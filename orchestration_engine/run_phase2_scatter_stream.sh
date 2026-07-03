@@ -5,6 +5,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+if [[ ! -f orchestration_engine/run_hls_scatter_stream.tcl ]] ||
+   [[ ! -f orchestration_engine/tb/oe_hls_stream_tb.cpp ]]; then
+  echo "ERROR: streaming scatter scripts missing. Run: git pull origin main"
+  exit 1
+fi
+
 source /tools/software/xilinx/setup_env.sh
 
 echo "=== streaming scatter csynth + cosim (8 completions / invocation) ==="

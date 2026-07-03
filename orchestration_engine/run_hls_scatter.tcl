@@ -1,8 +1,8 @@
 # Scatter csynth + cosim (Phase 2). From repo root:
 #   vitis_hls -f orchestration_engine/run_hls_scatter.tcl
 #
-# csim runs fan-out=2 anchor + fan-out=8 regression.
-# cosim runs fan-out=2 anchor only (OE_COSIM_FANOUT2_ONLY).
+# csim runs full regression (exactly-once, prune, mid-graph append, fan-out=8).
+# cosim runs fan-out=2 anchor x4 (OE_COSIM_FANOUT2_ONLY via -cosimflags for II).
 
 open_project -reset oe_scatter_proj
 set_top oe_hls_scatter_kernel
@@ -19,7 +19,7 @@ csynth_design
 
 add_files -tb orchestration_engine/tb/oe_hls_scatter_tb.cpp \
   -cflags "-I./orchestration_engine/hls" \
-  -csimflags "-DOE_COSIM_FANOUT2_ONLY"
+  -cosimflags "-DOE_COSIM_FANOUT2_ONLY"
 
 config_cosim -trace_level none
 cosim_design

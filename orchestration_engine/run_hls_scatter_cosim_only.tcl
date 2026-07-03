@@ -11,7 +11,7 @@ catch { remove_files orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp }
 
 add_files -tb orchestration_engine/tb/oe_hls_scatter_tb.cpp \
   -cflags "-I./orchestration_engine/hls" \
-  -csimflags "-DOE_COSIM_FANOUT2_ONLY"
+  -cosimflags "-DOE_COSIM_FANOUT2_ONLY"
 
 config_cosim -trace_level none
 cosim_design
