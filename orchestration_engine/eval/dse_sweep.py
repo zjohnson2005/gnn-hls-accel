@@ -18,7 +18,33 @@ _REPO = Path(__file__).resolve().parents[2]
 if str(_REPO) not in sys.path:
     sys.path.insert(0, str(_REPO))
 
-from fifo_pareto.sweep import LightningSimEvaluator, SweepConfig, StreamingSweep
+from fifo_pareto.sweep import LightningSimEvaluator, SweepConfig, StreamingSweep, make_evaluator
+
+
+def run_dse_synthetic(n_samples: int, batch_size: int) -> dict:
+    evaluator = make_evaluator(synthetic="small")
+    sweep = StreamingSweep(
+        evaluator,
+        SweepConfig(n_samples=n_samples, batch_size=batch_size),
+    )
+    state = sweep.run()
+    baseline = evaluator.baseline_max()
+    frontier = [
+        {"latency": p.latency, "bram": p.bram, "deadlock": p.deadlock}
+        for p in state.frontier
+    ]
+    return {
+        "source": "synthetic",
+        "solution_dir": "synthetic",
+        "note": "Offline stall model; gcn_stream LS trace unavailable on this toolchain",
+        "n_samples": n_samples,
+        "num_fifos": evaluator.num_fifos,
+        "baseline_max_latency": baseline.latency,
+        "baseline_max_bram": baseline.bram,
+        "evaluations": len(state.all_points),
+        "deadlocks": state.deadlocks,
+        "pareto_frontier": frontier,
+    }
 
 
 def run_dse(solution_dir: Path, n_samples: int, batch_size: int) -> dict:
@@ -68,20 +94,31 @@ def main() -> None:
     parser.add_argument(
         "--solution-dir",
         type=Path,
-        required=True,
-        help="Path to Vitis HLS solution dir (contains solution1/)",
+        default=None,
+        help="Path to Vitis HLS solution dir (sol1/ or solution1/)",
+    )
+    parser.add_argument(
+        "--synthetic",
+        action="store_true",
+        help="Offline Pareto demo (no Vitis/LightningSim trace)",
     )
     parser.add_argument("--n-samples", type=int, default=500)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
 
-    try:
-        report = run_dse(args.solution_dir, args.n_samples, args.batch_size)
-    except ImportError as exc:
-        raise SystemExit(
-            "fifo-advisor not installed. See fifo_pareto/README.md for conda setup."
-        ) from exc
+    if args.synthetic:
+        report = run_dse_synthetic(args.n_samples, args.batch_size)
+    elif args.solution_dir is None:
+        parser.error("Provide --solution-dir or --synthetic")
+    else:
+        try:
+            report = run_dse(args.solution_dir, args.n_samples, args.batch_size)
+        except ImportError as exc:
+            raise SystemExit(
+                "fifo-advisor not installed. See fifo_pareto/README.md for conda setup."
+            ) from exc
+        report["source"] = "lightningsim"
 
     text = json.dumps(report, indent=2)
     if args.output:
