@@ -1,19 +1,12 @@
 """Crossover analysis using measured csynth scatter + Phase 1 software constants."""
 
-from __future__ import annotations
-
 import json
-from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from orchestration_engine.phase2_gate.csynth_parser import (
-    DEFAULT_CLOCK_MHZ,
-    load_or_parse,
-)
+from orchestration_engine.phase2_gate.csynth_parser import DEFAULT_CLOCK_MHZ, load_or_parse
 
 OE_ROOT = Path(__file__).resolve().parents[1]
 GATE_DIR = OE_ROOT / "characterization" / "out" / "gate"
-OUT_DIR = OE_ROOT / "characterization" / "out" / "phase2"
 
 DELIVERY_US = {
     "sw_epoll": 3.5,
@@ -24,35 +17,66 @@ DELIVERY_US = {
 }
 
 
-@dataclass
-class CrossoverRow:
-    baseline: str
-    per_completion_us: float
-    vs_hw_pcie: float
-    vs_hw_on_soc: float
-    note: str
+class CrossoverRow(object):
+    def __init__(self, baseline, per_completion_us, vs_hw_pcie, vs_hw_on_soc, note):
+        self.baseline = baseline
+        self.per_completion_us = per_completion_us
+        self.vs_hw_pcie = vs_hw_pcie
+        self.vs_hw_on_soc = vs_hw_on_soc
+        self.note = note
 
 
-@dataclass
-class CrossoverReport:
-    hw_scatter_us_fanout2: float
-    hw_scatter_cycles_fanout2: int
-    clock_mhz: float
-    csynth_source: str | None
-    csynth_pending: bool
-    rows: list[CrossoverRow]
-    verdict: str
-    headline: str
+class CrossoverReport(object):
+    def __init__(
+        self,
+        hw_scatter_us_fanout2,
+        hw_scatter_cycles_fanout2,
+        clock_mhz,
+        csynth_source,
+        csynth_pending,
+        rows,
+        verdict,
+        headline,
+    ):
+        self.hw_scatter_us_fanout2 = hw_scatter_us_fanout2
+        self.hw_scatter_cycles_fanout2 = hw_scatter_cycles_fanout2
+        self.clock_mhz = clock_mhz
+        self.csynth_source = csynth_source
+        self.csynth_pending = csynth_pending
+        self.rows = rows
+        self.verdict = verdict
+        self.headline = headline
+
+    def to_dict(self):
+        return {
+            "hw_scatter_us_fanout2": self.hw_scatter_us_fanout2,
+            "hw_scatter_cycles_fanout2": self.hw_scatter_cycles_fanout2,
+            "clock_mhz": self.clock_mhz,
+            "csynth_source": self.csynth_source,
+            "csynth_pending": self.csynth_pending,
+            "rows": [
+                {
+                    "baseline": r.baseline,
+                    "per_completion_us": r.per_completion_us,
+                    "vs_hw_pcie": r.vs_hw_pcie,
+                    "vs_hw_on_soc": r.vs_hw_on_soc,
+                    "note": r.note,
+                }
+                for r in self.rows
+            ],
+            "verdict": self.verdict,
+            "headline": self.headline,
+        }
 
 
-def _load_dispatch_stress() -> dict:
+def _load_dispatch_stress():
     path = GATE_DIR / "dispatch_stress.json"
     if not path.exists():
         return {}
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def build_crossover(out_degree: int = 2, batch_width: int = 1) -> CrossoverReport:
+def build_crossover(out_degree=2, batch_width=1):
     csynth = load_or_parse()
     stress = _load_dispatch_stress()
 
@@ -88,31 +112,16 @@ def build_crossover(out_degree: int = 2, batch_width: int = 1) -> CrossoverRepor
     if lg_rows:
         langgraph = sum(r["cpu_us_per_decision"] for r in lg_rows) / len(lg_rows)
 
-    def _row(name: str, dispatch_us: float, delivery_key: str, note: str) -> CrossoverRow:
+    def _row(name, dispatch_us, delivery_key, note):
         total = dispatch_us + DELIVERY_US[delivery_key]
         hw_pcie = total / (hw_scatter_us + DELIVERY_US["hw_pcie"])
         hw_soc = total / (hw_scatter_us + DELIVERY_US["hw_on_soc"])
         return CrossoverRow(name, round(total, 2), round(hw_pcie, 1), round(hw_soc, 1), note)
 
     rows = [
-        _row(
-            "LangGraph (deployed)",
-            langgraph,
-            "sw_epoll",
-            "Claim 2: constant factor vs deployed framework",
-        ),
-        _row(
-            "asyncio event (ideal, dispatch only)",
-            asyncio_dispatch,
-            "sw_epoll",
-            "Claim 2: full-path vs ideal event-driven",
-        ),
-        _row(
-            "asyncio + kernel-bypass delivery",
-            asyncio_dispatch,
-            "sw_kernel_bypass",
-            "Strongest software full-path baseline",
-        ),
+        _row("LangGraph (deployed)", langgraph, "sw_epoll", "Claim 2: constant factor vs deployed framework"),
+        _row("asyncio event (ideal, dispatch only)", asyncio_dispatch, "sw_epoll", "Claim 2: full-path vs ideal event-driven"),
+        _row("asyncio + kernel-bypass delivery", asyncio_dispatch, "sw_kernel_bypass", "Strongest software full-path baseline"),
     ]
 
     if fp:
@@ -146,15 +155,15 @@ def build_crossover(out_degree: int = 2, batch_width: int = 1) -> CrossoverRepor
     elif kb_total / hw_pcie_total < 2.0:
         verdict = "FULL_PATH_NEAR_PARITY"
         headline = (
-            f"Full-path vs kernel-bypass software is ~{kb_total / hw_pcie_total:.1f}x "
+            "Full-path vs kernel-bypass software is ~{0:.1f}x "
             "(throughput/energy/offload case at PCIe attach; on-SoC retains latency win)."
-        )
+        ).format(kb_total / hw_pcie_total)
     else:
         verdict = "FULL_PATH_ADVANTAGE"
         headline = (
-            f"Measured scatter {hw_scatter_us:.4f} µs + PCIe delivery → "
-            f"~{kb_total / hw_pcie_total:.1f}x vs kernel-bypass software."
-        )
+            "Measured scatter {0:.4f} us + PCIe delivery -> "
+            "~{1:.1f}x vs kernel-bypass software."
+        ).format(hw_scatter_us, kb_total / hw_pcie_total)
 
     return CrossoverReport(
         hw_scatter_us_fanout2=round(hw_scatter_us, 4),
@@ -168,26 +177,30 @@ def build_crossover(out_degree: int = 2, batch_width: int = 1) -> CrossoverRepor
     )
 
 
-def render_markdown(report: CrossoverReport) -> str:
+def render_markdown(report):
     src = report.csynth_source or "analytic (pending csynth)"
     lines = [
         "## Phase 2 crossover (measured scatter + full-path delivery)",
         "",
-        f"**Verdict:** `{report.verdict}`",
+        "**Verdict:** `{0}`".format(report.verdict),
         "",
         report.headline,
         "",
-        f"- Hardware scatter (fan-out=2): **{report.hw_scatter_cycles_fanout2} cycles** "
-        f"= **{report.hw_scatter_us_fanout2} µs** @ {report.clock_mhz} MHz",
-        f"- csynth source: `{src}`",
+        "- Hardware scatter (fan-out=2): **{0} cycles** = **{1} us** @ {2} MHz".format(
+            report.hw_scatter_cycles_fanout2,
+            report.hw_scatter_us_fanout2,
+            report.clock_mhz,
+        ),
+        "- csynth source: `{0}`".format(src),
         "",
-        "| baseline | µs/completion | vs engine+PCIe | vs engine+on-SoC |",
+        "| baseline | us/completion | vs engine+PCIe | vs engine+on-SoC |",
         "|----------|---------------|----------------|------------------|",
     ]
     for row in report.rows:
         lines.append(
-            f"| {row.baseline} | {row.per_completion_us} | {row.vs_hw_pcie}x | "
-            f"{row.vs_hw_on_soc}x |"
+            "| {0} | {1} | {2}x | {3}x |".format(
+                row.baseline, row.per_completion_us, row.vs_hw_pcie, row.vs_hw_on_soc
+            )
         )
     lines.extend(
         [
