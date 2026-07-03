@@ -26,6 +26,21 @@ rm -f "$ROOT/gcn_stream_proj/sol1/trace.pkl"
 "$PY" -m orchestration_engine.eval.ls_probe "$ROOT/gcn_stream_proj/sol1"
 
 echo
+echo "=== gdb backtrace (only if instrumented testbench crashed) ==="
+ART="$(grep -oE 'Build artifacts are being written to \S+' "$LOG" | tail -1 | awk '{print $NF}')"
+TB_BIN="$(ls "${ART:-/nonexistent}"/testbench_* 2>/dev/null | head -1)"
+if grep -qE 'testbench exit code: -' "$LOG" && [[ -n "$TB_BIN" ]]; then
+  if command -v gdb >/dev/null 2>&1; then
+    ( cd "$ART" && HLSLITESIM_TRACE_FD=9 gdb -batch -ex run -ex "bt 25" "$TB_BIN" 9>/dev/null 2>&1 | tail -45 )
+  else
+    echo "(gdb not available; falling back to core-less rerun under catchsegv/ltrace if present)"
+    ( cd "$ART" && HLSLITESIM_TRACE_FD=9 "$TB_BIN" 9>/dev/null; echo "manual rerun rc=$?" )
+  fi
+else
+  echo "(testbench did not crash, or artifacts dir not found: ART=${ART:-none})"
+fi
+
+echo
 echo "=== kernel symbols in kept testbench objects (post-objcopy) ==="
 TMPD="$(grep -oE 'Intermediate objects are being written to \S+' "$LOG" | tail -1 | awk '{print $NF}')"
 if [[ -n "${TMPD:-}" ]] && [[ -d "$TMPD" ]]; then
