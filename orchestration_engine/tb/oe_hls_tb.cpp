@@ -55,8 +55,8 @@ int main() {
     // Node 2 already fired via the chain; batch scatter must NOT re-fire it.
     ready_flags[2] = 0;
     oe_hls_cycle_t scatter_cycles = 0;
-    oe_hls_scatter_kernel(
-        3, succ_count, succ_slots, node_state, 1, 1, ready_flags,
+    oe_hls_scatter_batch_kernel(
+        3, succ_count, succ_slots, node_state, 1, ready_flags,
         scatter_cycles);
     if (ready_flags[2] != 0) {
         std::printf("FAIL: fired node re-fired after runtime append\n");

@@ -110,10 +110,12 @@ ap_uint<8> oe_hls_append_edge(
     oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS]);
 
 // ---------------------------------------------------------------------------
-// One-shot scatter kernel (csynth/cosim anchor; ap_ctrl_hs).
-// Flat mode: II=1 per successor -> analytic 1 + out_degree cycles.
-// Batch mode: OE_HLS_SUCC_CAP-wide unrolled row -> 2 cycles for any degree.
-// scatter_cycles reports the analytic count for gate parity.
+// One-shot FLAT scatter kernel (csynth/cosim anchor; ap_ctrl_hs).
+// II=1 per successor -> analytic 1 + out_degree cycles.
+// Deliberately contains NO batch path and NO array partitions: one update
+// per cycle needs only dual-port BRAM, and the 8-wide batch crossbar in a
+// combined kernel set the kernel-wide clock estimate (measured 415 -> 210
+// MHz). The wide variant is a separate top below.
 // ---------------------------------------------------------------------------
 void oe_hls_scatter_kernel(
     const oe_hls_node_id_t num_nodes,
@@ -121,7 +123,21 @@ void oe_hls_scatter_kernel(
     const oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS],
     oe_hls_node_state_t node_state[OE_HLS_MAX_NODES],
     const oe_hls_node_id_t completed,
-    const ap_uint<8> use_batch,
+    ap_uint<1> ready_flags[OE_HLS_MAX_NODES],
+    oe_hls_cycle_t &scatter_cycles);
+
+// ---------------------------------------------------------------------------
+// One-shot BATCH scatter kernel (own top, synthesized separately).
+// Whole row (OE_HLS_SUCC_CAP successors) in one wide cycle; needs the
+// 8-bank partition + crossbar, so it carries its own (lower) Fmax and must
+// not share a top with the flat anchor.
+// ---------------------------------------------------------------------------
+void oe_hls_scatter_batch_kernel(
+    const oe_hls_node_id_t num_nodes,
+    const ap_uint<8> succ_count[OE_HLS_MAX_NODES],
+    const oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS],
+    oe_hls_node_state_t node_state[OE_HLS_MAX_NODES],
+    const oe_hls_node_id_t completed,
     ap_uint<1> ready_flags[OE_HLS_MAX_NODES],
     oe_hls_cycle_t &scatter_cycles);
 
