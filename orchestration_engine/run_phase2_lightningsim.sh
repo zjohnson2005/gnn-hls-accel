@@ -6,13 +6,16 @@
 #   - LightningSim trace + FIFO DSE: Vitis ARCHIVE 2023.1/2024.x (hls_env_lightningsim.sh)
 #   LightningSim/fifo-advisor targets 2021.1–2024.x; 2025.x may break trace.pkl or skew latency.
 #
-# Run from repo root on the Vitis box, inside the fifo-advisor conda env:
-#   conda activate fifo-advisor
+# Run from repo root on the Vitis box (conda activate optional):
 #   cd ~/gnn-hls-accel && bash orchestration_engine/run_phase2_lightningsim.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+
+if [[ -z "${CONDA_PREFIX:-}" ]] && [[ -d "$HOME/miniconda3/envs/fifo-advisor" ]]; then
+  export CONDA_PREFIX="$HOME/miniconda3/envs/fifo-advisor"
+fi
 
 _oe_resolve_python() {
   local py cand
@@ -64,7 +67,7 @@ echo "Using python: $OE_PYTHON ($("$OE_PYTHON" -c 'import fifo_advisor; print("f
 SOLUTION_DIR="$ROOT/gcn_stream_proj/sol1"
 CSYNTH_RPT="$SOLUTION_DIR/syn/report/gcn_layer_stream_csynth.rpt"
 LS_TOOLCHAIN_STAMP="$SOLUTION_DIR/.oe_lightningsim_vitis"
-STAMP_TAG="GNN_LS_LITE=ptr512"
+STAMP_TAG="GNN_LS_LITE=nodf-u16"
 
 # Rebuild if missing, wrong toolchain, or pre-LS-lite ap_fixed build.
 if [[ -f "$CSYNTH_RPT" ]] && [[ -f "$LS_TOOLCHAIN_STAMP" ]] \

@@ -18,7 +18,7 @@ typedef float   data_t;
 typedef float   weight_t;
 typedef float   norm_t;
 typedef float   acc_t;
-typedef ap_uint<16> idx_t;
+typedef uint16_t idx_t;
 
 #else
 

@@ -13,6 +13,12 @@ v2 — exclude kernel .cpp from testbench link
   which segfaults at runtime (exit -11, empty stdout). Only compile sources
   living under the solution directory (``tb=`` files in ``hls.app``).
 
+v3 — drop -flto from testbench link (conda+LTO segfaults on some kernels)
+
+v4 — link with conda g++/libstdc++ (``liblightningsimrt.a`` ABI)
+
+v5 — preserve conda ``LD_LIBRARY_PATH`` when LS clears it before testbench run
+
 Usage:
     python -m orchestration_engine.eval.patch_lightningsim [solution_dir]
 """
@@ -25,6 +31,8 @@ from pathlib import Path
 MARKER_V1 = "# OE-PATCH v1: add solution generated-source include dirs (Vitis 2023.2+)"
 MARKER_V2 = "# OE-PATCH v2: compile only TB sources under solution/ (skip kernel .cpp)"
 MARKER_V3 = "# OE-PATCH v3: drop -flto from testbench link (conda+LTO segfaults on some kernels)"
+MARKER_V4 = "# OE-PATCH v4: conda g++/libstdc++ for liblightningsimrt link ABI"
+MARKER_V5 = "# OE-PATCH v5: keep conda libstdc++ on LD_LIBRARY_PATH for testbench run"
 
 STUB_HEADER = """\
 // Stub hls_signal_handler.h installed by gnn-hls-accel's LightningSim patch.
@@ -65,6 +73,31 @@ PATCH_V2_COMP_NEW = (
 )
 
 # Match single- or multi-line list comps (LS versions differ).
+PATCH_V4_CXX_BLOCK = """\
+# OE-PATCH v4: conda libstdc++ for liblightningsimrt link
+_oe_conda_prefix = environ.get("CONDA_PREFIX")
+if _oe_conda_prefix:
+    _oe_gxx = Path(_oe_conda_prefix) / "bin/x86_64-conda-linux-gnu-g++"
+    _oe_gcc = Path(_oe_conda_prefix) / "bin/x86_64-conda-linux-gnu-cc"
+    if _oe_gxx.is_file():
+        CXX = str(_oe_gxx)
+    if _oe_gcc.is_file():
+        CC = str(_oe_gcc)
+"""
+
+PATCH_V4_LD_AFTER = """\
+                        "-llightningsimrt",
+                        *(
+                            (
+                                "-L",
+                                str(Path(environ["CONDA_PREFIX"]) / "lib"),
+                                "-Wl,-rpath",
+                                str(Path(environ["CONDA_PREFIX"]) / "lib"),
+                            )
+                            if environ.get("CONDA_PREFIX")
+                            else ()
+                        ),
+"""
 PATCH_V2_BLOCK_RE = re.compile(
     r"(?P<indent>^[ \t]*)project_source_files\s*=\s*\[\s*\n?"
     r"(?P<body>(?:^[ \t]+[^\n]+\n?)+?)"
@@ -73,7 +106,18 @@ PATCH_V2_BLOCK_RE = re.compile(
 )
 
 
-def find_runner() -> Path:
+PATCH_V5_LD_POP_OLD = 'os.environ.pop("LD_LIBRARY_PATH", None)'
+PATCH_V5_LD_POP_NEW = """\
+_oe_saved_ld = os.environ.pop("LD_LIBRARY_PATH", None)
+_oe_conda_lib = os.environ.get("OE_CONDA_LIB")
+if not _oe_conda_lib:
+    _oe_cp = os.environ.get("CONDA_PREFIX")
+    if _oe_cp:
+        _oe_conda_lib = str(Path(_oe_cp) / "lib")
+if _oe_conda_lib:
+    os.environ["LD_LIBRARY_PATH"] = _oe_conda_lib + (
+        f":{_oe_saved_ld}" if _oe_saved_ld else ""
+    )"""
     import lightningsim
 
     return Path(lightningsim.__file__).parent / "runner.py"
@@ -176,6 +220,67 @@ def apply_v3(text: str) -> tuple[str, bool]:
     return f"{MARKER_V3}\n{text}", True
 
 
+def apply_v4(text: str) -> tuple[str, bool]:
+    if MARKER_V4 in text:
+        return text, True
+
+    changed = False
+
+    if "_oe_conda_prefix = environ.get(\"CONDA_PREFIX\")" not in text:
+        cxx_re = re.compile(
+            r"^(?P<indent>[ \t]*)CXX\s*=\s*environ\.get\(\"CXX\",\s*\"g\+\+\")",
+            re.MULTILINE,
+        )
+        match = cxx_re.search(text)
+        if match:
+            indent = match.group("indent")
+            block = "\n".join(indent + line for line in PATCH_V4_CXX_BLOCK.splitlines())
+            insert_at = match.end()
+            text = text[:insert_at] + "\n" + block + text[insert_at:]
+            print("patched v4: prefer conda CC/CXX for testbench link")
+            changed = True
+        else:
+            print("WARNING: v4 CXX anchor not found in runner.py")
+
+    ld_needle = '"-llightningsimrt",'
+    ld_already = '*(\n                            (\n                                "-L",\n                                str(Path(environ["CONDA_PREFIX"]) / "lib"),'
+    if ld_already in text:
+        print("v4 conda lib path already present (unmarked)")
+        changed = True
+    elif ld_needle in text and PATCH_V4_LD_AFTER.strip() not in text:
+        text = text.replace(ld_needle, PATCH_V4_LD_AFTER.rstrip(), 1)
+        print("patched v4: add conda -L/-rpath for libstdc++")
+        changed = True
+    elif ld_needle not in text:
+        print("WARNING: v4 -llightningsimrt anchor not found in runner.py")
+
+    if not changed:
+        return text, False
+
+    return f"{MARKER_V4}\n{text}", True
+
+
+def apply_v5(text: str) -> tuple[str, bool]:
+    if MARKER_V5 in text:
+        return text, True
+    if "_oe_conda_lib = os.environ.get(\"OE_CONDA_LIB\")" in text:
+        print("v5 conda LD_LIBRARY_PATH preserve already present (unmarked)")
+        return text, True
+
+    if PATCH_V5_LD_POP_OLD not in text:
+        alt = 'environ.pop("LD_LIBRARY_PATH", None)'
+        if alt in text:
+            text = text.replace(alt, PATCH_V5_LD_POP_NEW.replace("os.environ", "environ"), 1)
+            print("patched v5: preserve conda LD_LIBRARY_PATH (environ alias)")
+            return f"{MARKER_V5}\n{text}", True
+        print("WARNING: v5 LD_LIBRARY_PATH pop anchor not found in runner.py")
+        return text, True
+
+    text = text.replace(PATCH_V5_LD_POP_OLD, PATCH_V5_LD_POP_NEW, 1)
+    print("patched v5: preserve conda LD_LIBRARY_PATH for testbench run")
+    return f"{MARKER_V5}\n{text}", True
+
+
 def patch_runner(runner_path: Path) -> bool:
     text = runner_path.read_text()
     _ensure_backup(runner_path)
@@ -183,6 +288,8 @@ def patch_runner(runner_path: Path) -> bool:
     text, ok_v1 = apply_v1(text)
     text, ok_v2 = apply_v2(text)
     text, ok_v3 = apply_v3(text)
+    text, ok_v4 = apply_v4(text)
+    text, ok_v5 = apply_v5(text)
 
     if not ok_v1 and MARKER_V1 not in text:
         print("ERROR: v1 patch failed")
@@ -192,6 +299,12 @@ def patch_runner(runner_path: Path) -> bool:
         return False
     if not ok_v3 and MARKER_V3 not in text:
         print("ERROR: v3 patch failed")
+        return False
+    if not ok_v4 and MARKER_V4 not in text:
+        print("ERROR: v4 patch failed")
+        return False
+    if not ok_v5 and MARKER_V5 not in text:
+        print("ERROR: v5 patch failed")
         return False
 
     runner_path.write_text(text)

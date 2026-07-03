@@ -2,9 +2,16 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
+
+
+def _trace_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env["HLSLITESIM_TRACE_FD"] = "9"
+    return env
 
 
 def _run(
@@ -70,6 +77,19 @@ def diagnose(
         return
 
     print(f"LS testbench: {tb_bin}")
+    rc, out = _run(["ldd", str(tb_bin)])
+    if rc == 0 and out.strip():
+        print("  ldd (libstdc++):")
+        for line in out.splitlines():
+            if "libstdc++" in line or "not found" in line:
+                print(f"    {line}")
+        conda_lib = os.environ.get("CONDA_PREFIX")
+        if conda_lib and "libstdc++.so" in out and conda_lib not in out:
+            print(
+                f"  HINT: export LD_LIBRARY_PATH={conda_lib}/lib "
+                "(or rebuild with -Wl,-rpath)"
+            )
+
     rc, out = _run([str(tb_bin)], cwd=art_dir)
     print(f"  rerun without trace fd: exit {rc}")
     if out.strip():
@@ -78,12 +98,6 @@ def diagnose(
     rc, out = _run([str(tb_bin)], cwd=art_dir, env=_trace_env())
     print(f"  rerun with HLSLITESIM_TRACE_FD: exit {rc}")
 
-    # gdb inherits fd 9 from env but needs it open — use shell redirect
-    import os
-
-    env = _trace_env()
-    if art_dir:
-        os.chdir(art_dir)
     gdb_cmd = (
         f"HLSLITESIM_TRACE_FD=9 gdb -batch -ex run -ex 'bt 25' {tb_bin} 9>/dev/null 2>&1"
     )
@@ -93,11 +107,6 @@ def diagnose(
         print(out[-2500:] if out else "(empty)")
     else:
         print(f"  {out}")
-    import os
-
-    env = os.environ.copy()
-    env["HLSLITESIM_TRACE_FD"] = "9"
-    return env
 
 
 def main() -> int:
