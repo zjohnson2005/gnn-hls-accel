@@ -22,14 +22,8 @@ _oe_source_relaxed() {
 _oe_env_tried=""
 
 if ! command -v vitis_hls >/dev/null 2>&1; then
-  if [[ -f /tools/software/xilinx/setup_env.sh ]]; then
-    _oe_source_relaxed /tools/software/xilinx/setup_env.sh
-    _oe_env_tried="$_oe_env_tried /tools/software/xilinx/setup_env.sh"
-  fi
-fi
-
-if ! command -v vitis_hls >/dev/null 2>&1; then
   for _oe_env in \
+    /tools/software/amd/xilinx/2025.2.1/Vitis/settings64.sh \
     /tools/software/amd/xilinx/*/Vitis/settings64.sh \
     /tools/software/amd/xilinx/*/Vitis/*/settings64.sh \
     /tools/software/xilinx/latest/Vitis/settings64.sh \
@@ -44,6 +38,13 @@ if ! command -v vitis_hls >/dev/null 2>&1; then
     fi
   done
   unset _oe_env
+fi
+
+if ! command -v vitis_hls >/dev/null 2>&1; then
+  if [[ -f /tools/software/xilinx/setup_env.sh ]]; then
+    _oe_source_relaxed /tools/software/xilinx/setup_env.sh
+    _oe_env_tried="$_oe_env_tried /tools/software/xilinx/setup_env.sh"
+  fi
 fi
 
 if ! command -v vitis_hls >/dev/null 2>&1; then
