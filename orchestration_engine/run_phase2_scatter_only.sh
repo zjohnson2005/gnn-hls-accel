@@ -6,7 +6,6 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 source /tools/software/xilinx/setup_env.sh
-export PATH="/tools/software/xilinx/ARCHIVE/Vitis_HLS/2024.2/bin:${PATH}"
 
 echo "=== scatter csynth + cosim (fan-out=2 anchor) ==="
 rm -rf oe_scatter_proj

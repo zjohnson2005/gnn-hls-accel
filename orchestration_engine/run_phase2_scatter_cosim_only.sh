@@ -13,7 +13,6 @@ if [[ ! -f "$CSYNTH_RPT" ]]; then
 fi
 
 source /tools/software/xilinx/setup_env.sh
-export PATH="/tools/software/amd/xilinx/ARCHIVE/Vitis_HLS/2025.2/bin:${PATH}"
 
 echo "=== scatter cosim only (fan-out=2 anchor, reuses csynth RTL) ==="
 vitis_hls -f orchestration_engine/run_hls_scatter_cosim_only.tcl
