@@ -20,7 +20,7 @@ def _checklist():
             "id": "csynth_scatter",
             "label": "HLS csynth scatter kernel (run_hls_scatter.tcl)",
             "status": "done"
-            if csynth is not None and csynth.top_latency_min is not None
+            if csynth is not None and csynth.is_measured
             else "pending",
             "detail": csynth.report_path if csynth else "No report under oe_scatter_proj/",
         }

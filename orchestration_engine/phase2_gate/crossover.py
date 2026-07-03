@@ -80,12 +80,18 @@ def build_crossover(out_degree=2, batch_width=1):
     csynth = load_or_parse()
     stress = _load_dispatch_stress()
 
-    if csynth:
+    if csynth and csynth.is_measured:
         hw_scatter_us = csynth.scatter_us(out_degree, batch_width=batch_width)
         cycles = 1 + (out_degree + batch_width - 1) // batch_width
         clock_mhz = csynth.clock_mhz
         csynth_source = csynth.report_path
         csynth_pending = False
+    elif csynth:
+        hw_scatter_us = csynth.scatter_us(out_degree, batch_width=batch_width)
+        cycles = 1 + (out_degree + batch_width - 1) // batch_width
+        clock_mhz = csynth.clock_mhz
+        csynth_source = csynth.report_path
+        csynth_pending = True
     else:
         cycles = 1 + (out_degree + batch_width - 1) // batch_width
         clock_mhz = DEFAULT_CLOCK_MHZ
