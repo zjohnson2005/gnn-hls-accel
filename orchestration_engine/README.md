@@ -110,11 +110,14 @@ rm -rf oe_proj && vitis_hls -f orchestration_engine/run_hls.tcl
 # compact ready-event output instead of an O(N) flag scan):
 bash orchestration_engine/run_phase2_scatter_stream.sh
 
-# After csynth produces solution1/:
-python3 -m orchestration_engine.eval.dse_sweep \
-  --solution-dir oe_proj/sol1 \
+# After csynth produces solution1/ on a DATAFLOW kernel (gcn_stream_proj/sol1):
+python -m orchestration_engine.eval.dse_sweep \
+  --solution-dir gcn_stream_proj/sol1 \
   --n-samples 500 \
   --output orchestration_engine/characterization/out/phase2/dse_report.json
+
+# Or run the full LightningSim step (builds gcn_stream if missing):
+bash orchestration_engine/run_phase2_lightningsim.sh
 
 python3 -m orchestration_engine.phase2_gate.gate_report
 ```
