@@ -48,8 +48,10 @@ to scatter-on-completion — both are coordination and both are hardware targets
 **Dispatch constants (local stress, no API, gate check 11):** LangGraph
 ~1.7 ms/decision flat with live_n up to 1000; ideal event-driven asyncio ~2 µs;
 scan-class scheduler grows 59x from N=10 to N=1000. Engine scatter measured
-(csynth Jul 2026): **415.6 MHz Fmax**, cosim **17 cycles one-shot** (0.041 µs,
-includes ap_ctrl_hs); inner loop **3 cycles** for fan-out=2.
+(csynth Jul 2026): **404.4 MHz Fmax**, streaming cosim **16.2 cycles/completion
+steady-state** (0.040 µs); one-shot host-triggered 59 cycles (0.146 µs,
+dominated by ap_ctrl/AXI-lite handshake); inner loop **3 cycles** for
+fan-out=2.
 
 ## Synthetic findings (superseded — kept for history)
 

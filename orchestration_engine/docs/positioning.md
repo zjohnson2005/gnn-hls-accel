@@ -38,9 +38,11 @@ whose per-decision cost grows with the number of **live agents** (measured 59x
 from N=10 to N=1000), and event-driven frameworks whose cost is flat but carries
 a large constant (LangGraph measured ~1.7 ms/decision; ideal asyncio ~2 µs).
 Hardware scatter-on-completion costs grow only with **fan-out**. Measured
-(csynth Jul 2026): **415.6 MHz Fmax**, cosim **17 cycles one-shot** (0.041 µs)
-for fan-out=2 including ap_ctrl_hs overhead; inner scatter loop accounts for
-3 cycles. Steady-state II requires multi-transaction cosim (in progress).
+(csynth Jul 2026): **404.4 MHz Fmax**, streaming cosim **16.2 cycles/completion
+steady-state** (0.040 µs) for fan-out=2 with the per-invocation handshake
+amortized over an 8-completion stream; one-shot host-triggered invocation
+measures 59 cycles (0.146 µs, ap_ctrl/AXI-lite dominated); inner scatter loop
+accounts for 3 cycles.
 We characterize both gaps — complexity class vs scan schedulers, constant
 factor + energy vs frameworks — on trace-calibrated tool-heavy agent graphs,
 implement the engine in HLS, and use cycle-accurate simulation to determine
