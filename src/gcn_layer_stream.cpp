@@ -46,16 +46,27 @@ unpack:
 }
 #endif
 
+#ifdef GNN_LS_LITE
+static void combine_tier(
+    const data_t            *X,
+    const weight_t          *W,
+    const weight_t          *bias,
+    idx_t                   num_nodes,
+    hls::stream<seam_token_t> &xt_stream)
+#else
 static void combine_tier(
     const data_t            X[MAX_NODES][F_IN],
     const weight_t          W[F_IN][F_OUT],
     const weight_t          bias[F_OUT],
     idx_t                   num_nodes,
     hls::stream<seam_token_t> &xt_stream)
+#endif
 {
+#ifndef GNN_LS_LITE
 #pragma HLS ARRAY_PARTITION variable=W    complete dim=1
 #pragma HLS ARRAY_PARTITION variable=X    complete dim=2
 #pragma HLS ARRAY_PARTITION variable=bias complete dim=1
+#endif
 
 combine_nodes:
     for (idx_t i = 0; i < num_nodes; i++) {
@@ -69,7 +80,11 @@ combine_nodes:
         combine_in:
             for (int k = 0; k < F_IN; k++) {
 #pragma HLS UNROLL
+#ifdef GNN_LS_LITE
+                acc += (acc_t)(X[i * F_IN + k] * W[k * F_OUT + o]);
+#else
                 acc += (acc_t)(X[i][k] * W[k][o]);
+#endif
             }
             row[o] = (data_t)acc;
         }
@@ -87,17 +102,28 @@ combine_nodes:
     }
 }
 
+#ifdef GNN_LS_LITE
+static void aggregate_tier(
+    hls::stream<seam_token_t> &xt_stream,
+    const idx_t              *row_ptr,
+    const idx_t              *col_idx,
+    idx_t                    num_nodes,
+    data_t                   *Y)
+#else
 static void aggregate_tier(
     hls::stream<seam_token_t> &xt_stream,
     const idx_t              row_ptr[MAX_NODES + 1],
     const idx_t              col_idx[MAX_EDGES],
     idx_t                    num_nodes,
     data_t                   Y[MAX_NODES][F_OUT])
+#endif
 {
     static data_t Xt[MAX_NODES][F_OUT];
     static data_t inv_sqrt_deg[MAX_NODES];
 #pragma HLS ARRAY_PARTITION variable=Xt complete dim=2
+#ifndef GNN_LS_LITE
 #pragma HLS ARRAY_PARTITION variable=Y  complete dim=2
+#endif
 
 drain_seam:
     for (idx_t i = 0; i < num_nodes; i++) {
@@ -159,11 +185,25 @@ agg_nodes:
     agg_store:
         for (int o = 0; o < F_OUT; o++) {
 #pragma HLS UNROLL
+#ifdef GNN_LS_LITE
+            Y[i * F_OUT + o] = (data_t)acc[o];
+#else
             Y[i][o] = (data_t)acc[o];
+#endif
         }
     }
 }
 
+#ifdef GNN_LS_LITE
+void gcn_layer_stream(
+    const data_t   *X,
+    const weight_t *W,
+    const weight_t *bias,
+    const idx_t    *row_ptr,
+    const idx_t    *col_idx,
+    idx_t          num_nodes,
+    data_t         *Y)
+#else
 void gcn_layer_stream(
     const data_t   X[MAX_NODES][F_IN],
     const weight_t W[F_IN][F_OUT],
@@ -172,6 +212,7 @@ void gcn_layer_stream(
     const idx_t    col_idx[MAX_EDGES],
     idx_t          num_nodes,
     data_t         Y[MAX_NODES][F_OUT])
+#endif
 {
 #pragma HLS DATAFLOW
     hls::stream<seam_token_t> xt_stream;

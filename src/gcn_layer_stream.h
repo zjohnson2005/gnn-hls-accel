@@ -31,6 +31,16 @@ struct feat_row_t {
 typedef feat_row_t seam_token_t;
 #endif
 
+#ifdef GNN_LS_LITE
+void gcn_layer_stream(
+    const data_t   *X,
+    const weight_t *W,
+    const weight_t *bias,
+    const idx_t    *row_ptr,
+    const idx_t    *col_idx,
+    idx_t          num_nodes,
+    data_t         *Y);
+#else
 void gcn_layer_stream(
     const data_t   X[MAX_NODES][F_IN],
     const weight_t W[F_IN][F_OUT],
@@ -38,7 +48,7 @@ void gcn_layer_stream(
     const idx_t    row_ptr[MAX_NODES + 1],
     const idx_t    col_idx[MAX_EDGES],
     idx_t          num_nodes,
-    data_t         Y[MAX_NODES][F_OUT]
-);
+    data_t         Y[MAX_NODES][F_OUT]);
+#endif
 
 #endif // GCN_LAYER_STREAM_H

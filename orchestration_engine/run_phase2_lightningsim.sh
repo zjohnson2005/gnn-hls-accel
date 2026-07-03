@@ -64,7 +64,7 @@ echo "Using python: $OE_PYTHON ($("$OE_PYTHON" -c 'import fifo_advisor; print("f
 SOLUTION_DIR="$ROOT/gcn_stream_proj/sol1"
 CSYNTH_RPT="$SOLUTION_DIR/syn/report/gcn_layer_stream_csynth.rpt"
 LS_TOOLCHAIN_STAMP="$SOLUTION_DIR/.oe_lightningsim_vitis"
-STAMP_TAG="GNN_LS_LITE=ap_uint512"
+STAMP_TAG="GNN_LS_LITE=ptr512"
 
 # Rebuild if missing, wrong toolchain, or pre-LS-lite ap_fixed build.
 if [[ -f "$CSYNTH_RPT" ]] && [[ -f "$LS_TOOLCHAIN_STAMP" ]] \
