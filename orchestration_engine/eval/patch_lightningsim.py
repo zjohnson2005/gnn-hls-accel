@@ -231,7 +231,7 @@ def apply_v4(text: str) -> tuple[str, bool]:
 
     if "_oe_conda_prefix = environ.get(\"CONDA_PREFIX\")" not in text:
         cxx_re = re.compile(
-            r"^(?P<indent>[ \t]*)CXX\s*=\s*environ\.get\(\"CXX\",\s*\"g\+\+\")",
+            r'^(?P<indent>[ \t]*)CXX\s*=\s*environ\.get\("CXX",\s*"g\+\+"\)',
             re.MULTILINE,
         )
         match = cxx_re.search(text)
