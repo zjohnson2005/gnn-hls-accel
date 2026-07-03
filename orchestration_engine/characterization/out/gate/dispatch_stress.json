@@ -97,9 +97,9 @@
   "growth_langgraph": 1.04,
   "growth_asyncio_event": 0.92,
   "growth_global_scan": 13.58,
-  "hw_reference_us_per_decision": 0.0409,
-  "hw_reference_source": "cosim_latency",
-  "hw_reference_note": "one-shot cosim latency 17 cycles @ 415.6 MHz (includes ap_ctrl_hs; run multi-transaction cosim for II)",
+  "hw_reference_us_per_decision": 0.114,
+  "hw_reference_source": "cosim_ii",
+  "hw_reference_note": "steady-state II from multi-transaction cosim (24 cycles @ 210.5 MHz); one-shot latency 13 cycles (ap_ctrl_hs overhead)",
   "delivery_us_assumptions": {
     "sw_epoll_wakeup": [
       2.0,
@@ -125,11 +125,11 @@
   "full_path_us_per_completion": {
     "sw_asyncio_epoll": 5.37,
     "sw_asyncio_kernel_bypass": 3.12,
-    "hw_engine_pcie": 0.79,
-    "hw_engine_cxl": 0.49,
-    "hw_engine_on_soc": 0.141,
-    "advantage_vs_kernel_bypass": 3.9,
-    "advantage_vs_epoll": 6.8
+    "hw_engine_pcie": 0.86,
+    "hw_engine_cxl": 0.56,
+    "hw_engine_on_soc": 0.214,
+    "advantage_vs_kernel_bypass": 3.6,
+    "advantage_vs_epoll": 6.2
   },
   "full_path_note": "Delivery + dispatch per completion, mid-range first-order estimates. Both sides pay inbound delivery: software completions cross NIC->kernel->epoll wakeup (see epoll_wakeup_bench.py); engine completions cross an interconnect DMA write. Outbound work-launch to the executor (GPU/tool server) is symmetric on both sides and excluded. Dispatch-only comparisons overstate the hardware gap vs event-driven software.",
   "verdict": "LANGGRAPH_FLAT",
