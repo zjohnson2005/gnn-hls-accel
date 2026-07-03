@@ -57,11 +57,8 @@ g++ -std=c++17 -I include -I software -o build/oe_bench \
 echo ""
 echo "=== Phase 2: LightningSim DSE (if fifo-advisor installed) ==="
 cd "$ROOT"
-if python3 -c "import fifo_advisor" 2>/dev/null; then
-  python3 -m orchestration_engine.eval.dse_sweep \
-    --solution-dir oe_proj/sol1 \
-    --n-samples 500 \
-    --output orchestration_engine/characterization/out/phase2/dse_report.json
+if python3 -c "import fifo_advisor" 2>/dev/null || python -c "import fifo_advisor" 2>/dev/null; then
+  bash orchestration_engine/run_phase2_lightningsim.sh
 else
   echo "fifo-advisor not installed — skip DSE (see fifo_pareto/README.md)"
 fi
