@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
 # LightningSim FIFO DSE on the streaming GCN kernel (DATAFLOW + hls::stream FIFOs).
-# Run from repo root on the Vitis box, inside the fifo-advisor conda env.
 #
-# One-time setup (from a home dir with conda/mamba):
-#   git clone https://github.com/sharc-lab/fifo-advisor.git
-#   cd fifo-advisor && conda env create -f environment.yml
-#   conda activate fifo-advisor
-#   pip install --no-deps git+https://github.com/sharc-lab/fifo-advisor.git
+# Toolchain split (important):
+#   - Orchestration scatter csynth/cosim (thesis numbers): Vitis 2025.2.1 (hls_env.sh)
+#   - LightningSim trace + FIFO DSE: Vitis ARCHIVE 2023.1/2024.x (hls_env_lightningsim.sh)
+#   LightningSim/fifo-advisor targets 2021.1–2024.x; 2025.x may break trace.pkl or skew latency.
 #
-# Then each session:
-#   source /tools/software/xilinx/setup_env.sh
+# Run from repo root on the Vitis box, inside the fifo-advisor conda env:
 #   conda activate fifo-advisor
 #   cd ~/gnn-hls-accel && bash orchestration_engine/run_phase2_lightningsim.sh
 set -euo pipefail
@@ -17,7 +14,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-# Xilinx settings64.sh prepends its own python; keep conda first for fifo-advisor.
+# Keep conda python — Xilinx settings64 prepends its own python to PATH.
 if [[ -n "${CONDA_PREFIX:-}" ]] && [[ -x "$CONDA_PREFIX/bin/python" ]]; then
   OE_PYTHON="$CONDA_PREFIX/bin/python"
 else
@@ -26,14 +23,12 @@ fi
 
 if [[ -z "$OE_PYTHON" ]] || ! "$OE_PYTHON" -c "import fifo_advisor" 2>/dev/null; then
   echo "ERROR: fifo-advisor not importable."
-  echo "Activate the conda env first:"
   echo "  eval \"\$(\$HOME/miniconda3/bin/conda shell.bash hook)\""
   echo "  conda activate fifo-advisor"
-  echo "See fifo_pareto/README.md for install steps."
   exit 1
 fi
 
-source "$ROOT/orchestration_engine/hls_env.sh"
+source "$ROOT/orchestration_engine/hls_env_lightningsim.sh"
 
 if [[ -n "${CONDA_PREFIX:-}" ]] && [[ -x "$CONDA_PREFIX/bin/python" ]]; then
   export PATH="$CONDA_PREFIX/bin:$PATH"
@@ -44,11 +39,22 @@ echo "Using python: $OE_PYTHON ($("$OE_PYTHON" -c 'import fifo_advisor; print("f
 
 SOLUTION_DIR="$ROOT/gcn_stream_proj/sol1"
 CSYNTH_RPT="$SOLUTION_DIR/syn/report/gcn_layer_stream_csynth.rpt"
+LS_TOOLCHAIN_STAMP="$SOLUTION_DIR/.oe_lightningsim_vitis"
+
+# Rebuild if missing or if a previous build used the wrong (2025.x) toolchain.
+if [[ -f "$CSYNTH_RPT" ]] && [[ -f "$LS_TOOLCHAIN_STAMP" ]]; then
+  echo "Reusing $SOLUTION_DIR (built for LightningSim: $(cat "$LS_TOOLCHAIN_STAMP"))"
+elif [[ -f "$CSYNTH_RPT" ]]; then
+  echo "WARNING: $CSYNTH_RPT exists but was not built via hls_env_lightningsim.sh."
+  echo "Removing gcn_stream_proj and rebuilding with ARCHIVE Vitis for trace capture."
+  rm -rf gcn_stream_proj
+fi
 
 if [[ ! -f "$CSYNTH_RPT" ]]; then
-  echo "=== Building streaming GCN kernel (DATAFLOW target for LightningSim) ==="
+  echo "=== Building streaming GCN kernel with LightningSim-compatible Vitis ==="
   rm -rf gcn_stream_proj
   vitis_hls -f run_hls_stream.tcl
+  echo "$(command -v vitis_hls) via ${OE_LS_VITIS_SETTINGS64:-PATH}" > "$LS_TOOLCHAIN_STAMP"
 fi
 
 if [[ ! -d "$SOLUTION_DIR" ]]; then
