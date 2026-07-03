@@ -58,6 +58,9 @@ export PATH="$(dirname "$OE_PYTHON"):$PATH"
 
 echo "Using python: $OE_PYTHON ($("$OE_PYTHON" -c 'import fifo_advisor; print("fifo-advisor ok")'))"
 
+# Vitis 2023.2+ compat: make LS find generated headers (hls_signal_handler.h).
+"$OE_PYTHON" -m orchestration_engine.eval.patch_lightningsim "$ROOT/gcn_stream_proj/sol1" || exit 1
+
 SOLUTION_DIR="$ROOT/gcn_stream_proj/sol1"
 CSYNTH_RPT="$SOLUTION_DIR/syn/report/gcn_layer_stream_csynth.rpt"
 LS_TOOLCHAIN_STAMP="$SOLUTION_DIR/.oe_lightningsim_vitis"
