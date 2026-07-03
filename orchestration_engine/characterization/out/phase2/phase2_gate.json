@@ -1,0 +1,70 @@
+{
+  "phase": 2,
+  "passed": false,
+  "crossover": {
+    "hw_scatter_us_fanout2": 0.01,
+    "hw_scatter_cycles_fanout2": 3,
+    "clock_mhz": 300.0,
+    "csynth_source": null,
+    "csynth_pending": true,
+    "rows": [
+      {
+        "baseline": "LangGraph (deployed)",
+        "per_completion_us": 1677.78,
+        "vs_hw_pcie": 2207.6,
+        "vs_hw_on_soc": 15252.5,
+        "note": "Claim 2: constant factor vs deployed framework"
+      },
+      {
+        "baseline": "asyncio + epoll (measured full-path)",
+        "per_completion_us": 7.0,
+        "vs_hw_pcie": 9.2,
+        "vs_hw_on_soc": 63.6,
+        "note": "Claim 2: full-path vs ideal event-driven"
+      },
+      {
+        "baseline": "asyncio + kernel-bypass (measured full-path)",
+        "per_completion_us": 4.75,
+        "vs_hw_pcie": 6.2,
+        "vs_hw_on_soc": 43.2,
+        "note": "Strongest software full-path baseline"
+      }
+    ],
+    "verdict": "PENDING_CSYNTH",
+    "headline": "Crossover table uses analytic scatter target; run run_hls_scatter.tcl on the Vitis box and re-run phase2_gate.gate_report."
+  },
+  "checklist": [
+    {
+      "id": "csynth_scatter",
+      "label": "HLS csynth scatter kernel (run_hls_scatter.tcl)",
+      "status": "pending",
+      "detail": "No report under oe_scatter_proj/"
+    },
+    {
+      "id": "cosim_scatter",
+      "label": "HLS cosim scatter (trust cycle count)",
+      "status": "pending",
+      "detail": "Enable cosim in run_hls_scatter.tcl"
+    },
+    {
+      "id": "lightningsim_dse",
+      "label": "LightningSim FIFO DSE (eval/dse_sweep.py)",
+      "status": "pending",
+      "detail": "Requires fifo-advisor on Vitis box"
+    },
+    {
+      "id": "openai_c1000",
+      "label": "Real OpenAI anchor at c=1000",
+      "status": "done",
+      "detail": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\orchestration_engine\\characterization\\out\\gate\\openai_action_heavy_c1000.json"
+    },
+    {
+      "id": "oe_bench",
+      "label": "Native oe_bench structural proof",
+      "status": "pending",
+      "detail": "build.ps1 on Windows or g++ on Vitis box"
+    }
+  ],
+  "pending_count": 4,
+  "csynth_reports_found": []
+}

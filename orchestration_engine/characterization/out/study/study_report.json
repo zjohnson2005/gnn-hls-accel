@@ -1,0 +1,342 @@
+{
+  "traces": [
+    "orchestration_engine\\characterization\\out\\study\\langgraph_action_heavy_calibrated_c1.json",
+    "orchestration_engine\\characterization\\out\\study\\langgraph_action_heavy_calibrated_c100.json",
+    "orchestration_engine\\characterization\\out\\study\\langgraph_action_heavy_calibrated_c500.json",
+    "orchestration_engine\\characterization\\out\\study\\langgraph_reasoning_heavy_calibrated_c1.json",
+    "orchestration_engine\\characterization\\out\\study\\langgraph_reasoning_heavy_calibrated_c100.json",
+    "orchestration_engine\\characterization\\out\\study\\langgraph_reasoning_heavy_calibrated_c500.json"
+  ],
+  "reports": [
+    {
+      "workload_name": "langgraph_action_heavy_calibrated_c1",
+      "concurrency": 1,
+      "e2e_us": 16122730,
+      "gpu_inference_us": 5764689,
+      "cpu_tool_phase_us": 10358041,
+      "bucket_us": {
+        "gpu_inference": 5764689,
+        "cpu_io_wait": 10325859,
+        "cpu_parse": 16800,
+        "cpu_tokenize": 1596,
+        "cpu_orchestration": 3279,
+        "cpu_state": 10507,
+        "cpu_other": 0
+      },
+      "bucket_pct_of_e2e": {
+        "gpu_inference": 35.755,
+        "cpu_io_wait": 64.045,
+        "cpu_parse": 0.104,
+        "cpu_tokenize": 0.01,
+        "cpu_orchestration": 0.02,
+        "cpu_state": 0.065,
+        "cpu_other": 0.0
+      },
+      "bucket_pct_of_cpu_tool": {
+        "cpu_io_wait": 99.689,
+        "cpu_parse": 0.162,
+        "cpu_tokenize": 0.015,
+        "cpu_orchestration": 0.032,
+        "cpu_state": 0.101,
+        "cpu_other": 0.0
+      },
+      "io_wait_us": 10325859,
+      "accelerable_cpu_us": 32182,
+      "orchestration_us": 3279,
+      "orchestration_pct_of_cpu_tool": 0.03,
+      "orchestration_pct_of_accelerable_cpu": 10.19,
+      "orchestration_pct_of_e2e": 0.02,
+      "cpu_tool_pct_of_e2e": 64.24,
+      "accelerable_cpu_pct_of_e2e": 0.2,
+      "gt_style_cpu_tool_pct_of_e2e": 64.24,
+      "aggregate_cpu_us": 16122730,
+      "aggregate_orchestration_us": 3279,
+      "aggregate_orchestration_pct_of_accelerable": 10.19,
+      "headline": "Coordination is 10.2% of hardware-amenable CPU time (after removing I/O wait). Per-agent orchestration is 0.02% of E2E.",
+      "meta": {
+        "source": "langgraph_react instrumented run",
+        "preset": "action_heavy",
+        "backend": "mock",
+        "concurrency": "1",
+        "calibrated": "True",
+        "wall_clock": "False",
+        "label": "LangGraph + calibrated mock timing"
+      }
+    },
+    {
+      "workload_name": "langgraph_action_heavy_calibrated_c100",
+      "concurrency": 100,
+      "e2e_us": 9916588075,
+      "gpu_inference_us": 576468900,
+      "cpu_tool_phase_us": 1047170125,
+      "bucket_us": {
+        "gpu_inference": 576468900,
+        "cpu_io_wait": 1043569725,
+        "cpu_parse": 1680000,
+        "cpu_tokenize": 159600,
+        "cpu_orchestration": 710100,
+        "cpu_state": 1050700,
+        "cpu_other": 0
+      },
+      "bucket_pct_of_e2e": {
+        "gpu_inference": 35.505,
+        "cpu_io_wait": 64.274,
+        "cpu_parse": 0.103,
+        "cpu_tokenize": 0.01,
+        "cpu_orchestration": 0.044,
+        "cpu_state": 0.065,
+        "cpu_other": 0.0
+      },
+      "bucket_pct_of_cpu_tool": {
+        "cpu_io_wait": 99.656,
+        "cpu_parse": 0.16,
+        "cpu_tokenize": 0.015,
+        "cpu_orchestration": 0.068,
+        "cpu_state": 0.1,
+        "cpu_other": 0.0
+      },
+      "io_wait_us": 1043569725,
+      "accelerable_cpu_us": 3600400,
+      "orchestration_us": 710100,
+      "orchestration_pct_of_cpu_tool": 0.07,
+      "orchestration_pct_of_accelerable_cpu": 19.72,
+      "orchestration_pct_of_e2e": 0.04,
+      "cpu_tool_pct_of_e2e": 64.5,
+      "accelerable_cpu_pct_of_e2e": 0.22,
+      "gt_style_cpu_tool_pct_of_e2e": 64.5,
+      "aggregate_cpu_us": 1623639025,
+      "aggregate_orchestration_us": 710100,
+      "aggregate_orchestration_pct_of_accelerable": 19.72,
+      "headline": "Coordination is 19.7% of hardware-amenable CPU time (after removing I/O wait). Per-agent-equivalent CPU tool / E2E is 64.5%. At concurrency=100, aggregate coordination is 19.7% of aggregate accelerable CPU (710,100 us of 3,600,400 us). Coordination is a sizeable, non-rounding-error slice.",
+      "meta": {
+        "source": "langgraph_react instrumented run",
+        "preset": "action_heavy",
+        "backend": "mock",
+        "concurrency": "100",
+        "calibrated": "True",
+        "wall_clock": "False",
+        "label": "LangGraph + calibrated mock timing"
+      }
+    },
+    {
+      "workload_name": "langgraph_action_heavy_calibrated_c500",
+      "concurrency": 500,
+      "e2e_us": 49916827497,
+      "gpu_inference_us": 2882344500,
+      "cpu_tool_phase_us": 5241160585,
+      "bucket_us": {
+        "gpu_inference": 2882344500,
+        "cpu_io_wait": 5215358585,
+        "cpu_parse": 8400000,
+        "cpu_tokenize": 798000,
+        "cpu_orchestration": 11350500,
+        "cpu_state": 5253500,
+        "cpu_other": 0
+      },
+      "bucket_pct_of_e2e": {
+        "gpu_inference": 35.482,
+        "cpu_io_wait": 64.201,
+        "cpu_parse": 0.103,
+        "cpu_tokenize": 0.01,
+        "cpu_orchestration": 0.14,
+        "cpu_state": 0.065,
+        "cpu_other": 0.0
+      },
+      "bucket_pct_of_cpu_tool": {
+        "cpu_io_wait": 99.508,
+        "cpu_parse": 0.16,
+        "cpu_tokenize": 0.015,
+        "cpu_orchestration": 0.217,
+        "cpu_state": 0.1,
+        "cpu_other": 0.0
+      },
+      "io_wait_us": 5215358585,
+      "accelerable_cpu_us": 25802000,
+      "orchestration_us": 11350500,
+      "orchestration_pct_of_cpu_tool": 0.22,
+      "orchestration_pct_of_accelerable_cpu": 43.99,
+      "orchestration_pct_of_e2e": 0.14,
+      "cpu_tool_pct_of_e2e": 64.52,
+      "accelerable_cpu_pct_of_e2e": 0.32,
+      "gt_style_cpu_tool_pct_of_e2e": 64.52,
+      "aggregate_cpu_us": 8123505085,
+      "aggregate_orchestration_us": 11350500,
+      "aggregate_orchestration_pct_of_accelerable": 43.99,
+      "headline": "Coordination is 44.0% of hardware-amenable CPU time (after removing I/O wait). Per-agent-equivalent CPU tool / E2E is 64.5%. At concurrency=500, aggregate coordination is 44.0% of aggregate accelerable CPU (11,350,500 us of 25,802,000 us). Coordination is a sizeable, non-rounding-error slice.",
+      "meta": {
+        "source": "langgraph_react instrumented run",
+        "preset": "action_heavy",
+        "backend": "mock",
+        "concurrency": "500",
+        "calibrated": "True",
+        "wall_clock": "False",
+        "label": "LangGraph + calibrated mock timing"
+      }
+    },
+    {
+      "workload_name": "langgraph_reasoning_heavy_calibrated_c1",
+      "concurrency": 1,
+      "e2e_us": 20833071,
+      "gpu_inference_us": 20059875,
+      "cpu_tool_phase_us": 773196,
+      "bucket_us": {
+        "gpu_inference": 20059875,
+        "cpu_io_wait": 751193,
+        "cpu_parse": 11200,
+        "cpu_tokenize": 1140,
+        "cpu_orchestration": 2163,
+        "cpu_state": 7500,
+        "cpu_other": 0
+      },
+      "bucket_pct_of_e2e": {
+        "gpu_inference": 96.289,
+        "cpu_io_wait": 3.606,
+        "cpu_parse": 0.054,
+        "cpu_tokenize": 0.005,
+        "cpu_orchestration": 0.01,
+        "cpu_state": 0.036,
+        "cpu_other": 0.0
+      },
+      "bucket_pct_of_cpu_tool": {
+        "cpu_io_wait": 97.154,
+        "cpu_parse": 1.449,
+        "cpu_tokenize": 0.147,
+        "cpu_orchestration": 0.28,
+        "cpu_state": 0.97,
+        "cpu_other": 0.0
+      },
+      "io_wait_us": 751193,
+      "accelerable_cpu_us": 22003,
+      "orchestration_us": 2163,
+      "orchestration_pct_of_cpu_tool": 0.28,
+      "orchestration_pct_of_accelerable_cpu": 9.83,
+      "orchestration_pct_of_e2e": 0.01,
+      "cpu_tool_pct_of_e2e": 3.71,
+      "accelerable_cpu_pct_of_e2e": 0.11,
+      "gt_style_cpu_tool_pct_of_e2e": 3.71,
+      "aggregate_cpu_us": 20833071,
+      "aggregate_orchestration_us": 2163,
+      "aggregate_orchestration_pct_of_accelerable": 9.83,
+      "headline": "Coordination is 9.8% of hardware-amenable CPU time (after removing I/O wait). Per-agent orchestration is 0.01% of E2E.",
+      "meta": {
+        "source": "langgraph_react instrumented run",
+        "preset": "reasoning_heavy",
+        "backend": "mock",
+        "concurrency": "1",
+        "calibrated": "True",
+        "wall_clock": "False",
+        "label": "LangGraph + calibrated mock timing"
+      }
+    },
+    {
+      "workload_name": "langgraph_reasoning_heavy_calibrated_c100",
+      "concurrency": 100,
+      "e2e_us": 9920986830,
+      "gpu_inference_us": 2005987500,
+      "cpu_tool_phase_us": 76633145,
+      "bucket_us": {
+        "gpu_inference": 2005987500,
+        "cpu_io_wait": 74168245,
+        "cpu_parse": 1120000,
+        "cpu_tokenize": 114000,
+        "cpu_orchestration": 480900,
+        "cpu_state": 750000,
+        "cpu_other": 0
+      },
+      "bucket_pct_of_e2e": {
+        "gpu_inference": 96.32,
+        "cpu_io_wait": 3.561,
+        "cpu_parse": 0.054,
+        "cpu_tokenize": 0.005,
+        "cpu_orchestration": 0.023,
+        "cpu_state": 0.036,
+        "cpu_other": 0.0
+      },
+      "bucket_pct_of_cpu_tool": {
+        "cpu_io_wait": 96.784,
+        "cpu_parse": 1.462,
+        "cpu_tokenize": 0.149,
+        "cpu_orchestration": 0.628,
+        "cpu_state": 0.979,
+        "cpu_other": 0.0
+      },
+      "io_wait_us": 74168245,
+      "accelerable_cpu_us": 2464900,
+      "orchestration_us": 480900,
+      "orchestration_pct_of_cpu_tool": 0.63,
+      "orchestration_pct_of_accelerable_cpu": 19.51,
+      "orchestration_pct_of_e2e": 0.02,
+      "cpu_tool_pct_of_e2e": 3.68,
+      "accelerable_cpu_pct_of_e2e": 0.12,
+      "gt_style_cpu_tool_pct_of_e2e": 3.68,
+      "aggregate_cpu_us": 2082620645,
+      "aggregate_orchestration_us": 480900,
+      "aggregate_orchestration_pct_of_accelerable": 19.51,
+      "headline": "Coordination is 19.5% of hardware-amenable CPU time (after removing I/O wait). Per-agent-equivalent CPU tool / E2E is 3.7%. At concurrency=100, aggregate coordination is 19.5% of aggregate accelerable CPU (480,900 us of 2,464,900 us). Coordination is a sizeable, non-rounding-error slice.",
+      "meta": {
+        "source": "langgraph_react instrumented run",
+        "preset": "reasoning_heavy",
+        "backend": "mock",
+        "concurrency": "100",
+        "calibrated": "True",
+        "wall_clock": "False",
+        "label": "LangGraph + calibrated mock timing"
+      }
+    },
+    {
+      "workload_name": "langgraph_reasoning_heavy_calibrated_c500",
+      "concurrency": 500,
+      "e2e_us": 49921381817,
+      "gpu_inference_us": 10029937500,
+      "cpu_tool_phase_us": 388300698,
+      "bucket_us": {
+        "gpu_inference": 10029937500,
+        "cpu_io_wait": 370576198,
+        "cpu_parse": 5600000,
+        "cpu_tokenize": 570000,
+        "cpu_orchestration": 7804500,
+        "cpu_state": 3750000,
+        "cpu_other": 0
+      },
+      "bucket_pct_of_e2e": {
+        "gpu_inference": 96.273,
+        "cpu_io_wait": 3.557,
+        "cpu_parse": 0.054,
+        "cpu_tokenize": 0.005,
+        "cpu_orchestration": 0.075,
+        "cpu_state": 0.036,
+        "cpu_other": 0.0
+      },
+      "bucket_pct_of_cpu_tool": {
+        "cpu_io_wait": 95.435,
+        "cpu_parse": 1.442,
+        "cpu_tokenize": 0.147,
+        "cpu_orchestration": 2.01,
+        "cpu_state": 0.966,
+        "cpu_other": 0.0
+      },
+      "io_wait_us": 370576198,
+      "accelerable_cpu_us": 17724500,
+      "orchestration_us": 7804500,
+      "orchestration_pct_of_cpu_tool": 2.01,
+      "orchestration_pct_of_accelerable_cpu": 44.03,
+      "orchestration_pct_of_e2e": 0.07,
+      "cpu_tool_pct_of_e2e": 3.73,
+      "accelerable_cpu_pct_of_e2e": 0.17,
+      "gt_style_cpu_tool_pct_of_e2e": 3.73,
+      "aggregate_cpu_us": 10418238198,
+      "aggregate_orchestration_us": 7804500,
+      "aggregate_orchestration_pct_of_accelerable": 44.03,
+      "headline": "Coordination is 44.0% of hardware-amenable CPU time (after removing I/O wait). Per-agent-equivalent CPU tool / E2E is 3.7%. At concurrency=500, aggregate coordination is 44.0% of aggregate accelerable CPU (7,804,500 us of 17,724,500 us). Coordination is a sizeable, non-rounding-error slice.",
+      "meta": {
+        "source": "langgraph_react instrumented run",
+        "preset": "reasoning_heavy",
+        "backend": "mock",
+        "concurrency": "500",
+        "calibrated": "True",
+        "wall_clock": "False",
+        "label": "LangGraph + calibrated mock timing"
+      }
+    }
+  ]
+}
