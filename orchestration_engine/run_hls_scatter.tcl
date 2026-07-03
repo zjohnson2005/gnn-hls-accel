@@ -1,8 +1,9 @@
 # Scatter csynth + cosim (Phase 2). From repo root:
 #   vitis_hls -f orchestration_engine/run_hls_scatter.tcl
 #
-# csim runs full regression (exactly-once, prune, mid-graph append, fan-out=8).
-# cosim runs fan-out=2 anchor x4 (OE_COSIM_FANOUT2_ONLY via -cosimflags for II).
+# csim: full regression TB (oe_hls_scatter_tb.cpp).
+# cosim: dedicated x4 TB (oe_hls_scatter_cosim_tb.cpp) for RTL II measurement.
+# Vitis 2025.2 has no -cosimflags — swap TB files before cosim_design.
 
 open_project -reset oe_scatter_proj
 set_top oe_hls_scatter_kernel
@@ -17,9 +18,9 @@ create_clock -period 3.33 -name default
 csim_design
 csynth_design
 
-add_files -tb orchestration_engine/tb/oe_hls_scatter_tb.cpp \
-  -cflags "-I./orchestration_engine/hls" \
-  -cosimflags "-DOE_COSIM_FANOUT2_ONLY"
+catch { remove_files orchestration_engine/tb/oe_hls_scatter_tb.cpp }
+add_files -tb orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp \
+  -cflags "-I./orchestration_engine/hls"
 
 config_cosim -trace_level none
 cosim_design
