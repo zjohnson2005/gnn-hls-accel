@@ -19,12 +19,15 @@ if [[ -n "${OE_LS_VITIS_SETTINGS64:-}" ]] && [[ -f "$OE_LS_VITIS_SETTINGS64" ]];
 fi
 
 if ! command -v vitis_hls >/dev/null 2>&1; then
+  # 2021.1 first: LightningSim's gold-standard version (its LLVM tooling and
+  # AXI models were built against it). Then newest-supported downward.
   for _oe_ls_env in \
+    /tools/software/xilinx/ARCHIVE/Vitis/2021.1/settings64.sh \
+    /tools/software/xilinx/ARCHIVE/Vitis_HLS/2021.1/settings64.sh \
     /tools/software/xilinx/ARCHIVE/Vitis/2024.2/settings64.sh \
     /tools/software/xilinx/ARCHIVE/Vitis_HLS/2024.2/settings64.sh \
     /tools/software/xilinx/ARCHIVE/Vitis/2023.1/settings64.sh \
-    /tools/software/xilinx/ARCHIVE/Vitis_HLS/2023.1/settings64.sh \
-    /tools/software/xilinx/ARCHIVE/Vitis/2021.1/settings64.sh; do
+    /tools/software/xilinx/ARCHIVE/Vitis_HLS/2023.1/settings64.sh; do
     if [[ -f "$_oe_ls_env" ]]; then
       _oe_ls_source_relaxed "$_oe_ls_env"
       if command -v vitis_hls >/dev/null 2>&1; then
@@ -38,9 +41,9 @@ fi
 
 if ! command -v vitis_hls >/dev/null 2>&1; then
   for _oe_ls_bin in \
+    /tools/software/xilinx/ARCHIVE/Vitis_HLS/2021.1/bin/vitis_hls \
     /tools/software/xilinx/ARCHIVE/Vitis_HLS/2024.2/bin/vitis_hls \
-    /tools/software/xilinx/ARCHIVE/Vitis_HLS/2023.1/bin/vitis_hls \
-    /tools/software/xilinx/ARCHIVE/Vitis_HLS/2021.1/bin/vitis_hls; do
+    /tools/software/xilinx/ARCHIVE/Vitis_HLS/2023.1/bin/vitis_hls; do
     if [[ -x "$_oe_ls_bin" ]]; then
       export PATH="$(dirname "$_oe_ls_bin"):$PATH"
       break
