@@ -25,6 +25,21 @@ echo "XILINX_HLS=${XILINX_HLS:-unset}"
 # Vitis 2023.2+ compat: make LS find generated headers (hls_signal_handler.h).
 "$PY" -m orchestration_engine.eval.patch_lightningsim "$ROOT/gcn_stream_proj/sol1" || exit 1
 
+# If the env fell back to a different Vitis version than the one that built
+# the project, the bitcode is stale — rebuild (csim + csynth only, ~10 min).
+STAMP="$ROOT/gcn_stream_proj/sol1/.oe_lightningsim_vitis"
+CUR_VER="$(command -v vitis_hls | grep -oE '20[0-9]{2}\.[0-9]+' | head -1)"
+OLD_VER="$(grep -oE '20[0-9]{2}\.[0-9]+' "$STAMP" 2>/dev/null | head -1 || true)"
+if [[ ! -f "$ROOT/gcn_stream_proj/sol1/syn/report/gcn_layer_stream_csynth.rpt" ]] \
+   || [[ -z "$OLD_VER" ]] || [[ "$CUR_VER" != "$OLD_VER" ]]; then
+  echo "=== Rebuilding gcn_stream_proj with Vitis $CUR_VER (was: ${OLD_VER:-unknown}) ==="
+  rm -rf "$ROOT/gcn_stream_proj"
+  vitis_hls -f run_hls_stream_ls.tcl || exit 1
+  mkdir -p "$ROOT/gcn_stream_proj/sol1"
+  echo "$(command -v vitis_hls) via ${OE_LS_VITIS_SETTINGS64:-PATH}" > "$STAMP"
+  ln -sfn sol1 "$ROOT/gcn_stream_proj/solution1"
+fi
+
 rm -f "$ROOT/gcn_stream_proj/sol1/trace.pkl"
 "$PY" -m orchestration_engine.eval.ls_probe "$ROOT/gcn_stream_proj/sol1"
 
