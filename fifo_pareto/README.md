@@ -46,6 +46,14 @@ python -m fifo_pareto.live_demo --save pareto.png --export results.json
 
 ## With LightningSim (remote Vitis box)
 
+**Vitis version:** synthesize the target kernel with **2021.1–2024.x** (site ARCHIVE),
+not the same 2025.x toolchain used for orchestration scatter cosim. LightningSim
+0.2.x trace capture and AXI models target that era; 2025.x may fail `trace.pkl`
+generation or skew FIFO latency (see [LightningSim setup docs](https://lightningsim-doc.readthedocs.io/en/latest/tutorial/setup-local.html)).
+This repo runs DSE on `gcn_stream_proj` (DATAFLOW GNN substrate) via
+`orchestration_engine/run_phase2_lightningsim.sh`, which sources
+`hls_env_lightningsim.sh` (ARCHIVE 2024.2 → 2023.1 → 2021.1).
+
 Install [fifo-advisor](https://github.com/sharc-lab/fifo-advisor) (includes
 LightningSim 0.2.6 via conda):
 
