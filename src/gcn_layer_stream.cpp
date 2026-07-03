@@ -1,5 +1,9 @@
 #include "gcn_layer_stream.h"
 
+#ifdef GNN_LS_LITE
+#include <cstdint>
+#endif
+
 #ifndef USE_NR_RSQRT
 #define USE_NR_RSQRT 1
 #endif
@@ -18,10 +22,10 @@ pack:
 #pragma HLS UNROLL
         union {
             float f;
-            ap_uint<32> u;
+            uint32_t u;
         } c;
         c.f = (float)v[o];
-        tok.range((o + 1) * 32 - 1, o * 32) = c.u;
+        tok.range((o + 1) * 32 - 1, o * 32) = (ap_uint<32>)c.u;
     }
     return tok;
 }
@@ -33,9 +37,9 @@ unpack:
 #pragma HLS UNROLL
         union {
             float f;
-            ap_uint<32> u;
+            uint32_t u;
         } c;
-        c.u = tok.range((o + 1) * 32 - 1, o * 32);
+        c.u = (uint32_t)tok.range((o + 1) * 32 - 1, o * 32).range(31, 0);
         v[o] = (data_t)c.f;
     }
 }
