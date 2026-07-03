@@ -2,12 +2,12 @@
   "phase": 2,
   "passed": false,
   "crossover": {
-    "hw_scatter_us_fanout2": 0.114,
-    "hw_scatter_cycles_fanout2": 24,
-    "hw_cosim_latency_cycles": 13,
-    "hw_cosim_ii_cycles": 24,
-    "hw_metric_source": "cosim_ii",
-    "clock_mhz": 210.5,
+    "hw_scatter_us_fanout2": 0.0401,
+    "hw_scatter_cycles_fanout2": 16.2,
+    "hw_cosim_latency_cycles": 59,
+    "hw_cosim_ii_cycles": 47,
+    "hw_metric_source": "cosim_stream",
+    "clock_mhz": 404.4,
     "csynth_source": "oe_scatter_proj/sol1/syn/report/oe_hls_scatter_kernel_csynth.rpt",
     "csynth_pending": false,
     "cosim_source": "oe_scatter_cosim_proj/sol1/sim/report/oe_hls_scatter_kernel_cosim.rpt",
@@ -16,27 +16,27 @@
       {
         "baseline": "LangGraph (deployed)",
         "per_completion_us": 1334.83,
-        "vs_hw_pcie": 1544.9,
-        "vs_hw_on_soc": 6237.5,
+        "vs_hw_pcie": 1689.4,
+        "vs_hw_on_soc": 9527.7,
         "note": "Claim 2: constant factor vs deployed framework"
       },
       {
         "baseline": "asyncio + epoll (measured full-path)",
         "per_completion_us": 5.37,
-        "vs_hw_pcie": 6.2,
-        "vs_hw_on_soc": 25.1,
+        "vs_hw_pcie": 6.8,
+        "vs_hw_on_soc": 38.3,
         "note": "Claim 2: full-path vs ideal event-driven"
       },
       {
         "baseline": "asyncio + kernel-bypass (measured full-path)",
         "per_completion_us": 3.12,
-        "vs_hw_pcie": 3.6,
-        "vs_hw_on_soc": 14.6,
+        "vs_hw_pcie": 3.9,
+        "vs_hw_on_soc": 22.3,
         "note": "Strongest software full-path baseline"
       }
     ],
     "verdict": "FULL_PATH_ADVANTAGE",
-    "headline": "Cosim II 24 cycles (0.1140 us steady-state) + PCIe delivery -> ~3.6x vs kernel-bypass (one-shot latency 13 cycles)."
+    "headline": "Streaming cosim: 16.2 cycles/completion steady-state (0.0401 us) + PCIe delivery -> ~3.9x vs kernel-bypass."
   },
   "checklist": [
     {
@@ -49,13 +49,13 @@
       "id": "cosim_scatter",
       "label": "HLS cosim scatter (trust cycle count)",
       "status": "done",
-      "detail": "oe_scatter_cosim_proj/sol1/sim/report/oe_hls_scatter_kernel_cosim.rpt (13 cycles)"
+      "detail": "oe_scatter_cosim_proj/sol1/sim/report/oe_hls_scatter_kernel_cosim.rpt (59 cycles)"
     },
     {
       "id": "cosim_stream",
       "label": "Streaming scatter cosim (steady-state cycles/completion)",
-      "status": "pending",
-      "detail": "Run run_phase2_scatter_stream.sh on Vitis box"
+      "status": "done",
+      "detail": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\orchestration_engine\\characterization\\out\\phase2\\cosim_stream.json"
     },
     {
       "id": "lightningsim_dse",
@@ -76,6 +76,6 @@
       "detail": "build.ps1 on Windows or g++ on Vitis box"
     }
   ],
-  "pending_count": 3,
+  "pending_count": 2,
   "csynth_reports_found": []
 }

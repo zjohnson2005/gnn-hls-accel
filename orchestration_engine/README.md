@@ -15,8 +15,10 @@ applies **only** against scan-class software, never event-driven baselines.
 **Claim 2 — constant factor + energy (csynth + cosim measured):** event-driven
 software is also O(fan-out) but carries measured constants — ~2 µs/decision
 (ideal asyncio), ~1.7 ms/decision (deployed LangGraph, 850x worse than the
-ideal, itself a finding) — vs cosim-measured scatter (**17 cycles one-shot,
-0.041 µs @ 415.6 MHz csynth Fmax**; multi-transaction cosim for II pending).
+ideal, itself a finding) — vs cosim-measured streaming scatter (**16.2
+cycles/completion steady-state, 0.040 µs @ 404.4 MHz csynth Fmax**; one-shot
+host-triggered invocation measures 59 cycles, dominated by ap_ctrl/AXI-lite
+handshake).
 Full-path accounting (completion delivery + dispatch) shows PCIe-attached
 near parity with kernel-bypass software (~3.9x); the win there is
 throughput/energy/offload, and on-SoC integration keeps the latency win

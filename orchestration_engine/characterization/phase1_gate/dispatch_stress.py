@@ -33,7 +33,7 @@ DEFAULT_LEVELS = [1, 10, 50, 100, 250, 500, 1000]
 STEPS_PER_TASK = 10
 
 # Hardware reference: scatter-on-completion = (1 + fan-out) cycles.
-HW_CLOCK_MHZ = 415.6
+HW_CLOCK_MHZ = 404.4
 HW_FANOUT = 2
 SHARD_PROCS = 4
 

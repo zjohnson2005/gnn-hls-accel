@@ -184,9 +184,10 @@ def build_structural_proof() -> dict:
         "proven at a measurable (live_nodes, fan-out) crossover below. "
         "(2) Constant factor + energy: event-driven software is also O(fan-out) "
         "but carries measured constants of ~2 us/decision (ideal asyncio) to "
-        "~1.7 ms/decision (deployed LangGraph) vs cosim-measured scatter "
-        "(17 cycles one-shot / II when multi-transaction cosim completes @ "
-        "415 MHz csynth Fmax) — full-path interface accounting in check 11. "
+        "~1.7 ms/decision (deployed LangGraph) vs cosim-measured streaming "
+        "scatter (16.2 cycles/completion steady-state, 0.040 us @ 404.4 MHz "
+        "csynth Fmax; one-shot 59 cycles incl. ap_ctrl handshake) — full-path "
+        "interface accounting in check 11. "
         "Claim (1) never applies against event-driven baselines."
     )
 

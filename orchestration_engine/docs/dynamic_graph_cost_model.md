@@ -2,8 +2,10 @@
 
 The setup-as-graph-construction reframe makes the dynamic-graph path
 load-bearing, so it needs numbers. Scatter-on-completion is measured (csynth
-415.6 MHz, cosim 17 cycles one-shot / 3 inner); append, prune, and capacity
-rows below remain design targets until graph-load HLS lands.
+404.4 MHz; streaming cosim 16.2 cycles/completion steady-state, 3 inner;
+one-shot host-triggered 59 cycles incl. ap_ctrl/AXI-lite handshake); append,
+prune, and capacity rows below remain design targets until graph-load HLS
+lands.
 
 ## Node record layout (on-chip)
 
@@ -29,7 +31,7 @@ Per-node on-chip cost with ReAct-like mean out-degree ~1.5:
 |----|--------|-----------|
 | append node | ~4 | free-list pop, write record, init counter |
 | append edge | ~1/edge | write into segmented succ pool |
-| scatter on completion | **3 measured inner** (fan-out=2); **17 cosim one-shot** @ 415.6 MHz (ap_ctrl_hs) | pred decrement per successor (v1) |
+| scatter on completion | **3 measured inner** (fan-out=2); **16.2 cosim streaming steady-state**; 59 one-shot (ap_ctrl_hs handshake) @ 404.4 MHz | guarded pred decrement per successor, exactly-once fire |
 | prune subtree | ~2/node lazily | mark-dead bit; reclaim on free-list sweep |
 | session load (50-node graph) | ~250–400 | streamed append, ~13 B/cycle at 128-bit AXI |
 
@@ -65,7 +67,7 @@ stay on-chip regardless.
 
 ## Energy (first order; scatter csynth measured, power report pending)
 
-- Engine: small kernel at **415.6 MHz csynth Fmax**, est. 1–3 W dynamic → at 10⁶
+- Engine: small kernel at **404.4 MHz csynth Fmax**, est. 1–3 W dynamic → at 10⁶
   decisions/s ≈ **1–3 µJ/decision**; at full-path 1 µs/completion the
   bound is interconnect, not the engine.
 - Host core (Zen-class, ~10 W core running the asyncio loop at measured
