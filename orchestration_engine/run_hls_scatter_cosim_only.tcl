@@ -4,8 +4,8 @@
 open_project oe_scatter_proj
 open_solution sol1
 
-remove_files orchestration_engine/tb/oe_hls_scatter_tb.cpp -tb
-remove_files orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp -tb
+catch { remove_files orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp }
+remove_files orchestration_engine/tb/oe_hls_scatter_tb.cpp
 add_files -tb orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp -cflags "-I./orchestration_engine/hls"
 
 config_cosim -trace_level none
