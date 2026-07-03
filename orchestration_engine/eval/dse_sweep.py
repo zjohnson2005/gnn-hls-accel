@@ -22,6 +22,7 @@ from fifo_pareto.sweep import LightningSimEvaluator, SweepConfig, StreamingSweep
 
 
 def run_dse(solution_dir: Path, n_samples: int, batch_size: int) -> dict:
+    solution_dir = solution_dir.resolve()
     evaluator = LightningSimEvaluator(solution_dir)
     sweep = StreamingSweep(
         evaluator,

@@ -78,6 +78,17 @@ if [[ ! -f "$CSYNTH_RPT" ]]; then
   echo "$(command -v vitis_hls) via ${OE_LS_VITIS_SETTINGS64:-PATH}" > "$LS_TOOLCHAIN_STAMP"
 fi
 
+# LightningSim docs/examples use solution1/; Vitis 2023+ defaults to sol1/.
+if [[ ! -e "$ROOT/gcn_stream_proj/solution1" ]]; then
+  ln -sfn sol1 "$ROOT/gcn_stream_proj/solution1"
+fi
+
+if [[ ! -f "$SOLUTION_DIR/trace.pkl" ]]; then
+  echo "=== Refresh csim + capture LightningSim trace.pkl ==="
+  vitis_hls -f run_hls_stream_csim_refresh.tcl
+  "$OE_PYTHON" -m orchestration_engine.eval.capture_ls_trace --solution-dir "$SOLUTION_DIR"
+fi
+
 if [[ ! -d "$SOLUTION_DIR" ]]; then
   echo "ERROR: expected $SOLUTION_DIR after csynth"
   exit 1
