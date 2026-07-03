@@ -11,10 +11,18 @@ if [[ ! -f orchestration_engine/run_hls_scatter_stream.tcl ]] ||
   exit 1
 fi
 
-# Xilinx settings64.sh references unset vars; relax -u while sourcing.
-set +u
-source /tools/software/xilinx/setup_env.sh
-set -u
+# Xilinx env: prefer the caller's shell (setup_env.sh may rely on interactive
+# features like environment modules). Only try sourcing as a fallback.
+if ! command -v vitis_hls >/dev/null 2>&1; then
+  set +u +e
+  source /tools/software/xilinx/setup_env.sh
+  set -u -e
+fi
+if ! command -v vitis_hls >/dev/null 2>&1; then
+  echo "ERROR: vitis_hls not on PATH. In your shell, first run:"
+  echo "  source /tools/software/xilinx/setup_env.sh"
+  exit 1
+fi
 
 echo "=== streaming scatter csynth + cosim (8 completions / invocation) ==="
 rm -rf oe_stream_proj
