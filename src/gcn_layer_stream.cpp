@@ -9,18 +9,44 @@
 #include "hls_math.h"
 #endif
 
-// ----------------------------------------------------------------------------
-// Compute tier: Xt = X*W + b, emitted row-by-row into the seam stream.
-//   Pipelined over output features (II=1). Each completed row is pushed as one
-//   feat_row_t token, so downstream can begin transport while later rows are
-//   still being computed.
-// ----------------------------------------------------------------------------
+#ifdef GNN_LS_LITE
+static seam_token_t pack_seam_row(const data_t v[F_OUT]) {
+#pragma HLS INLINE
+    seam_token_t tok = 0;
+pack:
+    for (int o = 0; o < F_OUT; o++) {
+#pragma HLS UNROLL
+        union {
+            float f;
+            ap_uint<32> u;
+        } c;
+        c.f = (float)v[o];
+        tok.range((o + 1) * 32 - 1, o * 32) = c.u;
+    }
+    return tok;
+}
+
+static void unpack_seam_row(seam_token_t tok, data_t v[F_OUT]) {
+#pragma HLS INLINE
+unpack:
+    for (int o = 0; o < F_OUT; o++) {
+#pragma HLS UNROLL
+        union {
+            float f;
+            ap_uint<32> u;
+        } c;
+        c.u = tok.range((o + 1) * 32 - 1, o * 32);
+        v[o] = (data_t)c.f;
+    }
+}
+#endif
+
 static void combine_tier(
     const data_t            X[MAX_NODES][F_IN],
     const weight_t          W[F_IN][F_OUT],
     const weight_t          bias[F_OUT],
     idx_t                   num_nodes,
-    hls::stream<feat_row_t> &xt_stream)
+    hls::stream<seam_token_t> &xt_stream)
 {
 #pragma HLS ARRAY_PARTITION variable=W    complete dim=1
 #pragma HLS ARRAY_PARTITION variable=X    complete dim=2
@@ -29,8 +55,8 @@ static void combine_tier(
 combine_nodes:
     for (idx_t i = 0; i < num_nodes; i++) {
 #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_NODES
-        feat_row_t row;
-#pragma HLS ARRAY_PARTITION variable=row.v complete dim=1
+        data_t row[F_OUT];
+#pragma HLS ARRAY_PARTITION variable=row complete dim=1
     combine_out:
         for (int o = 0; o < F_OUT; o++) {
 #pragma HLS PIPELINE II=1
@@ -40,19 +66,24 @@ combine_nodes:
 #pragma HLS UNROLL
                 acc += (acc_t)(X[i][k] * W[k][o]);
             }
-            row.v[o] = (data_t)acc;
+            row[o] = (data_t)acc;
         }
-        xt_stream.write(row);
+#ifdef GNN_LS_LITE
+        xt_stream.write(pack_seam_row(row));
+#else
+        feat_row_t packed;
+    pack_struct:
+        for (int o = 0; o < F_OUT; o++) {
+#pragma HLS UNROLL
+            packed.v[o] = row[o];
+        }
+        xt_stream.write(packed);
+#endif
     }
 }
 
-// ----------------------------------------------------------------------------
-// Near-memory tier: drain the seam stream into a local buffer, then perform
-// the normalized CSR gather. inv_sqrt_deg is computed here from row_ptr (the
-// degree info travels with the graph, not across the feature seam).
-// ----------------------------------------------------------------------------
 static void aggregate_tier(
-    hls::stream<feat_row_t> &xt_stream,
+    hls::stream<seam_token_t> &xt_stream,
     const idx_t              row_ptr[MAX_NODES + 1],
     const idx_t              col_idx[MAX_EDGES],
     idx_t                    num_nodes,
@@ -67,7 +98,18 @@ drain_seam:
     for (idx_t i = 0; i < num_nodes; i++) {
 #pragma HLS LOOP_TRIPCOUNT min=1 max=MAX_NODES
 #pragma HLS PIPELINE II=1
-        feat_row_t row = xt_stream.read();
+        data_t row[F_OUT];
+#pragma HLS ARRAY_PARTITION variable=row complete dim=1
+#ifdef GNN_LS_LITE
+        unpack_seam_row(xt_stream.read(), row);
+#else
+        feat_row_t tok = xt_stream.read();
+    unpack_struct:
+        for (int o = 0; o < F_OUT; o++) {
+#pragma HLS UNROLL
+            row[o] = tok.v[o];
+        }
+#endif
         idx_t deg = row_ptr[i + 1] - row_ptr[i];
 #if USE_NR_RSQRT && !defined(GNN_LS_LITE)
         inv_sqrt_deg[i] = (deg == 0) ? (data_t)0 : (data_t)nr_rsqrt<3>((float)deg);
@@ -78,7 +120,7 @@ drain_seam:
     store_row:
         for (int o = 0; o < F_OUT; o++) {
 #pragma HLS UNROLL
-            Xt[i][o] = row.v[o];
+            Xt[i][o] = row[o];
         }
     }
 
@@ -117,10 +159,6 @@ agg_nodes:
     }
 }
 
-// ----------------------------------------------------------------------------
-// Top level: the two tiers run concurrently in a DATAFLOW region, connected by
-// the bounded seam FIFO.
-// ----------------------------------------------------------------------------
 void gcn_layer_stream(
     const data_t   X[MAX_NODES][F_IN],
     const weight_t W[F_IN][F_OUT],
@@ -131,7 +169,7 @@ void gcn_layer_stream(
     data_t         Y[MAX_NODES][F_OUT])
 {
 #pragma HLS DATAFLOW
-    hls::stream<feat_row_t> xt_stream;
+    hls::stream<seam_token_t> xt_stream;
 #pragma HLS STREAM variable=xt_stream depth=4
 
     combine_tier(X, W, bias, num_nodes, xt_stream);

@@ -12,23 +12,24 @@
 // the combine -> aggregate seam:
 //
 //     combine_tier  (compute-bound: Xt = X*W + b)
-//          |  hls::stream<feat_row_t>  Xt, one row per token   <-- TIER SEAM
+//          |  hls::stream<seam_token_t>  Xt, one row per token   <-- TIER SEAM
 //          v
 //     aggregate_tier (memory-bound: gather + normalize over CSR)
 //
-// The seam stream is exactly the payload that crosses TSVs when the two tiers
-// live on different dies, so its width (F_OUT * data_t) and token count
-// (num_nodes) are the inter-tier bandwidth knobs Phase B reasons about.
-//
-// The gather is irregular, so aggregate_tier buffers the streamed rows locally
-// before gathering; the stream models ordered transport across the seam, not
-// random access through it.
+// GNN_LS_LITE (LightningSim trace build): seam is ap_uint<F_OUT*32> so LS FIFO
+// hooks match _autotb_FifoRead_i512 (struct payloads often crash LS SystemC).
+// Thesis cosim uses feat_row_t (ap_fixed) via run_hls_stream.tcl without -DGNN_LS_LITE.
 // ============================================================================
 
-// One transformed-feature row, streamed as a single token.
+#ifdef GNN_LS_LITE
+static const int SEAM_TOKEN_W = F_OUT * 32;
+typedef ap_uint<SEAM_TOKEN_W> seam_token_t;
+#else
 struct feat_row_t {
     data_t v[F_OUT];
 };
+typedef feat_row_t seam_token_t;
+#endif
 
 void gcn_layer_stream(
     const data_t   X[MAX_NODES][F_IN],

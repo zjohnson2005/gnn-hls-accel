@@ -28,7 +28,7 @@ echo "XILINX_HLS=${XILINX_HLS:-unset}"
 # If the env fell back to a different Vitis version than the one that built
 # the project, the bitcode is stale — rebuild (csim + csynth only, ~10 min).
 STAMP="$ROOT/gcn_stream_proj/sol1/.oe_lightningsim_vitis"
-STAMP_TAG="GNN_LS_LITE=1"
+STAMP_TAG="GNN_LS_LITE=ap_uint512"
 CUR_VER="$(command -v vitis_hls | grep -oE '20[0-9]{2}\.[0-9]+' | head -1)"
 OLD_STAMP="$(cat "$STAMP" 2>/dev/null || true)"
 if [[ ! -f "$ROOT/gcn_stream_proj/sol1/syn/report/gcn_layer_stream_csynth.rpt" ]] \
@@ -49,13 +49,14 @@ if [[ ! -f "$ROOT/gcn_stream_proj/sol1/syn/report/gcn_layer_stream_csynth.rpt" ]
 fi
 
 rm -f "$ROOT/gcn_stream_proj/sol1/trace.pkl"
+"$PY" -m orchestration_engine.eval.ls_bitcode_inspect "$ROOT/gcn_stream_proj/sol1" || true
 "$PY" -m orchestration_engine.eval.ls_probe "$ROOT/gcn_stream_proj/sol1"
 
 echo
 echo "=== gdb backtrace (only if instrumented testbench crashed) ==="
 ART="$(grep -oE 'Build artifacts are being written to \S+' "$LOG" | tail -1 | awk '{print $NF}')"
 TB_BIN="$(ls "${ART:-/nonexistent}"/testbench_* 2>/dev/null | head -1)"
-if grep -qE 'testbench exit code: -' "$LOG" && [[ -n "$TB_BIN" ]]; then
+if grep -qE 'testbench exit code: -(11|6|8)' "$LOG" && [[ -n "$TB_BIN" ]] && [[ -f "$TB_BIN" ]]; then
   if command -v gdb >/dev/null 2>&1; then
     ( cd "$ART" && HLSLITESIM_TRACE_FD=9 gdb -batch -ex run -ex "bt 25" "$TB_BIN" 9>/dev/null 2>&1 | tail -45 )
   else
@@ -76,8 +77,8 @@ if [[ -n "${TMPD:-}" ]] && [[ -d "$TMPD" ]]; then
     echo "--- $obj ---"
     nm "$obj" 2>/dev/null | grep -iE "gcn_layer_stream|apatb|FifoRead|FifoWrite" || echo "(no matching symbols)"
   done
-  echo "--- linked bitcode objects ---"
-  ls -la "$TMPD" | head -30
+  echo "--- fifo support IR (if generated) ---"
+  ls -la "$TMPD"/fifo_*.ll 2>/dev/null || echo "(no fifo_*.ll — LS FIFO template may not have matched)"
 else
   echo "(tempdir not found in log)"
 fi
