@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fast path: scatter csynth only (~5-15 min). Run from repo root on Vitis box.
+# Scatter csynth + cosim (~30-90 min). Run from repo root on Vitis box.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -8,7 +8,7 @@ cd "$ROOT"
 source /tools/software/xilinx/setup_env.sh
 export PATH="/tools/software/xilinx/ARCHIVE/Vitis_HLS/2024.2/bin:${PATH}"
 
-echo "=== scatter csynth only ==="
+echo "=== scatter csynth + cosim (fan-out=2 anchor) ==="
 rm -rf oe_scatter_proj
 vitis_hls -f orchestration_engine/run_hls_scatter.tcl
 
@@ -18,9 +18,18 @@ if [[ -z "$SCATTER_RPT" ]]; then
 fi
 echo "csynth report: $SCATTER_RPT"
 
+COSIM_RPT="$(find oe_scatter_proj -name 'oe_hls_scatter_kernel_cosim.rpt' | head -1)"
+if [[ -z "$COSIM_RPT" ]]; then
+  COSIM_RPT="$(find oe_scatter_proj -name '*_cosim.rpt' | head -1)"
+fi
+echo "cosim report: $COSIM_RPT"
+
 mkdir -p orchestration_engine/characterization/out/phase2
 
 python3 -m orchestration_engine.phase2_gate.csynth_parser --report "$SCATTER_RPT"
+if [[ -n "$COSIM_RPT" ]]; then
+  python3 -m orchestration_engine.phase2_gate.cosim_parser --report "$COSIM_RPT" --fan-out 2
+fi
 python3 -m orchestration_engine.phase2_gate.gate_report
 
 echo "Done. See orchestration_engine/characterization/out/phase2/phase2_gate.md"

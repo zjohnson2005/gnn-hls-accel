@@ -25,14 +25,16 @@ Set-Location $Root
 Write-Host "Syncing to ${RemoteHost}:${RemoteDir} ..." -ForegroundColor Cyan
 ssh $RemoteHost "mkdir -p $RemoteDir/orchestration_engine/characterization/out/phase2"
 scp -r orchestration_engine/hls orchestration_engine/tb orchestration_engine/phase2_gate `
-    orchestration_engine/run_hls_scatter.tcl orchestration_engine/run_hls.tcl `
-    orchestration_engine/run_phase2_scatter_only.sh orchestration_engine/run_phase2.sh `
+    orchestration_engine/run_hls_scatter.tcl orchestration_engine/run_hls_scatter_cosim_only.tcl `
+    orchestration_engine/run_hls.tcl `
+    orchestration_engine/run_phase2_scatter_only.sh orchestration_engine/run_phase2_scatter_cosim_only.sh `
+    orchestration_engine/run_phase2.sh `
     orchestration_engine/__init__.py `
     "${RemoteHost}:${RemoteDir}/orchestration_engine/"
 
 $script = if ($Mode -eq "full") { "run_phase2.sh" } else { "run_phase2_scatter_only.sh" }
 
-Write-Host "Running orchestration_engine/$script on remote (~5-15 min) ..." -ForegroundColor Cyan
+Write-Host "Running orchestration_engine/$script on remote (~30-90 min for scatter+cosim) ..." -ForegroundColor Cyan
 ssh -t $RemoteHost "cd $RemoteDir && chmod +x orchestration_engine/$script && bash orchestration_engine/$script"
 
 Write-Host "`nPulling results back ..." -ForegroundColor Cyan
