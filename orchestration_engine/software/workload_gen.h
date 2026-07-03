@@ -1,6 +1,7 @@
 #ifndef OE_WORKLOAD_GEN_H
 #define OE_WORKLOAD_GEN_H
 
+#include "cpu_baseline.h"
 #include "engine_sim.h"
 
 // Synthetic agentic DAG workloads for Phase 1/2 characterization.
