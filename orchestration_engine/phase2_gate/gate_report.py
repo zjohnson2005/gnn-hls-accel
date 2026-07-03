@@ -47,6 +47,18 @@ def _checklist():
         }
     )
 
+    stream_json = OUT_DIR / "cosim_stream.json"
+    items.append(
+        {
+            "id": "cosim_stream",
+            "label": "Streaming scatter cosim (steady-state cycles/completion)",
+            "status": "done" if stream_json.exists() else "pending",
+            "detail": str(stream_json)
+            if stream_json.exists()
+            else "Run run_phase2_scatter_stream.sh on Vitis box",
+        }
+    )
+
     dse_out = OUT_DIR / "dse_report.json"
     items.append(
         {

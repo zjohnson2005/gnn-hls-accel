@@ -33,7 +33,7 @@ DEFAULT_LEVELS = [1, 10, 50, 100, 250, 500, 1000]
 STEPS_PER_TASK = 10
 
 # Hardware reference: scatter-on-completion = (1 + fan-out) cycles.
-HW_CLOCK_MHZ = 300
+HW_CLOCK_MHZ = 415.6
 HW_FANOUT = 2
 SHARD_PROCS = 4
 
@@ -52,6 +52,16 @@ DELIVERY_US = {
     "hw_cxl": (0.3, 0.6),
     "hw_on_soc_axi": (0.05, 0.15),
 }
+
+FULL_PATH_NOTE = (
+    "Delivery + dispatch per completion, mid-range first-order estimates. "
+    "Both sides pay inbound delivery: software completions cross "
+    "NIC->kernel->epoll wakeup (see epoll_wakeup_bench.py); engine "
+    "completions cross an interconnect DMA write. Outbound work-launch "
+    "to the executor (GPU/tool server) is symmetric on both sides and "
+    "excluded. Dispatch-only comparisons overstate the hardware gap vs "
+    "event-driven software."
+)
 
 
 def _cpu_and_wall(fn) -> tuple[float, float]:
@@ -243,13 +253,15 @@ def build_stress_report(levels: list[int] | None = None) -> dict:
 
     hw_us_per_decision = (1 + HW_FANOUT) / HW_CLOCK_MHZ  # cycles -> us
     hw_source = "analytic"
+    hw_note = "scatter analytic pending csynth"
     try:
-        from orchestration_engine.phase2_gate.csynth_parser import load_or_parse
+        from orchestration_engine.phase2_gate.hw_metrics import load_hw_scatter_metrics
 
-        csynth = load_or_parse()
-        if csynth is not None:
-            hw_us_per_decision = csynth.scatter_us(HW_FANOUT)
-            hw_source = "csynth"
+        metrics = load_hw_scatter_metrics(HW_FANOUT)
+        hw_us_per_decision = metrics["steady_state_us"]
+        hw_source = metrics["source"]
+        hw_note = metrics["note"]
+        HW_CLOCK_MHZ = metrics["clock_mhz"]
     except ImportError:
         pass
 
@@ -312,23 +324,56 @@ def build_stress_report(levels: list[int] | None = None) -> dict:
         "growth_global_scan": round(scan_growth, 2),
         "hw_reference_us_per_decision": round(hw_us_per_decision, 4),
         "hw_reference_source": hw_source,
-        "hw_reference_note": (
-            f"scatter = (1 + fan-out={HW_FANOUT}) cycles at {HW_CLOCK_MHZ} MHz "
-            + ("(measured csynth)" if hw_source == "csynth" else "(analytic target, pending HLS csynth)")
-        ),
+        "hw_reference_note": hw_note,
         "delivery_us_assumptions": {k: list(v) for k, v in DELIVERY_US.items()},
         "full_path_us_per_completion": full_path,
-        "full_path_note": (
-            "Delivery + dispatch per completion, mid-range first-order estimates. "
-            "Both sides pay inbound delivery: software completions cross "
-            "NIC->kernel->epoll wakeup; engine completions cross an interconnect "
-            "DMA write. Outbound work-launch to the executor (GPU/tool server) is "
-            "symmetric on both sides and excluded. Dispatch-only comparisons "
-            "overstate the hardware gap vs event-driven software."
-        ),
+        "full_path_note": FULL_PATH_NOTE,
         "verdict": verdict,
         "headline": headline,
     }
+
+
+def refresh_hw_fields(data: dict) -> dict:
+    """Recompute hw_reference_* and full_path from cached stress rows + hw_metrics."""
+    metrics = _load_hw_metrics()
+    hw_us_per_decision = metrics["steady_state_us"]
+
+    def _mid(key: str) -> float:
+        lo, hi = DELIVERY_US[key]
+        return (lo + hi) / 2
+
+    ev_rows = [
+        r for r in data.get("rows", []) if r.get("scheduler") == "asyncio_event" and r.get("live_n", 0) >= 100
+    ]
+    ev_dispatch = (
+        sum(r["cpu_us_per_decision"] for r in ev_rows) / len(ev_rows) if ev_rows else 2.0
+    )
+    full_path = {
+        "sw_asyncio_epoll": round(_mid("sw_epoll_wakeup") + ev_dispatch, 2),
+        "sw_asyncio_kernel_bypass": round(_mid("sw_kernel_bypass") + ev_dispatch, 2),
+        "hw_engine_pcie": round(_mid("hw_pcie_gen4_dma") + hw_us_per_decision, 2),
+        "hw_engine_cxl": round(_mid("hw_cxl") + hw_us_per_decision, 2),
+        "hw_engine_on_soc": round(_mid("hw_on_soc_axi") + hw_us_per_decision, 3),
+    }
+    full_path["advantage_vs_kernel_bypass"] = round(
+        full_path["sw_asyncio_kernel_bypass"] / full_path["hw_engine_pcie"], 1
+    )
+    full_path["advantage_vs_epoll"] = round(
+        full_path["sw_asyncio_epoll"] / full_path["hw_engine_pcie"], 1
+    )
+
+    data["hw_reference_us_per_decision"] = round(hw_us_per_decision, 4)
+    data["hw_reference_source"] = metrics["source"]
+    data["hw_reference_note"] = metrics["note"]
+    data["full_path_us_per_completion"] = full_path
+    data["full_path_note"] = FULL_PATH_NOTE
+    return data
+
+
+def _load_hw_metrics():
+    from orchestration_engine.phase2_gate.hw_metrics import load_hw_scatter_metrics
+
+    return load_hw_scatter_metrics(HW_FANOUT)
 
 
 def render_stress_markdown(data: dict) -> str:
@@ -410,7 +455,23 @@ def render_stress_markdown(data: dict) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Local dispatch stress test")
     parser.add_argument("--levels", default=None, help="Comma list, e.g. 1,10,100,1000")
+    parser.add_argument(
+        "--refresh-hw",
+        action="store_true",
+        help="Update hw_reference + full_path from hw_metrics without re-running stress",
+    )
     args = parser.parse_args()
+
+    if args.refresh_hw:
+        if not OUT_PATH.is_file():
+            print(f"No cached report at {OUT_PATH}; run without --refresh-hw first.")
+            return 1
+        data = json.loads(OUT_PATH.read_text(encoding="utf-8"))
+        data = refresh_hw_fields(data)
+        OUT_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        print(f"Refreshed hw metrics in {OUT_PATH.resolve()}")
+        print(f"hw_reference: {data['hw_reference_us_per_decision']} us ({data['hw_reference_source']})")
+        return 0
 
     levels = (
         [int(x) for x in args.levels.split(",") if x.strip()] if args.levels else None

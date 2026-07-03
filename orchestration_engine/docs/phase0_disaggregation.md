@@ -47,8 +47,9 @@ to scatter-on-completion — both are coordination and both are hardware targets
 
 **Dispatch constants (local stress, no API, gate check 11):** LangGraph
 ~1.7 ms/decision flat with live_n up to 1000; ideal event-driven asyncio ~2 µs;
-scan-class scheduler grows 59x from N=10 to N=1000. Engine scatter target
-~0.01 µs (analytic, pending csynth).
+scan-class scheduler grows 59x from N=10 to N=1000. Engine scatter measured
+(csynth Jul 2026): **415.6 MHz Fmax**, cosim **17 cycles one-shot** (0.041 µs,
+includes ap_ctrl_hs); inner loop **3 cycles** for fan-out=2.
 
 ## Synthetic findings (superseded — kept for history)
 
@@ -114,7 +115,6 @@ See `characterization/README.md` for profiler hooks.
 Condition was: orchestration ≥10–15% of accelerable CPU at target concurrency.
 Measured: **12–25% steady-state** (33–50% including session setup) at c=10–500.
 
-Remaining before paper: repeats for error bars (`--repeats`), native `oe_bench`
-on the Vitis box, then HLS csynth + LightningSim to replace the analytic
-0.01 µs/decision scatter constant with a measured one and locate the
-**crossover point** (below → software wins, above → hardware wins).
+Remaining before paper: repeats for error bars (`--repeats`), native `oe_bench`,
+multi-transaction cosim for steady-state II, LightningSim DSE, and measured
+epoll delivery (`epoll_wakeup_bench.py`) to tighten full-path constants.

@@ -12,13 +12,15 @@ O(live_nodes) per coordination decision (measured 59x from N=10 to N=1000,
 gate check 11); the engine's scatter-on-completion is O(fan-out). This claim
 applies **only** against scan-class software, never event-driven baselines.
 
-**Claim 2 — constant factor + energy (pending csynth):** event-driven
+**Claim 2 — constant factor + energy (csynth + cosim measured):** event-driven
 software is also O(fan-out) but carries measured constants — ~2 µs/decision
 (ideal asyncio), ~1.7 ms/decision (deployed LangGraph, 850x worse than the
-ideal, itself a finding) — vs the engine's cycle-scale scatter. Full-path
-accounting (completion delivery + dispatch) shows PCIe-attached near parity
-with kernel-bypass software; the win there is throughput/energy/offload, and
-on-SoC integration keeps the latency win (check 11 full-path table).
+ideal, itself a finding) — vs cosim-measured scatter (**17 cycles one-shot,
+0.041 µs @ 415.6 MHz csynth Fmax**; multi-transaction cosim for II pending).
+Full-path accounting (completion delivery + dispatch) shows PCIe-attached
+near parity with kernel-bypass software (~3.9x); the win there is
+throughput/energy/offload, and on-SoC integration keeps the latency win
+(check 11 full-path table).
 
 The thesis is provable via the structural crossover (check 9) plus measured
 dispatch constants (check 11) — not via E2E percentage of remote-LLM runs.
@@ -102,6 +104,10 @@ bash orchestration_engine/run_phase2.sh
 rm -rf oe_scatter_proj && vitis_hls -f orchestration_engine/run_hls_scatter.tcl
 rm -rf oe_proj && vitis_hls -f orchestration_engine/run_hls.tcl
 
+# Streaming scatter (steady-state cycles/completion; 8 completions/invocation,
+# compact ready-event output instead of an O(N) flag scan):
+bash orchestration_engine/run_phase2_scatter_stream.sh
+
 # After csynth produces solution1/:
 python3 -m orchestration_engine.eval.dse_sweep \
   --solution-dir oe_proj/sol1 \
@@ -126,7 +132,7 @@ toolchain setup (fifo-advisor conda env).
 |-------|-------------|--------|
 | 0 | One-page 50–90% disaggregation | `docs/phase0_disaggregation.md` + `characterization/` |
 | 1 | Profile agent traces; publishable coordination slice | **framework ready** — needs real instrumented runs |
-| 2 | HLS baseline + proposed engine + LightningSim DSE | **in progress** — scatter kernel + phase2 gate scaffold |
+| 2 | HLS baseline + proposed engine + LightningSim DSE | **in progress** — scatter csynth+cosim done; II + graph-load next |
 | 3 | RISC-V host integration + crossover analysis | not started |
 
 ### Phase 0/1 (start here)
@@ -140,6 +146,13 @@ py -3 -m orchestration_engine.characterization.phase1_gate.gate_report --skip-op
 
 # Refresh OpenAI anchors (wall-clock residual orchestration)
 py -3 -m orchestration_engine.characterization.phase1_gate.gate_report --openai-only --force-openai --openai-levels 1,10,20
+
+# Measured delivery constant (Linux: local epoll bench; Windows: literature stub)
+py -3 -m orchestration_engine.characterization.epoll_wakeup_bench
+
+# Sync check 11 hw scatter numbers after pulling csynth/cosim JSON from Vitis box
+py -3 -m orchestration_engine.characterization.phase1_gate.dispatch_stress --refresh-hw
+py -3 -m orchestration_engine.phase2_gate.gate_report
 ```
 
 Outputs: `characterization/out/gate/gate_report.md` (check **9** = primary thesis evidence).
