@@ -1,9 +1,9 @@
 # Dynamic graph cost model (paper design, pre-HLS)
 
 The setup-as-graph-construction reframe makes the dynamic-graph path
-load-bearing, so it needs numbers. This is a first-order cost model for
-append, prune, and capacity — to be replaced by csynth cycle counts in
-Phase 2. Until then, cite these as design targets, not measurements.
+load-bearing, so it needs numbers. Scatter-on-completion is measured (csynth
+415.6 MHz, cosim 17 cycles one-shot / 3 inner); append, prune, and capacity
+rows below remain design targets until graph-load HLS lands.
 
 ## Node record layout (on-chip)
 
@@ -23,13 +23,13 @@ append never compacts live rows.
 Per-node on-chip cost with ReAct-like mean out-degree ~1.5:
 **12 B + 1.5 × 3 B ≈ 16.5 B/node** (round to 20 B with free-list overhead).
 
-## Operation cost model (cycles, target 300 MHz)
+## Operation cost model (cycles)
 
 | op | cycles | mechanism |
 |----|--------|-----------|
 | append node | ~4 | free-list pop, write record, init counter |
 | append edge | ~1/edge | write into segmented succ pool |
-| scatter on completion | 1 + out-degree | pred decrement per successor (v1) |
+| scatter on completion | **3 measured inner** (fan-out=2); **17 cosim one-shot** @ 415.6 MHz (ap_ctrl_hs) | pred decrement per successor (v1) |
 | prune subtree | ~2/node lazily | mark-dead bit; reclaim on free-list sweep |
 | session load (50-node graph) | ~250–400 | streamed append, ~13 B/cycle at 128-bit AXI |
 
@@ -63,9 +63,9 @@ only above out-degree ~13. Spill therefore weakens the constant-factor
 margin but does not break the complexity claim; counters (hot, 1 B/node)
 stay on-chip regardless.
 
-## Energy (first order, pre-csynth)
+## Energy (first order; scatter csynth measured, power report pending)
 
-- Engine: small kernel at 300 MHz, est. 1–3 W dynamic → at 10⁶
+- Engine: small kernel at **415.6 MHz csynth Fmax**, est. 1–3 W dynamic → at 10⁶
   decisions/s ≈ **1–3 µJ/decision**; at full-path 1 µs/completion the
   bound is interconnect, not the engine.
 - Host core (Zen-class, ~10 W core running the asyncio loop at measured
@@ -73,10 +73,10 @@ stay on-chip regardless.
   **17,000 µJ/decision**.
 
 First-order: ~10x energy vs ideal software, ~10⁴x vs deployed framework.
-Replace with csynth + power report in Phase 2 before citing externally.
+Replace scatter cycles with power report before citing energy externally.
 
 ## What this does NOT yet cover
 
-- Measured cycle counts (needs csynth) — every number above is analytic.
+- Graph-load / append / prune cycle counts (needs HLS beyond scatter kernel).
 - Contention on the counter banks at >1 completion/cycle (needs cosim).
 - Host-side graph-diff protocol for conditional branches (compiler pass).

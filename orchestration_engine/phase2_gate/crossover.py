@@ -3,12 +3,13 @@
 import json
 from pathlib import Path
 
-from orchestration_engine.phase2_gate.csynth_parser import DEFAULT_CLOCK_MHZ, load_or_parse
+from orchestration_engine.phase2_gate.hw_metrics import load_hw_scatter_metrics
 
 OE_ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = OE_ROOT / "characterization" / "out" / "phase2"
 GATE_DIR = OE_ROOT / "characterization" / "out" / "gate"
 
+# Mid-range delivery estimates (us). See DELIVERY_CITATIONS below.
 DELIVERY_US = {
     "sw_epoll": 3.5,
     "sw_kernel_bypass": 1.25,
@@ -16,6 +17,12 @@ DELIVERY_US = {
     "hw_cxl": 0.45,
     "hw_on_soc": 0.10,
 }
+
+DELIVERY_CITATIONS = (
+    "Delivery constants (mid-range): sw_epoll 3.5 us (Linux epoll wakeup path, "
+    "see epoll_wakeup_bench.py); sw_kernel_bypass 1.25 us (DPDK/eRPC class); "
+    "hw_pcie 0.75 us (PCIe Gen4 posted write); hw_cxl 0.45 us; hw_on_soc 0.10 us (AXI)."
+)
 
 
 class CrossoverRow(object):
@@ -32,6 +39,9 @@ class CrossoverReport(object):
         self,
         hw_scatter_us_fanout2,
         hw_scatter_cycles_fanout2,
+        hw_cosim_latency_cycles,
+        hw_cosim_ii_cycles,
+        hw_metric_source,
         clock_mhz,
         csynth_source,
         csynth_pending,
@@ -43,6 +53,9 @@ class CrossoverReport(object):
     ):
         self.hw_scatter_us_fanout2 = hw_scatter_us_fanout2
         self.hw_scatter_cycles_fanout2 = hw_scatter_cycles_fanout2
+        self.hw_cosim_latency_cycles = hw_cosim_latency_cycles
+        self.hw_cosim_ii_cycles = hw_cosim_ii_cycles
+        self.hw_metric_source = hw_metric_source
         self.clock_mhz = clock_mhz
         self.csynth_source = csynth_source
         self.csynth_pending = csynth_pending
@@ -56,6 +69,9 @@ class CrossoverReport(object):
         return {
             "hw_scatter_us_fanout2": self.hw_scatter_us_fanout2,
             "hw_scatter_cycles_fanout2": self.hw_scatter_cycles_fanout2,
+            "hw_cosim_latency_cycles": self.hw_cosim_latency_cycles,
+            "hw_cosim_ii_cycles": self.hw_cosim_ii_cycles,
+            "hw_metric_source": self.hw_metric_source,
             "clock_mhz": self.clock_mhz,
             "csynth_source": self.csynth_source,
             "csynth_pending": self.csynth_pending,
@@ -83,49 +99,17 @@ def _load_dispatch_stress():
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _load_cosim_scatter():
-    path = OUT_DIR / "cosim_scatter.json"
-    if not path.exists():
-        return None
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
 def build_crossover(out_degree=2, batch_width=1):
-    csynth = load_or_parse()
-    cosim = _load_cosim_scatter()
+    metrics = load_hw_scatter_metrics(out_degree, batch_width)
     stress = _load_dispatch_stress()
 
-    cycles = 1 + (out_degree + batch_width - 1) // batch_width
-    cosim_source = None
-    cosim_verified = False
-
-    if csynth and csynth.is_measured:
-        clock_mhz = csynth.clock_mhz
-        csynth_source = csynth.report_path
-        csynth_pending = False
-    elif csynth:
-        clock_mhz = csynth.clock_mhz
-        csynth_source = csynth.report_path
-        csynth_pending = True
-    else:
-        clock_mhz = DEFAULT_CLOCK_MHZ
-        csynth_source = None
-        csynth_pending = True
-
-    if (
-        cosim
-        and cosim.get("passed")
-        and cosim.get("latency_cycles") is not None
-        and cosim.get("fan_out", out_degree) == out_degree
-    ):
-        cycles = int(cosim["latency_cycles"])
-        hw_scatter_us = cycles / clock_mhz
-        cosim_source = cosim.get("report_path")
-        cosim_verified = True
-    elif csynth:
-        hw_scatter_us = csynth.scatter_us(out_degree, batch_width=batch_width)
-    else:
-        hw_scatter_us = cycles / clock_mhz
+    hw_scatter_us = metrics["steady_state_us"]
+    cycles = metrics["steady_state_cycles"]
+    clock_mhz = metrics["clock_mhz"]
+    csynth_source = metrics["csynth_source"]
+    cosim_source = metrics["cosim_source"]
+    cosim_verified = metrics["cosim_verified"]
+    csynth_pending = metrics["source"] == "analytic"
 
     fp = stress.get("full_path_us_per_completion", {})
     asyncio_dispatch = 1.9
@@ -186,11 +170,28 @@ def build_crossover(out_degree=2, batch_width=1):
             "Crossover table uses analytic scatter target; run run_hls_scatter.tcl "
             "on the Vitis box and re-run phase2_gate.gate_report."
         )
+    elif metrics["source"] == "cosim_stream":
+        verdict = "FULL_PATH_ADVANTAGE"
+        headline = (
+            "Streaming cosim: {0} cycles/completion steady-state ({1:.4f} us) "
+            "+ PCIe delivery -> ~{2:.1f}x vs kernel-bypass."
+        ).format(cycles, hw_scatter_us, kb_total / hw_pcie_total)
+    elif metrics["source"] == "cosim_ii":
+        verdict = "FULL_PATH_ADVANTAGE"
+        headline = (
+            "Cosim II {0} cycles ({1:.4f} us steady-state) + PCIe delivery -> "
+            "~{2:.1f}x vs kernel-bypass (one-shot latency {3} cycles)."
+        ).format(
+            cycles,
+            hw_scatter_us,
+            kb_total / hw_pcie_total,
+            metrics["cosim_latency_cycles"],
+        )
     elif cosim_verified:
         verdict = "FULL_PATH_ADVANTAGE"
         headline = (
-            "Cosim-verified scatter {0} cycles ({1:.4f} us) + PCIe delivery -> "
-            "~{2:.1f}x vs kernel-bypass software."
+            "Cosim latency {0} cycles ({1:.4f} us one-shot) + PCIe delivery -> "
+            "~{2:.1f}x vs kernel-bypass (re-run cosim x4 for II)."
         ).format(cycles, hw_scatter_us, kb_total / hw_pcie_total)
     elif kb_total / hw_pcie_total < 2.0:
         verdict = "FULL_PATH_NEAR_PARITY"
@@ -208,7 +209,10 @@ def build_crossover(out_degree=2, batch_width=1):
     return CrossoverReport(
         hw_scatter_us_fanout2=round(hw_scatter_us, 4),
         hw_scatter_cycles_fanout2=cycles,
-        clock_mhz=round(clock_mhz, 1),
+        hw_cosim_latency_cycles=metrics["cosim_latency_cycles"],
+        hw_cosim_ii_cycles=metrics["cosim_ii_cycles"],
+        hw_metric_source=metrics["source"],
+        clock_mhz=clock_mhz,
         csynth_source=csynth_source,
         csynth_pending=csynth_pending,
         cosim_source=cosim_source,
@@ -221,7 +225,17 @@ def build_crossover(out_degree=2, batch_width=1):
 
 def render_markdown(report):
     src = report.csynth_source or "analytic (pending csynth)"
-    cycle_note = "cosim-verified" if report.cosim_verified else "csynth/analytic"
+    if report.hw_metric_source == "cosim_stream":
+        cycle_note = "streaming cosim (steady-state cycles/completion)"
+    elif report.hw_metric_source == "cosim_ii":
+        cycle_note = "cosim II (steady-state)"
+    elif report.cosim_verified:
+        cycle_note = "cosim one-shot latency"
+    elif report.csynth_source:
+        cycle_note = "csynth Fmax + analytic cycles"
+    else:
+        cycle_note = "analytic pending csynth"
+
     lines = [
         "## Phase 2 crossover (measured scatter + full-path delivery)",
         "",
@@ -235,8 +249,20 @@ def render_markdown(report):
             report.clock_mhz,
             cycle_note,
         ),
-        "- csynth source: `{0}`".format(src),
     ]
+    if report.hw_cosim_latency_cycles is not None:
+        lines.append(
+            "- Cosim one-shot latency: **{0} cycles** (ap_start/ap_done)".format(
+                report.hw_cosim_latency_cycles
+            )
+        )
+    if report.hw_cosim_ii_cycles is not None:
+        lines.append(
+            "- Cosim measured II: **{0} cycles** (multi-transaction steady-state)".format(
+                report.hw_cosim_ii_cycles
+            )
+        )
+    lines.append("- csynth source: `{0}`".format(src))
     if report.cosim_source:
         lines.append("- cosim source: `{0}`".format(report.cosim_source))
     lines.extend(
@@ -254,6 +280,8 @@ def render_markdown(report):
         )
     lines.extend(
         [
+            "",
+            "_{0}_".format(DELIVERY_CITATIONS),
             "",
             "_Scan-class O(N) crossover remains in Phase 1 check 9; this table closes "
             "Claim 2 (constant factor + energy) against event-driven baselines._",

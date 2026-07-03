@@ -97,9 +97,9 @@
   "growth_langgraph": 1.04,
   "growth_asyncio_event": 0.92,
   "growth_global_scan": 13.58,
-  "hw_reference_us_per_decision": 0.01,
-  "hw_reference_source": "analytic",
-  "hw_reference_note": "scatter = (1 + fan-out=2) cycles at 300 MHz (analytic target, pending HLS csynth)",
+  "hw_reference_us_per_decision": 0.0409,
+  "hw_reference_source": "cosim_latency",
+  "hw_reference_note": "one-shot cosim latency 17 cycles @ 415.6 MHz (includes ap_ctrl_hs; run multi-transaction cosim for II)",
   "delivery_us_assumptions": {
     "sw_epoll_wakeup": [
       2.0,
@@ -125,13 +125,13 @@
   "full_path_us_per_completion": {
     "sw_asyncio_epoll": 5.37,
     "sw_asyncio_kernel_bypass": 3.12,
-    "hw_engine_pcie": 0.76,
-    "hw_engine_cxl": 0.46,
-    "hw_engine_on_soc": 0.11,
-    "advantage_vs_kernel_bypass": 4.1,
-    "advantage_vs_epoll": 7.1
+    "hw_engine_pcie": 0.79,
+    "hw_engine_cxl": 0.49,
+    "hw_engine_on_soc": 0.141,
+    "advantage_vs_kernel_bypass": 3.9,
+    "advantage_vs_epoll": 6.8
   },
-  "full_path_note": "Delivery + dispatch per completion, mid-range first-order estimates. Both sides pay inbound delivery: software completions cross NIC->kernel->epoll wakeup; engine completions cross an interconnect DMA write. Outbound work-launch to the executor (GPU/tool server) is symmetric on both sides and excluded. Dispatch-only comparisons overstate the hardware gap vs event-driven software.",
+  "full_path_note": "Delivery + dispatch per completion, mid-range first-order estimates. Both sides pay inbound delivery: software completions cross NIC->kernel->epoll wakeup (see epoll_wakeup_bench.py); engine completions cross an interconnect DMA write. Outbound work-launch to the executor (GPU/tool server) is symmetric on both sides and excluded. Dispatch-only comparisons overstate the hardware gap vs event-driven software.",
   "verdict": "LANGGRAPH_FLAT",
   "headline": "Measured: LangGraph per-decision CPU is ~flat with live_n (1.0x). The hardware case vs frameworks rests on constant factor + energy, not asymptotics - cite measured constants below."
 }

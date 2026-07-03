@@ -2,7 +2,7 @@
 
 ## Thesis (scoped, provable)
 
-Two-claim thesis. (1) Complexity class: scan-class schedulers cost O(live_nodes) per coordination decision (measured 59x growth to N=1000, check 11) while the engine costs O(fan-out) via scatter-on-completion — proven at a measurable (live_nodes, fan-out) crossover below. (2) Constant factor + energy: event-driven software is also O(fan-out) but carries measured constants of ~2 us/decision (ideal asyncio) to ~1.7 ms/decision (deployed LangGraph) vs the engine's cycle-scale scatter — pending csynth and full-path interface accounting (check 11). Claim (1) never applies against event-driven baselines.
+Two-claim thesis. (1) Complexity class: scan-class schedulers cost O(live_nodes) per coordination decision (measured 59x growth to N=1000, check 11) while the engine costs O(fan-out) via scatter-on-completion — proven at a measurable (live_nodes, fan-out) crossover below. (2) Constant factor + energy: event-driven software is also O(fan-out) but carries measured constants of ~2 us/decision (ideal asyncio) to ~1.7 ms/decision (deployed LangGraph) vs cosim-measured scatter (17 cycles one-shot / II when multi-transaction cosim completes @ 415 MHz csynth Fmax) — full-path interface accounting in check 11. Claim (1) never applies against event-driven baselines.
 
 **Evidence hierarchy:** (9) structural sim is primary proof; (7) trace crossover is calibration/projection; (3) OpenAI anchors workload realism.
 
@@ -163,7 +163,7 @@ _LangGraph ≈ 1995 µs/decision; 4× opt ≈ 499 µs/decision_
 
 ## 9. Structural proof (primary thesis evidence)
 
-**Thesis:** Two-claim thesis. (1) Complexity class: scan-class schedulers cost O(live_nodes) per coordination decision (measured 59x growth to N=1000, check 11) while the engine costs O(fan-out) via scatter-on-completion — proven at a measurable (live_nodes, fan-out) crossover below. (2) Constant factor + energy: event-driven software is also O(fan-out) but carries measured constants of ~2 us/decision (ideal asyncio) to ~1.7 ms/decision (deployed LangGraph) vs the engine's cycle-scale scatter — pending csynth and full-path interface accounting (check 11). Claim (1) never applies against event-driven baselines.
+**Thesis:** Two-claim thesis. (1) Complexity class: scan-class schedulers cost O(live_nodes) per coordination decision (measured 59x growth to N=1000, check 11) while the engine costs O(fan-out) via scatter-on-completion — proven at a measurable (live_nodes, fan-out) crossover below. (2) Constant factor + energy: event-driven software is also O(fan-out) but carries measured constants of ~2 us/decision (ideal asyncio) to ~1.7 ms/decision (deployed LangGraph) vs cosim-measured scatter (17 cycles one-shot / II when multi-transaction cosim completes @ 415 MHz csynth Fmax) — full-path interface accounting in check 11. Claim (1) never applies against event-driven baselines.
 
 **Headline:** Analytical crossover: flat hardware beats 4x optimized software at live_nodes >= 100 (fan-out=2). 8-wide batch lowers threshold to live_nodes >= 10.
 
@@ -188,9 +188,9 @@ An ideal event-driven software scheduler (O(1) wakeup) matches the engine's O(fa
 
 | dispatcher | measured µs/decision | vs hardware |
 |-----------|----------------------|-------------|
-| LangGraph (real framework, live_n>=100) | 1331 | 133,133x |
-| asyncio event-driven (O(1) baseline) | 1.87 | 187x |
-| engine scatter (analytic, pre-csynth) | 0.01 | 1x |
+| LangGraph (real framework, live_n>=100) | 1331 | 32,551x |
+| asyncio event-driven (O(1) baseline) | 1.87 | 46x |
+| engine scatter (analytic, pre-csynth) | 0.04 | 1x |
 
 
 ### Hardware-wins region (flat vs 4x optimized scan)
@@ -208,7 +208,7 @@ An ideal event-driven software scheduler (O(1) wakeup) matches the engine's O(fa
 
 **Verdict:** `MIXED_MID_REGIME`
 
-Real orch/accel at c=500 is 57.5%; combine structural crossover with measured absolute cores. NOTE: c=1000 measured 39.9% (back to plateau) vs c=500 57.5% — do not cite monotonic rise; c=500 spike may be latency variance or mid-scale contention, not sustained scaling.
+Real orch/accel at c=500 is 57.5%; combine structural crossover with measured absolute cores. NOTE: c=1000 measured 39.9% (back to plateau) vs c=500 57.5% - do not cite monotonic rise; c=500 spike may be latency variance or mid-scale contention, not sustained scaling.
 
 - Real slope (orch/accel % per +1 conc): **+0.0035** pp
 - Real steady-state slope (setup excluded): **+0.0022** pp
@@ -245,24 +245,24 @@ N live tasks in one process; per-decision **process CPU** cost (GIL-independent,
 | 1000 | 1355 | 1.9 | 1.6 | 18.4 |
 
 - Growth 100->1000: LangGraph **1.04x**, asyncio event **0.92x**, global scan **13.58x**
-- Hardware reference: **0.01 µs/decision** (scatter = (1 + fan-out=2) cycles at 300 MHz (analytic target, pending HLS csynth))
+- Hardware reference: **0.0409 µs/decision** (one-shot cosim latency 17 cycles @ 415.6 MHz (includes ap_ctrl_hs; run multi-transaction cosim for II))
 
 ### Full-path accounting (delivery + dispatch per completion)
 
-Delivery + dispatch per completion, mid-range first-order estimates. Both sides pay inbound delivery: software completions cross NIC->kernel->epoll wakeup; engine completions cross an interconnect DMA write. Outbound work-launch to the executor (GPU/tool server) is symmetric on both sides and excluded. Dispatch-only comparisons overstate the hardware gap vs event-driven software.
+Delivery + dispatch per completion, mid-range first-order estimates. Both sides pay inbound delivery: software completions cross NIC->kernel->epoll wakeup (see epoll_wakeup_bench.py); engine completions cross an interconnect DMA write. Outbound work-launch to the executor (GPU/tool server) is symmetric on both sides and excluded. Dispatch-only comparisons overstate the hardware gap vs event-driven software.
 
 | path | µs/completion |
 |------|---------------|
 | software: epoll wakeup + asyncio dispatch | 5.37 |
 | software: kernel-bypass + asyncio dispatch | 3.12 |
-| engine: PCIe Gen4 DMA + scatter | 0.76 |
-| engine: CXL + scatter | 0.46 |
-| engine: on-SoC AXI + scatter | 0.11 |
+| engine: PCIe Gen4 DMA + scatter | 0.79 |
+| engine: CXL + scatter | 0.49 |
+| engine: on-SoC AXI + scatter | 0.141 |
 
-_Full-path, the dispatch-only ~200x gap vs ideal asyncio collapses to **~4.1x** (vs kernel-bypass software) / **~7.1x** (vs standard epoll), because interconnect delivery dominates the engine's cycle-scale scatter. The durable advantages at PCIe attach are throughput under load (banked counters, no queue contention), energy, and freeing host cores; on-SoC integration recovers the latency gap._
+_Full-path, the dispatch-only ~200x gap vs ideal asyncio collapses to **~3.9x** (vs kernel-bypass software) / **~6.8x** (vs standard epoll), because interconnect delivery dominates the engine's cycle-scale scatter. The durable advantages at PCIe attach are throughput under load (banked counters, no queue contention), energy, and freeing host cores; on-SoC integration recovers the latency gap._
 
 _Interpretation: sharded x4 event loops are the realistic deployed counter-proposal; single-core asyncio is the ideal. The hardware case against both is constant factor + energy + full-path latency; the case against LangGraph-class frameworks and scan-class schedulers adds the asymptotic gap._
 
 ## Gate recommendation
 
-HEADLINE REGIME RESOLVED at c=500 real anchor (consistent methodology). Real orch/accel at c=500 is 57.5%; combine structural crossover with measured absolute cores. NOTE: c=1000 measured 39.9% (back to plateau) vs c=500 57.5% — do not cite monotonic rise; c=500 spike may be latency variance or mid-scale contention, not sustained scaling. Structural: hardware beats 4x optimized scan at live_nodes >= 100. Lead with check 9 crossover; check 10 picks percentage headline. Check 11 measured: real-framework dispatch is ~flat with live_n (constant-factor + energy case), while a scan-class scheduler grows 13.58x - frame the hardware win as constant factor vs deployed frameworks, complexity class vs scan schedulers.
+HEADLINE REGIME RESOLVED at c=500 real anchor (consistent methodology). Real orch/accel at c=500 is 57.5%; combine structural crossover with measured absolute cores. NOTE: c=1000 measured 39.9% (back to plateau) vs c=500 57.5% - do not cite monotonic rise; c=500 spike may be latency variance or mid-scale contention, not sustained scaling. Structural: hardware beats 4x optimized scan at live_nodes >= 100. Lead with check 9 crossover; check 10 picks percentage headline. Check 11 measured: real-framework dispatch is ~flat with live_n (constant-factor + energy case), while a scan-class scheduler grows 13.58x - frame the hardware win as constant factor vs deployed frameworks, complexity class vs scan schedulers.

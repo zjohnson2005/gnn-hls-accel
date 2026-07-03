@@ -37,12 +37,15 @@ Software agent dispatch splits into two measured regimes: scan-class schedulers
 whose per-decision cost grows with the number of **live agents** (measured 59x
 from N=10 to N=1000), and event-driven frameworks whose cost is flat but carries
 a large constant (LangGraph measured ~1.7 ms/decision; ideal asyncio ~2 µs).
-Hardware scatter-on-completion costs grow only with **fan-out** at a ~0.01 µs
-constant. We characterize both gaps — complexity class vs scan schedulers,
-constant factor + energy vs frameworks — on trace-calibrated tool-heavy agent
-graphs, implement the engine in HLS, and use cycle-accurate simulation to
-determine whether custom silicon wins in the external, second-scale,
-dynamic-graph datacenter regime — without assuming the answer.
+Hardware scatter-on-completion costs grow only with **fan-out**. Measured
+(csynth Jul 2026): **415.6 MHz Fmax**, cosim **17 cycles one-shot** (0.041 µs)
+for fan-out=2 including ap_ctrl_hs overhead; inner scatter loop accounts for
+3 cycles. Steady-state II requires multi-transaction cosim (in progress).
+We characterize both gaps — complexity class vs scan schedulers, constant
+factor + energy vs frameworks — on trace-calibrated tool-heavy agent graphs,
+implement the engine in HLS, and use cycle-accurate simulation to determine
+whether custom silicon wins in the external, second-scale, dynamic-graph
+datacenter regime — without assuming the answer.
 
 ## Two hardware targets from real traces
 

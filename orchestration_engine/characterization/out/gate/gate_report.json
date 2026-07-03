@@ -1,5 +1,5 @@
 {
-  "thesis_statement": "Two-claim thesis. (1) Complexity class: scan-class schedulers cost O(live_nodes) per coordination decision (measured 59x growth to N=1000, check 11) while the engine costs O(fan-out) via scatter-on-completion \u2014 proven at a measurable (live_nodes, fan-out) crossover below. (2) Constant factor + energy: event-driven software is also O(fan-out) but carries measured constants of ~2 us/decision (ideal asyncio) to ~1.7 ms/decision (deployed LangGraph) vs the engine's cycle-scale scatter \u2014 pending csynth and full-path interface accounting (check 11). Claim (1) never applies against event-driven baselines.",
+  "thesis_statement": "Two-claim thesis. (1) Complexity class: scan-class schedulers cost O(live_nodes) per coordination decision (measured 59x growth to N=1000, check 11) while the engine costs O(fan-out) via scatter-on-completion \u2014 proven at a measurable (live_nodes, fan-out) crossover below. (2) Constant factor + energy: event-driven software is also O(fan-out) but carries measured constants of ~2 us/decision (ideal asyncio) to ~1.7 ms/decision (deployed LangGraph) vs cosim-measured scatter (17 cycles one-shot / II when multi-transaction cosim completes @ 415 MHz csynth Fmax) \u2014 full-path interface accounting in check 11. Claim (1) never applies against event-driven baselines.",
   "check1_absolute_and_software": {
     "rows": [
       {
@@ -1905,7 +1905,7 @@
     ]
   },
   "check9_structural_proof": {
-    "thesis_statement": "Two-claim thesis. (1) Complexity class: scan-class schedulers cost O(live_nodes) per coordination decision (measured 59x growth to N=1000, check 11) while the engine costs O(fan-out) via scatter-on-completion \u2014 proven at a measurable (live_nodes, fan-out) crossover below. (2) Constant factor + energy: event-driven software is also O(fan-out) but carries measured constants of ~2 us/decision (ideal asyncio) to ~1.7 ms/decision (deployed LangGraph) vs the engine's cycle-scale scatter \u2014 pending csynth and full-path interface accounting (check 11). Claim (1) never applies against event-driven baselines.",
+    "thesis_statement": "Two-claim thesis. (1) Complexity class: scan-class schedulers cost O(live_nodes) per coordination decision (measured 59x growth to N=1000, check 11) while the engine costs O(fan-out) via scatter-on-completion \u2014 proven at a measurable (live_nodes, fan-out) crossover below. (2) Constant factor + energy: event-driven software is also O(fan-out) but carries measured constants of ~2 us/decision (ideal asyncio) to ~1.7 ms/decision (deployed LangGraph) vs cosim-measured scatter (17 cycles one-shot / II when multi-transaction cosim completes @ 415 MHz csynth Fmax) \u2014 full-path interface accounting in check 11. Claim (1) never applies against event-driven baselines.",
     "proof_layer": "structural_sim",
     "note": "Primary evidence for Phase 2. LangGraph traces (checks 1\u20135) calibrate workload realism; this check proves the mechanism.",
     "opt_speedup": 4.0,
@@ -2402,14 +2402,14 @@
       "langgraph_us_per_decision": 1331.3301282051282,
       "event_driven_us_per_decision": 1.8712106665285926,
       "scan_growth_measured": 13.58,
-      "hw_us_per_decision": 0.01
+      "hw_us_per_decision": 0.0409
     },
     "baseline_honesty": "An ideal event-driven software scheduler (O(1) wakeup) matches the engine's O(fan-out) asymptotics. Against that baseline the hardware case is constant factor + energy, not complexity class. The scan columns model LangGraph-class superstep frameworks; check 11 measures both constants on real code.",
     "headline": "Analytical crossover: flat hardware beats 4x optimized software at live_nodes >= 100 (fan-out=2). 8-wide batch lowers threshold to live_nodes >= 10."
   },
   "check10_scaling_regime": {
     "verdict": "MIXED_MID_REGIME",
-    "headline": "Real orch/accel at c=500 is 57.5%; combine structural crossover with measured absolute cores. NOTE: c=1000 measured 39.9% (back to plateau) vs c=500 57.5% \u2014 do not cite monotonic rise; c=500 spike may be latency variance or mid-scale contention, not sustained scaling.",
+    "headline": "Real orch/accel at c=500 is 57.5%; combine structural crossover with measured absolute cores. NOTE: c=1000 measured 39.9% (back to plateau) vs c=500 57.5% - do not cite monotonic rise; c=500 spike may be latency variance or mid-scale contention, not sustained scaling.",
     "methodology_consistent": true,
     "methodology_issues": [],
     "real_slope_pct_per_conc": 0.0035,
@@ -2615,9 +2615,9 @@
     "growth_langgraph": 1.04,
     "growth_asyncio_event": 0.92,
     "growth_global_scan": 13.58,
-    "hw_reference_us_per_decision": 0.01,
-    "hw_reference_source": "analytic",
-    "hw_reference_note": "scatter = (1 + fan-out=2) cycles at 300 MHz (analytic target, pending HLS csynth)",
+    "hw_reference_us_per_decision": 0.0409,
+    "hw_reference_source": "cosim_latency",
+    "hw_reference_note": "one-shot cosim latency 17 cycles @ 415.6 MHz (includes ap_ctrl_hs; run multi-transaction cosim for II)",
     "delivery_us_assumptions": {
       "sw_epoll_wakeup": [
         2.0,
@@ -2643,15 +2643,15 @@
     "full_path_us_per_completion": {
       "sw_asyncio_epoll": 5.37,
       "sw_asyncio_kernel_bypass": 3.12,
-      "hw_engine_pcie": 0.76,
-      "hw_engine_cxl": 0.46,
-      "hw_engine_on_soc": 0.11,
-      "advantage_vs_kernel_bypass": 4.1,
-      "advantage_vs_epoll": 7.1
+      "hw_engine_pcie": 0.79,
+      "hw_engine_cxl": 0.49,
+      "hw_engine_on_soc": 0.141,
+      "advantage_vs_kernel_bypass": 3.9,
+      "advantage_vs_epoll": 6.8
     },
-    "full_path_note": "Delivery + dispatch per completion, mid-range first-order estimates. Both sides pay inbound delivery: software completions cross NIC->kernel->epoll wakeup; engine completions cross an interconnect DMA write. Outbound work-launch to the executor (GPU/tool server) is symmetric on both sides and excluded. Dispatch-only comparisons overstate the hardware gap vs event-driven software.",
+    "full_path_note": "Delivery + dispatch per completion, mid-range first-order estimates. Both sides pay inbound delivery: software completions cross NIC->kernel->epoll wakeup (see epoll_wakeup_bench.py); engine completions cross an interconnect DMA write. Outbound work-launch to the executor (GPU/tool server) is symmetric on both sides and excluded. Dispatch-only comparisons overstate the hardware gap vs event-driven software.",
     "verdict": "LANGGRAPH_FLAT",
     "headline": "Measured: LangGraph per-decision CPU is ~flat with live_n (1.0x). The hardware case vs frameworks rests on constant factor + energy, not asymptotics - cite measured constants below."
   },
-  "recommendation": "HEADLINE REGIME RESOLVED at c=500 real anchor (consistent methodology). Real orch/accel at c=500 is 57.5%; combine structural crossover with measured absolute cores. NOTE: c=1000 measured 39.9% (back to plateau) vs c=500 57.5% \u2014 do not cite monotonic rise; c=500 spike may be latency variance or mid-scale contention, not sustained scaling. Structural: hardware beats 4x optimized scan at live_nodes >= 100. Lead with check 9 crossover; check 10 picks percentage headline. Check 11 measured: real-framework dispatch is ~flat with live_n (constant-factor + energy case), while a scan-class scheduler grows 13.58x - frame the hardware win as constant factor vs deployed frameworks, complexity class vs scan schedulers."
+  "recommendation": "HEADLINE REGIME RESOLVED at c=500 real anchor (consistent methodology). Real orch/accel at c=500 is 57.5%; combine structural crossover with measured absolute cores. NOTE: c=1000 measured 39.9% (back to plateau) vs c=500 57.5% - do not cite monotonic rise; c=500 spike may be latency variance or mid-scale contention, not sustained scaling. Structural: hardware beats 4x optimized scan at live_nodes >= 100. Lead with check 9 crossover; check 10 picks percentage headline. Check 11 measured: real-framework dispatch is ~flat with live_n (constant-factor + energy case), while a scan-class scheduler grows 13.58x - frame the hardware win as constant factor vs deployed frameworks, complexity class vs scan schedulers."
 }

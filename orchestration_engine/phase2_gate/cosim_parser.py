@@ -101,7 +101,7 @@ def parse_cosim_report(path, fan_out=2):
         if not line.strip().startswith("|"):
             continue
         if re.search(r"VHDL|Verilog", line, re.I) and "Status" not in line:
-            cols = [c.strip() for c in line.strip("|").split("|")]
+            cols = [c.strip() for c in line.strip().strip("|").split("|")]
             if len(cols) >= 5:
                 row_status = cols[1]
                 if row_status.upper() in ("NA", "-", ""):
@@ -128,7 +128,7 @@ def parse_cosim_report(path, fan_out=2):
                 past_header = True
                 continue
             if past_header and line.strip().startswith("|"):
-                cols = [c.strip() for c in line.strip("|").split("|")]
+                cols = [c.strip() for c in line.strip().strip("|").split("|")]
                 if len(cols) >= 2 and cols[0] and not cols[0].startswith("="):
                     lat_min = _parse_int(cols[0])
                     lat_max = _parse_int(cols[1])
@@ -160,6 +160,7 @@ def parse_cosim_report(path, fan_out=2):
 def find_cosim_reports(search_roots=None):
     roots = search_roots or [
         OE_ROOT.parent / "oe_scatter_proj",
+        OE_ROOT.parent / "oe_stream_proj",
         OE_ROOT.parent / "oe_proj",
     ]
     found = []
@@ -208,6 +209,18 @@ def main():
     parser = argparse.ArgumentParser(description="Parse Vitis HLS cosim report")
     parser.add_argument("--report", type=Path, default=None)
     parser.add_argument("--fan-out", type=int, default=2)
+    parser.add_argument(
+        "--transactions",
+        type=int,
+        default=None,
+        help="Completions per invocation (streaming TB); records per-transaction cycles",
+    )
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="Write parsed JSON here instead of the default cosim_scatter.json cache",
+    )
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
 
@@ -217,6 +230,22 @@ def main():
         assert report.passed, report.status
         assert report.latency_cycles == 3, report.latency_cycles
         print("self-test OK")
+        return 0
+
+    if args.report is not None and args.out is not None:
+        report = parse_cosim_report(args.report, fan_out=args.fan_out)
+        data = report.to_dict()
+        if args.transactions and report.latency_cycles is not None:
+            data["transactions"] = args.transactions
+            data["per_transaction_cycles"] = round(
+                report.latency_cycles / float(args.transactions), 1
+            )
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        print(json.dumps(data, indent=2))
+        if not report.passed:
+            print("\nWARNING: cosim did not pass.")
+            return 1
         return 0
 
     report = load_or_parse(args.report, fan_out=args.fan_out, force=args.report is not None)

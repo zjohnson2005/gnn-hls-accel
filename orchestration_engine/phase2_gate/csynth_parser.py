@@ -181,7 +181,7 @@ def _parse_top_latency(text):
             past_header = True
             continue
         if past_header and line.strip().startswith("|"):
-            cols = [c.strip() for c in line.strip("|").split("|")]
+            cols = [c.strip() for c in line.strip().strip("|").split("|")]
             if len(cols) >= 2 and cols[0] and not cols[0].startswith("="):
                 lat_min = _parse_int(cols[0])
                 lat_max = _parse_int(cols[1])
@@ -202,7 +202,7 @@ def _parse_loop_modules(text):
         if in_loops and line.strip().startswith("+---"):
             continue
         if in_loops and line.strip().startswith("|") and "Loop Name" not in line:
-            cols = [c.strip() for c in line.strip("|").split("|")]
+            cols = [c.strip() for c in line.strip().strip("|").split("|")]
             if len(cols) >= 2 and cols[0] and not cols[0].startswith("="):
                 latency_text = cols[1] if len(cols) > 1 else ""
                 lat_parts = re.findall(r"\d+", latency_text)
