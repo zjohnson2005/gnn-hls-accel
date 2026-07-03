@@ -93,8 +93,76 @@ if [[ -z "$_oe_ls_cur" ]]; then
   return 1 2>/dev/null || exit 1
 fi
 
-# Force-align XILINX_HLS with the resolved binary: <root>/bin/vitis_hls -> <root>.
+# --- XILINX_HLS must be a COMPLETE HLS tree, not just a bin/ shim. ---------
+# LightningSim compiles support code with -I $XILINX_HLS/include and links via
+# $XILINX_HLS/include/Makefile.sysc.rules. Some ARCHIVE entries on the box are
+# partial installs (binaries only, no headers), so validate before exporting.
+_oe_ls_hls_root_ok() {
+  [[ -f "$1/include/ap_fixed.h" ]] && [[ -f "$1/include/Makefile.sysc.rules" ]]
+}
+
 _oe_ls_root="$(cd "$(dirname "$_oe_ls_cur")/.." && pwd)"
+
+if ! _oe_ls_hls_root_ok "$_oe_ls_root"; then
+  _oe_ls_ver="$(basename "$_oe_ls_root")"
+  echo "NOTE: $_oe_ls_root has no HLS headers (partial install); probing sibling roots for $_oe_ls_ver ..."
+  for _oe_ls_hroot in \
+    "/tools/software/amd/xilinx/ARCHIVE/Vitis/$_oe_ls_ver" \
+    "/tools/software/xilinx/ARCHIVE/Vitis/$_oe_ls_ver" \
+    "/tools/software/amd/xilinx/ARCHIVE/Vitis_HLS/$_oe_ls_ver" \
+    "/tools/software/xilinx/ARCHIVE/Vitis_HLS/$_oe_ls_ver" \
+    "/tools/software/amd/xilinx/ARCHIVE/$_oe_ls_ver/Vitis" \
+    "/tools/software/xilinx/ARCHIVE/$_oe_ls_ver/Vitis" \
+    "/tools/software/amd/xilinx/ARCHIVE/$_oe_ls_ver/Vitis_HLS" \
+    "/tools/software/xilinx/ARCHIVE/$_oe_ls_ver/Vitis_HLS" \
+    "/tools/software/amd/xilinx/$_oe_ls_ver/Vitis_HLS" \
+    "/tools/software/xilinx/$_oe_ls_ver/Vitis_HLS"; do
+    if _oe_ls_hls_root_ok "$_oe_ls_hroot"; then
+      _oe_ls_root="$_oe_ls_hroot"
+      echo "  found complete header tree: $_oe_ls_root"
+      break
+    fi
+  done
+  unset _oe_ls_ver _oe_ls_hroot
+fi
+
+if ! _oe_ls_hls_root_ok "$_oe_ls_root"; then
+  # Same-version headers unavailable: fall back to ANY complete LS-compatible
+  # install (bin/vitis_hls + headers), preferring 2021.1 then newest down.
+  # NOTE: callers must rebuild the HLS project if the version changes.
+  echo "NOTE: no $_oe_ls_ver header tree found; searching for any complete 2021-2024 install ..."
+  for _oe_ls_ver2 in 2021.1 2024.2 2024.1 2023.2 2023.1 2022.2 2022.1; do
+    for _oe_ls_hroot in \
+      "/tools/software/amd/xilinx/ARCHIVE/Vitis/$_oe_ls_ver2" \
+      "/tools/software/xilinx/ARCHIVE/Vitis/$_oe_ls_ver2" \
+      "/tools/software/amd/xilinx/ARCHIVE/Vitis_HLS/$_oe_ls_ver2" \
+      "/tools/software/xilinx/ARCHIVE/Vitis_HLS/$_oe_ls_ver2" \
+      "/tools/software/amd/xilinx/ARCHIVE/$_oe_ls_ver2/Vitis" \
+      "/tools/software/xilinx/ARCHIVE/$_oe_ls_ver2/Vitis" \
+      "/tools/software/amd/xilinx/ARCHIVE/$_oe_ls_ver2/Vitis_HLS" \
+      "/tools/software/xilinx/ARCHIVE/$_oe_ls_ver2/Vitis_HLS"; do
+      if _oe_ls_hls_root_ok "$_oe_ls_hroot" && [[ -x "$_oe_ls_hroot/bin/vitis_hls" ]]; then
+        _oe_ls_root="$_oe_ls_hroot"
+        export PATH="$_oe_ls_root/bin:$PATH"
+        echo "  switching toolchain to complete install: $_oe_ls_root"
+        break 2
+      fi
+    done
+  done
+  unset _oe_ls_ver2 _oe_ls_hroot
+fi
+
+if ! _oe_ls_hls_root_ok "$_oe_ls_root"; then
+  echo "ERROR: no complete LS-compatible Vitis HLS tree found"
+  echo "       (need include/ap_fixed.h + include/Makefile.sysc.rules)."
+  echo "Layout of picked root $_oe_ls_root:"
+  ls "$_oe_ls_root" 2>/dev/null || true
+  echo "Candidate header trees on the box (60s search cap):"
+  timeout 60 find /tools/software -maxdepth 8 -path '*/include/ap_fixed.h' 2>/dev/null | head -20
+  echo "Set OE_LS_VITIS_SETTINGS64 or edit hls_env_lightningsim.sh with the right root."
+  return 1 2>/dev/null || exit 1
+fi
+
 if [[ "${XILINX_HLS:-}" != "$_oe_ls_root" ]]; then
   if [[ -n "${XILINX_HLS:-}" ]]; then
     echo "NOTE: overriding stale XILINX_HLS=$XILINX_HLS"
@@ -105,6 +173,9 @@ unset _oe_ls_cur _oe_ls_root
 
 echo "LightningSim HLS toolchain: $(command -v vitis_hls)"
 echo "  XILINX_HLS=$XILINX_HLS"
+if [[ ! -f "$XILINX_HLS/include/ap_fixed.h" ]]; then
+  echo "  WARNING: XILINX_HLS still lacks headers; LS support-code compiles will fail."
+fi
 if [[ -n "${XILINX_VITIS:-}" ]] && [[ "${XILINX_VITIS}" != "$XILINX_HLS"* ]]; then
   echo "  (XILINX_VITIS=$XILINX_VITIS is a different install; harmless for LS, which only uses XILINX_HLS)"
 fi
