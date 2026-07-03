@@ -6,7 +6,6 @@
 #include "oe_hls_config.h"
 
 typedef ap_uint<16> oe_hls_node_id_t;
-typedef ap_uint<16> oe_hls_seg_id_t;
 typedef ap_uint<32> oe_hls_cycle_t;
 typedef ap_uint<8> oe_hls_kind_t;
 typedef ap_uint<2> oe_hls_fire_t;
@@ -93,44 +92,33 @@ static inline ap_uint<1> oe_hls_node_update(oe_hls_node_state_t &st) {
 }
 
 // ---------------------------------------------------------------------------
-// Segmented successor pool (replaces CSR row_ptr/col_idx).
-// Append is O(1) into a node's tail segment and NEVER touches other nodes'
+// Fixed-capacity successor rows (replaces CSR row_ptr/col_idx).
+// succ_slots[node * OE_HLS_SUCC_CAP + i] for i < succ_count[node].
+// Append is O(1) into the node's own row and NEVER touches other nodes'
 // rows, so mid-graph runtime append is safe (the CSR tail-append was only
-// correct for the highest-numbered node).
-//
-// Bank note: batch scatter updates OE_HLS_SEG_WIDTH successors per cycle via
-// cyclic partitioning of node_state (factor OE_HLS_SEG_WIDTH). The host
-// should order successors within a segment so succ % OE_HLS_SEG_WIDTH values
-// are distinct (bank-aware load ordering); duplicates in one segment are
-// serialized by HLS dependence analysis, costing II, never correctness
-// (the fired bit makes duplicate updates idempotent).
+// correct for the highest-numbered node). Contiguous rows mean the 8-wide
+// batch walk hits banks 0..7 exactly once — no pointer chasing, no chain
+// dependence (the earlier segmented-pool design serialized on seg_next and
+// cost ~2x Fmax).
 // ---------------------------------------------------------------------------
 
-// O(1) tail append. Allocates a fresh segment from the bump allocator when
-// the node has none or its tail is full. Returns 0 on success, 1 = pool full.
-// v1 uses bump allocation; free-list reclaim of pruned segments is follow-on.
+// O(1) row append. Returns 0 on success, 1 = row full (out-degree > CAP).
 ap_uint<8> oe_hls_append_edge(
     const oe_hls_node_id_t src,
     const oe_hls_node_id_t dst,
-    oe_hls_seg_id_t head_seg[OE_HLS_MAX_NODES],
-    oe_hls_seg_id_t tail_seg[OE_HLS_MAX_NODES],
-    oe_hls_seg_id_t seg_next[OE_HLS_MAX_SEGS],
-    ap_uint<8> seg_count[OE_HLS_MAX_SEGS],
-    oe_hls_node_id_t seg_slots[OE_HLS_MAX_SEG_SLOTS],
-    ap_uint<32> &seg_alloc);
+    ap_uint<8> succ_count[OE_HLS_MAX_NODES],
+    oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS]);
 
 // ---------------------------------------------------------------------------
 // One-shot scatter kernel (csynth/cosim anchor; ap_ctrl_hs).
 // Flat mode: II=1 per successor -> analytic 1 + out_degree cycles.
-// Batch mode: OE_HLS_SEG_WIDTH-wide unroll per segment -> 1 + n_segments.
+// Batch mode: OE_HLS_SUCC_CAP-wide unrolled row -> 2 cycles for any degree.
 // scatter_cycles reports the analytic count for gate parity.
 // ---------------------------------------------------------------------------
 void oe_hls_scatter_kernel(
     const oe_hls_node_id_t num_nodes,
-    const oe_hls_seg_id_t head_seg[OE_HLS_MAX_NODES],
-    const oe_hls_seg_id_t seg_next[OE_HLS_MAX_SEGS],
-    const ap_uint<8> seg_count[OE_HLS_MAX_SEGS],
-    const oe_hls_node_id_t seg_slots[OE_HLS_MAX_SEG_SLOTS],
+    const ap_uint<8> succ_count[OE_HLS_MAX_NODES],
+    const oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS],
     oe_hls_node_state_t node_state[OE_HLS_MAX_NODES],
     const oe_hls_node_id_t completed,
     const ap_uint<8> use_batch,
@@ -149,10 +137,8 @@ void oe_hls_scatter_kernel(
 // ---------------------------------------------------------------------------
 void oe_hls_scatter_stream(
     const oe_hls_node_id_t num_nodes,
-    const oe_hls_seg_id_t head_seg[OE_HLS_MAX_NODES],
-    const oe_hls_seg_id_t seg_next[OE_HLS_MAX_SEGS],
-    const ap_uint<8> seg_count[OE_HLS_MAX_SEGS],
-    const oe_hls_node_id_t seg_slots[OE_HLS_MAX_SEG_SLOTS],
+    const ap_uint<8> succ_count[OE_HLS_MAX_NODES],
+    const oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS],
     oe_hls_node_state_t node_state[OE_HLS_MAX_NODES],
     hls::stream<oe_hls_node_id_t> &completions_in,
     hls::stream<oe_hls_node_id_t> &ready_out,
@@ -165,10 +151,8 @@ void oe_hls_scatter_stream(
 // ---------------------------------------------------------------------------
 void orchestration_engine(
     const oe_hls_node_id_t num_nodes,
-    const oe_hls_seg_id_t head_seg[OE_HLS_MAX_NODES],
-    const oe_hls_seg_id_t seg_next[OE_HLS_MAX_SEGS],
-    const ap_uint<8> seg_count[OE_HLS_MAX_SEGS],
-    const oe_hls_node_id_t seg_slots[OE_HLS_MAX_SEG_SLOTS],
+    const ap_uint<8> succ_count[OE_HLS_MAX_NODES],
+    const oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS],
     oe_hls_node_state_t node_state[OE_HLS_MAX_NODES],
     const oe_hls_node_id_t completion_nodes[OE_HLS_MAX_OUTSTANDING],
     const oe_hls_cycle_t completion_cycles[OE_HLS_MAX_OUTSTANDING],

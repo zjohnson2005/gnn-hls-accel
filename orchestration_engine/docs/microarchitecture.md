@@ -15,14 +15,14 @@ flowchart LR
 
 | Structure | Role |
 |-----------|------|
-| Segmented successor pool | Per-node segment chains (`head_seg`/`tail_seg`, 8-slot segments); O(1) mid-graph append, never compacts live rows |
+| Fixed-capacity successor rows | `succ_slots[node*CAP + i]`, `succ_count[node]` (CAP=8); O(1) mid-graph append, no pointer chasing (a segmented-chain variant cost ~2x Fmax and was dropped) |
 | Packed node state | One 32-bit word/node: `preds_remaining` + `fire_threshold` + `fire_mode` + `fired` + `pruned` — single RMW per scatter update |
 | Ready queue | Nodes with satisfied dependencies |
 | MSHR table | Outstanding external tasks keyed by node id |
 | Graph op queue | Runtime append / prune / fire-mode updates |
 
 (Software sim keeps a CSR mirror in `include/csr_graph.h`; the HLS side uses
-the segmented pool because CSR tail-append is not safe for runtime append.)
+fixed rows because CSR tail-append is not safe for runtime append.)
 
 ## Scatter (O(out-degree))
 
@@ -70,8 +70,8 @@ Operations:
 Software reference: `software/engine_sim.cpp` (`oe_graph_op` queue).
 
 HLS: `oe_hls_append_edge` implements O(1) runtime edge append into the
-segmented pool (bump allocator; free-list reclaim of pruned segments is
-follow-on). Node append / prune / fire-mode ops remain host-side.
+node's fixed row (out-degree ≤ 8 in v1; wider planner fan-out uses batch
+rows). Node append / prune / fire-mode ops remain host-side.
 
 ## Speculation (simplified in scaffold)
 
@@ -88,7 +88,7 @@ Read-only graph during scatter traversal → shared across worker replicas
 
 | Stage | Responsibility |
 |-------|----------------|
-| `graph_mutator` | Drain op queue, update segmented pool (`oe_hls_append_edge`) |
+| `graph_mutator` | Drain op queue, update successor rows (`oe_hls_append_edge`) |
 | `dispatch` | Ready queue → MSHR + external issue |
 | `completion_intake` | Match returning completions |
 | `scatter` | `oe_hls_scatter_stream` (completion stream in, ready-event stream out) |

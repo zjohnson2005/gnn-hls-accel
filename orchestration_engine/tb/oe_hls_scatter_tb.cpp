@@ -2,34 +2,22 @@
 
 #include <cstdio>
 
-// Shared TB state (static: segment pool arrays are too large for the stack).
-static oe_hls_seg_id_t head_seg[OE_HLS_MAX_NODES];
-static oe_hls_seg_id_t tail_seg[OE_HLS_MAX_NODES];
-static oe_hls_seg_id_t seg_next[OE_HLS_MAX_SEGS];
-static ap_uint<8> seg_count[OE_HLS_MAX_SEGS];
-static oe_hls_node_id_t seg_slots[OE_HLS_MAX_SEG_SLOTS];
+// Shared TB state (static: arrays are too large for the stack).
+static ap_uint<8> succ_count[OE_HLS_MAX_NODES];
+static oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS];
 static oe_hls_node_state_t node_state[OE_HLS_MAX_NODES];
 static ap_uint<1> ready_flags[OE_HLS_MAX_NODES];
-static ap_uint<32> seg_alloc;
 
-static void pool_reset() {
+static void graph_reset() {
     for (int n = 0; n < OE_HLS_MAX_NODES; ++n) {
-        head_seg[n] = OE_HLS_NULL_SEG;
-        tail_seg[n] = OE_HLS_NULL_SEG;
+        succ_count[n] = 0;
         node_state[n] = 0;
         ready_flags[n] = 0;
     }
-    for (int s = 0; s < OE_HLS_MAX_SEGS; ++s) {
-        seg_next[s] = OE_HLS_NULL_SEG;
-        seg_count[s] = 0;
-    }
-    seg_alloc = 0;
 }
 
 static int add_edge(int src, int dst) {
-    if (oe_hls_append_edge(
-            src, dst, head_seg, tail_seg, seg_next, seg_count, seg_slots,
-            seg_alloc) != 0) {
+    if (oe_hls_append_edge(src, dst, succ_count, succ_slots) != 0) {
         std::printf("FAIL: append_edge(%d,%d) rejected\n", src, dst);
         return 1;
     }
@@ -39,14 +27,14 @@ static int add_edge(int src, int dst) {
 static oe_hls_cycle_t scatter(int num_nodes, int completed, int use_batch) {
     oe_hls_cycle_t cycles = 0;
     oe_hls_scatter_kernel(
-        num_nodes, head_seg, seg_next, seg_count, seg_slots, node_state,
-        completed, use_batch, ready_flags, cycles);
+        num_nodes, succ_count, succ_slots, node_state, completed, use_batch,
+        ready_flags, cycles);
     return cycles;
 }
 
 // Fan-out=2 anchor: 0 -> {1, 2}, all-of. Expect 3 cycles, both fire once.
 static int run_fanout2_once() {
-    pool_reset();
+    graph_reset();
     if (add_edge(0, 1) || add_edge(0, 2)) {
         return 1;
     }
@@ -71,11 +59,10 @@ static int run_fanout2_once() {
     return 0;
 }
 
-#ifndef OE_COSIM_FANOUT2_ONLY
 // Any-of exactly-once: {0, 1} -> 2 (any-of). First completion fires node 2;
 // after the host clears the flag, the second completion must NOT re-fire.
 static int run_anyof_exactly_once() {
-    pool_reset();
+    graph_reset();
     if (add_edge(0, 2) || add_edge(1, 2)) {
         return 1;
     }
@@ -102,7 +89,7 @@ static int run_anyof_exactly_once() {
 // Threshold exactly-once: {0,1,2} -> 3 with threshold 1 (fires when
 // preds_remaining <= 1, i.e. after the 2nd completion; 3rd must not re-fire).
 static int run_threshold_exactly_once() {
-    pool_reset();
+    graph_reset();
     if (add_edge(0, 3) || add_edge(1, 3) || add_edge(2, 3)) {
         return 1;
     }
@@ -133,7 +120,7 @@ static int run_threshold_exactly_once() {
 
 // Prune: pruned successor must never fire.
 static int run_prune_guard() {
-    pool_reset();
+    graph_reset();
     if (add_edge(0, 1)) {
         return 1;
     }
@@ -149,9 +136,9 @@ static int run_prune_guard() {
     return 0;
 }
 
-// Fan-out=8 regression: flat = 1+8 = 9 cycles; batch = 1+1 segment = 2.
+// Fan-out=8 regression: flat = 1+8 = 9 cycles; batch = 1+1 row = 2.
 static int run_fanout8_regression() {
-    pool_reset();
+    graph_reset();
     for (int i = 1; i <= 8; ++i) {
         if (add_edge(0, i)) {
             return 1;
@@ -174,7 +161,7 @@ static int run_fanout8_regression() {
         return 1;
     }
 
-    // Reset counters/flags and re-run in batch mode (one 8-wide segment).
+    // Reset counters/flags and re-run in batch mode (one 8-wide row).
     for (int i = 1; i <= 8; ++i) {
         node_state[i] = oe_hls_make_node(1, 0, 0);
         ready_flags[i] = 0;
@@ -193,9 +180,9 @@ static int run_fanout8_regression() {
 }
 
 // Mid-graph append: appending to node 0 AFTER node 2 already has edges.
-// The old CSR tail-append corrupted node 2's row here; segments must not.
+// The old CSR tail-append corrupted node 2's row here; fixed rows must not.
 static int run_midgraph_append() {
-    pool_reset();
+    graph_reset();
     if (add_edge(0, 1) || add_edge(2, 3)) {
         return 1;
     }
@@ -212,7 +199,7 @@ static int run_midgraph_append() {
 
     (void)scatter(5, 2, 0);
     if (ready_flags[3] != 1) {
-        std::printf("FAIL: node 2 successor list corrupted by append to node 0\n");
+        std::printf("FAIL: node 2 successor row corrupted by append to node 0\n");
         return 1;
     }
     const oe_hls_cycle_t cycles = scatter(5, 0, 0);
@@ -227,7 +214,6 @@ static int run_midgraph_append() {
     std::printf("mid-graph append PASSED\n");
     return 0;
 }
-#endif
 
 int main() {
     if (run_fanout2_once() != 0) {

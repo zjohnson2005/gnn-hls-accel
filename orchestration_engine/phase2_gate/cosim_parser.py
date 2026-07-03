@@ -159,6 +159,7 @@ def parse_cosim_report(path, fan_out=2):
 
 def find_cosim_reports(search_roots=None):
     roots = search_roots or [
+        OE_ROOT.parent / "oe_scatter_cosim_proj",
         OE_ROOT.parent / "oe_scatter_proj",
         OE_ROOT.parent / "oe_stream_proj",
         OE_ROOT.parent / "oe_proj",

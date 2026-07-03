@@ -2,33 +2,21 @@
 
 #include <cstdio>
 
-static oe_hls_seg_id_t head_seg[OE_HLS_MAX_NODES];
-static oe_hls_seg_id_t tail_seg[OE_HLS_MAX_NODES];
-static oe_hls_seg_id_t seg_next[OE_HLS_MAX_SEGS];
-static ap_uint<8> seg_count[OE_HLS_MAX_SEGS];
-static oe_hls_node_id_t seg_slots[OE_HLS_MAX_SEG_SLOTS];
+static ap_uint<8> succ_count[OE_HLS_MAX_NODES];
+static oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS];
 static oe_hls_node_state_t node_state[OE_HLS_MAX_NODES];
 static ap_uint<1> ready_flags[OE_HLS_MAX_NODES];
-static ap_uint<32> seg_alloc;
 
 int main() {
     for (int n = 0; n < OE_HLS_MAX_NODES; ++n) {
-        head_seg[n] = OE_HLS_NULL_SEG;
-        tail_seg[n] = OE_HLS_NULL_SEG;
+        succ_count[n] = 0;
         node_state[n] = 0;
         ready_flags[n] = 0;
     }
-    for (int s = 0; s < OE_HLS_MAX_SEGS; ++s) {
-        seg_next[s] = OE_HLS_NULL_SEG;
-        seg_count[s] = 0;
-    }
-    seg_alloc = 0;
 
     // Chain 0 -> 1 -> 2.
-    if (oe_hls_append_edge(0, 1, head_seg, tail_seg, seg_next, seg_count,
-                           seg_slots, seg_alloc) != 0 ||
-        oe_hls_append_edge(1, 2, head_seg, tail_seg, seg_next, seg_count,
-                           seg_slots, seg_alloc) != 0) {
+    if (oe_hls_append_edge(0, 1, succ_count, succ_slots) != 0 ||
+        oe_hls_append_edge(1, 2, succ_count, succ_slots) != 0) {
         std::printf("FAIL: chain append rejected\n");
         return 1;
     }
@@ -45,8 +33,8 @@ int main() {
 
     oe_hls_cycle_t out_cycles = 0;
     orchestration_engine(
-        3, head_seg, seg_next, seg_count, seg_slots, node_state,
-        completion_nodes, completion_cycles, 2, ready_flags, out_cycles);
+        3, succ_count, succ_slots, node_state, completion_nodes,
+        completion_cycles, 2, ready_flags, out_cycles);
 
     if (ready_flags[2] != 1) {
         std::printf("FAIL: node 2 not ready after chain completions\n");
@@ -57,10 +45,9 @@ int main() {
         return 1;
     }
 
-    // Runtime mid-graph append to node 1 (node 2's list must stay intact —
+    // Runtime mid-graph append to node 1 (node 2's row must stay intact —
     // this exact pattern corrupted the old CSR tail-append).
-    if (oe_hls_append_edge(1, 2, head_seg, tail_seg, seg_next, seg_count,
-                           seg_slots, seg_alloc) != 0) {
+    if (oe_hls_append_edge(1, 2, succ_count, succ_slots) != 0) {
         std::printf("FAIL: append_edge rejected\n");
         return 1;
     }
@@ -69,17 +56,16 @@ int main() {
     ready_flags[2] = 0;
     oe_hls_cycle_t scatter_cycles = 0;
     oe_hls_scatter_kernel(
-        3, head_seg, seg_next, seg_count, seg_slots, node_state,
-        1, 1, ready_flags, scatter_cycles);
+        3, succ_count, succ_slots, node_state, 1, 1, ready_flags,
+        scatter_cycles);
     if (ready_flags[2] != 0) {
         std::printf("FAIL: fired node re-fired after runtime append\n");
         return 1;
     }
 
     std::printf(
-        "HLS TB PASSED out_cycles=%u scatter_cycles=%u segs_used=%u\n",
+        "HLS TB PASSED out_cycles=%u scatter_cycles=%u\n",
         (unsigned)out_cycles,
-        (unsigned)scatter_cycles,
-        (unsigned)seg_alloc);
+        (unsigned)scatter_cycles);
     return 0;
 }

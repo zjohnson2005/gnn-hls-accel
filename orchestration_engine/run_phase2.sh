@@ -19,7 +19,10 @@ echo "csynth report: $SCATTER_RPT"
 
 python3 -m orchestration_engine.phase2_gate.csynth_parser --report "$SCATTER_RPT"
 
-COSIM_RPT="$(find oe_scatter_proj -name 'oe_hls_scatter_kernel_cosim.rpt' | head -1)"
+echo "=== Phase 2: scatter cosim x4 (oe_scatter_cosim_proj) ==="
+rm -rf oe_scatter_cosim_proj
+vitis_hls -f orchestration_engine/run_hls_scatter_cosim_only.tcl
+COSIM_RPT="$(find oe_scatter_cosim_proj -name 'oe_hls_scatter_kernel_cosim.rpt' | head -1)"
 if [[ -n "$COSIM_RPT" ]]; then
   python3 -m orchestration_engine.phase2_gate.cosim_parser --report "$COSIM_RPT" --fan-out 2
 fi
