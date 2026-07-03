@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Streaming scatter csynth + cosim (steady-state II). Run from repo root on Vitis box.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+
+source /tools/software/xilinx/setup_env.sh
+
+echo "=== streaming scatter csynth + cosim (8 completions / invocation) ==="
+rm -rf oe_stream_proj
+vitis_hls -f orchestration_engine/run_hls_scatter_stream.tcl
+
+STREAM_RPT="$(find oe_stream_proj -name 'oe_hls_scatter_stream_cosim.rpt' | head -1)"
+if [[ -z "$STREAM_RPT" ]]; then
+  STREAM_RPT="$(find oe_stream_proj -name '*_cosim.rpt' | head -1)"
+fi
+echo "stream cosim report: $STREAM_RPT"
+
+mkdir -p orchestration_engine/characterization/out/phase2
+
+if [[ -n "$STREAM_RPT" ]]; then
+  # 8 transactions per invocation (OE_STREAM_TB_TRANSACTIONS in the TB).
+  python3 -m orchestration_engine.phase2_gate.cosim_parser \
+    --report "$STREAM_RPT" --fan-out 2 --transactions 8 \
+    --out orchestration_engine/characterization/out/phase2/cosim_stream.json
+fi
+python3 -m orchestration_engine.phase2_gate.gate_report
+
+echo "Done. See orchestration_engine/characterization/out/phase2/phase2_gate.md"

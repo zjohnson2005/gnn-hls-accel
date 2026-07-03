@@ -15,11 +15,14 @@ flowchart LR
 
 | Structure | Role |
 |-----------|------|
-| CSR graph store | Successor lists (`row_ptr`, `col_idx`) |
-| Readiness counters | `preds_remaining`; 0 ⇒ eligible |
+| Segmented successor pool | Per-node segment chains (`head_seg`/`tail_seg`, 8-slot segments); O(1) mid-graph append, never compacts live rows |
+| Packed node state | One 32-bit word/node: `preds_remaining` + `fire_threshold` + `fire_mode` + `fired` + `pruned` — single RMW per scatter update |
 | Ready queue | Nodes with satisfied dependencies |
 | MSHR table | Outstanding external tasks keyed by node id |
 | Graph op queue | Runtime append / prune / fire-mode updates |
+
+(Software sim keeps a CSR mirror in `include/csr_graph.h`; the HLS side uses
+the segmented pool because CSR tail-append is not safe for runtime append.)
 
 ## Scatter (O(out-degree))
 
@@ -27,11 +30,14 @@ On completion of node `u`:
 
 ```
 for v in successors(u):
-    apply_fire_mode(v)   // all-of | any-of | threshold
-    if ready(v): enqueue ready queue
+    if fired(v) or pruned(v): skip   // exactly-once dispatch guard
+    apply_fire_mode(v)               // all-of | any-of | threshold
+    if fires(v): set fired(v); emit v
 ```
 
-No scan over all waiting tasks.
+No scan over all waiting tasks. The streaming kernel
+(`oe_hls_scatter_stream`) emits only newly-fired node ids — O(fired) output,
+so the host never scans an O(N) flag array at the interface.
 
 ## Fire modes
 
@@ -63,7 +69,9 @@ Operations:
 
 Software reference: `software/engine_sim.cpp` (`oe_graph_op` queue).
 
-HLS: not yet integrated — graph mutations remain host-side in scaffold.
+HLS: `oe_hls_append_edge` implements O(1) runtime edge append into the
+segmented pool (bump allocator; free-list reclaim of pruned segments is
+follow-on). Node append / prune / fire-mode ops remain host-side.
 
 ## Speculation (simplified in scaffold)
 
@@ -80,13 +88,14 @@ Read-only graph during scatter traversal → shared across worker replicas
 
 | Stage | Responsibility |
 |-------|----------------|
-| `graph_mutator` | Drain op queue, update CSR |
+| `graph_mutator` | Drain op queue, update segmented pool (`oe_hls_append_edge`) |
 | `dispatch` | Ready queue → MSHR + external issue |
 | `completion_intake` | Match returning completions |
-| `scatter` | `oe_hls_scatter_step` |
+| `scatter` | `oe_hls_scatter_stream` (completion stream in, ready-event stream out) |
 
-Current `hls/orchestration_engine.cpp` implements scatter + batched completion
-processing only — other stages stubbed.
+Current `hls/orchestration_engine.cpp` implements the scatter kernels
+(one-shot anchor + streaming steady-state), runtime edge append, and batched
+completion processing — dispatch/MSHR stages stubbed.
 
 ## Software baseline
 

@@ -25,6 +25,18 @@ if [[ -n "$COSIM_RPT" ]]; then
 fi
 
 echo ""
+echo "=== Phase 2: streaming scatter (steady-state cycles/completion) ==="
+rm -rf oe_stream_proj
+vitis_hls -f orchestration_engine/run_hls_scatter_stream.tcl
+
+STREAM_RPT="$(find oe_stream_proj -name 'oe_hls_scatter_stream_cosim.rpt' | head -1)"
+if [[ -n "$STREAM_RPT" ]]; then
+  python3 -m orchestration_engine.phase2_gate.cosim_parser \
+    --report "$STREAM_RPT" --fan-out 2 --transactions 8 \
+    --out orchestration_engine/characterization/out/phase2/cosim_stream.json
+fi
+
+echo ""
 echo "=== Phase 2: full engine csynth ==="
 rm -rf oe_proj
 vitis_hls -f orchestration_engine/run_hls.tcl
