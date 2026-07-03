@@ -26,9 +26,15 @@ static int add_edge(int src, int dst) {
 
 static oe_hls_cycle_t scatter(int num_nodes, int completed, int use_batch) {
     oe_hls_cycle_t cycles = 0;
-    oe_hls_scatter_kernel(
-        num_nodes, succ_count, succ_slots, node_state, completed, use_batch,
-        ready_flags, cycles);
+    if (use_batch) {
+        oe_hls_scatter_batch_kernel(
+            num_nodes, succ_count, succ_slots, node_state, completed,
+            ready_flags, cycles);
+    } else {
+        oe_hls_scatter_kernel(
+            num_nodes, succ_count, succ_slots, node_state, completed,
+            ready_flags, cycles);
+    }
     return cycles;
 }
 

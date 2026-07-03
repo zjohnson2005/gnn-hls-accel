@@ -88,7 +88,8 @@ batch_slots:
 }
 
 // ---------------------------------------------------------------------------
-// One-shot csynth/cosim anchor.
+// One-shot flat csynth/cosim anchor. No partitions: one RMW per cycle fits
+// dual-port BRAM; partitions only add crossbar muxing to the clock path.
 // ---------------------------------------------------------------------------
 void oe_hls_scatter_kernel(
     const oe_hls_node_id_t num_nodes,
@@ -96,31 +97,44 @@ void oe_hls_scatter_kernel(
     const oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS],
     oe_hls_node_state_t node_state[OE_HLS_MAX_NODES],
     const oe_hls_node_id_t completed,
-    const ap_uint<8> use_batch,
     ap_uint<1> ready_flags[OE_HLS_MAX_NODES],
     oe_hls_cycle_t &scatter_cycles) {
 #pragma HLS INTERFACE s_axilite port = num_nodes bundle = control
 #pragma HLS INTERFACE s_axilite port = completed bundle = control
-#pragma HLS INTERFACE s_axilite port = use_batch bundle = control
 #pragma HLS INTERFACE s_axilite port = scatter_cycles bundle = control
 #pragma HLS INTERFACE s_axilite port = return bundle = control
 
-// Single partition factor everywhere (= OE_HLS_SUCC_CAP).
+    const ap_uint<8> cnt = succ_count[completed];
+    oe_hls_walk_flat(
+        completed, num_nodes, succ_count, succ_slots, node_state, ready_flags);
+    scatter_cycles = 1 + cnt; // 1 + out_degree
+}
+
+// ---------------------------------------------------------------------------
+// One-shot batch kernel (separate top; carries the 8-bank crossbar).
+// ---------------------------------------------------------------------------
+void oe_hls_scatter_batch_kernel(
+    const oe_hls_node_id_t num_nodes,
+    const ap_uint<8> succ_count[OE_HLS_MAX_NODES],
+    const oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS],
+    oe_hls_node_state_t node_state[OE_HLS_MAX_NODES],
+    const oe_hls_node_id_t completed,
+    ap_uint<1> ready_flags[OE_HLS_MAX_NODES],
+    oe_hls_cycle_t &scatter_cycles) {
+#pragma HLS INTERFACE s_axilite port = num_nodes bundle = control
+#pragma HLS INTERFACE s_axilite port = completed bundle = control
+#pragma HLS INTERFACE s_axilite port = scatter_cycles bundle = control
+#pragma HLS INTERFACE s_axilite port = return bundle = control
+
 #pragma HLS ARRAY_PARTITION variable = node_state cyclic factor = 8
 #pragma HLS ARRAY_PARTITION variable = ready_flags cyclic factor = 8
 #pragma HLS ARRAY_PARTITION variable = succ_slots cyclic factor = 8
 
     const ap_uint<8> cnt = succ_count[completed];
-    if (use_batch) {
-        oe_hls_walk_batch(
-            completed, num_nodes, succ_count, succ_slots, node_state, ready_flags);
-        // 1 + ceil(out_degree / CAP): whole row updates in one wide cycle.
-        scatter_cycles = 1 + ((cnt + OE_HLS_SUCC_CAP - 1) / OE_HLS_SUCC_CAP);
-    } else {
-        oe_hls_walk_flat(
-            completed, num_nodes, succ_count, succ_slots, node_state, ready_flags);
-        scatter_cycles = 1 + cnt; // 1 + out_degree
-    }
+    oe_hls_walk_batch(
+        completed, num_nodes, succ_count, succ_slots, node_state, ready_flags);
+    // 1 + ceil(out_degree / CAP): whole row updates in one wide cycle.
+    scatter_cycles = 1 + ((cnt + OE_HLS_SUCC_CAP - 1) / OE_HLS_SUCC_CAP);
 }
 
 // ---------------------------------------------------------------------------
@@ -141,9 +155,7 @@ void oe_hls_scatter_stream(
 #pragma HLS INTERFACE s_axilite port = completions_processed bundle = control
 #pragma HLS INTERFACE s_axilite port = return bundle = control
 
-#pragma HLS ARRAY_PARTITION variable = node_state cyclic factor = 8
-#pragma HLS ARRAY_PARTITION variable = succ_slots cyclic factor = 8
-
+    // Flat walk: one RMW per cycle -> dual-port BRAM, no partitions needed.
     oe_hls_cycle_t processed = 0;
 
 event_loop:
@@ -196,10 +208,6 @@ void orchestration_engine(
 #pragma HLS INTERFACE s_axilite port = num_completions bundle = control
 #pragma HLS INTERFACE s_axilite port = out_cycles bundle = control
 #pragma HLS INTERFACE s_axilite port = return bundle = control
-
-#pragma HLS ARRAY_PARTITION variable = node_state cyclic factor = 8
-#pragma HLS ARRAY_PARTITION variable = ready_flags cyclic factor = 8
-#pragma HLS ARRAY_PARTITION variable = succ_slots cyclic factor = 8
 
     oe_hls_cycle_t cycle = 0;
 

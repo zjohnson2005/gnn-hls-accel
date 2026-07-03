@@ -29,7 +29,7 @@ static int run_fanout2_once() {
 
     oe_hls_cycle_t cycles = 0;
     oe_hls_scatter_kernel(
-        4, succ_count, succ_slots, node_state, 0, 0, ready_flags, cycles);
+        4, succ_count, succ_slots, node_state, 0, ready_flags, cycles);
 
     if (ready_flags[1] != 1 || ready_flags[2] != 1) {
         std::printf("FAIL: fan-out=2 scatter did not ready successors\n");
