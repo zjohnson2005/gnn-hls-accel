@@ -219,9 +219,7 @@ void gcn_layer_stream(
     data_t         Y[MAX_NODES][F_OUT])
 #endif
 {
-#ifndef GNN_LS_LITE
 #pragma HLS DATAFLOW
-#endif
     hls::stream<seam_token_t> xt_stream;
 #pragma HLS STREAM variable=xt_stream depth=4
 

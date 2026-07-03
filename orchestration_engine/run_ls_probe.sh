@@ -26,7 +26,7 @@ export PATH="$(dirname "$PY"):$PATH"
 echo "XILINX_HLS=${XILINX_HLS:-unset}"
 
 STAMP="$ROOT/gcn_stream_proj/sol1/.oe_lightningsim_vitis"
-STAMP_TAG="GNN_LS_LITE=nodf-u16"
+STAMP_TAG="GNN_LS_LITE=df-u16"
 CUR_VER="$(command -v vitis_hls | grep -oE '20[0-9]{2}\.[0-9]+' | head -1)"
 
 echo "=== Preflight (LS-lite tree must match $STAMP_TAG) ==="
