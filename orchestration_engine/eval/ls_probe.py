@@ -10,11 +10,16 @@ tempdirs) and prints everything needed to localize the failure:
 
 Usage:
   python -m orchestration_engine.eval.ls_probe <solution_dir>
+
+If XILINX_HLS is unset, the ARCHIVE Vitis env is sourced automatically via
+orchestration_engine/hls_env_lightningsim.sh (same as run_ls_probe.sh).
 """
 
 import asyncio
 import sys
 from pathlib import Path
+
+from orchestration_engine.eval.ls_env import ensure_lightningsim_env
 
 
 async def probe(solution_dir: Path) -> int:
@@ -65,6 +70,7 @@ def main() -> int:
     if len(sys.argv) != 2:
         print(__doc__)
         return 2
+    ensure_lightningsim_env()
     return asyncio.run(probe(Path(sys.argv[1])))
 
 
