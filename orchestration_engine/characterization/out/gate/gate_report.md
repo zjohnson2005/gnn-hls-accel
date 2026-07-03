@@ -188,9 +188,9 @@ An ideal event-driven software scheduler (O(1) wakeup) matches the engine's O(fa
 
 | dispatcher | measured µs/decision | vs hardware |
 |-----------|----------------------|-------------|
-| LangGraph (real framework, live_n>=100) | 1331 | 32,551x |
-| asyncio event-driven (O(1) baseline) | 1.87 | 46x |
-| engine scatter (analytic, pre-csynth) | 0.04 | 1x |
+| LangGraph (real framework, live_n>=100) | 1331 | 11,678x |
+| asyncio event-driven (O(1) baseline) | 1.87 | 16x |
+| engine scatter (analytic, pre-csynth) | 0.11 | 1x |
 
 
 ### Hardware-wins region (flat vs 4x optimized scan)
@@ -245,7 +245,7 @@ N live tasks in one process; per-decision **process CPU** cost (GIL-independent,
 | 1000 | 1355 | 1.9 | 1.6 | 18.4 |
 
 - Growth 100->1000: LangGraph **1.04x**, asyncio event **0.92x**, global scan **13.58x**
-- Hardware reference: **0.0409 µs/decision** (one-shot cosim latency 17 cycles @ 415.6 MHz (includes ap_ctrl_hs; run multi-transaction cosim for II))
+- Hardware reference: **0.114 µs/decision** (steady-state II from multi-transaction cosim (24 cycles @ 210.5 MHz); one-shot latency 13 cycles (ap_ctrl_hs overhead))
 
 ### Full-path accounting (delivery + dispatch per completion)
 
@@ -255,11 +255,11 @@ Delivery + dispatch per completion, mid-range first-order estimates. Both sides 
 |------|---------------|
 | software: epoll wakeup + asyncio dispatch | 5.37 |
 | software: kernel-bypass + asyncio dispatch | 3.12 |
-| engine: PCIe Gen4 DMA + scatter | 0.79 |
-| engine: CXL + scatter | 0.49 |
-| engine: on-SoC AXI + scatter | 0.141 |
+| engine: PCIe Gen4 DMA + scatter | 0.86 |
+| engine: CXL + scatter | 0.56 |
+| engine: on-SoC AXI + scatter | 0.214 |
 
-_Full-path, the dispatch-only ~200x gap vs ideal asyncio collapses to **~3.9x** (vs kernel-bypass software) / **~6.8x** (vs standard epoll), because interconnect delivery dominates the engine's cycle-scale scatter. The durable advantages at PCIe attach are throughput under load (banked counters, no queue contention), energy, and freeing host cores; on-SoC integration recovers the latency gap._
+_Full-path, the dispatch-only ~200x gap vs ideal asyncio collapses to **~3.6x** (vs kernel-bypass software) / **~6.2x** (vs standard epoll), because interconnect delivery dominates the engine's cycle-scale scatter. The durable advantages at PCIe attach are throughput under load (banked counters, no queue contention), energy, and freeing host cores; on-SoC integration recovers the latency gap._
 
 _Interpretation: sharded x4 event loops are the realistic deployed counter-proposal; single-core asyncio is the ideal. The hardware case against both is constant factor + energy + full-path latency; the case against LangGraph-class frameworks and scan-class schedulers adds the asymptotic gap._
 

@@ -2,41 +2,41 @@
   "phase": 2,
   "passed": false,
   "crossover": {
-    "hw_scatter_us_fanout2": 0.0409,
-    "hw_scatter_cycles_fanout2": 17,
-    "hw_cosim_latency_cycles": 17,
-    "hw_cosim_ii_cycles": null,
-    "hw_metric_source": "cosim_latency",
-    "clock_mhz": 415.6,
+    "hw_scatter_us_fanout2": 0.114,
+    "hw_scatter_cycles_fanout2": 24,
+    "hw_cosim_latency_cycles": 13,
+    "hw_cosim_ii_cycles": 24,
+    "hw_metric_source": "cosim_ii",
+    "clock_mhz": 210.5,
     "csynth_source": "oe_scatter_proj/sol1/syn/report/oe_hls_scatter_kernel_csynth.rpt",
     "csynth_pending": false,
-    "cosim_source": "oe_scatter_proj/sol1/sim/report/oe_hls_scatter_kernel_cosim.rpt",
+    "cosim_source": "oe_scatter_cosim_proj/sol1/sim/report/oe_hls_scatter_kernel_cosim.rpt",
     "cosim_verified": true,
     "rows": [
       {
         "baseline": "LangGraph (deployed)",
         "per_completion_us": 1334.83,
-        "vs_hw_pcie": 1687.7,
-        "vs_hw_on_soc": 9473.6,
+        "vs_hw_pcie": 1544.9,
+        "vs_hw_on_soc": 6237.5,
         "note": "Claim 2: constant factor vs deployed framework"
       },
       {
         "baseline": "asyncio + epoll (measured full-path)",
         "per_completion_us": 5.37,
-        "vs_hw_pcie": 6.8,
-        "vs_hw_on_soc": 38.1,
+        "vs_hw_pcie": 6.2,
+        "vs_hw_on_soc": 25.1,
         "note": "Claim 2: full-path vs ideal event-driven"
       },
       {
         "baseline": "asyncio + kernel-bypass (measured full-path)",
         "per_completion_us": 3.12,
-        "vs_hw_pcie": 3.9,
-        "vs_hw_on_soc": 22.1,
+        "vs_hw_pcie": 3.6,
+        "vs_hw_on_soc": 14.6,
         "note": "Strongest software full-path baseline"
       }
     ],
     "verdict": "FULL_PATH_ADVANTAGE",
-    "headline": "Cosim latency 17 cycles (0.0409 us one-shot) + PCIe delivery -> ~3.9x vs kernel-bypass (re-run cosim x4 for II)."
+    "headline": "Cosim II 24 cycles (0.1140 us steady-state) + PCIe delivery -> ~3.6x vs kernel-bypass (one-shot latency 13 cycles)."
   },
   "checklist": [
     {
@@ -49,7 +49,7 @@
       "id": "cosim_scatter",
       "label": "HLS cosim scatter (trust cycle count)",
       "status": "done",
-      "detail": "oe_scatter_proj/sol1/sim/report/oe_hls_scatter_kernel_cosim.rpt (17 cycles)"
+      "detail": "oe_scatter_cosim_proj/sol1/sim/report/oe_hls_scatter_kernel_cosim.rpt (13 cycles)"
     },
     {
       "id": "cosim_stream",
