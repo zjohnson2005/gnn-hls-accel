@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 
+from orchestration_engine.phase2_gate.cosim_parser import load_or_parse as load_cosim
 from orchestration_engine.phase2_gate.crossover import build_crossover, render_markdown
 from orchestration_engine.phase2_gate.csynth_parser import find_csynth_reports, load_or_parse
 
@@ -26,13 +27,23 @@ def _checklist():
         }
     )
 
+    cosim = load_cosim()
     cosim_reports = list((OE_ROOT.parent / "oe_scatter_proj").glob("**/sim/report/*_cosim.rpt"))
+    cosim_done = cosim is not None and cosim.passed and cosim.latency_cycles is not None
     items.append(
         {
             "id": "cosim_scatter",
             "label": "HLS cosim scatter (trust cycle count)",
-            "status": "done" if cosim_reports else "pending",
-            "detail": str(cosim_reports[0]) if cosim_reports else "Enable cosim in run_hls_scatter.tcl",
+            "status": "done" if cosim_done else "pending",
+            "detail": (
+                "{0} ({1} cycles)".format(cosim.report_path, cosim.latency_cycles)
+                if cosim_done
+                else (
+                    str(cosim_reports[0])
+                    if cosim_reports
+                    else "Run run_phase2_scatter_only.sh (includes cosim)"
+                )
+            ),
         }
     )
 
