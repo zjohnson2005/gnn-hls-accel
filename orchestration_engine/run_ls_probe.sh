@@ -28,7 +28,7 @@ echo "XILINX_HLS=${XILINX_HLS:-unset}"
 # If the env fell back to a different Vitis version than the one that built
 # the project, the bitcode is stale — rebuild (csim + csynth only, ~10 min).
 STAMP="$ROOT/gcn_stream_proj/sol1/.oe_lightningsim_vitis"
-STAMP_TAG="GNN_LS_LITE=ap_uint512"
+STAMP_TAG="GNN_LS_LITE=ptr512"
 CUR_VER="$(command -v vitis_hls | grep -oE '20[0-9]{2}\.[0-9]+' | head -1)"
 OLD_STAMP="$(cat "$STAMP" 2>/dev/null || true)"
 if [[ ! -f "$ROOT/gcn_stream_proj/sol1/syn/report/gcn_layer_stream_csynth.rpt" ]] \
@@ -51,25 +51,17 @@ fi
 rm -f "$ROOT/gcn_stream_proj/sol1/trace.pkl"
 "$PY" -m orchestration_engine.eval.ls_bitcode_inspect "$ROOT/gcn_stream_proj/sol1" || true
 "$PY" -m orchestration_engine.eval.ls_probe "$ROOT/gcn_stream_proj/sol1"
-
-echo
-echo "=== gdb backtrace (only if instrumented testbench crashed) ==="
+RC=$?
 ART="$(grep -oE 'Build artifacts are being written to \S+' "$LOG" | tail -1 | awk '{print $NF}')"
+TMPD="$(grep -oE 'Intermediate objects are being written to \S+' "$LOG" | tail -1 | awk '{print $NF}')"
 TB_BIN="$(ls "${ART:-/nonexistent}"/testbench_* 2>/dev/null | head -1)"
-if grep -qE 'testbench exit code: -(11|6|8)' "$LOG" && [[ -n "$TB_BIN" ]] && [[ -f "$TB_BIN" ]]; then
-  if command -v gdb >/dev/null 2>&1; then
-    ( cd "$ART" && HLSLITESIM_TRACE_FD=9 gdb -batch -ex run -ex "bt 25" "$TB_BIN" 9>/dev/null 2>&1 | tail -45 )
-  else
-    echo "(gdb not available; falling back to core-less rerun under catchsegv/ltrace if present)"
-    ( cd "$ART" && HLSLITESIM_TRACE_FD=9 "$TB_BIN" 9>/dev/null; echo "manual rerun rc=$?" )
-  fi
-else
-  echo "(testbench did not crash, or artifacts dir not found: ART=${ART:-none})"
+if [[ "$RC" -ne 0 ]] || grep -qE 'testbench exit code: -(11|6|8)' "$LOG"; then
+  "$PY" -m orchestration_engine.eval.ls_crash_diag \
+    "$ROOT/gcn_stream_proj/sol1" "${ART:-}" "${TMPD:-}" "${TB_BIN:-}" || true
 fi
 
 echo
 echo "=== kernel symbols in kept testbench objects (post-objcopy) ==="
-TMPD="$(grep -oE 'Intermediate objects are being written to \S+' "$LOG" | tail -1 | awk '{print $NF}')"
 if [[ -n "${TMPD:-}" ]] && [[ -d "$TMPD" ]]; then
   echo "tempdir: $TMPD"
   for obj in "$TMPD"/testbench.*.o; do
@@ -85,3 +77,4 @@ fi
 
 echo
 echo "Log written to $LOG"
+exit "$RC"
