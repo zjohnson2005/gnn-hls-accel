@@ -10,18 +10,7 @@ if [[ ! -f orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp ]]; then
   exit 1
 fi
 
-# Xilinx env: prefer the caller's shell (setup_env.sh may rely on interactive
-# features like environment modules). Only try sourcing as a fallback.
-if ! command -v vitis_hls >/dev/null 2>&1; then
-  set +u +e
-  source /tools/software/xilinx/setup_env.sh
-  set -u -e
-fi
-if ! command -v vitis_hls >/dev/null 2>&1; then
-  echo "ERROR: vitis_hls not on PATH. In your shell, first run:"
-  echo "  source /tools/software/xilinx/setup_env.sh"
-  exit 1
-fi
+source "$ROOT/orchestration_engine/hls_env.sh"
 
 echo "=== scatter cosim x4 for II (oe_scatter_cosim_proj) ==="
 rm -rf oe_scatter_cosim_proj
