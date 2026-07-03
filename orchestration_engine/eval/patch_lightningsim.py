@@ -54,19 +54,22 @@ PATCH_V1_INCLUDES = (
     '{i}Path(__file__).parent / "compat_include",\n'
 )
 
-PATCH_V2_OLD = """\
-                project_source_files = [
-                    file for file in project_files if file.type == ProjectFile.Type.SOURCE
-                ]"""
+PATCH_V2_COMP_OLD = (
+    "file for file in project_files if file.type == ProjectFile.Type.SOURCE"
+)
+PATCH_V2_COMP_NEW = (
+    "file for file in project_files "
+    "if file.type == ProjectFile.Type.SOURCE "
+    "and self.solution.path in file.path.parents"
+)
 
-PATCH_V2_NEW = """\
-                # OE-PATCH v2: compile only TB sources under solution/ (skip kernel .cpp)
-                project_source_files = [
-                    file
-                    for file in project_files
-                    if file.type == ProjectFile.Type.SOURCE
-                    and self.solution.path in file.path.parents
-                ]"""
+# Match single- or multi-line list comps (LS versions differ).
+PATCH_V2_BLOCK_RE = re.compile(
+    r"(?P<indent>^[ \t]*)project_source_files\s*=\s*\[\s*\n?"
+    r"(?P<body>(?:^[ \t]+[^\n]+\n?)+?)"
+    r"(?P=indent)\]",
+    re.MULTILINE,
+)
 
 
 def find_runner() -> Path:
@@ -106,23 +109,58 @@ def apply_v1(text: str) -> tuple[str, bool]:
     return f"{MARKER_V1}\n{text}", True
 
 
+def _v2_replacement(indent: str) -> str:
+    inner = indent + "    "
+    return (
+        f"{indent}project_source_files = [\n"
+        f"{inner}file\n"
+        f"{inner}for file in project_files\n"
+        f"{inner}if file.type == ProjectFile.Type.SOURCE\n"
+        f"{inner}and self.solution.path in file.path.parents\n"
+        f"{indent}]"
+    )
+
+
 def apply_v2(text: str) -> tuple[str, bool]:
     if MARKER_V2 in text:
         return text, True
+    if "self.solution.path in file.path.parents" in text:
+        print("v2 filter already present (unmarked)")
+        return text, True
 
-    if PATCH_V2_OLD not in text:
-        # Already manually edited or LS version drift.
-        alt = PATCH_V2_OLD.replace("                ", "        ")
-        if alt in text:
-            text = text.replace(alt, PATCH_V2_NEW.replace("                ", "        "))
-            print("patched v2: TB-only project_source_files filter (alt indent)")
+    if PATCH_V2_COMP_OLD in text:
+        text = text.replace(PATCH_V2_COMP_OLD, PATCH_V2_COMP_NEW, 1)
+        print("patched v2: TB-only project_source_files filter (inline)")
+        return f"{MARKER_V2}\n{text}", True
+
+    line_re = re.compile(
+        r"file\s+for\s+file\s+in\s+project_files\s+"
+        r"if\s+file\.type\s*==\s*ProjectFile\.Type\.SOURCE"
+    )
+    if line_re.search(text):
+        text, n = line_re.subn(PATCH_V2_COMP_NEW, text, count=1)
+        if n == 1:
+            print("patched v2: TB-only project_source_files filter (regex line)")
             return f"{MARKER_V2}\n{text}", True
-        print("WARNING: v2 anchor not found; inspect runner.py project_source_files")
-        return text, False
 
-    text = text.replace(PATCH_V2_OLD, PATCH_V2_NEW, 1)
-    print("patched v2: TB-only project_source_files filter")
-    return f"{MARKER_V2}\n{text}", True
+    match = PATCH_V2_BLOCK_RE.search(text)
+    if match and "ProjectFile.Type.SOURCE" in match.group("body"):
+        if "self.solution.path in file.path.parents" in match.group("body"):
+            return text, True
+        indent = match.group("indent")
+        text = (
+            text[: match.start()]
+            + _v2_replacement(indent)
+            + text[match.end() :]
+        )
+        print("patched v2: TB-only project_source_files filter (block rewrite)")
+        return f"{MARKER_V2}\n{text}", True
+
+    print("WARNING: v2 target not found in runner.py")
+    for i, line in enumerate(text.splitlines(), 1):
+        if "project_source_files" in line:
+            print(f"  line {i}: {line.rstrip()}")
+    return text, False
 
 
 def patch_runner(runner_path: Path) -> bool:
