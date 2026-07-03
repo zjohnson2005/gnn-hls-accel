@@ -230,14 +230,6 @@ static int run_midgraph_append() {
 #endif
 
 int main() {
-#ifdef OE_COSIM_FANOUT2_ONLY
-    for (int t = 0; t < 4; ++t) {
-        if (run_fanout2_once() != 0) {
-            return 1;
-        }
-    }
-    std::printf("COSIM TB fan-out=2 x4 PASSED (multi-transaction for II)\n");
-#else
     if (run_fanout2_once() != 0) {
         return 1;
     }
@@ -258,6 +250,5 @@ int main() {
         return 1;
     }
     std::printf("SCATTER TB PASSED\n");
-#endif
     return 0;
 }

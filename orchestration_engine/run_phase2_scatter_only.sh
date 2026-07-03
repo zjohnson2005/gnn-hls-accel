@@ -5,10 +5,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-if [[ ! -f orchestration_engine/tb/oe_hls_scatter_tb.cpp ]] ||
-   ! grep -q 'x4 PASSED' orchestration_engine/tb/oe_hls_scatter_tb.cpp; then
+if [[ ! -f orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp ]] ||
+   ! grep -q 'x4 PASSED' orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp; then
   echo "ERROR: repo is stale. Run: git pull origin main"
-  echo "  (expect commit 7c1ec09 or later with HLS redesign + x4 cosim TB)"
+  echo "  (expect dedicated oe_hls_scatter_cosim_tb.cpp for Vitis 2025.2)"
   exit 1
 fi
 

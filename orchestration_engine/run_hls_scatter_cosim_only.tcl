@@ -6,12 +6,16 @@
 open_project oe_scatter_proj
 open_solution sol1
 
-# Drop stale second-TB entries from older scripts (file deleted from repo).
-catch { remove_files orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp }
+CSYNTH_RPT "oe_scatter_proj/sol1/syn/report/oe_hls_scatter_kernel_csynth.rpt"
+if {![file exists $CSYNTH_RPT]} {
+    puts "ERROR: missing $CSYNTH_RPT — run run_phase2_scatter_only.sh first"
+    exit 1
+}
 
-add_files -tb orchestration_engine/tb/oe_hls_scatter_tb.cpp \
-  -cflags "-I./orchestration_engine/hls" \
-  -cosimflags "-DOE_COSIM_FANOUT2_ONLY"
+catch { remove_files orchestration_engine/tb/oe_hls_scatter_tb.cpp }
+catch { remove_files orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp }
+add_files -tb orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp \
+  -cflags "-I./orchestration_engine/hls"
 
 config_cosim -trace_level none
 cosim_design
