@@ -28,7 +28,9 @@ def _checklist():
     )
 
     cosim = load_cosim()
-    cosim_reports = list((OE_ROOT.parent / "oe_scatter_proj").glob("**/sim/report/*_cosim.rpt"))
+    cosim_reports = list(
+        (OE_ROOT.parent / "oe_scatter_cosim_proj").glob("**/sim/report/*_cosim.rpt")
+    ) + list((OE_ROOT.parent / "oe_scatter_proj").glob("**/sim/report/*_cosim.rpt"))
     cosim_done = cosim is not None and cosim.passed and cosim.latency_cycles is not None
     items.append(
         {

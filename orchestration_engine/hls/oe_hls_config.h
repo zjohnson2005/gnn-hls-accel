@@ -10,14 +10,11 @@
 #define OE_HLS_BATCH_WIDTH     8
 #define OE_HLS_CLOCK_MHZ       300
 
-// Segmented successor pool (append-safe dynamic graph).
-// Each segment holds OE_HLS_SEG_WIDTH successor slots; nodes chain segments.
-// 512 segments x 8 slots = 4096 edge capacity (25% slack over MAX_EDGES,
-// matching the ~25% free-list overhead in dynamic_graph_cost_model.md).
-#define OE_HLS_SEG_WIDTH       8
-#define OE_HLS_MAX_SEGS        512
-#define OE_HLS_MAX_SEG_SLOTS   (OE_HLS_MAX_SEGS * OE_HLS_SEG_WIDTH)
-#define OE_HLS_NULL_SEG        0xFFFF
+// Fixed-capacity successor rows (append-safe dynamic graph, no pointer chase).
+// Each node owns a contiguous row of OE_HLS_SUCC_CAP slots; append is O(1)
+// and never touches other nodes' rows. 256 nodes x 8 slots x 2 B = 4 KB.
+#define OE_HLS_SUCC_CAP        OE_HLS_MAX_OUT_DEGREE
+#define OE_HLS_SUCC_SLOTS      (OE_HLS_MAX_NODES * OE_HLS_SUCC_CAP)
 
 // Sentinel node id terminating a completion stream transaction batch.
 #define OE_HLS_STREAM_END      0xFFFF

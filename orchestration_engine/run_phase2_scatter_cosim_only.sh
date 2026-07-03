@@ -1,23 +1,22 @@
 #!/usr/bin/env bash
-# Re-run scatter cosim on existing oe_scatter_proj (~20-60 min).
+# Re-run scatter cosim only (dedicated project; standalone, ~2-5 min).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-CSYNTH_RPT="oe_scatter_proj/sol1/syn/report/oe_hls_scatter_kernel_csynth.rpt"
-if [[ ! -f "$CSYNTH_RPT" ]]; then
-  echo "Missing $CSYNTH_RPT"
-  echo "Run: bash orchestration_engine/run_phase2_scatter_only.sh"
+if [[ ! -f orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp ]]; then
+  echo "ERROR: repo is stale. Run: git pull origin main"
   exit 1
 fi
 
 source /tools/software/xilinx/setup_env.sh
 
-echo "=== scatter cosim only (fan-out=2 anchor, reuses csynth RTL) ==="
+echo "=== scatter cosim x4 for II (oe_scatter_cosim_proj) ==="
+rm -rf oe_scatter_cosim_proj
 vitis_hls -f orchestration_engine/run_hls_scatter_cosim_only.tcl
 
-COSIM_RPT="$(find oe_scatter_proj -name 'oe_hls_scatter_kernel_cosim.rpt' | head -1)"
+COSIM_RPT="$(find oe_scatter_cosim_proj -name 'oe_hls_scatter_kernel_cosim.rpt' | head -1)"
 echo "cosim report: $COSIM_RPT"
 
 mkdir -p orchestration_engine/characterization/out/phase2

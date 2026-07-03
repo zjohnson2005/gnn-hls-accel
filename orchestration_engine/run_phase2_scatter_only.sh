@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Scatter csynth + cosim (~30-90 min). Run from repo root on Vitis box.
+# Scatter csynth (regression project) + cosim (dedicated x4 project).
+# Run from repo root on Vitis box.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -8,26 +9,24 @@ cd "$ROOT"
 if [[ ! -f orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp ]] ||
    ! grep -q 'x4 PASSED' orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp; then
   echo "ERROR: repo is stale. Run: git pull origin main"
-  echo "  (expect dedicated oe_hls_scatter_cosim_tb.cpp for Vitis 2025.2)"
   exit 1
 fi
 
 source /tools/software/xilinx/setup_env.sh
 
-echo "=== scatter csynth + cosim (fan-out=2 anchor x4 for II) ==="
+echo "=== scatter csynth + csim regression (oe_scatter_proj) ==="
 rm -rf oe_scatter_proj
 vitis_hls -f orchestration_engine/run_hls_scatter.tcl
 
+echo ""
+echo "=== scatter cosim x4 for II (oe_scatter_cosim_proj) ==="
+rm -rf oe_scatter_cosim_proj
+vitis_hls -f orchestration_engine/run_hls_scatter_cosim_only.tcl
+
 SCATTER_RPT="$(find oe_scatter_proj -name 'oe_hls_scatter_kernel_csynth.rpt' | head -1)"
-if [[ -z "$SCATTER_RPT" ]]; then
-  SCATTER_RPT="$(find oe_scatter_proj -name '*_csynth.rpt' | head -1)"
-fi
 echo "csynth report: $SCATTER_RPT"
 
-COSIM_RPT="$(find oe_scatter_proj -name 'oe_hls_scatter_kernel_cosim.rpt' | head -1)"
-if [[ -z "$COSIM_RPT" ]]; then
-  COSIM_RPT="$(find oe_scatter_proj -name '*_cosim.rpt' | head -1)"
-fi
+COSIM_RPT="$(find oe_scatter_cosim_proj -name 'oe_hls_scatter_kernel_cosim.rpt' | head -1)"
 echo "cosim report: $COSIM_RPT"
 
 mkdir -p orchestration_engine/characterization/out/phase2
