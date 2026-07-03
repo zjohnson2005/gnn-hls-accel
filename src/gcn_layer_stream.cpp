@@ -39,7 +39,8 @@ unpack:
             float f;
             uint32_t u;
         } c;
-        c.u = (uint32_t)tok.range((o + 1) * 32 - 1, o * 32).range(31, 0);
+        ap_uint<32> word = tok.range((o + 1) * 32 - 1, o * 32);
+        c.u = (uint32_t)word;
         v[o] = (data_t)c.f;
     }
 }
