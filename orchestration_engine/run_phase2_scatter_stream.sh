@@ -11,7 +11,10 @@ if [[ ! -f orchestration_engine/run_hls_scatter_stream.tcl ]] ||
   exit 1
 fi
 
+# Xilinx settings64.sh references unset vars; relax -u while sourcing.
+set +u
 source /tools/software/xilinx/setup_env.sh
+set -u
 
 echo "=== streaming scatter csynth + cosim (8 completions / invocation) ==="
 rm -rf oe_stream_proj
