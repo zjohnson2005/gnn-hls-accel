@@ -93,4 +93,5 @@ fi
 
 echo
 echo "Log written to $LOG"
+"$PY" -m orchestration_engine.eval.ls_progress "$ROOT/gcn_stream_proj/sol1" || true
 exit "$RC"
