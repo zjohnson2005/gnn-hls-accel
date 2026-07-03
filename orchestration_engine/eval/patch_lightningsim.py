@@ -118,6 +118,9 @@ if _oe_conda_lib:
     os.environ["LD_LIBRARY_PATH"] = _oe_conda_lib + (
         f":{_oe_saved_ld}" if _oe_saved_ld else ""
     )"""
+
+
+def find_runner() -> Path:
     import lightningsim
 
     return Path(lightningsim.__file__).parent / "runner.py"
