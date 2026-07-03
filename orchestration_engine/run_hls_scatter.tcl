@@ -5,6 +5,8 @@
 # cosim: dedicated x4 TB (oe_hls_scatter_cosim_tb.cpp) for RTL II measurement.
 # Vitis 2025.2 has no -cosimflags — swap TB files before cosim_design.
 
+source orchestration_engine/hls_utils.tcl
+
 open_project -reset oe_scatter_proj
 set_top oe_hls_scatter_kernel
 
@@ -18,7 +20,7 @@ create_clock -period 3.33 -name default
 csim_design
 csynth_design
 
-catch { remove_files orchestration_engine/tb/oe_hls_scatter_tb.cpp }
+oe_remove_all_tb
 add_files -tb orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp \
   -cflags "-I./orchestration_engine/hls"
 

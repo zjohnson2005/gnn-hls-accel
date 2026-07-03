@@ -3,17 +3,18 @@
 #
 # Do NOT use open_project -reset here — that invalidates the synthesized solution.
 
+source orchestration_engine/hls_utils.tcl
+
 open_project oe_scatter_proj
 open_solution sol1
 
-CSYNTH_RPT "oe_scatter_proj/sol1/syn/report/oe_hls_scatter_kernel_csynth.rpt"
-if {![file exists $CSYNTH_RPT]} {
-    puts "ERROR: missing $CSYNTH_RPT — run run_phase2_scatter_only.sh first"
+set csynth_rpt "oe_scatter_proj/sol1/syn/report/oe_hls_scatter_kernel_csynth.rpt"
+if {![file exists $csynth_rpt]} {
+    puts "ERROR: missing $csynth_rpt — run run_phase2_scatter_only.sh first"
     exit 1
 }
 
-catch { remove_files orchestration_engine/tb/oe_hls_scatter_tb.cpp }
-catch { remove_files orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp }
+oe_remove_all_tb
 add_files -tb orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp \
   -cflags "-I./orchestration_engine/hls"
 
