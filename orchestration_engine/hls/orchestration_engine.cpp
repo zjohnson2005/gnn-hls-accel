@@ -19,9 +19,13 @@ ap_uint<8> oe_hls_append_edge(
 }
 
 // ---------------------------------------------------------------------------
-// Flat scatter walk: II=1 per successor slot. Duplicate successors in one
-// row are legal and idempotent via the fired bit (cost is II, not
-// correctness).
+// Flat scatter walk: II=1 per successor slot.
+// INVARIANT: successors within one row are unique (edges are unique
+// (src, dst) pairs; oe_hls_append_edge is the only writer). Consecutive
+// iterations therefore never touch the same node_state word, so the
+// loop-carried RMW dependence is declared false — without it the scheduler
+// forces read+decode+decrement+writeback into one cycle and Fmax collapses
+// (measured 415 -> 210 MHz).
 // ---------------------------------------------------------------------------
 static void oe_hls_walk_flat(
     const oe_hls_node_id_t completed,
@@ -37,6 +41,7 @@ static void oe_hls_walk_flat(
 walk_slots:
     for (ap_uint<8> i = 0; i < cnt; ++i) {
 #pragma HLS PIPELINE II = 1
+#pragma HLS DEPENDENCE variable = node_state inter false
 #pragma HLS LOOP_TRIPCOUNT min = 0 max = OE_HLS_SUCC_CAP
         const oe_hls_node_id_t succ = succ_slots[base + i];
         if (succ < num_nodes) {
@@ -155,6 +160,7 @@ event_loop:
         stream_slots:
             for (ap_uint<8> i = 0; i < cnt; ++i) {
 #pragma HLS PIPELINE II = 1
+#pragma HLS DEPENDENCE variable = node_state inter false
 #pragma HLS LOOP_TRIPCOUNT min = 0 max = OE_HLS_SUCC_CAP
                 const oe_hls_node_id_t succ = succ_slots[base + i];
                 if (succ < num_nodes) {
