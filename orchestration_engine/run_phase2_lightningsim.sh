@@ -17,15 +17,30 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-source "$ROOT/orchestration_engine/hls_env.sh"
+# Xilinx settings64.sh prepends its own python; keep conda first for fifo-advisor.
+if [[ -n "${CONDA_PREFIX:-}" ]] && [[ -x "$CONDA_PREFIX/bin/python" ]]; then
+  OE_PYTHON="$CONDA_PREFIX/bin/python"
+else
+  OE_PYTHON="$(command -v python || true)"
+fi
 
-if ! python -c "import fifo_advisor" 2>/dev/null; then
+if [[ -z "$OE_PYTHON" ]] || ! "$OE_PYTHON" -c "import fifo_advisor" 2>/dev/null; then
   echo "ERROR: fifo-advisor not importable."
   echo "Activate the conda env first:"
+  echo "  eval \"\$(\$HOME/miniconda3/bin/conda shell.bash hook)\""
   echo "  conda activate fifo-advisor"
   echo "See fifo_pareto/README.md for install steps."
   exit 1
 fi
+
+source "$ROOT/orchestration_engine/hls_env.sh"
+
+if [[ -n "${CONDA_PREFIX:-}" ]] && [[ -x "$CONDA_PREFIX/bin/python" ]]; then
+  export PATH="$CONDA_PREFIX/bin:$PATH"
+  OE_PYTHON="$CONDA_PREFIX/bin/python"
+fi
+
+echo "Using python: $OE_PYTHON ($("$OE_PYTHON" -c 'import fifo_advisor; print("fifo-advisor ok")'))"
 
 SOLUTION_DIR="$ROOT/gcn_stream_proj/sol1"
 CSYNTH_RPT="$SOLUTION_DIR/syn/report/gcn_layer_stream_csynth.rpt"
@@ -44,12 +59,12 @@ fi
 mkdir -p orchestration_engine/characterization/out/phase2
 
 echo "=== LightningSim FIFO DSE (500 samples; first run builds trace.pkl) ==="
-python -m orchestration_engine.eval.dse_sweep \
+"$OE_PYTHON" -m orchestration_engine.eval.dse_sweep \
   --solution-dir "$SOLUTION_DIR" \
   --n-samples 500 \
   --batch-size 64 \
   --output orchestration_engine/characterization/out/phase2/dse_report.json
 
 echo ""
-python -m orchestration_engine.phase2_gate.gate_report
+"$OE_PYTHON" -m orchestration_engine.phase2_gate.gate_report
 echo "Done. See orchestration_engine/characterization/out/phase2/phase2_gate.md"
