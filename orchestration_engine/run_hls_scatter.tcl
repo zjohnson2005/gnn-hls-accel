@@ -20,7 +20,7 @@ create_clock -period 3.33 -name default
 csim_design
 csynth_design
 
-oe_remove_all_tb
+oe_remove_scatter_tb
 add_files -tb orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp \
   -cflags "-I./orchestration_engine/hls"
 

@@ -1,14 +1,22 @@
 # Shared Vitis HLS helpers (source from run_*.tcl).
+# Vitis 2025.2: no get_files -filter, no -cosimflags on add_files.
 
-proc oe_remove_all_tb {} {
-    set tb_files [get_files -filter {FILE_TYPE == TB}]
-    if {[llength $tb_files] > 0} {
-        puts "Removing TB files: $tb_files"
-        remove_files $tb_files
+proc oe_remove_scatter_tb {} {
+    set removed 0
+    foreach f [get_files] {
+        if {[string match *oe_hls_scatter_tb.cpp $f] ||
+            [string match *oe_hls_scatter_cosim_tb.cpp $f]} {
+            puts "Removing TB: $f"
+            remove_files $f
+            incr removed
+        }
     }
-    set remaining [get_files -filter {FILE_TYPE == TB}]
-    if {[llength $remaining] > 0} {
-        puts "ERROR: failed to remove all TB files; still registered: $remaining"
-        exit 1
+    foreach f [get_files] {
+        if {[string match *oe_hls_scatter_tb.cpp $f] ||
+            [string match *oe_hls_scatter_cosim_tb.cpp $f]} {
+            puts "ERROR: scatter TB still registered after remove: $f"
+            exit 1
+        }
     }
+    puts "Removed $removed scatter TB file(s)"
 }
