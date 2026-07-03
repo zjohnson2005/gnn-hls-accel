@@ -1,9 +1,6 @@
 """Phase 2 gate report — csynth scatter, crossover, DSE readiness."""
 
-from __future__ import annotations
-
 import json
-from dataclasses import asdict
 from pathlib import Path
 
 from orchestration_engine.phase2_gate.crossover import build_crossover, render_markdown
@@ -14,7 +11,7 @@ OUT_DIR = OE_ROOT / "characterization" / "out" / "phase2"
 GATE_DIR = OE_ROOT / "characterization" / "out" / "gate"
 
 
-def _checklist() -> list[dict]:
+def _checklist():
     items = []
 
     csynth = load_or_parse()
@@ -29,7 +26,7 @@ def _checklist() -> list[dict]:
         }
     )
 
-    cosim_reports = list(OE_ROOT.parent.glob("oe_scatter_proj/**/sim/report/*_cosim.rpt"))
+    cosim_reports = list((OE_ROOT.parent / "oe_scatter_proj").glob("**/sim/report/*_cosim.rpt"))
     items.append(
         {
             "id": "cosim_scatter",
@@ -59,43 +56,47 @@ def _checklist() -> list[dict]:
         }
     )
 
-    bench = OE_ROOT / "build" / "oe_bench.exe"
+    bench = OE_ROOT / "build" / "oe_bench"
+    bench_exe = OE_ROOT / "build" / "oe_bench.exe"
     items.append(
         {
             "id": "oe_bench",
             "label": "Native oe_bench structural proof",
-            "status": "done" if bench.exists() else "pending",
-            "detail": str(bench) if bench.exists() else "build.ps1 on Windows or g++ on Vitis box",
+            "status": "done" if bench.exists() or bench_exe.exists() else "pending",
+            "detail": str(bench) if bench.exists() else (
+                str(bench_exe) if bench_exe.exists() else "build.ps1 on Windows or g++ on Vitis box"
+            ),
         }
     )
 
     return items
 
 
-def build_report() -> dict:
+def build_report():
     crossover = build_crossover()
     checklist = _checklist()
-    csynth = load_or_parse()
     pending = [c for c in checklist if c["status"] != "done"]
     passed = len(pending) == 0 and crossover.verdict != "PENDING_CSYNTH"
 
     return {
         "phase": 2,
         "passed": passed,
-        "crossover": asdict(crossover),
+        "crossover": crossover.to_dict(),
         "checklist": checklist,
         "pending_count": len(pending),
         "csynth_reports_found": [str(p) for p in find_csynth_reports()],
     }
 
 
-def render_full_markdown(data: dict) -> str:
+def render_full_markdown(data):
     crossover = build_crossover()
     lines = [
         "# Phase 2 gate report",
         "",
-        f"**Status:** {'PASSED' if data['passed'] else 'IN PROGRESS'} "
-        f"({data['pending_count']} checklist items pending)",
+        "**Status:** {0} ({1} checklist items pending)".format(
+            "PASSED" if data["passed"] else "IN PROGRESS",
+            data["pending_count"],
+        ),
         "",
         render_markdown(crossover),
         "",
@@ -105,42 +106,26 @@ def render_full_markdown(data: dict) -> str:
         "|------|--------|--------|",
     ]
     for item in data["checklist"]:
-        lines.append(
-            f"| {item['label']} | {item['status']} | {item['detail']} |"
-        )
-    lines.extend(
-        [
-            "",
-            "## Next commands (Vitis box)",
-            "",
-            "```bash",
-            "source /tools/software/xilinx/setup_env.sh",
-            "cd gnn-hls-accel",
-            "bash orchestration_engine/run_phase2.sh",
-            "```",
-            "",
-            "## Next commands (OpenAI / local)",
-            "",
-            "```powershell",
-            "py -3 -m orchestration_engine.characterization.phase1_gate.closeout",
-            "```",
-        ]
-    )
+        lines.append("| {0} | {1} | {2} |".format(item["label"], item["status"], item["detail"]))
     return "\n".join(lines)
 
 
-def main() -> int:
+def main():
+    import sys
+
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     data = build_report()
     (OUT_DIR / "phase2_gate.json").write_text(json.dumps(data, indent=2), encoding="utf-8")
     md = render_full_markdown(data)
     (OUT_DIR / "phase2_gate.md").write_text(md, encoding="utf-8")
-    print(f"Wrote {OUT_DIR / 'phase2_gate.md'}")
+    print("Wrote {0}".format(OUT_DIR / "phase2_gate.md"))
     print(data["crossover"]["headline"])
     if not data["passed"]:
-        print(f"{data['pending_count']} checklist items still pending.")
+        print("{0} checklist items still pending.".format(data["pending_count"]))
     return 0 if data["passed"] else 1
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    import sys
+
+    sys.exit(main())
