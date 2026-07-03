@@ -14,26 +14,47 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-# Keep conda python — Xilinx settings64 prepends its own python to PATH.
-if [[ -n "${CONDA_PREFIX:-}" ]] && [[ -x "$CONDA_PREFIX/bin/python" ]]; then
-  OE_PYTHON="$CONDA_PREFIX/bin/python"
-else
-  OE_PYTHON="$(command -v python || true)"
-fi
+_oe_resolve_python() {
+  local py cand
+  if [[ -n "${OE_PYTHON:-}" ]] && [[ -x "$OE_PYTHON" ]]; then
+    if "$OE_PYTHON" -c "import fifo_advisor" 2>/dev/null; then
+      echo "$OE_PYTHON"
+      return 0
+    fi
+  fi
+  for cand in \
+    "${CONDA_PREFIX:+$CONDA_PREFIX/bin/python}" \
+    "$HOME/miniconda3/envs/fifo-advisor/bin/python" \
+    "$(command -v python 2>/dev/null || true)" \
+    "$(command -v python3 2>/dev/null || true)"; do
+    [[ -n "$cand" ]] || continue
+    [[ -x "$cand" ]] || continue
+    if "$cand" -c "import fifo_advisor" 2>/dev/null; then
+      echo "$cand"
+      return 0
+    fi
+  done
+  echo "ERROR: fifo-advisor not importable. Tried:" >&2
+  for cand in \
+    "${OE_PYTHON:-}" \
+    "${CONDA_PREFIX:+$CONDA_PREFIX/bin/python}" \
+    "$HOME/miniconda3/envs/fifo-advisor/bin/python" \
+    "$(command -v python 2>/dev/null || true)" \
+    "$(command -v python3 2>/dev/null || true)"; do
+    [[ -n "$cand" ]] || continue
+    echo "  $cand -> $("$cand" -c "import fifo_advisor" 2>&1 || true)" >&2
+  done
+  echo "Fix: eval \"\$(\$HOME/miniconda3/bin/conda shell.bash hook)\" && conda activate fifo-advisor" >&2
+  echo "Or:  export OE_PYTHON=\$HOME/miniconda3/envs/fifo-advisor/bin/python" >&2
+  return 1
+}
 
-if [[ -z "$OE_PYTHON" ]] || ! "$OE_PYTHON" -c "import fifo_advisor" 2>/dev/null; then
-  echo "ERROR: fifo-advisor not importable."
-  echo "  eval \"\$(\$HOME/miniconda3/bin/conda shell.bash hook)\""
-  echo "  conda activate fifo-advisor"
-  exit 1
-fi
+OE_PYTHON="$(_oe_resolve_python)" || exit 1
 
 source "$ROOT/orchestration_engine/hls_env_lightningsim.sh"
 
-if [[ -n "${CONDA_PREFIX:-}" ]] && [[ -x "$CONDA_PREFIX/bin/python" ]]; then
-  export PATH="$CONDA_PREFIX/bin:$PATH"
-  OE_PYTHON="$CONDA_PREFIX/bin/python"
-fi
+# Xilinx settings64 prepends its own python; keep conda env first.
+export PATH="$(dirname "$OE_PYTHON"):$PATH"
 
 echo "Using python: $OE_PYTHON ($("$OE_PYTHON" -c 'import fifo_advisor; print("fifo-advisor ok")'))"
 
