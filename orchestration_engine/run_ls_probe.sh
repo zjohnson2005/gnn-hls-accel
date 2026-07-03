@@ -28,11 +28,12 @@ echo "XILINX_HLS=${XILINX_HLS:-unset}"
 # If the env fell back to a different Vitis version than the one that built
 # the project, the bitcode is stale — rebuild (csim + csynth only, ~10 min).
 STAMP="$ROOT/gcn_stream_proj/sol1/.oe_lightningsim_vitis"
+STAMP_TAG="GNN_LS_LITE=1"
 CUR_VER="$(command -v vitis_hls | grep -oE '20[0-9]{2}\.[0-9]+' | head -1)"
-OLD_VER="$(grep -oE '20[0-9]{2}\.[0-9]+' "$STAMP" 2>/dev/null | head -1 || true)"
+OLD_STAMP="$(cat "$STAMP" 2>/dev/null || true)"
 if [[ ! -f "$ROOT/gcn_stream_proj/sol1/syn/report/gcn_layer_stream_csynth.rpt" ]] \
-   || [[ -z "$OLD_VER" ]] || [[ "$CUR_VER" != "$OLD_VER" ]]; then
-  echo "=== Rebuilding gcn_stream_proj with Vitis $CUR_VER (was: ${OLD_VER:-unknown}) ==="
+   || [[ "$OLD_STAMP" != *"$CUR_VER"* ]] || [[ "$OLD_STAMP" != *"$STAMP_TAG"* ]]; then
+  echo "=== Rebuilding gcn_stream_proj with Vitis $CUR_VER ($STAMP_TAG) ==="
   rm -rf "$ROOT/gcn_stream_proj"
   if ! vitis_hls -f run_hls_stream_ls.tcl; then
     echo ""
@@ -43,7 +44,7 @@ if [[ ! -f "$ROOT/gcn_stream_proj/sol1/syn/report/gcn_layer_stream_csynth.rpt" ]
     exit 1
   fi
   mkdir -p "$ROOT/gcn_stream_proj/sol1"
-  echo "$(command -v vitis_hls) via ${OE_LS_VITIS_SETTINGS64:-PATH}" > "$STAMP"
+  echo "$(command -v vitis_hls) $STAMP_TAG via ${OE_LS_VITIS_SETTINGS64:-PATH}" > "$STAMP"
   ln -sfn sol1 "$ROOT/gcn_stream_proj/solution1"
 fi
 

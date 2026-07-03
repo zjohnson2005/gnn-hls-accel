@@ -3,7 +3,7 @@
 #ifndef USE_NR_RSQRT
 #define USE_NR_RSQRT 1
 #endif
-#if USE_NR_RSQRT
+#if USE_NR_RSQRT && !defined(GNN_LS_LITE)
 #include "hls_rsqrt.h"
 #else
 #include "hls_math.h"
@@ -69,7 +69,7 @@ drain_seam:
 #pragma HLS PIPELINE II=1
         feat_row_t row = xt_stream.read();
         idx_t deg = row_ptr[i + 1] - row_ptr[i];
-#if USE_NR_RSQRT
+#if USE_NR_RSQRT && !defined(GNN_LS_LITE)
         inv_sqrt_deg[i] = (deg == 0) ? (data_t)0 : (data_t)nr_rsqrt<3>((float)deg);
 #else
         inv_sqrt_deg[i] = (deg == 0) ? (data_t)0

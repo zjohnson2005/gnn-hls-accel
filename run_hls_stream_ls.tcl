@@ -5,8 +5,8 @@
 open_project -reset gcn_stream_proj
 set_top gcn_layer_stream
 
-add_files src/gcn_layer_stream.cpp -cflags "-I./src"
-add_files -tb tb/gcn_stream_tb.cpp -cflags "-I./src"
+add_files src/gcn_layer_stream.cpp -cflags "-I./src -DGNN_LS_LITE"
+add_files -tb tb/gcn_stream_tb.cpp -cflags "-I./src -DGNN_LS_LITE"
 
 open_solution -reset sol1 -flow_target vivado
 set_part {xczu3eg-sbva484-1-e}
