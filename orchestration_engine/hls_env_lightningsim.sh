@@ -102,9 +102,10 @@ _oe_ls_hls_root_ok() {
 }
 
 _oe_ls_root="$(cd "$(dirname "$_oe_ls_cur")/.." && pwd)"
+_oe_ls_ver="$(echo "$_oe_ls_root" | grep -oE '20[0-9]{2}\.[0-9]+' | tail -1)"
+_oe_ls_ver="${_oe_ls_ver:-unknown}"
 
 if ! _oe_ls_hls_root_ok "$_oe_ls_root"; then
-  _oe_ls_ver="$(basename "$_oe_ls_root")"
   echo "NOTE: $_oe_ls_root has no HLS headers (partial install); probing sibling roots for $_oe_ls_ver ..."
   for _oe_ls_hroot in \
     "/tools/software/amd/xilinx/ARCHIVE/Vitis/$_oe_ls_ver" \
@@ -123,7 +124,7 @@ if ! _oe_ls_hls_root_ok "$_oe_ls_root"; then
       break
     fi
   done
-  unset _oe_ls_ver _oe_ls_hroot
+  unset _oe_ls_hroot
 fi
 
 if ! _oe_ls_hls_root_ok "$_oe_ls_root"; then
@@ -169,7 +170,7 @@ if [[ "${XILINX_HLS:-}" != "$_oe_ls_root" ]]; then
   fi
   export XILINX_HLS="$_oe_ls_root"
 fi
-unset _oe_ls_cur _oe_ls_root
+unset _oe_ls_cur _oe_ls_root _oe_ls_ver
 
 echo "LightningSim HLS toolchain: $(command -v vitis_hls)"
 echo "  XILINX_HLS=$XILINX_HLS"
