@@ -1,24 +1,20 @@
-"""Patch installed LightningSim for Vitis 2023.2+ generated csim sources.
+"""Patch installed LightningSim for Vitis 2023.2+ and multi-file HLS projects.
 
-Vitis >= ~2023.2 emits generated csim support sources (e.g.
-``.autopilot/db/mapper_<kernel>.cpp``) whose first line is
-``#include "hls_signal_handler.h"``. That header is generated into the
-solution tree (typically ``csim/build/``) and is NOT part of
-``$XILINX_HLS/include``, so LightningSim's support-code compiles fail with
-``hls_signal_handler.h: No such file or directory``.
+Patches applied to the installed ``lightningsim/runner.py`` (backup:
+``runner.py.oe-orig``):
 
-This script idempotently patches the *installed* ``lightningsim/runner.py``
-to pass the solution's generated-source directories (``.autopilot/db``,
-``csim/build``) plus a bundled ``compat_include/`` fallback on every
-generated-source / testbench compile. The real Vitis-generated header wins
-when present; the stub only exists so older/odd project layouts still build
-(the real header merely installs csim crash-diagnostic signal handlers).
+v1 — generated csim headers (``hls_signal_handler.h``)
+  Add ``-I`` paths for ``.autopilot/db``, ``csim/build``, and a bundled stub.
+
+v2 — exclude kernel .cpp from testbench link
+  LightningSim's ``project_files`` lists both the kernel and TB sources. Compiling
+  the kernel .cpp with objcopy ``--redefine-sym`` to ``apatb_<kernel>_ir`` creates
+  a second, uninstrumented definition of the instrumented kernel from bitcode,
+  which segfaults at runtime (exit -11, empty stdout). Only compile sources
+  living under the solution directory (``tb=`` files in ``hls.app``).
 
 Usage:
     python -m orchestration_engine.eval.patch_lightningsim [solution_dir]
-
-If ``solution_dir`` is given and contains a real ``hls_signal_handler.h``,
-it is copied into ``compat_include/`` so the genuine header is always found.
 """
 
 import re
@@ -26,21 +22,17 @@ import shutil
 import sys
 from pathlib import Path
 
-MARKER = "# OE-PATCH v1: add solution generated-source include dirs (Vitis 2023.2+)"
+MARKER_V1 = "# OE-PATCH v1: add solution generated-source include dirs (Vitis 2023.2+)"
+MARKER_V2 = "# OE-PATCH v2: compile only TB sources under solution/ (skip kernel .cpp)"
 
 STUB_HEADER = """\
 // Stub hls_signal_handler.h installed by gnn-hls-accel's LightningSim patch.
-// The Vitis-generated original (solution csim/build/) only installs signal
-// handlers for nicer csim crash diagnostics; omitting them is functionally
-// safe for LightningSim trace capture. If the real header exists in the
-// solution tree, its include dir is searched first and this stub is unused.
 #ifndef OE_LS_COMPAT_HLS_SIGNAL_HANDLER_H
 #define OE_LS_COMPAT_HLS_SIGNAL_HANDLER_H
 #endif
 """
 
-# (regex anchor, human name) — insert extra -I lines just before each "-c".
-PATCH_POINTS = [
+PATCH_V1_POINTS = [
     (
         re.compile(r'(?P<indent>[ \t]*)"-c",\n(?P=indent)mapper_hw_input_path,'),
         "mapper (generated csim source) compile",
@@ -53,7 +45,7 @@ PATCH_POINTS = [
     ),
 ]
 
-EXTRA_INCLUDE_TEMPLATE = (
+PATCH_V1_INCLUDES = (
     '{i}"-I",\n'
     '{i}self.solution.path / ".autopilot/db",\n'
     '{i}"-I",\n'
@@ -62,6 +54,20 @@ EXTRA_INCLUDE_TEMPLATE = (
     '{i}Path(__file__).parent / "compat_include",\n'
 )
 
+PATCH_V2_OLD = """\
+                project_source_files = [
+                    file for file in project_files if file.type == ProjectFile.Type.SOURCE
+                ]"""
+
+PATCH_V2_NEW = """\
+                # OE-PATCH v2: compile only TB sources under solution/ (skip kernel .cpp)
+                project_source_files = [
+                    file
+                    for file in project_files
+                    if file.type == ProjectFile.Type.SOURCE
+                    and self.solution.path in file.path.parents
+                ]"""
+
 
 def find_runner() -> Path:
     import lightningsim
@@ -69,39 +75,72 @@ def find_runner() -> Path:
     return Path(lightningsim.__file__).parent / "runner.py"
 
 
-def patch_runner(runner_path: Path) -> bool:
-    text = runner_path.read_text()
-    if MARKER in text:
-        print(f"already patched: {runner_path}")
-        return True
-
+def _ensure_backup(runner_path: Path) -> None:
     backup = runner_path.with_suffix(".py.oe-orig")
     if not backup.exists():
         shutil.copy2(runner_path, backup)
         print(f"backup saved: {backup}")
 
+
+def apply_v1(text: str) -> tuple[str, bool]:
+    if MARKER_V1 in text:
+        return text, True
+
     applied = 0
-    for pattern, name in PATCH_POINTS:
+    for pattern, name in PATCH_V1_POINTS:
 
         def add_includes(match: re.Match) -> str:
             indent = match.group("indent")
-            return EXTRA_INCLUDE_TEMPLATE.format(i=indent) + match.group(0)
+            return PATCH_V1_INCLUDES.format(i=indent) + match.group(0)
 
         text, count = pattern.subn(add_includes, text, count=1)
         if count == 1:
-            print(f"patched: {name}")
+            print(f"patched v1: {name}")
             applied += 1
         else:
-            print(f"WARNING: anchor not found for {name} (LS version drift?)")
+            print(f"WARNING: v1 anchor not found for {name}")
 
     if applied == 0:
-        print("ERROR: no patch points matched; installed LightningSim differs "
-              "from expected layout. Inspect manually:", runner_path)
+        return text, False
+
+    return f"{MARKER_V1}\n{text}", True
+
+
+def apply_v2(text: str) -> tuple[str, bool]:
+    if MARKER_V2 in text:
+        return text, True
+
+    if PATCH_V2_OLD not in text:
+        # Already manually edited or LS version drift.
+        alt = PATCH_V2_OLD.replace("                ", "        ")
+        if alt in text:
+            text = text.replace(alt, PATCH_V2_NEW.replace("                ", "        "))
+            print("patched v2: TB-only project_source_files filter (alt indent)")
+            return f"{MARKER_V2}\n{text}", True
+        print("WARNING: v2 anchor not found; inspect runner.py project_source_files")
+        return text, False
+
+    text = text.replace(PATCH_V2_OLD, PATCH_V2_NEW, 1)
+    print("patched v2: TB-only project_source_files filter")
+    return f"{MARKER_V2}\n{text}", True
+
+
+def patch_runner(runner_path: Path) -> bool:
+    text = runner_path.read_text()
+    _ensure_backup(runner_path)
+
+    text, ok_v1 = apply_v1(text)
+    text, ok_v2 = apply_v2(text)
+
+    if not ok_v1 and MARKER_V1 not in text:
+        print("ERROR: v1 patch failed")
+        return False
+    if not ok_v2 and MARKER_V2 not in text:
+        print("ERROR: v2 patch failed")
         return False
 
-    text = f"{MARKER}\n{text}"
     runner_path.write_text(text)
-    print(f"patched runner written: {runner_path}")
+    print(f"runner ready: {runner_path}")
     return True
 
 
