@@ -5,9 +5,16 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+if [[ ! -f orchestration_engine/tb/oe_hls_scatter_tb.cpp ]] ||
+   ! grep -q 'x4 PASSED' orchestration_engine/tb/oe_hls_scatter_tb.cpp; then
+  echo "ERROR: repo is stale. Run: git pull origin main"
+  echo "  (expect commit 7c1ec09 or later with HLS redesign + x4 cosim TB)"
+  exit 1
+fi
+
 source /tools/software/xilinx/setup_env.sh
 
-echo "=== scatter csynth + cosim (fan-out=2 anchor) ==="
+echo "=== scatter csynth + cosim (fan-out=2 anchor x4 for II) ==="
 rm -rf oe_scatter_proj
 vitis_hls -f orchestration_engine/run_hls_scatter.tcl
 
