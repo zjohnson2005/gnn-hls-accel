@@ -34,7 +34,14 @@ if [[ ! -f "$ROOT/gcn_stream_proj/sol1/syn/report/gcn_layer_stream_csynth.rpt" ]
    || [[ -z "$OLD_VER" ]] || [[ "$CUR_VER" != "$OLD_VER" ]]; then
   echo "=== Rebuilding gcn_stream_proj with Vitis $CUR_VER (was: ${OLD_VER:-unknown}) ==="
   rm -rf "$ROOT/gcn_stream_proj"
-  vitis_hls -f run_hls_stream_ls.tcl || exit 1
+  if ! vitis_hls -f run_hls_stream_ls.tcl; then
+    echo ""
+    echo "ERROR: vitis_hls rebuild failed with $CUR_VER."
+    echo "Try pinning a known-good version, then re-run:"
+    echo "  export OE_LS_VITIS_VERSION=2023.1"
+    echo "  bash orchestration_engine/run_ls_probe.sh"
+    exit 1
+  fi
   mkdir -p "$ROOT/gcn_stream_proj/sol1"
   echo "$(command -v vitis_hls) via ${OE_LS_VITIS_SETTINGS64:-PATH}" > "$STAMP"
   ln -sfn sol1 "$ROOT/gcn_stream_proj/solution1"
