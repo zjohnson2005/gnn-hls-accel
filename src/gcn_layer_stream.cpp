@@ -196,6 +196,9 @@ agg_nodes:
 
 #ifdef GNN_LS_LITE
 void gcn_layer_stream(
+#else
+void gcn_layer_stream(
+#endif
     const data_t   *X,
     const weight_t *W,
     const weight_t *bias,
