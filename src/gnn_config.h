@@ -14,6 +14,8 @@
 
 #ifdef GNN_LS_LITE
 
+#include <cstdint>
+
 typedef float   data_t;
 typedef float   weight_t;
 typedef float   norm_t;
