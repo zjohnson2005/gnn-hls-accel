@@ -26,6 +26,14 @@
 #define F_IN      16           // input feature dimension
 #define F_OUT     16           // output feature dimension
 
+#ifdef GNN_LS_LITE
+// Smaller bounds for LightningSim SystemC elaboration (TB uses N=6; topology unchanged).
+#undef MAX_NODES
+#undef MAX_EDGES
+#define MAX_NODES 64
+#define MAX_EDGES 512
+#endif
+
 // ---- Top-level kernel ----
 void gcn_layer(
     const data_t   X[MAX_NODES][F_IN],   // node input features
