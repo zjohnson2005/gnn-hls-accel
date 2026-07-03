@@ -14,7 +14,7 @@ if {![file exists $csynth_rpt]} {
     exit 1
 }
 
-oe_remove_all_tb
+oe_remove_scatter_tb
 add_files -tb orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp \
   -cflags "-I./orchestration_engine/hls"
 
