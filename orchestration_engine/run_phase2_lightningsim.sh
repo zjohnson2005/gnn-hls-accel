@@ -77,7 +77,7 @@ fi
 if [[ ! -f "$CSYNTH_RPT" ]]; then
   echo "=== Building streaming GCN kernel with LightningSim-compatible Vitis ==="
   rm -rf gcn_stream_proj
-  vitis_hls -f run_hls_stream.tcl
+  vitis_hls -f run_hls_stream_ls.tcl
   echo "$(command -v vitis_hls) via ${OE_LS_VITIS_SETTINGS64:-PATH}" > "$LS_TOOLCHAIN_STAMP"
 fi
 

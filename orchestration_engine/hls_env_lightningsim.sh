@@ -11,11 +11,13 @@
 # If XILINX_HLS points at a different Vitis version than the one that built
 # the project bitcode, ap_fixed/hls::stream ABI mismatches cause the
 # instrumented testbench to SEGFAULT (surfaces as "kernel did not run").
-# So this script always force-aligns XILINX_HLS with the vitis_hls it picks,
-# even when the calling shell already has a (possibly mixed) Xilinx env.
 #
-# Both site trees are probed: /tools/software/amd/xilinx/ARCHIVE/... and
-# /tools/software/xilinx/ARCHIVE/... (the box symlinks between them).
+# On this box, ARCHIVE/Vitis_HLS/<ver> is often a partial install (binaries
+# only). Headers live under sibling trees such as ARCHIVE/Vitis/<ver>/Vitis_HLS.
+# Some ARCHIVE entries (notably 2024.1) have headers but a broken vitis_hls
+# runtime ("Not supported revsion: iostream error"); we smoke-test before pick.
+#
+# Override version preference: export OE_LS_VITIS_VERSION=2023.1
 
 _oe_ls_source_relaxed() {
   set +u +e
@@ -24,159 +26,137 @@ _oe_ls_source_relaxed() {
   set -u -e
 }
 
-# Accept a pre-existing vitis_hls only if it is an LS-compatible version
-# (2021.x-2024.x, judging by its installation path).
-_oe_ls_path_ok() {
-  case "$1" in
-    *202[1-4]*) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
-_oe_ls_cur="$(command -v vitis_hls 2>/dev/null || true)"
-if [[ -n "$_oe_ls_cur" ]] && ! _oe_ls_path_ok "$_oe_ls_cur"; then
-  echo "NOTE: ignoring vitis_hls on PATH ($_oe_ls_cur) — not LS-compatible (need 2021-2024)."
-  _oe_ls_cur=""
-fi
-
-if [[ -z "$_oe_ls_cur" ]]; then
-  if [[ -n "${OE_LS_VITIS_SETTINGS64:-}" ]] && [[ -f "$OE_LS_VITIS_SETTINGS64" ]]; then
-    _oe_ls_source_relaxed "$OE_LS_VITIS_SETTINGS64"
-    _oe_ls_cur="$(command -v vitis_hls 2>/dev/null || true)"
-  fi
-fi
-
-if [[ -z "$_oe_ls_cur" ]]; then
-  # 2021.1 first (LS gold standard), then newest-supported downward.
-  for _oe_ls_ver in 2021.1 2024.2 2024.1 2023.2 2023.1 2022.2 2022.1; do
-    for _oe_ls_env in \
-      "/tools/software/amd/xilinx/ARCHIVE/Vitis/$_oe_ls_ver/settings64.sh" \
-      "/tools/software/xilinx/ARCHIVE/Vitis/$_oe_ls_ver/settings64.sh" \
-      "/tools/software/amd/xilinx/ARCHIVE/Vitis_HLS/$_oe_ls_ver/settings64.sh" \
-      "/tools/software/xilinx/ARCHIVE/Vitis_HLS/$_oe_ls_ver/settings64.sh"; do
-      if [[ -f "$_oe_ls_env" ]]; then
-        _oe_ls_source_relaxed "$_oe_ls_env"
-        _oe_ls_cur="$(command -v vitis_hls 2>/dev/null || true)"
-        if [[ -n "$_oe_ls_cur" ]] && _oe_ls_path_ok "$_oe_ls_cur"; then
-          export OE_LS_VITIS_SETTINGS64="$_oe_ls_env"
-          break 2
-        fi
-        _oe_ls_cur=""
-      fi
-    done
-  done
-  unset _oe_ls_ver _oe_ls_env
-fi
-
-if [[ -z "$_oe_ls_cur" ]]; then
-  for _oe_ls_ver in 2021.1 2024.2 2024.1 2023.2 2023.1; do
-    for _oe_ls_bin in \
-      "/tools/software/amd/xilinx/ARCHIVE/Vitis_HLS/$_oe_ls_ver/bin/vitis_hls" \
-      "/tools/software/xilinx/ARCHIVE/Vitis_HLS/$_oe_ls_ver/bin/vitis_hls" \
-      "/tools/software/amd/xilinx/ARCHIVE/Vitis/$_oe_ls_ver/bin/vitis_hls" \
-      "/tools/software/xilinx/ARCHIVE/Vitis/$_oe_ls_ver/bin/vitis_hls"; do
-      if [[ -x "$_oe_ls_bin" ]]; then
-        export PATH="$(dirname "$_oe_ls_bin"):$PATH"
-        _oe_ls_cur="$_oe_ls_bin"
-        break 2
-      fi
-    done
-  done
-  unset _oe_ls_ver _oe_ls_bin
-fi
-
-if [[ -z "$_oe_ls_cur" ]]; then
-  echo "ERROR: no LightningSim-compatible vitis_hls found (need ARCHIVE 2021-2024)."
-  echo "Checked /tools/software/{amd/,}xilinx/ARCHIVE/{Vitis,Vitis_HLS}/<ver>/"
-  echo "Set OE_LS_VITIS_SETTINGS64=/path/to/settings64.sh and re-run."
-  # return when sourced, exit when executed
-  return 1 2>/dev/null || exit 1
-fi
-
-# --- XILINX_HLS must be a COMPLETE HLS tree, not just a bin/ shim. ---------
-# LightningSim compiles support code with -I $XILINX_HLS/include and links via
-# $XILINX_HLS/include/Makefile.sysc.rules. Some ARCHIVE entries on the box are
-# partial installs (binaries only, no headers), so validate before exporting.
 _oe_ls_hls_root_ok() {
   [[ -f "$1/include/ap_fixed.h" ]] && [[ -f "$1/include/Makefile.sysc.rules" ]]
 }
 
-_oe_ls_root="$(cd "$(dirname "$_oe_ls_cur")/.." && pwd)"
-_oe_ls_ver="$(echo "$_oe_ls_root" | grep -oE '20[0-9]{2}\.[0-9]+' | tail -1)"
-_oe_ls_ver="${_oe_ls_ver:-unknown}"
+_oe_ls_smoke_ok() {
+  local vh="$1"
+  [[ -x "$vh" ]] || return 1
+  local out rc
+  out="$("$vh" -version 2>&1)" || rc=$?
+  if [[ "${rc:-0}" -eq 0 ]] && [[ -n "$out" ]]; then
+    return 0
+  fi
+  out="$("$vh" 2>&1 | head -3)" || true
+  [[ "$out" == *"Not supported"* ]] && return 1
+  [[ "$out" == *"iostream error"* ]] && return 1
+  [[ "$out" == *"Vitis HLS"* || "$out" == *"vivado_hls"* ]] && return 0
+  return 1
+}
 
-if ! _oe_ls_hls_root_ok "$_oe_ls_root"; then
-  echo "NOTE: $_oe_ls_root has no HLS headers (partial install); probing sibling roots for $_oe_ls_ver ..."
-  for _oe_ls_hroot in \
-    "/tools/software/amd/xilinx/ARCHIVE/Vitis/$_oe_ls_ver" \
-    "/tools/software/xilinx/ARCHIVE/Vitis/$_oe_ls_ver" \
-    "/tools/software/amd/xilinx/ARCHIVE/Vitis_HLS/$_oe_ls_ver" \
-    "/tools/software/xilinx/ARCHIVE/Vitis_HLS/$_oe_ls_ver" \
-    "/tools/software/amd/xilinx/ARCHIVE/$_oe_ls_ver/Vitis" \
-    "/tools/software/xilinx/ARCHIVE/$_oe_ls_ver/Vitis" \
-    "/tools/software/amd/xilinx/ARCHIVE/$_oe_ls_ver/Vitis_HLS" \
-    "/tools/software/xilinx/ARCHIVE/$_oe_ls_ver/Vitis_HLS" \
-    "/tools/software/amd/xilinx/$_oe_ls_ver/Vitis_HLS" \
-    "/tools/software/xilinx/$_oe_ls_ver/Vitis_HLS"; do
-    if _oe_ls_hls_root_ok "$_oe_ls_hroot"; then
-      _oe_ls_root="$_oe_ls_hroot"
-      echo "  found complete header tree: $_oe_ls_root"
-      break
+_oe_ls_header_roots_for_ver() {
+  local ver="$1"
+  local root
+  for root in \
+    "/tools/software/amd/xilinx/ARCHIVE/Vitis/$ver/Vitis_HLS" \
+    "/tools/software/xilinx/ARCHIVE/Vitis/$ver/Vitis_HLS" \
+    "/tools/software/amd/xilinx/ARCHIVE/Vitis/$ver" \
+    "/tools/software/xilinx/ARCHIVE/Vitis/$ver" \
+    "/tools/software/amd/xilinx/ARCHIVE/Vitis_HLS/$ver" \
+    "/tools/software/xilinx/ARCHIVE/Vitis_HLS/$ver" \
+    "/tools/software/amd/xilinx/ARCHIVE/$ver/Vitis/Vitis_HLS" \
+    "/tools/software/xilinx/ARCHIVE/$ver/Vitis/Vitis_HLS" \
+    "/tools/software/amd/xilinx/ARCHIVE/$ver/Vitis_HLS" \
+    "/tools/software/xilinx/ARCHIVE/$ver/Vitis_HLS" \
+    "/tools/software/amd/xilinx/$ver/Vitis_HLS" \
+    "/tools/software/xilinx/$ver/Vitis_HLS"; do
+    if _oe_ls_hls_root_ok "$root"; then
+      echo "$root"
+      return 0
     fi
   done
-  unset _oe_ls_hroot
-fi
+  return 1
+}
 
-if ! _oe_ls_hls_root_ok "$_oe_ls_root"; then
-  # Same-version headers unavailable: fall back to ANY complete LS-compatible
-  # install (bin/vitis_hls + headers), preferring 2021.1 then newest down.
-  # NOTE: callers must rebuild the HLS project if the version changes.
-  echo "NOTE: no $_oe_ls_ver header tree found; searching for any complete 2021-2024 install ..."
-  for _oe_ls_ver2 in 2021.1 2024.2 2024.1 2023.2 2023.1 2022.2 2022.1; do
-    for _oe_ls_hroot in \
-      "/tools/software/amd/xilinx/ARCHIVE/Vitis/$_oe_ls_ver2" \
-      "/tools/software/xilinx/ARCHIVE/Vitis/$_oe_ls_ver2" \
-      "/tools/software/amd/xilinx/ARCHIVE/Vitis_HLS/$_oe_ls_ver2" \
-      "/tools/software/xilinx/ARCHIVE/Vitis_HLS/$_oe_ls_ver2" \
-      "/tools/software/amd/xilinx/ARCHIVE/$_oe_ls_ver2/Vitis" \
-      "/tools/software/xilinx/ARCHIVE/$_oe_ls_ver2/Vitis" \
-      "/tools/software/amd/xilinx/ARCHIVE/$_oe_ls_ver2/Vitis_HLS" \
-      "/tools/software/xilinx/ARCHIVE/$_oe_ls_ver2/Vitis_HLS"; do
-      if _oe_ls_hls_root_ok "$_oe_ls_hroot" && [[ -x "$_oe_ls_hroot/bin/vitis_hls" ]]; then
-        _oe_ls_root="$_oe_ls_hroot"
-        export PATH="$_oe_ls_root/bin:$PATH"
-        echo "  switching toolchain to complete install: $_oe_ls_root"
-        break 2
-      fi
-    done
+_oe_ls_bin_for_ver() {
+  local ver="$1"
+  local bin
+  for bin in \
+    "/tools/software/amd/xilinx/ARCHIVE/Vitis_HLS/$ver/bin/vitis_hls" \
+    "/tools/software/xilinx/ARCHIVE/Vitis_HLS/$ver/bin/vitis_hls" \
+    "/tools/software/amd/xilinx/ARCHIVE/Vitis/$ver/bin/vitis_hls" \
+    "/tools/software/xilinx/ARCHIVE/Vitis/$ver/bin/vitis_hls" \
+    "/tools/software/amd/xilinx/ARCHIVE/Vitis/$ver/Vitis_HLS/bin/vitis_hls" \
+    "/tools/software/xilinx/ARCHIVE/Vitis/$ver/Vitis_HLS/bin/vitis_hls"; do
+    if [[ -x "$bin" ]]; then
+      echo "$bin"
+      return 0
+    fi
   done
-  unset _oe_ls_ver2 _oe_ls_hroot
+  return 1
+}
+
+_oe_ls_try_settings64() {
+  local ver="$1"
+  local env
+  for env in \
+    "/tools/software/amd/xilinx/ARCHIVE/Vitis/$ver/settings64.sh" \
+    "/tools/software/xilinx/ARCHIVE/Vitis/$ver/settings64.sh" \
+    "/tools/software/amd/xilinx/ARCHIVE/Vitis_HLS/$ver/settings64.sh" \
+    "/tools/software/xilinx/ARCHIVE/Vitis_HLS/$ver/settings64.sh"; do
+    if [[ -f "$env" ]]; then
+      _oe_ls_source_relaxed "$env"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Version order: 2023.1 first (known-good on this box), then 2024.2 (LS example-1
+# passed), then others. 2024.1 is late — headers exist but runtime is broken.
+if [[ -n "${OE_LS_VITIS_VERSION:-}" ]]; then
+  _oe_ls_versions=("$OE_LS_VITIS_VERSION")
+else
+  _oe_ls_versions=(2023.1 2024.2 2023.2 2022.2 2024.1 2021.1)
 fi
 
-if ! _oe_ls_hls_root_ok "$_oe_ls_root"; then
-  echo "ERROR: no complete LS-compatible Vitis HLS tree found"
-  echo "       (need include/ap_fixed.h + include/Makefile.sysc.rules)."
-  echo "Layout of picked root $_oe_ls_root:"
-  ls "$_oe_ls_root" 2>/dev/null || true
+_oe_ls_picked_bin=""
+_oe_ls_picked_root=""
+
+for _oe_ls_ver in "${_oe_ls_versions[@]}"; do
+  _oe_ls_try_settings64 "$_oe_ls_ver" || true
+  _oe_ls_cand_bin="$(_oe_ls_bin_for_ver "$_oe_ls_ver" || true)"
+  if [[ -z "$_oe_ls_cand_bin" ]]; then
+    continue
+  fi
+  if ! _oe_ls_smoke_ok "$_oe_ls_cand_bin"; then
+    echo "NOTE: skipping $_oe_ls_cand_bin (vitis_hls smoke test failed)"
+    continue
+  fi
+  _oe_ls_cand_root="$(_oe_ls_header_roots_for_ver "$_oe_ls_ver" || true)"
+  if [[ -z "$_oe_ls_cand_root" ]]; then
+    echo "NOTE: skipping $_oe_ls_ver (vitis_hls ok but no header tree found)"
+    continue
+  fi
+  _oe_ls_picked_bin="$_oe_ls_cand_bin"
+  _oe_ls_picked_root="$_oe_ls_cand_root"
+  echo "Picked Vitis $_oe_ls_ver: bin=$_oe_ls_picked_bin"
+  echo "  headers=$_oe_ls_picked_root"
+  break
+done
+unset _oe_ls_ver _oe_ls_cand_bin _oe_ls_cand_root _oe_ls_versions
+
+if [[ -z "$_oe_ls_picked_bin" ]] || [[ -z "$_oe_ls_picked_root" ]]; then
+  echo "ERROR: no complete, working LS-compatible Vitis HLS tree found."
+  echo "       Need vitis_hls that passes -version AND include/ap_fixed.h."
+  echo "Try: export OE_LS_VITIS_VERSION=2023.1"
   echo "Candidate header trees on the box (60s search cap):"
-  timeout 60 find /tools/software -maxdepth 8 -path '*/include/ap_fixed.h' 2>/dev/null | head -20
-  echo "Set OE_LS_VITIS_SETTINGS64 or edit hls_env_lightningsim.sh with the right root."
+  timeout 60 find /tools/software -maxdepth 10 -path '*/include/ap_fixed.h' 2>/dev/null | head -25
   return 1 2>/dev/null || exit 1
 fi
 
-if [[ "${XILINX_HLS:-}" != "$_oe_ls_root" ]]; then
+export PATH="$(dirname "$_oe_ls_picked_bin"):$PATH"
+if [[ "${XILINX_HLS:-}" != "$_oe_ls_picked_root" ]]; then
   if [[ -n "${XILINX_HLS:-}" ]]; then
     echo "NOTE: overriding stale XILINX_HLS=$XILINX_HLS"
   fi
-  export XILINX_HLS="$_oe_ls_root"
+  export XILINX_HLS="$_oe_ls_picked_root"
 fi
-unset _oe_ls_cur _oe_ls_root _oe_ls_ver
+unset _oe_ls_picked_bin _oe_ls_picked_root
 
 echo "LightningSim HLS toolchain: $(command -v vitis_hls)"
 echo "  XILINX_HLS=$XILINX_HLS"
-if [[ ! -f "$XILINX_HLS/include/ap_fixed.h" ]]; then
-  echo "  WARNING: XILINX_HLS still lacks headers; LS support-code compiles will fail."
-fi
 if [[ -n "${XILINX_VITIS:-}" ]] && [[ "${XILINX_VITIS}" != "$XILINX_HLS"* ]]; then
   echo "  (XILINX_VITIS=$XILINX_VITIS is a different install; harmless for LS, which only uses XILINX_HLS)"
 fi
