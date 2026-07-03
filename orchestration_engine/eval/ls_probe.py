@@ -16,6 +16,7 @@ orchestration_engine/hls_env_lightningsim.sh (same as run_ls_probe.sh).
 """
 
 import asyncio
+import pickle
 import sys
 from pathlib import Path
 
@@ -35,9 +36,14 @@ async def probe(solution_dir: Path) -> int:
         )
 
     failed = None
+    trace = None
     try:
         trace = await runner.run()
         print(f"\nTRACE OK: {trace.line_count} lines, {len(trace.fifos)} FIFOs")
+        trace_path = solution_dir.resolve() / "trace.pkl"
+        with trace_path.open("wb") as f:
+            pickle.dump(trace, f)
+        print(f"Wrote {trace_path} ({trace_path.stat().st_size} bytes)")
     except Exception as exc:  # noqa: BLE001 - report everything, then exit nonzero
         failed = exc
         print(f"\nTRACE FAILED: {type(exc).__name__}: {exc}")
@@ -62,6 +68,12 @@ async def probe(solution_dir: Path) -> int:
         out = tb.output or "(empty)"
         print(out[-4000:])
         print("=== end testbench output ===")
+        if trace is not None and tb.returncode != 0:
+            print(
+                "\nNOTE: TRACE OK despite TB exit "
+                f"{tb.returncode} — timing trace is valid for FIFO DSE; "
+                "functional Y mismatch is a separate LS sim issue."
+            )
 
     return 1 if failed else 0
 

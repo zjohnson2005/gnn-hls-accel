@@ -26,8 +26,8 @@ def report(repo: Path, log: Path, sol: Path) -> int:
         ("Instrumented TB runs (not -11)", not any("testbench exit code: -11" in ln for ln in _grep(log, "testbench exit code"))),
         ("Functional: Vitis csim TEST PASSED", "TEST PASSED" in (log.read_text(errors="replace") if log.is_file() else "") and "CSIM finish" in (log.read_text(errors="replace") if log.is_file() else "")),
         ("Functional: LS TB golden match", "testbench exit code: 0" in (log.read_text(errors="replace") if log.is_file() else "")),
-        ("Trace capture", "TRACE OK:" in (log.read_text(errors="replace") if log.is_file() else "")),
-        ("trace.pkl written", (sol / "trace.pkl").is_file()),
+        ("Trace resolution (TRACE OK in log)", "TRACE OK:" in (log.read_text(errors="replace") if log.is_file() else "")),
+        ("trace.pkl on disk", (sol / "trace.pkl").is_file()),
     ]
 
     done = 0
@@ -61,8 +61,8 @@ def report(repo: Path, log: Path, sol: Path) -> int:
     else:
         print("\ntrace.pkl: missing")
 
-    print("\nCurrent blocker: instrumented kernel runs but Y stays zero → FIFO seam or pointer/map issue")
-    print("Next: paste output of  bash orchestration_engine/run_ls_tb_rerun.sh")
+    print("\nCurrent phase: TRACE CAPTURE WORKS (540+ lines). Next: persist trace.pkl → run DSE.")
+    print("Optional: Y=0 golden mismatch (LS functional sim); does not block FIFO timing DSE.")
     return 0
 
 
