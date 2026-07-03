@@ -64,21 +64,22 @@ echo "Using python: $OE_PYTHON ($("$OE_PYTHON" -c 'import fifo_advisor; print("f
 SOLUTION_DIR="$ROOT/gcn_stream_proj/sol1"
 CSYNTH_RPT="$SOLUTION_DIR/syn/report/gcn_layer_stream_csynth.rpt"
 LS_TOOLCHAIN_STAMP="$SOLUTION_DIR/.oe_lightningsim_vitis"
+STAMP_TAG="GNN_LS_LITE=1"
 
-# Rebuild if missing or if a previous build used the wrong (2025.x) toolchain.
-if [[ -f "$CSYNTH_RPT" ]] && [[ -f "$LS_TOOLCHAIN_STAMP" ]]; then
+# Rebuild if missing, wrong toolchain, or pre-LS-lite ap_fixed build.
+if [[ -f "$CSYNTH_RPT" ]] && [[ -f "$LS_TOOLCHAIN_STAMP" ]] \
+   && grep -q "$STAMP_TAG" "$LS_TOOLCHAIN_STAMP"; then
   echo "Reusing $SOLUTION_DIR (built for LightningSim: $(cat "$LS_TOOLCHAIN_STAMP"))"
 elif [[ -f "$CSYNTH_RPT" ]]; then
-  echo "WARNING: $CSYNTH_RPT exists but was not built via hls_env_lightningsim.sh."
-  echo "Removing gcn_stream_proj and rebuilding with ARCHIVE Vitis for trace capture."
+  echo "WARNING: rebuilding $SOLUTION_DIR for LightningSim ($STAMP_TAG required)."
   rm -rf gcn_stream_proj
 fi
 
 if [[ ! -f "$CSYNTH_RPT" ]]; then
-  echo "=== Building streaming GCN kernel with LightningSim-compatible Vitis ==="
+  echo "=== Building streaming GCN kernel with LightningSim-compatible Vitis ($STAMP_TAG) ==="
   rm -rf gcn_stream_proj
   vitis_hls -f run_hls_stream_ls.tcl
-  echo "$(command -v vitis_hls) via ${OE_LS_VITIS_SETTINGS64:-PATH}" > "$LS_TOOLCHAIN_STAMP"
+  echo "$(command -v vitis_hls) $STAMP_TAG via ${OE_LS_VITIS_SETTINGS64:-PATH}" > "$LS_TOOLCHAIN_STAMP"
 fi
 
 # LightningSim docs/examples use solution1/; Vitis 2023+ defaults to sol1/.

@@ -24,6 +24,7 @@ from pathlib import Path
 
 MARKER_V1 = "# OE-PATCH v1: add solution generated-source include dirs (Vitis 2023.2+)"
 MARKER_V2 = "# OE-PATCH v2: compile only TB sources under solution/ (skip kernel .cpp)"
+MARKER_V3 = "# OE-PATCH v3: drop -flto from testbench link (conda+LTO segfaults on some kernels)"
 
 STUB_HEADER = """\
 // Stub hls_signal_handler.h installed by gnn-hls-accel's LightningSim patch.
@@ -163,18 +164,34 @@ def apply_v2(text: str) -> tuple[str, bool]:
     return text, False
 
 
+def apply_v3(text: str) -> tuple[str, bool]:
+    if MARKER_V3 in text:
+        return text, True
+    old = '"-flto",'
+    if old not in text:
+        print("WARNING: v3 -flto flag not found (already removed or LS drift)")
+        return text, True
+    text = text.replace(old, '"-fno-lto",  # OE: was -flto', 1)
+    print("patched v3: replaced -flto with -fno-lto on testbench link")
+    return f"{MARKER_V3}\n{text}", True
+
+
 def patch_runner(runner_path: Path) -> bool:
     text = runner_path.read_text()
     _ensure_backup(runner_path)
 
     text, ok_v1 = apply_v1(text)
     text, ok_v2 = apply_v2(text)
+    text, ok_v3 = apply_v3(text)
 
     if not ok_v1 and MARKER_V1 not in text:
         print("ERROR: v1 patch failed")
         return False
     if not ok_v2 and MARKER_V2 not in text:
         print("ERROR: v2 patch failed")
+        return False
+    if not ok_v3 and MARKER_V3 not in text:
+        print("ERROR: v3 patch failed")
         return False
 
     runner_path.write_text(text)
