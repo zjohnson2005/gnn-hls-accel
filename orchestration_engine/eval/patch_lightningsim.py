@@ -107,7 +107,7 @@ PATCH_V2_BLOCK_RE = re.compile(
 
 
 PATCH_V5_LD_POP_OLD = 'os.environ.pop("LD_LIBRARY_PATH", None)'
-PATCH_V5_LD_POP_NEW = """\
+PATCH_V5_LD_POP_BODY = """\
 _oe_saved_ld = os.environ.pop("LD_LIBRARY_PATH", None)
 _oe_conda_lib = os.environ.get("OE_CONDA_LIB")
 if not _oe_conda_lib:
@@ -118,6 +118,42 @@ if _oe_conda_lib:
     os.environ["LD_LIBRARY_PATH"] = _oe_conda_lib + (
         f":{_oe_saved_ld}" if _oe_saved_ld else ""
     )"""
+PATCH_V5_LD_POP_RE = re.compile(
+    r'^(?P<indent>[ \t]*)os\.environ\.pop\("LD_LIBRARY_PATH", None\)',
+    re.MULTILINE,
+)
+PATCH_V5_LD_POP_RE_ALT = re.compile(
+    r'^(?P<indent>[ \t]*)environ\.pop\("LD_LIBRARY_PATH", None\)',
+    re.MULTILINE,
+)
+
+
+def _indented_block(indent: str, body: str) -> str:
+    lines = []
+    for line in body.splitlines():
+        if line.strip():
+            lines.append(indent + line)
+        else:
+            lines.append("")
+    return "\n".join(lines)
+
+
+def _runner_syntax_ok(text: str, label: str = "runner.py") -> bool:
+    try:
+        compile(text, label, "exec")
+        return True
+    except SyntaxError as exc:
+        print(f"ERROR: {label} syntax error: {exc}")
+        return False
+
+
+def _restore_runner_backup(runner_path: Path) -> str | None:
+    backup = runner_path.with_suffix(".py.oe-orig")
+    if not backup.is_file():
+        return None
+    text = backup.read_text()
+    print(f"restored runner from {backup}")
+    return text
 
 
 def find_runner() -> Path:
@@ -270,22 +306,35 @@ def apply_v5(text: str) -> tuple[str, bool]:
         print("v5 conda LD_LIBRARY_PATH preserve already present (unmarked)")
         return text, True
 
-    if PATCH_V5_LD_POP_OLD not in text:
-        alt = 'environ.pop("LD_LIBRARY_PATH", None)'
-        if alt in text:
-            text = text.replace(alt, PATCH_V5_LD_POP_NEW.replace("os.environ", "environ"), 1)
-            print("patched v5: preserve conda LD_LIBRARY_PATH (environ alias)")
-            return f"{MARKER_V5}\n{text}", True
-        print("WARNING: v5 LD_LIBRARY_PATH pop anchor not found in runner.py")
-        return text, True
+    for pattern, env_prefix in (
+        (PATCH_V5_LD_POP_RE, "os.environ"),
+        (PATCH_V5_LD_POP_RE_ALT, "environ"),
+    ):
+        match = pattern.search(text)
+        if not match:
+            continue
+        indent = match.group("indent")
+        body = PATCH_V5_LD_POP_BODY
+        if env_prefix == "environ":
+            body = body.replace("os.environ", "environ")
+        replacement = _indented_block(indent, body)
+        text = text[: match.start()] + replacement + text[match.end() :]
+        print("patched v5: preserve conda LD_LIBRARY_PATH for testbench run")
+        return f"{MARKER_V5}\n{text}", True
 
-    text = text.replace(PATCH_V5_LD_POP_OLD, PATCH_V5_LD_POP_NEW, 1)
-    print("patched v5: preserve conda LD_LIBRARY_PATH for testbench run")
-    return f"{MARKER_V5}\n{text}", True
+    print("WARNING: v5 LD_LIBRARY_PATH pop anchor not found in runner.py")
+    return text, True
 
 
 def patch_runner(runner_path: Path) -> bool:
     text = runner_path.read_text()
+    if not _runner_syntax_ok(text, str(runner_path)):
+        restored = _restore_runner_backup(runner_path)
+        if restored is None:
+            print("ERROR: runner.py is corrupt and runner.py.oe-orig is missing")
+            return False
+        text = restored
+
     _ensure_backup(runner_path)
 
     text, ok_v1 = apply_v1(text)
@@ -308,6 +357,13 @@ def patch_runner(runner_path: Path) -> bool:
         return False
     if not ok_v5 and MARKER_V5 not in text:
         print("ERROR: v5 patch failed")
+        return False
+
+    if not _runner_syntax_ok(text, str(runner_path)):
+        backup = runner_path.with_suffix(".py.oe-orig")
+        if backup.is_file():
+            shutil.copy2(backup, runner_path)
+            print(f"reverted runner to {backup} after failed patch")
         return False
 
     runner_path.write_text(text)
