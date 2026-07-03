@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
-# Re-run scatter cosim on an existing oe_scatter_proj (~20-60 min).
+# Re-run scatter cosim on existing oe_scatter_proj (~20-60 min).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-if [[ ! -d oe_scatter_proj ]]; then
-  echo "oe_scatter_proj not found — run run_phase2_scatter_only.sh first."
+CSYNTH_RPT="oe_scatter_proj/sol1/syn/report/oe_hls_scatter_kernel_csynth.rpt"
+if [[ ! -f "$CSYNTH_RPT" ]]; then
+  echo "Missing $CSYNTH_RPT"
+  echo "Run: bash orchestration_engine/run_phase2_scatter_only.sh"
   exit 1
 fi
 
 source /tools/software/xilinx/setup_env.sh
-export PATH="/tools/software/xilinx/ARCHIVE/Vitis_HLS/2024.2/bin:${PATH}"
+export PATH="/tools/software/amd/xilinx/ARCHIVE/Vitis_HLS/2025.2/bin:${PATH}"
 
-echo "=== scatter cosim only (fan-out=2 anchor) ==="
+echo "=== scatter cosim only (fan-out=2 anchor, reuses csynth RTL) ==="
 vitis_hls -f orchestration_engine/run_hls_scatter_cosim_only.tcl
 
 COSIM_RPT="$(find oe_scatter_proj -name 'oe_hls_scatter_kernel_cosim.rpt' | head -1)"
