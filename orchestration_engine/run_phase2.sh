@@ -5,7 +5,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# Xilinx settings64.sh references unset vars; relax -u while sourcing.
+set +u
 source /tools/software/xilinx/setup_env.sh
+set -u
 
 echo "=== Phase 2: scatter csynth ==="
 rm -rf oe_scatter_proj

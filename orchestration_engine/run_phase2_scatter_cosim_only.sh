@@ -10,7 +10,10 @@ if [[ ! -f orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp ]]; then
   exit 1
 fi
 
+# Xilinx settings64.sh references unset vars; relax -u while sourcing.
+set +u
 source /tools/software/xilinx/setup_env.sh
+set -u
 
 echo "=== scatter cosim x4 for II (oe_scatter_cosim_proj) ==="
 rm -rf oe_scatter_cosim_proj
