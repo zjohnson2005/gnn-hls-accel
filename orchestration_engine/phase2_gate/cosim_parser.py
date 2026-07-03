@@ -33,7 +33,9 @@ class CosimReport(object):
 
     @property
     def passed(self):
-        return self.status is not None and self.status.lower() == "pass"
+        if self.status is None:
+            return False
+        return self.status.lower() in ("pass", "passed")
 
     @property
     def latency_cycles(self):
@@ -101,8 +103,11 @@ def parse_cosim_report(path, fan_out=2):
         if re.search(r"VHDL|Verilog", line, re.I) and "Status" not in line:
             cols = [c.strip() for c in line.strip("|").split("|")]
             if len(cols) >= 5:
+                row_status = cols[1]
+                if row_status.upper() in ("NA", "-", ""):
+                    continue
                 rtl = cols[0]
-                status = cols[1]
+                status = row_status
                 lat_min = _parse_int(cols[2])
                 lat_max = _parse_int(cols[4]) if len(cols) > 4 else lat_min
                 interval_min = _parse_int(cols[5]) if len(cols) > 5 else None
@@ -129,10 +134,15 @@ def parse_cosim_report(path, fan_out=2):
                     lat_max = _parse_int(cols[1])
                     break
 
-    if status is None:
-        m_status = re.search(r"Co-simulation\s+(passed|failed|Pass|Fail)", text, re.I)
-        if m_status:
-            status = "pass" if m_status.group(1).lower().startswith("p") else "fail"
+    if status is None or status.upper() == "NA":
+        if re.search(r"co-simulation finished:\s*PASS", text, re.I):
+            status = "pass"
+        elif re.search(r"Co-simulation\s+passed", text, re.I):
+            status = "pass"
+        else:
+            m_status = re.search(r"Co-simulation\s+(passed|failed|Pass|Fail)", text, re.I)
+            if m_status:
+                status = "pass" if m_status.group(1).lower().startswith("p") else "fail"
 
     return CosimReport(
         top=top,
