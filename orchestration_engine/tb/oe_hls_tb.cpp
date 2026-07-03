@@ -2,61 +2,39 @@
 
 #include <cstdio>
 
-static void init_chain_graph(
-    oe_hls_graph_desc &desc,
-    ap_uint<32> row_ptr[OE_HLS_MAX_NODES + 1],
-    oe_hls_node_id_t col_idx[OE_HLS_MAX_EDGES],
-    ap_uint<16> preds_remaining[OE_HLS_MAX_NODES],
-    ap_uint<8> fire_mode[OE_HLS_MAX_NODES],
-    ap_uint<16> fire_threshold[OE_HLS_MAX_NODES],
-    ap_uint<8> node_kind[OE_HLS_MAX_NODES],
-    oe_hls_cycle_t predicted_latency[OE_HLS_MAX_NODES],
-    ap_uint<1> ready_flags[OE_HLS_MAX_NODES]) {
-    desc.num_nodes = 3;
-    desc.num_edges = 2;
-    desc.num_roots = 1;
-
-    row_ptr[0] = 0;
-    row_ptr[1] = 1;
-    row_ptr[2] = 2;
-    row_ptr[3] = 2;
-    col_idx[0] = 1;
-    col_idx[1] = 2;
-
-    preds_remaining[0] = 0;
-    preds_remaining[1] = 1;
-    preds_remaining[2] = 1;
-
-    for (int i = 0; i < 3; ++i) {
-        fire_mode[i] = 0;
-        fire_threshold[i] = 0;
-        node_kind[i] = 1;
-        predicted_latency[i] = 10;
-        ready_flags[i] = 0;
-    }
-}
+static oe_hls_seg_id_t head_seg[OE_HLS_MAX_NODES];
+static oe_hls_seg_id_t tail_seg[OE_HLS_MAX_NODES];
+static oe_hls_seg_id_t seg_next[OE_HLS_MAX_SEGS];
+static ap_uint<8> seg_count[OE_HLS_MAX_SEGS];
+static oe_hls_node_id_t seg_slots[OE_HLS_MAX_SEG_SLOTS];
+static oe_hls_node_state_t node_state[OE_HLS_MAX_NODES];
+static ap_uint<1> ready_flags[OE_HLS_MAX_NODES];
+static ap_uint<32> seg_alloc;
 
 int main() {
-    oe_hls_graph_desc desc;
-    ap_uint<32> row_ptr[OE_HLS_MAX_NODES + 1] = {};
-    oe_hls_node_id_t col_idx[OE_HLS_MAX_EDGES] = {};
-    ap_uint<16> preds_remaining[OE_HLS_MAX_NODES] = {};
-    ap_uint<8> fire_mode[OE_HLS_MAX_NODES] = {};
-    ap_uint<16> fire_threshold[OE_HLS_MAX_NODES] = {};
-    ap_uint<8> node_kind[OE_HLS_MAX_NODES] = {};
-    oe_hls_cycle_t predicted_latency[OE_HLS_MAX_NODES] = {};
-    ap_uint<1> ready_flags[OE_HLS_MAX_NODES] = {};
+    for (int n = 0; n < OE_HLS_MAX_NODES; ++n) {
+        head_seg[n] = OE_HLS_NULL_SEG;
+        tail_seg[n] = OE_HLS_NULL_SEG;
+        node_state[n] = 0;
+        ready_flags[n] = 0;
+    }
+    for (int s = 0; s < OE_HLS_MAX_SEGS; ++s) {
+        seg_next[s] = OE_HLS_NULL_SEG;
+        seg_count[s] = 0;
+    }
+    seg_alloc = 0;
 
-    init_chain_graph(
-        desc,
-        row_ptr,
-        col_idx,
-        preds_remaining,
-        fire_mode,
-        fire_threshold,
-        node_kind,
-        predicted_latency,
-        ready_flags);
+    // Chain 0 -> 1 -> 2.
+    if (oe_hls_append_edge(0, 1, head_seg, tail_seg, seg_next, seg_count,
+                           seg_slots, seg_alloc) != 0 ||
+        oe_hls_append_edge(1, 2, head_seg, tail_seg, seg_next, seg_count,
+                           seg_slots, seg_alloc) != 0) {
+        std::printf("FAIL: chain append rejected\n");
+        return 1;
+    }
+    node_state[0] = oe_hls_make_node(0, 0, 0);
+    node_state[1] = oe_hls_make_node(1, 0, 0);
+    node_state[2] = oe_hls_make_node(1, 0, 0);
 
     oe_hls_node_id_t completion_nodes[OE_HLS_MAX_OUTSTANDING] = {};
     oe_hls_cycle_t completion_cycles[OE_HLS_MAX_OUTSTANDING] = {};
@@ -67,19 +45,8 @@ int main() {
 
     oe_hls_cycle_t out_cycles = 0;
     orchestration_engine(
-        desc,
-        row_ptr,
-        col_idx,
-        preds_remaining,
-        fire_mode,
-        fire_threshold,
-        node_kind,
-        predicted_latency,
-        completion_nodes,
-        completion_cycles,
-        2,
-        ready_flags,
-        out_cycles);
+        3, head_seg, seg_next, seg_count, seg_slots, node_state,
+        completion_nodes, completion_cycles, 2, ready_flags, out_cycles);
 
     if (ready_flags[2] != 1) {
         std::printf("FAIL: node 2 not ready after chain completions\n");
@@ -90,28 +57,29 @@ int main() {
         return 1;
     }
 
-    ap_uint<32> num_edges = desc.num_edges;
-    if (oe_hls_append_edge(1, 2, row_ptr, col_idx, num_edges) != 0) {
+    // Runtime mid-graph append to node 1 (node 2's list must stay intact —
+    // this exact pattern corrupted the old CSR tail-append).
+    if (oe_hls_append_edge(1, 2, head_seg, tail_seg, seg_next, seg_count,
+                           seg_slots, seg_alloc) != 0) {
         std::printf("FAIL: append_edge rejected\n");
         return 1;
     }
 
+    // Node 2 already fired via the chain; batch scatter must NOT re-fire it.
+    ready_flags[2] = 0;
     oe_hls_cycle_t scatter_cycles = 0;
     oe_hls_scatter_kernel(
-        desc,
-        row_ptr,
-        col_idx,
-        preds_remaining,
-        fire_mode,
-        fire_threshold,
-        1,
-        1,
-        ready_flags,
-        scatter_cycles);
+        3, head_seg, seg_next, seg_count, seg_slots, node_state,
+        1, 1, ready_flags, scatter_cycles);
+    if (ready_flags[2] != 0) {
+        std::printf("FAIL: fired node re-fired after runtime append\n");
+        return 1;
+    }
 
-    std::printf("HLS TB PASSED out_cycles=%u scatter_cycles=%u edges=%u\n",
+    std::printf(
+        "HLS TB PASSED out_cycles=%u scatter_cycles=%u segs_used=%u\n",
         (unsigned)out_cycles,
         (unsigned)scatter_cycles,
-        (unsigned)num_edges);
+        (unsigned)seg_alloc);
     return 0;
 }
