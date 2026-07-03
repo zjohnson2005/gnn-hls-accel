@@ -22,6 +22,9 @@ fi
 export PATH="$(dirname "$PY"):$PATH"
 echo "XILINX_HLS=${XILINX_HLS:-unset}"
 
+# Vitis 2023.2+ compat: make LS find generated headers (hls_signal_handler.h).
+"$PY" -m orchestration_engine.eval.patch_lightningsim "$ROOT/gcn_stream_proj/sol1" || exit 1
+
 rm -f "$ROOT/gcn_stream_proj/sol1/trace.pkl"
 "$PY" -m orchestration_engine.eval.ls_probe "$ROOT/gcn_stream_proj/sol1"
 
