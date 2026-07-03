@@ -160,3 +160,28 @@ echo "  XILINX_HLS=$XILINX_HLS"
 if [[ -n "${XILINX_VITIS:-}" ]] && [[ "${XILINX_VITIS}" != "$XILINX_HLS"* ]]; then
   echo "  (XILINX_VITIS=$XILINX_VITIS is a different install; harmless for LS, which only uses XILINX_HLS)"
 fi
+
+# liblightningsimrt.a is built against conda libstdc++; linking with /usr/bin/g++
+# fails on std::__throw_bad_array_new_length(). Keep CC/CXX/LD_LIBRARY_PATH aligned.
+_oe_ls_conda_toolchain() {
+  local p="${CONDA_PREFIX:-}"
+  if [[ -z "$p" ]] && [[ -d "$HOME/miniconda3/envs/fifo-advisor" ]]; then
+    p="$HOME/miniconda3/envs/fifo-advisor"
+    export CONDA_PREFIX="$p"
+  fi
+  [[ -n "$p" ]] || return 0
+  local gxx="$p/bin/x86_64-conda-linux-gnu-g++"
+  local gcc="$p/bin/x86_64-conda-linux-gnu-cc"
+  if [[ -x "$gxx" ]]; then
+    export CXX="$gxx"
+  fi
+  if [[ -x "$gcc" ]]; then
+    export CC="$gcc"
+  fi
+  export LD_LIBRARY_PATH="${p}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export OE_CONDA_LIB="${p}/lib"
+}
+_oe_ls_conda_toolchain
+if [[ -n "${CXX:-}" ]]; then
+  echo "  LightningSim link CXX=$CXX"
+fi

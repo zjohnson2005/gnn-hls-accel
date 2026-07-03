@@ -118,8 +118,13 @@ static void aggregate_tier(
     data_t                   Y[MAX_NODES][F_OUT])
 #endif
 {
+#ifdef GNN_LS_LITE
+    data_t Xt[MAX_NODES][F_OUT];
+    data_t inv_sqrt_deg[MAX_NODES];
+#else
     static data_t Xt[MAX_NODES][F_OUT];
     static data_t inv_sqrt_deg[MAX_NODES];
+#endif
 #pragma HLS ARRAY_PARTITION variable=Xt complete dim=2
 #ifndef GNN_LS_LITE
 #pragma HLS ARRAY_PARTITION variable=Y  complete dim=2
@@ -214,7 +219,9 @@ void gcn_layer_stream(
     data_t         Y[MAX_NODES][F_OUT])
 #endif
 {
+#ifndef GNN_LS_LITE
 #pragma HLS DATAFLOW
+#endif
     hls::stream<seam_token_t> xt_stream;
 #pragma HLS STREAM variable=xt_stream depth=4
 

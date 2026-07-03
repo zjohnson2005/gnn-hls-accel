@@ -3,7 +3,7 @@
 # dump the instrumented testbench's exit code + stdout, all build subprocess
 # results, and the kernel-related symbols in the kept testbench object.
 #
-# Usage (inside fifo-advisor conda env):
+# Usage (fifo-advisor env — conda activate optional if ~/miniconda3 exists):
 #   bash orchestration_engine/run_ls_probe.sh
 set -uo pipefail
 
@@ -14,6 +14,9 @@ LOG="$ROOT/ls_probe.log"
 exec > >(tee -a "$LOG") 2>&1
 
 PY="${CONDA_PREFIX:-$HOME/miniconda3/envs/fifo-advisor}/bin/python"
+if [[ -z "${CONDA_PREFIX:-}" ]] && [[ -x "$HOME/miniconda3/envs/fifo-advisor/bin/python" ]]; then
+  export CONDA_PREFIX="$HOME/miniconda3/envs/fifo-advisor"
+fi
 
 # shellcheck disable=SC1091
 if ! source "$ROOT/orchestration_engine/hls_env_lightningsim.sh"; then
@@ -22,14 +25,27 @@ fi
 export PATH="$(dirname "$PY"):$PATH"
 echo "XILINX_HLS=${XILINX_HLS:-unset}"
 
+STAMP="$ROOT/gcn_stream_proj/sol1/.oe_lightningsim_vitis"
+STAMP_TAG="GNN_LS_LITE=nodf-u16"
+CUR_VER="$(command -v vitis_hls | grep -oE '20[0-9]{2}\.[0-9]+' | head -1)"
+
+echo "=== Preflight (LS-lite tree must match $STAMP_TAG) ==="
+if ! grep -q 'typedef uint16_t idx_t' "$ROOT/src/gnn_config.h"; then
+  echo "ERROR: src/gnn_config.h on this machine still uses ap_uint idx_t."
+  echo "       git pull (or rsync) the latest orchestration_engine + src changes, then re-run."
+  exit 1
+fi
+echo "  source: idx_t=uint16_t OK"
+if [[ -f "$STAMP" ]]; then
+  echo "  stamp: $(cat "$STAMP")"
+else
+  echo "  stamp: (missing — will rebuild)"
+fi
 # Vitis 2023.2+ compat: make LS find generated headers (hls_signal_handler.h).
 "$PY" -m orchestration_engine.eval.patch_lightningsim "$ROOT/gcn_stream_proj/sol1" || exit 1
 
 # If the env fell back to a different Vitis version than the one that built
 # the project, the bitcode is stale — rebuild (csim + csynth only, ~10 min).
-STAMP="$ROOT/gcn_stream_proj/sol1/.oe_lightningsim_vitis"
-STAMP_TAG="GNN_LS_LITE=ptr512"
-CUR_VER="$(command -v vitis_hls | grep -oE '20[0-9]{2}\.[0-9]+' | head -1)"
 OLD_STAMP="$(cat "$STAMP" 2>/dev/null || true)"
 if [[ ! -f "$ROOT/gcn_stream_proj/sol1/syn/report/gcn_layer_stream_csynth.rpt" ]] \
    || [[ "$OLD_STAMP" != *"$CUR_VER"* ]] || [[ "$OLD_STAMP" != *"$STAMP_TAG"* ]]; then
