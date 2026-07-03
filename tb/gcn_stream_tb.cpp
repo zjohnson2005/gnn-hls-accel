@@ -39,7 +39,11 @@ int main() {
     }
     row_ptr[N] = e;
 
+#ifdef GNN_LS_LITE
+    gcn_layer_stream(&X[0][0], &W[0][0], bias, row_ptr, col_idx, (idx_t)N, &Y[0][0]);
+#else
     gcn_layer_stream(X, W, bias, row_ptr, col_idx, (idx_t)N, Y);
+#endif
 
     double Xt_g[N][F_OUT];
     for (int i = 0; i < N; i++)
