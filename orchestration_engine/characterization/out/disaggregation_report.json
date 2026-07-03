@@ -1,0 +1,59 @@
+{
+  "reports": [
+    {
+      "workload_name": "langgraph_openai_action_heavy_c20",
+      "concurrency": 20,
+      "e2e_us": 181457798138,
+      "gpu_inference_us": 0,
+      "cpu_tool_phase_us": 309913456,
+      "bucket_us": {
+        "gpu_inference": 0,
+        "cpu_io_wait": 309276412,
+        "cpu_parse": 336000,
+        "cpu_tokenize": 56000,
+        "cpu_orchestration": 65000,
+        "cpu_state": 180044,
+        "cpu_other": 0
+      },
+      "bucket_pct_of_e2e": {
+        "gpu_inference": 0.0,
+        "cpu_io_wait": 99.794,
+        "cpu_parse": 0.108,
+        "cpu_tokenize": 0.018,
+        "cpu_orchestration": 0.021,
+        "cpu_state": 0.058,
+        "cpu_other": 0.0
+      },
+      "bucket_pct_of_cpu_tool": {
+        "cpu_io_wait": 99.794,
+        "cpu_parse": 0.108,
+        "cpu_tokenize": 0.018,
+        "cpu_orchestration": 0.021,
+        "cpu_state": 0.058,
+        "cpu_other": 0.0
+      },
+      "io_wait_us": 309276412,
+      "accelerable_cpu_us": 637044,
+      "orchestration_us": 65000,
+      "orchestration_pct_of_cpu_tool": 0.02,
+      "orchestration_pct_of_accelerable_cpu": 10.2,
+      "orchestration_pct_of_e2e": 0.02,
+      "cpu_tool_pct_of_e2e": 100.0,
+      "accelerable_cpu_pct_of_e2e": 0.21,
+      "gt_style_cpu_tool_pct_of_e2e": 100.0,
+      "aggregate_cpu_us": 309913456,
+      "aggregate_orchestration_us": 65000,
+      "aggregate_orchestration_pct_of_accelerable": 10.2,
+      "headline": "Coordination is 10.2% of hardware-amenable CPU time (after removing I/O wait). Per-agent-equivalent CPU tool / E2E is 100.0%. At concurrency=20, aggregate coordination is 10.2% of aggregate accelerable CPU (65,000 us of 637,044 us).",
+      "meta": {
+        "source": "langgraph_react instrumented run",
+        "preset": "action_heavy",
+        "backend": "openai",
+        "concurrency": "20",
+        "calibrated": "False",
+        "wall_clock": "True"
+      }
+    }
+  ],
+  "scaling": []
+}

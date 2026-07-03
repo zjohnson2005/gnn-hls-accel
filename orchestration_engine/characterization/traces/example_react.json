@@ -1,0 +1,14 @@
+{
+  "name": "example_instrumented_react",
+  "concurrency": 1,
+  "meta": {"source": "manual example — replace with real instrumented run"},
+  "spans": [
+    {"name": "gpu_prefill", "bucket": "gpu_inference", "start_us": 0, "end_us": 75000, "agent_id": "agent_0"},
+    {"name": "gpu_decode", "bucket": "gpu_inference", "start_us": 75000, "end_us": 2300000, "agent_id": "agent_0"},
+    {"name": "tokenize", "bucket": "cpu_tokenize", "start_us": 2300000, "end_us": 2300400, "agent_id": "agent_0"},
+    {"name": "orchestration_dispatch", "bucket": "cpu_orchestration", "start_us": 2300400, "end_us": 2300550, "agent_id": "agent_0"},
+    {"name": "tool_web_search", "bucket": "cpu_io_wait", "start_us": 2300550, "end_us": 4300550, "agent_id": "agent_0", "meta": {"tool": "web_search"}},
+    {"name": "parse_response", "bucket": "cpu_parse", "start_us": 4300550, "end_us": 4303050, "agent_id": "agent_0"},
+    {"name": "state_update", "bucket": "cpu_state", "start_us": 4303050, "end_us": 4305250, "agent_id": "agent_0"}
+  ]
+}

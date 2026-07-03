@@ -1,0 +1,165 @@
+{
+  "name": "langgraph_openai_action_heavy_c1",
+  "concurrency": 1,
+  "meta": {
+    "source": "langgraph_react instrumented run",
+    "preset": "action_heavy",
+    "backend": "openai",
+    "concurrency": "1",
+    "calibrated": "False",
+    "wall_clock": "True",
+    "parallel_workers": "4",
+    "execution_mode": "single_agent",
+    "batch_wall_s": "1.41",
+    "orch_ms_per_agent": "3.296",
+    "orch_measurement": "wall_residual",
+    "sweep": "openai_scaling",
+    "repeat_index": "8",
+    "react_steps_override": "4",
+    "task_prompt": "Search once and summarize in one sentence."
+  },
+  "spans": [
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192926084792,
+      "end_us": 192926084794,
+      "agent_id": "agent_0",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192926087003,
+      "end_us": 192926087009,
+      "agent_id": "agent_0",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192926087011,
+      "end_us": 192926087411,
+      "agent_id": "agent_0",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192926759254,
+      "end_us": 192927431494,
+      "agent_id": "agent_0",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192926760096,
+      "end_us": 192926762705,
+      "agent_id": "agent_0",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "1",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192926760970,
+      "end_us": 192926761770,
+      "agent_id": "agent_0",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192926760973,
+      "end_us": 192928434998,
+      "agent_id": "agent_0",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192926760976,
+      "end_us": 192926762976,
+      "agent_id": "agent_0",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192926760977,
+      "end_us": 192926762477,
+      "agent_id": "agent_0",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192926761779,
+      "end_us": 192926761780,
+      "agent_id": "agent_0",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "1",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192926762412,
+      "end_us": 192926762416,
+      "agent_id": "agent_0",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192926762417,
+      "end_us": 192926762817,
+      "agent_id": "agent_0",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192927480325,
+      "end_us": 192928198230,
+      "agent_id": "agent_0",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192927480896,
+      "end_us": 192927481582,
+      "agent_id": "agent_0",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "2",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    }
+  ]
+}

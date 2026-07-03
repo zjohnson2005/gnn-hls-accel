@@ -1,0 +1,2657 @@
+{
+  "thesis_statement": "Two-claim thesis. (1) Complexity class: scan-class schedulers cost O(live_nodes) per coordination decision (measured 59x growth to N=1000, check 11) while the engine costs O(fan-out) via scatter-on-completion \u2014 proven at a measurable (live_nodes, fan-out) crossover below. (2) Constant factor + energy: event-driven software is also O(fan-out) but carries measured constants of ~2 us/decision (ideal asyncio) to ~1.7 ms/decision (deployed LangGraph) vs the engine's cycle-scale scatter \u2014 pending csynth and full-path interface accounting (check 11). Claim (1) never applies against event-driven baselines.",
+  "check1_absolute_and_software": {
+    "rows": [
+      {
+        "preset": "action_heavy",
+        "concurrency": 1,
+        "orchestration_us": 6516,
+        "orchestration_ms_per_agent": 6.516,
+        "orchestration_us_per_decision": 501.2,
+        "wall_batch_s": 15.827,
+        "cores_equivalent": 0.0,
+        "schedulers": [
+          {
+            "name": "langgraph_measured",
+            "total_orchestration_us": 6516,
+            "per_decision_us": 501.2307692307692,
+            "notes": "From instrumented trace spans (cpu_orchestration bucket)."
+          },
+          {
+            "name": "naive_global_scan",
+            "total_orchestration_us": 3536,
+            "per_decision_us": 272,
+            "notes": "O(N) scan with N=1 live tasks per decision."
+          },
+          {
+            "name": "hardware_scatter_o_out_degree",
+            "total_orchestration_us": 3510,
+            "per_decision_us": 270.0,
+            "notes": "O(out-degree) avg=1.5, batch_width=1."
+          },
+          {
+            "name": "optimized_software_4x",
+            "total_orchestration_us": 1629,
+            "per_decision_us": 125.3076923076923,
+            "notes": "LangGraph cost / 4x (literature-style optimized scheduler)."
+          },
+          {
+            "name": "optimized_software_15x",
+            "total_orchestration_us": 434,
+            "per_decision_us": 33.41538461538462,
+            "notes": "LangGraph cost / 15x (literature-style optimized scheduler)."
+          }
+        ],
+        "verdict": "WEAK_ABSOLUTE"
+      },
+      {
+        "preset": "action_heavy",
+        "concurrency": 10,
+        "orchestration_us": 68280,
+        "orchestration_ms_per_agent": 6.828,
+        "orchestration_us_per_decision": 525.2,
+        "wall_batch_s": 16.307,
+        "cores_equivalent": 0.004,
+        "schedulers": [
+          {
+            "name": "langgraph_measured",
+            "total_orchestration_us": 68280,
+            "per_decision_us": 525.2307692307693,
+            "notes": "From instrumented trace spans (cpu_orchestration bucket)."
+          },
+          {
+            "name": "naive_global_scan",
+            "total_orchestration_us": 58760,
+            "per_decision_us": 452,
+            "notes": "O(N) scan with N=10 live tasks per decision."
+          },
+          {
+            "name": "hardware_scatter_o_out_degree",
+            "total_orchestration_us": 35100,
+            "per_decision_us": 270.0,
+            "notes": "O(out-degree) avg=1.5, batch_width=1."
+          },
+          {
+            "name": "optimized_software_4x",
+            "total_orchestration_us": 17070,
+            "per_decision_us": 131.30769230769232,
+            "notes": "LangGraph cost / 4x (literature-style optimized scheduler)."
+          },
+          {
+            "name": "optimized_software_15x",
+            "total_orchestration_us": 4552,
+            "per_decision_us": 35.01538461538462,
+            "notes": "LangGraph cost / 15x (literature-style optimized scheduler)."
+          }
+        ],
+        "verdict": "WEAK_ABSOLUTE"
+      },
+      {
+        "preset": "action_heavy",
+        "concurrency": 100,
+        "orchestration_us": 1033800,
+        "orchestration_ms_per_agent": 10.338,
+        "orchestration_us_per_decision": 795.2,
+        "wall_batch_s": 16.352,
+        "cores_equivalent": 0.063,
+        "schedulers": [
+          {
+            "name": "langgraph_measured",
+            "total_orchestration_us": 1033800,
+            "per_decision_us": 795.2307692307693,
+            "notes": "From instrumented trace spans (cpu_orchestration bucket)."
+          },
+          {
+            "name": "naive_global_scan",
+            "total_orchestration_us": 2927600,
+            "per_decision_us": 2252,
+            "notes": "O(N) scan with N=100 live tasks per decision."
+          },
+          {
+            "name": "hardware_scatter_o_out_degree",
+            "total_orchestration_us": 351000,
+            "per_decision_us": 270.0,
+            "notes": "O(out-degree) avg=1.5, batch_width=1."
+          },
+          {
+            "name": "optimized_software_4x",
+            "total_orchestration_us": 258450,
+            "per_decision_us": 198.80769230769232,
+            "notes": "LangGraph cost / 4x (literature-style optimized scheduler)."
+          },
+          {
+            "name": "optimized_software_15x",
+            "total_orchestration_us": 68920,
+            "per_decision_us": 53.01538461538462,
+            "notes": "LangGraph cost / 15x (literature-style optimized scheduler)."
+          }
+        ],
+        "verdict": "WEAK_ABSOLUTE"
+      },
+      {
+        "preset": "action_heavy",
+        "concurrency": 500,
+        "orchestration_us": 12969000,
+        "orchestration_ms_per_agent": 25.938,
+        "orchestration_us_per_decision": 1995.2,
+        "wall_batch_s": 16.373,
+        "cores_equivalent": 0.792,
+        "schedulers": [
+          {
+            "name": "langgraph_measured",
+            "total_orchestration_us": 12969000,
+            "per_decision_us": 1995.2307692307693,
+            "notes": "From instrumented trace spans (cpu_orchestration bucket)."
+          },
+          {
+            "name": "naive_global_scan",
+            "total_orchestration_us": 66638000,
+            "per_decision_us": 10252,
+            "notes": "O(N) scan with N=500 live tasks per decision."
+          },
+          {
+            "name": "hardware_scatter_o_out_degree",
+            "total_orchestration_us": 1755000,
+            "per_decision_us": 270.0,
+            "notes": "O(out-degree) avg=1.5, batch_width=1."
+          },
+          {
+            "name": "optimized_software_4x",
+            "total_orchestration_us": 3242250,
+            "per_decision_us": 498.8076923076923,
+            "notes": "LangGraph cost / 4x (literature-style optimized scheduler)."
+          },
+          {
+            "name": "optimized_software_15x",
+            "total_orchestration_us": 864600,
+            "per_decision_us": 133.01538461538462,
+            "notes": "LangGraph cost / 15x (literature-style optimized scheduler)."
+          }
+        ],
+        "verdict": "MODERATE"
+      },
+      {
+        "preset": "action_heavy",
+        "concurrency": 1000,
+        "orchestration_us": 45438000,
+        "orchestration_ms_per_agent": 45.438,
+        "orchestration_us_per_decision": 3495.2,
+        "wall_batch_s": 16.388,
+        "cores_equivalent": 2.773,
+        "schedulers": [
+          {
+            "name": "langgraph_measured",
+            "total_orchestration_us": 45438000,
+            "per_decision_us": 3495.230769230769,
+            "notes": "From instrumented trace spans (cpu_orchestration bucket)."
+          },
+          {
+            "name": "naive_global_scan",
+            "total_orchestration_us": 263276000,
+            "per_decision_us": 20252,
+            "notes": "O(N) scan with N=1000 live tasks per decision."
+          },
+          {
+            "name": "hardware_scatter_o_out_degree",
+            "total_orchestration_us": 3510000,
+            "per_decision_us": 270.0,
+            "notes": "O(out-degree) avg=1.5, batch_width=1."
+          },
+          {
+            "name": "optimized_software_4x",
+            "total_orchestration_us": 11359500,
+            "per_decision_us": 873.8076923076923,
+            "notes": "LangGraph cost / 4x (literature-style optimized scheduler)."
+          },
+          {
+            "name": "optimized_software_15x",
+            "total_orchestration_us": 3029200,
+            "per_decision_us": 233.0153846153846,
+            "notes": "LangGraph cost / 15x (literature-style optimized scheduler)."
+          }
+        ],
+        "verdict": "STRONG_ABSOLUTE"
+      },
+      {
+        "preset": "action_heavy",
+        "concurrency": 5000,
+        "orchestration_us": 483524760,
+        "orchestration_ms_per_agent": 96.705,
+        "orchestration_us_per_decision": 7438.8,
+        "wall_batch_s": 16.46,
+        "cores_equivalent": 29.376,
+        "schedulers": [
+          {
+            "name": "langgraph_measured",
+            "total_orchestration_us": 483524760,
+            "per_decision_us": 7438.842461538462,
+            "notes": "From instrumented trace spans (cpu_orchestration bucket)."
+          },
+          {
+            "name": "naive_global_scan",
+            "total_orchestration_us": 6516380000,
+            "per_decision_us": 100252,
+            "notes": "O(N) scan with N=5000 live tasks per decision."
+          },
+          {
+            "name": "hardware_scatter_o_out_degree",
+            "total_orchestration_us": 17550000,
+            "per_decision_us": 270.0,
+            "notes": "O(out-degree) avg=1.5, batch_width=1."
+          },
+          {
+            "name": "optimized_software_4x",
+            "total_orchestration_us": 120881190,
+            "per_decision_us": 1859.7106153846155,
+            "notes": "LangGraph cost / 4x (literature-style optimized scheduler)."
+          },
+          {
+            "name": "optimized_software_15x",
+            "total_orchestration_us": 32234984,
+            "per_decision_us": 495.9228307692308,
+            "notes": "LangGraph cost / 15x (literature-style optimized scheduler)."
+          }
+        ],
+        "verdict": "STRONG_ABSOLUTE"
+      },
+      {
+        "preset": "reasoning_heavy",
+        "concurrency": 1,
+        "orchestration_us": 2163,
+        "orchestration_ms_per_agent": 2.163,
+        "orchestration_us_per_decision": 240.3,
+        "wall_batch_s": 20.825,
+        "cores_equivalent": 0.0,
+        "schedulers": [
+          {
+            "name": "langgraph_measured",
+            "total_orchestration_us": 2163,
+            "per_decision_us": 240.33333333333334,
+            "notes": "From instrumented trace spans (cpu_orchestration bucket)."
+          },
+          {
+            "name": "naive_global_scan",
+            "total_orchestration_us": 2043,
+            "per_decision_us": 227,
+            "notes": "O(N) scan with N=1 live tasks per decision."
+          },
+          {
+            "name": "hardware_scatter_o_out_degree",
+            "total_orchestration_us": 2025,
+            "per_decision_us": 225.0,
+            "notes": "O(out-degree) avg=1.5, batch_width=1."
+          },
+          {
+            "name": "optimized_software_4x",
+            "total_orchestration_us": 540,
+            "per_decision_us": 60.083333333333336,
+            "notes": "LangGraph cost / 4x (literature-style optimized scheduler)."
+          },
+          {
+            "name": "optimized_software_15x",
+            "total_orchestration_us": 144,
+            "per_decision_us": 16.022222222222222,
+            "notes": "LangGraph cost / 15x (literature-style optimized scheduler)."
+          }
+        ],
+        "verdict": "WEAK_ABSOLUTE"
+      },
+      {
+        "preset": "reasoning_heavy",
+        "concurrency": 100,
+        "orchestration_us": 480900,
+        "orchestration_ms_per_agent": 4.809,
+        "orchestration_us_per_decision": 534.3,
+        "wall_batch_s": 20.825,
+        "cores_equivalent": 0.023,
+        "schedulers": [
+          {
+            "name": "langgraph_measured",
+            "total_orchestration_us": 480900,
+            "per_decision_us": 534.3333333333334,
+            "notes": "From instrumented trace spans (cpu_orchestration bucket)."
+          },
+          {
+            "name": "naive_global_scan",
+            "total_orchestration_us": 1986300,
+            "per_decision_us": 2207,
+            "notes": "O(N) scan with N=100 live tasks per decision."
+          },
+          {
+            "name": "hardware_scatter_o_out_degree",
+            "total_orchestration_us": 202500,
+            "per_decision_us": 225.0,
+            "notes": "O(out-degree) avg=1.5, batch_width=1."
+          },
+          {
+            "name": "optimized_software_4x",
+            "total_orchestration_us": 120225,
+            "per_decision_us": 133.58333333333334,
+            "notes": "LangGraph cost / 4x (literature-style optimized scheduler)."
+          },
+          {
+            "name": "optimized_software_15x",
+            "total_orchestration_us": 32060,
+            "per_decision_us": 35.62222222222223,
+            "notes": "LangGraph cost / 15x (literature-style optimized scheduler)."
+          }
+        ],
+        "verdict": "WEAK_ABSOLUTE"
+      },
+      {
+        "preset": "reasoning_heavy",
+        "concurrency": 500,
+        "orchestration_us": 7804500,
+        "orchestration_ms_per_agent": 15.609,
+        "orchestration_us_per_decision": 1734.3,
+        "wall_batch_s": 20.835,
+        "cores_equivalent": 0.375,
+        "schedulers": [
+          {
+            "name": "langgraph_measured",
+            "total_orchestration_us": 7804500,
+            "per_decision_us": 1734.3333333333333,
+            "notes": "From instrumented trace spans (cpu_orchestration bucket)."
+          },
+          {
+            "name": "naive_global_scan",
+            "total_orchestration_us": 45931500,
+            "per_decision_us": 10207,
+            "notes": "O(N) scan with N=500 live tasks per decision."
+          },
+          {
+            "name": "hardware_scatter_o_out_degree",
+            "total_orchestration_us": 1012500,
+            "per_decision_us": 225.0,
+            "notes": "O(out-degree) avg=1.5, batch_width=1."
+          },
+          {
+            "name": "optimized_software_4x",
+            "total_orchestration_us": 1951125,
+            "per_decision_us": 433.5833333333333,
+            "notes": "LangGraph cost / 4x (literature-style optimized scheduler)."
+          },
+          {
+            "name": "optimized_software_15x",
+            "total_orchestration_us": 520300,
+            "per_decision_us": 115.62222222222222,
+            "notes": "LangGraph cost / 15x (literature-style optimized scheduler)."
+          }
+        ],
+        "verdict": "WEAK_ABSOLUTE"
+      }
+    ],
+    "deployment_extrapolation_from_c500_per_agent": {
+      "1000": {
+        "aggregate_orchestration_cpu_seconds": 25.94,
+        "cores_if_serialized_on_one_core": 25.94,
+        "note": "Upper bound if all coord work piled on one core; parallel batch lowers duty cycle."
+      },
+      "10000": {
+        "aggregate_orchestration_cpu_seconds": 259.38,
+        "cores_if_serialized_on_one_core": 259.38,
+        "note": "Upper bound if all coord work piled on one core; parallel batch lowers duty cycle."
+      },
+      "50000": {
+        "aggregate_orchestration_cpu_seconds": 1296.9,
+        "cores_if_serialized_on_one_core": 1296.9,
+        "note": "Upper bound if all coord work piled on one core; parallel batch lowers duty cycle."
+      }
+    }
+  },
+  "check2_extended_curve": {
+    "action_heavy_curve": [
+      {
+        "concurrency": 1,
+        "orch_pct_accelerable": 17.79549923530697,
+        "cores_equivalent": 0.0004,
+        "orchestration_us": 6516
+      },
+      {
+        "concurrency": 10,
+        "orch_pct_accelerable": 18.490034662045062,
+        "cores_equivalent": 0.0042,
+        "orchestration_us": 68280
+      },
+      {
+        "concurrency": 100,
+        "orch_pct_accelerable": 25.56506256491419,
+        "cores_equivalent": 0.0632,
+        "orchestration_us": 1033800
+      },
+      {
+        "concurrency": 500,
+        "orch_pct_accelerable": 46.28644848138763,
+        "cores_equivalent": 0.7921,
+        "orchestration_us": 12969000
+      },
+      {
+        "concurrency": 1000,
+        "orch_pct_accelerable": 60.15250602345839,
+        "cores_equivalent": 2.7726,
+        "orchestration_us": 45438000
+      },
+      {
+        "concurrency": 5000,
+        "orch_pct_accelerable": 76.26275667846159,
+        "cores_equivalent": 29.3762,
+        "orchestration_us": 483524760
+      }
+    ],
+    "plateau_detected": false,
+    "note": "Plateau if last step gain < 2 percentage points."
+  },
+  "check3_mock_vs_real": {
+    "comparisons": [
+      {
+        "concurrency": 1,
+        "backend": "openai",
+        "mock_orch_pct_accelerable": 17.8,
+        "real_orch_pct_accelerable": 62.07,
+        "delta_pct_points": 44.28,
+        "mock_cores_eq": 0.0004,
+        "real_cores_eq": 0.0014,
+        "mock_ms_per_agent": 6.516,
+        "real_ms_per_agent": 8.35,
+        "real_instrumentation": "wall_residual"
+      },
+      {
+        "concurrency": 10,
+        "backend": "openai",
+        "mock_orch_pct_accelerable": 18.49,
+        "real_orch_pct_accelerable": 35.62,
+        "delta_pct_points": 17.13,
+        "mock_cores_eq": 0.0042,
+        "real_cores_eq": 0.007,
+        "mock_ms_per_agent": 6.828,
+        "real_ms_per_agent": 2.822,
+        "real_instrumentation": "wall_residual"
+      },
+      {
+        "concurrency": 20,
+        "backend": "openai",
+        "mock_orch_pct_accelerable": 19.34,
+        "real_orch_pct_accelerable": 48.2,
+        "delta_pct_points": 28.86,
+        "mock_cores_eq": 0.0089,
+        "real_cores_eq": 0.0117,
+        "mock_ms_per_agent": 7.218,
+        "real_ms_per_agent": 4.756,
+        "real_instrumentation": "wall_residual"
+      },
+      {
+        "concurrency": 100,
+        "backend": "openai",
+        "mock_orch_pct_accelerable": 25.57,
+        "real_orch_pct_accelerable": 39.89,
+        "delta_pct_points": 14.33,
+        "mock_cores_eq": 0.0632,
+        "real_cores_eq": 0.0085,
+        "mock_ms_per_agent": 10.338,
+        "real_ms_per_agent": 3.386,
+        "real_instrumentation": "wall_residual"
+      },
+      {
+        "concurrency": 500,
+        "backend": "openai",
+        "mock_orch_pct_accelerable": 46.29,
+        "real_orch_pct_accelerable": 56.17,
+        "delta_pct_points": 9.88,
+        "mock_cores_eq": 0.7921,
+        "real_cores_eq": 0.0205,
+        "mock_ms_per_agent": 25.938,
+        "real_ms_per_agent": 6.539,
+        "real_instrumentation": "wall_residual"
+      },
+      {
+        "concurrency": 1000,
+        "backend": "openai",
+        "mock_orch_pct_accelerable": 60.15,
+        "real_orch_pct_accelerable": 39.93,
+        "delta_pct_points": -20.22,
+        "mock_cores_eq": 2.7726,
+        "real_cores_eq": 0.0093,
+        "mock_ms_per_agent": 45.438,
+        "real_ms_per_agent": 3.391,
+        "real_instrumentation": "wall_residual"
+      }
+    ],
+    "anchor_points": 6,
+    "max_delta_pct_points": 44.28,
+    "curve_trust": "MEDIUM \u2014 6 anchors, max delta 44.3 pp"
+  },
+  "check4_workload_axis": {
+    "rows": [
+      {
+        "preset": "action_heavy",
+        "concurrency": 1,
+        "cpu_tool_pct_e2e": 57.54,
+        "orch_pct_accelerable": 17.8,
+        "cores_equivalent": 0.0004
+      },
+      {
+        "preset": "action_heavy",
+        "concurrency": 100,
+        "cpu_tool_pct_e2e": 58.9,
+        "orch_pct_accelerable": 25.57,
+        "cores_equivalent": 0.0632
+      },
+      {
+        "preset": "action_heavy",
+        "concurrency": 500,
+        "cpu_tool_pct_e2e": 58.96,
+        "orch_pct_accelerable": 46.29,
+        "cores_equivalent": 0.7921
+      },
+      {
+        "preset": "reasoning_heavy",
+        "concurrency": 1,
+        "cpu_tool_pct_e2e": 3.68,
+        "orch_pct_accelerable": 9.83,
+        "cores_equivalent": 0.0001
+      },
+      {
+        "preset": "reasoning_heavy",
+        "concurrency": 100,
+        "cpu_tool_pct_e2e": 3.67,
+        "orch_pct_accelerable": 19.51,
+        "cores_equivalent": 0.0231
+      },
+      {
+        "preset": "reasoning_heavy",
+        "concurrency": 500,
+        "cpu_tool_pct_e2e": 3.72,
+        "orch_pct_accelerable": 44.03,
+        "cores_equivalent": 0.3746
+      }
+    ],
+    "claim_scope": "Tool-heavy / action-heavy agents show higher CPU-tool share and rising orchestration at scale; reasoning-heavy agents are GPU-dominated with smaller absolute orchestration but similar % of accelerable CPU at high concurrency (check rows)."
+  },
+  "check5_software_closes_gap": {
+    "rows": [
+      {
+        "concurrency": 1,
+        "langgraph_us": 6516,
+        "optimized_4x_us": 1629,
+        "optimized_15x_us": 434,
+        "hardware_scatter_model_us": 3510,
+        "cores_eq_langgraph": 0.0004,
+        "cores_eq_optimized_4x": 0.0001,
+        "cores_eq_hardware_model": 0.0002,
+        "hardware_beats_optimized_4x": false
+      },
+      {
+        "concurrency": 10,
+        "langgraph_us": 68280,
+        "optimized_4x_us": 17070,
+        "optimized_15x_us": 4552,
+        "hardware_scatter_model_us": 35100,
+        "cores_eq_langgraph": 0.0042,
+        "cores_eq_optimized_4x": 0.001,
+        "cores_eq_hardware_model": 0.0022,
+        "hardware_beats_optimized_4x": false
+      },
+      {
+        "concurrency": 100,
+        "langgraph_us": 1033800,
+        "optimized_4x_us": 258450,
+        "optimized_15x_us": 68920,
+        "hardware_scatter_model_us": 351000,
+        "cores_eq_langgraph": 0.0632,
+        "cores_eq_optimized_4x": 0.0158,
+        "cores_eq_hardware_model": 0.0215,
+        "hardware_beats_optimized_4x": false
+      },
+      {
+        "concurrency": 500,
+        "langgraph_us": 12969000,
+        "optimized_4x_us": 3242250,
+        "optimized_15x_us": 864600,
+        "hardware_scatter_model_us": 1755000,
+        "cores_eq_langgraph": 0.7921,
+        "cores_eq_optimized_4x": 0.198,
+        "cores_eq_hardware_model": 0.1072,
+        "hardware_beats_optimized_4x": true
+      },
+      {
+        "concurrency": 1000,
+        "langgraph_us": 45438000,
+        "optimized_4x_us": 11359500,
+        "optimized_15x_us": 3029200,
+        "hardware_scatter_model_us": 3510000,
+        "cores_eq_langgraph": 2.7726,
+        "cores_eq_optimized_4x": 0.6931,
+        "cores_eq_hardware_model": 0.2142,
+        "hardware_beats_optimized_4x": true
+      },
+      {
+        "concurrency": 5000,
+        "langgraph_us": 483524760,
+        "optimized_4x_us": 120881190,
+        "optimized_15x_us": 32234984,
+        "hardware_scatter_model_us": 17550000,
+        "cores_eq_langgraph": 29.3762,
+        "cores_eq_optimized_4x": 7.344,
+        "cores_eq_hardware_model": 1.0662,
+        "hardware_beats_optimized_4x": true
+      }
+    ],
+    "literature_note": "Autellix-class claims 4-15x software orchestration speedups; hardware must beat 4x optimized in absolute cores, not just unoptimized LangGraph."
+  },
+  "check6_graph_shapes": {
+    "shapes": [
+      {
+        "name": "langgraph_react_chain",
+        "num_nodes": 11,
+        "num_edges": 10,
+        "max_out_degree": 1,
+        "mean_out_degree": 0.9090909090909091,
+        "p95_out_degree": 1.0,
+        "notes": "Linear ReAct: one successor per LLM/tools step."
+      },
+      {
+        "name": "synthetic_fanout_action_heavy",
+        "num_nodes": 5592405,
+        "num_edges": 5592404,
+        "max_out_degree": 4,
+        "mean_out_degree": 0.999999821186055,
+        "p95_out_degree": 4.0,
+        "notes": "Tree fan-out=4, depth=12 (subagents_per_step_mean from react_sim)."
+      },
+      {
+        "name": "synthetic_fanout_reasoning_heavy",
+        "num_nodes": 8,
+        "num_edges": 7,
+        "max_out_degree": 1,
+        "mean_out_degree": 0.875,
+        "p95_out_degree": 1.0,
+        "notes": "Tree fan-out=1, depth=8 (subagents_per_step_mean from react_sim)."
+      },
+      {
+        "name": "planner_fanout_64",
+        "num_nodes": 65,
+        "num_edges": 64,
+        "max_out_degree": 64,
+        "mean_out_degree": 0.9846153846153847,
+        "p95_out_degree": 0.0,
+        "notes": "Stress: single node with high fan-out (hardware scatter cost grows)."
+      },
+      {
+        "name": "planner_fanout_256",
+        "num_nodes": 257,
+        "num_edges": 256,
+        "max_out_degree": 256,
+        "mean_out_degree": 0.9961089494163424,
+        "p95_out_degree": 0.0,
+        "notes": "Stress: single node with high fan-out (hardware scatter cost grows)."
+      }
+    ]
+  },
+  "check7_crossover": {
+    "sweep_concurrency": [
+      1,
+      10,
+      100,
+      500,
+      1000,
+      5000
+    ],
+    "sweep_out_degree": [
+      1.0,
+      1.5,
+      4.0,
+      8.0,
+      16.0,
+      64.0,
+      256.0
+    ],
+    "opt_speedup": 4.0,
+    "batch_width": 8,
+    "react_avg_out_degree": 1.5,
+    "by_concurrency": [
+      {
+        "concurrency": 1,
+        "cores_langgraph": 0.0004,
+        "cells": [
+          {
+            "concurrency": 1,
+            "out_degree": 1.0,
+            "wall_batch_us": 15826523,
+            "decisions": 13,
+            "cores_langgraph": 0.0004,
+            "cores_optimized_4x": 0.0001,
+            "cores_hw_flat": 0.0002,
+            "cores_hw_batched": 0.0002,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 1,
+            "out_degree": 1.5,
+            "wall_batch_us": 15826523,
+            "decisions": 13,
+            "cores_langgraph": 0.0004,
+            "cores_optimized_4x": 0.0001,
+            "cores_hw_flat": 0.0002,
+            "cores_hw_batched": 0.0002,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 1,
+            "out_degree": 4.0,
+            "wall_batch_us": 15826523,
+            "decisions": 13,
+            "cores_langgraph": 0.0004,
+            "cores_optimized_4x": 0.0001,
+            "cores_hw_flat": 0.0002,
+            "cores_hw_batched": 0.0002,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 1,
+            "out_degree": 8.0,
+            "wall_batch_us": 15826523,
+            "decisions": 13,
+            "cores_langgraph": 0.0004,
+            "cores_optimized_4x": 0.0001,
+            "cores_hw_flat": 0.0003,
+            "cores_hw_batched": 0.0002,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 1,
+            "out_degree": 16.0,
+            "wall_batch_us": 15826523,
+            "decisions": 13,
+            "cores_langgraph": 0.0004,
+            "cores_optimized_4x": 0.0001,
+            "cores_hw_flat": 0.0004,
+            "cores_hw_batched": 0.0002,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 1,
+            "out_degree": 64.0,
+            "wall_batch_us": 15826523,
+            "decisions": 13,
+            "cores_langgraph": 0.0004,
+            "cores_optimized_4x": 0.0001,
+            "cores_hw_flat": 0.0008,
+            "cores_hw_batched": 0.0003,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 1,
+            "out_degree": 256.0,
+            "wall_batch_us": 15826523,
+            "decisions": 13,
+            "cores_langgraph": 0.0004,
+            "cores_optimized_4x": 0.0001,
+            "cores_hw_flat": 0.0027,
+            "cores_hw_batched": 0.0005,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          }
+        ]
+      },
+      {
+        "concurrency": 10,
+        "cores_langgraph": 0.0042,
+        "cells": [
+          {
+            "concurrency": 10,
+            "out_degree": 1.0,
+            "wall_batch_us": 16307440,
+            "decisions": 130,
+            "cores_langgraph": 0.0042,
+            "cores_optimized_4x": 0.001,
+            "cores_hw_flat": 0.0021,
+            "cores_hw_batched": 0.0021,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 10,
+            "out_degree": 1.5,
+            "wall_batch_us": 16307440,
+            "decisions": 130,
+            "cores_langgraph": 0.0042,
+            "cores_optimized_4x": 0.001,
+            "cores_hw_flat": 0.0022,
+            "cores_hw_batched": 0.0021,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 10,
+            "out_degree": 4.0,
+            "wall_batch_us": 16307440,
+            "decisions": 130,
+            "cores_langgraph": 0.0042,
+            "cores_optimized_4x": 0.001,
+            "cores_hw_flat": 0.0024,
+            "cores_hw_batched": 0.0021,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 10,
+            "out_degree": 8.0,
+            "wall_batch_us": 16307440,
+            "decisions": 130,
+            "cores_langgraph": 0.0042,
+            "cores_optimized_4x": 0.001,
+            "cores_hw_flat": 0.0028,
+            "cores_hw_batched": 0.0021,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 10,
+            "out_degree": 16.0,
+            "wall_batch_us": 16307440,
+            "decisions": 130,
+            "cores_langgraph": 0.0042,
+            "cores_optimized_4x": 0.001,
+            "cores_hw_flat": 0.0035,
+            "cores_hw_batched": 0.0022,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 10,
+            "out_degree": 64.0,
+            "wall_batch_us": 16307440,
+            "decisions": 130,
+            "cores_langgraph": 0.0042,
+            "cores_optimized_4x": 0.001,
+            "cores_hw_flat": 0.0081,
+            "cores_hw_batched": 0.0028,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 10,
+            "out_degree": 256.0,
+            "wall_batch_us": 16307440,
+            "decisions": 130,
+            "cores_langgraph": 0.0042,
+            "cores_optimized_4x": 0.001,
+            "cores_hw_flat": 0.0265,
+            "cores_hw_batched": 0.0051,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          }
+        ]
+      },
+      {
+        "concurrency": 100,
+        "cores_langgraph": 0.0632,
+        "cells": [
+          {
+            "concurrency": 100,
+            "out_degree": 1.0,
+            "wall_batch_us": 16352155,
+            "decisions": 1300,
+            "cores_langgraph": 0.0632,
+            "cores_optimized_4x": 0.0158,
+            "cores_hw_flat": 0.021,
+            "cores_hw_batched": 0.021,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 100,
+            "out_degree": 1.5,
+            "wall_batch_us": 16352155,
+            "decisions": 1300,
+            "cores_langgraph": 0.0632,
+            "cores_optimized_4x": 0.0158,
+            "cores_hw_flat": 0.0215,
+            "cores_hw_batched": 0.021,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 100,
+            "out_degree": 4.0,
+            "wall_batch_us": 16352155,
+            "decisions": 1300,
+            "cores_langgraph": 0.0632,
+            "cores_optimized_4x": 0.0158,
+            "cores_hw_flat": 0.0239,
+            "cores_hw_batched": 0.021,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 100,
+            "out_degree": 8.0,
+            "wall_batch_us": 16352155,
+            "decisions": 1300,
+            "cores_langgraph": 0.0632,
+            "cores_optimized_4x": 0.0158,
+            "cores_hw_flat": 0.0277,
+            "cores_hw_batched": 0.021,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 100,
+            "out_degree": 16.0,
+            "wall_batch_us": 16352155,
+            "decisions": 1300,
+            "cores_langgraph": 0.0632,
+            "cores_optimized_4x": 0.0158,
+            "cores_hw_flat": 0.0353,
+            "cores_hw_batched": 0.0219,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 100,
+            "out_degree": 64.0,
+            "wall_batch_us": 16352155,
+            "decisions": 1300,
+            "cores_langgraph": 0.0632,
+            "cores_optimized_4x": 0.0158,
+            "cores_hw_flat": 0.0811,
+            "cores_hw_batched": 0.0277,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          },
+          {
+            "concurrency": 100,
+            "out_degree": 256.0,
+            "wall_batch_us": 16352155,
+            "decisions": 1300,
+            "cores_langgraph": 0.0632,
+            "cores_optimized_4x": 0.0158,
+            "cores_hw_flat": 0.2643,
+            "cores_hw_batched": 0.0506,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          }
+        ]
+      },
+      {
+        "concurrency": 500,
+        "cores_langgraph": 0.7921,
+        "cells": [
+          {
+            "concurrency": 500,
+            "out_degree": 1.0,
+            "wall_batch_us": 16373372,
+            "decisions": 6500,
+            "cores_langgraph": 0.7921,
+            "cores_optimized_4x": 0.198,
+            "cores_hw_flat": 0.1048,
+            "cores_hw_batched": 0.1048,
+            "hw_flat_beats_opt4": true,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 500,
+            "out_degree": 1.5,
+            "wall_batch_us": 16373372,
+            "decisions": 6500,
+            "cores_langgraph": 0.7921,
+            "cores_optimized_4x": 0.198,
+            "cores_hw_flat": 0.1072,
+            "cores_hw_batched": 0.1048,
+            "hw_flat_beats_opt4": true,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 500,
+            "out_degree": 4.0,
+            "wall_batch_us": 16373372,
+            "decisions": 6500,
+            "cores_langgraph": 0.7921,
+            "cores_optimized_4x": 0.198,
+            "cores_hw_flat": 0.1191,
+            "cores_hw_batched": 0.1048,
+            "hw_flat_beats_opt4": true,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 500,
+            "out_degree": 8.0,
+            "wall_batch_us": 16373372,
+            "decisions": 6500,
+            "cores_langgraph": 0.7921,
+            "cores_optimized_4x": 0.198,
+            "cores_hw_flat": 0.1382,
+            "cores_hw_batched": 0.1048,
+            "hw_flat_beats_opt4": true,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 500,
+            "out_degree": 16.0,
+            "wall_batch_us": 16373372,
+            "decisions": 6500,
+            "cores_langgraph": 0.7921,
+            "cores_optimized_4x": 0.198,
+            "cores_hw_flat": 0.1763,
+            "cores_hw_batched": 0.1096,
+            "hw_flat_beats_opt4": true,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 500,
+            "out_degree": 64.0,
+            "wall_batch_us": 16373372,
+            "decisions": 6500,
+            "cores_langgraph": 0.7921,
+            "cores_optimized_4x": 0.198,
+            "cores_hw_flat": 0.4049,
+            "cores_hw_batched": 0.1382,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 500,
+            "out_degree": 256.0,
+            "wall_batch_us": 16373372,
+            "decisions": 6500,
+            "cores_langgraph": 0.7921,
+            "cores_optimized_4x": 0.198,
+            "cores_hw_flat": 1.3196,
+            "cores_hw_batched": 0.2525,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": false
+          }
+        ]
+      },
+      {
+        "concurrency": 1000,
+        "cores_langgraph": 2.7726,
+        "cells": [
+          {
+            "concurrency": 1000,
+            "out_degree": 1.0,
+            "wall_batch_us": 16388441,
+            "decisions": 13000,
+            "cores_langgraph": 2.7726,
+            "cores_optimized_4x": 0.6931,
+            "cores_hw_flat": 0.2094,
+            "cores_hw_batched": 0.2094,
+            "hw_flat_beats_opt4": true,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 1000,
+            "out_degree": 1.5,
+            "wall_batch_us": 16388441,
+            "decisions": 13000,
+            "cores_langgraph": 2.7726,
+            "cores_optimized_4x": 0.6931,
+            "cores_hw_flat": 0.2142,
+            "cores_hw_batched": 0.2094,
+            "hw_flat_beats_opt4": true,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 1000,
+            "out_degree": 4.0,
+            "wall_batch_us": 16388441,
+            "decisions": 13000,
+            "cores_langgraph": 2.7726,
+            "cores_optimized_4x": 0.6931,
+            "cores_hw_flat": 0.238,
+            "cores_hw_batched": 0.2094,
+            "hw_flat_beats_opt4": true,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 1000,
+            "out_degree": 8.0,
+            "wall_batch_us": 16388441,
+            "decisions": 13000,
+            "cores_langgraph": 2.7726,
+            "cores_optimized_4x": 0.6931,
+            "cores_hw_flat": 0.276,
+            "cores_hw_batched": 0.2094,
+            "hw_flat_beats_opt4": true,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 1000,
+            "out_degree": 16.0,
+            "wall_batch_us": 16388441,
+            "decisions": 13000,
+            "cores_langgraph": 2.7726,
+            "cores_optimized_4x": 0.6931,
+            "cores_hw_flat": 0.3522,
+            "cores_hw_batched": 0.2189,
+            "hw_flat_beats_opt4": true,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 1000,
+            "out_degree": 64.0,
+            "wall_batch_us": 16388441,
+            "decisions": 13000,
+            "cores_langgraph": 2.7726,
+            "cores_optimized_4x": 0.6931,
+            "cores_hw_flat": 0.8091,
+            "cores_hw_batched": 0.276,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 1000,
+            "out_degree": 256.0,
+            "wall_batch_us": 16388441,
+            "decisions": 13000,
+            "cores_langgraph": 2.7726,
+            "cores_optimized_4x": 0.6931,
+            "cores_hw_flat": 2.6367,
+            "cores_hw_batched": 0.5045,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": true
+          }
+        ]
+      },
+      {
+        "concurrency": 5000,
+        "cores_langgraph": 29.3762,
+        "cells": [
+          {
+            "concurrency": 5000,
+            "out_degree": 1.0,
+            "wall_batch_us": 16459753,
+            "decisions": 65000,
+            "cores_langgraph": 29.3762,
+            "cores_optimized_4x": 7.344,
+            "cores_hw_flat": 1.0425,
+            "cores_hw_batched": 1.0425,
+            "hw_flat_beats_opt4": true,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 5000,
+            "out_degree": 1.5,
+            "wall_batch_us": 16459753,
+            "decisions": 65000,
+            "cores_langgraph": 29.3762,
+            "cores_optimized_4x": 7.344,
+            "cores_hw_flat": 1.0662,
+            "cores_hw_batched": 1.0425,
+            "hw_flat_beats_opt4": true,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 5000,
+            "out_degree": 4.0,
+            "wall_batch_us": 16459753,
+            "decisions": 65000,
+            "cores_langgraph": 29.3762,
+            "cores_optimized_4x": 7.344,
+            "cores_hw_flat": 1.1847,
+            "cores_hw_batched": 1.0425,
+            "hw_flat_beats_opt4": true,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 5000,
+            "out_degree": 8.0,
+            "wall_batch_us": 16459753,
+            "decisions": 65000,
+            "cores_langgraph": 29.3762,
+            "cores_optimized_4x": 7.344,
+            "cores_hw_flat": 1.3743,
+            "cores_hw_batched": 1.0425,
+            "hw_flat_beats_opt4": true,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 5000,
+            "out_degree": 16.0,
+            "wall_batch_us": 16459753,
+            "decisions": 65000,
+            "cores_langgraph": 29.3762,
+            "cores_optimized_4x": 7.344,
+            "cores_hw_flat": 1.7534,
+            "cores_hw_batched": 1.0899,
+            "hw_flat_beats_opt4": true,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 5000,
+            "out_degree": 64.0,
+            "wall_batch_us": 16459753,
+            "decisions": 65000,
+            "cores_langgraph": 29.3762,
+            "cores_optimized_4x": 7.344,
+            "cores_hw_flat": 4.028,
+            "cores_hw_batched": 1.3743,
+            "hw_flat_beats_opt4": true,
+            "hw_batched_beats_opt4": true
+          },
+          {
+            "concurrency": 5000,
+            "out_degree": 256.0,
+            "wall_batch_us": 16459753,
+            "decisions": 65000,
+            "cores_langgraph": 29.3762,
+            "cores_optimized_4x": 7.344,
+            "cores_hw_flat": 13.1266,
+            "cores_hw_batched": 2.5116,
+            "hw_flat_beats_opt4": false,
+            "hw_batched_beats_opt4": true
+          }
+        ]
+      }
+    ],
+    "grid": [
+      {
+        "concurrency": 1,
+        "out_degree": 1.0,
+        "wall_batch_us": 15826523,
+        "decisions": 13,
+        "cores_langgraph": 0.0004,
+        "cores_optimized_4x": 0.0001,
+        "cores_hw_flat": 0.0002,
+        "cores_hw_batched": 0.0002,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 1,
+        "out_degree": 1.5,
+        "wall_batch_us": 15826523,
+        "decisions": 13,
+        "cores_langgraph": 0.0004,
+        "cores_optimized_4x": 0.0001,
+        "cores_hw_flat": 0.0002,
+        "cores_hw_batched": 0.0002,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 1,
+        "out_degree": 4.0,
+        "wall_batch_us": 15826523,
+        "decisions": 13,
+        "cores_langgraph": 0.0004,
+        "cores_optimized_4x": 0.0001,
+        "cores_hw_flat": 0.0002,
+        "cores_hw_batched": 0.0002,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 1,
+        "out_degree": 8.0,
+        "wall_batch_us": 15826523,
+        "decisions": 13,
+        "cores_langgraph": 0.0004,
+        "cores_optimized_4x": 0.0001,
+        "cores_hw_flat": 0.0003,
+        "cores_hw_batched": 0.0002,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 1,
+        "out_degree": 16.0,
+        "wall_batch_us": 15826523,
+        "decisions": 13,
+        "cores_langgraph": 0.0004,
+        "cores_optimized_4x": 0.0001,
+        "cores_hw_flat": 0.0004,
+        "cores_hw_batched": 0.0002,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 1,
+        "out_degree": 64.0,
+        "wall_batch_us": 15826523,
+        "decisions": 13,
+        "cores_langgraph": 0.0004,
+        "cores_optimized_4x": 0.0001,
+        "cores_hw_flat": 0.0008,
+        "cores_hw_batched": 0.0003,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 1,
+        "out_degree": 256.0,
+        "wall_batch_us": 15826523,
+        "decisions": 13,
+        "cores_langgraph": 0.0004,
+        "cores_optimized_4x": 0.0001,
+        "cores_hw_flat": 0.0027,
+        "cores_hw_batched": 0.0005,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 10,
+        "out_degree": 1.0,
+        "wall_batch_us": 16307440,
+        "decisions": 130,
+        "cores_langgraph": 0.0042,
+        "cores_optimized_4x": 0.001,
+        "cores_hw_flat": 0.0021,
+        "cores_hw_batched": 0.0021,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 10,
+        "out_degree": 1.5,
+        "wall_batch_us": 16307440,
+        "decisions": 130,
+        "cores_langgraph": 0.0042,
+        "cores_optimized_4x": 0.001,
+        "cores_hw_flat": 0.0022,
+        "cores_hw_batched": 0.0021,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 10,
+        "out_degree": 4.0,
+        "wall_batch_us": 16307440,
+        "decisions": 130,
+        "cores_langgraph": 0.0042,
+        "cores_optimized_4x": 0.001,
+        "cores_hw_flat": 0.0024,
+        "cores_hw_batched": 0.0021,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 10,
+        "out_degree": 8.0,
+        "wall_batch_us": 16307440,
+        "decisions": 130,
+        "cores_langgraph": 0.0042,
+        "cores_optimized_4x": 0.001,
+        "cores_hw_flat": 0.0028,
+        "cores_hw_batched": 0.0021,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 10,
+        "out_degree": 16.0,
+        "wall_batch_us": 16307440,
+        "decisions": 130,
+        "cores_langgraph": 0.0042,
+        "cores_optimized_4x": 0.001,
+        "cores_hw_flat": 0.0035,
+        "cores_hw_batched": 0.0022,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 10,
+        "out_degree": 64.0,
+        "wall_batch_us": 16307440,
+        "decisions": 130,
+        "cores_langgraph": 0.0042,
+        "cores_optimized_4x": 0.001,
+        "cores_hw_flat": 0.0081,
+        "cores_hw_batched": 0.0028,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 10,
+        "out_degree": 256.0,
+        "wall_batch_us": 16307440,
+        "decisions": 130,
+        "cores_langgraph": 0.0042,
+        "cores_optimized_4x": 0.001,
+        "cores_hw_flat": 0.0265,
+        "cores_hw_batched": 0.0051,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 100,
+        "out_degree": 1.0,
+        "wall_batch_us": 16352155,
+        "decisions": 1300,
+        "cores_langgraph": 0.0632,
+        "cores_optimized_4x": 0.0158,
+        "cores_hw_flat": 0.021,
+        "cores_hw_batched": 0.021,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 100,
+        "out_degree": 1.5,
+        "wall_batch_us": 16352155,
+        "decisions": 1300,
+        "cores_langgraph": 0.0632,
+        "cores_optimized_4x": 0.0158,
+        "cores_hw_flat": 0.0215,
+        "cores_hw_batched": 0.021,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 100,
+        "out_degree": 4.0,
+        "wall_batch_us": 16352155,
+        "decisions": 1300,
+        "cores_langgraph": 0.0632,
+        "cores_optimized_4x": 0.0158,
+        "cores_hw_flat": 0.0239,
+        "cores_hw_batched": 0.021,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 100,
+        "out_degree": 8.0,
+        "wall_batch_us": 16352155,
+        "decisions": 1300,
+        "cores_langgraph": 0.0632,
+        "cores_optimized_4x": 0.0158,
+        "cores_hw_flat": 0.0277,
+        "cores_hw_batched": 0.021,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 100,
+        "out_degree": 16.0,
+        "wall_batch_us": 16352155,
+        "decisions": 1300,
+        "cores_langgraph": 0.0632,
+        "cores_optimized_4x": 0.0158,
+        "cores_hw_flat": 0.0353,
+        "cores_hw_batched": 0.0219,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 100,
+        "out_degree": 64.0,
+        "wall_batch_us": 16352155,
+        "decisions": 1300,
+        "cores_langgraph": 0.0632,
+        "cores_optimized_4x": 0.0158,
+        "cores_hw_flat": 0.0811,
+        "cores_hw_batched": 0.0277,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 100,
+        "out_degree": 256.0,
+        "wall_batch_us": 16352155,
+        "decisions": 1300,
+        "cores_langgraph": 0.0632,
+        "cores_optimized_4x": 0.0158,
+        "cores_hw_flat": 0.2643,
+        "cores_hw_batched": 0.0506,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 500,
+        "out_degree": 1.0,
+        "wall_batch_us": 16373372,
+        "decisions": 6500,
+        "cores_langgraph": 0.7921,
+        "cores_optimized_4x": 0.198,
+        "cores_hw_flat": 0.1048,
+        "cores_hw_batched": 0.1048,
+        "hw_flat_beats_opt4": true,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 500,
+        "out_degree": 1.5,
+        "wall_batch_us": 16373372,
+        "decisions": 6500,
+        "cores_langgraph": 0.7921,
+        "cores_optimized_4x": 0.198,
+        "cores_hw_flat": 0.1072,
+        "cores_hw_batched": 0.1048,
+        "hw_flat_beats_opt4": true,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 500,
+        "out_degree": 4.0,
+        "wall_batch_us": 16373372,
+        "decisions": 6500,
+        "cores_langgraph": 0.7921,
+        "cores_optimized_4x": 0.198,
+        "cores_hw_flat": 0.1191,
+        "cores_hw_batched": 0.1048,
+        "hw_flat_beats_opt4": true,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 500,
+        "out_degree": 8.0,
+        "wall_batch_us": 16373372,
+        "decisions": 6500,
+        "cores_langgraph": 0.7921,
+        "cores_optimized_4x": 0.198,
+        "cores_hw_flat": 0.1382,
+        "cores_hw_batched": 0.1048,
+        "hw_flat_beats_opt4": true,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 500,
+        "out_degree": 16.0,
+        "wall_batch_us": 16373372,
+        "decisions": 6500,
+        "cores_langgraph": 0.7921,
+        "cores_optimized_4x": 0.198,
+        "cores_hw_flat": 0.1763,
+        "cores_hw_batched": 0.1096,
+        "hw_flat_beats_opt4": true,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 500,
+        "out_degree": 64.0,
+        "wall_batch_us": 16373372,
+        "decisions": 6500,
+        "cores_langgraph": 0.7921,
+        "cores_optimized_4x": 0.198,
+        "cores_hw_flat": 0.4049,
+        "cores_hw_batched": 0.1382,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 500,
+        "out_degree": 256.0,
+        "wall_batch_us": 16373372,
+        "decisions": 6500,
+        "cores_langgraph": 0.7921,
+        "cores_optimized_4x": 0.198,
+        "cores_hw_flat": 1.3196,
+        "cores_hw_batched": 0.2525,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": false
+      },
+      {
+        "concurrency": 1000,
+        "out_degree": 1.0,
+        "wall_batch_us": 16388441,
+        "decisions": 13000,
+        "cores_langgraph": 2.7726,
+        "cores_optimized_4x": 0.6931,
+        "cores_hw_flat": 0.2094,
+        "cores_hw_batched": 0.2094,
+        "hw_flat_beats_opt4": true,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 1000,
+        "out_degree": 1.5,
+        "wall_batch_us": 16388441,
+        "decisions": 13000,
+        "cores_langgraph": 2.7726,
+        "cores_optimized_4x": 0.6931,
+        "cores_hw_flat": 0.2142,
+        "cores_hw_batched": 0.2094,
+        "hw_flat_beats_opt4": true,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 1000,
+        "out_degree": 4.0,
+        "wall_batch_us": 16388441,
+        "decisions": 13000,
+        "cores_langgraph": 2.7726,
+        "cores_optimized_4x": 0.6931,
+        "cores_hw_flat": 0.238,
+        "cores_hw_batched": 0.2094,
+        "hw_flat_beats_opt4": true,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 1000,
+        "out_degree": 8.0,
+        "wall_batch_us": 16388441,
+        "decisions": 13000,
+        "cores_langgraph": 2.7726,
+        "cores_optimized_4x": 0.6931,
+        "cores_hw_flat": 0.276,
+        "cores_hw_batched": 0.2094,
+        "hw_flat_beats_opt4": true,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 1000,
+        "out_degree": 16.0,
+        "wall_batch_us": 16388441,
+        "decisions": 13000,
+        "cores_langgraph": 2.7726,
+        "cores_optimized_4x": 0.6931,
+        "cores_hw_flat": 0.3522,
+        "cores_hw_batched": 0.2189,
+        "hw_flat_beats_opt4": true,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 1000,
+        "out_degree": 64.0,
+        "wall_batch_us": 16388441,
+        "decisions": 13000,
+        "cores_langgraph": 2.7726,
+        "cores_optimized_4x": 0.6931,
+        "cores_hw_flat": 0.8091,
+        "cores_hw_batched": 0.276,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 1000,
+        "out_degree": 256.0,
+        "wall_batch_us": 16388441,
+        "decisions": 13000,
+        "cores_langgraph": 2.7726,
+        "cores_optimized_4x": 0.6931,
+        "cores_hw_flat": 2.6367,
+        "cores_hw_batched": 0.5045,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 5000,
+        "out_degree": 1.0,
+        "wall_batch_us": 16459753,
+        "decisions": 65000,
+        "cores_langgraph": 29.3762,
+        "cores_optimized_4x": 7.344,
+        "cores_hw_flat": 1.0425,
+        "cores_hw_batched": 1.0425,
+        "hw_flat_beats_opt4": true,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 5000,
+        "out_degree": 1.5,
+        "wall_batch_us": 16459753,
+        "decisions": 65000,
+        "cores_langgraph": 29.3762,
+        "cores_optimized_4x": 7.344,
+        "cores_hw_flat": 1.0662,
+        "cores_hw_batched": 1.0425,
+        "hw_flat_beats_opt4": true,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 5000,
+        "out_degree": 4.0,
+        "wall_batch_us": 16459753,
+        "decisions": 65000,
+        "cores_langgraph": 29.3762,
+        "cores_optimized_4x": 7.344,
+        "cores_hw_flat": 1.1847,
+        "cores_hw_batched": 1.0425,
+        "hw_flat_beats_opt4": true,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 5000,
+        "out_degree": 8.0,
+        "wall_batch_us": 16459753,
+        "decisions": 65000,
+        "cores_langgraph": 29.3762,
+        "cores_optimized_4x": 7.344,
+        "cores_hw_flat": 1.3743,
+        "cores_hw_batched": 1.0425,
+        "hw_flat_beats_opt4": true,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 5000,
+        "out_degree": 16.0,
+        "wall_batch_us": 16459753,
+        "decisions": 65000,
+        "cores_langgraph": 29.3762,
+        "cores_optimized_4x": 7.344,
+        "cores_hw_flat": 1.7534,
+        "cores_hw_batched": 1.0899,
+        "hw_flat_beats_opt4": true,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 5000,
+        "out_degree": 64.0,
+        "wall_batch_us": 16459753,
+        "decisions": 65000,
+        "cores_langgraph": 29.3762,
+        "cores_optimized_4x": 7.344,
+        "cores_hw_flat": 4.028,
+        "cores_hw_batched": 1.3743,
+        "hw_flat_beats_opt4": true,
+        "hw_batched_beats_opt4": true
+      },
+      {
+        "concurrency": 5000,
+        "out_degree": 256.0,
+        "wall_batch_us": 16459753,
+        "decisions": 65000,
+        "cores_langgraph": 29.3762,
+        "cores_optimized_4x": 7.344,
+        "cores_hw_flat": 13.1266,
+        "cores_hw_batched": 2.5116,
+        "hw_flat_beats_opt4": false,
+        "hw_batched_beats_opt4": true
+      }
+    ],
+    "analytic_live_task_model": [
+      {
+        "concurrency": 1,
+        "avg_live_tasks": 1.0,
+        "langgraph_us_per_decision": 264.0,
+        "opt4_us_per_decision": 66.0,
+        "analytic_out_degree_hw_beats_opt4_flat": -15.5,
+        "analytic_out_degree_hw_beats_opt4_batched_w8": -124.0
+      },
+      {
+        "concurrency": 10,
+        "avg_live_tasks": 7.5,
+        "langgraph_us_per_decision": 342.0,
+        "opt4_us_per_decision": 85.5,
+        "analytic_out_degree_hw_beats_opt4_flat": -13.88,
+        "analytic_out_degree_hw_beats_opt4_batched_w8": -111.0
+      },
+      {
+        "concurrency": 100,
+        "avg_live_tasks": 30.0,
+        "langgraph_us_per_decision": 612.0,
+        "opt4_us_per_decision": 153.0,
+        "analytic_out_degree_hw_beats_opt4_flat": -8.25,
+        "analytic_out_degree_hw_beats_opt4_batched_w8": -66.0
+      },
+      {
+        "concurrency": 500,
+        "avg_live_tasks": 130.0,
+        "langgraph_us_per_decision": 1812.0,
+        "opt4_us_per_decision": 453.0,
+        "analytic_out_degree_hw_beats_opt4_flat": 16.75,
+        "analytic_out_degree_hw_beats_opt4_batched_w8": 134.0
+      },
+      {
+        "concurrency": 1000,
+        "avg_live_tasks": 255.0,
+        "langgraph_us_per_decision": 3312.0,
+        "opt4_us_per_decision": 828.0,
+        "analytic_out_degree_hw_beats_opt4_flat": 48.0,
+        "analytic_out_degree_hw_beats_opt4_batched_w8": 384.0
+      },
+      {
+        "concurrency": 5000,
+        "avg_live_tasks": 539.7,
+        "langgraph_us_per_decision": 6728.1,
+        "opt4_us_per_decision": 1682.0,
+        "analytic_out_degree_hw_beats_opt4_flat": 119.17,
+        "analytic_out_degree_hw_beats_opt4_batched_w8": 953.34
+      }
+    ],
+    "summary": {
+      "min_concurrency_hw_flat_beats_opt4_at_react": 500,
+      "min_concurrency_hw_flat_beats_opt4_at_degree": {
+        "1": 500,
+        "4": 500,
+        "8": 500,
+        "16": 500
+      },
+      "max_out_degree_hw_flat_beats_opt4_at_c500": 16.0,
+      "max_out_degree_hw_batched_beats_opt4_at_c500": 64.0,
+      "react_degree": 1.5,
+      "headline": "Hardware crossover begins at concurrency ~500 (ReAct out-degree). Below that, optimized software on a spare core wins."
+    }
+  },
+  "check8_fanout_resolution": {
+    "v1_product_scope_max_out_degree": 8,
+    "batch_width": 8,
+    "design_decision": "Phase 2 v1: flat CSR scatter for out-degree \u2264 8 (ReAct chains, modest trees). Planner fan-out 64: extend routing unit with 8-wide pipelined batch scatter (same pred-decrement semantics, inner loop unroll factor 8). Fan-out 256: unstructured single-step planner launch is out of v1 silicon; use tree-launch graph lowering (max degree 16) or 16-wide batch in a later revision.",
+    "routing_unit_implications": [
+      "Flat scatter: single pred_remaining[] port, II=1 per edge \u2014 sufficient for d\u22648.",
+      "8-wide batch unit: unroll inner scatter loop factor=8, cyclic partition preds \u2014 extends reach to d\u226464 without changing O(out-degree) asymptotics.",
+      "Barrier lowering (software): converts planner\u2192N into N+1 single-edge scatters \u2014 same hardware, different graph IR; belongs in host compiler pass."
+    ],
+    "planner_comparisons": [
+      {
+        "fanout": 64,
+        "decisions_per_wave": 1,
+        "langgraph_us_per_decision": 1995.2307692307693,
+        "strategies": [
+          {
+            "name": "flat_csr_scatter",
+            "effective_out_degree": 64.0,
+            "per_completion_us": 1020,
+            "notes": "Current HLS loop: O(64) edge updates at II=1.",
+            "v1_feasible": false
+          },
+          {
+            "name": "pipelined_batch_scatter",
+            "effective_out_degree": 8.0,
+            "per_completion_us": 348,
+            "notes": "8 successors/cycle via partitioned pred RAM + unrolled decrement.",
+            "v1_feasible": true
+          },
+          {
+            "name": "barrier_graph_rewrite",
+            "effective_out_degree": 1.0,
+            "per_completion_us": 17160.0,
+            "notes": "Planner\u2192barrier (1 edge); each worker completion scatter-to-barrier (1 edge). Amortizes wide launch without one O(N) scatter; needs compiler/graph lowering.",
+            "v1_feasible": true
+          },
+          {
+            "name": "tree_launch (8\u00d78 for 64, 16\u00d716 for 256)",
+            "effective_out_degree": 8.0,
+            "per_completion_us": 348.0,
+            "notes": "Restructure planner into two-level coordinator tree; bounded per-node degree.",
+            "v1_feasible": true
+          }
+        ],
+        "verdict": "Fan-out 64 exceeds flat v1 scope (>8) but **8-wide batched scatter** (348 \u00b5s) beats 4\u00d7 optimized (499 \u00b5s). Phase 2 should add a pipelined batch scatter unit \u2014 not a thesis scope exclusion."
+      },
+      {
+        "fanout": 256,
+        "decisions_per_wave": 1,
+        "langgraph_us_per_decision": 1995.2307692307693,
+        "strategies": [
+          {
+            "name": "flat_csr_scatter",
+            "effective_out_degree": 256.0,
+            "per_completion_us": 3324,
+            "notes": "Current HLS loop: O(256) edge updates at II=1.",
+            "v1_feasible": false
+          },
+          {
+            "name": "pipelined_batch_scatter",
+            "effective_out_degree": 32.0,
+            "per_completion_us": 636,
+            "notes": "8 successors/cycle via partitioned pred RAM + unrolled decrement.",
+            "v1_feasible": false
+          },
+          {
+            "name": "barrier_graph_rewrite",
+            "effective_out_degree": 1.0,
+            "per_completion_us": 67848.0,
+            "notes": "Planner\u2192barrier (1 edge); each worker completion scatter-to-barrier (1 edge). Amortizes wide launch without one O(N) scatter; needs compiler/graph lowering.",
+            "v1_feasible": true
+          },
+          {
+            "name": "tree_launch (8\u00d78 for 64, 16\u00d716 for 256)",
+            "effective_out_degree": 16.0,
+            "per_completion_us": 444.0,
+            "notes": "Restructure planner into two-level coordinator tree; bounded per-node degree.",
+            "v1_feasible": true
+          }
+        ],
+        "verdict": "Fan-out 256: 8-wide batch (636 \u00b5s) loses to 4\u00d7 opt (499 \u00b5s), but **tree-launch lowering** (444 \u00b5s, max degree 16) wins. Requires host-side graph rewrite before hardware; flat/batch silicon unchanged."
+      }
+    ]
+  },
+  "check9_structural_proof": {
+    "thesis_statement": "Two-claim thesis. (1) Complexity class: scan-class schedulers cost O(live_nodes) per coordination decision (measured 59x growth to N=1000, check 11) while the engine costs O(fan-out) via scatter-on-completion \u2014 proven at a measurable (live_nodes, fan-out) crossover below. (2) Constant factor + energy: event-driven software is also O(fan-out) but carries measured constants of ~2 us/decision (ideal asyncio) to ~1.7 ms/decision (deployed LangGraph) vs the engine's cycle-scale scatter \u2014 pending csynth and full-path interface accounting (check 11). Claim (1) never applies against event-driven baselines.",
+    "proof_layer": "structural_sim",
+    "note": "Primary evidence for Phase 2. LangGraph traces (checks 1\u20135) calibrate workload realism; this check proves the mechanism.",
+    "opt_speedup": 4.0,
+    "batch_width": 8,
+    "sweep_live_nodes": [
+      1,
+      10,
+      100,
+      500,
+      1000,
+      5000
+    ],
+    "sweep_fanout": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      64
+    ],
+    "react_fanout_proxy": 2,
+    "by_live_nodes_at_react_fanout": [
+      {
+        "live_nodes": 1,
+        "fanout": 2,
+        "completions": 13,
+        "cycles_global_scan": 39,
+        "cycles_optimized_scan": 9,
+        "cycles_hardware_flat": 39,
+        "cycles_hardware_batched": 26,
+        "hardware_flat_beats_optimized": false,
+        "hardware_batched_beats_optimized": false
+      },
+      {
+        "live_nodes": 10,
+        "fanout": 2,
+        "completions": 18,
+        "cycles_global_scan": 216,
+        "cycles_optimized_scan": 54,
+        "cycles_hardware_flat": 54,
+        "cycles_hardware_batched": 36,
+        "hardware_flat_beats_optimized": false,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 100,
+        "fanout": 2,
+        "completions": 63,
+        "cycles_global_scan": 6426,
+        "cycles_optimized_scan": 1606,
+        "cycles_hardware_flat": 189,
+        "cycles_hardware_batched": 126,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 500,
+        "fanout": 2,
+        "completions": 263,
+        "cycles_global_scan": 132026,
+        "cycles_optimized_scan": 33006,
+        "cycles_hardware_flat": 789,
+        "cycles_hardware_batched": 526,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 1000,
+        "fanout": 2,
+        "completions": 513,
+        "cycles_global_scan": 514026,
+        "cycles_optimized_scan": 128506,
+        "cycles_hardware_flat": 1539,
+        "cycles_hardware_batched": 1026,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 5000,
+        "fanout": 2,
+        "completions": 2513,
+        "cycles_global_scan": 12570026,
+        "cycles_optimized_scan": 3142506,
+        "cycles_hardware_flat": 7539,
+        "cycles_hardware_batched": 5026,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      }
+    ],
+    "min_live_nodes_hw_flat_beats_optimized": 100,
+    "min_live_nodes_hw_batch_beats_optimized": 10,
+    "grid": [
+      {
+        "live_nodes": 1,
+        "fanout": 1,
+        "completions": 13,
+        "cycles_global_scan": 26,
+        "cycles_optimized_scan": 6,
+        "cycles_hardware_flat": 26,
+        "cycles_hardware_batched": 26,
+        "hardware_flat_beats_optimized": false,
+        "hardware_batched_beats_optimized": false
+      },
+      {
+        "live_nodes": 1,
+        "fanout": 2,
+        "completions": 13,
+        "cycles_global_scan": 39,
+        "cycles_optimized_scan": 9,
+        "cycles_hardware_flat": 39,
+        "cycles_hardware_batched": 26,
+        "hardware_flat_beats_optimized": false,
+        "hardware_batched_beats_optimized": false
+      },
+      {
+        "live_nodes": 1,
+        "fanout": 4,
+        "completions": 13,
+        "cycles_global_scan": 65,
+        "cycles_optimized_scan": 16,
+        "cycles_hardware_flat": 65,
+        "cycles_hardware_batched": 26,
+        "hardware_flat_beats_optimized": false,
+        "hardware_batched_beats_optimized": false
+      },
+      {
+        "live_nodes": 1,
+        "fanout": 8,
+        "completions": 13,
+        "cycles_global_scan": 117,
+        "cycles_optimized_scan": 29,
+        "cycles_hardware_flat": 117,
+        "cycles_hardware_batched": 26,
+        "hardware_flat_beats_optimized": false,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 1,
+        "fanout": 16,
+        "completions": 13,
+        "cycles_global_scan": 221,
+        "cycles_optimized_scan": 55,
+        "cycles_hardware_flat": 221,
+        "cycles_hardware_batched": 39,
+        "hardware_flat_beats_optimized": false,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 1,
+        "fanout": 64,
+        "completions": 13,
+        "cycles_global_scan": 845,
+        "cycles_optimized_scan": 211,
+        "cycles_hardware_flat": 845,
+        "cycles_hardware_batched": 117,
+        "hardware_flat_beats_optimized": false,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 10,
+        "fanout": 1,
+        "completions": 18,
+        "cycles_global_scan": 198,
+        "cycles_optimized_scan": 49,
+        "cycles_hardware_flat": 36,
+        "cycles_hardware_batched": 36,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 10,
+        "fanout": 2,
+        "completions": 18,
+        "cycles_global_scan": 216,
+        "cycles_optimized_scan": 54,
+        "cycles_hardware_flat": 54,
+        "cycles_hardware_batched": 36,
+        "hardware_flat_beats_optimized": false,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 10,
+        "fanout": 4,
+        "completions": 18,
+        "cycles_global_scan": 252,
+        "cycles_optimized_scan": 63,
+        "cycles_hardware_flat": 90,
+        "cycles_hardware_batched": 36,
+        "hardware_flat_beats_optimized": false,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 10,
+        "fanout": 8,
+        "completions": 18,
+        "cycles_global_scan": 324,
+        "cycles_optimized_scan": 81,
+        "cycles_hardware_flat": 162,
+        "cycles_hardware_batched": 36,
+        "hardware_flat_beats_optimized": false,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 10,
+        "fanout": 16,
+        "completions": 18,
+        "cycles_global_scan": 468,
+        "cycles_optimized_scan": 117,
+        "cycles_hardware_flat": 306,
+        "cycles_hardware_batched": 54,
+        "hardware_flat_beats_optimized": false,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 10,
+        "fanout": 64,
+        "completions": 18,
+        "cycles_global_scan": 1332,
+        "cycles_optimized_scan": 333,
+        "cycles_hardware_flat": 1170,
+        "cycles_hardware_batched": 162,
+        "hardware_flat_beats_optimized": false,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 100,
+        "fanout": 1,
+        "completions": 63,
+        "cycles_global_scan": 6363,
+        "cycles_optimized_scan": 1590,
+        "cycles_hardware_flat": 126,
+        "cycles_hardware_batched": 126,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 100,
+        "fanout": 2,
+        "completions": 63,
+        "cycles_global_scan": 6426,
+        "cycles_optimized_scan": 1606,
+        "cycles_hardware_flat": 189,
+        "cycles_hardware_batched": 126,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 100,
+        "fanout": 4,
+        "completions": 63,
+        "cycles_global_scan": 6552,
+        "cycles_optimized_scan": 1638,
+        "cycles_hardware_flat": 315,
+        "cycles_hardware_batched": 126,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 100,
+        "fanout": 8,
+        "completions": 63,
+        "cycles_global_scan": 6804,
+        "cycles_optimized_scan": 1701,
+        "cycles_hardware_flat": 567,
+        "cycles_hardware_batched": 126,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 100,
+        "fanout": 16,
+        "completions": 63,
+        "cycles_global_scan": 7308,
+        "cycles_optimized_scan": 1827,
+        "cycles_hardware_flat": 1071,
+        "cycles_hardware_batched": 189,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 100,
+        "fanout": 64,
+        "completions": 63,
+        "cycles_global_scan": 10332,
+        "cycles_optimized_scan": 2583,
+        "cycles_hardware_flat": 4095,
+        "cycles_hardware_batched": 567,
+        "hardware_flat_beats_optimized": false,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 500,
+        "fanout": 1,
+        "completions": 263,
+        "cycles_global_scan": 131763,
+        "cycles_optimized_scan": 32940,
+        "cycles_hardware_flat": 526,
+        "cycles_hardware_batched": 526,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 500,
+        "fanout": 2,
+        "completions": 263,
+        "cycles_global_scan": 132026,
+        "cycles_optimized_scan": 33006,
+        "cycles_hardware_flat": 789,
+        "cycles_hardware_batched": 526,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 500,
+        "fanout": 4,
+        "completions": 263,
+        "cycles_global_scan": 132552,
+        "cycles_optimized_scan": 33138,
+        "cycles_hardware_flat": 1315,
+        "cycles_hardware_batched": 526,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 500,
+        "fanout": 8,
+        "completions": 263,
+        "cycles_global_scan": 133604,
+        "cycles_optimized_scan": 33401,
+        "cycles_hardware_flat": 2367,
+        "cycles_hardware_batched": 526,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 500,
+        "fanout": 16,
+        "completions": 263,
+        "cycles_global_scan": 135708,
+        "cycles_optimized_scan": 33927,
+        "cycles_hardware_flat": 4471,
+        "cycles_hardware_batched": 789,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 500,
+        "fanout": 64,
+        "completions": 263,
+        "cycles_global_scan": 148332,
+        "cycles_optimized_scan": 37083,
+        "cycles_hardware_flat": 17095,
+        "cycles_hardware_batched": 2367,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 1000,
+        "fanout": 1,
+        "completions": 513,
+        "cycles_global_scan": 513513,
+        "cycles_optimized_scan": 128378,
+        "cycles_hardware_flat": 1026,
+        "cycles_hardware_batched": 1026,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 1000,
+        "fanout": 2,
+        "completions": 513,
+        "cycles_global_scan": 514026,
+        "cycles_optimized_scan": 128506,
+        "cycles_hardware_flat": 1539,
+        "cycles_hardware_batched": 1026,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 1000,
+        "fanout": 4,
+        "completions": 513,
+        "cycles_global_scan": 515052,
+        "cycles_optimized_scan": 128763,
+        "cycles_hardware_flat": 2565,
+        "cycles_hardware_batched": 1026,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 1000,
+        "fanout": 8,
+        "completions": 513,
+        "cycles_global_scan": 517104,
+        "cycles_optimized_scan": 129276,
+        "cycles_hardware_flat": 4617,
+        "cycles_hardware_batched": 1026,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 1000,
+        "fanout": 16,
+        "completions": 513,
+        "cycles_global_scan": 521208,
+        "cycles_optimized_scan": 130302,
+        "cycles_hardware_flat": 8721,
+        "cycles_hardware_batched": 1539,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 1000,
+        "fanout": 64,
+        "completions": 513,
+        "cycles_global_scan": 545832,
+        "cycles_optimized_scan": 136458,
+        "cycles_hardware_flat": 33345,
+        "cycles_hardware_batched": 4617,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 5000,
+        "fanout": 1,
+        "completions": 2513,
+        "cycles_global_scan": 12567513,
+        "cycles_optimized_scan": 3141878,
+        "cycles_hardware_flat": 5026,
+        "cycles_hardware_batched": 5026,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 5000,
+        "fanout": 2,
+        "completions": 2513,
+        "cycles_global_scan": 12570026,
+        "cycles_optimized_scan": 3142506,
+        "cycles_hardware_flat": 7539,
+        "cycles_hardware_batched": 5026,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 5000,
+        "fanout": 4,
+        "completions": 2513,
+        "cycles_global_scan": 12575052,
+        "cycles_optimized_scan": 3143763,
+        "cycles_hardware_flat": 12565,
+        "cycles_hardware_batched": 5026,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 5000,
+        "fanout": 8,
+        "completions": 2513,
+        "cycles_global_scan": 12585104,
+        "cycles_optimized_scan": 3146276,
+        "cycles_hardware_flat": 22617,
+        "cycles_hardware_batched": 5026,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 5000,
+        "fanout": 16,
+        "completions": 2513,
+        "cycles_global_scan": 12605208,
+        "cycles_optimized_scan": 3151302,
+        "cycles_hardware_flat": 42721,
+        "cycles_hardware_batched": 7539,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      },
+      {
+        "live_nodes": 5000,
+        "fanout": 64,
+        "completions": 2513,
+        "cycles_global_scan": 12725832,
+        "cycles_optimized_scan": 3181458,
+        "cycles_hardware_flat": 163345,
+        "cycles_hardware_batched": 22617,
+        "hardware_flat_beats_optimized": true,
+        "hardware_batched_beats_optimized": true
+      }
+    ],
+    "native_bench_available": false,
+    "native_bench_rows": [],
+    "native_bench_avg_coord_speedup": null,
+    "measured_constants": {
+      "langgraph_us_per_decision": 1331.3301282051282,
+      "event_driven_us_per_decision": 1.8712106665285926,
+      "scan_growth_measured": 13.58,
+      "hw_us_per_decision": 0.01
+    },
+    "baseline_honesty": "An ideal event-driven software scheduler (O(1) wakeup) matches the engine's O(fan-out) asymptotics. Against that baseline the hardware case is constant factor + energy, not complexity class. The scan columns model LangGraph-class superstep frameworks; check 11 measures both constants on real code.",
+    "headline": "Analytical crossover: flat hardware beats 4x optimized software at live_nodes >= 100 (fan-out=2). 8-wide batch lowers threshold to live_nodes >= 10."
+  },
+  "check10_scaling_regime": {
+    "verdict": "MIXED_MID_REGIME",
+    "headline": "Real orch/accel at c=500 is 57.5%; combine structural crossover with measured absolute cores. NOTE: c=1000 measured 39.9% (back to plateau) vs c=500 57.5% \u2014 do not cite monotonic rise; c=500 spike may be latency variance or mid-scale contention, not sustained scaling.",
+    "methodology_consistent": true,
+    "methodology_issues": [],
+    "real_slope_pct_per_conc": 0.0035,
+    "real_slope_steady_pct_per_conc": 0.0022,
+    "real_slope_ms_per_agent_per_conc": -0.001,
+    "mock_slope_pct_per_conc": 0.0434,
+    "hypothesis_scores": {
+      "plateau_or_falling_share": 0.998,
+      "late_inflection": 0.0,
+      "mock_model_mismatch": 0.3
+    },
+    "leading_hypothesis": "plateau_or_falling_share",
+    "linear_extrapolation_orch_pct_at_c100": 36.79,
+    "linear_extrapolation_orch_pct_at_c500": 38.18,
+    "linear_extrapolation_orch_pct_at_c1000": 39.93,
+    "anchors": [
+      {
+        "concurrency": 1,
+        "orch_pct_accelerable": 39.09267663931933,
+        "orch_ms_per_agent": 8.35,
+        "cores_equivalent": 0.0013733552631578947,
+        "parallel_workers": 4,
+        "execution_mode": "single_agent",
+        "react_steps": "4",
+        "steady_pct_accelerable": 26.047253225105088,
+        "steady_us_per_decision": 898.5,
+        "setup_ms_per_agent": 6.553,
+        "orch_pct_std": 9.659058585900052,
+        "n_repeats": 10
+      },
+      {
+        "concurrency": 10,
+        "orch_pct_accelerable": 40.309105431407104,
+        "orch_ms_per_agent": 2.8225,
+        "cores_equivalent": 0.006951972155658167,
+        "parallel_workers": 8,
+        "execution_mode": "parallel",
+        "react_steps": "4",
+        "steady_pct_accelerable": 10.977141860059326,
+        "steady_us_per_decision": 314.55,
+        "setup_ms_per_agent": 2.1934,
+        "orch_pct_std": 5.5032516095574575,
+        "n_repeats": 10
+      },
+      {
+        "concurrency": 20,
+        "orch_pct_accelerable": 40.59279529589987,
+        "orch_ms_per_agent": 4.75575,
+        "cores_equivalent": 0.011742592592592593,
+        "parallel_workers": 8,
+        "execution_mode": "parallel",
+        "react_steps": "4",
+        "steady_pct_accelerable": 16.20032956492511,
+        "steady_us_per_decision": 494.025,
+        "setup_ms_per_agent": 3.7676999999999996,
+        "orch_pct_std": 4.803965232468854,
+        "n_repeats": 10
+      },
+      {
+        "concurrency": 100,
+        "orch_pct_accelerable": 46.401150557753645,
+        "orch_ms_per_agent": 3.3864699999999996,
+        "cores_equivalent": 0.008489521183253948,
+        "parallel_workers": 8,
+        "execution_mode": "parallel",
+        "react_steps": "4",
+        "steady_pct_accelerable": 16.828584468931343,
+        "steady_us_per_decision": 516.2,
+        "setup_ms_per_agent": 2.35407,
+        "orch_pct_std": 12.051052588673805,
+        "n_repeats": 3
+      },
+      {
+        "concurrency": 500,
+        "orch_pct_accelerable": 57.46989462254636,
+        "orch_ms_per_agent": 6.538678,
+        "cores_equivalent": 0.020474317384769538,
+        "parallel_workers": 8,
+        "execution_mode": "parallel",
+        "react_steps": "4",
+        "steady_pct_accelerable": 29.045667614999093,
+        "steady_us_per_decision": 1044.522,
+        "setup_ms_per_agent": 4.449634,
+        "orch_pct_std": 1.8453951561914521,
+        "n_repeats": 2
+      },
+      {
+        "concurrency": 1000,
+        "orch_pct_accelerable": 39.92832278086039,
+        "orch_ms_per_agent": 3.391031,
+        "cores_equivalent": 0.009316787097837734,
+        "parallel_workers": 8,
+        "execution_mode": "parallel",
+        "react_steps": "4",
+        "steady_pct_accelerable": 16.540511943337854,
+        "steady_us_per_decision": 505.5495,
+        "setup_ms_per_agent": 2.3799319999999997,
+        "orch_pct_std": null,
+        "n_repeats": 1
+      }
+    ],
+    "has_real_c100": true,
+    "has_real_c500": true,
+    "has_real_c1000": true,
+    "measurement_suspect_c500": false
+  },
+  "check11_dispatch_stress": {
+    "levels": [
+      100,
+      500,
+      1000
+    ],
+    "steps_per_task": 10,
+    "rows": [
+      {
+        "scheduler": "langgraph_threads",
+        "live_n": 100,
+        "decisions": 1300,
+        "cpu_us_per_decision": 1298.076923076923,
+        "wall_s": 1.765
+      },
+      {
+        "scheduler": "asyncio_event",
+        "live_n": 100,
+        "decisions": 50000,
+        "cpu_us_per_decision": 2.1041619998868555,
+        "wall_s": 0.105
+      },
+      {
+        "scheduler": "sharded_asyncio_x4",
+        "live_n": 100,
+        "decisions": 200000,
+        "cpu_us_per_decision": 1.675,
+        "throughput_decisions_per_s": 787171.0018803576,
+        "wall_s": 0.254
+      },
+      {
+        "scheduler": "python_global_scan",
+        "live_n": 100,
+        "decisions": 50000,
+        "cpu_us_per_decision": 1.352509999414906,
+        "wall_s": 0.068
+      },
+      {
+        "scheduler": "langgraph_threads",
+        "live_n": 500,
+        "decisions": 6500,
+        "cpu_us_per_decision": 1341.3461538461538,
+        "wall_s": 8.484
+      },
+      {
+        "scheduler": "asyncio_event",
+        "live_n": 500,
+        "decisions": 50000,
+        "cpu_us_per_decision": 1.5658780001103878,
+        "wall_s": 0.078
+      },
+      {
+        "scheduler": "sharded_asyncio_x4",
+        "live_n": 500,
+        "decisions": 200000,
+        "cpu_us_per_decision": 1.73,
+        "throughput_decisions_per_s": 769579.1516614369,
+        "wall_s": 0.26
+      },
+      {
+        "scheduler": "python_global_scan",
+        "live_n": 500,
+        "decisions": 50000,
+        "cpu_us_per_decision": 7.9080220009200275,
+        "wall_s": 0.395
+      },
+      {
+        "scheduler": "langgraph_threads",
+        "live_n": 1000,
+        "decisions": 13000,
+        "cpu_us_per_decision": 1354.5673076923076,
+        "wall_s": 17.36
+      },
+      {
+        "scheduler": "asyncio_event",
+        "live_n": 1000,
+        "decisions": 50000,
+        "cpu_us_per_decision": 1.9435919995885342,
+        "wall_s": 0.097
+      },
+      {
+        "scheduler": "sharded_asyncio_x4",
+        "live_n": 1000,
+        "decisions": 200000,
+        "cpu_us_per_decision": 1.64,
+        "throughput_decisions_per_s": 783840.9617685399,
+        "wall_s": 0.255
+      },
+      {
+        "scheduler": "python_global_scan",
+        "live_n": 1000,
+        "decisions": 50000,
+        "cpu_us_per_decision": 18.372199999867007,
+        "wall_s": 0.919
+      }
+    ],
+    "growth_langgraph": 1.04,
+    "growth_asyncio_event": 0.92,
+    "growth_global_scan": 13.58,
+    "hw_reference_us_per_decision": 0.01,
+    "hw_reference_source": "analytic",
+    "hw_reference_note": "scatter = (1 + fan-out=2) cycles at 300 MHz (analytic target, pending HLS csynth)",
+    "delivery_us_assumptions": {
+      "sw_epoll_wakeup": [
+        2.0,
+        5.0
+      ],
+      "sw_kernel_bypass": [
+        1.0,
+        1.5
+      ],
+      "hw_pcie_gen4_dma": [
+        0.5,
+        1.0
+      ],
+      "hw_cxl": [
+        0.3,
+        0.6
+      ],
+      "hw_on_soc_axi": [
+        0.05,
+        0.15
+      ]
+    },
+    "full_path_us_per_completion": {
+      "sw_asyncio_epoll": 5.37,
+      "sw_asyncio_kernel_bypass": 3.12,
+      "hw_engine_pcie": 0.76,
+      "hw_engine_cxl": 0.46,
+      "hw_engine_on_soc": 0.11,
+      "advantage_vs_kernel_bypass": 4.1,
+      "advantage_vs_epoll": 7.1
+    },
+    "full_path_note": "Delivery + dispatch per completion, mid-range first-order estimates. Both sides pay inbound delivery: software completions cross NIC->kernel->epoll wakeup; engine completions cross an interconnect DMA write. Outbound work-launch to the executor (GPU/tool server) is symmetric on both sides and excluded. Dispatch-only comparisons overstate the hardware gap vs event-driven software.",
+    "verdict": "LANGGRAPH_FLAT",
+    "headline": "Measured: LangGraph per-decision CPU is ~flat with live_n (1.0x). The hardware case vs frameworks rests on constant factor + energy, not asymptotics - cite measured constants below."
+  },
+  "recommendation": "HEADLINE REGIME RESOLVED at c=500 real anchor (consistent methodology). Real orch/accel at c=500 is 57.5%; combine structural crossover with measured absolute cores. NOTE: c=1000 measured 39.9% (back to plateau) vs c=500 57.5% \u2014 do not cite monotonic rise; c=500 spike may be latency variance or mid-scale contention, not sustained scaling. Structural: hardware beats 4x optimized scan at live_nodes >= 100. Lead with check 9 crossover; check 10 picks percentage headline. Check 11 measured: real-framework dispatch is ~flat with live_n (constant-factor + energy case), while a scan-class scheduler grows 13.58x - frame the hardware win as constant factor vs deployed frameworks, complexity class vs scan schedulers."
+}

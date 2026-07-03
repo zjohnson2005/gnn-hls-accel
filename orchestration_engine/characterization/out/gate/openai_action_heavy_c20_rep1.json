@@ -1,0 +1,2863 @@
+{
+  "name": "langgraph_openai_action_heavy_c20",
+  "concurrency": 20,
+  "meta": {
+    "source": "langgraph_react instrumented run",
+    "preset": "action_heavy",
+    "backend": "openai",
+    "concurrency": "20",
+    "calibrated": "False",
+    "wall_clock": "True",
+    "parallel_workers": "8",
+    "execution_mode": "parallel",
+    "batch_wall_s": "6.50",
+    "orch_ms_per_agent": "2.943",
+    "orch_measurement": "wall_residual",
+    "sweep": "openai_scaling",
+    "repeat_index": "1",
+    "react_steps_override": "4",
+    "task_prompt": "Search once and summarize in one sentence."
+  },
+  "spans": [
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192993645824,
+      "end_us": 192993645825,
+      "agent_id": "agent_1",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192993780976,
+      "end_us": 192993914508,
+      "agent_id": "agent_1",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192993781001,
+      "end_us": 192993781401,
+      "agent_id": "agent_1",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994329265,
+      "end_us": 192994877530,
+      "agent_id": "agent_1",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192994330172,
+      "end_us": 192994332291,
+      "agent_id": "agent_1",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "1",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192994331637,
+      "end_us": 192994332437,
+      "agent_id": "agent_1",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994331640,
+      "end_us": 192995684036,
+      "agent_id": "agent_1",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192994331643,
+      "end_us": 192994333643,
+      "agent_id": "agent_1",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192994331644,
+      "end_us": 192994333144,
+      "agent_id": "agent_1",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192994332269,
+      "end_us": 192994332270,
+      "agent_id": "agent_1",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "1",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994983713,
+      "end_us": 192995634621,
+      "agent_id": "agent_1",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192994983734,
+      "end_us": 192994984134,
+      "agent_id": "agent_1",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192995712913,
+      "end_us": 192996442094,
+      "agent_id": "agent_1",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192995713359,
+      "end_us": 192995713959,
+      "agent_id": "agent_1",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "2",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192993627899,
+      "end_us": 192993627901,
+      "agent_id": "agent_0",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192993630637,
+      "end_us": 192993630648,
+      "agent_id": "agent_0",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192993630654,
+      "end_us": 192993631054,
+      "agent_id": "agent_0",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994300370,
+      "end_us": 192994970084,
+      "agent_id": "agent_0",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192994301066,
+      "end_us": 192994304004,
+      "agent_id": "agent_0",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "1",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192994302130,
+      "end_us": 192994302930,
+      "agent_id": "agent_0",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994302135,
+      "end_us": 192995976160,
+      "agent_id": "agent_0",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192994302139,
+      "end_us": 192994304139,
+      "agent_id": "agent_0",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192994302140,
+      "end_us": 192994303640,
+      "agent_id": "agent_0",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192994302686,
+      "end_us": 192994302687,
+      "agent_id": "agent_0",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "1",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994833411,
+      "end_us": 192995363425,
+      "agent_id": "agent_0",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192994833433,
+      "end_us": 192994833833,
+      "agent_id": "agent_0",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192995723549,
+      "end_us": 192996613666,
+      "agent_id": "agent_0",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192995723935,
+      "end_us": 192995724651,
+      "agent_id": "agent_0",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "2",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192993680051,
+      "end_us": 192993680052,
+      "agent_id": "agent_4",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994231882,
+      "end_us": 192994781887,
+      "agent_id": "agent_4",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192994231908,
+      "end_us": 192994232308,
+      "agent_id": "agent_4",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994750729,
+      "end_us": 192995269552,
+      "agent_id": "agent_4",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192994751460,
+      "end_us": 192994753616,
+      "agent_id": "agent_4",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "3",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192994752477,
+      "end_us": 192994753277,
+      "agent_id": "agent_4",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994752480,
+      "end_us": 192996558226,
+      "agent_id": "agent_4",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192994752482,
+      "end_us": 192994754482,
+      "agent_id": "agent_4",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192994752483,
+      "end_us": 192994753983,
+      "agent_id": "agent_4",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192994752931,
+      "end_us": 192994752932,
+      "agent_id": "agent_4",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "3",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192995284789,
+      "end_us": 192995816168,
+      "agent_id": "agent_4",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192995284819,
+      "end_us": 192995285219,
+      "agent_id": "agent_4",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192995967417,
+      "end_us": 192996650018,
+      "agent_id": "agent_4",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192995967919,
+      "end_us": 192995968525,
+      "agent_id": "agent_4",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "4",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192993677205,
+      "end_us": 192993677207,
+      "agent_id": "agent_6",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994081800,
+      "end_us": 192994485087,
+      "agent_id": "agent_6",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192994081828,
+      "end_us": 192994082228,
+      "agent_id": "agent_6",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994768210,
+      "end_us": 192995454594,
+      "agent_id": "agent_6",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192994768810,
+      "end_us": 192994770312,
+      "agent_id": "agent_6",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "4",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192994769762,
+      "end_us": 192994770562,
+      "agent_id": "agent_6",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994769765,
+      "end_us": 192996121537,
+      "agent_id": "agent_6",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192994769768,
+      "end_us": 192994771768,
+      "agent_id": "agent_6",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192994769769,
+      "end_us": 192994771269,
+      "agent_id": "agent_6",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192994770294,
+      "end_us": 192994770295,
+      "agent_id": "agent_6",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "4",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192995435327,
+      "end_us": 192996099869,
+      "agent_id": "agent_6",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192995435349,
+      "end_us": 192995435749,
+      "agent_id": "agent_6",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192996089606,
+      "end_us": 192996743864,
+      "agent_id": "agent_6",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192996090033,
+      "end_us": 192996090571,
+      "agent_id": "agent_6",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "5",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192993684565,
+      "end_us": 192993684566,
+      "agent_id": "agent_3",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994382262,
+      "end_us": 192995078727,
+      "agent_id": "agent_3",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192994382282,
+      "end_us": 192994382682,
+      "agent_id": "agent_3",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192995114541,
+      "end_us": 192995846801,
+      "agent_id": "agent_3",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192995115124,
+      "end_us": 192995116521,
+      "agent_id": "agent_3",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "2",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192995116015,
+      "end_us": 192995116815,
+      "agent_id": "agent_3",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192995116019,
+      "end_us": 192996452879,
+      "agent_id": "agent_3",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192995116021,
+      "end_us": 192995118021,
+      "agent_id": "agent_3",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192995116022,
+      "end_us": 192995117522,
+      "agent_id": "agent_3",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192995116650,
+      "end_us": 192995116651,
+      "agent_id": "agent_3",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "2",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192995736403,
+      "end_us": 192996355664,
+      "agent_id": "agent_3",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192995736428,
+      "end_us": 192995736828,
+      "agent_id": "agent_3",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192996382302,
+      "end_us": 192997028175,
+      "agent_id": "agent_3",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192996383345,
+      "end_us": 192996384494,
+      "agent_id": "agent_3",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "3",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192993695066,
+      "end_us": 192993695068,
+      "agent_id": "agent_7",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994683129,
+      "end_us": 192995669936,
+      "agent_id": "agent_7",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192994683153,
+      "end_us": 192994683553,
+      "agent_id": "agent_7",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192995417825,
+      "end_us": 192996152499,
+      "agent_id": "agent_7",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192995418457,
+      "end_us": 192995419940,
+      "agent_id": "agent_7",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "4",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192995419266,
+      "end_us": 192995420066,
+      "agent_id": "agent_7",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192995419269,
+      "end_us": 192997044866,
+      "agent_id": "agent_7",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192995419272,
+      "end_us": 192995421272,
+      "agent_id": "agent_7",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192995419273,
+      "end_us": 192995420773,
+      "agent_id": "agent_7",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192995419872,
+      "end_us": 192995419873,
+      "agent_id": "agent_7",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "4",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192995887052,
+      "end_us": 192996353508,
+      "agent_id": "agent_7",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192995887231,
+      "end_us": 192995887631,
+      "agent_id": "agent_7",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192996539580,
+      "end_us": 192997191934,
+      "agent_id": "agent_7",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192996540212,
+      "end_us": 192996541336,
+      "agent_id": "agent_7",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "5",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192993659517,
+      "end_us": 192993659519,
+      "agent_id": "agent_2",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192993931478,
+      "end_us": 192994202042,
+      "agent_id": "agent_2",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192993931498,
+      "end_us": 192993931898,
+      "agent_id": "agent_2",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994565449,
+      "end_us": 192995199402,
+      "agent_id": "agent_2",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192994566123,
+      "end_us": 192994567772,
+      "agent_id": "agent_2",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "2",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192994567084,
+      "end_us": 192994567884,
+      "agent_id": "agent_2",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994567088,
+      "end_us": 192995887119,
+      "agent_id": "agent_2",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192994567090,
+      "end_us": 192994569090,
+      "agent_id": "agent_2",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192994567091,
+      "end_us": 192994568591,
+      "agent_id": "agent_2",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192994567789,
+      "end_us": 192994567790,
+      "agent_id": "agent_2",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "2",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192995134010,
+      "end_us": 192995699731,
+      "agent_id": "agent_2",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192995134034,
+      "end_us": 192995134434,
+      "agent_id": "agent_2",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192996570225,
+      "end_us": 192998006418,
+      "agent_id": "agent_2",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192996570708,
+      "end_us": 192996571310,
+      "agent_id": "agent_2",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "3",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192993687109,
+      "end_us": 192993687110,
+      "agent_id": "agent_5",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192994532861,
+      "end_us": 192995377630,
+      "agent_id": "agent_5",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192994532885,
+      "end_us": 192994533285,
+      "agent_id": "agent_5",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192995074318,
+      "end_us": 192995615752,
+      "agent_id": "agent_5",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192995074920,
+      "end_us": 192995076104,
+      "agent_id": "agent_5",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "3",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192995075867,
+      "end_us": 192995076667,
+      "agent_id": "agent_5",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192995075871,
+      "end_us": 192996312810,
+      "agent_id": "agent_5",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192995075873,
+      "end_us": 192995077873,
+      "agent_id": "agent_5",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192995075874,
+      "end_us": 192995077374,
+      "agent_id": "agent_5",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192995076379,
+      "end_us": 192995076380,
+      "agent_id": "agent_5",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "3",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192995585935,
+      "end_us": 192996094998,
+      "agent_id": "agent_5",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192995586545,
+      "end_us": 192995586945,
+      "agent_id": "agent_5",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192996820805,
+      "end_us": 192998055067,
+      "agent_id": "agent_5",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192996821289,
+      "end_us": 192996822472,
+      "agent_id": "agent_5",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "4",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192995719439,
+      "end_us": 192995719440,
+      "agent_id": "agent_8",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192996037317,
+      "end_us": 192996353705,
+      "agent_id": "agent_8",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192996037344,
+      "end_us": 192996037744,
+      "agent_id": "agent_8",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192996834518,
+      "end_us": 192997631692,
+      "agent_id": "agent_8",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192996835614,
+      "end_us": 192996837795,
+      "agent_id": "agent_8",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "5",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192996836502,
+      "end_us": 192996837302,
+      "agent_id": "agent_8",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192996836505,
+      "end_us": 192998606548,
+      "agent_id": "agent_8",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192996836507,
+      "end_us": 192996838507,
+      "agent_id": "agent_8",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192996836508,
+      "end_us": 192996838008,
+      "agent_id": "agent_8",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192996837464,
+      "end_us": 192996837465,
+      "agent_id": "agent_8",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "5",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997241690,
+      "end_us": 192997645316,
+      "agent_id": "agent_8",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192997241716,
+      "end_us": 192997242116,
+      "agent_id": "agent_8",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997976088,
+      "end_us": 192998710463,
+      "agent_id": "agent_8",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192997976515,
+      "end_us": 192997977167,
+      "agent_id": "agent_8",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "6",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192996095995,
+      "end_us": 192996095996,
+      "agent_id": "agent_11",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192996489105,
+      "end_us": 192996880860,
+      "agent_id": "agent_11",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192996489133,
+      "end_us": 192996489533,
+      "agent_id": "agent_11",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997026670,
+      "end_us": 192997564206,
+      "agent_id": "agent_11",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192997027598,
+      "end_us": 192997029472,
+      "agent_id": "agent_11",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "6",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192997028594,
+      "end_us": 192997029394,
+      "agent_id": "agent_11",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997028598,
+      "end_us": 192998679317,
+      "agent_id": "agent_11",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192997028601,
+      "end_us": 192997030601,
+      "agent_id": "agent_11",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192997028602,
+      "end_us": 192997030102,
+      "agent_id": "agent_11",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192997029112,
+      "end_us": 192997029113,
+      "agent_id": "agent_11",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "6",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997542757,
+      "end_us": 192998055862,
+      "agent_id": "agent_11",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192997542780,
+      "end_us": 192997543180,
+      "agent_id": "agent_11",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192998140570,
+      "end_us": 192998738361,
+      "agent_id": "agent_11",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192998140994,
+      "end_us": 192998141578,
+      "agent_id": "agent_11",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "7",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192995975373,
+      "end_us": 192995975374,
+      "agent_id": "agent_10",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192996338547,
+      "end_us": 192996700435,
+      "agent_id": "agent_10",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192996338580,
+      "end_us": 192996338980,
+      "agent_id": "agent_10",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997143251,
+      "end_us": 192997947925,
+      "agent_id": "agent_10",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192997143862,
+      "end_us": 192997145360,
+      "agent_id": "agent_10",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "6",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192997144729,
+      "end_us": 192997145529,
+      "agent_id": "agent_10",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997144732,
+      "end_us": 192998411613,
+      "agent_id": "agent_10",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192997144735,
+      "end_us": 192997146735,
+      "agent_id": "agent_10",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192997144736,
+      "end_us": 192997146236,
+      "agent_id": "agent_10",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192997145838,
+      "end_us": 192997145839,
+      "agent_id": "agent_10",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "6",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997693331,
+      "end_us": 192998239779,
+      "agent_id": "agent_10",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192997693372,
+      "end_us": 192997693772,
+      "agent_id": "agent_10",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192998329409,
+      "end_us": 192998965453,
+      "agent_id": "agent_10",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192998329851,
+      "end_us": 192998330978,
+      "agent_id": "agent_10",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "7",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192995729505,
+      "end_us": 192995729506,
+      "agent_id": "agent_9",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192996187836,
+      "end_us": 192996644745,
+      "agent_id": "agent_9",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192996187940,
+      "end_us": 192996188340,
+      "agent_id": "agent_9",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192996979415,
+      "end_us": 192997770898,
+      "agent_id": "agent_9",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192996980044,
+      "end_us": 192996981762,
+      "agent_id": "agent_9",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "5",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192996980888,
+      "end_us": 192996981688,
+      "agent_id": "agent_9",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192996980891,
+      "end_us": 192998709892,
+      "agent_id": "agent_9",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192996980894,
+      "end_us": 192996982894,
+      "agent_id": "agent_9",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192996980895,
+      "end_us": 192996982395,
+      "agent_id": "agent_9",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192996981493,
+      "end_us": 192996981494,
+      "agent_id": "agent_9",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "5",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997392161,
+      "end_us": 192997802242,
+      "agent_id": "agent_9",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192997392184,
+      "end_us": 192997392584,
+      "agent_id": "agent_9",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192998520911,
+      "end_us": 192999649640,
+      "agent_id": "agent_9",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192998521349,
+      "end_us": 192998521993,
+      "agent_id": "agent_9",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "6",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192996576249,
+      "end_us": 192996576250,
+      "agent_id": "agent_14",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192996940682,
+      "end_us": 192997303777,
+      "agent_id": "agent_14",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192996940705,
+      "end_us": 192996941105,
+      "agent_id": "agent_14",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997514113,
+      "end_us": 192998087522,
+      "agent_id": "agent_14",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192997514723,
+      "end_us": 192997516266,
+      "agent_id": "agent_14",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "8",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192997515804,
+      "end_us": 192997516604,
+      "agent_id": "agent_14",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997515808,
+      "end_us": 192999100811,
+      "agent_id": "agent_14",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192997515810,
+      "end_us": 192997517810,
+      "agent_id": "agent_14",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192997515811,
+      "end_us": 192997517311,
+      "agent_id": "agent_14",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192997516491,
+      "end_us": 192997516492,
+      "agent_id": "agent_14",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "8",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997994101,
+      "end_us": 192998471146,
+      "agent_id": "agent_14",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192997994123,
+      "end_us": 192997994523,
+      "agent_id": "agent_14",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192998550870,
+      "end_us": 192999107617,
+      "agent_id": "agent_14",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192998551369,
+      "end_us": 192998552053,
+      "agent_id": "agent_14",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "9",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192996404180,
+      "end_us": 192996404185,
+      "agent_id": "agent_12",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192996639720,
+      "end_us": 192996870871,
+      "agent_id": "agent_12",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192996639751,
+      "end_us": 192996640151,
+      "agent_id": "agent_12",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997217047,
+      "end_us": 192997794348,
+      "agent_id": "agent_12",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192997217652,
+      "end_us": 192997222189,
+      "agent_id": "agent_12",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "7",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192997219062,
+      "end_us": 192997219862,
+      "agent_id": "agent_12",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997219072,
+      "end_us": 192998957157,
+      "agent_id": "agent_12",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192997219077,
+      "end_us": 192997221077,
+      "agent_id": "agent_12",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192997219079,
+      "end_us": 192997220579,
+      "agent_id": "agent_12",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192997220459,
+      "end_us": 192997220460,
+      "agent_id": "agent_12",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "7",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997843549,
+      "end_us": 192998465936,
+      "agent_id": "agent_12",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192997843574,
+      "end_us": 192997843974,
+      "agent_id": "agent_12",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192998620866,
+      "end_us": 192999398160,
+      "agent_id": "agent_12",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192998621383,
+      "end_us": 192998622227,
+      "agent_id": "agent_12",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "8",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192996827055,
+      "end_us": 192996827057,
+      "agent_id": "agent_15",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997091059,
+      "end_us": 192997353532,
+      "agent_id": "agent_15",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192997091082,
+      "end_us": 192997091482,
+      "agent_id": "agent_15",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997566208,
+      "end_us": 192998041335,
+      "agent_id": "agent_15",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192997566829,
+      "end_us": 192997568554,
+      "agent_id": "agent_15",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "8",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192997567853,
+      "end_us": 192997568653,
+      "agent_id": "agent_15",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997567857,
+      "end_us": 192998955947,
+      "agent_id": "agent_15",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192997567860,
+      "end_us": 192997569860,
+      "agent_id": "agent_15",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192997567861,
+      "end_us": 192997569361,
+      "agent_id": "agent_15",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192997569875,
+      "end_us": 192997569876,
+      "agent_id": "agent_15",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "8",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192998148002,
+      "end_us": 192998725041,
+      "agent_id": "agent_15",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192998148006,
+      "end_us": 192998148406,
+      "agent_id": "agent_15",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192998772551,
+      "end_us": 192999397090,
+      "agent_id": "agent_15",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192998773340,
+      "end_us": 192998774834,
+      "agent_id": "agent_15",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "9",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192996549056,
+      "end_us": 192996549058,
+      "agent_id": "agent_13",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192996790032,
+      "end_us": 192997029045,
+      "agent_id": "agent_13",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192996790064,
+      "end_us": 192996790464,
+      "agent_id": "agent_13",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997568509,
+      "end_us": 192998346958,
+      "agent_id": "agent_13",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192997568935,
+      "end_us": 192997570903,
+      "agent_id": "agent_13",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "7",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192997571609,
+      "end_us": 192997572409,
+      "agent_id": "agent_13",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192997571613,
+      "end_us": 192999069773,
+      "agent_id": "agent_13",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192997571615,
+      "end_us": 192997573615,
+      "agent_id": "agent_13",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192997571616,
+      "end_us": 192997573116,
+      "agent_id": "agent_13",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192997572191,
+      "end_us": 192997572192,
+      "agent_id": "agent_13",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "7",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192998298605,
+      "end_us": 192999024467,
+      "agent_id": "agent_13",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192998298647,
+      "end_us": 192998299047,
+      "agent_id": "agent_13",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192998898624,
+      "end_us": 192999498609,
+      "agent_id": "agent_13",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192998899061,
+      "end_us": 192998899684,
+      "agent_id": "agent_13",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "8",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192997983356,
+      "end_us": 192997983358,
+      "agent_id": "agent_16",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192998449040,
+      "end_us": 192998913298,
+      "agent_id": "agent_16",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192998449059,
+      "end_us": 192998449459,
+      "agent_id": "agent_16",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192998985605,
+      "end_us": 192999522150,
+      "agent_id": "agent_16",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192998986229,
+      "end_us": 192998987869,
+      "agent_id": "agent_16",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "9",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192998987049,
+      "end_us": 192998987849,
+      "agent_id": "agent_16",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192998987053,
+      "end_us": 193000714819,
+      "agent_id": "agent_16",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192998987055,
+      "end_us": 192998989055,
+      "agent_id": "agent_16",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192998987056,
+      "end_us": 192998988556,
+      "agent_id": "agent_16",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192998987543,
+      "end_us": 192998987544,
+      "agent_id": "agent_16",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "9",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192999051860,
+      "end_us": 192999115687,
+      "agent_id": "agent_16",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192999051888,
+      "end_us": 192999052288,
+      "agent_id": "agent_16",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192999793118,
+      "end_us": 193000534350,
+      "agent_id": "agent_16",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192999793546,
+      "end_us": 192999794089,
+      "agent_id": "agent_16",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "10",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192998146819,
+      "end_us": 192998146821,
+      "agent_id": "agent_17",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192998600351,
+      "end_us": 192999052714,
+      "agent_id": "agent_17",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192998600385,
+      "end_us": 192998600785,
+      "agent_id": "agent_17",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192999142903,
+      "end_us": 192999685420,
+      "agent_id": "agent_17",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192999144582,
+      "end_us": 192999147025,
+      "agent_id": "agent_17",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "9",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192999150227,
+      "end_us": 192999151027,
+      "agent_id": "agent_17",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192999150239,
+      "end_us": 193001031935,
+      "agent_id": "agent_17",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192999150245,
+      "end_us": 192999152245,
+      "agent_id": "agent_17",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192999150249,
+      "end_us": 192999151749,
+      "agent_id": "agent_17",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192999152039,
+      "end_us": 192999152040,
+      "agent_id": "agent_17",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "9",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192999202118,
+      "end_us": 192999250536,
+      "agent_id": "agent_17",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192999202144,
+      "end_us": 192999202544,
+      "agent_id": "agent_17",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192999900422,
+      "end_us": 193000598703,
+      "agent_id": "agent_17",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192999900860,
+      "end_us": 192999902595,
+      "agent_id": "agent_17",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "10",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192998527155,
+      "end_us": 192998527156,
+      "agent_id": "agent_19",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192998901382,
+      "end_us": 192999273026,
+      "agent_id": "agent_19",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192998901445,
+      "end_us": 192998901845,
+      "agent_id": "agent_19",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192999426374,
+      "end_us": 192999951312,
+      "agent_id": "agent_19",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192999427458,
+      "end_us": 192999430745,
+      "agent_id": "agent_19",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "10",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192999428767,
+      "end_us": 192999429567,
+      "agent_id": "agent_19",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192999428774,
+      "end_us": 193000981472,
+      "agent_id": "agent_19",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192999428777,
+      "end_us": 192999430777,
+      "agent_id": "agent_19",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192999428779,
+      "end_us": 192999430279,
+      "agent_id": "agent_19",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192999429687,
+      "end_us": 192999429688,
+      "agent_id": "agent_19",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "10",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192999503037,
+      "end_us": 192999575584,
+      "agent_id": "agent_19",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192999503062,
+      "end_us": 192999503462,
+      "agent_id": "agent_19",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 193000059494,
+      "end_us": 193000615927,
+      "agent_id": "agent_19",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 193000059928,
+      "end_us": 193000060794,
+      "agent_id": "agent_19",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "11",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "session_init",
+      "bucket": "cpu_state",
+      "start_us": 192998336042,
+      "end_us": 192998336043,
+      "agent_id": "agent_18",
+      "meta": {}
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192998750772,
+      "end_us": 192999163567,
+      "agent_id": "agent_18",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192998750794,
+      "end_us": 192998751194,
+      "agent_id": "agent_18",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 192999228415,
+      "end_us": 192999706034,
+      "agent_id": "agent_18",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192999229357,
+      "end_us": 192999231815,
+      "agent_id": "agent_18",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "10",
+        "step_index": "0",
+        "phase": "setup"
+      }
+    },
+    {
+      "name": "web_search_parse_request",
+      "bucket": "cpu_parse",
+      "start_us": 192999233339,
+      "end_us": 192999234139,
+      "agent_id": "agent_18",
+      "meta": {}
+    },
+    {
+      "name": "web_search_io",
+      "bucket": "cpu_io_wait",
+      "start_us": 192999233348,
+      "end_us": 193000980592,
+      "agent_id": "agent_18",
+      "meta": {
+        "tool": "web_search"
+      }
+    },
+    {
+      "name": "web_search_parse_response",
+      "bucket": "cpu_parse",
+      "start_us": 192999233353,
+      "end_us": 192999235353,
+      "agent_id": "agent_18",
+      "meta": {}
+    },
+    {
+      "name": "web_search_state_update",
+      "bucket": "cpu_state",
+      "start_us": 192999233355,
+      "end_us": 192999234855,
+      "agent_id": "agent_18",
+      "meta": {}
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 192999234504,
+      "end_us": 192999234505,
+      "agent_id": "agent_18",
+      "meta": {
+        "node": "tools",
+        "measured": "wall_residual",
+        "live_tasks": "10",
+        "step_index": "1",
+        "phase": "steady"
+      }
+    },
+    {
+      "name": "openai_rpm_queue",
+      "bucket": "cpu_io_wait",
+      "start_us": 192999352703,
+      "end_us": 192999469742,
+      "agent_id": "agent_18",
+      "meta": {
+        "backend": "openai"
+      }
+    },
+    {
+      "name": "openai_tokenize_prompt",
+      "bucket": "cpu_tokenize",
+      "start_us": 192999352736,
+      "end_us": 192999353136,
+      "agent_id": "agent_18",
+      "meta": {}
+    },
+    {
+      "name": "openai_llm_call",
+      "bucket": "cpu_io_wait",
+      "start_us": 193000123865,
+      "end_us": 193000894997,
+      "agent_id": "agent_18",
+      "meta": {
+        "backend": "openai",
+        "model": "gpt-4o-mini-2024-07-18"
+      }
+    },
+    {
+      "name": "langgraph_react_step",
+      "bucket": "cpu_orchestration",
+      "start_us": 193000124298,
+      "end_us": 193000125528,
+      "agent_id": "agent_18",
+      "meta": {
+        "node": "agent",
+        "measured": "wall_residual",
+        "live_tasks": "11",
+        "step_index": "2",
+        "phase": "steady"
+      }
+    }
+  ]
+}
