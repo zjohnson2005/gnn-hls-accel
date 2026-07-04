@@ -1,16 +1,13 @@
 #include "orchestration_engine.h"
 
-// LS C2 top: two DATAFLOW tasks + two internal FIFOs (GCN combine/aggregate shape).
+// LS C2 top: DATAFLOW feeders (ops + completions in parallel) + engine body.
 // OE_LS_LITE uses plain uint16/uint32 top ports (GNN_LS_LITE pattern) so LS objcopy
 // links the instrumented kernel without SIGSEGV on ap_uint* scalars.
 
-static void oe_ls_feed_inputs(
+static void oe_ls_feed_ops(
     const oe_graph_op_word_t ops_in[OE_LS_ENGINE_MAX_OPS],
     const ap_uint<16> num_ops,
-    const oe_hls_node_id_t completions_in[OE_HLS_MAX_OUTSTANDING],
-    const ap_uint<16> num_completions,
-    hls::stream<oe_graph_op_word_t> &ops_s,
-    hls::stream<oe_hls_node_id_t> &comp_s) {
+    hls::stream<oe_graph_op_word_t> &ops_s) {
 #pragma HLS INLINE off
 feed_ops:
     for (ap_uint<16> i = 0; i < num_ops; ++i) {
@@ -21,7 +18,13 @@ feed_ops:
     oe_graph_op_word_t end_word = 0;
     end_word.range(7, 0) = OE_HLS_OP_WORD_END;
     ops_s.write(end_word);
+}
 
+static void oe_ls_feed_completions(
+    const oe_hls_node_id_t completions_in[OE_HLS_MAX_OUTSTANDING],
+    const ap_uint<16> num_completions,
+    hls::stream<oe_hls_node_id_t> &comp_s) {
+#pragma HLS INLINE off
 feed_comp:
     for (ap_uint<16> i = 0; i < num_completions; ++i) {
 #pragma HLS PIPELINE II = 1
@@ -106,7 +109,8 @@ static void oe_hls_engine_stream_impl(
 #pragma HLS STREAM variable = comp_s depth = 8
 
 #pragma HLS DATAFLOW
-    oe_ls_feed_inputs(ops_in, num_ops, completions_in, num_completions, ops_s, comp_s);
+    oe_ls_feed_ops(ops_in, num_ops, ops_s);
+    oe_ls_feed_completions(completions_in, num_completions, comp_s);
     oe_ls_engine_body(
         ops_s,
         comp_s,
