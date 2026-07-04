@@ -1,0 +1,4 @@
+open_project oe_stream_ls_proj
+open_solution sol1
+csim_design
+exit

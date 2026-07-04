@@ -176,6 +176,79 @@ def _checklist():
         }
     )
 
+    dse_oe = OUT_DIR / "dse_report_oe.json"
+    items.append(
+        {
+            "id": "lightningsim_oe_dse",
+            "label": "LightningSim DSE on OE engine (C2)",
+            "status": "done" if dse_oe.exists() else "pending",
+            "detail": str(dse_oe)
+            if dse_oe.exists()
+            else "bash orchestration_engine/run_phase2_lightningsim_oe.sh",
+        }
+    )
+
+    ls_val = OUT_DIR / "ls_validation.json"
+    ls_val_done = False
+    if ls_val.exists():
+        try:
+            lv = json.loads(ls_val.read_text(encoding="utf-8"))
+            ls_val_done = bool(lv.get("passed"))
+        except (ValueError, OSError):
+            pass
+    items.append(
+        {
+            "id": "ls_validation",
+            "label": "LS vs Vitis validation report (C1/C2)",
+            "status": "done" if ls_val_done else "pending",
+            "detail": str(ls_val)
+            if ls_val.exists()
+            else "bash orchestration_engine/run_ls_validate_gcn.sh",
+        }
+    )
+
+    oe_exp = OE_ROOT.parent / "cost_model_3d" / "out" / "oe_experiment.json"
+    items.append(
+        {
+            "id": "cost_model_oe",
+            "label": "3D cost model on OE kernel graph (E1)",
+            "status": "done" if oe_exp.exists() else "pending",
+            "detail": str(oe_exp)
+            if oe_exp.exists()
+            else "bash orchestration_engine/run_oe_cost_model_3d.sh",
+        }
+    )
+
+    variants = OUT_DIR / "variants_results.json"
+    items.append(
+        {
+            "id": "variants_csynth",
+            "label": "OE HLS config variant csynth sweep (C3)",
+            "status": "done" if variants.exists() else "pending",
+            "detail": str(variants)
+            if variants.exists()
+            else "bash orchestration_engine/run_phase2_variants.sh",
+        }
+    )
+
+    power_impl = False
+    for pj in (OUT_DIR / "power_scatter.json", OUT_DIR / "power_graph_load.json"):
+        if pj.exists():
+            try:
+                pw = json.loads(pj.read_text(encoding="utf-8"))
+                if pw.get("status") not in (None, "pending_impl"):
+                    power_impl = True
+            except (ValueError, OSError):
+                pass
+    items.append(
+        {
+            "id": "vivado_power",
+            "label": "Vivado post-impl power (B2 full)",
+            "status": "done" if power_impl else "pending",
+            "detail": "bash orchestration_engine/run_power_vivado.sh (after impl closes)",
+        }
+    )
+
     return items
 
 

@@ -203,6 +203,15 @@ void oe_hls_scatter_banked_stream(
     hls::stream<oe_hls_node_id_t> &ready_out,
     oe_hls_cycle_t &completions_processed);
 
+// C2 DATAFLOW top: graph_load (axis ops) -> scatter (axis completions/ready).
+void oe_hls_engine_stream(
+    hls::stream<oe_graph_op_word_t> &ops_in,
+    hls::stream<oe_hls_node_id_t> &completions_in,
+    hls::stream<oe_hls_node_id_t> &ready_out,
+    oe_hls_cycle_t &load_cycles,
+    oe_hls_cycle_t &scatter_processed,
+    ap_uint<32> &ops_processed);
+
 void orchestration_engine(
     const oe_hls_node_id_t num_nodes,
     const ap_uint<8> succ_count[OE_HLS_MAX_NODES],
