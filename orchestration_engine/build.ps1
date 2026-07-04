@@ -1,4 +1,5 @@
 # Build orchestration_engine software sim + benchmarks (local, no Vitis).
+# Linux/macOS: bash orchestration_engine/build.sh
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Build = Join-Path $Root "build"

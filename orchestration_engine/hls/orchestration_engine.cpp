@@ -243,3 +243,108 @@ process_completions:
 
     out_cycles = cycle;
 }
+
+// ---------------------------------------------------------------------------
+// Banked scatter: cyclic partition on node_state; up to OE_HLS_SCATTER_BANKS
+// completions read per outer iteration with per-lane slot walks.
+// ---------------------------------------------------------------------------
+static void oe_hls_banked_walk_lane(
+    const oe_hls_node_id_t completed,
+    const oe_hls_node_id_t num_nodes,
+    const ap_uint<8> succ_count[OE_HLS_MAX_NODES],
+    const oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS],
+    oe_hls_node_state_t node_state[OE_HLS_MAX_NODES],
+    hls::stream<oe_hls_node_id_t> &ready_out) {
+#pragma HLS INLINE off
+    if (completed >= num_nodes) {
+        return;
+    }
+    const ap_uint<8> cnt = succ_count[completed];
+    const ap_uint<32> base = completed * OE_HLS_SUCC_CAP;
+
+banked_slots:
+    for (ap_uint<8> i = 0; i < cnt; ++i) {
+#pragma HLS PIPELINE II = 1
+#pragma HLS DEPENDENCE variable = node_state inter false
+#pragma HLS LOOP_TRIPCOUNT min = 0 max = OE_HLS_SUCC_CAP
+        const oe_hls_node_id_t succ = succ_slots[base + i];
+        if (succ < num_nodes) {
+            oe_hls_node_state_t st = node_state[succ];
+            if (oe_hls_node_update(st)) {
+                ready_out.write(succ);
+            }
+            node_state[succ] = st;
+        }
+    }
+}
+
+void oe_hls_scatter_banked_stream(
+    const oe_hls_node_id_t num_nodes,
+    const ap_uint<8> succ_count[OE_HLS_MAX_NODES],
+    const oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS],
+    oe_hls_node_state_t node_state[OE_HLS_MAX_NODES],
+    hls::stream<oe_hls_node_id_t> &completions_in,
+    hls::stream<oe_hls_node_id_t> &ready_out,
+    oe_hls_cycle_t &completions_processed) {
+#pragma HLS INTERFACE axis port = completions_in
+#pragma HLS INTERFACE axis port = ready_out
+#pragma HLS INTERFACE s_axilite port = num_nodes bundle = control
+#pragma HLS INTERFACE s_axilite port = completions_processed bundle = control
+#pragma HLS INTERFACE s_axilite port = return bundle = control
+
+#pragma HLS ARRAY_PARTITION variable = node_state cyclic factor = OE_HLS_SCATTER_BANKS
+
+    oe_hls_cycle_t processed = 0;
+    ap_uint<1> saw_end = 0;
+
+bank_event_loop:
+    while (true) {
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = OE_HLS_MAX_OUTSTANDING
+        oe_hls_node_id_t batch[OE_HLS_SCATTER_BANKS];
+#pragma HLS ARRAY_PARTITION variable = batch complete
+        ap_uint<4> batch_count = 0;
+
+        for (int b = 0; b < OE_HLS_SCATTER_BANKS; ++b) {
+#pragma HLS UNROLL
+            batch[b] = 0;
+        }
+
+    read_batch:
+        while (batch_count < OE_HLS_SCATTER_BANKS) {
+#pragma HLS PIPELINE II = 1
+            const oe_hls_node_id_t c = completions_in.read();
+            if (c == oe_hls_node_id_t(OE_HLS_STREAM_END)) {
+                saw_end = 1;
+                break;
+            }
+            batch[batch_count] = c;
+            batch_count = batch_count + 1;
+        }
+
+        if (batch_count == 0) {
+            ready_out.write(oe_hls_node_id_t(OE_HLS_STREAM_END));
+            completions_processed = processed;
+            return;
+        }
+
+        for (int b = 0; b < OE_HLS_SCATTER_BANKS; ++b) {
+#pragma HLS PIPELINE II = 1
+            if (b < batch_count) {
+                oe_hls_banked_walk_lane(
+                    batch[b],
+                    num_nodes,
+                    succ_count,
+                    succ_slots,
+                    node_state,
+                    ready_out);
+                processed = processed + 1;
+            }
+        }
+
+        if (saw_end) {
+            ready_out.write(oe_hls_node_id_t(OE_HLS_STREAM_END));
+            completions_processed = processed;
+            return;
+        }
+    }
+}
