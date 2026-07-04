@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# LightningSim FIFO DSE on OE engine (graph_load -> scatter DATAFLOW).
+# LightningSim FIFO DSE on OE engine (graph_load then scatter; axis FIFO trace).
 # No synthetic fallbacks — trace capture failure is a hard error.
 set -euo pipefail
 

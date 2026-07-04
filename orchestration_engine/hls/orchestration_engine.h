@@ -203,7 +203,8 @@ void oe_hls_scatter_banked_stream(
     hls::stream<oe_hls_node_id_t> &ready_out,
     oe_hls_cycle_t &completions_processed);
 
-// C2 DATAFLOW top: graph_load (axis ops) -> scatter (axis completions/ready).
+// C2 LS top: graph_load (axis ops) then scatter_stream (axis completions/ready).
+// Sequential in one invocation — avoids HLS 200-968 on shared graph BRAM.
 void oe_hls_engine_stream(
     hls::stream<oe_graph_op_word_t> &ops_in,
     hls::stream<oe_hls_node_id_t> &completions_in,

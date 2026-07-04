@@ -48,6 +48,21 @@ fi
 echo "=== C1: GNN_LS_LITE Vitis cosim (2023.1) paired with LS trace build ==="
 echo "Using python: $OE_PYTHON"
 
+# Drop stale Vitis side if csynth-only or missing cosim.rpt (pairs ~37 cyc vs LS ~315).
+if [[ -f "$OUT/cosim_gcn_stream_ls.json" ]]; then
+  if ! "$OE_PYTHON" -c "
+from pathlib import Path
+import json
+from orchestration_engine.phase2_gate.ls_gate import gcn_ls_cosim_json_valid
+p = Path('$OUT/cosim_gcn_stream_ls.json')
+ok, _ = gcn_ls_cosim_json_valid(json.loads(p.read_text(encoding='utf-8')))
+raise SystemExit(0 if ok else 1)
+"; then
+    echo "Removing stale invalid cosim_gcn_stream_ls.json (not real cosim)"
+    rm -f "$OUT/cosim_gcn_stream_ls.json" "$OUT/ls_gcn_eval.json"
+  fi
+fi
+
 if ! vitis_hls -f run_hls_stream_ls_cosim.tcl; then
   echo ""
   echo "ERROR: GNN_LS_LITE cosim failed. C1 cannot pass without real cosim cycles." >&2

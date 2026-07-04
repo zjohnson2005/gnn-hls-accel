@@ -24,18 +24,7 @@ def _ls_gcn_latency():
     captured = _read_json(OUT_DIR / "ls_gcn_eval.json")
     if captured and captured.get("lightningsim_cycles") is not None:
         return int(captured["lightningsim_cycles"]), str(OUT_DIR / "ls_gcn_eval.json")
-    sol = REPO / "gcn_stream_proj" / "sol1"
-    if not (sol / "trace.pkl").is_file():
-        return None, "missing gcn_stream_proj/sol1/trace.pkl"
-    try:
-        from fifo_advisor.opt_env import LSEnv
-
-        result = LSEnv(str(sol.resolve())).eval_solution_default()
-        if result.latency is not None:
-            return int(result.latency), "fifo_advisor.eval_solution_default(gcn_stream_proj/sol1)"
-    except Exception as exc:
-        return None, "fifo_advisor failed: {0}".format(exc)
-    return None, "fifo_advisor unavailable"
+    return None, "missing ls_gcn_eval.json — run run_ls_validate_gcn.sh (no live-eval fallback)"
 
 
 def _ls_oe_latency():
@@ -56,14 +45,15 @@ def _ls_oe_latency():
 
 
 def _find_gcn_vitis_cycles(mode):
+    from orchestration_engine.phase2_gate.ls_gate import gcn_ls_cosim_json_valid
+
     if mode == "ls_lite":
         cached = _read_json(OUT_DIR / "cosim_gcn_stream_ls.json")
         if cached and cached.get("latency_cycles") is not None:
-            if cached.get("passed") and cached.get("status") != "csynth_only":
+            ok, detail = gcn_ls_cosim_json_valid(cached)
+            if ok:
                 return int(cached["latency_cycles"]), str(OUT_DIR / "cosim_gcn_stream_ls.json")
-            return None, "{0} (need real cosim, not csynth_only)".format(
-                OUT_DIR / "cosim_gcn_stream_ls.json"
-            )
+            return None, "{0} ({1})".format(OUT_DIR / "cosim_gcn_stream_ls.json", detail)
         root = REPO / "gcn_stream_ls_cosim_proj"
     else:
         cached = _read_json(OUT_DIR / "cosim_gcn_stream.json")
@@ -132,6 +122,34 @@ def _gate_ok(rows, kernel, threshold):
             return False, err
         return True, err
     return False, None
+
+
+def _purge_stale_gcn_cosim_json():
+    from orchestration_engine.phase2_gate.ls_gate import gcn_ls_cosim_json_valid
+
+    path = OUT_DIR / "cosim_gcn_stream_ls.json"
+    cached = _read_json(path)
+    if not cached:
+        return
+    ok, detail = gcn_ls_cosim_json_valid(cached)
+    if ok:
+        return
+    try:
+        path.unlink()
+    except OSError:
+        pass
+    eval_path = OUT_DIR / "ls_gcn_eval.json"
+    if eval_path.is_file():
+        try:
+            eval_path.unlink()
+        except OSError:
+            pass
+    print(
+        "Removed stale cosim_gcn_stream_ls.json ({0}) — rerun run_ls_validate_gcn.sh".format(
+            detail
+        ),
+        file=sys.stderr,
+    )
 
 
 def build_validation(mode):
@@ -204,6 +222,7 @@ def main():
     parser.add_argument("--output", type=Path, default=OUT_DIR / "ls_validation.json")
     args = parser.parse_args()
 
+    _purge_stale_gcn_cosim_json()
     rows = build_validation(args.mode)
     c1_ok, c1_err = _gate_ok(rows, "gcn_stream", C1_THRESHOLD)
     c2_ok, c2_err = _gate_ok(rows, "oe_hls_scatter_stream", C2_THRESHOLD)
@@ -243,7 +262,26 @@ def main():
         if not dse_oe_ok:
             print("BLOCKED: dse_report_oe.json invalid — {0}".format(dse_oe_detail), file=sys.stderr)
         if not c1_ok:
-            print("C1 FAILED (threshold {0}%, err={1})".format(C1_THRESHOLD, c1_err), file=sys.stderr)
+            msg = "C1 FAILED (threshold {0}%, err={1})".format(C1_THRESHOLD, c1_err)
+            for r in rows:
+                if r.get("kernel") != "gcn_stream":
+                    continue
+                if r.get("status") == "pending":
+                    msg += " — pending vitis={0} ls={1}".format(
+                        r.get("vitis_source"), r.get("ls_source")
+                    )
+                elif (
+                    r.get("vitis_cycles") is not None
+                    and r.get("lightningsim_cycles") is not None
+                    and r["vitis_cycles"] < 80
+                    and r["lightningsim_cycles"] > 200
+                ):
+                    msg += (
+                        " — Vitis {0} cyc looks like csynth min vs LS {1} cyc; "
+                        "need real cosim (run_ls_validate_gcn.sh)"
+                    ).format(r["vitis_cycles"], r["lightningsim_cycles"])
+                break
+            print(msg, file=sys.stderr)
         if not c2_ok:
             print("C2 FAILED (threshold {0}%, err={1})".format(C2_THRESHOLD, c2_err), file=sys.stderr)
         return 1
