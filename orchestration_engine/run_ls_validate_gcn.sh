@@ -59,6 +59,6 @@ if [[ -n "$RPT" ]]; then
 fi
 
 "$OE_PYTHON" -m orchestration_engine.eval.ls_validate --mode ls_lite
-"$OE_PYTHON" -m orchestration_engine.phase2_gate.gate_report
+"$OE_PYTHON" -m orchestration_engine.phase2_gate.gate_report --refresh
 
 echo "Done. See $OUT/ls_validation.json"

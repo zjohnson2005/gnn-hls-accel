@@ -23,6 +23,9 @@ ARCHIVE Vitis 2023.1 + conda `fifo-advisor`.
 | `orchestration_engine/build/oe_bench` | `bash orchestration_engine/build.sh` | g++ C++17 | ece-rschsrv |
 | GCN cosim JSON (E2) | `vitis_hls -f run_hls_stream.tcl` | Vitis 2025.2.1 | ece-rschsrv |
 | `cost_model_3d/out/oe_experiment.json` | `bash orchestration_engine/run_oe_cost_model_3d.sh` | Python 3.7+ (conda fifo-advisor on server) | any |
+| `orchestration_engine/characterization/out/phase2/variants_results.json` | `bash orchestration_engine/run_phase2_variants.sh` | Vitis 2025.2.1 csynth subset | ece-rschsrv |
+| `orchestration_engine/characterization/out/phase2/fifo_pareto_demo.json` | `bash orchestration_engine/run_phase2_deferred.sh` (fifo section) | conda fifo-advisor | any |
+| Deferred gate refresh | `bash orchestration_engine/run_phase2_deferred.sh` | mixed (see rows above) | ece-rschsrv |
 
 Local-only work: edit files under `orchestration_engine/hls/`, `tb/`, `eval/`,
 `phase2_gate/`. Any step invoking `vitis_hls` or Vivado is **server-only**.

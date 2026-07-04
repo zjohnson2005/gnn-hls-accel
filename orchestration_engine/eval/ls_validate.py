@@ -173,14 +173,29 @@ def build_validation(mode):
         )
 
     scatter = _read_json(OUT_DIR / "cosim_stream.json")
+    oe_dse = _read_json(OUT_DIR / "dse_report_oe.json")
+    ls_scatter_lat = None
+    ls_scatter_src = "bash orchestration_engine/run_phase2_lightningsim_oe.sh (C2)"
+    if oe_dse and oe_dse.get("baseline_max_latency") is not None:
+        ls_scatter_lat = int(oe_dse["baseline_max_latency"])
+        ls_scatter_src = "{0} baseline_max_latency (source={1})".format(
+            OUT_DIR / "dse_report_oe.json",
+            oe_dse.get("source", "?"),
+        )
+    vitis_scatter = None
+    vitis_scatter_src = str(OUT_DIR / "cosim_stream.json")
+    if scatter:
+        vitis_scatter = scatter.get("per_transaction_cycles") or scatter.get(
+            "latency_cycles"
+        )
     rows.append(
         _row(
             "oe_hls_scatter_stream",
-            scatter.get("latency_cycles") if scatter else None,
-            None,
-            str(OUT_DIR / "cosim_stream.json"),
-            "pending LS on oe engine kernel (C2)",
-            "pending C2",
+            vitis_scatter,
+            ls_scatter_lat,
+            vitis_scatter_src,
+            ls_scatter_src,
+            "OE scatter steady-state cosim vs LS DSE (C2)",
         )
     )
 
