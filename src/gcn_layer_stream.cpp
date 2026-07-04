@@ -219,6 +219,16 @@ void gcn_layer_stream(
     data_t         Y[MAX_NODES][F_OUT])
 #endif
 {
+#ifdef GNN_LS_LITE
+#pragma HLS INTERFACE mode = ap_memory port = X depth = 1024
+#pragma HLS INTERFACE mode = ap_memory port = W depth = 256
+#pragma HLS INTERFACE mode = ap_memory port = bias depth = 16
+#pragma HLS INTERFACE mode = ap_memory port = row_ptr depth = 65
+#pragma HLS INTERFACE mode = ap_memory port = col_idx depth = 512
+#pragma HLS INTERFACE mode = ap_memory port = Y depth = 1024
+#pragma HLS INTERFACE s_axilite port = num_nodes bundle = control
+#pragma HLS INTERFACE s_axilite port = return bundle = control
+#endif
 #pragma HLS DATAFLOW
     hls::stream<seam_token_t> xt_stream;
 #pragma HLS STREAM variable=xt_stream depth=4
