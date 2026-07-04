@@ -29,7 +29,10 @@ def resolve_solution_dir(solution_dir_str, repo=None):
 
 
 def gcn_ls_cosim_json_valid(data):
-    """True only for real GNN_LS_LITE cosim (not csynth-only poison)."""
+    """True only for a real cosim JSON (not csynth-only poison).
+
+    Used for both C1 (GNN_LS_LITE) and C2 (oe_hls_engine_stream) cosim caches.
+    """
     if not data or data.get("latency_cycles") is None:
         return False, "missing latency_cycles"
     if not data.get("passed"):
@@ -39,6 +42,15 @@ def gcn_ls_cosim_json_valid(data):
     report_path = (data.get("report_path") or "").replace("\\", "/")
     if "cosim.rpt" not in report_path:
         return False, "report_path must reference *_cosim.rpt (got {0!r})".format(
+            data.get("report_path")
+        )
+    if "gcn_stream_ls_cosim_proj" in report_path:
+        return False, (
+            "reject split-project cosim (use gcn_stream_proj trace solution; "
+            "rerun run_ls_validate_gcn.sh)"
+        )
+    if "gcn_stream_proj" not in report_path:
+        return False, "report_path must be under gcn_stream_proj (got {0!r})".format(
             data.get("report_path")
         )
     return True, "ok"

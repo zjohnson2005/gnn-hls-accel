@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
-# C1 (thesis pillar): Vitis cosim vs LightningSim on the SAME GNN_LS_LITE RTL stamp.
-# Does NOT overwrite gcn_stream_proj/sol1/trace.pkl (uses gcn_stream_ls_cosim_proj).
+# C1 (thesis pillar): Vitis cosim vs LightningSim on the SAME gcn_stream_proj/sol1.
+# Cosim runs on the traced solution (not a separate project) so RTL matches trace.pkl.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 OUT="$ROOT/orchestration_engine/characterization/out/phase2"
 mkdir -p "$OUT"
+
+STAMP_TAG="GNN_LS_LITE=df-u16-apmem-v2"
+TRACE_SOL="$ROOT/gcn_stream_proj/sol1"
+LS_STAMP="$TRACE_SOL/.oe_lightningsim_vitis"
 
 if [[ -z "${CONDA_PREFIX:-}" ]] && [[ -d "$HOME/miniconda3/envs/fifo-advisor" ]]; then
   export CONDA_PREFIX="$HOME/miniconda3/envs/fifo-advisor"
@@ -40,8 +44,15 @@ if [[ -n "${CONDA_PREFIX:-}" ]] && [[ -x "$CONDA_PREFIX/bin/python" ]]; then
   OE_PYTHON="$CONDA_PREFIX/bin/python"
 fi
 
-if [[ ! -f "$ROOT/gcn_stream_proj/sol1/trace.pkl" ]]; then
-  echo "ERROR: missing gcn_stream_proj/sol1/trace.pkl — run run_phase2_lightningsim.sh first." >&2
+if [[ ! -f "$TRACE_SOL/trace.pkl" ]]; then
+  echo "ERROR: missing $TRACE_SOL/trace.pkl — run run_phase2_lightningsim.sh first." >&2
+  exit 1
+fi
+
+if [[ ! -f "$LS_STAMP" ]] || ! grep -q "$STAMP_TAG" "$LS_STAMP"; then
+  echo "ERROR: $TRACE_SOL stamp missing or not $STAMP_TAG." >&2
+  echo "Rebuild trace+DSE so cosim pairs the same RTL:" >&2
+  echo "  rm -rf gcn_stream_proj && bash orchestration_engine/run_phase2_lightningsim.sh" >&2
   exit 1
 fi
 
@@ -59,10 +70,10 @@ sys.exit(0 if ok else 1)
   exit 1
 fi
 
-echo "=== C1: GNN_LS_LITE Vitis cosim (2023.1) paired with LS trace build ==="
+echo "=== C1: GNN_LS_LITE cosim on traced solution ($TRACE_SOL) ==="
 echo "Using python: $OE_PYTHON"
 
-# Drop stale Vitis side if csynth-only or missing cosim.rpt (pairs ~37 cyc vs LS ~315).
+# Drop stale Vitis side if csynth-only or missing cosim.rpt.
 if [[ -f "$OUT/cosim_gcn_stream_ls.json" ]]; then
   if ! "$OE_PYTHON" -c "
 from pathlib import Path
@@ -72,22 +83,35 @@ p = Path('$OUT/cosim_gcn_stream_ls.json')
 ok, _ = gcn_ls_cosim_json_valid(json.loads(p.read_text(encoding='utf-8')))
 raise SystemExit(0 if ok else 1)
 "; then
-    echo "Removing stale invalid cosim_gcn_stream_ls.json (not real cosim)"
+    echo "Removing stale invalid cosim_gcn_stream_ls.json"
     rm -f "$OUT/cosim_gcn_stream_ls.json" "$OUT/ls_gcn_eval.json"
   fi
 fi
 
-if ! vitis_hls -f run_hls_stream_ls_cosim.tcl; then
+# Reject cosim from the old split-project flow (different RTL than trace).
+if [[ -f "$OUT/cosim_gcn_stream_ls.json" ]]; then
+  if ! "$OE_PYTHON" -c "
+import json
+from pathlib import Path
+p = Path('$OUT/cosim_gcn_stream_ls.json')
+d = json.loads(p.read_text())
+rp = (d.get('report_path') or '').replace('\\\\', '/')
+raise SystemExit(0 if 'gcn_stream_proj/' in rp else 1)
+"; then
+    echo "Removing cosim_gcn_stream_ls.json from old gcn_stream_ls_cosim_proj pairing"
+    rm -f "$OUT/cosim_gcn_stream_ls.json" "$OUT/ls_gcn_eval.json"
+  fi
+fi
+
+if ! vitis_hls -f run_hls_stream_ls_cosim_trace.tcl; then
   echo ""
-  echo "ERROR: GNN_LS_LITE cosim failed. C1 cannot pass without real cosim cycles." >&2
-  echo "Check ap_memory depth pragmas in src/gcn_layer_stream.cpp (GNN_LS_LITE top)." >&2
-  echo "Do NOT use csynth-only numbers for LightningSim validation." >&2
+  echo "ERROR: cosim on gcn_stream_proj failed. C1 cannot pass without real cosim cycles." >&2
   exit 1
 fi
 
-RPT="$(find gcn_stream_ls_cosim_proj -name '*_cosim.rpt' | head -1)"
+RPT="$(find gcn_stream_proj -path '*/sim/report/*_cosim.rpt' | head -1)"
 if [[ -z "$RPT" ]]; then
-  echo "ERROR: cosim finished but no *_cosim.rpt found" >&2
+  echo "ERROR: cosim finished but no *_cosim.rpt under gcn_stream_proj" >&2
   exit 1
 fi
 
@@ -95,7 +119,7 @@ fi
   --report "$RPT" \
   --out "$OUT/cosim_gcn_stream_ls.json"
 
-echo "=== C1: fresh LightningSim eval on gcn_stream_proj/sol1 ==="
+echo "=== C1: fresh LightningSim eval on $TRACE_SOL ==="
 "$OE_PYTHON" -m orchestration_engine.eval.ls_capture_gcn_eval
 
 "$OE_PYTHON" -m orchestration_engine.eval.ls_validate --mode ls_lite
