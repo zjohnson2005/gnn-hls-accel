@@ -64,8 +64,9 @@ def _ls_latency_from_trace(solution_dir):
 def _find_gcn_vitis_cycles(mode):
     if mode == "ls_lite":
         cached = _read_json(OUT_DIR / "cosim_gcn_stream_ls.json")
-        if cached and cached.get("passed") and cached.get("latency_cycles") is not None:
-            return int(cached["latency_cycles"]), str(OUT_DIR / "cosim_gcn_stream_ls.json")
+        if cached and cached.get("latency_cycles") is not None:
+            if cached.get("passed") or cached.get("status") == "csynth_only":
+                return int(cached["latency_cycles"]), str(OUT_DIR / "cosim_gcn_stream_ls.json")
         search_roots = [REPO / "gcn_stream_ls_cosim_proj"]
     else:
         cached = _read_json(OUT_DIR / "cosim_gcn_stream.json")

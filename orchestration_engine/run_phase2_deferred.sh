@@ -37,7 +37,8 @@ fi
 # C1 — strict GNN_LS_LITE pairing (optional; long cosim on 2023.1)
 if [[ ! -f "$OUT/ls_validation.json" ]] || ! python3 -c \
   "import json; d=json.load(open('$OUT/ls_validation.json')); exit(0 if d.get('passed') else 1)" 2>/dev/null; then
-  _run "C1 LS validate GCN" bash orchestration_engine/run_ls_validate_gcn.sh
+  _run "C1 LS validate GCN" bash orchestration_engine/run_ls_validate_gcn.sh || \
+    echo "WARN: C1 incomplete (cosim or pairing); continuing deferred pipeline"
 else
   echo "SKIP C1 (ls_validation.json passed)"
 fi

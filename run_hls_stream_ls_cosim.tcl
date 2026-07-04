@@ -17,6 +17,8 @@ create_clock -period 3.33 -name default
 
 csim_design
 csynth_design
+
+config_cosim -trace_level none
 cosim_design
 
 exit
