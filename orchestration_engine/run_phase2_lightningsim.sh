@@ -94,12 +94,9 @@ if [[ ! -f "$SOLUTION_DIR/trace.pkl" ]]; then
   echo "=== Refresh csim + capture LightningSim trace.pkl ==="
   vitis_hls -f run_hls_stream_csim_refresh.tcl
   if ! "$OE_PYTHON" -m orchestration_engine.eval.capture_ls_trace --solution-dir "$SOLUTION_DIR"; then
-    echo ""
-    echo "WARNING: gcn_stream trace capture failed (LS cannot hook top-level array ports on this design)."
-    echo "Run the known-good LS reference design instead:"
-    echo "  bash orchestration_engine/run_phase2_lightningsim_ex1.sh"
-    echo "Or offline methodology demo:"
-    echo "  python -m orchestration_engine.eval.dse_sweep --synthetic --output orchestration_engine/characterization/out/phase2/dse_report.json"
+    echo "ERROR: gcn_stream trace capture failed — cannot emit trace-backed dse_report.json." >&2
+    echo "Fix patch_lightningsim / csim on $SOLUTION_DIR (see run_ls_diagnose.sh)." >&2
+    echo "Offline fifo_pareto demos do NOT satisfy the thesis LightningSim gate." >&2
     exit 1
   fi
 fi

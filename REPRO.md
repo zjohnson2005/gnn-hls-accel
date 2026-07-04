@@ -14,9 +14,11 @@ ARCHIVE Vitis 2023.1 + conda `fifo-advisor`.
 | `orchestration_engine/characterization/out/phase2/power_scatter.json` | `bash orchestration_engine/run_power.sh scatter` | Vivado impl on exported RTL | ece-rschsrv |
 | `orchestration_engine/characterization/out/phase2/power_graph_load.json` | `bash orchestration_engine/run_power.sh graph_load` | Vivado impl on exported RTL | ece-rschsrv |
 | `orchestration_engine/characterization/out/phase2/oe_bench.log` | `bash orchestration_engine/run_oe_bench.sh` | g++ C++17 (no Vitis) | ece-rschsrv |
-| `orchestration_engine/characterization/out/phase2/dse_report.json` | `bash orchestration_engine/run_phase2_lightningsim.sh` | Vitis 2023.1 ARCHIVE + conda via `hls_env_lightningsim.sh` | ece-rschsrv |
-| `orchestration_engine/characterization/out/phase2/dse_report_oe.json` | `bash orchestration_engine/run_phase2_lightningsim_oe.sh` | Vitis 2023.1 ARCHIVE + conda | ece-rschsrv |
-| `orchestration_engine/characterization/out/phase2/ls_validation.json` | `bash orchestration_engine/run_ls_validate_gcn.sh` | GNN_LS_LITE 2023.1 cosim + LS trace | ece-rschsrv |
+| `orchestration_engine/characterization/out/phase2/dse_report.json` | `bash orchestration_engine/run_phase2_lightningsim.sh` | Must have `"source":"lightningsim"` + `gcn_stream_proj/sol1/trace.pkl` | ece-rschsrv |
+| `orchestration_engine/characterization/out/phase2/dse_report_oe.json` | `bash orchestration_engine/run_phase2_lightningsim_oe.sh` | Must have `"source":"lightningsim"` + OE `trace.pkl` (no synthetic) | ece-rschsrv |
+| `orchestration_engine/characterization/out/phase2/ls_gcn_eval.json` | `run_ls_validate_gcn.sh` (via `ls_capture_gcn_eval`) | Live `eval_solution_default` on GCN trace | ece-rschsrv |
+| `orchestration_engine/characterization/out/phase2/ls_oe_eval.json` | `run_phase2_lightningsim_oe.sh` (via `ls_capture_oe_eval`) | Live eval on OE trace; must match DSE baseline | ece-rschsrv |
+| `orchestration_engine/characterization/out/phase2/ls_validation.json` | C1 + C2 scripts; `passed` requires both | C1 ≤5%; C2 ≤15% (cross-toolchain) | ece-rschsrv |
 | `orchestration_engine/characterization/out/phase2/cosim_gcn_stream_ls.json` | `bash orchestration_engine/run_ls_validate_gcn.sh` | Vitis 2023.1 ARCHIVE cosim | ece-rschsrv |
 | `orchestration_engine/characterization/out/phase2/cosim_gcn_stream.json` | `bash orchestration_engine/run_gcn_stream_cosim.sh` | Vitis 2025.2.1 thesis ap_fixed (E2) | ece-rschsrv |
 | `orchestration_engine/characterization/out/phase2/phase2_gate.md` | `bash orchestration_engine/run_phase2_sprint_remainder.sh` | mixed (see rows above) | ece-rschsrv |
@@ -24,8 +26,9 @@ ARCHIVE Vitis 2023.1 + conda `fifo-advisor`.
 | GCN cosim JSON (E2) | `vitis_hls -f run_hls_stream.tcl` | Vitis 2025.2.1 | ece-rschsrv |
 | `cost_model_3d/out/oe_experiment.json` | `bash orchestration_engine/run_oe_cost_model_3d.sh` | Python 3.7+ (conda fifo-advisor on server) | any |
 | `orchestration_engine/characterization/out/phase2/variants_results.json` | `bash orchestration_engine/run_phase2_variants.sh` | Vitis 2025.2.1 csynth subset | ece-rschsrv |
-| `orchestration_engine/characterization/out/phase2/fifo_pareto_demo.json` | `bash orchestration_engine/run_phase2_deferred.sh` (fifo section) | conda fifo-advisor | any |
-| Deferred gate refresh | `bash orchestration_engine/run_phase2_deferred.sh` | mixed (see rows above) | ece-rschsrv |
+| Deferred gate refresh | `bash orchestration_engine/run_phase2_deferred.sh` | C1+C2 required; synthetic DSE rejected | ece-rschsrv |
+
+**LightningSim gate rules:** `dse_report*.json` must have `"source":"lightningsim"`, `deadlocks:0`, and a live `trace.pkl` under `solution_dir`. `ls_validation.json` must have `"passed":true` (C1+C2). Synthetic/offline DSE is for `fifo_pareto/` demos only.
 
 Local-only work: edit files under `orchestration_engine/hls/`, `tb/`, `eval/`,
 `phase2_gate/`. Any step invoking `vitis_hls` or Vivado is **server-only**.

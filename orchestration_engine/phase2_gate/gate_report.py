@@ -6,6 +6,11 @@ from pathlib import Path
 from orchestration_engine.phase2_gate.cosim_parser import load_or_parse as load_cosim
 from orchestration_engine.phase2_gate.crossover import build_crossover, render_markdown
 from orchestration_engine.phase2_gate.csynth_parser import find_csynth_reports, load_or_parse
+from orchestration_engine.phase2_gate.ls_gate import (
+    dse_report_valid,
+    gcn_e2_cosim_done,
+    ls_validation_passed,
+)
 
 OE_ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = OE_ROOT / "characterization" / "out" / "phase2"
@@ -62,12 +67,17 @@ def _checklist():
     )
 
     dse_out = OUT_DIR / "dse_report.json"
+    dse_ok, dse_detail = dse_report_valid(dse_out, OE_ROOT.parent)
     items.append(
         {
             "id": "lightningsim_dse",
-            "label": "LightningSim FIFO DSE (eval/dse_sweep.py)",
-            "status": "done" if dse_out.exists() else "pending",
-            "detail": str(dse_out) if dse_out.exists() else "Requires fifo-advisor on Vitis box",
+            "label": "LightningSim GCN DSE (trace-backed, source=lightningsim)",
+            "status": "done" if dse_ok else "pending",
+            "detail": dse_detail if dse_ok else (
+                dse_detail + " — run run_phase2_lightningsim.sh on ece-rschsrv"
+                if dse_out.exists()
+                else "Requires fifo-advisor + gcn_stream_proj/sol1/trace.pkl"
+            ),
         }
     )
 
@@ -119,33 +129,22 @@ def _checklist():
         }
     )
 
-    ls_val = OUT_DIR / "ls_validation.json"
-    gcn_e2 = OUT_DIR / "cosim_gcn_stream.json"
-    ls_status = "pending"
-    ls_detail = "bash orchestration_engine/run_gcn_stream_cosim.sh (E2) or run_ls_validate_gcn.sh (C1)"
-    if gcn_e2.exists():
-        try:
-            g2 = json.loads(gcn_e2.read_text(encoding="utf-8"))
-            if g2.get("passed") and g2.get("latency_cycles") is not None:
-                ls_status = "done"
-                ls_detail = "E2 gcn cosim {0} cyc ({1})".format(
-                    g2.get("latency_cycles"), gcn_e2.name
-                )
-        except (ValueError, OSError):
-            pass
-    elif ls_val.exists():
-        try:
-            lv = json.loads(ls_val.read_text(encoding="utf-8"))
-            if lv.get("gcn_stream_validated") or lv.get("passed"):
-                ls_status = "done"
-            ls_detail = str(ls_val)
-        except (ValueError, OSError):
-            pass
+    e2_ok, e2_detail = gcn_e2_cosim_done()
     items.append(
         {
-            "id": "ls_validated",
-            "label": "GCN stream cosim anchor (E2) / LS validation",
-            "status": ls_status,
+            "id": "gcn_e2_cosim",
+            "label": "GCN stream thesis cosim anchor (E2, Vitis 2025.2.1)",
+            "status": "done" if e2_ok else "pending",
+            "detail": e2_detail,
+        }
+    )
+
+    ls_ok, ls_detail = ls_validation_passed()
+    items.append(
+        {
+            "id": "ls_validation",
+            "label": "LightningSim effectiveness (C1 GCN + C2 OE, ls_validation.json)",
+            "status": "done" if ls_ok else "pending",
             "detail": ls_detail,
         }
     )
@@ -177,33 +176,17 @@ def _checklist():
     )
 
     dse_oe = OUT_DIR / "dse_report_oe.json"
+    dse_oe_ok, dse_oe_detail = dse_report_valid(dse_oe, OE_ROOT.parent)
     items.append(
         {
             "id": "lightningsim_oe_dse",
-            "label": "LightningSim DSE on OE engine (C2)",
-            "status": "done" if dse_oe.exists() else "pending",
-            "detail": str(dse_oe)
-            if dse_oe.exists()
-            else "bash orchestration_engine/run_phase2_lightningsim_oe.sh",
-        }
-    )
-
-    ls_val = OUT_DIR / "ls_validation.json"
-    ls_val_done = False
-    ls_val_detail = "bash orchestration_engine/run_ls_validate_gcn.sh (C1 thesis pillar)"
-    if ls_val.exists():
-        try:
-            lv = json.loads(ls_val.read_text(encoding="utf-8"))
-            ls_val_done = bool(lv.get("passed"))
-            ls_val_detail = str(ls_val)
-        except (ValueError, OSError):
-            pass
-    items.append(
-        {
-            "id": "ls_validation",
-            "label": "LightningSim effectiveness (C1 cosim vs LS eval)",
-            "status": "done" if ls_val_done else "pending",
-            "detail": ls_val_detail,
+            "label": "LightningSim OE engine DSE (C2, trace-backed)",
+            "status": "done" if dse_oe_ok else "pending",
+            "detail": dse_oe_detail if dse_oe_ok else (
+                dse_oe_detail + " — run run_phase2_lightningsim_oe.sh"
+                if dse_oe.exists()
+                else "bash orchestration_engine/run_phase2_lightningsim_oe.sh"
+            ),
         }
     )
 
@@ -255,7 +238,7 @@ def _checklist():
 def build_report():
     crossover = build_crossover()
     checklist = _checklist()
-    pending = [c for c in checklist if c["status"] != "done"]
+    pending = [c for c in checklist if c["status"] == "pending"]
     passed = len(pending) == 0 and crossover.verdict != "PENDING_CSYNTH"
 
     return {

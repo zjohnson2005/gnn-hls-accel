@@ -108,6 +108,11 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.synthetic:
+        if args.output and "phase2" in str(args.output).replace("\\", "/"):
+            raise SystemExit(
+                "Refusing to write synthetic DSE under characterization/out/phase2/. "
+                "Use fifo_pareto.live_demo for offline demos only."
+            )
         report = run_dse_synthetic(args.n_samples, args.batch_size)
     elif args.solution_dir is None:
         parser.error("Provide --solution-dir or --synthetic")
@@ -119,6 +124,9 @@ def main() -> None:
                 "fifo-advisor not installed. See fifo_pareto/README.md for conda setup."
             ) from exc
         report["source"] = "lightningsim"
+        trace = args.solution_dir.resolve() / "trace.pkl"
+        if not trace.is_file():
+            raise SystemExit("ERROR: {0} missing — cannot emit lightningsim DSE report".format(trace))
 
     text = json.dumps(report, indent=2)
     if args.output:
