@@ -45,6 +45,20 @@ if [[ ! -f "$ROOT/gcn_stream_proj/sol1/trace.pkl" ]]; then
   exit 1
 fi
 
+# C1 needs a valid FULL DSE report (trace-backed, >=100 evals, real pareto_frontier).
+if ! "$OE_PYTHON" -c "
+import sys
+from pathlib import Path
+from orchestration_engine.phase2_gate.ls_gate import dse_report_valid
+ok, detail = dse_report_valid(Path('$OUT/dse_report.json'))
+print(detail)
+sys.exit(0 if ok else 1)
+"; then
+  echo "ERROR: dse_report.json is not a valid full LightningSim DSE artifact." >&2
+  echo "Run: bash orchestration_engine/run_phase2_lightningsim.sh (full DSE, no summaries)." >&2
+  exit 1
+fi
+
 echo "=== C1: GNN_LS_LITE Vitis cosim (2023.1) paired with LS trace build ==="
 echo "Using python: $OE_PYTHON"
 

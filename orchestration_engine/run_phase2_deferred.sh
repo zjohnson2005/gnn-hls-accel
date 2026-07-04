@@ -54,6 +54,23 @@ else
   echo "SKIP E1 ($ROOT/cost_model_3d/out/oe_experiment.json exists)"
 fi
 
+_dse_gcn_valid() {
+  "$PY" -c "
+import sys
+from pathlib import Path
+from orchestration_engine.phase2_gate.ls_gate import dse_report_valid
+ok, _ = dse_report_valid(Path('$OUT/dse_report.json'))
+sys.exit(0 if ok else 1)
+" 2>/dev/null
+}
+
+# C0 — GCN full DSE (prerequisite for C1; summaries/partial reports are rejected)
+if ! _dse_gcn_valid; then
+  _run "C0 GCN LightningSim full DSE" bash orchestration_engine/run_phase2_lightningsim.sh
+else
+  echo "SKIP C0 (dse_report.json is a valid full DSE artifact)"
+fi
+
 # C1 — required
 if ! _c1_passed; then
   _run "C1 LightningSim vs Vitis (GCN)" bash orchestration_engine/run_ls_validate_gcn.sh

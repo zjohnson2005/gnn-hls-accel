@@ -1,25 +1,56 @@
 #include "orchestration_engine.h"
 
-// LS C2 top: graph_load then scatter_stream in one ap_ctrl_hs invocation.
-// Sequential (not inter-task DATAFLOW): shared BRAM graph state cannot be read
-// from two DATAFLOW processes (HLS 200-968). Axis streams on ops/completions/
-// ready are still traced by LightningSim for FIFO DSE.
+// LS C2 top: DATAFLOW feeders -> engine process -> sink with INTERNAL FIFOs.
+//
+// Why this shape:
+//  - LightningSim 2023.1 cannot link instrumented testbenches against
+//    top-level hls::stream ports (undefined fpga_fifo_* in streamcpy_hls).
+//    The proven GCN LS build traces INTERNAL DATAFLOW FIFOs only, so the OE
+//    engine does the same: plain array ports at the top, streams inside.
+//  - All graph BRAM lives inside ONE process (oe_ls_engine_proc) so dataflow
+//    checking passes (HLS 200-968/971: arrays cannot be shared across tasks).
+//  - The traced FIFOs (ops 128b, completions 16b, ready 16b) are exactly the
+//    seams the C2 FIFO DSE sizes.
 
-void oe_hls_engine_stream(
-    hls::stream<oe_graph_op_word_t> &ops_in,
-    hls::stream<oe_hls_node_id_t> &completions_in,
-    hls::stream<oe_hls_node_id_t> &ready_out,
+static void oe_ls_feed_ops(
+    const oe_graph_op_word_t ops_in[OE_LS_ENGINE_MAX_OPS],
+    const ap_uint<16> num_ops,
+    hls::stream<oe_graph_op_word_t> &ops_s) {
+#pragma HLS INLINE off
+feed_ops:
+    for (ap_uint<16> i = 0; i < num_ops; ++i) {
+#pragma HLS PIPELINE II = 1
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = OE_LS_ENGINE_MAX_OPS
+        ops_s.write(ops_in[i]);
+    }
+    oe_graph_op_word_t end_word = 0;
+    end_word.range(7, 0) = OE_HLS_OP_WORD_END;
+    ops_s.write(end_word);
+}
+
+static void oe_ls_feed_completions(
+    const oe_hls_node_id_t completions_in[OE_HLS_MAX_OUTSTANDING],
+    const ap_uint<16> num_completions,
+    hls::stream<oe_hls_node_id_t> &comp_s) {
+#pragma HLS INLINE off
+feed_comp:
+    for (ap_uint<16> i = 0; i < num_completions; ++i) {
+#pragma HLS PIPELINE II = 1
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = OE_HLS_MAX_OUTSTANDING
+        comp_s.write(completions_in[i]);
+    }
+    comp_s.write(oe_hls_node_id_t(OE_HLS_STREAM_END));
+}
+
+// Single process owning all graph state: load session, then scatter.
+static void oe_ls_engine_proc(
+    hls::stream<oe_graph_op_word_t> &ops_s,
+    hls::stream<oe_hls_node_id_t> &comp_s,
+    hls::stream<oe_hls_node_id_t> &ready_s,
     oe_hls_cycle_t &load_cycles,
     oe_hls_cycle_t &scatter_processed,
     ap_uint<32> &ops_processed) {
-#pragma HLS INTERFACE axis port = ops_in
-#pragma HLS INTERFACE axis port = completions_in
-#pragma HLS INTERFACE axis port = ready_out
-#pragma HLS INTERFACE s_axilite port = load_cycles bundle = control
-#pragma HLS INTERFACE s_axilite port = scatter_processed bundle = control
-#pragma HLS INTERFACE s_axilite port = ops_processed bundle = control
-#pragma HLS INTERFACE s_axilite port = return bundle = control
-
+#pragma HLS INLINE off
     static oe_hls_node_id_t num_nodes;
     static ap_uint<8> succ_count[OE_HLS_MAX_NODES];
     static oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS];
@@ -33,7 +64,7 @@ void oe_hls_engine_stream(
         succ_count,
         succ_slots,
         node_state,
-        ops_in,
+        ops_s,
         load_cycles,
         ops_processed);
 
@@ -42,7 +73,64 @@ void oe_hls_engine_stream(
         succ_count,
         succ_slots,
         node_state,
-        completions_in,
-        ready_out,
+        comp_s,
+        ready_s,
         scatter_processed);
+}
+
+static void oe_ls_sink_ready(
+    hls::stream<oe_hls_node_id_t> &ready_s,
+    oe_hls_node_id_t ready_out[OE_HLS_MAX_NODES],
+    oe_hls_node_id_t &num_ready) {
+#pragma HLS INLINE off
+    oe_hls_node_id_t n = 0;
+sink_ready:
+    while (true) {
+#pragma HLS PIPELINE II = 1
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = OE_HLS_MAX_NODES
+        const oe_hls_node_id_t id = ready_s.read();
+        if (id == oe_hls_node_id_t(OE_HLS_STREAM_END)) {
+            break;
+        }
+        if (n < oe_hls_node_id_t(OE_HLS_MAX_NODES)) {
+            ready_out[n] = id;
+            n = n + 1;
+        }
+    }
+    num_ready = n;
+}
+
+void oe_hls_engine_stream(
+    const oe_graph_op_word_t ops_in[OE_LS_ENGINE_MAX_OPS],
+    const ap_uint<16> num_ops,
+    const oe_hls_node_id_t completions_in[OE_HLS_MAX_OUTSTANDING],
+    const ap_uint<16> num_completions,
+    oe_hls_node_id_t ready_out[OE_HLS_MAX_NODES],
+    oe_hls_node_id_t &num_ready,
+    oe_hls_cycle_t &load_cycles,
+    oe_hls_cycle_t &scatter_processed,
+    ap_uint<32> &ops_processed) {
+#pragma HLS INTERFACE mode = ap_memory port = ops_in depth = 512
+#pragma HLS INTERFACE mode = ap_memory port = completions_in depth = 64
+#pragma HLS INTERFACE mode = ap_memory port = ready_out depth = 256
+#pragma HLS INTERFACE s_axilite port = num_ops bundle = control
+#pragma HLS INTERFACE s_axilite port = num_completions bundle = control
+#pragma HLS INTERFACE s_axilite port = num_ready bundle = control
+#pragma HLS INTERFACE s_axilite port = load_cycles bundle = control
+#pragma HLS INTERFACE s_axilite port = scatter_processed bundle = control
+#pragma HLS INTERFACE s_axilite port = ops_processed bundle = control
+#pragma HLS INTERFACE s_axilite port = return bundle = control
+
+    hls::stream<oe_graph_op_word_t> ops_s("ops_s");
+    hls::stream<oe_hls_node_id_t> comp_s("comp_s");
+    hls::stream<oe_hls_node_id_t> ready_s("ready_s");
+#pragma HLS STREAM variable = ops_s depth = 8
+#pragma HLS STREAM variable = comp_s depth = 8
+#pragma HLS STREAM variable = ready_s depth = 8
+
+#pragma HLS DATAFLOW
+    oe_ls_feed_ops(ops_in, num_ops, ops_s);
+    oe_ls_feed_completions(completions_in, num_completions, comp_s);
+    oe_ls_engine_proc(ops_s, comp_s, ready_s, load_cycles, scatter_processed, ops_processed);
+    oe_ls_sink_ready(ready_s, ready_out, num_ready);
 }
