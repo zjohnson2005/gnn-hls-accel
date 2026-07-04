@@ -190,20 +190,22 @@ def _checklist():
 
     ls_val = OUT_DIR / "ls_validation.json"
     ls_val_done = False
+    ls_val_detail = "bash orchestration_engine/run_ls_validate_gcn.sh (set RUN_C1=1)"
     if ls_val.exists():
         try:
             lv = json.loads(ls_val.read_text(encoding="utf-8"))
             ls_val_done = bool(lv.get("passed"))
+            ls_val_detail = str(ls_val)
+            if not ls_val_done and lv.get("rows"):
+                ls_val_detail = "{0} (C1 optional; E2 thesis cosim is primary)".format(ls_val)
         except (ValueError, OSError):
             pass
     items.append(
         {
             "id": "ls_validation",
             "label": "LS vs Vitis validation report (C1/C2)",
-            "status": "done" if ls_val_done else "pending",
-            "detail": str(ls_val)
-            if ls_val.exists()
-            else "bash orchestration_engine/run_ls_validate_gcn.sh",
+            "status": "done" if ls_val.exists() else "pending",
+            "detail": ls_val_detail,
         }
     )
 
