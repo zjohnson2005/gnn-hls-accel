@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# C1: compare Vitis cosim vs LightningSim on the SAME GNN_LS_LITE build (2023.1).
-# Does NOT touch gcn_stream_proj/sol1/trace.pkl.
+# C1 (thesis pillar): Vitis cosim vs LightningSim on the SAME GNN_LS_LITE RTL stamp.
+# Does NOT overwrite gcn_stream_proj/sol1/trace.pkl (uses gcn_stream_ls_cosim_proj).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -26,17 +26,11 @@ _oe_resolve_python() {
       return 0
     fi
   done
-  echo "WARN: fifo_advisor not found; LS side will fall back to dse_report.json" >&2
-  for cand in \
-    "${CONDA_PREFIX:+$CONDA_PREFIX/bin/python}" \
-    "$HOME/miniconda3/envs/fifo-advisor/bin/python" \
-    "$(command -v python3 2>/dev/null || true)"; do
-    [[ -n "$cand" ]] && [[ -x "$cand" ]] && echo "$cand" && return 0
-  done
-  echo "python3"
+  echo "ERROR: fifo-advisor required for C1 / LightningSim validation." >&2
+  return 1
 }
 
-OE_PYTHON="$(_oe_resolve_python)"
+OE_PYTHON="$(_oe_resolve_python)" || exit 1
 export PATH="$(dirname "$OE_PYTHON"):$PATH"
 
 source "$ROOT/orchestration_engine/hls_env_lightningsim.sh"
@@ -46,24 +40,36 @@ if [[ -n "${CONDA_PREFIX:-}" ]] && [[ -x "$CONDA_PREFIX/bin/python" ]]; then
   OE_PYTHON="$CONDA_PREFIX/bin/python"
 fi
 
-echo "=== gcn_stream GNN_LS_LITE cosim (2023.1 ARCHIVE, paired with LS trace) ==="
+if [[ ! -f "$ROOT/gcn_stream_proj/sol1/trace.pkl" ]]; then
+  echo "ERROR: missing gcn_stream_proj/sol1/trace.pkl — run run_phase2_lightningsim.sh first." >&2
+  exit 1
+fi
+
+echo "=== C1: GNN_LS_LITE Vitis cosim (2023.1) paired with LS trace build ==="
 echo "Using python: $OE_PYTHON"
 
 if ! vitis_hls -f run_hls_stream_ls_cosim.tcl; then
   echo ""
-  echo "WARNING: GNN_LS_LITE cosim failed (known pointer-port issue on some Vitis builds)."
-  echo "Falling back to csynth-only anchor for C1 pairing."
-  bash orchestration_engine/run_ls_validate_gcn_csynth_fallback.sh
-else
-  RPT="$(find gcn_stream_ls_cosim_proj -name '*_cosim.rpt' | head -1)"
-  if [[ -n "$RPT" ]]; then
-    "$OE_PYTHON" -m orchestration_engine.phase2_gate.cosim_parser \
-      --report "$RPT" \
-      --out "$OUT/cosim_gcn_stream_ls.json"
-  fi
+  echo "ERROR: GNN_LS_LITE cosim failed. C1 cannot pass without real cosim cycles." >&2
+  echo "Check ap_memory depth pragmas in src/gcn_layer_stream.cpp (GNN_LS_LITE top)." >&2
+  echo "Do NOT use csynth-only numbers for LightningSim validation." >&2
+  exit 1
 fi
 
-"$OE_PYTHON" -m orchestration_engine.eval.ls_validate --mode ls_lite || true
+RPT="$(find gcn_stream_ls_cosim_proj -name '*_cosim.rpt' | head -1)"
+if [[ -z "$RPT" ]]; then
+  echo "ERROR: cosim finished but no *_cosim.rpt found" >&2
+  exit 1
+fi
+
+"$OE_PYTHON" -m orchestration_engine.phase2_gate.cosim_parser \
+  --report "$RPT" \
+  --out "$OUT/cosim_gcn_stream_ls.json"
+
+echo "=== C1: fresh LightningSim eval on gcn_stream_proj/sol1 ==="
+"$OE_PYTHON" -m orchestration_engine.eval.ls_capture_gcn_eval
+
+"$OE_PYTHON" -m orchestration_engine.eval.ls_validate --mode ls_lite
 "$OE_PYTHON" -m orchestration_engine.phase2_gate.gate_report --refresh
 
 echo "Done. See $OUT/ls_validation.json"

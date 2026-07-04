@@ -1,4 +1,4 @@
-"""Compare Vitis cosim cycle counts with LightningSim trace latency."""
+"""Compare Vitis cosim cycle counts with LightningSim trace latency (C1 effectiveness)."""
 
 import argparse
 import json
@@ -8,6 +8,7 @@ from pathlib import Path
 OE_ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = OE_ROOT / "characterization" / "out" / "phase2"
 REPO = OE_ROOT.parent
+GCN_LS_SOL = REPO / "gcn_stream_proj" / "sol1"
 
 
 def _read_json(path):
@@ -16,63 +17,32 @@ def _read_json(path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _ls_latency_from_fifo_advisor(solution_dir):
-    solution_dir = Path(solution_dir)
+def _ls_latency_for_c1():
+    """LightningSim side of C1: fresh eval on the trace/DSE solution."""
+    captured = _read_json(OUT_DIR / "ls_gcn_eval.json")
+    if captured and captured.get("lightningsim_cycles") is not None:
+        src = str(OUT_DIR / "ls_gcn_eval.json")
+        if captured.get("dse_baseline_max_latency") is not None:
+            src += " (live eval; dse baseline {0})".format(
+                captured.get("dse_baseline_max_latency")
+            )
+        return int(captured["lightningsim_cycles"]), src
+
+    if not (GCN_LS_SOL / "trace.pkl").is_file():
+        return None, "missing {0}/trace.pkl — run run_phase2_lightningsim.sh".format(GCN_LS_SOL)
+
     try:
         from fifo_advisor.opt_env import LSEnv
 
-        env = LSEnv(str(solution_dir.resolve()))
+        env = LSEnv(str(GCN_LS_SOL.resolve()))
         result = env.eval_solution_default()
         if result.latency is not None:
-            return int(result.latency), "fifo_advisor eval_solution_default({0})".format(
-                solution_dir
+            return int(result.latency), "fifo_advisor.eval_solution_default({0})".format(
+                GCN_LS_SOL
             )
     except Exception as exc:
         return None, "fifo_advisor failed: {0}".format(exc)
     return None, "fifo_advisor unavailable"
-
-
-def _ls_baseline_latency():
-    """Authoritative LS latency for C1 (DSE baseline on trace build)."""
-    dse = _read_json(OUT_DIR / "dse_report.json")
-    if dse and dse.get("baseline_max_latency") is not None:
-        return int(dse["baseline_max_latency"]), str(OUT_DIR / "dse_report.json") + " baseline_max_latency"
-    return None, "missing dse_report.json baseline_max_latency"
-
-
-def _ls_latency_from_trace(solution_dir):
-    solution_dir = Path(solution_dir)
-    trace_pkl = solution_dir / "trace.pkl"
-    if not trace_pkl.exists():
-        return _ls_baseline_latency()
-
-    # Prefer DSE baseline (315 on server) over fifo_advisor default eval, which
-    # can return a much smaller number (~37) that is not comparable to cosim.
-    dse_lat, dse_src = _ls_baseline_latency()
-    if dse_lat is not None:
-        return dse_lat, dse_src
-
-    fa_lat, fa_src = _ls_latency_from_fifo_advisor(solution_dir)
-    if fa_lat is not None:
-        return fa_lat, fa_src
-
-    try:
-        import pickle
-
-        with trace_pkl.open("rb") as f:
-            trace = pickle.load(f)
-        for attr in ("max_latency", "latency", "cycle_count", "total_cycles"):
-            if hasattr(trace, attr):
-                val = getattr(trace, attr)
-                if val is not None:
-                    return int(val), "{0}.{1}".format(trace_pkl, attr)
-        if isinstance(trace, dict):
-            for key in ("max_latency", "latency", "cycle_count"):
-                if key in trace and trace[key] is not None:
-                    return int(trace[key]), "{0}[{1}]".format(trace_pkl, key)
-    except Exception as exc:
-        return None, "trace read failed: {0}".format(exc)
-    return None, "unsupported trace.pkl layout"
 
 
 def _find_gcn_vitis_cycles(mode):
@@ -82,7 +52,9 @@ def _find_gcn_vitis_cycles(mode):
             if cached.get("passed") and cached.get("status") != "csynth_only":
                 return int(cached["latency_cycles"]), str(OUT_DIR / "cosim_gcn_stream_ls.json")
             if cached.get("status") == "csynth_only":
-                return None, str(OUT_DIR / "cosim_gcn_stream_ls.json") + " (csynth_only; not a cosim anchor)"
+                return None, "{0} (csynth_only — run real cosim for C1)".format(
+                    OUT_DIR / "cosim_gcn_stream_ls.json"
+                )
         search_roots = [REPO / "gcn_stream_ls_cosim_proj"]
     else:
         cached = _read_json(OUT_DIR / "cosim_gcn_stream.json")
@@ -140,33 +112,43 @@ def _row(name, vitis_cycles, ls_cycles, vitis_source, ls_source, comparison):
 def build_validation(mode):
     rows = []
 
-    gcn_ls = REPO / "gcn_stream_proj" / "sol1"
-    ls_lat, ls_src = _ls_latency_from_trace(gcn_ls)
-
+    ls_lat, ls_src = _ls_latency_for_c1()
     vitis_gcn, vitis_src = _find_gcn_vitis_cycles(mode)
-    ls_cached = _read_json(OUT_DIR / "cosim_gcn_stream_ls.json")
+
     comparison = (
-        "GNN_LS_LITE Vitis 2023.1 cosim vs LS trace/DSE (C1 gate row)"
+        "C1 thesis row: GNN_LS_LITE Vitis cosim vs LightningSim eval (same RTL stamp)"
         if mode == "ls_lite"
         else "thesis ap_fixed Vitis 2025.2.1 cosim vs LS (cross-build; informational)"
     )
-    gate_row = _row("gcn_stream", vitis_gcn, ls_lat, vitis_src, ls_src or "trace.pkl", comparison)
-    gate_row["counts_for_gate"] = vitis_gcn is not None and not (
-        ls_cached and ls_cached.get("status") == "csynth_only"
-    )
+    gate_row = _row("gcn_stream", vitis_gcn, ls_lat, vitis_src, ls_src, comparison)
+    gate_row["counts_for_gate"] = True
     rows.append(gate_row)
 
+    captured = _read_json(OUT_DIR / "ls_gcn_eval.json")
+    if captured and captured.get("dse_baseline_max_latency") is not None:
+        dse_row = _row(
+            "gcn_stream_dse_baseline_crosscheck",
+            captured.get("dse_baseline_max_latency"),
+            captured.get("lightningsim_cycles"),
+            str(OUT_DIR / "dse_report.json") + " baseline_max_latency",
+            captured.get("source", "ls_gcn_eval.json"),
+            "Sanity: DSE sweep baseline vs fresh eval_solution_default (should match)",
+        )
+        dse_row["counts_for_gate"] = False
+        rows.append(dse_row)
+
+    ls_cached = _read_json(OUT_DIR / "cosim_gcn_stream_ls.json")
     if ls_cached and ls_cached.get("status") == "csynth_only":
         cs_row = _row(
             "gcn_stream_csynth_fallback",
             ls_cached.get("latency_cycles"),
             ls_lat,
             str(OUT_DIR / "cosim_gcn_stream_ls.json"),
-            ls_src or "dse_report.json",
-            "C1 cosim blocked; csynth max is NOT N=6 cosim — informational only",
+            ls_src,
+            "Cosim failed — csynth number is NOT valid for C1; fix cosim and re-run",
         )
         cs_row["counts_for_gate"] = False
-        cs_row["status"] = "informational"
+        cs_row["status"] = "blocked"
         rows.append(cs_row)
 
     thesis = _read_json(OUT_DIR / "cosim_gcn_stream.json")
@@ -176,29 +158,13 @@ def build_validation(mode):
             int(thesis["latency_cycles"]),
             ls_lat,
             str(OUT_DIR / "cosim_gcn_stream.json"),
-            ls_src or "trace.pkl",
-            "E2 thesis 2025.2.1 vs LS 2023.1 — cross-build, NOT the C1 gate row",
+            ls_src,
+            "E2 cross-build (2025.2.1 ap_fixed vs LS 2023.1) — informational",
         )
         t_row["counts_for_gate"] = False
         if t_row["status"] == "ok" and t_row.get("error_percent") is not None:
-            t_row["note"] = (
-                "7-8% delta expected here (ap_fixed vs GNN_LS_LITE); "
-                "do not fail C1 on this row"
-            )
+            t_row["note"] = "Larger delta expected (precision/toolchain); not the C1 gate row"
         rows.append(t_row)
-
-    if mode == "thesis_cross":
-        thesis_vitis, thesis_src = _find_gcn_vitis_cycles("thesis")
-        rows.append(
-            _row(
-                "gcn_stream_thesis_apfixed",
-                thesis_vitis,
-                ls_lat,
-                thesis_src,
-                ls_src or "trace.pkl",
-                "cross-build thesis 2025.2.1 vs LS 2023.1 (expected larger delta)",
-            )
-        )
 
     scatter = _read_json(OUT_DIR / "cosim_stream.json")
     oe_dse = _read_json(OUT_DIR / "dse_report_oe.json")
@@ -216,29 +182,35 @@ def build_validation(mode):
         vitis_scatter = scatter.get("per_transaction_cycles") or scatter.get(
             "latency_cycles"
         )
-    rows.append(
-        _row(
-            "oe_hls_scatter_stream",
-            vitis_scatter,
-            ls_scatter_lat,
-            vitis_scatter_src,
-            ls_scatter_src,
-            "OE scatter steady-state cosim vs LS DSE (C2)",
-        )
+    c2_row = _row(
+        "oe_hls_scatter_stream",
+        vitis_scatter,
+        ls_scatter_lat,
+        vitis_scatter_src,
+        ls_scatter_src,
+        "C2: OE scatter steady-state cosim vs LS DSE on OE engine",
     )
+    c2_row["counts_for_gate"] = False
+    rows.append(c2_row)
 
     return rows
 
 
 def main():
-    parser = argparse.ArgumentParser(description="LS vs Vitis cosim validation")
+    parser = argparse.ArgumentParser(
+        description="LightningSim effectiveness: Vitis cosim vs LS on same GNN_LS_LITE build"
+    )
     parser.add_argument(
         "--mode",
         choices=("ls_lite", "thesis_cross"),
         default="ls_lite",
-        help="ls_lite: same GNN_LS_LITE build (C1). thesis_cross: adds cross-build row.",
     )
-    parser.add_argument("--threshold", type=float, default=5.0, help="Max |error| % for gcn_stream")
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=5.0,
+        help="Max |error| %% for C1 gcn_stream row",
+    )
     parser.add_argument(
         "--output",
         type=Path,
@@ -261,44 +233,27 @@ def main():
     ]
     gcn_ok = len(gate_rows) > 0 and len(gcn_failed) == 0
 
-    thesis_json = OUT_DIR / "cosim_gcn_stream.json"
-    ls_json = OUT_DIR / "cosim_gcn_stream_ls.json"
-    if (
-        args.mode == "ls_lite"
-        and not ls_json.exists()
-        and thesis_json.exists()
-        and gate_rows
-        and "cosim_gcn_stream.json" in gate_rows[0].get("vitis_source", "")
-    ):
-        payload_note = (
-            "BLOCKER: C1 gate row used thesis cosim_gcn_stream.json (ap_fixed 2025.2.1). "
-            "Run: bash orchestration_engine/run_ls_validate_gcn.sh"
-        )
-    else:
-        payload_note = (
-            "C1 gate row needs real cosim on cosim_gcn_stream_ls.json (not csynth_only). "
-            "Thesis E2 cosim_gcn_stream.json (340 cyc N=6) is the primary hardware anchor. "
-            "Set RUN_C1=1 to retry run_ls_validate_gcn.sh."
-        )
-
     payload = {
         "mode": args.mode,
         "threshold_percent": args.threshold,
         "rows": rows,
         "passed": gcn_ok,
         "gcn_stream_validated": gcn_ok,
-        "note": payload_note,
+        "note": (
+            "C1 proves LightningSim effectiveness: Vitis cosim cycle count on GNN_LS_LITE "
+            "must match fifo_advisor eval on gcn_stream_proj/sol1 within {0}%. "
+            "This is a thesis pillar alongside OE hardware cosim.".format(args.threshold)
+        ),
         "csynth_context": {
             "tb_num_nodes": 6,
             "cosim_thesis_n6_cycles": (
-                int(_read_json(thesis_json)["latency_cycles"])
-                if thesis_json.exists() and _read_json(thesis_json)
+                int(_read_json(OUT_DIR / "cosim_gcn_stream.json")["latency_cycles"])
+                if _read_json(OUT_DIR / "cosim_gcn_stream.json")
                 else None
             ),
             "interpretation": (
-                "csynth top min latency (25 cyc) is a dataflow cold-start bound, NOT N=6 cosim. "
-                "csynth max (20624 cyc) is LOOP_TRIPCOUNT max=MAX_NODES=256. "
-                "Trust cosim for N=6; compare to ~120 cyc naive II=1 compute floor."
+                "Do not substitute csynth min/max for C1. "
+                "Trust paired cosim + LS eval only."
             ),
         },
     }
@@ -307,19 +262,18 @@ def main():
     print(json.dumps(payload, indent=2))
 
     if not gate_rows:
-        print("C1 gate row pending (no paired LS-lite cosim yet).", file=sys.stderr)
-        print("Primary anchor: cosim_gcn_stream.json (E2 thesis).", file=sys.stderr)
-        print("Optional: RUN_C1=1 bash orchestration_engine/run_ls_validate_gcn.sh", file=sys.stderr)
-        return 0
+        print("C1 BLOCKED: need cosim_gcn_stream_ls.json + ls_gcn_eval.json.", file=sys.stderr)
+        print("Run: bash orchestration_engine/run_ls_validate_gcn.sh", file=sys.stderr)
+        return 1
     if gcn_failed:
         print(
-            "Validation FAILED: gcn_stream error {0}% exceeds {1}%".format(
+            "LightningSim validation FAILED: gcn_stream error {0}% exceeds {1}%".format(
                 gcn_failed[0]["error_percent"], args.threshold
             ),
             file=sys.stderr,
         )
         return 1
-    print("gcn_stream validated within {0}%".format(args.threshold))
+    print("LightningSim validated within {0}% (C1 passed)".format(args.threshold))
     return 0
 
 

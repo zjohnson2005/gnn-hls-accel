@@ -4,7 +4,7 @@
 #
 # Toolchain split (do not mix):
 #   E1 cost model     — conda python 3.7+ (any host)
-#   C1 LS validate    — Vitis 2023.1 ARCHIVE + conda
+#   C1 LS validate    — Vitis 2023.1 cosim + LS eval (required thesis pillar)
 #   C2 OE LS+DSE      — Vitis 2023.1 ARCHIVE + conda
 #   C3 variants       — Vitis 2025.2.1 csynth
 #   B2 Vivado power   — Vitis 2025.2.1 export scaffold
@@ -34,20 +34,16 @@ else
   echo "SKIP E1 ($ROOT/cost_model_3d/out/oe_experiment.json exists)"
 fi
 
-# C1 — optional strict GNN_LS_LITE pairing (deprioritized; E2 thesis cosim is primary)
-if [[ "${RUN_C1:-0}" == "1" ]]; then
+# C1 — LightningSim effectiveness (required unless SKIP_C1=1)
+if [[ "${SKIP_C1:-0}" == "1" ]]; then
+  echo "SKIP C1 (SKIP_C1=1 — not recommended; LS validation is a thesis pillar)"
+else
   if [[ ! -f "$OUT/ls_validation.json" ]] || ! python3 -c \
     "import json; d=json.load(open('$OUT/ls_validation.json')); exit(0 if d.get('passed') else 1)" 2>/dev/null; then
-    _run "C1 LS validate GCN" bash orchestration_engine/run_ls_validate_gcn.sh || \
-      echo "WARN: C1 incomplete; continuing deferred pipeline"
+    _run "C1 LightningSim vs Vitis (GCN)" bash orchestration_engine/run_ls_validate_gcn.sh
   else
     echo "SKIP C1 (ls_validation.json passed)"
   fi
-else
-  echo "SKIP C1 (default; set RUN_C1=1 to force run_ls_validate_gcn.sh)"
-  PY="${CONDA_PREFIX:+$CONDA_PREFIX/bin/python}"
-  PY="${PY:-python3}"
-  "$PY" -m orchestration_engine.eval.ls_validate --mode ls_lite || true
 fi
 
 # C2 — OE engine LightningSim DSE
