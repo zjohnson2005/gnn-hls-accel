@@ -138,7 +138,6 @@ static oe_hls_cycle_t oe_hls_load_one_session(
 
 op_loop:
     while (true) {
-#pragma HLS PIPELINE II = 1
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = 512
         const oe_graph_op_word_t word = ops_in.read();
         const ap_uint<8> kind = word.range(7, 0);

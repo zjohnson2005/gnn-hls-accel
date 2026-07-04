@@ -19,7 +19,7 @@ ARCHIVE Vitis 2023.1 + conda `fifo-advisor`.
 | `orchestration_engine/characterization/out/phase2/ls_validation.json` | `bash orchestration_engine/run_ls_validate_gcn.sh` | GNN_LS_LITE 2023.1 cosim + LS trace | ece-rschsrv |
 | `orchestration_engine/characterization/out/phase2/cosim_gcn_stream_ls.json` | `bash orchestration_engine/run_ls_validate_gcn.sh` | Vitis 2023.1 ARCHIVE cosim | ece-rschsrv |
 | `orchestration_engine/characterization/out/phase2/cosim_gcn_stream.json` | `bash orchestration_engine/run_gcn_stream_cosim.sh` | Vitis 2025.2.1 thesis ap_fixed (E2) | ece-rschsrv |
-| `orchestration_engine/characterization/out/phase2/phase2_gate.md` | `python -m orchestration_engine.phase2_gate.gate_report` | Python 3 (local or server) | any |
+| `orchestration_engine/characterization/out/phase2/phase2_gate.md` | `bash orchestration_engine/run_phase2_sprint_remainder.sh` | mixed (see rows above) | ece-rschsrv |
 | `orchestration_engine/build/oe_bench` | `bash orchestration_engine/build.sh` | g++ C++17 | ece-rschsrv |
 | GCN cosim JSON (E2) | `vitis_hls -f run_hls_stream.tcl` | Vitis 2025.2.1 | ece-rschsrv |
 | `cost_model_3d/out/oe_experiment.json` | `bash orchestration_engine/run_oe_cost_model_3d.sh` | Python 3.7+ (conda fifo-advisor on server) | any |
