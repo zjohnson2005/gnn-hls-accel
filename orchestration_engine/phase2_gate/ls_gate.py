@@ -59,6 +59,19 @@ def dse_report_valid(path, repo=None):
     if deadlocks not in (0, None):
         return False, "reject deadlocks={0}".format(deadlocks)
 
+    evaluations = data.get("evaluations")
+    if not isinstance(evaluations, int) or evaluations < 100:
+        return False, "reject evaluations={0!r} (need full DSE run, >=100 evals)".format(
+            evaluations
+        )
+
+    frontier = data.get("pareto_frontier")
+    if not isinstance(frontier, list) or not frontier:
+        return False, (
+            "missing pareto_frontier (hand-summarized report is not a full DSE "
+            "artifact; rerun the LightningSim DSE script)"
+        )
+
     sol = resolve_solution_dir(data.get("solution_dir"), repo)
     if sol is None:
         return False, "missing solution_dir"

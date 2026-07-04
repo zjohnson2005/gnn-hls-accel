@@ -20,11 +20,33 @@ def _read_json(path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _eval_matches_dse(captured, dse):
+    """Eval JSON must come from the same solution the DSE trace ran on."""
+    from orchestration_engine.phase2_gate.ls_gate import resolve_solution_dir
+
+    eval_sol = resolve_solution_dir(captured.get("solution_dir"), REPO)
+    dse_sol = resolve_solution_dir(dse.get("solution_dir"), REPO)
+    return eval_sol is not None and dse_sol is not None and eval_sol == dse_sol
+
+
 def _ls_gcn_latency():
+    from orchestration_engine.phase2_gate.ls_gate import dse_report_valid
+
+    ok, detail = dse_report_valid(OUT_DIR / "dse_report.json", REPO)
+    if not ok:
+        return None, "invalid dse_report.json: {0}".format(detail)
+
     captured = _read_json(OUT_DIR / "ls_gcn_eval.json")
-    if captured and captured.get("lightningsim_cycles") is not None:
-        return int(captured["lightningsim_cycles"]), str(OUT_DIR / "ls_gcn_eval.json")
-    return None, "missing ls_gcn_eval.json — run run_ls_validate_gcn.sh (no live-eval fallback)"
+    if not captured or captured.get("lightningsim_cycles") is None:
+        return None, "missing ls_gcn_eval.json — run run_ls_validate_gcn.sh (no live-eval fallback)"
+
+    dse = _read_json(OUT_DIR / "dse_report.json")
+    if not _eval_matches_dse(captured, dse):
+        return None, (
+            "ls_gcn_eval.json solution_dir does not match dse_report.json trace solution "
+            "— rerun run_ls_validate_gcn.sh"
+        )
+    return int(captured["lightningsim_cycles"]), str(OUT_DIR / "ls_gcn_eval.json")
 
 
 def _ls_oe_latency():
@@ -34,11 +56,16 @@ def _ls_oe_latency():
     if not ok:
         return None, "invalid dse_report_oe.json: {0}".format(detail)
 
+    dse = _read_json(OUT_DIR / "dse_report_oe.json")
     captured = _read_json(OUT_DIR / "ls_oe_eval.json")
     if captured and captured.get("lightningsim_cycles") is not None:
-        return int(captured["lightningsim_cycles"]), str(OUT_DIR / "ls_oe_eval.json")
+        if _eval_matches_dse(captured, dse):
+            return int(captured["lightningsim_cycles"]), str(OUT_DIR / "ls_oe_eval.json")
+        return None, (
+            "ls_oe_eval.json solution_dir does not match dse_report_oe.json trace solution "
+            "— rerun run_phase2_lightningsim_oe.sh"
+        )
 
-    dse = _read_json(OUT_DIR / "dse_report_oe.json")
     if dse and dse.get("baseline_max_latency") is not None:
         return int(dse["baseline_max_latency"]), str(OUT_DIR / "dse_report_oe.json") + " baseline_max_latency"
     return None, "run ls_capture_oe_eval after C2 DSE"
@@ -197,21 +224,6 @@ def build_validation(mode):
         )
         t_row["counts_for_gate"] = False
         rows.append(t_row)
-
-    ls_cached = _read_json(OUT_DIR / "cosim_gcn_stream_ls.json")
-    if ls_cached and ls_cached.get("status") == "csynth_only":
-        rows.append(
-            {
-                "kernel": "gcn_stream_csynth_fallback",
-                "comparison": "BLOCKED: csynth-only is not valid for C1",
-                "vitis_cycles": ls_cached.get("latency_cycles"),
-                "lightningsim_cycles": ls_gcn,
-                "status": "blocked",
-                "counts_for_gate": False,
-                "vitis_source": str(OUT_DIR / "cosim_gcn_stream_ls.json"),
-                "ls_source": ls_gcn_src,
-            }
-        )
 
     return rows
 

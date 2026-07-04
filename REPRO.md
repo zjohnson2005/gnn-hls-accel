@@ -28,7 +28,14 @@ ARCHIVE Vitis 2023.1 + conda `fifo-advisor`.
 | `orchestration_engine/characterization/out/phase2/variants_results.json` | `bash orchestration_engine/run_phase2_variants.sh` | Vitis 2025.2.1 csynth subset | ece-rschsrv |
 | Deferred gate refresh | `bash orchestration_engine/run_phase2_deferred.sh` | C1+C2 required; synthetic DSE rejected | ece-rschsrv |
 
-**LightningSim gate rules:** `dse_report*.json` must have `"source":"lightningsim"`, `deadlocks:0`, and a live `trace.pkl` under `solution_dir`. `ls_validation.json` must have `"passed":true` (C1+C2). Synthetic/offline DSE is for `fifo_pareto/` demos only.
+**LightningSim gate rules:** `dse_report*.json` must have `"source":"lightningsim"`,
+`deadlocks:0`, `evaluations >= 100`, a non-empty `pareto_frontier`, and a live
+`trace.pkl` under `solution_dir`. Hand-copied/summarized reports are rejected —
+every DSE artifact must be the direct output of a full `dse_sweep` run on the
+server. `ls_gcn_eval.json` / `ls_oe_eval.json` must come from the SAME solution
+as the corresponding DSE report (checked by `ls_validate`). `ls_validation.json`
+must have `"passed":true` (C1+C2). Synthetic/offline DSE is for `fifo_pareto/`
+demos only and may never be written under `characterization/out/phase2/`.
 
 Local-only work: edit files under `orchestration_engine/hls/`, `tb/`, `eval/`,
 `phase2_gate/`. Any step invoking `vitis_hls` or Vivado is **server-only**.

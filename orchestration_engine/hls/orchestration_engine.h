@@ -203,12 +203,19 @@ void oe_hls_scatter_banked_stream(
     hls::stream<oe_hls_node_id_t> &ready_out,
     oe_hls_cycle_t &completions_processed);
 
-// C2 LS top: graph_load (axis ops) then scatter_stream (axis completions/ready).
-// Sequential in one invocation — avoids HLS 200-968 on shared graph BRAM.
+// C2 LS top: array ports feeding INTERNAL DATAFLOW FIFOs (ops/completions/
+// ready). LightningSim 2023.1 cannot link instrumented TBs against top-level
+// hls::stream ports (fpga_fifo_* undefined), and graph BRAM must stay inside
+// one dataflow process (HLS 200-968) — hence feeders -> engine -> sink.
+#define OE_LS_ENGINE_MAX_OPS 512
+
 void oe_hls_engine_stream(
-    hls::stream<oe_graph_op_word_t> &ops_in,
-    hls::stream<oe_hls_node_id_t> &completions_in,
-    hls::stream<oe_hls_node_id_t> &ready_out,
+    const oe_graph_op_word_t ops_in[OE_LS_ENGINE_MAX_OPS],
+    const ap_uint<16> num_ops,
+    const oe_hls_node_id_t completions_in[OE_HLS_MAX_OUTSTANDING],
+    const ap_uint<16> num_completions,
+    oe_hls_node_id_t ready_out[OE_HLS_MAX_NODES],
+    oe_hls_node_id_t &num_ready,
     oe_hls_cycle_t &load_cycles,
     oe_hls_cycle_t &scatter_processed,
     ap_uint<32> &ops_processed);
