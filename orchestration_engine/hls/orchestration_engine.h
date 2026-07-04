@@ -209,6 +209,17 @@ void oe_hls_scatter_banked_stream(
 // one dataflow process (HLS 200-968) — hence feeders -> engine -> sink.
 #define OE_LS_ENGINE_MAX_OPS 512
 
+#ifdef OE_LS_LITE
+#include <cstdint>
+// Plain C ports for LightningSim trace (matches GNN_LS_LITE / uint16_t idx_t fix).
+void oe_hls_engine_stream(
+    const ap_uint<128> *ops_in,
+    uint16_t num_ops,
+    const uint16_t *completions_in,
+    uint16_t num_completions,
+    uint16_t *ready_out,
+    uint32_t metrics_out[4]);
+#else
 void oe_hls_engine_stream(
     const oe_graph_op_word_t ops_in[OE_LS_ENGINE_MAX_OPS],
     const ap_uint<16> num_ops,
@@ -219,6 +230,7 @@ void oe_hls_engine_stream(
     oe_hls_cycle_t *load_cycles,
     oe_hls_cycle_t *scatter_processed,
     ap_uint<32> *ops_processed);
+#endif
 
 void orchestration_engine(
     const oe_hls_node_id_t num_nodes,
