@@ -14,6 +14,6 @@ BENCH="$ROOT/orchestration_engine/build/oe_bench"
 "$BENCH" 4 2 42 | tee "$OUT/oe_bench.log"
 "$BENCH" 100 2 42 >> "$OUT/oe_bench.log"
 
-python3 -m orchestration_engine.phase2_gate.gate_report
+python3 -m orchestration_engine.phase2_gate.gate_report --refresh
 
 echo "Wrote $OUT/oe_bench.log and refreshed phase2_gate.md"

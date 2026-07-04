@@ -27,5 +27,5 @@ if [[ -n "$RPT" ]]; then
     --ops-processed 103
 fi
 
-python3 -m orchestration_engine.phase2_gate.gate_report
+python3 -m orchestration_engine.phase2_gate.gate_report --refresh
 echo "Done. See orchestration_engine/characterization/out/phase2/phase2_gate.md"
