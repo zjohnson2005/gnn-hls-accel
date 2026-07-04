@@ -43,7 +43,16 @@ def main() -> int:
 
     from fifo_advisor.opt_env import LSEnv
 
-    LSEnv(sol)
+    try:
+        LSEnv(sol)
+    except ValueError as exc:
+        if "kernel did not run" in str(exc):
+            print(
+                "ERROR: LightningSim trace empty — run: "
+                "bash orchestration_engine/run_ls_probe_oe.sh",
+                file=sys.stderr,
+            )
+        raise
     if not trace.is_file():
         print("ERROR: trace.pkl was not created", file=sys.stderr)
         return 1
