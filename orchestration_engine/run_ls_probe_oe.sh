@@ -22,7 +22,7 @@ fi
 export PATH="$(dirname "$PY"):$PATH"
 
 SOL="$ROOT/oe_engine_ls_proj/sol1"
-STAMP_TAG="OE_ENGINE_LS=oe-ls-lite-uint-v6"
+STAMP_TAG="OE_ENGINE_LS=oe-ls-lite-u64-v7"
 
 echo "=== OE engine LS probe ($STAMP_TAG) ==="
 "$PY" -m orchestration_engine.eval.patch_lightningsim "$SOL" || exit 1
@@ -50,7 +50,8 @@ if [[ "$RC" -ne 0 ]] || grep -qE 'testbench exit code: -(11|6|8)' "$LOG"; then
 fi
 
 echo
-echo "=== kernel symbols (post-objcopy) ==="
+echo "=== objcopy symbol (must NOT contain ap_uint for OE_LS_LITE) ==="
+grep -o 'redefine-sym _[^ ]*' "$LOG" | tail -1 || echo "(objcopy line not found)"
 if [[ -n "${TMPD:-}" ]] && [[ -d "$TMPD" ]]; then
   for obj in "$TMPD"/testbench.*.o; do
     [[ -f "$obj" ]] || continue
