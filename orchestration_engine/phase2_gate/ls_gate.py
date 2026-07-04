@@ -44,14 +44,16 @@ def gcn_ls_cosim_json_valid(data):
         return False, "report_path must reference *_cosim.rpt (got {0!r})".format(
             data.get("report_path")
         )
-    if "gcn_stream_ls_cosim_proj" in report_path:
+    if "gcn_stream_ls_cosim_proj" in report_path or "oe_engine_ls_cosim_proj" in report_path:
         return False, (
-            "reject split-project cosim (use gcn_stream_proj trace solution; "
-            "rerun run_ls_validate_gcn.sh)"
+            "reject split-project cosim (use trace solution on *_proj/sol1; "
+            "rerun run_ls_validate_gcn.sh or run_phase2_lightningsim_oe.sh)"
         )
-    if "gcn_stream_proj" not in report_path:
-        return False, "report_path must be under gcn_stream_proj (got {0!r})".format(
-            data.get("report_path")
+    if "gcn_stream_proj" not in report_path and "oe_engine_ls_proj" not in report_path:
+        return False, (
+            "report_path must be under gcn_stream_proj or oe_engine_ls_proj (got {0!r})".format(
+                data.get("report_path")
+            )
         )
     return True, "ok"
 

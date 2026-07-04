@@ -111,7 +111,7 @@ def _oe_engine_vitis_cycles():
             return int(cached["latency_cycles"]), str(OUT_DIR / "cosim_oe_engine_ls.json")
         return None, "{0} ({1})".format(OUT_DIR / "cosim_oe_engine_ls.json", detail)
 
-    root = REPO / "oe_engine_ls_cosim_proj"
+    root = REPO / "oe_engine_ls_proj"
     reports = list(root.glob("**/sim/report/*_cosim.rpt")) if root.exists() else []
     if not reports:
         return None, "bash orchestration_engine/run_phase2_lightningsim_oe.sh (engine cosim)"
