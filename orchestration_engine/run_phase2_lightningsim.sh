@@ -67,7 +67,9 @@ echo "Using python: $OE_PYTHON ($("$OE_PYTHON" -c 'import fifo_advisor; print("f
 SOLUTION_DIR="$ROOT/gcn_stream_proj/sol1"
 CSYNTH_RPT="$SOLUTION_DIR/syn/report/gcn_layer_stream_csynth.rpt"
 LS_TOOLCHAIN_STAMP="$SOLUTION_DIR/.oe_lightningsim_vitis"
-STAMP_TAG="GNN_LS_LITE=df-u16"
+# Bump when GNN_LS_LITE source changes (v2 = ap_memory depth pragmas), so the
+# trace/DSE build always matches the C1 cosim build (same RTL stamp).
+STAMP_TAG="GNN_LS_LITE=df-u16-apmem-v2"
 
 # Rebuild if missing, wrong toolchain, or pre-LS-lite ap_fixed build.
 if [[ -f "$CSYNTH_RPT" ]] && [[ -f "$LS_TOOLCHAIN_STAMP" ]] \
