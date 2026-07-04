@@ -215,10 +215,10 @@ void oe_hls_engine_stream(
     const oe_hls_node_id_t completions_in[OE_HLS_MAX_OUTSTANDING],
     const ap_uint<16> num_completions,
     oe_hls_node_id_t ready_out[OE_HLS_MAX_NODES],
-    oe_hls_node_id_t &num_ready,
-    oe_hls_cycle_t &load_cycles,
-    oe_hls_cycle_t &scatter_processed,
-    ap_uint<32> &ops_processed);
+    oe_hls_node_id_t *num_ready,
+    oe_hls_cycle_t *load_cycles,
+    oe_hls_cycle_t *scatter_processed,
+    ap_uint<32> *ops_processed);
 
 void orchestration_engine(
     const oe_hls_node_id_t num_nodes,
