@@ -22,7 +22,7 @@ fi
 export PATH="$(dirname "$PY"):$PATH"
 
 SOL="$ROOT/oe_engine_ls_proj/sol1"
-STAMP_TAG="OE_ENGINE_LS=oe-ls-lite-u64-v7"
+STAMP_TAG="OE_ENGINE_LS=oe-ls-lite-u64-v8-split-feed"
 
 echo "=== OE engine LS probe ($STAMP_TAG) ==="
 "$PY" -m orchestration_engine.eval.patch_lightningsim "$SOL" || exit 1
