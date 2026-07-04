@@ -120,28 +120,47 @@ def _checklist():
     )
 
     ls_val = OUT_DIR / "ls_validation.json"
+    gcn_e2 = OUT_DIR / "cosim_gcn_stream.json"
     ls_status = "pending"
-    ls_detail = "python -m orchestration_engine.eval.ls_validate"
-    if ls_val.exists():
+    ls_detail = "bash orchestration_engine/run_gcn_stream_cosim.sh (E2) or run_ls_validate_gcn.sh (C1)"
+    if gcn_e2.exists():
+        try:
+            g2 = json.loads(gcn_e2.read_text(encoding="utf-8"))
+            if g2.get("passed") and g2.get("latency_cycles") is not None:
+                ls_status = "done"
+                ls_detail = "E2 gcn cosim {0} cyc ({1})".format(
+                    g2.get("latency_cycles"), gcn_e2.name
+                )
+        except (ValueError, OSError):
+            pass
+    elif ls_val.exists():
         try:
             lv = json.loads(ls_val.read_text(encoding="utf-8"))
             if lv.get("gcn_stream_validated") or lv.get("passed"):
                 ls_status = "done"
             ls_detail = str(ls_val)
-            if lv.get("rows"):
-                gcn = [r for r in lv["rows"] if r.get("kernel") == "gcn_stream"]
-                if gcn and gcn[0].get("error_percent") is not None:
-                    ls_detail = "gcn_stream error {0}%".format(gcn[0]["error_percent"])
         except (ValueError, OSError):
             pass
     items.append(
         {
             "id": "ls_validated",
-            "label": "LightningSim vs Vitis cosim cycle validation",
+            "label": "GCN stream cosim anchor (E2) / LS validation",
             "status": ls_status,
-            "detail": ls_detail
-            if ls_status == "done"
-            else "bash orchestration_engine/run_ls_validate_gcn.sh",
+            "detail": ls_detail,
+        }
+    )
+
+    power_scatter = OUT_DIR / "power_scatter.json"
+    power_gl = OUT_DIR / "power_graph_load.json"
+    power_done = power_scatter.exists() and power_gl.exists()
+    items.append(
+        {
+            "id": "power_reports",
+            "label": "Power JSON (scatter + graph_load)",
+            "status": "done" if power_done else "pending",
+            "detail": "{0}, {1}".format(power_scatter, power_gl)
+            if power_done
+            else "bash orchestration_engine/run_power.sh all",
         }
     )
 
