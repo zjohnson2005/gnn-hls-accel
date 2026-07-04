@@ -14,8 +14,6 @@ Every number is a single place to retune, so a "crude model -> crude rules"
 risk is explicit and auditable (see roadmap risks).
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 

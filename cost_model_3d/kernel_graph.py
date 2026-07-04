@@ -9,8 +9,6 @@ provide, so a real flow can populate them from
 egnn_proj/sol1/syn/report/*.rpt instead of the analytical defaults here.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple
 

@@ -16,8 +16,6 @@ swapping in a learned GNN later is a drop-in replacement for `Surrogate`.
     python -m cost_model_3d.surrogate        # trains on the B4 corpus, reports error
 """
 
-from __future__ import annotations
-
 import math
 from dataclasses import dataclass
 from typing import Callable, List, Sequence, Tuple

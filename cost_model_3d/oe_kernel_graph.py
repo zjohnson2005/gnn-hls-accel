@@ -1,7 +1,5 @@
 """3D cost-model experiment on the orchestration engine kernel graph."""
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 

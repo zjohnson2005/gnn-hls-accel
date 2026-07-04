@@ -18,8 +18,6 @@ Replace the analytical kernel-graph numbers with csynth/activity values from a
 real per-tier HLS run to harden the table; the arms and metrics are unchanged.
 """
 
-from __future__ import annotations
-
 from typing import Dict, List, Tuple
 
 from .kernel_graph import (
