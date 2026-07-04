@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# GCN stream Vitis 2025.2.1 cosim for ls_validate (does NOT touch gcn_stream_proj trace).
+# GCN stream Vitis 2025.2.1 cosim (thesis ap_fixed, E2). NOT used for C1 LS validation.
+# C1 uses run_ls_validate_gcn.sh (GNN_LS_LITE on 2023.1 vs trace.pkl).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -7,7 +8,7 @@ cd "$ROOT"
 
 source "$ROOT/orchestration_engine/hls_env.sh"
 
-echo "=== gcn_stream cosim (2025.2.1, separate gcn_stream_cosim_proj) ==="
+echo "=== gcn_stream thesis cosim (2025.2.1 ap_fixed, gcn_stream_cosim_proj) ==="
 vitis_hls -f run_hls_stream_cosim.tcl
 
 RPT="$(find gcn_stream_cosim_proj -name '*_cosim.rpt' | head -1)"
@@ -18,9 +19,6 @@ if [[ -n "$RPT" ]]; then
   python3 -m orchestration_engine.phase2_gate.cosim_parser \
     --report "$RPT" \
     --out "$OUT/cosim_gcn_stream.json"
+  echo "Wrote $OUT/cosim_gcn_stream.json (thesis E2; not C1 LS pairing)"
 fi
 
-python3 -m orchestration_engine.eval.ls_validate
-python3 -m orchestration_engine.phase2_gate.gate_report
-
-echo "Done. See $OUT/ls_validation.json"

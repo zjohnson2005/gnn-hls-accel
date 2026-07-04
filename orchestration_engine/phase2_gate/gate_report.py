@@ -141,7 +141,7 @@ def _checklist():
             "status": ls_status,
             "detail": ls_detail
             if ls_status == "done"
-            else "bash orchestration_engine/run_gcn_stream_cosim.sh",
+            else "bash orchestration_engine/run_ls_validate_gcn.sh",
         }
     )
 
