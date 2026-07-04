@@ -9,8 +9,9 @@
 
 ## Known limitation
 
-LS instrumented testbench: all Y=0 (exit 1). Functional oracle = Vitis csim, not LS.
-FIFO timing DSE does not require LS golden match.
+LS instrumented testbench: all Y=0 (exit 1). Functional oracle = Vitis csim, not LS cosim.
+**Timing proof** uses: (1) trace.pkl + DSE with `source=lightningsim`, (2) C1 cosim vs LS eval ≤5%,
+(3) C2 OE cosim vs LS on OE trace ≤15% (cross-toolchain). Synthetic DSE never passes the gate.
 
 ## Toolchain split
 
