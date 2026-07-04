@@ -1,21 +1,16 @@
 #include "orchestration_engine.h"
 
-// LS C2 top: DATAFLOW feeders -> engine process -> sink with INTERNAL FIFOs.
-//
-// Why this shape:
-//  - LightningSim 2023.1 cannot link instrumented testbenches against
-//    top-level hls::stream ports (undefined fpga_fifo_* in streamcpy_hls).
-//    The proven GCN LS build traces INTERNAL DATAFLOW FIFOs only, so the OE
-//    engine does the same: plain array ports at the top, streams inside.
-//  - All graph BRAM lives inside ONE process (oe_ls_engine_proc) so dataflow
-//    checking passes (HLS 200-968/971: arrays cannot be shared across tasks).
-//  - The traced FIFOs (ops 128b, completions 16b, ready 16b) are exactly the
-//    seams the C2 FIFO DSE sizes.
+// LS C2 top: two DATAFLOW tasks + two internal FIFOs (GCN combine/aggregate shape).
+// graph_load + scatter + ready drain run sequentially inside oe_ls_engine_body so
+// graph BRAM is not shared across DATAFLOW processes (HLS 200-968).
 
-static void oe_ls_feed_ops(
+static void oe_ls_feed_inputs(
     const oe_graph_op_word_t ops_in[OE_LS_ENGINE_MAX_OPS],
     const ap_uint<16> num_ops,
-    hls::stream<oe_graph_op_word_t> &ops_s) {
+    const oe_hls_node_id_t completions_in[OE_HLS_MAX_OUTSTANDING],
+    const ap_uint<16> num_completions,
+    hls::stream<oe_graph_op_word_t> &ops_s,
+    hls::stream<oe_hls_node_id_t> &comp_s) {
 #pragma HLS INLINE off
 feed_ops:
     for (ap_uint<16> i = 0; i < num_ops; ++i) {
@@ -26,13 +21,7 @@ feed_ops:
     oe_graph_op_word_t end_word = 0;
     end_word.range(7, 0) = OE_HLS_OP_WORD_END;
     ops_s.write(end_word);
-}
 
-static void oe_ls_feed_completions(
-    const oe_hls_node_id_t completions_in[OE_HLS_MAX_OUTSTANDING],
-    const ap_uint<16> num_completions,
-    hls::stream<oe_hls_node_id_t> &comp_s) {
-#pragma HLS INLINE off
 feed_comp:
     for (ap_uint<16> i = 0; i < num_completions; ++i) {
 #pragma HLS PIPELINE II = 1
@@ -42,11 +31,11 @@ feed_comp:
     comp_s.write(oe_hls_node_id_t(OE_HLS_STREAM_END));
 }
 
-// Single process owning all graph state: load session, then scatter.
-static void oe_ls_engine_proc(
+static void oe_ls_engine_body(
     hls::stream<oe_graph_op_word_t> &ops_s,
     hls::stream<oe_hls_node_id_t> &comp_s,
-    hls::stream<oe_hls_node_id_t> &ready_s,
+    oe_hls_node_id_t ready_out[OE_HLS_MAX_NODES],
+    oe_hls_node_id_t *num_ready,
     oe_hls_cycle_t *load_cycles,
     oe_hls_cycle_t *scatter_processed,
     ap_uint<32> *ops_processed) {
@@ -58,6 +47,9 @@ static void oe_ls_engine_proc(
 #pragma HLS BIND_STORAGE variable = succ_count type = RAM_2P impl = BRAM
 #pragma HLS BIND_STORAGE variable = node_state type = RAM_2P impl = BRAM
 #pragma HLS BIND_STORAGE variable = succ_slots type = RAM_2P impl = BRAM
+
+    hls::stream<oe_hls_node_id_t> ready_s("ready_s");
+#pragma HLS STREAM variable = ready_s depth = 8
 
     oe_hls_cycle_t load_local = 0;
     oe_hls_cycle_t scatter_local = 0;
@@ -81,16 +73,6 @@ static void oe_ls_engine_proc(
         ready_s,
         scatter_local);
 
-    *load_cycles = load_local;
-    *scatter_processed = scatter_local;
-    *ops_processed = ops_local;
-}
-
-static void oe_ls_sink_ready(
-    hls::stream<oe_hls_node_id_t> &ready_s,
-    oe_hls_node_id_t ready_out[OE_HLS_MAX_NODES],
-    oe_hls_node_id_t *num_ready) {
-#pragma HLS INLINE off
     oe_hls_node_id_t n = 0;
 sink_ready:
     while (true) {
@@ -105,7 +87,11 @@ sink_ready:
             n = n + 1;
         }
     }
+
     *num_ready = n;
+    *load_cycles = load_local;
+    *scatter_processed = scatter_local;
+    *ops_processed = ops_local;
 }
 
 void oe_hls_engine_stream(
@@ -131,14 +117,17 @@ void oe_hls_engine_stream(
 
     hls::stream<oe_graph_op_word_t> ops_s("ops_s");
     hls::stream<oe_hls_node_id_t> comp_s("comp_s");
-    hls::stream<oe_hls_node_id_t> ready_s("ready_s");
 #pragma HLS STREAM variable = ops_s depth = 8
 #pragma HLS STREAM variable = comp_s depth = 8
-#pragma HLS STREAM variable = ready_s depth = 8
 
 #pragma HLS DATAFLOW
-    oe_ls_feed_ops(ops_in, num_ops, ops_s);
-    oe_ls_feed_completions(completions_in, num_completions, comp_s);
-    oe_ls_engine_proc(ops_s, comp_s, ready_s, load_cycles, scatter_processed, ops_processed);
-    oe_ls_sink_ready(ready_s, ready_out, num_ready);
+    oe_ls_feed_inputs(ops_in, num_ops, completions_in, num_completions, ops_s, comp_s);
+    oe_ls_engine_body(
+        ops_s,
+        comp_s,
+        ready_out,
+        num_ready,
+        load_cycles,
+        scatter_processed,
+        ops_processed);
 }
