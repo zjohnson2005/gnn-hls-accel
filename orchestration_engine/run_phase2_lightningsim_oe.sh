@@ -77,6 +77,52 @@ echo "=== LightningSim FIFO DSE on $SOLUTION_DIR ==="
   --output "$OUT/dse_report_oe.json"
 
 "$OE_PYTHON" -m orchestration_engine.eval.ls_capture_oe_eval
+
+echo "=== C2 Vitis side: oe_hls_engine_stream cosim (2023.1, same source stamp) ==="
+if [[ -f "$OUT/cosim_oe_engine_ls.json" ]]; then
+  if ! "$OE_PYTHON" -c "
+import json
+from pathlib import Path
+p = Path('$OUT/cosim_oe_engine_ls.json')
+d = json.loads(p.read_text())
+rp = (d.get('report_path') or '').replace('\\\\', '/')
+raise SystemExit(0 if 'oe_engine_ls_proj/' in rp else 1)
+"; then
+    echo "Removing cosim_oe_engine_ls.json from old split-project pairing"
+    rm -f "$OUT/cosim_oe_engine_ls.json"
+  fi
+fi
+# Reuse only a valid real-cosim cache (never csynth-only or a stale/failed run).
+if [[ -f "$OUT/cosim_oe_engine_ls.json" ]] && ! "$OE_PYTHON" -c "
+from pathlib import Path
+import json
+from orchestration_engine.phase2_gate.ls_gate import gcn_ls_cosim_json_valid
+p = Path('$OUT/cosim_oe_engine_ls.json')
+ok, _ = gcn_ls_cosim_json_valid(json.loads(p.read_text(encoding='utf-8')))
+raise SystemExit(0 if ok else 1)
+"; then
+  echo "Removing invalid cosim_oe_engine_ls.json (not real cosim)"
+  rm -f "$OUT/cosim_oe_engine_ls.json"
+fi
+if [[ ! -f "$OUT/cosim_oe_engine_ls.json" ]]; then
+  if ! vitis_hls -f orchestration_engine/run_hls_oe_engine_ls_cosim_trace.tcl; then
+    echo ""
+    echo "ERROR: OE engine cosim failed. C2 needs real cosim cycles for the pairing." >&2
+    echo "Do NOT substitute csynth estimates or the scatter-only anchor." >&2
+    exit 1
+  fi
+  RPT="$(find oe_engine_ls_proj -path '*/sim/report/*_cosim.rpt' | head -1)"
+  if [[ -z "$RPT" ]]; then
+    echo "ERROR: engine cosim finished but no *_cosim.rpt found" >&2
+    exit 1
+  fi
+  "$OE_PYTHON" -m orchestration_engine.phase2_gate.cosim_parser \
+    --report "$RPT" \
+    --out "$OUT/cosim_oe_engine_ls.json"
+else
+  echo "Reusing $OUT/cosim_oe_engine_ls.json"
+fi
+
 "$OE_PYTHON" -m orchestration_engine.eval.ls_validate --mode ls_lite
 "$OE_PYTHON" -m orchestration_engine.phase2_gate.gate_report --refresh
 
