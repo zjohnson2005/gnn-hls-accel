@@ -81,16 +81,65 @@ def _checklist():
         }
     )
 
-    bench = OE_ROOT / "build" / "oe_bench"
-    bench_exe = OE_ROOT / "build" / "oe_bench.exe"
+    bench_log = OUT_DIR / "oe_bench.log"
     items.append(
         {
             "id": "oe_bench",
             "label": "Native oe_bench structural proof",
-            "status": "done" if bench.exists() or bench_exe.exists() else "pending",
-            "detail": str(bench) if bench.exists() else (
-                str(bench_exe) if bench_exe.exists() else "build.ps1 on Windows or g++ on Vitis box"
-            ),
+            "status": "done" if bench_log.exists() else "pending",
+            "detail": str(bench_log)
+            if bench_log.exists()
+            else "bash orchestration_engine/run_oe_bench.sh on Vitis box",
+        }
+    )
+
+    graph_load_json = OUT_DIR / "cosim_graph_load.json"
+    graph_detail = str(graph_load_json)
+    graph_status = "pending"
+    if graph_load_json.exists():
+        try:
+            gl = json.loads(graph_load_json.read_text(encoding="utf-8"))
+            graph_status = "done" if gl.get("passed") else "pending"
+            if gl.get("latency_cycles") is not None:
+                graph_detail = "{0} ({1} cycles, {2} cyc/node)".format(
+                    graph_load_json,
+                    gl.get("latency_cycles"),
+                    gl.get("cycles_per_node", "?"),
+                )
+        except (ValueError, OSError):
+            graph_status = "pending"
+    items.append(
+        {
+            "id": "session_load_measured",
+            "label": "Session load measured (oe_hls_graph_load cosim)",
+            "status": graph_status,
+            "detail": graph_detail
+            if graph_status == "done"
+            else "Run run_phase2_graph_load.sh on ece-rschsrv",
+        }
+    )
+
+    ls_val = OUT_DIR / "ls_validation.json"
+    items.append(
+        {
+            "id": "ls_validated",
+            "label": "LightningSim vs Vitis cosim cycle validation",
+            "status": "done" if ls_val.exists() else "pending",
+            "detail": str(ls_val)
+            if ls_val.exists()
+            else "python -m orchestration_engine.eval.ls_validate",
+        }
+    )
+
+    banked_json = OUT_DIR / "cosim_scatter_banked.json"
+    items.append(
+        {
+            "id": "cosim_scatter_banked",
+            "label": "Banked scatter cosim (oe_hls_scatter_banked_stream)",
+            "status": "done" if banked_json.exists() else "pending",
+            "detail": str(banked_json)
+            if banked_json.exists()
+            else "Run run_phase2_scatter_banked.sh on ece-rschsrv",
         }
     )
 

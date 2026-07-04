@@ -9,6 +9,13 @@ typedef ap_uint<16> oe_hls_node_id_t;
 typedef ap_uint<32> oe_hls_cycle_t;
 typedef ap_uint<8> oe_hls_kind_t;
 typedef ap_uint<2> oe_hls_fire_t;
+typedef ap_uint<128> oe_graph_op_word_t;
+
+#define OE_HLS_OP_APPEND_NODE   0
+#define OE_HLS_OP_APPEND_EDGE   1
+#define OE_HLS_OP_SET_FIRE_MODE 2
+#define OE_HLS_OP_WORD_END      0xFF
+#define OE_HLS_SCATTER_BANKS    4
 
 // ---------------------------------------------------------------------------
 // Packed per-node scheduling state: one BRAM word per node so the scatter
@@ -165,6 +172,37 @@ void oe_hls_scatter_stream(
 // batch. Outer completion loop is intentionally NOT pipelined: the scatter
 // walk has variable bounds and cannot be unrolled into a pipelined parent.
 // ---------------------------------------------------------------------------
+// Streamed session graph load (packed op words; layout matches scatter arrays).
+void oe_hls_graph_load(
+    oe_hls_node_id_t &num_nodes,
+    ap_uint<8> succ_count[OE_HLS_MAX_NODES],
+    oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS],
+    oe_hls_node_state_t node_state[OE_HLS_MAX_NODES],
+    hls::stream<oe_graph_op_word_t> &ops_in,
+    oe_hls_cycle_t &load_cycles,
+    ap_uint<32> &ops_processed);
+
+void oe_hls_graph_load_batch(
+    const oe_hls_node_id_t num_sessions,
+    oe_hls_node_id_t &num_nodes,
+    ap_uint<8> succ_count[OE_HLS_MAX_NODES],
+    oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS],
+    oe_hls_node_state_t node_state[OE_HLS_MAX_NODES],
+    hls::stream<oe_graph_op_word_t> &ops_in,
+    oe_hls_cycle_t &load_cycles,
+    oe_hls_cycle_t &sessions_loaded,
+    ap_uint<32> &ops_processed);
+
+// Banked scatter variant (B=OE_HLS_SCATTER_BANKS); baseline kept separate.
+void oe_hls_scatter_banked_stream(
+    const oe_hls_node_id_t num_nodes,
+    const ap_uint<8> succ_count[OE_HLS_MAX_NODES],
+    const oe_hls_node_id_t succ_slots[OE_HLS_SUCC_SLOTS],
+    oe_hls_node_state_t node_state[OE_HLS_MAX_NODES],
+    hls::stream<oe_hls_node_id_t> &completions_in,
+    hls::stream<oe_hls_node_id_t> &ready_out,
+    oe_hls_cycle_t &completions_processed);
+
 void orchestration_engine(
     const oe_hls_node_id_t num_nodes,
     const ap_uint<8> succ_count[OE_HLS_MAX_NODES],

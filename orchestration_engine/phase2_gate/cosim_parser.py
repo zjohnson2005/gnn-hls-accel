@@ -222,6 +222,24 @@ def main():
         default=None,
         help="Write parsed JSON here instead of the default cosim_scatter.json cache",
     )
+    parser.add_argument(
+        "--nodes-loaded",
+        type=int,
+        default=None,
+        help="Graph-load TB node count (cosim_graph_load.json)",
+    )
+    parser.add_argument(
+        "--ops-processed",
+        type=int,
+        default=None,
+        help="Graph-load op count from TB",
+    )
+    parser.add_argument(
+        "--sessions",
+        type=int,
+        default=1,
+        help="Sessions per graph-load invocation (batch mode)",
+    )
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
 
@@ -240,6 +258,23 @@ def main():
             data["transactions"] = args.transactions
             data["per_transaction_cycles"] = round(
                 report.latency_cycles / float(args.transactions), 1
+            )
+        if args.nodes_loaded is not None:
+            data["nodes_loaded"] = args.nodes_loaded
+            if report.latency_cycles is not None and args.nodes_loaded > 0:
+                data["cycles_per_node"] = round(
+                    report.latency_cycles / float(args.nodes_loaded), 2
+                )
+        if args.ops_processed is not None:
+            data["ops_processed"] = args.ops_processed
+            if report.latency_cycles is not None and args.ops_processed > 0:
+                data["cycles_per_op"] = round(
+                    report.latency_cycles / float(args.ops_processed), 3
+                )
+        if args.sessions and args.sessions > 0 and report.latency_cycles is not None:
+            data["sessions"] = args.sessions
+            data["per_session_cycles"] = round(
+                report.latency_cycles / float(args.sessions), 1
             )
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(data, indent=2), encoding="utf-8")
