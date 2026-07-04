@@ -1,14 +1,6 @@
-"""Phase 0/1 characterization — disaggregate the CPU-side agentic latency bucket."""
+"""Phase 0/1 characterization — disaggregate the CPU-side agentic latency bucket.
 
-from .taxonomy import Bucket, CpuBucket, SpanRecord, WorkloadProfile
-from .analyze import DisaggregationReport, analyze_profile, analyze_many
-
-__all__ = [
-    "Bucket",
-    "CpuBucket",
-    "SpanRecord",
-    "WorkloadProfile",
-    "DisaggregationReport",
-    "analyze_profile",
-    "analyze_many",
-]
+Import submodules directly (e.g. ``orchestration_engine.characterization.taxonomy``).
+This package intentionally avoids eager imports so phase2 utilities
+(``regen_cost_model``, ``energy_calc``) run on hosts where default python3 is 3.6.
+"""
