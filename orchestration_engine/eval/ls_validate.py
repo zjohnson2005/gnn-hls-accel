@@ -133,11 +133,31 @@ def build_validation(mode):
 
     vitis_gcn, vitis_src = _find_gcn_vitis_cycles(mode)
     comparison = (
-        "GNN_LS_LITE Vitis 2023.1 cosim vs LS trace/DSE (C1 paired)"
+        "GNN_LS_LITE Vitis 2023.1 cosim vs LS trace/DSE (C1 gate row)"
         if mode == "ls_lite"
         else "thesis ap_fixed Vitis 2025.2.1 cosim vs LS (cross-build; informational)"
     )
-    rows.append(_row("gcn_stream", vitis_gcn, ls_lat, vitis_src, ls_src or "trace.pkl", comparison))
+    gate_row = _row("gcn_stream", vitis_gcn, ls_lat, vitis_src, ls_src or "trace.pkl", comparison)
+    gate_row["counts_for_gate"] = True
+    rows.append(gate_row)
+
+    thesis = _read_json(OUT_DIR / "cosim_gcn_stream.json")
+    if thesis and thesis.get("latency_cycles") is not None and mode == "ls_lite":
+        t_row = _row(
+            "gcn_stream_thesis_apfixed_e2",
+            int(thesis["latency_cycles"]),
+            ls_lat,
+            str(OUT_DIR / "cosim_gcn_stream.json"),
+            ls_src or "trace.pkl",
+            "E2 thesis 2025.2.1 vs LS 2023.1 — cross-build, NOT the C1 gate row",
+        )
+        t_row["counts_for_gate"] = False
+        if t_row["status"] == "ok" and t_row.get("error_percent") is not None:
+            t_row["note"] = (
+                "7-8% delta expected here (ap_fixed vs GNN_LS_LITE); "
+                "do not fail C1 on this row"
+            )
+        rows.append(t_row)
 
     if mode == "thesis_cross":
         thesis_vitis, thesis_src = _find_gcn_vitis_cycles("thesis")
@@ -184,11 +204,38 @@ def main():
     args = parser.parse_args()
 
     rows = build_validation(args.mode)
-    gcn_rows = [r for r in rows if r["kernel"] == "gcn_stream" and r["status"] == "ok"]
-    gcn_failed = [
-        r for r in gcn_rows if r.get("error_percent") is not None and abs(r["error_percent"]) > args.threshold
+    gate_rows = [
+        r
+        for r in rows
+        if r.get("counts_for_gate", True)
+        and r["kernel"] == "gcn_stream"
+        and r["status"] == "ok"
     ]
-    gcn_ok = len(gcn_rows) > 0 and len(gcn_failed) == 0
+    gcn_failed = [
+        r
+        for r in gate_rows
+        if r.get("error_percent") is not None and abs(r["error_percent"]) > args.threshold
+    ]
+    gcn_ok = len(gate_rows) > 0 and len(gcn_failed) == 0
+
+    thesis_json = OUT_DIR / "cosim_gcn_stream.json"
+    ls_json = OUT_DIR / "cosim_gcn_stream_ls.json"
+    if (
+        args.mode == "ls_lite"
+        and not ls_json.exists()
+        and thesis_json.exists()
+        and gate_rows
+        and "cosim_gcn_stream.json" in gate_rows[0].get("vitis_source", "")
+    ):
+        payload_note = (
+            "BLOCKER: C1 gate row used thesis cosim_gcn_stream.json (ap_fixed 2025.2.1). "
+            "Run: bash orchestration_engine/run_ls_validate_gcn.sh"
+        )
+    else:
+        payload_note = (
+            "C1 gate row requires cosim_gcn_stream_ls.json from run_ls_validate_gcn.sh. "
+            "cosim_gcn_stream.json (thesis E2) is informational only."
+        )
 
     payload = {
         "mode": args.mode,
@@ -196,18 +243,33 @@ def main():
         "rows": rows,
         "passed": gcn_ok,
         "gcn_stream_validated": gcn_ok,
-        "note": (
-            "C1 requires run_ls_validate_gcn.sh (GNN_LS_LITE 2023.1 cosim). "
-            "Thesis ap_fixed cosim (340 cyc) is not comparable to LS trace (315 cyc)."
-        ),
+        "note": payload_note,
+        "csynth_context": {
+            "tb_num_nodes": 6,
+            "cosim_thesis_n6_cycles": (
+                int(_read_json(thesis_json)["latency_cycles"])
+                if thesis_json.exists() and _read_json(thesis_json)
+                else None
+            ),
+            "interpretation": (
+                "csynth top min latency (25 cyc) is a dataflow cold-start bound, NOT N=6 cosim. "
+                "csynth max (20624 cyc) is LOOP_TRIPCOUNT max=MAX_NODES=256. "
+                "Trust cosim for N=6; compare to ~120 cyc naive II=1 compute floor."
+            ),
+        },
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     print(json.dumps(payload, indent=2))
 
-    if not gcn_rows:
+    if not gate_rows:
         print("No comparable gcn_stream row yet.", file=sys.stderr)
         print("Run: bash orchestration_engine/run_ls_validate_gcn.sh", file=sys.stderr)
+        if thesis_json.exists() and not ls_json.exists():
+            print(
+                "You have thesis cosim (E2) but not paired LS-lite cosim (C1).",
+                file=sys.stderr,
+            )
         return 1
     if gcn_failed:
         print(
