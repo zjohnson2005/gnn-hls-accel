@@ -119,14 +119,22 @@ static void oe_hls_engine_stream_impl(
 
 #ifdef OE_LS_LITE
 
+static oe_graph_op_word_t oe_ls_word_from_u64(const uint64_t lo, const uint64_t hi) {
+#pragma HLS INLINE
+    oe_graph_op_word_t w = 0;
+    w.range(63, 0) = lo;
+    w.range(127, 64) = hi;
+    return w;
+}
+
 void oe_hls_engine_stream(
-    const ap_uint<128> *ops_in,
+    const uint64_t *ops_words,
     uint16_t num_ops,
     const uint16_t *completions_in,
     uint16_t num_completions,
     uint16_t *ready_out,
-    uint32_t metrics_out[4]) {
-#pragma HLS INTERFACE mode = ap_memory port = ops_in depth = 512
+    uint32_t *metrics_out) {
+#pragma HLS INTERFACE mode = ap_memory port = ops_words depth = 1024
 #pragma HLS INTERFACE mode = ap_memory port = completions_in depth = 64
 #pragma HLS INTERFACE mode = ap_memory port = ready_out depth = 256
 #pragma HLS INTERFACE mode = ap_memory port = metrics_out depth = 4
@@ -144,7 +152,7 @@ void oe_hls_engine_stream(
 copy_ops:
     for (ap_uint<16> i = 0; i < nops; ++i) {
 #pragma HLS PIPELINE II = 1
-        ops_buf[i] = ops_in[i];
+        ops_buf[i] = oe_ls_word_from_u64(ops_words[2 * i], ops_words[2 * i + 1]);
     }
 copy_comp:
     for (ap_uint<16> i = 0; i < ncomp; ++i) {

@@ -211,14 +211,15 @@ void oe_hls_scatter_banked_stream(
 
 #ifdef OE_LS_LITE
 #include <cstdint>
-// Plain C ports for LightningSim trace (matches GNN_LS_LITE / uint16_t idx_t fix).
+// Plain C ports only at the top (no ap_uint — GNN_LS_LITE uses float/uint16, not ap_uint).
+// ops_words holds 2 x uint64_t per 128-bit graph op.
 void oe_hls_engine_stream(
-    const ap_uint<128> *ops_in,
+    const uint64_t *ops_words,
     uint16_t num_ops,
     const uint16_t *completions_in,
     uint16_t num_completions,
     uint16_t *ready_out,
-    uint32_t metrics_out[4]);
+    uint32_t *metrics_out);
 #else
 void oe_hls_engine_stream(
     const oe_graph_op_word_t ops_in[OE_LS_ENGINE_MAX_OPS],

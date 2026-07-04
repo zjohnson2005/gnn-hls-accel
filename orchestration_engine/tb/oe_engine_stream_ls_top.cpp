@@ -1,5 +1,5 @@
 // LS trace TB: separate top file (LightningSim tutorial pattern).
-// OE_LS_LITE top uses plain uint16/uint32 ports (GNN_LS_LITE pattern).
+// OE_LS_LITE top uses plain uint64/uint16/uint32 only (no ap_uint in kernel signature).
 
 #include "orchestration_engine.h"
 
@@ -7,8 +7,15 @@
 #include "oe_types.h"
 
 #include <cstdio>
+#include <cstring>
 
 #define OE_ENGINE_TB_TRANSACTIONS 4
+
+static void pack_op_word(oe_graph_op_word_t word, uint64_t out[2]) {
+    std::memset(out, 0, sizeof(uint64_t) * 2);
+    out[0] = (uint64_t)word.range(63, 0);
+    out[1] = (uint64_t)word.range(127, 64);
+}
 
 static oe_graph_op_word_t pack_append_node(int id) {
     oe_graph_op op = {};
@@ -27,7 +34,7 @@ static oe_graph_op_word_t pack_append_edge(int src, int dst) {
 }
 
 int main() {
-    static ap_uint<128> ops_in[OE_LS_ENGINE_MAX_OPS];
+    static uint64_t ops_words[OE_LS_ENGINE_MAX_OPS * 2];
     static uint16_t completions_in[OE_HLS_MAX_OUTSTANDING];
     static uint16_t ready_out[OE_HLS_MAX_NODES];
     static uint32_t metrics_out[4];
@@ -35,11 +42,16 @@ int main() {
     uint16_t num_ops = 0;
     for (int t = 0; t < OE_ENGINE_TB_TRANSACTIONS; ++t) {
         const int root = 3 * t;
-        ops_in[num_ops++] = pack_append_node(root);
-        ops_in[num_ops++] = pack_append_node(root + 1);
-        ops_in[num_ops++] = pack_append_node(root + 2);
-        ops_in[num_ops++] = pack_append_edge(root, root + 1);
-        ops_in[num_ops++] = pack_append_edge(root, root + 2);
+        pack_op_word(pack_append_node(root), &ops_words[num_ops * 2]);
+        num_ops++;
+        pack_op_word(pack_append_node(root + 1), &ops_words[num_ops * 2]);
+        num_ops++;
+        pack_op_word(pack_append_node(root + 2), &ops_words[num_ops * 2]);
+        num_ops++;
+        pack_op_word(pack_append_edge(root, root + 1), &ops_words[num_ops * 2]);
+        num_ops++;
+        pack_op_word(pack_append_edge(root, root + 2), &ops_words[num_ops * 2]);
+        num_ops++;
     }
 
     uint16_t num_completions = 0;
@@ -48,7 +60,7 @@ int main() {
     }
 
     oe_hls_engine_stream(
-        ops_in,
+        ops_words,
         num_ops,
         completions_in,
         num_completions,
