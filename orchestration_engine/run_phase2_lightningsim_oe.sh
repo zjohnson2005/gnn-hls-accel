@@ -37,7 +37,7 @@ export PATH="$(dirname "$OE_PYTHON"):$PATH"
 echo "Using python: $OE_PYTHON"
 
 PROJ="oe_engine_ls_proj"
-STAMP_TAG="OE_ENGINE_LS=df-array-v2"
+STAMP_TAG="OE_ENGINE_LS=df-array-v3-apmem"
 SOLUTION_DIR="$ROOT/$PROJ/sol1"
 CSYNTH_RPT="$SOLUTION_DIR/syn/report/oe_hls_engine_stream_csynth.rpt"
 LS_STAMP="$SOLUTION_DIR/.oe_lightningsim_vitis"

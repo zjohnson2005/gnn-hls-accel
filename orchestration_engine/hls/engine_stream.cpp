@@ -47,9 +47,9 @@ static void oe_ls_engine_proc(
     hls::stream<oe_graph_op_word_t> &ops_s,
     hls::stream<oe_hls_node_id_t> &comp_s,
     hls::stream<oe_hls_node_id_t> &ready_s,
-    oe_hls_cycle_t &load_cycles,
-    oe_hls_cycle_t &scatter_processed,
-    ap_uint<32> &ops_processed) {
+    oe_hls_cycle_t *load_cycles,
+    oe_hls_cycle_t *scatter_processed,
+    ap_uint<32> *ops_processed) {
 #pragma HLS INLINE off
     static oe_hls_node_id_t num_nodes;
     static ap_uint<8> succ_count[OE_HLS_MAX_NODES];
@@ -59,14 +59,18 @@ static void oe_ls_engine_proc(
 #pragma HLS BIND_STORAGE variable = node_state type = RAM_2P impl = BRAM
 #pragma HLS BIND_STORAGE variable = succ_slots type = RAM_2P impl = BRAM
 
+    oe_hls_cycle_t load_local = 0;
+    oe_hls_cycle_t scatter_local = 0;
+    ap_uint<32> ops_local = 0;
+
     oe_hls_graph_load(
         num_nodes,
         succ_count,
         succ_slots,
         node_state,
         ops_s,
-        load_cycles,
-        ops_processed);
+        load_local,
+        ops_local);
 
     oe_hls_scatter_stream(
         num_nodes,
@@ -75,13 +79,17 @@ static void oe_ls_engine_proc(
         node_state,
         comp_s,
         ready_s,
-        scatter_processed);
+        scatter_local);
+
+    *load_cycles = load_local;
+    *scatter_processed = scatter_local;
+    *ops_processed = ops_local;
 }
 
 static void oe_ls_sink_ready(
     hls::stream<oe_hls_node_id_t> &ready_s,
     oe_hls_node_id_t ready_out[OE_HLS_MAX_NODES],
-    oe_hls_node_id_t &num_ready) {
+    oe_hls_node_id_t *num_ready) {
 #pragma HLS INLINE off
     oe_hls_node_id_t n = 0;
 sink_ready:
@@ -97,7 +105,7 @@ sink_ready:
             n = n + 1;
         }
     }
-    num_ready = n;
+    *num_ready = n;
 }
 
 void oe_hls_engine_stream(
@@ -106,19 +114,19 @@ void oe_hls_engine_stream(
     const oe_hls_node_id_t completions_in[OE_HLS_MAX_OUTSTANDING],
     const ap_uint<16> num_completions,
     oe_hls_node_id_t ready_out[OE_HLS_MAX_NODES],
-    oe_hls_node_id_t &num_ready,
-    oe_hls_cycle_t &load_cycles,
-    oe_hls_cycle_t &scatter_processed,
-    ap_uint<32> &ops_processed) {
+    oe_hls_node_id_t *num_ready,
+    oe_hls_cycle_t *load_cycles,
+    oe_hls_cycle_t *scatter_processed,
+    ap_uint<32> *ops_processed) {
 #pragma HLS INTERFACE mode = ap_memory port = ops_in depth = 512
 #pragma HLS INTERFACE mode = ap_memory port = completions_in depth = 64
 #pragma HLS INTERFACE mode = ap_memory port = ready_out depth = 256
+#pragma HLS INTERFACE mode = ap_memory port = num_ready depth = 1
+#pragma HLS INTERFACE mode = ap_memory port = load_cycles depth = 1
+#pragma HLS INTERFACE mode = ap_memory port = scatter_processed depth = 1
+#pragma HLS INTERFACE mode = ap_memory port = ops_processed depth = 1
 #pragma HLS INTERFACE s_axilite port = num_ops bundle = control
 #pragma HLS INTERFACE s_axilite port = num_completions bundle = control
-#pragma HLS INTERFACE s_axilite port = num_ready bundle = control
-#pragma HLS INTERFACE s_axilite port = load_cycles bundle = control
-#pragma HLS INTERFACE s_axilite port = scatter_processed bundle = control
-#pragma HLS INTERFACE s_axilite port = ops_processed bundle = control
 #pragma HLS INTERFACE s_axilite port = return bundle = control
 
     hls::stream<oe_graph_op_word_t> ops_s("ops_s");

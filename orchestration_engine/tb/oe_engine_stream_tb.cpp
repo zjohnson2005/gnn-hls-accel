@@ -58,10 +58,10 @@ int main() {
         completions_in,
         num_completions,
         ready_out,
-        num_ready,
-        load_cycles,
-        scatter_processed,
-        ops_processed);
+        &num_ready,
+        &load_cycles,
+        &scatter_processed,
+        &ops_processed);
 
     if (scatter_processed != OE_ENGINE_TB_TRANSACTIONS) {
         std::printf(
