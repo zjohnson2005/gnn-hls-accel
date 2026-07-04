@@ -170,11 +170,13 @@ void oe_hls_graph_load(
     hls::stream<oe_graph_op_word_t> &ops_in,
     oe_hls_cycle_t &load_cycles,
     ap_uint<32> &ops_processed) {
+#ifndef OE_LS_INTERNAL
 #pragma HLS INTERFACE axis port = ops_in
 #pragma HLS INTERFACE s_axilite port = num_nodes bundle = control
 #pragma HLS INTERFACE s_axilite port = load_cycles bundle = control
 #pragma HLS INTERFACE s_axilite port = ops_processed bundle = control
 #pragma HLS INTERFACE s_axilite port = return bundle = control
+#endif
 
     static oe_hls_node_id_t free_stack[OE_HLS_MAX_NODES];
     ap_uint<16> free_top = 0;
@@ -202,6 +204,7 @@ void oe_hls_graph_load_batch(
     oe_hls_cycle_t &load_cycles,
     oe_hls_cycle_t &sessions_loaded,
     ap_uint<32> &ops_processed) {
+#ifndef OE_LS_INTERNAL
 #pragma HLS INTERFACE axis port = ops_in
 #pragma HLS INTERFACE s_axilite port = num_sessions bundle = control
 #pragma HLS INTERFACE s_axilite port = num_nodes bundle = control
@@ -209,6 +212,7 @@ void oe_hls_graph_load_batch(
 #pragma HLS INTERFACE s_axilite port = sessions_loaded bundle = control
 #pragma HLS INTERFACE s_axilite port = ops_processed bundle = control
 #pragma HLS INTERFACE s_axilite port = return bundle = control
+#endif
 
     static oe_hls_node_id_t free_stack[OE_HLS_MAX_NODES];
     ap_uint<16> free_top = 0;

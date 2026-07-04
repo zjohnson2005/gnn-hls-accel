@@ -149,11 +149,13 @@ void oe_hls_scatter_stream(
     hls::stream<oe_hls_node_id_t> &completions_in,
     hls::stream<oe_hls_node_id_t> &ready_out,
     oe_hls_cycle_t &completions_processed) {
+#ifndef OE_LS_INTERNAL
 #pragma HLS INTERFACE axis port = completions_in
 #pragma HLS INTERFACE axis port = ready_out
 #pragma HLS INTERFACE s_axilite port = num_nodes bundle = control
 #pragma HLS INTERFACE s_axilite port = completions_processed bundle = control
 #pragma HLS INTERFACE s_axilite port = return bundle = control
+#endif
 
     // Flat walk: one RMW per cycle -> dual-port BRAM, no partitions needed.
     oe_hls_cycle_t processed = 0;
@@ -286,11 +288,13 @@ void oe_hls_scatter_banked_stream(
     hls::stream<oe_hls_node_id_t> &completions_in,
     hls::stream<oe_hls_node_id_t> &ready_out,
     oe_hls_cycle_t &completions_processed) {
+#ifndef OE_LS_INTERNAL
 #pragma HLS INTERFACE axis port = completions_in
 #pragma HLS INTERFACE axis port = ready_out
 #pragma HLS INTERFACE s_axilite port = num_nodes bundle = control
 #pragma HLS INTERFACE s_axilite port = completions_processed bundle = control
 #pragma HLS INTERFACE s_axilite port = return bundle = control
+#endif
 
 #pragma HLS ARRAY_PARTITION variable = node_state cyclic factor = OE_HLS_SCATTER_BANKS
 
