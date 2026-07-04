@@ -1,6 +1,7 @@
 #include "orchestration_engine.h"
 
-// LS C2 top: DATAFLOW feeders (ops + completions in parallel) + engine body.
+// LS C2 top: 4-process DATAFLOW — op feeder, completion feeder, load+scatter core,
+// ready drain (concurrent scatter/drain on ready_s for LightningSim FIFO sim).
 // OE_LS_LITE uses plain uint16/uint32 top ports (GNN_LS_LITE pattern) so LS objcopy
 // links the instrumented kernel without SIGSEGV on ap_uint* scalars.
 
@@ -34,11 +35,10 @@ feed_comp:
     comp_s.write(oe_hls_node_id_t(OE_HLS_STREAM_END));
 }
 
-static void oe_ls_engine_body(
+static void oe_ls_engine_core(
     hls::stream<oe_graph_op_word_t> &ops_s,
     hls::stream<oe_hls_node_id_t> &comp_s,
-    oe_hls_node_id_t ready_out[OE_HLS_MAX_NODES],
-    oe_hls_node_id_t &num_ready,
+    hls::stream<oe_hls_node_id_t> &ready_s,
     oe_hls_cycle_t &load_cycles,
     oe_hls_cycle_t &scatter_processed,
     ap_uint<32> &ops_processed) {
@@ -50,9 +50,6 @@ static void oe_ls_engine_body(
 #pragma HLS BIND_STORAGE variable = succ_count type = RAM_2P impl = BRAM
 #pragma HLS BIND_STORAGE variable = node_state type = RAM_2P impl = BRAM
 #pragma HLS BIND_STORAGE variable = succ_slots type = RAM_2P impl = BRAM
-
-    hls::stream<oe_hls_node_id_t> ready_s("ready_s");
-#pragma HLS STREAM variable = ready_s depth = 8
 
     load_cycles = 0;
     scatter_processed = 0;
@@ -75,9 +72,15 @@ static void oe_ls_engine_body(
         comp_s,
         ready_s,
         scatter_processed);
+}
 
+static void oe_ls_drain_ready(
+    hls::stream<oe_hls_node_id_t> &ready_s,
+    oe_hls_node_id_t ready_out[OE_HLS_MAX_NODES],
+    oe_hls_node_id_t &num_ready) {
+#pragma HLS INLINE off
     oe_hls_node_id_t n = 0;
-sink_ready:
+drain_ready:
     while (true) {
 #pragma HLS PIPELINE II = 1
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = OE_HLS_MAX_NODES
@@ -105,20 +108,22 @@ static void oe_hls_engine_stream_impl(
     ap_uint<32> &ops_processed) {
     hls::stream<oe_graph_op_word_t> ops_s("ops_s");
     hls::stream<oe_hls_node_id_t> comp_s("comp_s");
+    hls::stream<oe_hls_node_id_t> ready_s("ready_s");
 #pragma HLS STREAM variable = ops_s depth = 8
-#pragma HLS STREAM variable = comp_s depth = 8
+#pragma HLS STREAM variable = comp_s depth = OE_HLS_MAX_OUTSTANDING + 2
+#pragma HLS STREAM variable = ready_s depth = 8
 
 #pragma HLS DATAFLOW
     oe_ls_feed_ops(ops_in, num_ops, ops_s);
     oe_ls_feed_completions(completions_in, num_completions, comp_s);
-    oe_ls_engine_body(
+    oe_ls_engine_core(
         ops_s,
         comp_s,
-        ready_out,
-        num_ready,
+        ready_s,
         load_cycles,
         scatter_processed,
         ops_processed);
+    oe_ls_drain_ready(ready_s, ready_out, num_ready);
 }
 
 #ifdef OE_LS_LITE
