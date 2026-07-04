@@ -120,14 +120,28 @@ def _checklist():
     )
 
     ls_val = OUT_DIR / "ls_validation.json"
+    ls_status = "pending"
+    ls_detail = "python -m orchestration_engine.eval.ls_validate"
+    if ls_val.exists():
+        try:
+            lv = json.loads(ls_val.read_text(encoding="utf-8"))
+            if lv.get("gcn_stream_validated") or lv.get("passed"):
+                ls_status = "done"
+            ls_detail = str(ls_val)
+            if lv.get("rows"):
+                gcn = [r for r in lv["rows"] if r.get("kernel") == "gcn_stream"]
+                if gcn and gcn[0].get("error_percent") is not None:
+                    ls_detail = "gcn_stream error {0}%".format(gcn[0]["error_percent"])
+        except (ValueError, OSError):
+            pass
     items.append(
         {
             "id": "ls_validated",
             "label": "LightningSim vs Vitis cosim cycle validation",
-            "status": "done" if ls_val.exists() else "pending",
-            "detail": str(ls_val)
-            if ls_val.exists()
-            else "python -m orchestration_engine.eval.ls_validate",
+            "status": ls_status,
+            "detail": ls_detail
+            if ls_status == "done"
+            else "bash orchestration_engine/run_gcn_stream_cosim.sh",
         }
     )
 

@@ -19,8 +19,6 @@ benefit always measured against each design's own 2D baseline:
     python -m cost_model_3d.rules
 """
 
-from __future__ import annotations
-
 import math
 from typing import Callable, List, Tuple
 

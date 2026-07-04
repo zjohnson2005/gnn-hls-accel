@@ -9,8 +9,6 @@ rungs B1/B2/B3 just decide which fields the caller looks at, not how they are
 computed.
 """
 
-from __future__ import annotations
-
 import math
 from dataclasses import dataclass
 from typing import Dict

@@ -21,8 +21,6 @@ that respects the TSV budget and an accuracy-fixed peak-temp ceiling -- the
 constrained (epsilon-constraint) form the roadmap calls out.
 """
 
-from __future__ import annotations
-
 import itertools
 from typing import Dict, Optional, Tuple
 

@@ -20,8 +20,6 @@ accuracy fixed rather than rewarding capacity cuts that would hurt the task.
     python -m cost_model_3d.sweep            # prints summary, writes corpus.csv
 """
 
-from __future__ import annotations
-
 import csv
 import itertools
 import os

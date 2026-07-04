@@ -37,6 +37,33 @@ def _ls_latency_from_trace(solution_dir):
     return None, "unsupported trace.pkl layout"
 
 
+def _find_gcn_vitis_cycles():
+    cached = _read_json(OUT_DIR / "cosim_gcn_stream.json")
+    if cached and cached.get("passed") and cached.get("latency_cycles") is not None:
+        return int(cached["latency_cycles"]), str(OUT_DIR / "cosim_gcn_stream.json")
+
+    search_roots = [
+        REPO / "gcn_stream_cosim_proj",
+        REPO / "gcn_stream_proj",
+        REPO / "gcn_proj",
+    ]
+    reports = []
+    for root in search_roots:
+        if root.exists():
+            reports.extend(root.glob("**/sim/report/*_cosim.rpt"))
+
+    if not reports:
+        return None, "run orchestration_engine/run_gcn_stream_cosim.sh (2025.2.1 cosim)"
+
+    from orchestration_engine.phase2_gate.cosim_parser import parse_cosim_report
+
+    report_path = sorted(reports)[0]
+    rep = parse_cosim_report(report_path)
+    if rep.passed and rep.latency_cycles is not None:
+        return int(rep.latency_cycles), str(report_path)
+    return None, str(report_path)
+
+
 def _row(name, vitis_cycles, ls_cycles, vitis_source, ls_source):
     if vitis_cycles is None or ls_cycles is None:
         return {
@@ -66,7 +93,6 @@ def _row(name, vitis_cycles, ls_cycles, vitis_source, ls_source):
 def build_validation():
     rows = []
 
-    stream_cosim = _read_json(OUT_DIR / "cosim_stream.json")
     gcn_ls = REPO / "gcn_stream_proj" / "sol1"
     ls_lat, ls_src = _ls_latency_from_trace(gcn_ls)
     if ls_lat is None:
@@ -75,24 +101,8 @@ def build_validation():
             ls_lat = int(dse["baseline_max_latency"])
             ls_src = str(OUT_DIR / "dse_report.json") + " baseline_max_latency"
 
-    vitis_gcn = None
-    gcn_cosim = list(REPO.glob("gcn_stream_proj/**/sim/report/*_cosim.rpt"))
-    if gcn_cosim:
-        from orchestration_engine.phase2_gate.cosim_parser import parse_cosim_report
-
-        rep = parse_cosim_report(gcn_cosim[0])
-        if rep.passed:
-            vitis_gcn = rep.latency_cycles
-
-    rows.append(
-        _row(
-            "gcn_stream",
-            vitis_gcn,
-            ls_lat,
-            str(gcn_cosim[0]) if gcn_cosim else "run_hls_stream.tcl cosim",
-            ls_src or "gcn_stream_proj/sol1/trace.pkl",
-        )
-    )
+    vitis_gcn, vitis_src = _find_gcn_vitis_cycles()
+    rows.append(_row("gcn_stream", vitis_gcn, ls_lat, vitis_src, ls_src or "trace.pkl"))
 
     scatter = _read_json(OUT_DIR / "cosim_stream.json")
     rows.append(
@@ -116,31 +126,44 @@ def main():
         type=Path,
         default=OUT_DIR / "ls_validation.json",
     )
+    parser.add_argument(
+        "--allow-partial",
+        action="store_true",
+        help="Exit 0 when gcn_stream row validates even if scatter row pending",
+    )
     args = parser.parse_args()
 
     rows = build_validation()
     ok_rows = [r for r in rows if r["status"] == "ok" and r["error_percent"] is not None]
-    failed = [
-        r
-        for r in ok_rows
-        if abs(r["error_percent"]) > args.threshold
-    ]
+    failed = [r for r in ok_rows if abs(r["error_percent"]) > args.threshold]
+    gcn_ok = any(r["kernel"] == "gcn_stream" and r["status"] == "ok" for r in rows)
 
     payload = {
         "threshold_percent": args.threshold,
         "rows": rows,
         "passed": len(failed) == 0 and len(ok_rows) > 0,
+        "gcn_stream_validated": gcn_ok and not any(
+            r["kernel"] == "gcn_stream" and r["status"] == "ok" and abs(r["error_percent"]) > args.threshold
+            for r in rows
+            if r.get("error_percent") is not None
+        ),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     print(json.dumps(payload, indent=2))
 
     if not ok_rows:
-        print("No comparable rows yet.", file=sys.stderr)
+        print("No comparable rows yet (need gcn_stream Vitis cosim + LS trace).", file=sys.stderr)
+        print("Run: bash orchestration_engine/run_gcn_stream_cosim.sh", file=sys.stderr)
         return 1
     if failed:
         print("Validation FAILED: {0} rows exceed threshold".format(len(failed)), file=sys.stderr)
         return 1
+    if args.allow_partial:
+        return 0
+    pending = [r for r in rows if r["status"] == "pending"]
+    if pending:
+        print("{0} row(s) still pending (expected for scatter until C2).".format(len(pending)), file=sys.stderr)
     return 0
 
 
