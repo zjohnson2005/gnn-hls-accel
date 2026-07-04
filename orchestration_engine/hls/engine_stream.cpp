@@ -1,8 +1,8 @@
 #include "orchestration_engine.h"
 
 // LS C2 top: two DATAFLOW tasks + two internal FIFOs (GCN combine/aggregate shape).
-// graph_load + scatter + ready drain run sequentially inside oe_ls_engine_body so
-// graph BRAM is not shared across DATAFLOW processes (HLS 200-968).
+// OE_LS_LITE uses plain uint16/uint32 top ports (GNN_LS_LITE pattern) so LS objcopy
+// links the instrumented kernel without SIGSEGV on ap_uint* scalars.
 
 static void oe_ls_feed_inputs(
     const oe_graph_op_word_t ops_in[OE_LS_ENGINE_MAX_OPS],
@@ -35,10 +35,10 @@ static void oe_ls_engine_body(
     hls::stream<oe_graph_op_word_t> &ops_s,
     hls::stream<oe_hls_node_id_t> &comp_s,
     oe_hls_node_id_t ready_out[OE_HLS_MAX_NODES],
-    oe_hls_node_id_t *num_ready,
-    oe_hls_cycle_t *load_cycles,
-    oe_hls_cycle_t *scatter_processed,
-    ap_uint<32> *ops_processed) {
+    oe_hls_node_id_t &num_ready,
+    oe_hls_cycle_t &load_cycles,
+    oe_hls_cycle_t &scatter_processed,
+    ap_uint<32> &ops_processed) {
 #pragma HLS INLINE off
     static oe_hls_node_id_t num_nodes;
     static ap_uint<8> succ_count[OE_HLS_MAX_NODES];
@@ -51,9 +51,9 @@ static void oe_ls_engine_body(
     hls::stream<oe_hls_node_id_t> ready_s("ready_s");
 #pragma HLS STREAM variable = ready_s depth = 8
 
-    oe_hls_cycle_t load_local = 0;
-    oe_hls_cycle_t scatter_local = 0;
-    ap_uint<32> ops_local = 0;
+    load_cycles = 0;
+    scatter_processed = 0;
+    ops_processed = 0;
 
     oe_hls_graph_load(
         num_nodes,
@@ -61,8 +61,8 @@ static void oe_ls_engine_body(
         succ_slots,
         node_state,
         ops_s,
-        load_local,
-        ops_local);
+        load_cycles,
+        ops_processed);
 
     oe_hls_scatter_stream(
         num_nodes,
@@ -71,7 +71,7 @@ static void oe_ls_engine_body(
         node_state,
         comp_s,
         ready_s,
-        scatter_local);
+        scatter_processed);
 
     oe_hls_node_id_t n = 0;
 sink_ready:
@@ -87,12 +87,100 @@ sink_ready:
             n = n + 1;
         }
     }
-
-    *num_ready = n;
-    *load_cycles = load_local;
-    *scatter_processed = scatter_local;
-    *ops_processed = ops_local;
+    num_ready = n;
 }
+
+static void oe_hls_engine_stream_impl(
+    const oe_graph_op_word_t ops_in[OE_LS_ENGINE_MAX_OPS],
+    const ap_uint<16> num_ops,
+    const oe_hls_node_id_t completions_in[OE_HLS_MAX_OUTSTANDING],
+    const ap_uint<16> num_completions,
+    oe_hls_node_id_t ready_out[OE_HLS_MAX_NODES],
+    oe_hls_node_id_t &num_ready,
+    oe_hls_cycle_t &load_cycles,
+    oe_hls_cycle_t &scatter_processed,
+    ap_uint<32> &ops_processed) {
+    hls::stream<oe_graph_op_word_t> ops_s("ops_s");
+    hls::stream<oe_hls_node_id_t> comp_s("comp_s");
+#pragma HLS STREAM variable = ops_s depth = 8
+#pragma HLS STREAM variable = comp_s depth = 8
+
+#pragma HLS DATAFLOW
+    oe_ls_feed_inputs(ops_in, num_ops, completions_in, num_completions, ops_s, comp_s);
+    oe_ls_engine_body(
+        ops_s,
+        comp_s,
+        ready_out,
+        num_ready,
+        load_cycles,
+        scatter_processed,
+        ops_processed);
+}
+
+#ifdef OE_LS_LITE
+
+void oe_hls_engine_stream(
+    const ap_uint<128> *ops_in,
+    uint16_t num_ops,
+    const uint16_t *completions_in,
+    uint16_t num_completions,
+    uint16_t *ready_out,
+    uint32_t metrics_out[4]) {
+#pragma HLS INTERFACE mode = ap_memory port = ops_in depth = 512
+#pragma HLS INTERFACE mode = ap_memory port = completions_in depth = 64
+#pragma HLS INTERFACE mode = ap_memory port = ready_out depth = 256
+#pragma HLS INTERFACE mode = ap_memory port = metrics_out depth = 4
+#pragma HLS INTERFACE s_axilite port = num_ops bundle = control
+#pragma HLS INTERFACE s_axilite port = num_completions bundle = control
+#pragma HLS INTERFACE s_axilite port = return bundle = control
+
+    static oe_graph_op_word_t ops_buf[OE_LS_ENGINE_MAX_OPS];
+    static oe_hls_node_id_t comp_buf[OE_HLS_MAX_OUTSTANDING];
+    static oe_hls_node_id_t ready_buf[OE_HLS_MAX_NODES];
+
+    const ap_uint<16> nops = num_ops;
+    const ap_uint<16> ncomp = num_completions;
+
+copy_ops:
+    for (ap_uint<16> i = 0; i < nops; ++i) {
+#pragma HLS PIPELINE II = 1
+        ops_buf[i] = ops_in[i];
+    }
+copy_comp:
+    for (ap_uint<16> i = 0; i < ncomp; ++i) {
+#pragma HLS PIPELINE II = 1
+        comp_buf[i] = completions_in[i];
+    }
+
+    oe_hls_node_id_t num_ready = 0;
+    oe_hls_cycle_t load_cycles = 0;
+    oe_hls_cycle_t scatter_processed = 0;
+    ap_uint<32> ops_processed = 0;
+
+    oe_hls_engine_stream_impl(
+        ops_buf,
+        nops,
+        comp_buf,
+        ncomp,
+        ready_buf,
+        num_ready,
+        load_cycles,
+        scatter_processed,
+        ops_processed);
+
+export_ready:
+    for (ap_uint<16> i = 0; i < num_ready; ++i) {
+#pragma HLS PIPELINE II = 1
+        ready_out[i] = (uint16_t)ready_buf[i];
+    }
+
+    metrics_out[0] = (uint32_t)num_ready;
+    metrics_out[1] = (uint32_t)load_cycles;
+    metrics_out[2] = (uint32_t)scatter_processed;
+    metrics_out[3] = (uint32_t)ops_processed;
+}
+
+#else
 
 void oe_hls_engine_stream(
     const oe_graph_op_word_t ops_in[OE_LS_ENGINE_MAX_OPS],
@@ -115,19 +203,26 @@ void oe_hls_engine_stream(
 #pragma HLS INTERFACE s_axilite port = num_completions bundle = control
 #pragma HLS INTERFACE s_axilite port = return bundle = control
 
-    hls::stream<oe_graph_op_word_t> ops_s("ops_s");
-    hls::stream<oe_hls_node_id_t> comp_s("comp_s");
-#pragma HLS STREAM variable = ops_s depth = 8
-#pragma HLS STREAM variable = comp_s depth = 8
+    oe_hls_node_id_t nready = 0;
+    oe_hls_cycle_t load = 0;
+    oe_hls_cycle_t scatter = 0;
+    ap_uint<32> ops = 0;
 
-#pragma HLS DATAFLOW
-    oe_ls_feed_inputs(ops_in, num_ops, completions_in, num_completions, ops_s, comp_s);
-    oe_ls_engine_body(
-        ops_s,
-        comp_s,
+    oe_hls_engine_stream_impl(
+        ops_in,
+        num_ops,
+        completions_in,
+        num_completions,
         ready_out,
-        num_ready,
-        load_cycles,
-        scatter_processed,
-        ops_processed);
+        nready,
+        load,
+        scatter,
+        ops);
+
+    *num_ready = nready;
+    *load_cycles = load;
+    *scatter_processed = scatter;
+    *ops_processed = ops;
 }
+
+#endif

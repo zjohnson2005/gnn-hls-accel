@@ -5,10 +5,12 @@
 open_project -reset oe_engine_ls_proj
 set_top oe_hls_engine_stream
 
-add_files orchestration_engine/hls/engine_stream.cpp -cflags "-I./orchestration_engine/hls"
-add_files orchestration_engine/hls/graph_load.cpp -cflags "-I./orchestration_engine/hls -DOE_LS_INTERNAL"
-add_files orchestration_engine/hls/orchestration_engine.cpp -cflags "-I./orchestration_engine/hls -DOE_LS_INTERNAL"
-add_files -tb orchestration_engine/tb/oe_engine_stream_ls_top.cpp -cflags "-I./orchestration_engine/hls -I./orchestration_engine/include"
+set _oe_ls_cflags "-I./orchestration_engine/hls -DOE_LS_LITE -DOE_LS_INTERNAL"
+
+add_files orchestration_engine/hls/engine_stream.cpp -cflags $_oe_ls_cflags
+add_files orchestration_engine/hls/graph_load.cpp -cflags $_oe_ls_cflags
+add_files orchestration_engine/hls/orchestration_engine.cpp -cflags $_oe_ls_cflags
+add_files -tb orchestration_engine/tb/oe_engine_stream_ls_top.cpp -cflags "-I./orchestration_engine/hls -I./orchestration_engine/include -DOE_LS_LITE"
 
 open_solution -reset sol1 -flow_target vivado
 set_part {xczu3eg-sbva484-1-e}

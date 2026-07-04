@@ -1,5 +1,5 @@
 // LS trace TB: separate top file (LightningSim tutorial pattern).
-// Kernel lives in engine_stream.cpp; this file is the only testbench source LS links.
+// OE_LS_LITE top uses plain uint16/uint32 ports (GNN_LS_LITE pattern).
 
 #include "orchestration_engine.h"
 
@@ -27,11 +27,12 @@ static oe_graph_op_word_t pack_append_edge(int src, int dst) {
 }
 
 int main() {
-    static oe_graph_op_word_t ops_in[OE_LS_ENGINE_MAX_OPS];
-    static oe_hls_node_id_t completions_in[OE_HLS_MAX_OUTSTANDING];
-    static oe_hls_node_id_t ready_out[OE_HLS_MAX_NODES];
+    static ap_uint<128> ops_in[OE_LS_ENGINE_MAX_OPS];
+    static uint16_t completions_in[OE_HLS_MAX_OUTSTANDING];
+    static uint16_t ready_out[OE_HLS_MAX_NODES];
+    static uint32_t metrics_out[4];
 
-    ap_uint<16> num_ops = 0;
+    uint16_t num_ops = 0;
     for (int t = 0; t < OE_ENGINE_TB_TRANSACTIONS; ++t) {
         const int root = 3 * t;
         ops_in[num_ops++] = pack_append_node(root);
@@ -41,15 +42,10 @@ int main() {
         ops_in[num_ops++] = pack_append_edge(root, root + 2);
     }
 
-    ap_uint<16> num_completions = 0;
+    uint16_t num_completions = 0;
     for (int t = 0; t < OE_ENGINE_TB_TRANSACTIONS; ++t) {
-        completions_in[num_completions++] = 3 * t;
+        completions_in[num_completions++] = (uint16_t)(3 * t);
     }
-
-    oe_hls_node_id_t num_ready = 0;
-    oe_hls_cycle_t load_cycles = 0;
-    oe_hls_cycle_t scatter_processed = 0;
-    ap_uint<32> ops_processed = 0;
 
     oe_hls_engine_stream(
         ops_in,
@@ -57,12 +53,12 @@ int main() {
         completions_in,
         num_completions,
         ready_out,
-        &num_ready,
-        &load_cycles,
-        &scatter_processed,
-        &ops_processed);
+        metrics_out);
 
-    if (scatter_processed != OE_ENGINE_TB_TRANSACTIONS) {
+    const uint32_t scatter_processed = metrics_out[2];
+    const uint32_t num_ready = metrics_out[0];
+
+    if (scatter_processed != (uint32_t)OE_ENGINE_TB_TRANSACTIONS) {
         std::printf(
             "FAIL: expected %d scatter completions got %u\n",
             OE_ENGINE_TB_TRANSACTIONS,
@@ -70,7 +66,7 @@ int main() {
         return 1;
     }
 
-    if (num_ready != 2 * OE_ENGINE_TB_TRANSACTIONS) {
+    if (num_ready != (uint32_t)(2 * OE_ENGINE_TB_TRANSACTIONS)) {
         std::printf(
             "FAIL: expected %d ready events got %u\n",
             2 * OE_ENGINE_TB_TRANSACTIONS,
@@ -80,8 +76,8 @@ int main() {
 
     std::printf(
         "ENGINE STREAM TB PASSED: load_cycles=%u ops=%u scatter=%u ready=%u\n",
-        (unsigned)load_cycles,
-        (unsigned)ops_processed,
+        (unsigned)metrics_out[1],
+        (unsigned)metrics_out[3],
         (unsigned)scatter_processed,
         (unsigned)num_ready);
     return 0;
