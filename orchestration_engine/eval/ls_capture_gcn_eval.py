@@ -67,9 +67,12 @@ def main():
     print(json.dumps(payload, indent=2))
     if dse_div is not None and abs(dse_div) > 5.0:
         print(
-            "WARN: live LS eval diverges {0}% from dse_report baseline".format(dse_div),
+            "ERROR: live LS eval diverges {0}% from dse_report baseline (max 5%)".format(
+                dse_div
+            ),
             file=sys.stderr,
         )
+        return 1
     return 0
 
 

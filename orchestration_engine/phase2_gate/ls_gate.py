@@ -28,6 +28,22 @@ def resolve_solution_dir(solution_dir_str, repo=None):
     return sol
 
 
+def gcn_ls_cosim_json_valid(data):
+    """True only for real GNN_LS_LITE cosim (not csynth-only poison)."""
+    if not data or data.get("latency_cycles") is None:
+        return False, "missing latency_cycles"
+    if not data.get("passed"):
+        return False, "cosim did not pass"
+    if data.get("status") == "csynth_only":
+        return False, "csynth_only is not valid for C1"
+    report_path = (data.get("report_path") or "").replace("\\", "/")
+    if "cosim.rpt" not in report_path:
+        return False, "report_path must reference *_cosim.rpt (got {0!r})".format(
+            data.get("report_path")
+        )
+    return True, "ok"
+
+
 def dse_report_valid(path, repo=None):
     """Return (ok, detail) — True only for trace-backed LightningSim DSE."""
     path = Path(path)

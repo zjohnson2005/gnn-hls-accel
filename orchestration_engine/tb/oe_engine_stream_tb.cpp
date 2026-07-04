@@ -1,4 +1,4 @@
-// TB for oe_hls_engine_stream (C2 DATAFLOW): load a fan-out graph, then stream
+// TB for oe_hls_engine_stream (C2): load a fan-out graph, then stream
 // completions. Uses 4 independent fan-out=2 roots (same topology as stream TB).
 
 #include "orchestration_engine.h"

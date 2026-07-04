@@ -1,4 +1,4 @@
-# OE engine DATAFLOW (graph_load -> scatter) for LightningSim trace + DSE (C2).
+# OE engine (graph_load -> scatter sequential top) for LightningSim trace + DSE (C2).
 # Server-only: ARCHIVE Vitis 2023.1 via hls_env_lightningsim.sh
 #   vitis_hls -f orchestration_engine/run_hls_oe_engine_ls.tcl
 
