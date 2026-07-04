@@ -21,4 +21,4 @@ if [[ -n "$RPT" ]]; then
     --out orchestration_engine/characterization/out/phase2/cosim_scatter_banked.json
 fi
 
-python3 -m orchestration_engine.phase2_gate.gate_report
+python3 -m orchestration_engine.phase2_gate.gate_report --refresh

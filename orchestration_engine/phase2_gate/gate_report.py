@@ -218,7 +218,16 @@ def render_full_markdown(data):
 
 
 def main():
+    import argparse
     import sys
+
+    parser = argparse.ArgumentParser(description="Phase 2 gate report")
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Write reports but always exit 0 (use from multi-step pipelines)",
+    )
+    args = parser.parse_args()
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     data = build_report()
@@ -229,6 +238,8 @@ def main():
     print(data["crossover"]["headline"])
     if not data["passed"]:
         print("{0} checklist items still pending.".format(data["pending_count"]))
+    if args.refresh:
+        return 0
     return 0 if data["passed"] else 1
 
 
