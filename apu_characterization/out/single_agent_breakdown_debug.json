@@ -1,0 +1,2312 @@
+{
+  "experiment": "single_agent_breakdown",
+  "result_validity": "debug_only",
+  "generated_utc": "2026-07-07T16:39:15.072740+00:00",
+  "setup_ref": {
+    "setup_digest": "fe9707b03e17a5b7",
+    "task_suite_digest": "a88a9e1058964219",
+    "cpu_model": "Intel(R) Core(TM) Ultra 5 325"
+  },
+  "task_assignments": [
+    {
+      "task_id": "SH-01",
+      "profile": "search_heavy",
+      "goal": "What causes different kinds of weather? Collect mentions of rain, storms, and temperature changes and summarize the patterns.",
+      "turns": [
+        "search <- rain storm",
+        "search <- temperature cold warm",
+        "search <- wind forecast",
+        "search <- snow season",
+        "search <- climate humidity",
+        "search <- cloud sun",
+        "calculator <- (72 - 32) * 5 / 9",
+        "search <- storm wind rain",
+        "search <- season climate",
+        "reasoning only"
+      ]
+    },
+    {
+      "task_id": "SH-02",
+      "profile": "search_heavy",
+      "goal": "Put together a short overview of space topics: find what the corpus says about planets, the moon, eclipses, and telescopes.",
+      "turns": [
+        "search <- planet orbit",
+        "search <- moon eclipse",
+        "search <- solar eclipse",
+        "search <- telescope star",
+        "search <- rocket astronaut",
+        "retrieve <- which planets can be seen without a telescope",
+        "search <- mars earth",
+        "search <- gravity light",
+        "search <- galaxy star",
+        "search <- orbit gravity",
+        "reasoning only"
+      ]
+    },
+    {
+      "task_id": "CH-01",
+      "profile": "code_heavy",
+      "goal": "What is the sum of all prime numbers below 20000? Verify with a second computation and sanity-check the magnitude.",
+      "turns": [
+        "code_exec <- limit = 20000 sieve = [True] * limit sieve[0] = sieve[1] = False for i in range(2, int(limit ** 0.5)",
+        "code_exec <- xs = [(i * 2654435761) % 100003 for i in range(30000)] xs.sort() result = xs[len(xs) // 2]",
+        "calculator <- 21171191 / 1000000",
+        "code_exec <- a, b = 0, 1 for _ in range(50000):     a, b = b, (a + b) % 1000000007 result = a",
+        "reasoning only"
+      ]
+    },
+    {
+      "task_id": "CH-02",
+      "profile": "code_heavy",
+      "goal": "If I save 1000 dollars at 5 percent interest for 30 years, how much do I have? Also check a word-frequency count and a median.",
+      "turns": [
+        "code_exec <- balance = 1000.0 rate = 0.05 for year in range(30):     balance = balance * (1 + rate) result = int(",
+        "code_exec <- text = (\"the quick brown fox jumps over the lazy dog and runs away \" * 800).split() counts = {} for ",
+        "code_exec <- xs = [(i * 2654435761) % 100003 for i in range(30000)] xs.sort() result = xs[len(xs) // 2]",
+        "search <- bank interest save",
+        "calculator <- 1000 * 1.05 ** 30",
+        "reasoning only"
+      ]
+    },
+    {
+      "task_id": "RH-01",
+      "profile": "rag_heavy",
+      "goal": "Answer five basic nature questions using retrieval: how plants grow, the water cycle, rivers and oceans, forests, and birds.",
+      "turns": [
+        "retrieve <- how do plants grow from soil and water",
+        "retrieve <- what is the water cycle rain river ocean",
+        "retrieve <- why do rivers flow into the ocean",
+        "retrieve <- what animals live in a forest",
+        "retrieve <- where do birds go in winter",
+        "search <- tree leaf forest",
+        "reasoning only"
+      ]
+    },
+    {
+      "task_id": "RH-02",
+      "profile": "rag_heavy",
+      "goal": "Build a simple guide to home baking by retrieving passages about bread, ingredients, and oven technique.",
+      "turns": [
+        "retrieve <- how to bake bread with flour and butter",
+        "retrieve <- what temperature should the oven be for baking",
+        "retrieve <- how much sugar and salt goes in a recipe",
+        "calculator <- 350 / 2 + 25",
+        "retrieve <- difference between baking with butter and oil",
+        "retrieve <- how long should bread rest before cutting",
+        "retrieve <- simple dinner recipes with vegetables and cheese",
+        "reasoning only"
+      ]
+    },
+    {
+      "task_id": "RE-01",
+      "profile": "reasoning_heavy",
+      "goal": "A train leaves at 9am going 80 km per hour and another leaves at 10am going 100 km per hour on the same route. Reason through when the second catches the first, and verify the arithmetic.",
+      "turns": [
+        "reasoning only",
+        "reasoning only",
+        "calculator <- 80 / (100 - 80)",
+        "reasoning only"
+      ]
+    },
+    {
+      "task_id": "RE-02",
+      "profile": "reasoning_heavy",
+      "goal": "Is it better to sleep eight hours or exercise an extra hour? Reason through the trade-offs, checking one fact in the corpus.",
+      "turns": [
+        "reasoning only",
+        "search <- sleep exercise energy",
+        "reasoning only",
+        "reasoning only"
+      ]
+    },
+    {
+      "task_id": "LH-01",
+      "profile": "long_horizon",
+      "goal": "Help me plan a vegetable garden for the whole year, month by month. One retrieval per month; the growing plan accumulates in context, so state copies and token counts grow within the session.",
+      "turns": [
+        "retrieve <- what vegetables grow in january winter",
+        "retrieve <- what to plant in february cold soil",
+        "retrieve <- what vegetables grow in early spring march",
+        "retrieve <- when to plant tomatoes in april",
+        "retrieve <- what to plant in may after last frost",
+        "retrieve <- which vegetables handle summer heat in june",
+        "retrieve <- watering schedule for july vegetable garden",
+        "retrieve <- what to harvest and replant in august",
+        "retrieve <- what vegetables grow in september fall",
+        "retrieve <- which crops survive october frost",
+        "retrieve <- preparing garden soil in november",
+        "retrieve <- what can grow in december indoors",
+        "reasoning only"
+      ]
+    },
+    {
+      "task_id": "LH-02",
+      "profile": "long_horizon",
+      "goal": "Teach me basic cooking, one lesson at a time, and quiz me as we go. Alternates retrieval, quiz-composition reasoning, and a calculator check on a scaled recipe. Long and chatty; state accumulates every turn.",
+      "turns": [
+        "retrieve <- how to boil an egg step by step",
+        "reasoning only",
+        "calculator <- 2 * 3 / 4",
+        "retrieve <- what does simmer mean in cooking",
+        "reasoning only",
+        "calculator <- 1.5 * 2 / 3",
+        "retrieve <- how to chop an onion safely",
+        "reasoning only",
+        "calculator <- 3 * 1 / 2",
+        "retrieve <- how do I know when pasta is done",
+        "reasoning only",
+        "reasoning only"
+      ]
+    }
+  ],
+  "git": {
+    "commit": "unknown",
+    "dirty": "unknown"
+  },
+  "env": {
+    "python": "3.14.0",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "cpu_model": "Intel64 Family 6 Model 204 Stepping 3, GenuineIntel",
+    "cores_logical": 8,
+    "cores_physical": 8,
+    "ram_gb": 15.6
+  },
+  "config": {
+    "profile": "mixed",
+    "seed": 0,
+    "sessions": 10,
+    "mode": "asyncio",
+    "llm_median_scale": 0.05,
+    "note_llm_scale": "mock LLM latency is asyncio sleep (I/O wait, zero thread CPU); scaling it changes wall time only, never CPU shares"
+  },
+  "timer_overhead_ns_per_pair": 4140.625,
+  "batch_wall_s": 5.8270694999955595,
+  "run": {
+    "env": {},
+    "config": {
+      "concurrency": 10,
+      "profile": "mixed",
+      "seed": 0,
+      "mode": "asyncio",
+      "llm_median_scale": 0.05,
+      "task_suite_digest": "a88a9e1058964219"
+    },
+    "per_category": {
+      "GC": {
+        "cpu_ns": 0,
+        "wall_ns": 0,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 4
+      },
+      "ORCH_SETUP": {
+        "cpu_ns": 0,
+        "wall_ns": 251600,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 10
+      },
+      "CONTEXT_MGMT": {
+        "cpu_ns": 0,
+        "wall_ns": 9040400,
+        "bytes_in": 19256973,
+        "bytes_out": 0,
+        "count": 222
+      },
+      "PROMPT_ASSEMBLY": {
+        "cpu_ns": 62500000,
+        "wall_ns": 46934200,
+        "bytes_in": 0,
+        "bytes_out": 16075436,
+        "count": 160
+      },
+      "ORCH_DISPATCH": {
+        "cpu_ns": 0,
+        "wall_ns": 2364700,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 284
+      },
+      "TOKENIZATION": {
+        "cpu_ns": 1406250000,
+        "wall_ns": 1882212500,
+        "bytes_in": 16253836,
+        "bytes_out": 0,
+        "count": 160
+      },
+      "SERIALIZATION": {
+        "cpu_ns": 0,
+        "wall_ns": 17325000,
+        "bytes_in": 170386,
+        "bytes_out": 3327307,
+        "count": 222
+      },
+      "LOGGING": {
+        "cpu_ns": 0,
+        "wall_ns": 2071600,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 80
+      },
+      "TOOL_COMPUTE": {
+        "cpu_ns": 1375000000,
+        "wall_ns": 1914276200,
+        "bytes_in": 2234,
+        "bytes_out": 0,
+        "count": 62
+      }
+    },
+    "per_session": [
+      {
+        "session_id": "agent_0",
+        "task_id": "SH-01",
+        "turns": 10,
+        "plan_len": 10,
+        "wall_s": 4.056205499917269,
+        "thread_cpu_ns": 781250000,
+        "tool_call_counts": {
+          "search": 8,
+          "calculator": 1
+        },
+        "tool_result_bytes": {
+          "search": 507074,
+          "calculator": 29323
+        },
+        "graph_nodes": 30,
+        "graph_setup_ops": 48,
+        "dispatch_decisions": 48
+      },
+      {
+        "session_id": "agent_1",
+        "task_id": "SH-02",
+        "turns": 11,
+        "plan_len": 11,
+        "wall_s": 4.472324799979106,
+        "thread_cpu_ns": 390625000,
+        "tool_call_counts": {
+          "search": 9,
+          "retrieve": 1
+        },
+        "tool_result_bytes": {
+          "search": 447098,
+          "retrieve": 2578
+        },
+        "graph_nodes": 33,
+        "graph_setup_ops": 53,
+        "dispatch_decisions": 53
+      },
+      {
+        "session_id": "agent_2",
+        "task_id": "CH-01",
+        "turns": 5,
+        "plan_len": 5,
+        "wall_s": 2.3950928000267595,
+        "thread_cpu_ns": 46875000,
+        "tool_call_counts": {
+          "code_exec": 3,
+          "calculator": 1
+        },
+        "tool_result_bytes": {
+          "code_exec": 199648,
+          "calculator": 40157
+        },
+        "graph_nodes": 15,
+        "graph_setup_ops": 23,
+        "dispatch_decisions": 23
+      },
+      {
+        "session_id": "agent_3",
+        "task_id": "CH-02",
+        "turns": 6,
+        "plan_len": 6,
+        "wall_s": 2.4492543999804184,
+        "thread_cpu_ns": 171875000,
+        "tool_call_counts": {
+          "code_exec": 3,
+          "search": 1,
+          "calculator": 1
+        },
+        "tool_result_bytes": {
+          "code_exec": 129716,
+          "search": 62636,
+          "calculator": 56655
+        },
+        "graph_nodes": 18,
+        "graph_setup_ops": 28,
+        "dispatch_decisions": 28
+      },
+      {
+        "session_id": "agent_4",
+        "task_id": "RH-01",
+        "turns": 7,
+        "plan_len": 7,
+        "wall_s": 2.631962400046177,
+        "thread_cpu_ns": 312500000,
+        "tool_call_counts": {
+          "retrieve": 5,
+          "search": 1
+        },
+        "tool_result_bytes": {
+          "retrieve": 259874,
+          "search": 44423
+        },
+        "graph_nodes": 21,
+        "graph_setup_ops": 33,
+        "dispatch_decisions": 33
+      },
+      {
+        "session_id": "agent_5",
+        "task_id": "RH-02",
+        "turns": 8,
+        "plan_len": 8,
+        "wall_s": 3.5801943000406027,
+        "thread_cpu_ns": 187500000,
+        "tool_call_counts": {
+          "retrieve": 6,
+          "calculator": 1
+        },
+        "tool_result_bytes": {
+          "retrieve": 265219,
+          "calculator": 56825
+        },
+        "graph_nodes": 24,
+        "graph_setup_ops": 38,
+        "dispatch_decisions": 38
+      },
+      {
+        "session_id": "agent_6",
+        "task_id": "RE-01",
+        "turns": 4,
+        "plan_len": 4,
+        "wall_s": 1.4390836000675336,
+        "thread_cpu_ns": 15625000,
+        "tool_call_counts": {
+          "calculator": 1
+        },
+        "tool_result_bytes": {
+          "calculator": 22208
+        },
+        "graph_nodes": 8,
+        "graph_setup_ops": 12,
+        "dispatch_decisions": 12
+      },
+      {
+        "session_id": "agent_7",
+        "task_id": "RE-02",
+        "turns": 4,
+        "plan_len": 4,
+        "wall_s": 1.2189233000390232,
+        "thread_cpu_ns": 281250000,
+        "tool_call_counts": {
+          "search": 1
+        },
+        "tool_result_bytes": {
+          "search": 26184
+        },
+        "graph_nodes": 8,
+        "graph_setup_ops": 12,
+        "dispatch_decisions": 12
+      },
+      {
+        "session_id": "agent_8",
+        "task_id": "LH-01",
+        "turns": 13,
+        "plan_len": 13,
+        "wall_s": 4.512081400025636,
+        "thread_cpu_ns": 515625000,
+        "tool_call_counts": {
+          "retrieve": 12
+        },
+        "tool_result_bytes": {
+          "retrieve": 709519
+        },
+        "graph_nodes": 39,
+        "graph_setup_ops": 63,
+        "dispatch_decisions": 63
+      },
+      {
+        "session_id": "agent_9",
+        "task_id": "LH-02",
+        "turns": 12,
+        "plan_len": 12,
+        "wall_s": 4.121551200048998,
+        "thread_cpu_ns": 140625000,
+        "tool_call_counts": {
+          "retrieve": 4,
+          "calculator": 3
+        },
+        "tool_result_bytes": {
+          "retrieve": 204490,
+          "calculator": 98588
+        },
+        "graph_nodes": 28,
+        "graph_setup_ops": 46,
+        "dispatch_decisions": 46
+      }
+    ],
+    "per_session_category": {
+      "global": {
+        "GC": {
+          "cpu_ns": 0,
+          "wall_ns": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 4
+        }
+      },
+      "agent_0": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 53100,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 2770000,
+          "bytes_in": 3113196,
+          "bytes_out": 0,
+          "count": 29
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 31250000,
+          "wall_ns": 7303000,
+          "bytes_in": 0,
+          "bytes_out": 2574135,
+          "count": 20
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 338100,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 38
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 218750000,
+          "wall_ns": 312442500,
+          "bytes_in": 2602780,
+          "bytes_out": 0,
+          "count": 20
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 4656700,
+          "bytes_in": 27977,
+          "bytes_out": 563704,
+          "count": 29
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 1714000,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 531250000,
+          "wall_ns": 753711500,
+          "bytes_in": 126,
+          "bytes_out": 0,
+          "count": 9
+        }
+      },
+      "agent_1": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 42400,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 3015400,
+          "bytes_in": 3345285,
+          "bytes_out": 0,
+          "count": 32
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 0,
+          "wall_ns": 7956800,
+          "bytes_in": 0,
+          "bytes_out": 2892466,
+          "count": 22
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 359700,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 42
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 234375000,
+          "wall_ns": 327252200,
+          "bytes_in": 2913506,
+          "bytes_out": 0,
+          "count": 22
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 1859600,
+          "bytes_in": 20009,
+          "bytes_out": 468934,
+          "count": 32
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 51300,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 11
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 156250000,
+          "wall_ns": 149557500,
+          "bytes_in": 159,
+          "bytes_out": 0,
+          "count": 10
+        }
+      },
+      "agent_2": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 15900,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 211200,
+          "bytes_in": 800401,
+          "bytes_out": 0,
+          "count": 14
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 0,
+          "wall_ns": 1234000,
+          "bytes_in": 0,
+          "bytes_out": 559737,
+          "count": 10
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 157700,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 18
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 46875000,
+          "wall_ns": 64520000,
+          "bytes_in": 568512,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 850900,
+          "bytes_in": 8799,
+          "bytes_out": 248273,
+          "count": 14
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 23700,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 5
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 0,
+          "wall_ns": 22117300,
+          "bytes_in": 437,
+          "bytes_out": 0,
+          "count": 4
+        }
+      },
+      "agent_3": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 19700,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 385300,
+          "bytes_in": 964569,
+          "bytes_out": 0,
+          "count": 17
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 0,
+          "wall_ns": 1402500,
+          "bytes_in": 0,
+          "bytes_out": 714414,
+          "count": 12
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 165400,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 22
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 62500000,
+          "wall_ns": 85040000,
+          "bytes_in": 725866,
+          "bytes_out": 0,
+          "count": 12
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 915500,
+          "bytes_in": 11400,
+          "bytes_out": 260005,
+          "count": 17
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 26500,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 6
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 109375000,
+          "wall_ns": 190246500,
+          "bytes_in": 428,
+          "bytes_out": 0,
+          "count": 5
+        }
+      },
+      "agent_4": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 19200,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 399900,
+          "bytes_in": 1193789,
+          "bytes_out": 0,
+          "count": 20
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 0,
+          "wall_ns": 2061300,
+          "bytes_in": 0,
+          "bytes_out": 888015,
+          "count": 14
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 218900,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 26
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 78125000,
+          "wall_ns": 108206000,
+          "bytes_in": 903953,
+          "bytes_out": 0,
+          "count": 14
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 1136300,
+          "bytes_in": 15175,
+          "bytes_out": 318998,
+          "count": 20
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 39000,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 7
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 234375000,
+          "wall_ns": 329075600,
+          "bytes_in": 183,
+          "bytes_out": 0,
+          "count": 6
+        }
+      },
+      "agent_5": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 21500,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 432800,
+          "bytes_in": 1802812,
+          "bytes_out": 0,
+          "count": 23
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 0,
+          "wall_ns": 5989800,
+          "bytes_in": 0,
+          "bytes_out": 1478897,
+          "count": 16
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 236400,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 30
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 171875000,
+          "wall_ns": 168490900,
+          "bytes_in": 1496513,
+          "bytes_out": 0,
+          "count": 16
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 1352200,
+          "bytes_in": 16624,
+          "bytes_out": 338113,
+          "count": 23
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 34400,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 8
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 15625000,
+          "wall_ns": 39142700,
+          "bytes_in": 271,
+          "bytes_out": 0,
+          "count": 7
+        }
+      },
+      "agent_6": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 10100,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 105400,
+          "bytes_in": 49007,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 0,
+          "wall_ns": 343000,
+          "bytes_in": 0,
+          "bytes_out": 26399,
+          "count": 8
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 72000,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 5561100,
+          "bytes_in": 33655,
+          "bytes_out": 0,
+          "count": 8
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 232000,
+          "bytes_in": 7419,
+          "bytes_out": 29402,
+          "count": 9
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 17900,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 15625000,
+          "wall_ns": 920900,
+          "bytes_in": 15,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "agent_7": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 8500,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 109300,
+          "bytes_in": 82954,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 0,
+          "wall_ns": 144000,
+          "bytes_in": 0,
+          "bytes_out": 56338,
+          "count": 8
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 101200,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 12938700,
+          "bytes_in": 66640,
+          "bytes_out": 0,
+          "count": 8
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 255300,
+          "bytes_in": 10438,
+          "bytes_out": 36387,
+          "count": 9
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 40100,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 281250000,
+          "wall_ns": 323142000,
+          "bytes_in": 21,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "agent_8": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 32700,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 985100,
+          "bytes_in": 5650357,
+          "bytes_out": 0,
+          "count": 38
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 15625000,
+          "wall_ns": 15188600,
+          "bytes_in": 0,
+          "bytes_out": 4936459,
+          "count": 26
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 428800,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 50
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 468750000,
+          "wall_ns": 584367100,
+          "bytes_in": 4964190,
+          "bytes_out": 0,
+          "count": 26
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 4779000,
+          "bytes_in": 24156,
+          "bytes_out": 732774,
+          "count": 38
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 72100,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 13
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 31250000,
+          "wall_ns": 76241300,
+          "bytes_in": 443,
+          "bytes_out": 0,
+          "count": 12
+        }
+      },
+      "agent_9": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 28500,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 626000,
+          "bytes_in": 2254603,
+          "bytes_out": 0,
+          "count": 31
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 15625000,
+          "wall_ns": 5311200,
+          "bytes_in": 0,
+          "bytes_out": 1948576,
+          "count": 24
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 286500,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 38
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 125000000,
+          "wall_ns": 213394000,
+          "bytes_in": 1978221,
+          "bytes_out": 0,
+          "count": 24
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 1287500,
+          "bytes_in": 28389,
+          "bytes_out": 330717,
+          "count": 31
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 52600,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 12
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 0,
+          "wall_ns": 30120900,
+          "bytes_in": 151,
+          "bytes_out": 0,
+          "count": 7
+        }
+      }
+    },
+    "residual_cpu_ns": 406250000,
+    "residual_fraction": 0.125,
+    "totals": {
+      "thread_cpu_ns": 3250000000,
+      "wall_ns": 4522370600,
+      "instrumented_cpu_ns": 2843750000
+    },
+    "os_times_user_sys": {
+      "user": 3.15625,
+      "system": 0.359375
+    },
+    "timeline": []
+  },
+  "per_task": {
+    "SH-01": {
+      "categories": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 53100,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 2770000,
+          "bytes_in": 3113196,
+          "bytes_out": 0,
+          "count": 29
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 31250000,
+          "wall_ns": 7303000,
+          "bytes_in": 0,
+          "bytes_out": 2574135,
+          "count": 20
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 338100,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 38
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 218750000,
+          "wall_ns": 312442500,
+          "bytes_in": 2602780,
+          "bytes_out": 0,
+          "count": 20
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 4656700,
+          "bytes_in": 27977,
+          "bytes_out": 563704,
+          "count": 29
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 1714000,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 531250000,
+          "wall_ns": 753711500,
+          "bytes_in": 126,
+          "bytes_out": 0,
+          "count": 9
+        }
+      },
+      "sessions": [
+        "agent_0"
+      ],
+      "instrumented_cpu_ns": 781250000,
+      "amenable_strict_ns": 218750000,
+      "amenable_broad_ns": 250000000,
+      "amenable_strict_share": 0.28,
+      "amenable_broad_share": 0.32
+    },
+    "SH-02": {
+      "categories": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 42400,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 3015400,
+          "bytes_in": 3345285,
+          "bytes_out": 0,
+          "count": 32
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 0,
+          "wall_ns": 7956800,
+          "bytes_in": 0,
+          "bytes_out": 2892466,
+          "count": 22
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 359700,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 42
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 234375000,
+          "wall_ns": 327252200,
+          "bytes_in": 2913506,
+          "bytes_out": 0,
+          "count": 22
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 1859600,
+          "bytes_in": 20009,
+          "bytes_out": 468934,
+          "count": 32
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 51300,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 11
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 156250000,
+          "wall_ns": 149557500,
+          "bytes_in": 159,
+          "bytes_out": 0,
+          "count": 10
+        }
+      },
+      "sessions": [
+        "agent_1"
+      ],
+      "instrumented_cpu_ns": 390625000,
+      "amenable_strict_ns": 234375000,
+      "amenable_broad_ns": 234375000,
+      "amenable_strict_share": 0.6,
+      "amenable_broad_share": 0.6
+    },
+    "CH-01": {
+      "categories": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 15900,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 211200,
+          "bytes_in": 800401,
+          "bytes_out": 0,
+          "count": 14
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 0,
+          "wall_ns": 1234000,
+          "bytes_in": 0,
+          "bytes_out": 559737,
+          "count": 10
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 157700,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 18
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 46875000,
+          "wall_ns": 64520000,
+          "bytes_in": 568512,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 850900,
+          "bytes_in": 8799,
+          "bytes_out": 248273,
+          "count": 14
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 23700,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 5
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 0,
+          "wall_ns": 22117300,
+          "bytes_in": 437,
+          "bytes_out": 0,
+          "count": 4
+        }
+      },
+      "sessions": [
+        "agent_2"
+      ],
+      "instrumented_cpu_ns": 46875000,
+      "amenable_strict_ns": 46875000,
+      "amenable_broad_ns": 46875000,
+      "amenable_strict_share": 1.0,
+      "amenable_broad_share": 1.0
+    },
+    "CH-02": {
+      "categories": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 19700,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 385300,
+          "bytes_in": 964569,
+          "bytes_out": 0,
+          "count": 17
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 0,
+          "wall_ns": 1402500,
+          "bytes_in": 0,
+          "bytes_out": 714414,
+          "count": 12
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 165400,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 22
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 62500000,
+          "wall_ns": 85040000,
+          "bytes_in": 725866,
+          "bytes_out": 0,
+          "count": 12
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 915500,
+          "bytes_in": 11400,
+          "bytes_out": 260005,
+          "count": 17
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 26500,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 6
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 109375000,
+          "wall_ns": 190246500,
+          "bytes_in": 428,
+          "bytes_out": 0,
+          "count": 5
+        }
+      },
+      "sessions": [
+        "agent_3"
+      ],
+      "instrumented_cpu_ns": 171875000,
+      "amenable_strict_ns": 62500000,
+      "amenable_broad_ns": 62500000,
+      "amenable_strict_share": 0.36363636363636365,
+      "amenable_broad_share": 0.36363636363636365
+    },
+    "RH-01": {
+      "categories": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 19200,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 399900,
+          "bytes_in": 1193789,
+          "bytes_out": 0,
+          "count": 20
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 0,
+          "wall_ns": 2061300,
+          "bytes_in": 0,
+          "bytes_out": 888015,
+          "count": 14
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 218900,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 26
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 78125000,
+          "wall_ns": 108206000,
+          "bytes_in": 903953,
+          "bytes_out": 0,
+          "count": 14
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 1136300,
+          "bytes_in": 15175,
+          "bytes_out": 318998,
+          "count": 20
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 39000,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 7
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 234375000,
+          "wall_ns": 329075600,
+          "bytes_in": 183,
+          "bytes_out": 0,
+          "count": 6
+        }
+      },
+      "sessions": [
+        "agent_4"
+      ],
+      "instrumented_cpu_ns": 312500000,
+      "amenable_strict_ns": 78125000,
+      "amenable_broad_ns": 78125000,
+      "amenable_strict_share": 0.25,
+      "amenable_broad_share": 0.25
+    },
+    "RH-02": {
+      "categories": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 21500,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 432800,
+          "bytes_in": 1802812,
+          "bytes_out": 0,
+          "count": 23
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 0,
+          "wall_ns": 5989800,
+          "bytes_in": 0,
+          "bytes_out": 1478897,
+          "count": 16
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 236400,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 30
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 171875000,
+          "wall_ns": 168490900,
+          "bytes_in": 1496513,
+          "bytes_out": 0,
+          "count": 16
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 1352200,
+          "bytes_in": 16624,
+          "bytes_out": 338113,
+          "count": 23
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 34400,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 8
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 15625000,
+          "wall_ns": 39142700,
+          "bytes_in": 271,
+          "bytes_out": 0,
+          "count": 7
+        }
+      },
+      "sessions": [
+        "agent_5"
+      ],
+      "instrumented_cpu_ns": 187500000,
+      "amenable_strict_ns": 171875000,
+      "amenable_broad_ns": 171875000,
+      "amenable_strict_share": 0.9166666666666666,
+      "amenable_broad_share": 0.9166666666666666
+    },
+    "RE-01": {
+      "categories": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 10100,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 105400,
+          "bytes_in": 49007,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 0,
+          "wall_ns": 343000,
+          "bytes_in": 0,
+          "bytes_out": 26399,
+          "count": 8
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 72000,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 5561100,
+          "bytes_in": 33655,
+          "bytes_out": 0,
+          "count": 8
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 232000,
+          "bytes_in": 7419,
+          "bytes_out": 29402,
+          "count": 9
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 17900,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 15625000,
+          "wall_ns": 920900,
+          "bytes_in": 15,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "sessions": [
+        "agent_6"
+      ],
+      "instrumented_cpu_ns": 15625000,
+      "amenable_strict_ns": 0,
+      "amenable_broad_ns": 0,
+      "amenable_strict_share": 0.0,
+      "amenable_broad_share": 0.0
+    },
+    "RE-02": {
+      "categories": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 8500,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 109300,
+          "bytes_in": 82954,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 0,
+          "wall_ns": 144000,
+          "bytes_in": 0,
+          "bytes_out": 56338,
+          "count": 8
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 101200,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 12938700,
+          "bytes_in": 66640,
+          "bytes_out": 0,
+          "count": 8
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 255300,
+          "bytes_in": 10438,
+          "bytes_out": 36387,
+          "count": 9
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 40100,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 281250000,
+          "wall_ns": 323142000,
+          "bytes_in": 21,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "sessions": [
+        "agent_7"
+      ],
+      "instrumented_cpu_ns": 281250000,
+      "amenable_strict_ns": 0,
+      "amenable_broad_ns": 0,
+      "amenable_strict_share": 0.0,
+      "amenable_broad_share": 0.0
+    },
+    "LH-01": {
+      "categories": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 32700,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 985100,
+          "bytes_in": 5650357,
+          "bytes_out": 0,
+          "count": 38
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 15625000,
+          "wall_ns": 15188600,
+          "bytes_in": 0,
+          "bytes_out": 4936459,
+          "count": 26
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 428800,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 50
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 468750000,
+          "wall_ns": 584367100,
+          "bytes_in": 4964190,
+          "bytes_out": 0,
+          "count": 26
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 4779000,
+          "bytes_in": 24156,
+          "bytes_out": 732774,
+          "count": 38
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 72100,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 13
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 31250000,
+          "wall_ns": 76241300,
+          "bytes_in": 443,
+          "bytes_out": 0,
+          "count": 12
+        }
+      },
+      "sessions": [
+        "agent_8"
+      ],
+      "instrumented_cpu_ns": 515625000,
+      "amenable_strict_ns": 468750000,
+      "amenable_broad_ns": 484375000,
+      "amenable_strict_share": 0.9090909090909091,
+      "amenable_broad_share": 0.9393939393939394
+    },
+    "LH-02": {
+      "categories": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 28500,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "CONTEXT_MGMT": {
+          "cpu_ns": 0,
+          "wall_ns": 626000,
+          "bytes_in": 2254603,
+          "bytes_out": 0,
+          "count": 31
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 15625000,
+          "wall_ns": 5311200,
+          "bytes_in": 0,
+          "bytes_out": 1948576,
+          "count": 24
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 0,
+          "wall_ns": 286500,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 38
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 125000000,
+          "wall_ns": 213394000,
+          "bytes_in": 1978221,
+          "bytes_out": 0,
+          "count": 24
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 1287500,
+          "bytes_in": 28389,
+          "bytes_out": 330717,
+          "count": 31
+        },
+        "LOGGING": {
+          "cpu_ns": 0,
+          "wall_ns": 52600,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 12
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 0,
+          "wall_ns": 30120900,
+          "bytes_in": 151,
+          "bytes_out": 0,
+          "count": 7
+        }
+      },
+      "sessions": [
+        "agent_9"
+      ],
+      "instrumented_cpu_ns": 140625000,
+      "amenable_strict_ns": 125000000,
+      "amenable_broad_ns": 140625000,
+      "amenable_strict_share": 0.8888888888888888,
+      "amenable_broad_share": 1.0
+    }
+  },
+  "category_averages": {
+    "overall": {
+      "task_count": 10,
+      "tasks": [
+        "CH-01",
+        "CH-02",
+        "LH-01",
+        "LH-02",
+        "RE-01",
+        "RE-02",
+        "RH-01",
+        "RH-02",
+        "SH-01",
+        "SH-02"
+      ],
+      "mean_instrumented_cpu_ms": 284.375,
+      "mean_session_wall_s": 3.087667370017152,
+      "mean_amenable_strict_share": 0.5208282828282828,
+      "mean_amenable_broad_share": 0.538969696969697,
+      "mean_wall_frac_sum_partition": 0.05164856966125065,
+      "categories": {
+        "CONTEXT_MGMT": {
+          "mean_cpu_ms": 0.0,
+          "mean_cpu_share": 0.0,
+          "mean_wall_ms": 0.90404,
+          "mean_wall_frac": 0.00024085802367443564,
+          "in_wall_partition": true,
+          "wall_concurrent": false
+        },
+        "LOGGING": {
+          "mean_cpu_ms": 0.0,
+          "mean_cpu_share": 0.0,
+          "mean_wall_ms": 0.20716,
+          "mean_wall_frac": 5.5325193535534966e-05,
+          "in_wall_partition": true,
+          "wall_concurrent": false
+        },
+        "ORCH_DISPATCH": {
+          "mean_cpu_ms": 0.0,
+          "mean_cpu_share": 0.0,
+          "mean_wall_ms": 0.23647,
+          "mean_wall_frac": 7.43957607782637e-05,
+          "in_wall_partition": true,
+          "wall_concurrent": false
+        },
+        "ORCH_SETUP": {
+          "mean_cpu_ms": 0.0,
+          "mean_cpu_share": 0.0,
+          "mean_wall_ms": 0.02516,
+          "mean_wall_frac": null,
+          "in_wall_partition": false,
+          "wall_concurrent": false
+        },
+        "PROMPT_ASSEMBLY": {
+          "mean_cpu_ms": 6.25,
+          "mean_cpu_share": 0.018141414141414142,
+          "mean_wall_ms": 4.69342,
+          "mean_wall_frac": 0.0012134962770033403,
+          "in_wall_partition": true,
+          "wall_concurrent": false
+        },
+        "SERIALIZATION": {
+          "mean_cpu_ms": 0.0,
+          "mean_cpu_share": 0.0,
+          "mean_wall_ms": 1.7325,
+          "mean_wall_frac": 0.0004844520095854582,
+          "in_wall_partition": true,
+          "wall_concurrent": false
+        },
+        "TOKENIZATION": {
+          "mean_cpu_ms": 140.625,
+          "mean_cpu_share": 0.5208282828282828,
+          "mean_wall_ms": 188.22125,
+          "mean_wall_frac": 0.049580042396673615,
+          "in_wall_partition": true,
+          "wall_concurrent": false
+        },
+        "TOOL_COMPUTE": {
+          "mean_cpu_ms": 137.5,
+          "mean_cpu_share": 0.461030303030303,
+          "mean_wall_ms": 191.42762,
+          "mean_wall_frac": 0.07320805506427201,
+          "in_wall_partition": false,
+          "wall_concurrent": true
+        }
+      }
+    },
+    "by_archetype": {
+      "CH": {
+        "label": "code_heavy",
+        "task_count": 2,
+        "tasks": [
+          "CH-01",
+          "CH-02"
+        ],
+        "mean_instrumented_cpu_ms": 109.375,
+        "mean_session_wall_s": 2.422173600003589,
+        "mean_amenable_strict_share": 0.6818181818181819,
+        "mean_amenable_broad_share": 0.6818181818181819,
+        "mean_wall_frac_sum_partition": 0.031937832324130284,
+        "categories": {
+          "CONTEXT_MGMT": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.29825,
+            "mean_wall_frac": 0.00012274674000794806,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "LOGGING": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.025099999999999997,
+            "mean_wall_frac": 1.035742583986188e-05,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "ORCH_DISPATCH": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.16155,
+            "mean_wall_frac": 6.668685786066593e-05,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "ORCH_SETUP": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.0178,
+            "mean_wall_frac": null,
+            "in_wall_partition": false,
+            "wall_concurrent": false
+          },
+          "PROMPT_ASSEMBLY": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 1.31825,
+            "mean_wall_frac": 0.0005439216820540192,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "SERIALIZATION": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.8832,
+            "mean_wall_frac": 0.00036452764710277725,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "TOKENIZATION": {
+            "mean_cpu_ms": 54.6875,
+            "mean_cpu_share": 0.6818181818181819,
+            "mean_wall_ms": 74.78,
+            "mean_wall_frac": 0.03082959197126501,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "TOOL_COMPUTE": {
+            "mean_cpu_ms": 54.6875,
+            "mean_cpu_share": 0.3181818181818182,
+            "mean_wall_ms": 106.1819,
+            "mean_wall_frac": 0.0434548471414674,
+            "in_wall_partition": false,
+            "wall_concurrent": true
+          }
+        }
+      },
+      "LH": {
+        "label": "long_horizon",
+        "task_count": 2,
+        "tasks": [
+          "LH-01",
+          "LH-02"
+        ],
+        "mean_instrumented_cpu_ms": 328.125,
+        "mean_session_wall_s": 4.316816300037317,
+        "mean_amenable_strict_share": 0.898989898989899,
+        "mean_amenable_broad_share": 0.9696969696969697,
+        "mean_wall_frac_sum_partition": 0.09393834965790078,
+        "categories": {
+          "CONTEXT_MGMT": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.80555,
+            "mean_wall_frac": 0.00018510476212567117,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "LOGGING": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.06235,
+            "mean_wall_frac": 1.4370753457981866e-05,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "ORCH_DISPATCH": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.35765,
+            "mean_wall_frac": 8.227320480248753e-05,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "ORCH_SETUP": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.030600000000000002,
+            "mean_wall_frac": null,
+            "in_wall_partition": false,
+            "wall_concurrent": false
+          },
+          "PROMPT_ASSEMBLY": {
+            "mean_cpu_ms": 15.625,
+            "mean_cpu_share": 0.0707070707070707,
+            "mean_wall_ms": 10.2499,
+            "mean_wall_frac": 0.00232742401772449,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "SERIALIZATION": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 3.03325,
+            "mean_wall_frac": 0.0006857694052060202,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "TOKENIZATION": {
+            "mean_cpu_ms": 296.875,
+            "mean_cpu_share": 0.898989898989899,
+            "mean_wall_ms": 398.88055,
+            "mean_wall_frac": 0.09064340751458413,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "TOOL_COMPUTE": {
+            "mean_cpu_ms": 15.625,
+            "mean_cpu_share": 0.030303030303030304,
+            "mean_wall_ms": 53.1811,
+            "mean_wall_frac": 0.0121026464544326,
+            "in_wall_partition": false,
+            "wall_concurrent": true
+          }
+        }
+      },
+      "RE": {
+        "label": "reasoning_heavy",
+        "task_count": 2,
+        "tasks": [
+          "RE-01",
+          "RE-02"
+        ],
+        "mean_instrumented_cpu_ms": 148.4375,
+        "mean_session_wall_s": 1.3290034500532784,
+        "mean_amenable_strict_share": 0.0,
+        "mean_amenable_broad_share": 0.0,
+        "mean_wall_frac_sum_partition": 0.007773820367180829,
+        "categories": {
+          "CONTEXT_MGMT": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.10735,
+            "mean_wall_frac": 8.145517749929434e-05,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "LOGGING": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.028999999999999998,
+            "mean_wall_frac": 2.2668178725339142e-05,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "ORCH_DISPATCH": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.0866,
+            "mean_wall_frac": 6.652796576883861e-05,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "ORCH_SETUP": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.0093,
+            "mean_wall_frac": null,
+            "in_wall_partition": false,
+            "wall_concurrent": false
+          },
+          "PROMPT_ASSEMBLY": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.2435,
+            "mean_wall_frac": 0.0001782415864634036,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "SERIALIZATION": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.24365000000000003,
+            "mean_wall_frac": 0.00018533042323774616,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "TOKENIZATION": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 9.2499,
+            "mean_wall_frac": 0.007239597035486207,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "TOOL_COMPUTE": {
+            "mean_cpu_ms": 148.4375,
+            "mean_cpu_share": 1.0,
+            "mean_wall_ms": 162.03145,
+            "mean_wall_frac": 0.13287218923544775,
+            "in_wall_partition": false,
+            "wall_concurrent": true
+          }
+        }
+      },
+      "RH": {
+        "label": "rag_heavy",
+        "task_count": 2,
+        "tasks": [
+          "RH-01",
+          "RH-02"
+        ],
+        "mean_instrumented_cpu_ms": 250.0,
+        "mean_session_wall_s": 3.10607835004339,
+        "mean_amenable_strict_share": 0.5833333333333333,
+        "mean_amenable_broad_share": 0.5833333333333333,
+        "mean_wall_frac_sum_partition": 0.04594316165700175,
+        "categories": {
+          "CONTEXT_MGMT": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.41635,
+            "mean_wall_frac": 0.00013641357713884658,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "LOGGING": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.036699999999999997,
+            "mean_wall_frac": 1.2213128962565415e-05,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "ORCH_DISPATCH": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.22765000000000002,
+            "mean_wall_frac": 7.459990850468604e-05,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "ORCH_SETUP": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.02035,
+            "mean_wall_frac": null,
+            "in_wall_partition": false,
+            "wall_concurrent": false
+          },
+          "PROMPT_ASSEMBLY": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 4.02555,
+            "mean_wall_frac": 0.0012281087854314557,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "SERIALIZATION": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 1.24425,
+            "mean_wall_frac": 0.000404710045099188,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "TOKENIZATION": {
+            "mean_cpu_ms": 125.0,
+            "mean_cpu_share": 0.5833333333333333,
+            "mean_wall_ms": 138.34845,
+            "mean_wall_frac": 0.04408711621186501,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "TOOL_COMPUTE": {
+            "mean_cpu_ms": 125.0,
+            "mean_cpu_share": 0.4166666666666667,
+            "mean_wall_ms": 184.10915,
+            "mean_wall_frac": 0.06798181562721772,
+            "in_wall_partition": false,
+            "wall_concurrent": true
+          }
+        }
+      },
+      "SH": {
+        "label": "search_heavy",
+        "task_count": 2,
+        "tasks": [
+          "SH-01",
+          "SH-02"
+        ],
+        "mean_instrumented_cpu_ms": 585.9375,
+        "mean_session_wall_s": 4.264265149948187,
+        "mean_amenable_strict_share": 0.44,
+        "mean_amenable_broad_share": 0.45999999999999996,
+        "mean_wall_frac_sum_partition": 0.07864968430003957,
+        "categories": {
+          "CONTEXT_MGMT": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 2.8927,
+            "mean_wall_frac": 0.0006785698616004179,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "LOGGING": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.8826499999999999,
+            "mean_wall_frac": 0.00021701648069192653,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "ORCH_DISPATCH": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.3489,
+            "mean_wall_frac": 8.189086695464039e-05,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "ORCH_SETUP": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 0.04775,
+            "mean_wall_frac": null,
+            "in_wall_partition": false,
+            "wall_concurrent": false
+          },
+          "PROMPT_ASSEMBLY": {
+            "mean_cpu_ms": 15.625,
+            "mean_cpu_share": 0.02,
+            "mean_wall_ms": 7.6299,
+            "mean_wall_frac": 0.0017897853133433323,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "SERIALIZATION": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 3.2581499999999997,
+            "mean_wall_frac": 0.0007819225272815591,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "TOKENIZATION": {
+            "mean_cpu_ms": 226.5625,
+            "mean_cpu_share": 0.44,
+            "mean_wall_ms": 319.84735,
+            "mean_wall_frac": 0.0751004992501677,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "TOOL_COMPUTE": {
+            "mean_cpu_ms": 343.75,
+            "mean_cpu_share": 0.54,
+            "mean_wall_ms": 451.6345,
+            "mean_wall_frac": 0.10962877686279462,
+            "in_wall_partition": false,
+            "wall_concurrent": true
+          }
+        }
+      }
+    },
+    "wall_diagnostics": {
+      "per_task": {
+        "SH-01": {
+          "session_wall_s": 4.056205499917269,
+          "total_category_wall_s": 1.0829889,
+          "coverage_all_categories": 0.2669955701867165,
+          "coverage_partition_categories": 0.08116558692136422,
+          "concurrent_category_wall_s": 0.7537115
+        },
+        "SH-02": {
+          "session_wall_s": 4.472324799979106,
+          "total_category_wall_s": 0.4900949,
+          "coverage_all_categories": 0.10958392380392049,
+          "coverage_partition_categories": 0.07613378171373729,
+          "concurrent_category_wall_s": 0.1495575
+        },
+        "CH-01": {
+          "session_wall_s": 2.3950928000267595,
+          "total_category_wall_s": 0.0891307,
+          "coverage_all_categories": 0.03721388165001373,
+          "coverage_partition_categories": 0.027972820092816444,
+          "concurrent_category_wall_s": 0.0221173
+        },
+        "CH-02": {
+          "session_wall_s": 2.4492543999804184,
+          "total_category_wall_s": 0.2782014,
+          "coverage_all_categories": 0.11358615916484059,
+          "coverage_partition_categories": 0.0359028445701283,
+          "concurrent_category_wall_s": 0.1902465
+        },
+        "RH-01": {
+          "session_wall_s": 2.631962400046177,
+          "total_category_wall_s": 0.4411562,
+          "coverage_all_categories": 0.1676149324929566,
+          "coverage_partition_categories": 0.04257712800152464,
+          "concurrent_category_wall_s": 0.3290756
+        },
+        "RH-02": {
+          "session_wall_s": 3.5801943000406027,
+          "total_category_wall_s": 0.2157007,
+          "coverage_all_categories": 0.060248322276810505,
+          "coverage_partition_categories": 0.04930919531378507,
+          "concurrent_category_wall_s": 0.0391427
+        },
+        "RE-01": {
+          "session_wall_s": 1.4390836000675336,
+          "total_category_wall_s": 0.0072624,
+          "coverage_all_categories": 0.005046544898433976,
+          "coverage_partition_categories": 0.004399605415557512,
+          "concurrent_category_wall_s": 0.0009209
+        },
+        "RE-02": {
+          "session_wall_s": 1.2189233000390232,
+          "total_category_wall_s": 0.3367391,
+          "coverage_all_categories": 0.27625946603859325,
+          "coverage_partition_categories": 0.01114803531936751,
+          "concurrent_category_wall_s": 0.323142
+        },
+        "LH-01": {
+          "session_wall_s": 4.512081400025636,
+          "total_category_wall_s": 0.6820947,
+          "coverage_all_categories": 0.15117074350653337,
+          "coverage_partition_categories": 0.1342663498934217,
+          "concurrent_category_wall_s": 0.0762413
+        },
+        "LH-02": {
+          "session_wall_s": 4.121551200048998,
+          "total_category_wall_s": 0.2511072,
+          "coverage_all_categories": 0.06092541080164187,
+          "coverage_partition_categories": 0.053610349423780054,
+          "concurrent_category_wall_s": 0.0301209
+        }
+      }
+    }
+  },
+  "amenability_tiers": {
+    "ORCH_SETUP": "direct",
+    "ORCH_DISPATCH": "direct",
+    "TOKENIZATION": "direct",
+    "SERIALIZATION": "direct",
+    "HTTP_CLIENT": "overlap",
+    "PROMPT_ASSEMBLY": "partial",
+    "CONTEXT_MGMT": "partial",
+    "LOGGING": "partial",
+    "TOOL_COMPUTE": "none",
+    "GC": "none"
+  },
+  "invariant": {
+    "total_thread_cpu_ns": 3250000000,
+    "instrumented_cpu_ns": 2843750000,
+    "residual_cpu_ns": 406250000,
+    "residual_fraction": 0.125,
+    "limit": 0.15,
+    "pass": true
+  }
+}

@@ -18,7 +18,8 @@ ARCHIVE Vitis 2023.1 + conda `fifo-advisor`.
 | `orchestration_engine/characterization/out/phase2/dse_report_oe.json` | `bash orchestration_engine/run_phase2_lightningsim_oe.sh` | Must have `"source":"lightningsim"` + OE `trace.pkl` (no synthetic) | ece-rschsrv |
 | `orchestration_engine/characterization/out/phase2/ls_gcn_eval.json` | `run_ls_validate_gcn.sh` (via `ls_capture_gcn_eval`) | Live `eval_solution_default` on GCN trace | ece-rschsrv |
 | `orchestration_engine/characterization/out/phase2/ls_oe_eval.json` | `run_phase2_lightningsim_oe.sh` (via `ls_capture_oe_eval`) | Live eval on OE trace; must match DSE baseline | ece-rschsrv |
-| `orchestration_engine/characterization/out/phase2/ls_validation.json` | C1 + C2 scripts; `passed` requires both | C1 ≤5%; C2 ≤15% (cross-toolchain) | ece-rschsrv |
+| `orchestration_engine/characterization/out/phase2/cosim_oe_engine_ls.json` | `run_phase2_lightningsim_oe.sh` (via `run_hls_oe_engine_ls_cosim.tcl`) | Vitis 2023.1 ARCHIVE cosim of `oe_hls_engine_stream` (C2 Vitis side) | ece-rschsrv |
+| `orchestration_engine/characterization/out/phase2/ls_validation.json` | C1 + C2 scripts; `passed` requires both | C1 ≤5% (GCN, same build); C2 ≤15% (OE engine, same 2023.1 build) | ece-rschsrv |
 | `orchestration_engine/characterization/out/phase2/cosim_gcn_stream_ls.json` | `bash orchestration_engine/run_ls_validate_gcn.sh` | Vitis 2023.1 ARCHIVE cosim | ece-rschsrv |
 | `orchestration_engine/characterization/out/phase2/cosim_gcn_stream.json` | `bash orchestration_engine/run_gcn_stream_cosim.sh` | Vitis 2025.2.1 thesis ap_fixed (E2) | ece-rschsrv |
 | `orchestration_engine/characterization/out/phase2/phase2_gate.md` | `bash orchestration_engine/run_phase2_sprint_remainder.sh` | mixed (see rows above) | ece-rschsrv |

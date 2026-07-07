@@ -1,0 +1,773 @@
+{
+  "experiment": "real_agent_breakdown",
+  "result_validity": "debug_only",
+  "generated_utc": "2026-07-07T20:18:19.224199+00:00",
+  "setup_ref": {
+    "setup_digest": "66f54ae8c07ef581",
+    "task_suite_digest": "a88a9e1058964219",
+    "cpu_model": "unknown"
+  },
+  "task_assignments": [
+    {
+      "task_id": "SH-01",
+      "profile": "search_heavy",
+      "goal": "What causes different kinds of weather? Collect mentions of rain, storms, and temperature changes and summarize the patterns.",
+      "turns": [
+        "search <- rain storm",
+        "search <- temperature cold warm",
+        "search <- wind forecast",
+        "search <- snow season",
+        "search <- climate humidity",
+        "search <- cloud sun",
+        "calculator <- (72 - 32) * 5 / 9",
+        "search <- storm wind rain",
+        "search <- season climate",
+        "reasoning only"
+      ]
+    },
+    {
+      "task_id": "SH-02",
+      "profile": "search_heavy",
+      "goal": "Put together a short overview of space topics: find what the corpus says about planets, the moon, eclipses, and telescopes.",
+      "turns": [
+        "search <- planet orbit",
+        "search <- moon eclipse",
+        "search <- solar eclipse",
+        "search <- telescope star",
+        "search <- rocket astronaut",
+        "retrieve <- which planets can be seen without a telescope",
+        "search <- mars earth",
+        "search <- gravity light",
+        "search <- galaxy star",
+        "search <- orbit gravity",
+        "reasoning only"
+      ]
+    }
+  ],
+  "git": {
+    "commit": "d98b8d80538abf3f59fc00ca172491256478a65d",
+    "dirty": "yes"
+  },
+  "env": {
+    "python": "3.14.0",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "cpu_model": "Intel64 Family 6 Model 204 Stepping 3, GenuineIntel",
+    "cores_logical": 8,
+    "cores_physical": 8,
+    "ram_gb": 15.6
+  },
+  "config": {
+    "profile": "mixed",
+    "payload_profile": "mixed",
+    "search_locality": "local",
+    "seed": 0,
+    "sessions": 2,
+    "mode": "threads/scripted",
+    "llm_median_scale": 0.05,
+    "note_llm_scale": "scripted backend sleeps (wall only); openai backend ignores this",
+    "total_cpu_basis": "sum(session process_time)",
+    "comparison_type": "single_run_distribution_sample"
+  },
+  "timer_overhead_ns_per_pair": 5937.5,
+  "batch_wall_s": 4.229603599999791,
+  "run": {
+    "env": {},
+    "config": {
+      "concurrency": 2,
+      "profile": "mixed",
+      "payload_profile": "mixed",
+      "search_locality": "local",
+      "seed": 0,
+      "mode": "threads",
+      "backend": "scripted",
+      "llm_median_scale": 0.05,
+      "workers": 2,
+      "total_cpu_basis": "process_time_all_threads",
+      "worker_thread_cpu_ns": 234375000
+    },
+    "per_category": {
+      "ORCH_SETUP": {
+        "cpu_ns": 31250000,
+        "wall_ns": 336791000,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 4
+      },
+      "GC": {
+        "cpu_ns": 46875000,
+        "wall_ns": 46875000,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 3
+      },
+      "TOKENIZATION": {
+        "cpu_ns": 187500000,
+        "wall_ns": 343564800,
+        "bytes_in": 1166303,
+        "bytes_out": 0,
+        "count": 40
+      },
+      "TOOL_COMPUTE": {
+        "cpu_ns": 875000000,
+        "wall_ns": 1286450900,
+        "bytes_in": 285,
+        "bytes_out": 0,
+        "count": 19
+      },
+      "SERIALIZATION": {
+        "cpu_ns": 0,
+        "wall_ns": 7491600,
+        "bytes_in": 0,
+        "bytes_out": 1122188,
+        "count": 19
+      },
+      "ORCH_DISPATCH": {
+        "cpu_ns": 1640625000,
+        "wall_ns": 3857785900,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 59
+      }
+    },
+    "per_session": [
+      {
+        "session_id": "agent_0",
+        "task_id": "SH-01",
+        "turns": 19,
+        "plan_len": 10,
+        "wall_s": 2.4950478999999177,
+        "thread_cpu_ns": 1500000000,
+        "process_cpu_ns": 1500000000,
+        "instrumented_cpu_ns": 1500000000,
+        "reconcile_cpu_ns": 468750000,
+        "orch_measured_cpu_ns": 140625000,
+        "orch_reconcile_cpu_ns": 468750000,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "search": 8,
+          "calculator": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "search",
+            "query": "{\"query\": \"rain storm\", \"snippets\": [\"cast temperature forecast temperature forecast wind humidity warm snow wind temperature storm sun weather storm climate rain storm warm warm sun weather humidity weather cloud temperature cold rain humidity wind rain c",
+            "llm_step": 0
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"temperature cold warm\", \"snippets\": [\"recast storm storm snow sun weather climate cold weather wind wind cold warm climate temperature snow season season sun temperature cold warm humidity climate wind snow rain warm season storm cold warm rain ",
+            "llm_step": 2
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"wind forecast\", \"snippets\": [\"ather temperature climate rain climate rain temperature climate cloud cloud sun season sun warm temperature temperature wind forecast wind wind warm climate climate humidity forecast cloud warm temperature sun clima",
+            "llm_step": 4
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"snow season\", \"snippets\": [\"ture climate cold climate forecast temperature wind sun temperature storm sun warm weather rain snow warm humidity cold snow season storm temperature weather forecast climate humidity snow wind sun warm cold snow wind",
+            "llm_step": 6
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"climate humidity\", \"snippets\": [\"e rain temperature climate cloud cloud sun season sun warm temperature temperature wind forecast wind wind warm climate climate humidity forecast cloud warm temperature sun climate snow cold forecast rain weather",
+            "llm_step": 8
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"cloud sun\", \"snippets\": [\"castle museum empire battle empire rome battle ancient treaty battle\\n\\nhumidity cold forecast season climate sun weather cloud sun cold cold weather temperature climate rain climate rain temperature climate cloud cloud",
+            "llm_step": 10
+          },
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"(72 - 32) * 5 / 9\", \"engine\": \"sympy\", \"query\": \"(72 - 32) * 5 / 9\", \"value\": 22.22222222222222, \"padding\": \"first apart at water energy carefully an around the result over large by by small recipe together carefully item market a often sec",
+            "llm_step": 12
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"storm wind rain\", \"snippets\": [\" rain snow cold humidity rain storm cold snow weather snow season weather rain humidity rain humidity snow cloud season storm wind rain season season climate warm rain storm cold climate snow cloud temperature sun",
+            "llm_step": 14
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"season climate\", \"snippets\": [\"lution empire queen treaty castle museum empire battle empire rome battle ancient treaty battle\\n\\nhumidity cold forecast season climate sun weather cloud sun cold cold weather temperature climate rain climate rain",
+            "llm_step": 16
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "search_locality": "local"
+      },
+      {
+        "session_id": "agent_1",
+        "task_id": "SH-02",
+        "turns": 21,
+        "plan_len": 11,
+        "wall_s": 2.163877799999682,
+        "thread_cpu_ns": 1281250000,
+        "process_cpu_ns": 1281250000,
+        "instrumented_cpu_ns": 1281250000,
+        "reconcile_cpu_ns": 953125000,
+        "orch_measured_cpu_ns": 109375000,
+        "orch_reconcile_cpu_ns": 953125000,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "search": 9,
+          "retrieve": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "search",
+            "query": "{\"query\": \"planet orbit\", \"snippets\": [\"olar light planet moon light light solar moon solar planet gravity astronaut rocket orbit telescope star mars telescope planet orbit astronaut galaxy eclipse orbit moon rocket astronaut galaxy light gravity star rock",
+            "llm_step": 0
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"moon eclipse\", \"snippets\": [\"nce france history queen rome rome battle queen queen museum rome\\n\\norbit star earth earth galaxy star earth galaxy star moon eclipse astronaut eclipse earth planet eclipse galaxy light orbit earth moon solar mars r",
+            "llm_step": 2
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"solar eclipse\", \"snippets\": [\" telescope planet astronaut star telescope star rocket telescope eclipse galaxy moon telescope mars gravity orbit earth solar eclipse earth star orbit eclipse astronaut gravity orbit solar gravity light mars galaxy ",
+            "llm_step": 4
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"telescope star\", \"snippets\": [\" astronaut astronaut gravity solar light planet moon light light solar moon solar planet gravity astronaut rocket orbit telescope star mars telescope planet orbit astronaut galaxy eclipse orbit moon rocket astronau",
+            "llm_step": 6
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"rocket astronaut\", \"snippets\": [\"ar planet gravity astronaut rocket orbit telescope star mars telescope planet orbit astronaut galaxy eclipse orbit moon rocket astronaut galaxy light gravity star rocket rocket orbit solar telescope mars solar ma",
+            "llm_step": 8
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"which planets can be seen without a telescope\", \"chunks\": [{\"id\": 31464, \"score\": 0.22483128309249878, \"text\": \"chunk_31464\"}, {\"id\": 96808, \"score\": 0.19940516352653503, \"text\": \"chunk_96808\"}, {\"id\": 93529, \"score\": 0.19911351799964905, \"text\"",
+            "llm_step": 10
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"mars earth\", \"snippets\": [\"r orbit earth gravity solar rocket telescope orbit galaxy star telescope moon orbit orbit planet eclipse mars astronaut mars earth planet mars moon solar moon star telescope telescope eclipse telescope eclipse rocket r",
+            "llm_step": 12
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"gravity light\", \"snippets\": [\"pse galaxy moon telescope mars gravity orbit earth solar eclipse earth star orbit eclipse astronaut gravity orbit solar gravity light mars galaxy earth orbit star astronaut orbit astronaut orbit galaxy earth orbit g",
+            "llm_step": 14
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"galaxy star\", \"snippets\": [\"treaty castle rome century france france history queen rome rome battle queen queen museum rome\\n\\norbit star earth earth galaxy star earth galaxy star moon eclipse astronaut eclipse earth planet eclipse galaxy light ",
+            "llm_step": 16
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"orbit gravity\", \"snippets\": [\"galaxy star telescope planet galaxy galaxy solar galaxy star gravity solar earth astronaut mars planet mars rocket moon orbit gravity star earth telescope solar solar moon moon earth astronaut moon earth earth plane",
+            "llm_step": 18
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "search_locality": "local"
+      }
+    ],
+    "per_session_category": {
+      "agent_0": {
+        "ORCH_SETUP": {
+          "cpu_ns": 31250000,
+          "wall_ns": 119351200,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "GC": {
+          "cpu_ns": 46875000,
+          "wall_ns": 46875000,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 109375000,
+          "wall_ns": 139449000,
+          "bytes_in": 557040,
+          "bytes_out": 0,
+          "count": 19
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 734375000,
+          "wall_ns": 1004280400,
+          "bytes_in": 126,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 3210000,
+          "bytes_in": 0,
+          "bytes_out": 537020,
+          "count": 9
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 578125000,
+          "wall_ns": 1602381300,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 28
+        }
+      },
+      "agent_1": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 217439800,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 78125000,
+          "wall_ns": 204115800,
+          "bytes_in": 609263,
+          "bytes_out": 0,
+          "count": 21
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 140625000,
+          "wall_ns": 282170500,
+          "bytes_in": 159,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 4281600,
+          "bytes_in": 0,
+          "bytes_out": 585168,
+          "count": 10
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 1062500000,
+          "wall_ns": 2255404600,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 31
+        }
+      }
+    },
+    "residual_cpu_ns": 0,
+    "residual_fraction": 0.0,
+    "totals": {
+      "thread_cpu_ns": 2781250000,
+      "wall_ns": 2504453000,
+      "instrumented_cpu_ns": 2781250000
+    },
+    "os_times_user_sys": {
+      "user": 1.203125,
+      "system": 0.3125
+    },
+    "timeline": []
+  },
+  "category_regions_override": {
+    "ORCH_SETUP": "REAL AGENT MODE: LangGraph first-step CPU residual (framework graph/session construction), the Phase 0 setup definition",
+    "ORCH_DISPATCH": "REAL AGENT MODE: LangGraph per-step CPU residual between stream events minus tagged tool CPU (completion handling, channel updates, handoff), the Phase 0 steady definition",
+    "PROMPT_ASSEMBLY": "REAL AGENT MODE: inside the framework, not separable; included in the ORCH buckets",
+    "CONTEXT_MGMT": "REAL AGENT MODE: inside the framework (LangGraph state channels), not separable; included in the ORCH buckets",
+    "HTTP_CLIENT": "OpenAI backend: LangChain callback wraps each LLM call (request build, response parse; network wait costs ~zero thread CPU). Scripted backend: not used.",
+    "LOGGING": "REAL AGENT MODE: not separately instrumented; inside ORCH buckets"
+  },
+  "reproduce_cmd": "python -m apu_characterization.experiments.real_agent_breakdown --backend scripted --profile mixed --seed 0 --sessions 2 --llm-scale 0.05 --search-locality local",
+  "per_task": {
+    "SH-01": {
+      "categories": {
+        "ORCH_SETUP": {
+          "cpu_ns": 31250000,
+          "wall_ns": 119351200,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "GC": {
+          "cpu_ns": 46875000,
+          "wall_ns": 46875000,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 109375000,
+          "wall_ns": 139449000,
+          "bytes_in": 557040,
+          "bytes_out": 0,
+          "count": 19
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 734375000,
+          "wall_ns": 1004280400,
+          "bytes_in": 126,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 3210000,
+          "bytes_in": 0,
+          "bytes_out": 537020,
+          "count": 9
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 578125000,
+          "wall_ns": 1602381300,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 28
+        }
+      },
+      "sessions": [
+        "agent_0"
+      ],
+      "instrumented_cpu_ns": 1500000000,
+      "amenable_strict_ns": 718750000,
+      "amenable_broad_ns": 718750000,
+      "amenable_strict_share": 0.4791666666666667,
+      "amenable_broad_share": 0.4791666666666667
+    },
+    "SH-02": {
+      "categories": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 217439800,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 78125000,
+          "wall_ns": 204115800,
+          "bytes_in": 609263,
+          "bytes_out": 0,
+          "count": 21
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 140625000,
+          "wall_ns": 282170500,
+          "bytes_in": 159,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 4281600,
+          "bytes_in": 0,
+          "bytes_out": 585168,
+          "count": 10
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 1062500000,
+          "wall_ns": 2255404600,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 31
+        }
+      },
+      "sessions": [
+        "agent_1"
+      ],
+      "instrumented_cpu_ns": 1281250000,
+      "amenable_strict_ns": 1140625000,
+      "amenable_broad_ns": 1140625000,
+      "amenable_strict_share": 0.8902439024390244,
+      "amenable_broad_share": 0.8902439024390244
+    }
+  },
+  "category_averages": {
+    "overall": {
+      "task_count": 2,
+      "tasks": [
+        "SH-01",
+        "SH-02"
+      ],
+      "mean_instrumented_cpu_ms": 1390.625,
+      "mean_session_wall_s": 2.3294628499998,
+      "mean_amenable_strict_share": 0.6847052845528455,
+      "mean_amenable_broad_share": 0.6847052845528455,
+      "mean_wall_frac_sum_partition": 0.9190032422001857,
+      "categories": {
+        "GC": {
+          "mean_cpu_ms": 23.4375,
+          "mean_cpu_share": 0.015625,
+          "mean_wall_ms": 23.4375,
+          "mean_wall_frac": 0.009393607232951628,
+          "in_wall_partition": false,
+          "wall_concurrent": true
+        },
+        "ORCH_DISPATCH": {
+          "mean_cpu_ms": 820.3125,
+          "mean_cpu_share": 0.6073424796747967,
+          "mean_wall_ms": 1928.89295,
+          "mean_wall_frac": 0.8422611234563112,
+          "in_wall_partition": true,
+          "wall_concurrent": false
+        },
+        "ORCH_SETUP": {
+          "mean_cpu_ms": 15.625,
+          "mean_cpu_share": 0.010416666666666666,
+          "mean_wall_ms": 168.3955,
+          "mean_wall_frac": null,
+          "in_wall_partition": false,
+          "wall_concurrent": false
+        },
+        "SERIALIZATION": {
+          "mean_cpu_ms": 0.0,
+          "mean_cpu_share": 0.0,
+          "mean_wall_ms": 3.7458,
+          "mean_wall_frac": 0.0016326092033193999,
+          "in_wall_partition": true,
+          "wall_concurrent": false
+        },
+        "TOKENIZATION": {
+          "mean_cpu_ms": 93.75,
+          "mean_cpu_share": 0.06694613821138212,
+          "mean_wall_ms": 171.7824,
+          "mean_wall_frac": 0.07510950954055506,
+          "in_wall_partition": true,
+          "wall_concurrent": false
+        },
+        "TOOL_COMPUTE": {
+          "mean_cpu_ms": 437.5,
+          "mean_cpu_share": 0.2996697154471545,
+          "mean_wall_ms": 643.22545,
+          "mean_wall_frac": 0.26645492633910306,
+          "in_wall_partition": false,
+          "wall_concurrent": true
+        }
+      }
+    },
+    "by_archetype": {
+      "SH": {
+        "label": "search_heavy",
+        "task_count": 2,
+        "tasks": [
+          "SH-01",
+          "SH-02"
+        ],
+        "mean_instrumented_cpu_ms": 1390.625,
+        "mean_session_wall_s": 2.3294628499998,
+        "mean_amenable_strict_share": 0.6847052845528455,
+        "mean_amenable_broad_share": 0.6847052845528455,
+        "mean_wall_frac_sum_partition": 0.9190032422001857,
+        "categories": {
+          "GC": {
+            "mean_cpu_ms": 23.4375,
+            "mean_cpu_share": 0.015625,
+            "mean_wall_ms": 23.4375,
+            "mean_wall_frac": 0.009393607232951628,
+            "in_wall_partition": false,
+            "wall_concurrent": true
+          },
+          "ORCH_DISPATCH": {
+            "mean_cpu_ms": 820.3125,
+            "mean_cpu_share": 0.6073424796747967,
+            "mean_wall_ms": 1928.89295,
+            "mean_wall_frac": 0.8422611234563112,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "ORCH_SETUP": {
+            "mean_cpu_ms": 15.625,
+            "mean_cpu_share": 0.010416666666666666,
+            "mean_wall_ms": 168.3955,
+            "mean_wall_frac": null,
+            "in_wall_partition": false,
+            "wall_concurrent": false
+          },
+          "SERIALIZATION": {
+            "mean_cpu_ms": 0.0,
+            "mean_cpu_share": 0.0,
+            "mean_wall_ms": 3.7458,
+            "mean_wall_frac": 0.0016326092033193999,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "TOKENIZATION": {
+            "mean_cpu_ms": 93.75,
+            "mean_cpu_share": 0.06694613821138212,
+            "mean_wall_ms": 171.7824,
+            "mean_wall_frac": 0.07510950954055506,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "TOOL_COMPUTE": {
+            "mean_cpu_ms": 437.5,
+            "mean_cpu_share": 0.2996697154471545,
+            "mean_wall_ms": 643.22545,
+            "mean_wall_frac": 0.26645492633910306,
+            "in_wall_partition": false,
+            "wall_concurrent": true
+          }
+        }
+      }
+    },
+    "wall_diagnostics": {
+      "per_task": {
+        "SH-01": {
+          "session_wall_s": 2.4950478999999177,
+          "total_category_wall_s": 2.9155469,
+          "coverage_all_categories": 1.168533438243223,
+          "coverage_partition_categories": 0.6994015227921683,
+          "concurrent_category_wall_s": 1.0511554
+        },
+        "SH-02": {
+          "session_wall_s": 2.163877799999682,
+          "total_category_wall_s": 2.9634123,
+          "coverage_all_categories": 1.369491521826922,
+          "coverage_partition_categories": 1.1386049624145158,
+          "concurrent_category_wall_s": 0.2821705
+        }
+      }
+    }
+  },
+  "per_task_wall_cpu": {
+    "per_task": {
+      "SH-01": {
+        "session_id": "agent_0",
+        "session_wall_s": 2.4950478999999177,
+        "llm_io_wait_s": 0.0,
+        "non_llm_wall_s": 2.4950478999999177,
+        "host_cpu_ms": 1500.0,
+        "llm_io_pct_of_session_wall": 0.0,
+        "host_cpu_pct_of_session_wall": 60.11908629089042,
+        "tool_cpu_ms": 734.375,
+        "harness_cpu_ms": 765.625,
+        "cpu_by_category_ms": {
+          "ORCH_SETUP": 31.25,
+          "GC": 46.875,
+          "TOKENIZATION": 109.375,
+          "TOOL_COMPUTE": 734.375,
+          "ORCH_DISPATCH": 578.125
+        },
+        "tool_call_counts": {
+          "search": 8,
+          "calculator": 1
+        }
+      },
+      "SH-02": {
+        "session_id": "agent_1",
+        "session_wall_s": 2.163877799999682,
+        "llm_io_wait_s": 0.0,
+        "non_llm_wall_s": 2.163877799999682,
+        "host_cpu_ms": 1281.25,
+        "llm_io_pct_of_session_wall": 0.0,
+        "host_cpu_pct_of_session_wall": 59.21082974279732,
+        "tool_cpu_ms": 140.625,
+        "harness_cpu_ms": 1140.625,
+        "cpu_by_category_ms": {
+          "TOKENIZATION": 78.125,
+          "TOOL_COMPUTE": 140.625,
+          "ORCH_DISPATCH": 1062.5
+        },
+        "tool_call_counts": {
+          "search": 9,
+          "retrieve": 1
+        }
+      }
+    },
+    "totals": {
+      "session_wall_s": 4.6589256999996,
+      "llm_io_wait_s": 0.0,
+      "host_cpu_ms": 2781.25,
+      "llm_io_pct_of_session_wall": 0.0,
+      "host_cpu_pct_of_session_wall": 59.6972387861914
+    }
+  },
+  "behavior_buckets": {
+    "session_meta": {
+      "SH-01": {
+        "behavior_bucket": "B1_search_only",
+        "behavior_label": "search only (no local code/retrieve)",
+        "task_label": "SH",
+        "turns": 19,
+        "tool_call_counts": {
+          "search": 8,
+          "calculator": 1
+        },
+        "host_cpu_ms": 1500.0,
+        "above_cpu_floor": true
+      },
+      "SH-02": {
+        "behavior_bucket": "B2_mixed_tools",
+        "behavior_label": "search plus code and/or retrieve",
+        "task_label": "SH",
+        "turns": 21,
+        "tool_call_counts": {
+          "search": 9,
+          "retrieve": 1
+        },
+        "host_cpu_ms": 1281.25,
+        "above_cpu_floor": true
+      }
+    },
+    "buckets": {
+      "B1_search_only": {
+        "label": "search only (no local code/retrieve)",
+        "tasks": [
+          "SH-01"
+        ],
+        "task_labels": [
+          "SH"
+        ],
+        "mean_host_cpu_ms": 1500.0,
+        "mean_amenable_strict": 0.4791666666666667,
+        "mean_amenable_broad": 0.4791666666666667
+      },
+      "B2_mixed_tools": {
+        "label": "search plus code and/or retrieve",
+        "tasks": [
+          "SH-02"
+        ],
+        "task_labels": [
+          "SH"
+        ],
+        "mean_host_cpu_ms": 1281.25,
+        "mean_amenable_strict": 0.8902439024390244,
+        "mean_amenable_broad": 0.8902439024390244
+      }
+    },
+    "cpu_floor_ms": 200.0,
+    "note": "Buckets are assigned from realized tool calls and turn count, not from task archetype labels. Task-label tables are prompt-intent only."
+  },
+  "amenability_tiers": {
+    "ORCH_SETUP": "direct",
+    "ORCH_DISPATCH": "direct",
+    "TOKENIZATION": "direct",
+    "SERIALIZATION": "direct",
+    "HTTP_CLIENT": "overlap",
+    "PROMPT_ASSEMBLY": "partial",
+    "CONTEXT_MGMT": "partial",
+    "LOGGING": "partial",
+    "TOOL_COMPUTE": "none",
+    "GC": "none"
+  },
+  "invariant": {
+    "total_thread_cpu_ns": 2781250000,
+    "instrumented_cpu_ns": 2781250000,
+    "residual_cpu_ns": 0,
+    "residual_fraction": 0.0,
+    "limit": 0.15,
+    "pass": true
+  },
+  "audit": {
+    "pass": true,
+    "publishable_ok": true,
+    "violations": [],
+    "warnings": [
+      "Host CPU values appear quantized to 15.625 ms Windows thread-time ticks; per-task shares below ~200 ms/session are not quotable. Re-run on Linux with test_resolution PASS before publishing.",
+      "SH-01: reconcile gap 468.8 ms is 31% of process CPU \u2014 check attribution",
+      "SH-02: reconcile gap 953.1 ms is 74% of process CPU \u2014 check attribution"
+    ],
+    "platform": "win32",
+    "windows_tick_ms": 15.625,
+    "min_quotable_session_cpu_ms": 200.0,
+    "n_seeds": 1
+  }
+}

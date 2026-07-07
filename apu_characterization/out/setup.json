@@ -1,0 +1,517 @@
+{
+  "captured_utc": "2026-07-07T19:44:50.068804+00:00",
+  "hardware": {
+    "cpu_model": "unknown",
+    "machine": "x86_64",
+    "cores_physical": 8,
+    "cores_logical": 8,
+    "cpu_freq_mhz_max": 0.0,
+    "cpu_freq_mhz_current": 3110.4000000000005,
+    "ram_total_gb": 7.56,
+    "ram_available_gb": 6.95
+  },
+  "software": {
+    "python": "3.14.4",
+    "python_implementation": "CPython",
+    "python_build": "main Apr  8 2026 04:02:31",
+    "os": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "packages": {
+      "numpy": "numpy==2.5.1",
+      "psutil": "psutil==7.2.2",
+      "sympy": "sympy==1.14.0",
+      "tiktoken": "tiktoken==0.13.0",
+      "matplotlib": "not installed",
+      "py-spy": "not installed"
+    }
+  },
+  "git": {
+    "commit": "d98b8d80538abf3f59fc00ca172491256478a65d",
+    "dirty": "yes",
+    "git_path": "/usr/bin/git"
+  },
+  "kernel": "Linux 6.18.33.2-microsoft-standard-WSL2",
+  "openai": {
+    "model": "gpt-4o-mini",
+    "temperature": "0 (default)",
+    "timeout_s": "120",
+    "api_key_set": true
+  },
+  "fixtures": {
+    "corpus": {
+      "path": "/mnt/c/Users/zjohn/Projects/gnn-hls-accel/apu_characterization/fixtures/corpus.txt",
+      "bytes": 52429034,
+      "sha256": "19cc1dfd7b8664aa9e43e2458c8d15614236817fd3516b80ebf996692162d716"
+    },
+    "vectors": {
+      "path": "/mnt/c/Users/zjohn/Projects/gnn-hls-accel/apu_characterization/fixtures/vectors.npy",
+      "shape": [
+        100000,
+        384
+      ],
+      "dtype": "float32",
+      "sha256": "876e28b7776700dd07d507e0f929f766a21dc8951da491a45008335a84a911b0"
+    }
+  },
+  "agent": {
+    "type": "plain-Python ReAct loop (no LangGraph in the measured path)",
+    "decision_source": "scripted TaskSpec turn sequence, deterministic per (task, seed)",
+    "llm": "in-process mock: asyncio.sleep drawn from seeded lognormal (zero thread CPU, models remote inference wait), synthetic response of profile-drawn size",
+    "orchestration": "OrchEngine: task-graph build (ORCH_SETUP), readiness scan + scatter-on-completion dispatch (ORCH_DISPATCH), mirroring orchestration_engine/software/engine_sim.cpp semantics",
+    "tools": {
+      "search": "regex scan (phrase then word-alternation) over 50 MB corpus, top-5 snippets",
+      "code_exec": "exec of the task-supplied Python snippet, bounded builtins",
+      "retrieve": "full cosine top-5 over 100k x 384 float32 matrix, query embedded deterministically from query text hash",
+      "calculator": "sympy (or plain eval fallback) on the task-supplied expression",
+      "api": "mock remote API: HTTP_CLIENT-timed request build and response envelope parse around a seeded lognormal asyncio sleep (pure I/O wait)"
+    },
+    "turn_mechanics": "single call, fan-out burst (several calls per turn, completions land back-to-back on an ALL_OF join), chained handoff (pipe_result: parse previous result, rebuild next args), sub-agent spawning (child sessions with their own task graphs), structured emission (re-emit and validate the full accumulated JSON per turn)",
+    "execution_model": "asyncio, all sessions share one event-loop thread; optional --threads mode for the comparison point",
+    "clocks": "wall = perf_counter_ns; CPU = thread_time_ns per region; process user/system = os.times or psutil at run start/end",
+    "nesting_rule": "exclusive self-time: inner region pauses its parent"
+  },
+  "taxonomy": [
+    "ORCH_SETUP",
+    "ORCH_DISPATCH",
+    "SERIALIZATION",
+    "TOKENIZATION",
+    "PROMPT_ASSEMBLY",
+    "CONTEXT_MGMT",
+    "HTTP_CLIENT",
+    "TOOL_COMPUTE",
+    "LOGGING",
+    "GC",
+    "RESIDUAL"
+  ],
+  "profiles": {
+    "search_heavy": {
+      "turns": "8 to 15",
+      "tool_weights": {
+        "search": 0.8,
+        "code_exec": 0.05,
+        "retrieve": 0.1,
+        "calculator": 0.05
+      },
+      "llm_median_s": 1.8,
+      "llm_sigma": 0.6,
+      "llm_response_kb": "0.5 to 2.0",
+      "tool_result_kb": "1.0 to 20.0",
+      "tool_rate": 0.85
+    },
+    "code_heavy": {
+      "turns": "4 to 8",
+      "tool_weights": {
+        "search": 0.1,
+        "code_exec": 0.7,
+        "retrieve": 0.1,
+        "calculator": 0.1
+      },
+      "llm_median_s": 1.8,
+      "llm_sigma": 0.6,
+      "llm_response_kb": "0.5 to 3.0",
+      "tool_result_kb": "2.0 to 30.0",
+      "tool_rate": 0.75
+    },
+    "rag_heavy": {
+      "turns": "5 to 10",
+      "tool_weights": {
+        "search": 0.1,
+        "code_exec": 0.05,
+        "retrieve": 0.7,
+        "calculator": 0.15
+      },
+      "llm_median_s": 1.8,
+      "llm_sigma": 0.6,
+      "llm_response_kb": "1.0 to 4.0",
+      "tool_result_kb": "50.0 to 200.0",
+      "tool_rate": 0.8
+    },
+    "reasoning_heavy": {
+      "turns": "3 to 6",
+      "tool_weights": {
+        "search": 0.25,
+        "code_exec": 0.25,
+        "retrieve": 0.25,
+        "calculator": 0.25
+      },
+      "llm_median_s": 4.0,
+      "llm_sigma": 0.6,
+      "llm_response_kb": "2.0 to 8.0",
+      "tool_result_kb": "1.0 to 10.0",
+      "tool_rate": 0.2
+    },
+    "mixed": {
+      "turns": "5 to 12",
+      "tool_weights": {
+        "search": 0.25,
+        "code_exec": 0.25,
+        "retrieve": 0.25,
+        "calculator": 0.25
+      },
+      "llm_median_s": 1.8,
+      "llm_sigma": 0.6,
+      "llm_response_kb": "0.5 to 4.0",
+      "tool_result_kb": "1.0 to 100.0",
+      "tool_rate": 0.6
+    },
+    "long_horizon": {
+      "turns": "10 to 15",
+      "tool_weights": {
+        "search": 0.1,
+        "code_exec": 0.0,
+        "retrieve": 0.8,
+        "calculator": 0.1
+      },
+      "llm_median_s": 1.8,
+      "llm_sigma": 0.6,
+      "llm_response_kb": "0.5 to 2.0",
+      "tool_result_kb": "5.0 to 30.0",
+      "tool_rate": 0.75
+    },
+    "fanout": {
+      "turns": "2 to 2",
+      "tool_weights": {
+        "search": 1.0,
+        "code_exec": 0.0,
+        "retrieve": 0.0,
+        "calculator": 0.0
+      },
+      "llm_median_s": 1.8,
+      "llm_sigma": 0.6,
+      "llm_response_kb": "0.5 to 2.0",
+      "tool_result_kb": "1.0 to 10.0",
+      "tool_rate": 1.0
+    },
+    "chain": {
+      "turns": "4 to 4",
+      "tool_weights": {
+        "search": 0.0,
+        "code_exec": 0.34,
+        "retrieve": 0.33,
+        "calculator": 0.33
+      },
+      "llm_median_s": 1.8,
+      "llm_sigma": 0.6,
+      "llm_response_kb": "0.5 to 2.0",
+      "tool_result_kb": "1.0 to 10.0",
+      "tool_rate": 0.75
+    },
+    "swarm": {
+      "turns": "2 to 4",
+      "tool_weights": {
+        "search": 0.6,
+        "code_exec": 0.0,
+        "retrieve": 0.4,
+        "calculator": 0.0
+      },
+      "llm_median_s": 1.8,
+      "llm_sigma": 0.6,
+      "llm_response_kb": "0.5 to 2.0",
+      "tool_result_kb": "1.0 to 20.0",
+      "tool_rate": 0.75
+    },
+    "structured_output": {
+      "turns": "7 to 7",
+      "tool_weights": {
+        "search": 0.0,
+        "code_exec": 0.0,
+        "retrieve": 1.0,
+        "calculator": 0.0
+      },
+      "llm_median_s": 1.8,
+      "llm_sigma": 0.6,
+      "llm_response_kb": "0.5 to 1.0",
+      "tool_result_kb": "5.0 to 50.0",
+      "tool_rate": 0.3
+    },
+    "api_heavy": {
+      "turns": "6 to 6",
+      "tool_weights": {
+        "search": 0.0,
+        "code_exec": 0.0,
+        "retrieve": 0.0,
+        "calculator": 1.0
+      },
+      "llm_median_s": 1.8,
+      "llm_sigma": 0.6,
+      "llm_response_kb": "0.2 to 1.0",
+      "tool_result_kb": "0.5 to 2.0",
+      "tool_rate": 1.0
+    },
+    "locality_ablation": {
+      "turns": "5 to 12",
+      "tool_weights": {
+        "search": 0.25,
+        "code_exec": 0.25,
+        "retrieve": 0.25,
+        "calculator": 0.25
+      },
+      "llm_median_s": 1.8,
+      "llm_sigma": 0.6,
+      "llm_response_kb": "0.5 to 2.0",
+      "tool_result_kb": "0.25 to 4.0",
+      "tool_rate": 0.6
+    }
+  },
+  "task_suite": {
+    "digest": "a88a9e1058964219",
+    "count": 16,
+    "tasks": [
+      {
+        "task_id": "SH-01",
+        "profile": "search_heavy",
+        "goal": "What causes different kinds of weather? Collect mentions of rain, storms, and temperature changes and summarize the patterns.",
+        "turns": [
+          "search <- rain storm",
+          "search <- temperature cold warm",
+          "search <- wind forecast",
+          "search <- snow season",
+          "search <- climate humidity",
+          "search <- cloud sun",
+          "calculator <- (72 - 32) * 5 / 9",
+          "search <- storm wind rain",
+          "search <- season climate",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "SH-02",
+        "profile": "search_heavy",
+        "goal": "Put together a short overview of space topics: find what the corpus says about planets, the moon, eclipses, and telescopes.",
+        "turns": [
+          "search <- planet orbit",
+          "search <- moon eclipse",
+          "search <- solar eclipse",
+          "search <- telescope star",
+          "search <- rocket astronaut",
+          "retrieve <- which planets can be seen without a telescope",
+          "search <- mars earth",
+          "search <- gravity light",
+          "search <- galaxy star",
+          "search <- orbit gravity",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "CH-01",
+        "profile": "code_heavy",
+        "goal": "What is the sum of all prime numbers below 20000? Verify with a second computation and sanity-check the magnitude.",
+        "turns": [
+          "code_exec <- limit = 20000 sieve = [True] * limit sieve[0] = sieve[1] = False for i in range(2, int(limit ** 0.5)",
+          "code_exec <- xs = [(i * 2654435761) % 100003 for i in range(30000)] xs.sort() result = xs[len(xs) // 2]",
+          "calculator <- 21171191 / 1000000",
+          "code_exec <- a, b = 0, 1 for _ in range(50000):     a, b = b, (a + b) % 1000000007 result = a",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "CH-02",
+        "profile": "code_heavy",
+        "goal": "If I save 1000 dollars at 5 percent interest for 30 years, how much do I have? Also check a word-frequency count and a median.",
+        "turns": [
+          "code_exec <- balance = 1000.0 rate = 0.05 for year in range(30):     balance = balance * (1 + rate) result = int(",
+          "code_exec <- text = (\"the quick brown fox jumps over the lazy dog and runs away \" * 800).split() counts = {} for ",
+          "code_exec <- xs = [(i * 2654435761) % 100003 for i in range(30000)] xs.sort() result = xs[len(xs) // 2]",
+          "search <- bank interest save",
+          "calculator <- 1000 * 1.05 ** 30",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "RH-01",
+        "profile": "rag_heavy",
+        "goal": "Answer five basic nature questions using retrieval: how plants grow, the water cycle, rivers and oceans, forests, and birds.",
+        "turns": [
+          "retrieve <- how do plants grow from soil and water",
+          "retrieve <- what is the water cycle rain river ocean",
+          "retrieve <- why do rivers flow into the ocean",
+          "retrieve <- what animals live in a forest",
+          "retrieve <- where do birds go in winter",
+          "search <- tree leaf forest",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "RH-02",
+        "profile": "rag_heavy",
+        "goal": "Build a simple guide to home baking by retrieving passages about bread, ingredients, and oven technique.",
+        "turns": [
+          "retrieve <- how to bake bread with flour and butter",
+          "retrieve <- what temperature should the oven be for baking",
+          "retrieve <- how much sugar and salt goes in a recipe",
+          "calculator <- 350 / 2 + 25",
+          "retrieve <- difference between baking with butter and oil",
+          "retrieve <- how long should bread rest before cutting",
+          "retrieve <- simple dinner recipes with vegetables and cheese",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "RE-01",
+        "profile": "reasoning_heavy",
+        "goal": "A train leaves at 9am going 80 km per hour and another leaves at 10am going 100 km per hour on the same route. Reason through when the second catches the first, and verify the arithmetic.",
+        "turns": [
+          "reasoning only",
+          "reasoning only",
+          "calculator <- 80 / (100 - 80)",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "RE-02",
+        "profile": "reasoning_heavy",
+        "goal": "Is it better to sleep eight hours or exercise an extra hour? Reason through the trade-offs, checking one fact in the corpus.",
+        "turns": [
+          "reasoning only",
+          "search <- sleep exercise energy",
+          "reasoning only",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "LH-01",
+        "profile": "long_horizon",
+        "goal": "Help me plan a vegetable garden for the whole year, month by month. One retrieval per month; the growing plan accumulates in context, so state copies and token counts grow within the session.",
+        "turns": [
+          "retrieve <- what vegetables grow in january winter",
+          "retrieve <- what to plant in february cold soil",
+          "retrieve <- what vegetables grow in early spring march",
+          "retrieve <- when to plant tomatoes in april",
+          "retrieve <- what to plant in may after last frost",
+          "retrieve <- which vegetables handle summer heat in june",
+          "retrieve <- watering schedule for july vegetable garden",
+          "retrieve <- what to harvest and replant in august",
+          "retrieve <- what vegetables grow in september fall",
+          "retrieve <- which crops survive october frost",
+          "retrieve <- preparing garden soil in november",
+          "retrieve <- what can grow in december indoors",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "LH-02",
+        "profile": "long_horizon",
+        "goal": "Teach me basic cooking, one lesson at a time, and quiz me as we go. Alternates retrieval, quiz-composition reasoning, and a calculator check on a scaled recipe. Long and chatty; state accumulates every turn.",
+        "turns": [
+          "retrieve <- how to boil an egg step by step",
+          "reasoning only",
+          "calculator <- 2 * 3 / 4",
+          "retrieve <- what does simmer mean in cooking",
+          "reasoning only",
+          "calculator <- 1.5 * 2 / 3",
+          "retrieve <- how to chop an onion safely",
+          "reasoning only",
+          "calculator <- 3 * 1 / 2",
+          "retrieve <- how do I know when pasta is done",
+          "reasoning only",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "FO-01",
+        "profile": "fanout",
+        "goal": "Compare the weather, best food, and main attractions of Paris, Tokyo, and Cairo. Nine searches fan out in one turn; their completions land nearly simultaneously (dispatch burst), then one merge turn.",
+        "turns": [
+          "fan-out 9 calls [search: paris weather forecast rain; search: paris food recipe cheese; search: paris museum castle history; search: tokyo weather season wind; search: tokyo food fish dinner; search: tokyo city station bridge; search: cairo weather sun warm; search: cairo food bread market; search: cairo ancient museum empire]",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "CN-01",
+        "profile": "chain",
+        "goal": "Find the boiling point of water at sea level, convert it to Fahrenheit, then tell me if an oven at 200 degrees F could boil water. Strict three-step chain: each tool's result is the next tool's argument (pair-wise handoff cost).",
+        "turns": [
+          "retrieve <- boiling point of water at sea level",
+          "calculator <- 100 * 9 / 5 + 32 (piped from previous result)",
+          "code_exec <- boiling_f = 212 oven_f = 200 result = 1 if oven_f >= boiling_f else 0 (piped from previous result)",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "SW-01",
+        "profile": "swarm",
+        "goal": "Give me a short report on healthy living: one section each on food, sleep, and exercise. Parent spawns three sub-agents, each with its own task graph (repeated ORCH_SETUP), waits, and merges.",
+        "turns": [
+          "spawn sub-agents: food, sleep, exercise",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "SO-01",
+        "profile": "structured_output",
+        "goal": "Make me a shopping list for a pancake breakfast, with item, quantity, and aisle for each entry. Every turn re-emits and validates the full corrected JSON list (encode-side stress).",
+        "turns": [
+          "retrieve <- pancake ingredients flour sugar butter",
+          "retrieve <- grocery store aisle layout fruit vegetable",
+          "reasoning only; emit + validate structured JSON",
+          "reasoning only; emit + validate structured JSON",
+          "reasoning only; emit + validate structured JSON",
+          "reasoning only; emit + validate structured JSON",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "AH-01",
+        "profile": "api_heavy",
+        "goal": "What time is it right now in London, New York, and Sydney, and what is 100 dollars in each local currency? Six mock remote-API calls (near-zero local compute, all envelopes and I/O wait), one calculator per conversion.",
+        "turns": [
+          "fan-out 3 calls [api: GET /v1/timezone?city=london; api: GET /v1/timezone?city=new_york; api: GET /v1/timezone?city=sydney]",
+          "fan-out 3 calls [api: GET /v1/exchange?from=usd&to=gbp; api: GET /v1/exchange?from=usd&to=usd; api: GET /v1/exchange?from=usd&to=aud]",
+          "calculator <- 100 * 0.79",
+          "calculator <- 100 * 1.00",
+          "calculator <- 100 * 1.52",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "MX-01",
+        "profile": "mixed",
+        "goal": "Plan a birthday party for ten kids: theme ideas, a snack budget, and a schedule. Crosses every tool in one session: searches, a large retrieval feeding code_exec, a calculator check, and a structured JSON schedule at the end.",
+        "turns": [
+          "search <- party theme fun kids",
+          "search <- snack fruit juice dinner",
+          "retrieve <- easy snack recipes for a group of children",
+          "code_exec <- kids = 10 snacks = [(\"pancake mix\", 3.5), (\"syrup\", 4.0), (\"berries\", 6.0), (\"juice\", 2.5)] total =  (piped from previous result)",
+          "calculator <- 160.10 / 10 (piped from previous result)",
+          "reasoning only; emit + validate structured JSON",
+          "reasoning only"
+        ]
+      }
+    ],
+    "subagent_tasks": [
+      {
+        "task_id": "SW-01.food",
+        "profile": "swarm",
+        "goal": "Section: healthy food basics.",
+        "turns": [
+          "search <- vegetable fruit healthy",
+          "search <- sugar salt diet",
+          "retrieve <- what makes a balanced healthy meal",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "SW-01.sleep",
+        "profile": "swarm",
+        "goal": "Section: sleep basics.",
+        "turns": [
+          "search <- sleep rest brain",
+          "search <- sleep energy healthy",
+          "retrieve <- how many hours of sleep do adults need",
+          "reasoning only"
+        ]
+      },
+      {
+        "task_id": "SW-01.exercise",
+        "profile": "swarm",
+        "goal": "Section: exercise basics.",
+        "turns": [
+          "search <- exercise muscle heart",
+          "search <- walk run energy",
+          "retrieve <- simple exercise routine for beginners",
+          "reasoning only"
+        ]
+      }
+    ]
+  },
+  "setup_digest": "66f54ae8c07ef581"
+}

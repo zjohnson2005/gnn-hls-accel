@@ -1,0 +1,521 @@
+{
+  "experiment": "tool_locality_ablation",
+  "result_validity": "debug_only",
+  "generated_utc": "2026-07-07T18:20:47.594827+00:00",
+  "setup_ref": {
+    "setup_digest": "fe9707b03e17a5b7",
+    "task_suite_digest": "a88a9e1058964219",
+    "cpu_model": "Intel(R) Core(TM) Ultra 5 325"
+  },
+  "git": {
+    "commit": "unknown",
+    "dirty": "unknown"
+  },
+  "env": {
+    "python": "3.14.0",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "cpu_model": "Intel64 Family 6 Model 204 Stepping 3, GenuineIntel",
+    "cores_logical": 8,
+    "cores_physical": 8,
+    "ram_gb": 15.6
+  },
+  "config": {
+    "backend": "scripted",
+    "seed": 0,
+    "task_ids": [
+      "SH-01"
+    ],
+    "retrieve_locality": "local",
+    "llm_median_scale": 0.05,
+    "payload_profile": "locality_ablation",
+    "tool_result_kb_max": 4.0,
+    "comparison_type": "matched_pair_live_model",
+    "payload_note": "Synthetic tool-result padding capped at 4 KB so multi-tool OpenAI sessions stay under 128k context. Padding is identical across local/remote search arms."
+  },
+  "timer_overhead_ns_per_pair": 6250.0,
+  "batch_wall_s": 8.357459499966353,
+  "run": {
+    "env": {},
+    "config": {
+      "profile": "tool_locality_ablation",
+      "seed": 0,
+      "mode": "sequential",
+      "backend": "scripted",
+      "llm_median_scale": 0.05,
+      "task_ids": [
+        "SH-01"
+      ],
+      "retrieve_locality": "local",
+      "total_cpu_basis": "process_time_all_threads"
+    },
+    "per_category": {
+      "ORCH_SETUP": {
+        "cpu_ns": 15625000,
+        "wall_ns": 203472100,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 4
+      },
+      "GC": {
+        "cpu_ns": 0,
+        "wall_ns": 0,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 2
+      },
+      "TOKENIZATION": {
+        "cpu_ns": 15625000,
+        "wall_ns": 50366400,
+        "bytes_in": 68127,
+        "bytes_out": 0,
+        "count": 38
+      },
+      "TOOL_COMPUTE": {
+        "cpu_ns": 781250000,
+        "wall_ns": 1036944800,
+        "bytes_in": 143,
+        "bytes_out": 0,
+        "count": 10
+      },
+      "SERIALIZATION": {
+        "cpu_ns": 0,
+        "wall_ns": 892200,
+        "bytes_in": 0,
+        "bytes_out": 43277,
+        "count": 18
+      },
+      "ORCH_DISPATCH": {
+        "cpu_ns": 62500000,
+        "wall_ns": 4804452800,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 55
+      },
+      "HTTP_CLIENT": {
+        "cpu_ns": 15625000,
+        "wall_ns": 2709046400,
+        "bytes_in": 1059,
+        "bytes_out": 265,
+        "count": 24
+      }
+    },
+    "per_session": [
+      {
+        "session_id": "SH-01_search_local",
+        "task_id": "SH-01",
+        "turns": 19,
+        "plan_len": 10,
+        "wall_s": 2.26575420005247,
+        "thread_cpu_ns": 828125000,
+        "process_cpu_ns": 828125000,
+        "instrumented_cpu_ns": 812500000,
+        "reconcile_cpu_ns": 15625000,
+        "tool_call_counts": {
+          "search": 8,
+          "calculator": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "search",
+            "query": "{\"query\": \"rain storm\", \"snippets\": [\"cast temperature forecast temperature forecast wind humidity warm snow wind temperature storm sun weather storm climate rain storm warm warm sun weather humidity weather cloud temperature cold rain humidity wind rain c",
+            "llm_step": 0
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"temperature cold warm\", \"snippets\": [\"recast storm storm snow sun weather climate cold weather wind wind cold warm climate temperature snow season season sun temperature cold warm humidity climate wind snow rain warm season storm cold warm rain ",
+            "llm_step": 2
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"wind forecast\", \"snippets\": [\"ather temperature climate rain climate rain temperature climate cloud cloud sun season sun warm temperature temperature wind forecast wind wind warm climate climate humidity forecast cloud warm temperature sun clima",
+            "llm_step": 4
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"snow season\", \"snippets\": [\"ture climate cold climate forecast temperature wind sun temperature storm sun warm weather rain snow warm humidity cold snow season storm temperature weather forecast climate humidity snow wind sun warm cold snow wind",
+            "llm_step": 6
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"climate humidity\", \"snippets\": [\"e rain temperature climate cloud cloud sun season sun warm temperature temperature wind forecast wind wind warm climate climate humidity forecast cloud warm temperature sun climate snow cold forecast rain weather",
+            "llm_step": 8
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"cloud sun\", \"snippets\": [\"castle museum empire battle empire rome battle ancient treaty battle\\n\\nhumidity cold forecast season climate sun weather cloud sun cold cold weather temperature climate rain climate rain temperature climate cloud cloud",
+            "llm_step": 10
+          },
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"(72 - 32) * 5 / 9\", \"engine\": \"sympy\", \"query\": \"(72 - 32) * 5 / 9\", \"value\": 22.22222222222222, \"padding\": \"under travel together step step rarely light late with value under plan previous in in carefully detail stone from from note schedu",
+            "llm_step": 12
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"storm wind rain\", \"snippets\": [\" rain snow cold humidity rain storm cold snow weather snow season weather rain humidity rain humidity snow cloud season storm wind rain season season climate warm rain storm cold climate snow cloud temperature sun",
+            "llm_step": 14
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"season climate\", \"snippets\": [\"lution empire queen treaty castle museum empire battle empire rome battle ancient treaty battle\\n\\nhumidity cold forecast season climate sun weather cloud sun cold cold weather temperature climate rain climate rain",
+            "llm_step": 16
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "search_locality": "local",
+        "retrieve_locality": "local"
+      },
+      {
+        "session_id": "SH-01_search_remote",
+        "task_id": "SH-01",
+        "turns": 19,
+        "plan_len": 10,
+        "wall_s": 3.8807767999824136,
+        "thread_cpu_ns": 46875000,
+        "process_cpu_ns": 46875000,
+        "instrumented_cpu_ns": 62500000,
+        "reconcile_cpu_ns": 0,
+        "tool_call_counts": {
+          "search": 8,
+          "calculator": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "search",
+            "query": "{\"query\": \"rain storm\", \"snippets\": [\"... rain storm ... excerpt 9811 ...\", \"... rain storm ... excerpt 6872 ...\", \"... rain storm ... excerpt 7960 ...\", \"... rain storm ... excerpt 6385 ...\", \"... rain storm ... excerpt 1904 ...\"], \"matches_scanned\": 5, \"",
+            "llm_step": 0
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"temperature cold warm\", \"snippets\": [\"... temperature cold warm ... excerpt 9640 ...\", \"... temperature cold warm ... excerpt 2582 ...\", \"... temperature cold warm ... excerpt 6395 ...\", \"... temperature cold warm ... excerpt 3555 ...\", \"... tem",
+            "llm_step": 2
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"wind forecast\", \"snippets\": [\"... wind forecast ... excerpt 7799 ...\", \"... wind forecast ... excerpt 9479 ...\", \"... wind forecast ... excerpt 8709 ...\", \"... wind forecast ... excerpt 6296 ...\", \"... wind forecast ... excerpt 6683 ...\"], \"matc",
+            "llm_step": 4
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"snow season\", \"snippets\": [\"... snow season ... excerpt 2405 ...\", \"... snow season ... excerpt 7083 ...\", \"... snow season ... excerpt 1959 ...\", \"... snow season ... excerpt 8033 ...\", \"... snow season ... excerpt 7308 ...\"], \"matches_scanned\"",
+            "llm_step": 6
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"climate humidity\", \"snippets\": [\"... climate humidity ... excerpt 1885 ...\", \"... climate humidity ... excerpt 7870 ...\", \"... climate humidity ... excerpt 3104 ...\", \"... climate humidity ... excerpt 9676 ...\", \"... climate humidity ... excerpt",
+            "llm_step": 8
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"cloud sun\", \"snippets\": [\"... cloud sun ... excerpt 3214 ...\", \"... cloud sun ... excerpt 6314 ...\", \"... cloud sun ... excerpt 4725 ...\", \"... cloud sun ... excerpt 5258 ...\", \"... cloud sun ... excerpt 4981 ...\"], \"matches_scanned\": 5, \"locali",
+            "llm_step": 10
+          },
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"(72 - 32) * 5 / 9\", \"engine\": \"sympy\", \"query\": \"(72 - 32) * 5 / 9\", \"value\": 22.22222222222222, \"padding\": \"early plan over paper the money step paper on by quickly summary budget second paper large next from from sound first carefully rar",
+            "llm_step": 12
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"storm wind rain\", \"snippets\": [\"... storm wind rain ... excerpt 2128 ...\", \"... storm wind rain ... excerpt 8870 ...\", \"... storm wind rain ... excerpt 8318 ...\", \"... storm wind rain ... excerpt 9388 ...\", \"... storm wind rain ... excerpt 6789 ",
+            "llm_step": 14
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"season climate\", \"snippets\": [\"... season climate ... excerpt 3835 ...\", \"... season climate ... excerpt 3749 ...\", \"... season climate ... excerpt 7599 ...\", \"... season climate ... excerpt 8369 ...\", \"... season climate ... excerpt 8193 ...\"],",
+            "llm_step": 16
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "search_locality": "remote",
+        "retrieve_locality": "local"
+      }
+    ],
+    "per_session_category": {
+      "SH-01_search_local": {
+        "ORCH_SETUP": {
+          "cpu_ns": 0,
+          "wall_ns": 109407300,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "GC": {
+          "cpu_ns": 0,
+          "wall_ns": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 15625000,
+          "wall_ns": 38446800,
+          "bytes_in": 32013,
+          "bytes_out": 0,
+          "count": 19
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 781250000,
+          "wall_ns": 1035983900,
+          "bytes_in": 126,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 516900,
+          "bytes_in": 0,
+          "bytes_out": 18764,
+          "count": 9
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 31250000,
+          "wall_ns": 1059345200,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 28
+        }
+      },
+      "SH-01_search_remote": {
+        "ORCH_SETUP": {
+          "cpu_ns": 15625000,
+          "wall_ns": 94064800,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 11919600,
+          "bytes_in": 36114,
+          "bytes_out": 0,
+          "count": 19
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 15625000,
+          "wall_ns": 2709046400,
+          "bytes_in": 1059,
+          "bytes_out": 265,
+          "count": 24
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 375300,
+          "bytes_in": 0,
+          "bytes_out": 24513,
+          "count": 9
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 31250000,
+          "wall_ns": 3745107600,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 27
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 0,
+          "wall_ns": 960900,
+          "bytes_in": 17,
+          "bytes_out": 0,
+          "count": 1
+        }
+      }
+    },
+    "residual_cpu_ns": 0,
+    "residual_fraction": 0.0,
+    "totals": {
+      "thread_cpu_ns": 875000000,
+      "wall_ns": 6159089800,
+      "instrumented_cpu_ns": 890625000
+    },
+    "os_times_user_sys": {
+      "user": 0.765625,
+      "system": 0.125
+    },
+    "timeline": []
+  },
+  "per_task": {
+    "SH-01": {
+      "categories": {
+        "ORCH_SETUP": {
+          "cpu_ns": 15625000,
+          "wall_ns": 203472100,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "GC": {
+          "cpu_ns": 0,
+          "wall_ns": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 15625000,
+          "wall_ns": 50366400,
+          "bytes_in": 68127,
+          "bytes_out": 0,
+          "count": 38
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 781250000,
+          "wall_ns": 1036944800,
+          "bytes_in": 143,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 0,
+          "wall_ns": 892200,
+          "bytes_in": 0,
+          "bytes_out": 43277,
+          "count": 18
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 62500000,
+          "wall_ns": 4804452800,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 55
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 15625000,
+          "wall_ns": 2709046400,
+          "bytes_in": 1059,
+          "bytes_out": 265,
+          "count": 24
+        }
+      },
+      "sessions": [
+        "SH-01_search_local",
+        "SH-01_search_remote"
+      ],
+      "instrumented_cpu_ns": 890625000,
+      "amenable_strict_ns": 93750000,
+      "amenable_broad_ns": 109375000,
+      "amenable_strict_share": 0.10526315789473684,
+      "amenable_broad_share": 0.12280701754385964
+    }
+  },
+  "per_task_wall_cpu": {
+    "per_task": {
+      "SH-01": {
+        "session_id": "SH-01_search_local",
+        "session_wall_s": 2.26575420005247,
+        "llm_io_wait_s": 2.7090464,
+        "non_llm_wall_s": 0.0,
+        "host_cpu_ms": 828.125,
+        "llm_io_pct_of_session_wall": 119.56488483778445,
+        "host_cpu_pct_of_session_wall": 36.54963984976051,
+        "tool_cpu_ms": 781.25,
+        "harness_cpu_ms": 109.375,
+        "cpu_by_category_ms": {
+          "ORCH_SETUP": 15.625,
+          "TOKENIZATION": 15.625,
+          "TOOL_COMPUTE": 781.25,
+          "ORCH_DISPATCH": 62.5,
+          "HTTP_CLIENT": 15.625
+        },
+        "tool_call_counts": {
+          "search": 8,
+          "calculator": 1
+        }
+      }
+    },
+    "totals": {
+      "session_wall_s": 2.26575420005247,
+      "llm_io_wait_s": 2.7090464,
+      "host_cpu_ms": 828.125,
+      "llm_io_pct_of_session_wall": 119.56488483778445,
+      "host_cpu_pct_of_session_wall": 36.54963984976051
+    }
+  },
+  "session_rows": [
+    {
+      "session_id": "SH-01_search_local",
+      "task_id": "SH-01",
+      "search_locality": "local",
+      "retrieve_locality": "local",
+      "session_wall_s": 2.266,
+      "host_cpu_ms": 828.1,
+      "tool_compute_cpu_ms": 781.2,
+      "http_client_cpu_ms": 0.0,
+      "orch_cpu_ms": 31.2,
+      "llm_io_wait_s": 0.0,
+      "io_pct_of_wall": 0.0,
+      "cpu_pct_of_wall": 36.5,
+      "tool_call_counts": {
+        "search": 8,
+        "calculator": 1
+      },
+      "search_calls": 8
+    },
+    {
+      "session_id": "SH-01_search_remote",
+      "task_id": "SH-01",
+      "search_locality": "remote",
+      "retrieve_locality": "local",
+      "session_wall_s": 3.881,
+      "host_cpu_ms": 46.9,
+      "tool_compute_cpu_ms": 0.0,
+      "http_client_cpu_ms": 15.6,
+      "orch_cpu_ms": 46.9,
+      "llm_io_wait_s": 2.709,
+      "io_pct_of_wall": 69.8,
+      "cpu_pct_of_wall": 1.2,
+      "tool_call_counts": {
+        "search": 8,
+        "calculator": 1
+      },
+      "search_calls": 8
+    }
+  ],
+  "comparison": [
+    {
+      "task_id": "SH-01",
+      "local_host_cpu_ms": 828.1,
+      "remote_host_cpu_ms": 46.9,
+      "host_cpu_delta_ms": -781.2,
+      "local_tool_compute_ms": 781.2,
+      "remote_tool_compute_ms": 0.0,
+      "tool_compute_delta_ms": -781.2,
+      "local_io_pct": 0.0,
+      "remote_io_pct": 69.8,
+      "io_pct_delta": 69.8,
+      "local_cpu_pct_wall": 36.5,
+      "remote_cpu_pct_wall": 1.2,
+      "cpu_pct_wall_delta": -35.3,
+      "local_search_calls": 8,
+      "remote_search_calls": 8
+    }
+  ],
+  "interpretation": "Remote search moves tool body work from TOOL_COMPUTE (local regex scan) into HTTP_CLIENT envelope CPU plus I/O wait (time.sleep round trip). Search-heavy tasks (SH-*): mean CPU% of wall drops by -35.3 points when search is remote (n=1). Across all paired tasks: mean TOOL_COMPUTE delta -781.2 ms; mean CPU% of wall delta -35.3 points. Interpretation: search CPU in the baseline run is largely an artifact of in-process search locality, not a durable property of search-using agents when search is deployed as a remote service.",
+  "reproduce_cmd": "python -m apu_characterization.experiments.tool_locality_ablation --backend scripted --seed 0 --tasks SH-01 --retrieve-locality local",
+  "invariant": {
+    "total_thread_cpu_ns": 875000000,
+    "instrumented_cpu_ns": 890625000,
+    "residual_cpu_ns": 0,
+    "residual_fraction": 0.0,
+    "limit": 0.15,
+    "pass": true
+  },
+  "audit": {
+    "pass": false,
+    "publishable_ok": false,
+    "violations": [
+      "SH-01: instrumented 62.5 ms > process CPU 46.9 ms \u2014 thread_time timers vs process_time host basis; diagnose before quoting shares"
+    ],
+    "warnings": [
+      "Host CPU values appear quantized to 15.625 ms Windows thread-time ticks; per-task shares below ~200 ms/session are not quotable. Re-run on Linux with test_resolution PASS before publishing.",
+      "SH-01: host CPU 46.9 ms below Windows quotable floor (200 ms); per-task shares not publishable",
+      "SH-01: I/O % of wall is 119.6% (>100%) \u2014 HTTP_CLIENT wall includes remote-tool waits concurrent with session clock; not an additive partition (see wall integrity table)"
+    ],
+    "platform": "win32",
+    "windows_tick_ms": 15.625,
+    "min_quotable_session_cpu_ms": 200.0,
+    "n_seeds": 1
+  }
+}
