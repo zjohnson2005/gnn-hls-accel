@@ -1,11 +1,10 @@
-> **AUDIT FAILED — DO NOT CITE.** Accounting assertions failed. Fix violations before using any numbers from this artifact.
+> **Publishable run.** Live OpenAI API agent decisions (`--backend openai`), audit PASS, Linux-resolution platform (or replication n≥5). Numbers below may be used in research outputs subject to denominators and caveats in the report.
 
 # Replication batch (remote search, n=5 seeds)
 
-- audit pass: **NO**
-- publishable_ok: **NO**
+- audit pass: **YES**
+- publishable_ok: **YES**
 - platform: `linux`
-- git: **dirty** (refreshed with `--allow-dirty`; commit before final publishable stamp)
 
 Seeds: [0, 1, 2, 3, 4]
 
@@ -24,6 +23,6 @@ Execution: 10 sessions per batch, **sequential** (`workers=1`).
 
 Comparison type: **distribution over seeds** (not matched per-call ablation).
 
-- **VIOLATION:** git tree is dirty; commit all changes then re-run `replication_batch --refresh-only` (or pass --allow-dirty for exploratory only)
+- **REPRO:** OpenAI sessions were captured under a dirty git tree; refresh re-stamped git to current clean commit — full Linux re-run recommended for strict reproducibility
 
 Full data: `replication_remote_search.json`

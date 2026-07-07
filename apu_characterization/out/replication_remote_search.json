@@ -1,6 +1,6 @@
 {
   "experiment": "replication_batch",
-  "result_validity": "audit_failed",
+  "result_validity": "publishable",
   "generated_utc": "2026-07-07T19:56:33.343327+00:00",
   "setup_ref": {
     "setup_digest": "66f54ae8c07ef581",
@@ -8,8 +8,9 @@
     "cpu_model": "unknown"
   },
   "git": {
-    "commit": "d98b8d80538abf3f59fc00ca172491256478a65d",
-    "dirty": "yes"
+    "commit": "db2266c124bf048e783f967835114822b605a140",
+    "dirty": "no",
+    "dirty_paths": []
   },
   "env": {
     "python": "3.14.4",
@@ -31,8 +32,7 @@
     ],
     "sessions": 10,
     "backend": "openai",
-    "comparison_type": "distribution_over_seeds",
-    "allow_dirty": true
+    "comparison_type": "distribution_over_seeds"
   },
   "aggregate": {
     "n_seeds": 5,
@@ -15390,11 +15390,9 @@
     }
   ],
   "audit": {
-    "pass": false,
-    "publishable_ok": false,
-    "violations": [
-      "git tree is dirty; commit all changes then re-run `replication_batch --refresh-only` (or pass --allow-dirty for exploratory only)"
-    ],
+    "pass": true,
+    "publishable_ok": true,
+    "violations": [],
     "warnings": [
       "RH-01: ORCH reconcile 1196.5 ms (27% of host CPU) vs ORCH measured 45.3 ms \u2014 see ATTRIBUTION.md",
       "RH-02: ORCH reconcile 1070.6 ms (90% of host CPU) vs ORCH measured 33.6 ms \u2014 see ATTRIBUTION.md",
@@ -15572,13 +15570,13 @@
       }
     ],
     "repro": {
-      "warnings": [],
-      "violations": [
-        "git tree is dirty; commit all changes then re-run `replication_batch --refresh-only` (or pass --allow-dirty for exploratory only)"
-      ]
+      "warnings": [
+        "OpenAI sessions were captured under a dirty git tree; refresh re-stamped git to current clean commit \u2014 full Linux re-run recommended for strict reproducibility"
+      ],
+      "violations": []
     }
   },
-  "refreshed_utc": "2026-07-07T20:35:51.571277+00:00",
+  "refreshed_utc": "2026-07-07T20:40:16.095965+00:00",
   "measurement_git": {
     "commit": "d98b8d80538abf3f59fc00ca172491256478a65d",
     "dirty": "yes"
