@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from .audit import apply_audit_to_artifact, apply_audit_to_replication_batch
-from .experiments.single_agent_breakdown import _git_state
+from .experiments.single_agent_breakdown import _git_state, _repo_relative_posix
 from .stats import aggregate_replication_runs, backfill_run_orch_fields, batch_attribution_summary
 from .validity import DEBUG_ONLY, PUBLISHABLE, validity_banner
 
@@ -138,7 +138,15 @@ def refresh_replication_batch(
     cfg = combined.setdefault("config", {})
     if "measurement_git" not in combined and combined.get("git"):
         combined["measurement_git"] = dict(combined["git"])
-    combined["git"] = _git_state()
+    search_locality = cfg.get("search_locality", "remote")
+    stem = json_path.stem
+    out_json = out_dir / f"{stem}.json"
+    out_md = out_dir / f"{stem}.md"
+    ignore_git = (
+        _repo_relative_posix(out_json),
+        _repo_relative_posix(out_md),
+    )
+    combined["git"] = _git_state(ignore_paths=ignore_git)
     if combined["git"].get("dirty") == "no":
         cfg.pop("allow_dirty", None)
     elif allow_dirty:
@@ -157,10 +165,6 @@ def refresh_replication_batch(
     combined["refreshed_utc"] = datetime.now(timezone.utc).isoformat()
     apply_audit_to_replication_batch(combined, allow_dirty=allow_dirty)
 
-    search_locality = cfg.get("search_locality", "remote")
-    stem = json_path.stem
-    out_json = out_dir / f"{stem}.json"
-    out_md = out_dir / f"{stem}.md"
     out_json.write_text(json.dumps(combined, indent=2), encoding="utf-8")
     out_md.write_text(
         write_replication_markdown(

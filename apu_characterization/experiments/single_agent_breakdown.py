@@ -71,17 +71,45 @@ CATEGORY_REGIONS = {
 }
 
 
-def _git_state() -> dict[str, str]:
+def _repo_relative_posix(path: Path) -> str:
+    try:
+        root = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        return path.resolve().relative_to(root).as_posix()
+    except (FileNotFoundError, subprocess.CalledProcessError, ValueError):
+        return path.as_posix()
+
+
+def _git_state(*, ignore_paths: tuple[str, ...] = ()) -> dict[str, str]:
+    """Return HEAD commit and whether the working tree has uncommitted changes."""
     try:
         rev = subprocess.run(
             ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
         ).stdout.strip()
-        dirty = subprocess.run(
+        porcelain = subprocess.run(
             ["git", "status", "--porcelain"], capture_output=True, text=True, check=True
-        ).stdout.strip()
-        return {"commit": rev, "dirty": "yes" if dirty else "no"}
+        ).stdout
+        ignore = {p.replace("\\", "/") for p in ignore_paths}
+        dirty_lines: list[str] = []
+        for line in porcelain.splitlines():
+            if not line.strip():
+                continue
+            path = line[3:].split(" -> ")[-1].strip().replace("\\", "/")
+            if path in ignore:
+                continue
+            dirty_lines.append(line)
+        dirty = "\n".join(dirty_lines)
+        return {
+            "commit": rev,
+            "dirty": "yes" if dirty else "no",
+            "dirty_paths": [ln[3:].split(" -> ")[-1].strip() for ln in dirty_lines],
+        }
     except (FileNotFoundError, subprocess.CalledProcessError):
-        return {"commit": "unknown", "dirty": "unknown"}
+        return {"commit": "unknown", "dirty": "unknown", "dirty_paths": []}
 
 
 def _env_info() -> dict[str, Any]:

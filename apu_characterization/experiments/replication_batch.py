@@ -149,6 +149,13 @@ def main() -> None:
             print(f"  VIOLATION: {v}")
         for w in (audit.get("repro") or {}).get("warnings") or []:
             print(f"  REPRO: {w}")
+        dirty_paths = git.get("dirty_paths") or []
+        if dirty_paths:
+            print("  Uncommitted paths (excluding refreshed artifact):")
+            for p in dirty_paths[:8]:
+                print(f"    {p}")
+            if len(dirty_paths) > 8:
+                print(f"    ... and {len(dirty_paths) - 8} more")
         if not audit.get("pass"):
             if git.get("dirty") == "yes" and not args.allow_dirty:
                 print(
