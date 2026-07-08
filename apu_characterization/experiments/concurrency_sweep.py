@@ -22,9 +22,12 @@ k = 1 / (1 - f) where f is the pooled harness fraction of host CPU at N_max
 **workers mode (legacy, ``--workers``):** sessions fixed (default 10), sweep
 ThreadPoolExecutor max_workers. Kept for backward compatibility.
 
-**Per-level audit:** each run gets the standard 15% per-session residual gate
-plus a 12% fan-out canary on FO-01 or any session with >= 4 parallel tool
-calls (``apply_audit_to_concurrency_sweep``). Canary warnings do not fail the
+**Per-level audit:** at c=1 the standard 15% per-session residual gate applies.
+At c>1 overlapping session clocks make per-session gates meaningless; the
+batch-level gate uses ``batch_process_cpu_ns`` (single process_time delta for
+the whole batch) with the same 15% residual-provenance limit, plus a 12%
+fan-out canary on FO-01 or any session with >= 4 parallel tool calls
+(``apply_audit_to_concurrency_sweep``). Canary warnings do not fail the
 sweep.
 
 Run (publishable c-ladder, Linux/WSL):
@@ -576,10 +579,16 @@ def _run_levels_mode(args: argparse.Namespace, seeds: list[int], levels: list[in
         levels_run.append(level)
 
         reason = _saturation_reason(level_agg, prev_throughput)
-        if reason:
+        if reason and not args.no_saturate_stop:
             saturation = {"level": level, "reason": reason}
             print(f"SATURATION at c={level}: {reason}; stopping ladder", flush=True)
             break
+        if reason and args.no_saturate_stop:
+            print(
+                f"SATURATION would trip at c={level}: {reason}; "
+                "--no-saturate-stop — continuing",
+                flush=True,
+            )
         tp = (level_agg.get("throughput_sessions_per_min") or {}).get("median")
         if tp is not None:
             prev_throughput = tp
@@ -679,7 +688,8 @@ def _run_levels_mode(args: argparse.Namespace, seeds: list[int], levels: list[in
         print("FAIL: one or more runs exceeded residual limit")
         sys.exit(1)
     if not all_audit and args.backend == "openai":
-        print("WARN: one or more runs failed audit (check platform / tick resolution)")
+        print("FAIL: one or more runs failed audit (check platform / tick resolution)")
+        sys.exit(1)
 
 
 def _run_workers_mode(args: argparse.Namespace, seeds: list[int]) -> None:
@@ -770,7 +780,8 @@ def _run_workers_mode(args: argparse.Namespace, seeds: list[int]) -> None:
         print("FAIL: one or more runs exceeded residual limit")
         sys.exit(1)
     if not all_audit and args.backend == "openai":
-        print("WARN: one or more runs failed audit (check platform / tick resolution)")
+        print("FAIL: one or more runs failed audit (check platform / tick resolution)")
+        sys.exit(1)
 
 
 def main() -> None:
@@ -810,6 +821,13 @@ def main() -> None:
     parser.add_argument("--llm-scale", type=float, default=0.05, dest="llm_scale")
     parser.add_argument("--out", type=Path, default=Path("apu_characterization/out"))
     parser.add_argument("--allow-dirty", action="store_true")
+    parser.add_argument(
+        "--no-saturate-stop",
+        action="store_true",
+        dest="no_saturate_stop",
+        help="Do not stop the c-ladder when the saturation criterion trips "
+        "(smoke/debug; throughput may be API-bound at low c)",
+    )
     args = parser.parse_args()
 
     if args.seed is not None:

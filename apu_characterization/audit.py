@@ -83,6 +83,67 @@ def _repro_checks(combined: dict[str, Any], *, allow_dirty: bool) -> dict[str, A
     return {"warnings": warnings, "violations": violations}
 
 
+def _concurrent_batch(cfg: dict[str, Any], run: dict[str, Any] | None = None) -> bool:
+    """True when multiple sessions ran in parallel (batch-level audit applies)."""
+    workers = int(cfg.get("workers") or 1)
+    if workers <= 1 and run:
+        workers = int((run.get("config") or {}).get("workers") or 1)
+    return workers > 1
+
+
+def _audit_concurrent_batch(
+    run: dict[str, Any],
+    inv: dict[str, Any],
+    violations: list[str],
+    warnings: list[str],
+) -> None:
+    """Batch-level residual gate for c>1 (replaces per-session gate)."""
+    cfg = run.get("config") or {}
+    batch_host_ns = int(
+        cfg.get("batch_process_cpu_ns") or run.get("totals", {}).get("thread_cpu_ns") or 0
+    )
+    if batch_host_ns <= 0:
+        violations.append("concurrent batch: batch_process_cpu_ns is zero")
+        return
+    batch_host_ms = batch_host_ns / 1e6
+    prov = run.get("provenance_totals") or {}
+    residual_prov_ns = prov.get("residual", 0)
+    step_infer_ns = prov.get("step_inferred", 0)
+    res_limit = float(inv.get("limit", 0.15))
+    slack = _tick_slack_ms(batch_host_ms)
+    residual_prov_ms = residual_prov_ns / 1e6
+    if residual_prov_ns > batch_host_ns * res_limit + slack:
+        violations.append(
+            f"batch (workers={cfg.get('workers')}): residual-provenance "
+            f"{residual_prov_ms:.1f} ms ({100 * residual_prov_ns / batch_host_ns:.1f}% "
+            f"of batch host {batch_host_ms:.1f} ms) exceeds {res_limit * 100:.0f}% gate"
+        )
+    if step_infer_ns > batch_host_ns * 0.05 + slack:
+        warnings.append(
+            f"batch: step-inferred {step_infer_ns / 1e6:.1f} ms "
+            f"({100 * step_infer_ns / batch_host_ns:.1f}% of batch host)"
+        )
+    instr_ns = run.get("totals", {}).get("instrumented_cpu_ns", 0)
+    if instr_ns > batch_host_ns + IMPOSSIBILITY_EPS_MS * 1e6:
+        violations.append(
+            f"batch: instrumented {instr_ns / 1e6:.1f} ms > batch process CPU "
+            f"{batch_host_ms:.1f} ms"
+        )
+    residual_cat_ns = run.get("per_category", {}).get("RESIDUAL_UNATTRIBUTED", {}).get(
+        "cpu_ns", 0
+    )
+    if residual_cat_ns > batch_host_ns * res_limit + slack:
+        violations.append(
+            f"batch: RESIDUAL_UNATTRIBUTED category "
+            f"{residual_cat_ns / 1e6:.1f} ms ({100 * residual_cat_ns / batch_host_ns:.1f}% "
+            f"of batch host) exceeds {res_limit * 100:.0f}% gate"
+        )
+    warnings.append(
+        f"concurrent batch (workers={cfg.get('workers')}): per-session residual "
+        "checks waived; batch-level gate on batch_process_cpu_ns applies"
+    )
+
+
 def audit_real_agent_artifact(artifact: dict[str, Any]) -> dict[str, Any]:
     """Audit a real_agent_breakdown (or replication aggregate) artifact."""
     run = artifact.get("run", {})
@@ -91,6 +152,7 @@ def audit_real_agent_artifact(artifact: dict[str, Any]) -> dict[str, Any]:
     per_session_category = run.get("per_session_category", {})
     cfg = artifact.get("config", {})
     inv = artifact.get("invariant", {})
+    concurrent = _concurrent_batch(cfg, run)
 
     violations: list[str] = []
     warnings: list[str] = []
@@ -132,7 +194,7 @@ def audit_real_agent_artifact(artifact: dict[str, Any]) -> dict[str, Any]:
 
         for cat, vals in cats.items():
             cms = vals.get("cpu_ns", 0) / 1e6
-            if cms > host_cpu_ms + IMPOSSIBILITY_EPS_MS and host_cpu_ms > 0:
+            if not concurrent and cms > host_cpu_ms + IMPOSSIBILITY_EPS_MS and host_cpu_ms > 0:
                 diag = (
                     "cross-counter tick artifact (thread_time category vs process_time "
                     "host CPU)"
@@ -144,7 +206,30 @@ def audit_real_agent_artifact(artifact: dict[str, Any]) -> dict[str, Any]:
                     f"{host_cpu_ms:.1f} ms — {diag}"
                 )
 
-        if host_cpu_ms > 0 and instr_sess_ms > host_cpu_ms + IMPOSSIBILITY_EPS_MS:
+        if (
+            not concurrent
+            and reconcile_ms > host_cpu_ms * PROCESS_INSTR_TOLERANCE + slack
+            and host_cpu_ms > min_quotable
+        ):
+            orch_recon_ms = sess.get("orch_reconcile_cpu_ns", 0) / 1e6
+            orch_meas_ms = sess.get("orch_measured_cpu_ns", 0) / 1e6
+            if orch_recon_ms > 0:
+                warnings.append(
+                    f"{label}: ORCH reconcile {orch_recon_ms:.1f} ms "
+                    f"({100 * orch_recon_ms / host_cpu_ms:.0f}% of host CPU) vs "
+                    f"ORCH measured {orch_meas_ms:.1f} ms — see ATTRIBUTION.md"
+                )
+            else:
+                warnings.append(
+                    f"{label}: reconcile gap {reconcile_ms:.1f} ms is "
+                    f"{100 * reconcile_ms / host_cpu_ms:.0f}% of process CPU — check attribution"
+                )
+
+        if (
+            not concurrent
+            and host_cpu_ms > 0
+            and instr_sess_ms > host_cpu_ms + IMPOSSIBILITY_EPS_MS
+        ):
             trim_ms = sess.get("parallel_cpu_trim_ns", 0) / 1e6
             if trim_ms > 0 and instr_sess_ms <= host_cpu_ms + max(2.0, host_cpu_ms * 0.02):
                 warnings.append(
@@ -163,21 +248,6 @@ def audit_real_agent_artifact(artifact: dict[str, Any]) -> dict[str, Any]:
                     )
                 )
 
-        if reconcile_ms > host_cpu_ms * PROCESS_INSTR_TOLERANCE + slack and host_cpu_ms > min_quotable:
-            orch_recon_ms = sess.get("orch_reconcile_cpu_ns", 0) / 1e6
-            orch_meas_ms = sess.get("orch_measured_cpu_ns", 0) / 1e6
-            if orch_recon_ms > 0:
-                warnings.append(
-                    f"{label}: ORCH reconcile {orch_recon_ms:.1f} ms "
-                    f"({100 * orch_recon_ms / host_cpu_ms:.0f}% of host CPU) vs "
-                    f"ORCH measured {orch_meas_ms:.1f} ms — see ATTRIBUTION.md"
-                )
-            else:
-                warnings.append(
-                    f"{label}: reconcile gap {reconcile_ms:.1f} ms is "
-                    f"{100 * reconcile_ms / host_cpu_ms:.0f}% of process CPU — check attribution"
-                )
-
         if is_windows and host_cpu_ms > 0 and host_cpu_ms < min_quotable:
             warnings.append(
                 f"{label}: host CPU {host_cpu_ms:.1f} ms below Windows quotable floor "
@@ -188,7 +258,7 @@ def audit_real_agent_artifact(artifact: dict[str, Any]) -> dict[str, Any]:
         prov = sess.get("provenance") or {}
         residual_prov_ms = prov.get("residual", 0) / 1e6
         step_infer_ms = prov.get("step_inferred", 0) / 1e6
-        if instr_version >= 2 and host_cpu_ms > min_quotable:
+        if instr_version >= 2 and host_cpu_ms > min_quotable and not concurrent:
             res_ms = sess.get("residual_unattributed_cpu_ns", 0) / 1e6
             res_limit = inv.get("limit", 0.15)
             # True residual provenance only (not step-inferred mass).
@@ -204,6 +274,9 @@ def audit_real_agent_artifact(artifact: dict[str, Any]) -> dict[str, Any]:
                     f"({100 * step_infer_ms / host_cpu_ms:.0f}% of host) — "
                     "corroborating tier only; run step_infer_calibration"
                 )
+
+    if concurrent:
+        _audit_concurrent_batch(run, inv, violations, warnings)
 
     # Per-task rollup (single-session tasks only; skip merged multi-arm rows).
     session_by_task: dict[str, list[dict[str, Any]]] = {}
@@ -274,9 +347,13 @@ def audit_real_agent_artifact(artifact: dict[str, Any]) -> dict[str, Any]:
     )
 
     per_session = run.get("per_session") or []
-    batch_host = sum(s.get("process_cpu_ns", 0) for s in per_session) or inv.get(
-        "total_thread_cpu_ns", 0
-    )
+    run_cfg = run.get("config") or {}
+    if concurrent and run_cfg.get("batch_process_cpu_ns"):
+        batch_host = int(run_cfg["batch_process_cpu_ns"])
+    else:
+        batch_host = sum(s.get("process_cpu_ns", 0) for s in per_session) or inv.get(
+            "total_thread_cpu_ns", 0
+        )
     orch_meas = sum(s.get("orch_measured_cpu_ns", 0) for s in per_session)
     orch_recon = sum(s.get("orch_reconcile_cpu_ns", 0) for s in per_session)
     orch_total = orch_meas + orch_recon

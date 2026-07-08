@@ -55,6 +55,19 @@ python -c "from apu_characterization.env_pin import assert_blas_pinned; assert_b
 
 echo "=== sweep smoke (c=5, seed 0, openai, remote search) ==="
 python -m apu_characterization.experiments.concurrency_sweep \
-  --backend openai --levels 5 --seeds 0 --search-locality remote
+  --backend openai --levels 5 --seeds 0 --search-locality remote --no-saturate-stop
+
+echo "=== validating audit ==="
+python -c "
+import json, sys
+from pathlib import Path
+p = Path('apu_characterization/out/concurrency_sweep.json')
+d = json.loads(p.read_text())
+audit = d.get('audit') or {}
+if not audit.get('pass'):
+    print('AUDIT FAIL:', audit.get('violations'))
+    sys.exit(1)
+print('audit pass:', d.get('result_validity'))
+"
 
 echo "=== sweep smoke OK ==="

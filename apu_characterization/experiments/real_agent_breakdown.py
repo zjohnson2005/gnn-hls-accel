@@ -385,6 +385,53 @@ def _align_session_cpu_to_process(
     return trimmed
 
 
+def _align_batch_cpu_to_process(acc: RunAccumulator, batch_process_cpu_ns: int) -> int:
+    """Scale all category CPU when parallel sessions over-sum vs batch process clock."""
+    if batch_process_cpu_ns <= 0:
+        return 0
+    batch_instr = acc.instrumented_cpu_ns()
+    if batch_instr <= batch_process_cpu_ns:
+        return 0
+    scale = batch_process_cpu_ns / batch_instr
+    trimmed = 0
+    with acc._lock:
+        for t in acc.by_key.values():
+            old = t.cpu_ns
+            t.cpu_ns = int(old * scale)
+            trimmed += old - t.cpu_ns
+        for pt in acc.by_provenance.values():
+            pt.cpu_ns = int(pt.cpu_ns * scale)
+    return trimmed
+
+
+def _reconcile_batch_cpu(
+    acc: RunAccumulator, batch_process_cpu_ns: int, *, instr_version: int
+) -> int:
+    """Book one batch-level RESIDUAL gap for concurrent runs (c>1).
+
+    Per-session process_time deltas overlap under parallelism; session-end
+    reconcile inflates RESIDUAL. This runs once after all sessions finish.
+    Returns residual ns booked (0 if none).
+    """
+    if batch_process_cpu_ns <= 0 or instr_version < 2:
+        return 0
+    _align_batch_cpu_to_process(acc, batch_process_cpu_ns)
+    batch_instr = acc.instrumented_cpu_ns()
+    batch_gap = max(0, batch_process_cpu_ns - batch_instr)
+    if batch_gap <= 0:
+        return 0
+    from ..provenance import RESIDUAL
+
+    acc.book_cpu(
+        Category.RESIDUAL_UNATTRIBUTED,
+        "_batch_",
+        batch_gap,
+        batch_gap,
+        provenance=RESIDUAL,
+    )
+    return batch_gap
+
+
 def tool_sequence_to_steps(sequence: list[dict[str, str]]) -> list[list[tuple[str, str]]]:
     """Group a flat tool_call_sequence into per-LLM-step batches."""
     if not sequence:
@@ -439,6 +486,7 @@ def run_real_session(
     *,
     replay_steps: list[list[tuple[str, str]]] | None = None,
     instr_version: int = 1,
+    defer_session_reconcile: bool = False,
 ) -> dict[str, Any]:
     import random as _random
 
@@ -597,17 +645,26 @@ def run_real_session(
         session_process_ns = int((time.process_time() - proc_start) * 1e9)
         session_instr_before = tagged_cpu()
         orch_measured_before_ns = _session_orch_cpu_ns(acc, session_id)
-        reconcile_added_ns = max(0, session_process_ns - session_instr_before)
-        parallel_trim_ns = _align_session_cpu_to_process(
-            acc, session_id, session_process_ns
-        )
-        session_instr = tagged_cpu()
-        session_gap = max(0, session_process_ns - session_instr)
-        orch_measured_ns = 0
-        orch_reconcile_ns = 0
-        residual_unattributed_ns = 0
+        if defer_session_reconcile:
+            parallel_trim_ns = 0
+            reconcile_added_ns = 0
+            session_instr = session_instr_before
+            session_gap = 0
+            orch_measured_ns = _session_orch_cpu_ns(acc, session_id)
+            orch_reconcile_ns = 0
+            residual_unattributed_ns = 0
+        else:
+            reconcile_added_ns = max(0, session_process_ns - session_instr_before)
+            parallel_trim_ns = _align_session_cpu_to_process(
+                acc, session_id, session_process_ns
+            )
+            session_instr = tagged_cpu()
+            session_gap = max(0, session_process_ns - session_instr)
+            orch_measured_ns = 0
+            orch_reconcile_ns = 0
+            residual_unattributed_ns = 0
 
-        if instr_version >= 3:
+        if not defer_session_reconcile and instr_version >= 3:
             from ..provenance import RESIDUAL
 
             session_instr = tagged_cpu()
@@ -624,7 +681,7 @@ def run_real_session(
             orch_total_final_ns = _session_orch_cpu_ns(acc, session_id)
             orch_measured_ns = orch_total_final_ns
             session_instr = tagged_cpu()
-        elif instr_version >= 2:
+        elif not defer_session_reconcile and instr_version >= 2:
             if session_gap > 0:
                 from ..provenance import RESIDUAL
 
@@ -639,7 +696,7 @@ def run_real_session(
             orch_total_final_ns = _session_orch_cpu_ns(acc, session_id)
             orch_measured_ns = orch_total_final_ns
             session_instr = tagged_cpu()
-        else:
+        elif not defer_session_reconcile:
             session_gap_book = reconcile_added_ns
             if session_gap_book > 0:
                 totals = acc.totals_for(Category.ORCH_DISPATCH, session_id)
@@ -652,6 +709,8 @@ def run_real_session(
                 orch_measured_before_ns, reconcile_added_ns, orch_total_final_ns
             )
             residual_unattributed_ns = 0
+            session_instr = tagged_cpu()
+        elif defer_session_reconcile:
             session_instr = tagged_cpu()
 
         wall_s = time.perf_counter() - wall_start
@@ -752,6 +811,7 @@ def run_real_batch(
         max_workers = workers if workers is not None else 1
     else:
         max_workers = workers or min(16, concurrency)
+    defer_session_reconcile = max_workers > 1
 
     def worker(i: int) -> dict[str, Any]:
         t0 = time.thread_time_ns()
@@ -775,6 +835,7 @@ def run_real_batch(
                 llm_scale,
                 tools,
                 instr_version=instr_version,
+                defer_session_reconcile=defer_session_reconcile,
             )
             result["search_locality"] = search_locality
             return result
@@ -796,9 +857,24 @@ def run_real_batch(
     wall_end = time.perf_counter_ns()
     os_end = _os_times_snapshot()
     proc_end = time.process_time()
-    total_process_cpu_ns = sum(s.get("process_cpu_ns", 0) for s in per_session)
-    if total_process_cpu_ns <= 0:
-        total_process_cpu_ns = int((proc_end - proc_start) * 1e9)
+    batch_process_cpu_ns = int((proc_end - proc_start) * 1e9)
+    session_process_cpu_sum_ns = sum(s.get("process_cpu_ns", 0) for s in per_session)
+    if max_workers > 1:
+        # Concurrent sessions share one process clock; sum(session process_time)
+        # over-counts overlapping CPU. Use the single batch process delta as host
+        # CPU basis for attribution shares and the batch-level audit gate.
+        total_process_cpu_ns = batch_process_cpu_ns
+    elif session_process_cpu_sum_ns > 0:
+        total_process_cpu_ns = session_process_cpu_sum_ns
+    else:
+        total_process_cpu_ns = batch_process_cpu_ns
+
+    if defer_session_reconcile:
+        batch_reconcile_ns = _reconcile_batch_cpu(
+            acc, batch_process_cpu_ns, instr_version=instr_version
+        )
+    else:
+        batch_reconcile_ns = 0
 
     result = acc.to_run_dict(
         env={},
@@ -812,7 +888,15 @@ def run_real_batch(
             "backend": backend,
             "llm_median_scale": llm_scale,
             "workers": max_workers,
-            "total_cpu_basis": "process_time_all_threads",
+            "total_cpu_basis": (
+                "process_time_batch_delta"
+                if max_workers > 1
+                else "process_time_all_threads"
+            ),
+            "batch_process_cpu_ns": batch_process_cpu_ns,
+            "session_process_cpu_sum_ns": session_process_cpu_sum_ns,
+            "batch_reconcile_ns": batch_reconcile_ns,
+            "session_reconcile": not defer_session_reconcile,
             "worker_thread_cpu_ns": sum(worker_cpu_ns),
             "instr_version": instr_version,
             "task_sampling": "explicit_task_ids" if task_ids is not None else "rotation",
