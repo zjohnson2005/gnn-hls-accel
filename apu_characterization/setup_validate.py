@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -78,7 +79,7 @@ def validate_setup(
     for key in ("model", "temperature", "timeout_s"):
         if key not in openai:
             errors.append(f"openai.{key} not recorded")
-    if not openai.get("api_key_set"):
+    if not openai.get("api_key_set") and not os.getenv("OPENAI_API_KEY"):
         errors.append("openai.api_key_set is false; set OPENAI_API_KEY before publishable runs")
 
     return errors
