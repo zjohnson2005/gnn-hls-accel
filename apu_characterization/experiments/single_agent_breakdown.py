@@ -36,6 +36,7 @@ from ..amenability import (
     compute_per_task,
     compute_per_task_wall_cpu,
 )
+from ..capture_setup import _porcelain_path
 from ..harness.runner import run_batch
 from ..instr import measure_timer_overhead_ns
 from ..tasks import assign_task
@@ -104,15 +105,15 @@ def _git_state(*, ignore_paths: tuple[str, ...] = ()) -> dict[str, str]:
         for line in porcelain.splitlines():
             if not line.strip():
                 continue
-            path = line[3:].split(" -> ")[-1].strip().replace("\\", "/")
-            if path in ignore:
+            path = _porcelain_path(line)
+            if not path or path in ignore:
                 continue
             dirty_lines.append(line)
         dirty = "\n".join(dirty_lines)
         return {
             "commit": rev,
             "dirty": "yes" if dirty else "no",
-            "dirty_paths": [ln[3:].split(" -> ")[-1].strip() for ln in dirty_lines],
+            "dirty_paths": [_porcelain_path(ln) for ln in dirty_lines],
         }
     except (FileNotFoundError, subprocess.CalledProcessError):
         return {"commit": "unknown", "dirty": "unknown", "dirty_paths": []}

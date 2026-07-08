@@ -151,6 +151,15 @@ def _git_cmd() -> list[str]:
     return ["git"]
 
 
+def _porcelain_path(line: str) -> str:
+    line = line.rstrip("\r\n")
+    parts = line.split(maxsplit=1)
+    if len(parts) < 2:
+        return ""
+    raw = parts[1].split(" -> ")[-1].strip()
+    return raw.replace("\\", "/")
+
+
 def probe_git(*, ignore_paths: tuple[str, ...] = ()) -> dict[str, str]:
     git = _git_cmd()[0]
     rev = _run(_git_cmd() + ["rev-parse", "HEAD"]) or "unknown"
@@ -160,8 +169,8 @@ def probe_git(*, ignore_paths: tuple[str, ...] = ()) -> dict[str, str]:
     for line in porcelain.splitlines():
         if not line.strip():
             continue
-        path = line[3:].split(" -> ")[-1].strip().replace("\\", "/")
-        if path in ignore:
+        path = _porcelain_path(line)
+        if not path or path in ignore:
             continue
         dirty_lines.append(line)
     out: dict[str, str] = {
@@ -169,9 +178,7 @@ def probe_git(*, ignore_paths: tuple[str, ...] = ()) -> dict[str, str]:
         "dirty": "yes" if dirty_lines else "no",
     }
     if dirty_lines:
-        out["dirty_paths"] = [
-            ln[3:].split(" -> ")[-1].strip() for ln in dirty_lines
-        ]
+        out["dirty_paths"] = [_porcelain_path(ln) for ln in dirty_lines]
     if rev == "unknown":
         out["git_path"] = git if Path(git).is_file() else "not found on PATH"
     elif Path(git).is_file():

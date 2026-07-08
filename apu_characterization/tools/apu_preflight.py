@@ -36,9 +36,14 @@ def main() -> None:
 
     # Simulate driver: capture_setup dirties only ignored runtime paths.
     _run("apu_characterization.capture_setup")
-    from apu_characterization.setup_validate import load_and_validate
 
-    load_and_validate(ignore_dirty_paths=GIT_IGNORE_RUNTIME_REFRESH)
+    post = probe_git(ignore_paths=GIT_IGNORE_RUNTIME_REFRESH)
+    if post.get("dirty") == "yes":
+        paths = post.get("dirty_paths") or ["?"]
+        raise SystemExit(
+            "Post-capture FAIL: unexpected dirty paths after setup refresh.\n"
+            f"  paths: {paths}"
+        )
 
     print("preflight OK — safe to run run_linux_replication_v3.ps1")
 
