@@ -41,12 +41,12 @@ fi
 # shellcheck source=/dev/null
 source "${VENV}/bin/activate"
 
-# Fail loudly on a dirty tree BEFORE spending API budget: the smoke is a
-# publishable-pipeline check and must be reproducible from a commit.
-if [[ -n "$(git status --porcelain)" ]]; then
-  echo "ERROR: git tree is dirty. Commit all changes before running the sweep smoke." >&2
+# Fail loudly on uncommitted tracked changes BEFORE spending API budget.
+# Untracked out/ artifacts from prior runs are OK (this run overwrites them).
+if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+  echo "ERROR: git has uncommitted changes to tracked files. Commit before sweep smoke." >&2
   echo "Dirty paths:" >&2
-  git status --short >&2
+  git status --short --untracked-files=no >&2
   exit 1
 fi
 
