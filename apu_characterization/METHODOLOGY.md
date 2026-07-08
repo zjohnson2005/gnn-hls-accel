@@ -82,23 +82,18 @@ Comparison artifact: `out/bare_metal_comparison.md`.
 
 Fill in when executed (values come from artifacts, never hand-typed):
 
-- Machine option used: [A native lab machine | B cloud VM ("native-kernel
-  Linux VM", not "bare metal") | C dual-boot or live-USB on the primary
-  laptop]. Record hostname or instance type.
-- Commit run on the native box: [hash]. Note: the v3.1 baseline artifact
-  was measured at `d5fd7b8`; the native run uses the freeze commit, which
-  differs only by the FO-01 post-tools sampling fix and this experiment.
-  The FO-01 residual comparison must account for that fix (residual is
-  expected to shrink for code reasons, independent of platform).
-- Version deltas vs v3.1 (Python 3.14.4, numpy 2.5.1, psutil 7.2.2,
-  tiktoken 0.13.0, sympy 1.14.0): [list every delta, from the native
-  setup.json].
-- Load hygiene records: 1-min loadavg at start and end plus per-session
-  before/after samples are embedded in the native artifact
-  (`load_records`). Start limit 1.0, mid-run abort limit 2.0.
-- OpenAI key and quota handling: [same key as sweep during a sweep pause |
-  separate key]. The subset costs roughly one v3.1 seed of API usage.
-- Deviations: [none | list].
+- Machine option used: **B** (DigitalOcean Basic Regular 4 vCPU / 8 GB, NYC2,
+  slug s-4vcpu-8gb). Label: native-kernel Linux VM (KVM), not bare metal.
+- Commit run on the native box: `8b84ddfa` (freeze commit; v3.1 baseline
+  measured at `d5fd7b8`; FO-01 post-tools sampling fix differs).
+- Version deltas vs v3.1: Python 3.12.3 (native) vs 3.14.4 (WSL2); packages
+  matched (numpy 2.5.1, psutil 7.2.2, tiktoken 0.13.0, sympy 1.14.0).
+- Load hygiene: start 0.008, end 0.002 (1-min loadavg); all sessions PASS.
+- OpenAI key: same key as WSL2 runs; droplet completed before sweep smoke.
+- Verdict: **DELTA** (LH-01 ORCH_DISPATCH 28.6 pp WSL2 vs 11.2 pp native).
+  RH-01 THREADPOOL agreed within 10 pp (-4.8 pp). FO-01 residual 7.9% vs 8.0%.
+  WSL2 caveat retained; no rerun triggered.
+- Deviations: 4 vCPU native VM vs 8-core WSL2 baseline (core-count confound).
 
 Non-goals: no concurrency levels beyond the optional labeled `smoke_c5`
 (excluded from all statistics), no ablations, no new tasks. Native sessions

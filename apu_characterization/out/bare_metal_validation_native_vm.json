@@ -1,0 +1,3734 @@
+{
+  "experiment": "bare_metal_validation",
+  "result_validity": "publishable",
+  "generated_utc": "2026-07-08T17:50:50.376605+00:00",
+  "setup_ref": {
+    "setup_digest": "23349dbf17363714",
+    "task_suite_digest": "a88a9e1058964219",
+    "cpu_model": "DO-Regular"
+  },
+  "git": {
+    "commit": "8b84ddfa0236b8e073b4a822c95ffd65312be3f5",
+    "dirty": "yes",
+    "dirty_paths": [
+      "apu_characterization/EXPERIMENT_SETUP.md",
+      "apu_characterization/fixtures/fixtures_meta.json",
+      "apu_characterization/out/setup.json"
+    ]
+  },
+  "env": {
+    "python": "3.12.3",
+    "platform": "Linux-6.8.0-124-generic-x86_64-with-glibc2.39",
+    "cpu_model": "x86_64",
+    "blas_pin": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1"
+    },
+    "cores_logical": 4,
+    "cores_physical": 4,
+    "ram_gb": 7.76
+  },
+  "config": {
+    "platform_label": "native_vm",
+    "kernel": "6.8.0-124-generic",
+    "backend": "openai",
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "task_ids": [
+      "LH-01",
+      "RH-01",
+      "FO-01",
+      "RE-01",
+      "CH-01",
+      "LH-02"
+    ],
+    "sessions": 18,
+    "search_locality": "remote",
+    "instr_version": 3,
+    "comparison_type": "platform_validation_subset",
+    "baseline_ref": "out/replication_remote_search_v3.json (platform wsl2)"
+  },
+  "run": {
+    "env": {
+      "python": "3.12.3",
+      "platform": "Linux-6.8.0-124-generic-x86_64-with-glibc2.39",
+      "cpu_model": "x86_64",
+      "blas_pin": {
+        "OPENBLAS_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1"
+      },
+      "cores_logical": 4,
+      "cores_physical": 4,
+      "ram_gb": 7.76
+    },
+    "config": {
+      "profile": "locality_ablation",
+      "seeds": [
+        0,
+        1,
+        2
+      ],
+      "task_ids": [
+        "LH-01",
+        "RH-01",
+        "FO-01",
+        "RE-01",
+        "CH-01",
+        "LH-02"
+      ],
+      "mode": "sequential",
+      "backend": "openai",
+      "llm_median_scale": 1.0,
+      "search_locality": "remote",
+      "instr_version": 3,
+      "total_cpu_basis": "process_time_all_threads"
+    },
+    "per_category": {
+      "GC": {
+        "cpu_ns": 202895644,
+        "wall_ns": 320241086,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 222
+      },
+      "ORCH_SETUP": {
+        "cpu_ns": 172367933,
+        "wall_ns": 91697055,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 36
+      },
+      "PROMPT_ASSEMBLY": {
+        "cpu_ns": 445828,
+        "wall_ns": 463653,
+        "bytes_in": 0,
+        "bytes_out": 780683,
+        "count": 67
+      },
+      "TOKENIZATION": {
+        "cpu_ns": 142947341,
+        "wall_ns": 214962881,
+        "bytes_in": 1007535,
+        "bytes_out": 0,
+        "count": 225
+      },
+      "SERIALIZATION": {
+        "cpu_ns": 6389860,
+        "wall_ns": 8505244,
+        "bytes_in": 0,
+        "bytes_out": 976793,
+        "count": 158
+      },
+      "CLIENT_HTTP": {
+        "cpu_ns": 109825477,
+        "wall_ns": 168906557220,
+        "bytes_in": 0,
+        "bytes_out": 923019,
+        "count": 67
+      },
+      "CLIENT_PARSE": {
+        "cpu_ns": 1600890,
+        "wall_ns": 2069737,
+        "bytes_in": 29172,
+        "bytes_out": 0,
+        "count": 134
+      },
+      "HTTP_CLIENT": {
+        "cpu_ns": 4037740,
+        "wall_ns": 179279219405,
+        "bytes_in": 32933,
+        "bytes_out": 1089,
+        "count": 148
+      },
+      "FRAMEWORK": {
+        "cpu_ns": 608876832,
+        "wall_ns": 2343377923,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 353
+      },
+      "TOOL_COMPUTE": {
+        "cpu_ns": 542756995,
+        "wall_ns": 859075844,
+        "bytes_in": 2500,
+        "bytes_out": 0,
+        "count": 64
+      },
+      "THREADPOOL": {
+        "cpu_ns": 298417234,
+        "wall_ns": 368750580,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 363
+      },
+      "ORCH_DISPATCH": {
+        "cpu_ns": 313871783,
+        "wall_ns": 19314795,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 140
+      },
+      "RESIDUAL_UNATTRIBUTED": {
+        "cpu_ns": 19888091,
+        "wall_ns": 19888091,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 18
+      }
+    },
+    "per_session": [
+      {
+        "session_id": "CH-01_s0",
+        "task_id": "CH-01",
+        "turns": 4,
+        "plan_len": 5,
+        "wall_s": 3.573190091000015,
+        "thread_cpu_ns": 35776984,
+        "process_cpu_ns": 35776984,
+        "instrumented_cpu_ns": 35776984,
+        "reconcile_cpu_ns": 4,
+        "orch_measured_cpu_ns": 15316566,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 4,
+        "parallel_cpu_trim_ns": 2929289,
+        "tool_call_counts": {
+          "calculator": 1,
+          "code_exec": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"20000 * log(20000) - 20000\", \"engine\": \"sympy\", \"query\": \"20000 * log(20000) - 20000\", \"value\": 0.0, \"padding\": \"apart result of second between apart of small money budget from metal at after metal of stone stone note a weather cloth at ste",
+            "llm_step": 0
+          },
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"1823131\", \"exit_code\": 0, \"code_bytes\": 75, \"fallback\": true, \"query\": \"def is_prime(n):\\n    if n <= 1:\\n        return False\\n    for i in range(2, int(n**0.5) + 1):\\n        if n % i == 0:\\n            return False\\n    return True\\n\\nsum_of",
+            "llm_step": 1
+          }
+        ],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 35776980,
+          "step_inferred": 0,
+          "residual": 4
+        },
+        "seed": 0,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "CH-01_s1",
+        "task_id": "CH-01",
+        "turns": 4,
+        "plan_len": 5,
+        "wall_s": 3.888756216000047,
+        "thread_cpu_ns": 30283512,
+        "process_cpu_ns": 30283512,
+        "instrumented_cpu_ns": 30283512,
+        "reconcile_cpu_ns": 6,
+        "orch_measured_cpu_ns": 15011088,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 6,
+        "parallel_cpu_trim_ns": 3722216,
+        "tool_call_counts": {
+          "code_exec": 1,
+          "calculator": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"798671\", \"exit_code\": 0, \"code_bytes\": 75, \"fallback\": true, \"query\": \"def is_prime(n):\\n    if n <= 1:\\n        return False\\n    for i in range(2, int(n**0.5) + 1):\\n        if n % i == 0:\\n            return False\\n    return True\\n\\nsum_of_",
+            "llm_step": 0
+          },
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"20000 * log(20000) - 20000\", \"engine\": \"sympy\", \"query\": \"20000 * log(20000) - 20000\", \"value\": 0.0, \"padding\": \"value for recipe budget on second between budget first third a often glass item schedule large of apart an with metal plan unde",
+            "llm_step": 1
+          }
+        ],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 30283506,
+          "step_inferred": 0,
+          "residual": 6
+        },
+        "seed": 1,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "CH-01_s2",
+        "task_id": "CH-01",
+        "turns": 4,
+        "plan_len": 5,
+        "wall_s": 4.841280776000076,
+        "thread_cpu_ns": 35176936,
+        "process_cpu_ns": 35176936,
+        "instrumented_cpu_ns": 35176936,
+        "reconcile_cpu_ns": 5,
+        "orch_measured_cpu_ns": 17668607,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 5,
+        "parallel_cpu_trim_ns": 5021682,
+        "tool_call_counts": {
+          "code_exec": 1,
+          "calculator": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"485812\", \"exit_code\": 0, \"code_bytes\": 74, \"fallback\": true, \"query\": \"def is_prime(n):\\n    if n <= 1:\\n        return False\\n    for i in range(2, int(n**0.5) + 1):\\n        if n % i == 0:\\n            return False\\n    return True\\n\\nsum_of_",
+            "llm_step": 0
+          },
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"20000 * log(20000) - 20000\", \"engine\": \"sympy\", \"query\": \"20000 * log(20000) - 20000\", \"value\": 0.0, \"padding\": \"metal third final stone third large garden money item market previous light energy early early together light summary large lat",
+            "llm_step": 1
+          }
+        ],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 35176931,
+          "step_inferred": 0,
+          "residual": 5
+        },
+        "seed": 2,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "FO-01_s0",
+        "task_id": "FO-01",
+        "turns": 11,
+        "plan_len": 2,
+        "wall_s": 8.482205700999998,
+        "thread_cpu_ns": 79503014,
+        "process_cpu_ns": 79503014,
+        "instrumented_cpu_ns": 79503014,
+        "reconcile_cpu_ns": 6769184,
+        "orch_measured_cpu_ns": 19148001,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 6769184,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "search": 9
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "search",
+            "query": "{\"query\": \"best food in Cairo\", \"snippets\": [\"... best food in Cairo ... excerpt 3394 ...\", \"... best food in Cairo ... excerpt 2031 ...\", \"... best food in Cairo ... excerpt 6826 ...\", \"... best food in Cairo ... excerpt 9869 ...\", \"... best food in Cairo",
+            "llm_step": 0
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"Cairo weather\", \"snippets\": [\"... Cairo weather ... excerpt 9953 ...\", \"... Cairo weather ... excerpt 2688 ...\", \"... Cairo weather ... excerpt 1219 ...\", \"... Cairo weather ... excerpt 4832 ...\", \"... Cairo weather ... excerpt 2341 ...\"], \"matc",
+            "llm_step": 1
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"main attractions in Tokyo\", \"snippets\": [\"... main attractions in Tokyo ... excerpt 7192 ...\", \"... main attractions in Tokyo ... excerpt 9050 ...\", \"... main attractions in Tokyo ... excerpt 6500 ...\", \"... main attractions in Tokyo ... excerpt",
+            "llm_step": 2
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"Tokyo weather\", \"snippets\": [\"... Tokyo weather ... excerpt 1949 ...\", \"... Tokyo weather ... excerpt 3721 ...\", \"... Tokyo weather ... excerpt 9784 ...\", \"... Tokyo weather ... excerpt 1556 ...\", \"... Tokyo weather ... excerpt 9766 ...\"], \"matc",
+            "llm_step": 3
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"main attractions in Paris\", \"snippets\": [\"... main attractions in Paris ... excerpt 2666 ...\", \"... main attractions in Paris ... excerpt 6065 ...\", \"... main attractions in Paris ... excerpt 9413 ...\", \"... main attractions in Paris ... excerpt",
+            "llm_step": 4
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"Paris weather\", \"snippets\": [\"... Paris weather ... excerpt 5916 ...\", \"... Paris weather ... excerpt 5031 ...\", \"... Paris weather ... excerpt 7248 ...\", \"... Paris weather ... excerpt 8878 ...\", \"... Paris weather ... excerpt 1795 ...\"], \"matc",
+            "llm_step": 5
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"best food in Tokyo\", \"snippets\": [\"... best food in Tokyo ... excerpt 6118 ...\", \"... best food in Tokyo ... excerpt 1145 ...\", \"... best food in Tokyo ... excerpt 3701 ...\", \"... best food in Tokyo ... excerpt 9240 ...\", \"... best food in Tokyo",
+            "llm_step": 6
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"main attractions in Cairo\", \"snippets\": [\"... main attractions in Cairo ... excerpt 1406 ...\", \"... main attractions in Cairo ... excerpt 9599 ...\", \"... main attractions in Cairo ... excerpt 5264 ...\", \"... main attractions in Cairo ... excerpt",
+            "llm_step": 7
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"best food in Paris\", \"snippets\": [\"... best food in Paris ... excerpt 7021 ...\", \"... best food in Paris ... excerpt 2474 ...\", \"... best food in Paris ... excerpt 8583 ...\", \"... best food in Paris ... excerpt 2616 ...\", \"... best food in Paris",
+            "llm_step": 8
+          }
+        ],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 72733830,
+          "step_inferred": 0,
+          "residual": 6769184
+        },
+        "seed": 0,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "FO-01_s1",
+        "task_id": "FO-01",
+        "turns": 11,
+        "plan_len": 2,
+        "wall_s": 10.890943934000006,
+        "thread_cpu_ns": 243879183,
+        "process_cpu_ns": 243879183,
+        "instrumented_cpu_ns": 243879183,
+        "reconcile_cpu_ns": 3798628,
+        "orch_measured_cpu_ns": 21798693,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 3798628,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "search": 9
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "search",
+            "query": "{\"query\": \"Paris weather\", \"snippets\": [\"... Paris weather ... excerpt 5916 ...\", \"... Paris weather ... excerpt 5031 ...\", \"... Paris weather ... excerpt 7248 ...\", \"... Paris weather ... excerpt 8878 ...\", \"... Paris weather ... excerpt 1795 ...\"], \"matc",
+            "llm_step": 0
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"Cairo weather\", \"snippets\": [\"... Cairo weather ... excerpt 9953 ...\", \"... Cairo weather ... excerpt 2688 ...\", \"... Cairo weather ... excerpt 1219 ...\", \"... Cairo weather ... excerpt 4832 ...\", \"... Cairo weather ... excerpt 2341 ...\"], \"matc",
+            "llm_step": 1
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"best food in Paris\", \"snippets\": [\"... best food in Paris ... excerpt 7021 ...\", \"... best food in Paris ... excerpt 2474 ...\", \"... best food in Paris ... excerpt 8583 ...\", \"... best food in Paris ... excerpt 2616 ...\", \"... best food in Paris",
+            "llm_step": 2
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"best food in Cairo\", \"snippets\": [\"... best food in Cairo ... excerpt 3394 ...\", \"... best food in Cairo ... excerpt 2031 ...\", \"... best food in Cairo ... excerpt 6826 ...\", \"... best food in Cairo ... excerpt 9869 ...\", \"... best food in Cairo",
+            "llm_step": 3
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"main attractions in Paris\", \"snippets\": [\"... main attractions in Paris ... excerpt 2666 ...\", \"... main attractions in Paris ... excerpt 6065 ...\", \"... main attractions in Paris ... excerpt 9413 ...\", \"... main attractions in Paris ... excerpt",
+            "llm_step": 4
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"main attractions in Tokyo\", \"snippets\": [\"... main attractions in Tokyo ... excerpt 7192 ...\", \"... main attractions in Tokyo ... excerpt 9050 ...\", \"... main attractions in Tokyo ... excerpt 6500 ...\", \"... main attractions in Tokyo ... excerpt",
+            "llm_step": 5
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"Tokyo weather\", \"snippets\": [\"... Tokyo weather ... excerpt 1949 ...\", \"... Tokyo weather ... excerpt 3721 ...\", \"... Tokyo weather ... excerpt 9784 ...\", \"... Tokyo weather ... excerpt 1556 ...\", \"... Tokyo weather ... excerpt 9766 ...\"], \"matc",
+            "llm_step": 6
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"main attractions in Cairo\", \"snippets\": [\"... main attractions in Cairo ... excerpt 1406 ...\", \"... main attractions in Cairo ... excerpt 9599 ...\", \"... main attractions in Cairo ... excerpt 5264 ...\", \"... main attractions in Cairo ... excerpt",
+            "llm_step": 7
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"best food in Tokyo\", \"snippets\": [\"... best food in Tokyo ... excerpt 6118 ...\", \"... best food in Tokyo ... excerpt 1145 ...\", \"... best food in Tokyo ... excerpt 3701 ...\", \"... best food in Tokyo ... excerpt 9240 ...\", \"... best food in Tokyo",
+            "llm_step": 8
+          }
+        ],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 240080555,
+          "step_inferred": 0,
+          "residual": 3798628
+        },
+        "seed": 1,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "FO-01_s2",
+        "task_id": "FO-01",
+        "turns": 11,
+        "plan_len": 2,
+        "wall_s": 8.667455905999986,
+        "thread_cpu_ns": 76509792,
+        "process_cpu_ns": 76509792,
+        "instrumented_cpu_ns": 76509792,
+        "reconcile_cpu_ns": 6120027,
+        "orch_measured_cpu_ns": 18919907,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 6120027,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "search": 9
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "search",
+            "query": "{\"query\": \"best food in Cairo\", \"snippets\": [\"... best food in Cairo ... excerpt 3394 ...\", \"... best food in Cairo ... excerpt 2031 ...\", \"... best food in Cairo ... excerpt 6826 ...\", \"... best food in Cairo ... excerpt 9869 ...\", \"... best food in Cairo",
+            "llm_step": 0
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"best food in Tokyo\", \"snippets\": [\"... best food in Tokyo ... excerpt 6118 ...\", \"... best food in Tokyo ... excerpt 1145 ...\", \"... best food in Tokyo ... excerpt 3701 ...\", \"... best food in Tokyo ... excerpt 9240 ...\", \"... best food in Tokyo",
+            "llm_step": 1
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"Cairo weather\", \"snippets\": [\"... Cairo weather ... excerpt 9953 ...\", \"... Cairo weather ... excerpt 2688 ...\", \"... Cairo weather ... excerpt 1219 ...\", \"... Cairo weather ... excerpt 4832 ...\", \"... Cairo weather ... excerpt 2341 ...\"], \"matc",
+            "llm_step": 2
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"main attractions in Tokyo\", \"snippets\": [\"... main attractions in Tokyo ... excerpt 7192 ...\", \"... main attractions in Tokyo ... excerpt 9050 ...\", \"... main attractions in Tokyo ... excerpt 6500 ...\", \"... main attractions in Tokyo ... excerpt",
+            "llm_step": 3
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"main attractions in Paris\", \"snippets\": [\"... main attractions in Paris ... excerpt 2666 ...\", \"... main attractions in Paris ... excerpt 6065 ...\", \"... main attractions in Paris ... excerpt 9413 ...\", \"... main attractions in Paris ... excerpt",
+            "llm_step": 4
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"Tokyo weather\", \"snippets\": [\"... Tokyo weather ... excerpt 1949 ...\", \"... Tokyo weather ... excerpt 3721 ...\", \"... Tokyo weather ... excerpt 9784 ...\", \"... Tokyo weather ... excerpt 1556 ...\", \"... Tokyo weather ... excerpt 9766 ...\"], \"matc",
+            "llm_step": 5
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"main attractions in Cairo\", \"snippets\": [\"... main attractions in Cairo ... excerpt 1406 ...\", \"... main attractions in Cairo ... excerpt 9599 ...\", \"... main attractions in Cairo ... excerpt 5264 ...\", \"... main attractions in Cairo ... excerpt",
+            "llm_step": 6
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"Paris weather\", \"snippets\": [\"... Paris weather ... excerpt 5916 ...\", \"... Paris weather ... excerpt 5031 ...\", \"... Paris weather ... excerpt 7248 ...\", \"... Paris weather ... excerpt 8878 ...\", \"... Paris weather ... excerpt 1795 ...\"], \"matc",
+            "llm_step": 7
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"best food in Paris\", \"snippets\": [\"... best food in Paris ... excerpt 7021 ...\", \"... best food in Paris ... excerpt 2474 ...\", \"... best food in Paris ... excerpt 8583 ...\", \"... best food in Paris ... excerpt 2616 ...\", \"... best food in Paris",
+            "llm_step": 8
+          }
+        ],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 70389765,
+          "step_inferred": 0,
+          "residual": 6120027
+        },
+        "seed": 2,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "LH-01_s0",
+        "task_id": "LH-01",
+        "turns": 27,
+        "plan_len": 13,
+        "wall_s": 23.842478059999962,
+        "thread_cpu_ns": 574480248,
+        "process_cpu_ns": 574480248,
+        "instrumented_cpu_ns": 574480248,
+        "reconcile_cpu_ns": 6,
+        "orch_measured_cpu_ns": 34329596,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 6,
+        "parallel_cpu_trim_ns": 2253101825,
+        "tool_call_counts": {
+          "retrieve": 13
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"vegetable garden planning by month\", \"chunks\": [{\"id\": 36481, \"score\": 0.21508300304412842, \"text\": \"chunk_36481\"}, {\"id\": 36911, \"score\": 0.20957648754119873, \"text\": \"chunk_36911\"}, {\"id\": 43221, \"score\": 0.20949608087539673, \"text\": \"chunk_43",
+            "llm_step": 0
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"vegetable garden planting schedule January\", \"chunks\": [{\"id\": 45679, \"score\": 0.21681159734725952, \"text\": \"chunk_45679\"}, {\"id\": 4924, \"score\": 0.21651150286197662, \"text\": \"chunk_4924\"}, {\"id\": 5955, \"score\": 0.2091064751148224, \"text\": \"chun",
+            "llm_step": 2
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"vegetable garden planting schedule February\", \"chunks\": [{\"id\": 69809, \"score\": 0.2161651849746704, \"text\": \"chunk_69809\"}, {\"id\": 61246, \"score\": 0.20807263255119324, \"text\": \"chunk_61246\"}, {\"id\": 10916, \"score\": 0.20163840055465698, \"text\": \"",
+            "llm_step": 4
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"vegetable garden planting schedule March\", \"chunks\": [{\"id\": 77137, \"score\": 0.21510347723960876, \"text\": \"chunk_77137\"}, {\"id\": 68525, \"score\": 0.21048042178153992, \"text\": \"chunk_68525\"}, {\"id\": 74246, \"score\": 0.20574212074279785, \"text\": \"ch",
+            "llm_step": 6
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"vegetable garden planting schedule April\", \"chunks\": [{\"id\": 6278, \"score\": 0.21084728837013245, \"text\": \"chunk_6278\"}, {\"id\": 78608, \"score\": 0.20901134610176086, \"text\": \"chunk_78608\"}, {\"id\": 67792, \"score\": 0.19658148288726807, \"text\": \"chun",
+            "llm_step": 8
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"vegetable garden planting schedule May\", \"chunks\": [{\"id\": 87118, \"score\": 0.2356104552745819, \"text\": \"chunk_87118\"}, {\"id\": 33274, \"score\": 0.21043339371681213, \"text\": \"chunk_33274\"}, {\"id\": 75094, \"score\": 0.20869842171669006, \"text\": \"chunk",
+            "llm_step": 10
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"vegetable garden planting schedule June\", \"chunks\": [{\"id\": 66019, \"score\": 0.2088164985179901, \"text\": \"chunk_66019\"}, {\"id\": 56387, \"score\": 0.20343753695487976, \"text\": \"chunk_56387\"}, {\"id\": 16709, \"score\": 0.20318010449409485, \"text\": \"chun",
+            "llm_step": 12
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"vegetable garden planting schedule July\", \"chunks\": [{\"id\": 23330, \"score\": 0.19895929098129272, \"text\": \"chunk_23330\"}, {\"id\": 1028, \"score\": 0.19341528415679932, \"text\": \"chunk_1028\"}, {\"id\": 36144, \"score\": 0.19244569540023804, \"text\": \"chunk",
+            "llm_step": 14
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"vegetable garden planting schedule August\", \"chunks\": [{\"id\": 63586, \"score\": 0.21019518375396729, \"text\": \"chunk_63586\"}, {\"id\": 95469, \"score\": 0.20342913269996643, \"text\": \"chunk_95469\"}, {\"id\": 77111, \"score\": 0.20266352593898773, \"text\": \"c",
+            "llm_step": 16
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"vegetable garden planting schedule September\", \"chunks\": [{\"id\": 71737, \"score\": 0.2095615267753601, \"text\": \"chunk_71737\"}, {\"id\": 83913, \"score\": 0.20557506382465363, \"text\": \"chunk_83913\"}, {\"id\": 30320, \"score\": 0.20415166020393372, \"text\": ",
+            "llm_step": 18
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"vegetable garden planting schedule October\", \"chunks\": [{\"id\": 15938, \"score\": 0.24097639322280884, \"text\": \"chunk_15938\"}, {\"id\": 63348, \"score\": 0.22889165580272675, \"text\": \"chunk_63348\"}, {\"id\": 88179, \"score\": 0.21916501224040985, \"text\": \"",
+            "llm_step": 20
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"vegetable garden planting schedule November\", \"chunks\": [{\"id\": 66356, \"score\": 0.20340289175510406, \"text\": \"chunk_66356\"}, {\"id\": 28426, \"score\": 0.2012665867805481, \"text\": \"chunk_28426\"}, {\"id\": 97089, \"score\": 0.2000856250524521, \"text\": \"c",
+            "llm_step": 22
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"vegetable garden planting schedule December\", \"chunks\": [{\"id\": 21389, \"score\": 0.26045045256614685, \"text\": \"chunk_21389\"}, {\"id\": 17829, \"score\": 0.21880756318569183, \"text\": \"chunk_17829\"}, {\"id\": 448, \"score\": 0.21315914392471313, \"text\": \"c",
+            "llm_step": 24
+          }
+        ],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 574480242,
+          "step_inferred": 0,
+          "residual": 6
+        },
+        "seed": 0,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "LH-01_s1",
+        "task_id": "LH-01",
+        "turns": 3,
+        "plan_len": 13,
+        "wall_s": 5.140015819000155,
+        "thread_cpu_ns": 39567243,
+        "process_cpu_ns": 39567243,
+        "instrumented_cpu_ns": 39567243,
+        "reconcile_cpu_ns": 7,
+        "orch_measured_cpu_ns": 13426469,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 7,
+        "parallel_cpu_trim_ns": 4276702,
+        "tool_call_counts": {
+          "retrieve": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"vegetable garden planning by month\", \"chunks\": [{\"id\": 36481, \"score\": 0.21508300304412842, \"text\": \"chunk_36481\"}, {\"id\": 36911, \"score\": 0.20957648754119873, \"text\": \"chunk_36911\"}, {\"id\": 43221, \"score\": 0.20949608087539673, \"text\": \"chunk_43",
+            "llm_step": 0
+          }
+        ],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 39567236,
+          "step_inferred": 0,
+          "residual": 7
+        },
+        "seed": 1,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "LH-01_s2",
+        "task_id": "LH-01",
+        "turns": 27,
+        "plan_len": 13,
+        "wall_s": 18.121465932999854,
+        "thread_cpu_ns": 523815612,
+        "process_cpu_ns": 523815612,
+        "instrumented_cpu_ns": 523815612,
+        "reconcile_cpu_ns": 1966463,
+        "orch_measured_cpu_ns": 135476633,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 1966463,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "retrieve": 13
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"vegetable garden planning by month\", \"chunks\": [{\"id\": 36481, \"score\": 0.21508300304412842, \"text\": \"chunk_36481\"}, {\"id\": 36911, \"score\": 0.20957648754119873, \"text\": \"chunk_36911\"}, {\"id\": 43221, \"score\": 0.20949608087539673, \"text\": \"chunk_43",
+            "llm_step": 0
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"January vegetable garden planning\", \"chunks\": [{\"id\": 21228, \"score\": 0.21432742476463318, \"text\": \"chunk_21228\"}, {\"id\": 85473, \"score\": 0.2015753537416458, \"text\": \"chunk_85473\"}, {\"id\": 83470, \"score\": 0.1966942846775055, \"text\": \"chunk_83470",
+            "llm_step": 2
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"February vegetable garden planning\", \"chunks\": [{\"id\": 47179, \"score\": 0.21440547704696655, \"text\": \"chunk_47179\"}, {\"id\": 12049, \"score\": 0.21202026307582855, \"text\": \"chunk_12049\"}, {\"id\": 16359, \"score\": 0.2098129242658615, \"text\": \"chunk_163",
+            "llm_step": 4
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"March vegetable garden planning\", \"chunks\": [{\"id\": 81378, \"score\": 0.22257427871227264, \"text\": \"chunk_81378\"}, {\"id\": 87818, \"score\": 0.21659380197525024, \"text\": \"chunk_87818\"}, {\"id\": 20043, \"score\": 0.2140856683254242, \"text\": \"chunk_20043\"",
+            "llm_step": 6
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"April vegetable garden planning\", \"chunks\": [{\"id\": 58365, \"score\": 0.2322453111410141, \"text\": \"chunk_58365\"}, {\"id\": 44284, \"score\": 0.22516044974327087, \"text\": \"chunk_44284\"}, {\"id\": 58286, \"score\": 0.22266428172588348, \"text\": \"chunk_58286\"",
+            "llm_step": 8
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"May vegetable garden planning\", \"chunks\": [{\"id\": 57528, \"score\": 0.22650329768657684, \"text\": \"chunk_57528\"}, {\"id\": 46988, \"score\": 0.20964160561561584, \"text\": \"chunk_46988\"}, {\"id\": 97216, \"score\": 0.20667093992233276, \"text\": \"chunk_97216\"}",
+            "llm_step": 10
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"June vegetable garden planning\", \"chunks\": [{\"id\": 7714, \"score\": 0.2297562062740326, \"text\": \"chunk_7714\"}, {\"id\": 69235, \"score\": 0.2000737190246582, \"text\": \"chunk_69235\"}, {\"id\": 56769, \"score\": 0.19718880951404572, \"text\": \"chunk_56769\"}, {",
+            "llm_step": 12
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"July vegetable garden planning\", \"chunks\": [{\"id\": 22791, \"score\": 0.22701680660247803, \"text\": \"chunk_22791\"}, {\"id\": 52270, \"score\": 0.21535015106201172, \"text\": \"chunk_52270\"}, {\"id\": 52687, \"score\": 0.2146073579788208, \"text\": \"chunk_52687\"}",
+            "llm_step": 14
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"August vegetable garden planning\", \"chunks\": [{\"id\": 22538, \"score\": 0.23770134150981903, \"text\": \"chunk_22538\"}, {\"id\": 50649, \"score\": 0.22705508768558502, \"text\": \"chunk_50649\"}, {\"id\": 73189, \"score\": 0.2232162058353424, \"text\": \"chunk_73189",
+            "llm_step": 16
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"September vegetable garden planning\", \"chunks\": [{\"id\": 93631, \"score\": 0.22694189846515656, \"text\": \"chunk_93631\"}, {\"id\": 63798, \"score\": 0.2093977928161621, \"text\": \"chunk_63798\"}, {\"id\": 69786, \"score\": 0.2060731202363968, \"text\": \"chunk_697",
+            "llm_step": 18
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"October vegetable garden planning\", \"chunks\": [{\"id\": 47593, \"score\": 0.24024121463298798, \"text\": \"chunk_47593\"}, {\"id\": 80953, \"score\": 0.2310047447681427, \"text\": \"chunk_80953\"}, {\"id\": 7290, \"score\": 0.22107741236686707, \"text\": \"chunk_7290\"",
+            "llm_step": 20
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"November vegetable garden planning\", \"chunks\": [{\"id\": 40788, \"score\": 0.2105083465576172, \"text\": \"chunk_40788\"}, {\"id\": 16175, \"score\": 0.20483502745628357, \"text\": \"chunk_16175\"}, {\"id\": 55499, \"score\": 0.2043701708316803, \"text\": \"chunk_5549",
+            "llm_step": 22
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"December vegetable garden planning\", \"chunks\": [{\"id\": 67352, \"score\": 0.21350757777690887, \"text\": \"chunk_67352\"}, {\"id\": 93204, \"score\": 0.20373836159706116, \"text\": \"chunk_93204\"}, {\"id\": 62939, \"score\": 0.20211659371852875, \"text\": \"chunk_62",
+            "llm_step": 24
+          }
+        ],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 521849149,
+          "step_inferred": 0,
+          "residual": 1966463
+        },
+        "seed": 2,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "LH-02_s0",
+        "task_id": "LH-02",
+        "turns": 1,
+        "plan_len": 12,
+        "wall_s": 4.986000266000019,
+        "thread_cpu_ns": 8312388,
+        "process_cpu_ns": 8312388,
+        "instrumented_cpu_ns": 8312388,
+        "reconcile_cpu_ns": 3,
+        "orch_measured_cpu_ns": 6218695,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 3,
+        "parallel_cpu_trim_ns": 7996642,
+        "tool_call_counts": {},
+        "tool_call_sequence": [],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 8312385,
+          "step_inferred": 0,
+          "residual": 3
+        },
+        "seed": 0,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "LH-02_s1",
+        "task_id": "LH-02",
+        "turns": 1,
+        "plan_len": 12,
+        "wall_s": 4.786305521000031,
+        "thread_cpu_ns": 8794677,
+        "process_cpu_ns": 8794677,
+        "instrumented_cpu_ns": 8794677,
+        "reconcile_cpu_ns": 4,
+        "orch_measured_cpu_ns": 6480264,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 4,
+        "parallel_cpu_trim_ns": 5721210,
+        "tool_call_counts": {},
+        "tool_call_sequence": [],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 8794673,
+          "step_inferred": 0,
+          "residual": 4
+        },
+        "seed": 1,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "LH-02_s2",
+        "task_id": "LH-02",
+        "turns": 1,
+        "plan_len": 12,
+        "wall_s": 4.45221243900005,
+        "thread_cpu_ns": 8140280,
+        "process_cpu_ns": 8140280,
+        "instrumented_cpu_ns": 8140280,
+        "reconcile_cpu_ns": 3,
+        "orch_measured_cpu_ns": 6014798,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 3,
+        "parallel_cpu_trim_ns": 4345265,
+        "tool_call_counts": {},
+        "tool_call_sequence": [],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 8140277,
+          "step_inferred": 0,
+          "residual": 3
+        },
+        "seed": 2,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "RE-01_s0",
+        "task_id": "RE-01",
+        "turns": 6,
+        "plan_len": 4,
+        "wall_s": 10.239482132000035,
+        "thread_cpu_ns": 40939432,
+        "process_cpu_ns": 40939432,
+        "instrumented_cpu_ns": 40939432,
+        "reconcile_cpu_ns": 5,
+        "orch_measured_cpu_ns": 18777815,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 5,
+        "parallel_cpu_trim_ns": 2954993,
+        "tool_call_counts": {
+          "code_exec": 2,
+          "calculator": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"1823131\", \"exit_code\": 0, \"code_bytes\": 75, \"fallback\": true, \"query\": \"# Train 1 leaves at 9am and travels at 80 km/h\\n# Train 2 leaves at 10am and travels at 100 km/h\\n# Let t be the time in hours after 9am when Train 2 catches Train 1\\n# Dis",
+            "llm_step": 0
+          },
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"80 * (1 + solution[0])\", \"engine\": \"none\", \"query\": \"80 * (1 + solution[0])\", \"error\": \"not a parseable arithmetic expression: '80 * (1 + solution[0])'\", \"value\": null, \"padding\": \"stone section carefully large over with final glass after w",
+            "llm_step": 1
+          },
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"1304668\", \"exit_code\": 0, \"code_bytes\": 75, \"fallback\": true, \"query\": \"# Train 1 leaves at 9am and travels at 80 km/h\\n# Train 2 leaves at 10am and travels at 100 km/h\\n# Let t be the time in hours after 9am when Train 2 catches Train 1\\n# Dis",
+            "llm_step": 3
+          }
+        ],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 40939427,
+          "step_inferred": 0,
+          "residual": 5
+        },
+        "seed": 0,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "RE-01_s1",
+        "task_id": "RE-01",
+        "turns": 20,
+        "plan_len": 4,
+        "wall_s": 29.893015762999994,
+        "thread_cpu_ns": 191765031,
+        "process_cpu_ns": 191765031,
+        "instrumented_cpu_ns": 191765031,
+        "reconcile_cpu_ns": 1233725,
+        "orch_measured_cpu_ns": 87286660,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 1233725,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "code_exec": 9,
+          "calculator": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"798671\", \"exit_code\": 0, \"code_bytes\": 75, \"fallback\": true, \"query\": \"# Train 1 leaves at 9am, speed = 80 km/h\\n# Train 2 leaves at 10am, speed = 100 km/h\\n# Let t be the time in hours after 9am when Train 2 catches Train 1\\n# Distance covered",
+            "llm_step": 0
+          },
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"80 * (1 + solution[0])\", \"engine\": \"none\", \"query\": \"80 * (1 + solution[0])\", \"error\": \"not a parseable arithmetic expression: '80 * (1 + solution[0])'\", \"value\": null, \"padding\": \"recipe rarely at market at at an a water metal small next r",
+            "llm_step": 1
+          },
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"1307521\", \"exit_code\": 0, \"code_bytes\": 75, \"fallback\": true, \"query\": \"# Train 1 leaves at 9am, speed = 80 km/h\\n# Train 2 leaves at 10am, speed = 100 km/h\\n# Let t be the time in hours after 9am when Train 2 catches Train 1\\n# Distance covere",
+            "llm_step": 3
+          },
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"1334818\", \"exit_code\": 0, \"code_bytes\": 75, \"fallback\": true, \"query\": \"# Train 1 leaves at 9am, speed = 80 km/h\\n# Train 2 leaves at 10am, speed = 100 km/h\\n# Let t be the time in hours after 9am when Train 2 catches Train 1\\n# Distance covere",
+            "llm_step": 5
+          },
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"341806\", \"exit_code\": 0, \"code_bytes\": 74, \"fallback\": true, \"query\": \"# Train 1 leaves at 9am, speed = 80 km/h\\n# Train 2 leaves at 10am, speed = 100 km/h\\n# Let t be the time in hours after 9am when Train 2 catches Train 1\\n# Distance covered",
+            "llm_step": 7
+          },
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"1406275\", \"exit_code\": 0, \"code_bytes\": 75, \"fallback\": true, \"query\": \"# Train 1 leaves at 9am, speed = 80 km/h\\n# Train 2 leaves at 10am, speed = 100 km/h\\n# Let t be the time in hours after 9am when Train 2 catches Train 1\\n# Distance covere",
+            "llm_step": 9
+          },
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"880951\", \"exit_code\": 0, \"code_bytes\": 75, \"fallback\": true, \"query\": \"# Train 1 leaves at 9am, speed = 80 km/h\\n# Train 2 leaves at 10am, speed = 100 km/h\\n# Let t be the time in hours after 9am when Train 2 catches Train 1\\n# Distance covered",
+            "llm_step": 11
+          },
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"1636217\", \"exit_code\": 0, \"code_bytes\": 75, \"fallback\": true, \"query\": \"# Train 1 leaves at 9am, speed = 80 km/h\\n# Train 2 leaves at 10am, speed = 100 km/h\\n# Let t be the time in hours after 9am when Train 2 catches Train 1\\n# Distance covere",
+            "llm_step": 13
+          },
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"1281523\", \"exit_code\": 0, \"code_bytes\": 75, \"fallback\": true, \"query\": \"# Train 1 leaves at 9am, speed = 80 km/h\\n# Train 2 leaves at 10am, speed = 100 km/h\\n# Let t be the time in hours after 9am when Train 2 catches Train 1\\n# Distance covere",
+            "llm_step": 15
+          },
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"2036009\", \"exit_code\": 0, \"code_bytes\": 75, \"fallback\": true, \"query\": \"# Train 1 leaves at 9am, speed = 80 km/h\\n# Train 2 leaves at 10am, speed = 100 km/h\\n# Let t be the time in hours after 9am when Train 2 catches Train 1\\n# Distance covere",
+            "llm_step": 17
+          }
+        ],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 190531306,
+          "step_inferred": 0,
+          "residual": 1233725
+        },
+        "seed": 1,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "RE-01_s2",
+        "task_id": "RE-01",
+        "turns": 6,
+        "plan_len": 4,
+        "wall_s": 8.717019248000042,
+        "thread_cpu_ns": 48590905,
+        "process_cpu_ns": 48590905,
+        "instrumented_cpu_ns": 48590905,
+        "reconcile_cpu_ns": 6,
+        "orch_measured_cpu_ns": 23299505,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 6,
+        "parallel_cpu_trim_ns": 3174517,
+        "tool_call_counts": {
+          "code_exec": 2,
+          "calculator": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"485812\", \"exit_code\": 0, \"code_bytes\": 74, \"fallback\": true, \"query\": \"# Train 1 leaves at 9am and travels at 80 km/h\\n# Train 2 leaves at 10am and travels at 100 km/h\\n# Let t be the time in hours after 9am when Train 2 catches Train 1\\n# Dist",
+            "llm_step": 0
+          },
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"80 * (1 + solution[0])\", \"engine\": \"none\", \"query\": \"80 * (1 + solution[0])\", \"error\": \"not a parseable arithmetic expression: '80 * (1 + solution[0])'\", \"value\": null, \"padding\": \"item light budget answer to value between often late quickl",
+            "llm_step": 1
+          },
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"828434\", \"exit_code\": 0, \"code_bytes\": 75, \"fallback\": true, \"query\": \"# Re-evaluating the solution for when Train 2 catches Train 1\\nfrom sympy import symbols, Eq, solve\\n\\nt = symbols('t')\\ndistance_train1 = 80 * t\\n\\ndistance_train2 = 100 * ",
+            "llm_step": 3
+          }
+        ],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 48590899,
+          "step_inferred": 0,
+          "residual": 6
+        },
+        "seed": 2,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "RH-01_s0",
+        "task_id": "RH-01",
+        "turns": 7,
+        "plan_len": 7,
+        "wall_s": 7.615054006000037,
+        "thread_cpu_ns": 150531486,
+        "process_cpu_ns": 150531486,
+        "instrumented_cpu_ns": 150531486,
+        "reconcile_cpu_ns": 5,
+        "orch_measured_cpu_ns": 14815704,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 5,
+        "parallel_cpu_trim_ns": 35063115,
+        "tool_call_counts": {
+          "retrieve": 5
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"how plants grow\", \"chunks\": [{\"id\": 34957, \"score\": 0.24433624744415283, \"text\": \"chunk_34957\"}, {\"id\": 83655, \"score\": 0.22532016038894653, \"text\": \"chunk_83655\"}, {\"id\": 19306, \"score\": 0.20937752723693848, \"text\": \"chunk_19306\"}, {\"id\": 23191",
+            "llm_step": 0
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"rivers and oceans\", \"chunks\": [{\"id\": 13195, \"score\": 0.22411684691905975, \"text\": \"chunk_13195\"}, {\"id\": 67832, \"score\": 0.20400071144104004, \"text\": \"chunk_67832\"}, {\"id\": 45453, \"score\": 0.19819054007530212, \"text\": \"chunk_45453\"}, {\"id\": 287",
+            "llm_step": 1
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"forests\", \"chunks\": [{\"id\": 97212, \"score\": 0.23754432797431946, \"text\": \"chunk_97212\"}, {\"id\": 91624, \"score\": 0.2231198400259018, \"text\": \"chunk_91624\"}, {\"id\": 53549, \"score\": 0.2109793871641159, \"text\": \"chunk_53549\"}, {\"id\": 2547, \"score\": ",
+            "llm_step": 2
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"the water cycle\", \"chunks\": [{\"id\": 70086, \"score\": 0.2566032111644745, \"text\": \"chunk_70086\"}, {\"id\": 41104, \"score\": 0.23767775297164917, \"text\": \"chunk_41104\"}, {\"id\": 54662, \"score\": 0.2266468107700348, \"text\": \"chunk_54662\"}, {\"id\": 84688, ",
+            "llm_step": 3
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"birds\", \"chunks\": [{\"id\": 94382, \"score\": 0.22382575273513794, \"text\": \"chunk_94382\"}, {\"id\": 79528, \"score\": 0.20906010270118713, \"text\": \"chunk_79528\"}, {\"id\": 16472, \"score\": 0.20777079463005066, \"text\": \"chunk_16472\"}, {\"id\": 55886, \"score\":",
+            "llm_step": 4
+          }
+        ],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 150531481,
+          "step_inferred": 0,
+          "residual": 5
+        },
+        "seed": 0,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "RH-01_s1",
+        "task_id": "RH-01",
+        "turns": 7,
+        "plan_len": 7,
+        "wall_s": 7.126740228000017,
+        "thread_cpu_ns": 164123503,
+        "process_cpu_ns": 164123503,
+        "instrumented_cpu_ns": 164123503,
+        "reconcile_cpu_ns": 5,
+        "orch_measured_cpu_ns": 16595586,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 5,
+        "parallel_cpu_trim_ns": 72054857,
+        "tool_call_counts": {
+          "retrieve": 5
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"how plants grow\", \"chunks\": [{\"id\": 34957, \"score\": 0.24433624744415283, \"text\": \"chunk_34957\"}, {\"id\": 83655, \"score\": 0.22532016038894653, \"text\": \"chunk_83655\"}, {\"id\": 19306, \"score\": 0.20937752723693848, \"text\": \"chunk_19306\"}, {\"id\": 23191",
+            "llm_step": 0
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"forests\", \"chunks\": [{\"id\": 97212, \"score\": 0.23754432797431946, \"text\": \"chunk_97212\"}, {\"id\": 91624, \"score\": 0.2231198400259018, \"text\": \"chunk_91624\"}, {\"id\": 53549, \"score\": 0.2109793871641159, \"text\": \"chunk_53549\"}, {\"id\": 2547, \"score\": ",
+            "llm_step": 1
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"rivers and oceans\", \"chunks\": [{\"id\": 13195, \"score\": 0.22411684691905975, \"text\": \"chunk_13195\"}, {\"id\": 67832, \"score\": 0.20400071144104004, \"text\": \"chunk_67832\"}, {\"id\": 45453, \"score\": 0.19819054007530212, \"text\": \"chunk_45453\"}, {\"id\": 287",
+            "llm_step": 2
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"the water cycle\", \"chunks\": [{\"id\": 70086, \"score\": 0.2566032111644745, \"text\": \"chunk_70086\"}, {\"id\": 41104, \"score\": 0.23767775297164917, \"text\": \"chunk_41104\"}, {\"id\": 54662, \"score\": 0.2266468107700348, \"text\": \"chunk_54662\"}, {\"id\": 84688, ",
+            "llm_step": 3
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"birds\", \"chunks\": [{\"id\": 94382, \"score\": 0.22382575273513794, \"text\": \"chunk_94382\"}, {\"id\": 79528, \"score\": 0.20906010270118713, \"text\": \"chunk_79528\"}, {\"id\": 16472, \"score\": 0.20777079463005066, \"text\": \"chunk_16472\"}, {\"id\": 55886, \"score\":",
+            "llm_step": 4
+          }
+        ],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 164123498,
+          "step_inferred": 0,
+          "residual": 5
+        },
+        "seed": 1,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "RH-01_s2",
+        "task_id": "RH-01",
+        "turns": 7,
+        "plan_len": 7,
+        "wall_s": 7.48785510100015,
+        "thread_cpu_ns": 161681751,
+        "process_cpu_ns": 161681751,
+        "instrumented_cpu_ns": 161681751,
+        "reconcile_cpu_ns": 5,
+        "orch_measured_cpu_ns": 15655129,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 5,
+        "parallel_cpu_trim_ns": 52858865,
+        "tool_call_counts": {
+          "retrieve": 5
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"the water cycle\", \"chunks\": [{\"id\": 70086, \"score\": 0.2566032111644745, \"text\": \"chunk_70086\"}, {\"id\": 41104, \"score\": 0.23767775297164917, \"text\": \"chunk_41104\"}, {\"id\": 54662, \"score\": 0.2266468107700348, \"text\": \"chunk_54662\"}, {\"id\": 84688, ",
+            "llm_step": 0
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"how plants grow\", \"chunks\": [{\"id\": 34957, \"score\": 0.24433624744415283, \"text\": \"chunk_34957\"}, {\"id\": 83655, \"score\": 0.22532016038894653, \"text\": \"chunk_83655\"}, {\"id\": 19306, \"score\": 0.20937752723693848, \"text\": \"chunk_19306\"}, {\"id\": 23191",
+            "llm_step": 1
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"forests\", \"chunks\": [{\"id\": 97212, \"score\": 0.23754432797431946, \"text\": \"chunk_97212\"}, {\"id\": 91624, \"score\": 0.2231198400259018, \"text\": \"chunk_91624\"}, {\"id\": 53549, \"score\": 0.2109793871641159, \"text\": \"chunk_53549\"}, {\"id\": 2547, \"score\": ",
+            "llm_step": 2
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"rivers and oceans\", \"chunks\": [{\"id\": 13195, \"score\": 0.22411684691905975, \"text\": \"chunk_13195\"}, {\"id\": 67832, \"score\": 0.20400071144104004, \"text\": \"chunk_67832\"}, {\"id\": 45453, \"score\": 0.19819054007530212, \"text\": \"chunk_45453\"}, {\"id\": 287",
+            "llm_step": 3
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"birds\", \"chunks\": [{\"id\": 94382, \"score\": 0.22382575273513794, \"text\": \"chunk_94382\"}, {\"id\": 79528, \"score\": 0.20906010270118713, \"text\": \"chunk_79528\"}, {\"id\": 16472, \"score\": 0.20777079463005066, \"text\": \"chunk_16472\"}, {\"id\": 55886, \"score\":",
+            "llm_step": 4
+          }
+        ],
+        "backend": "openai",
+        "replay": false,
+        "provenance": {
+          "measured": 161681746,
+          "step_inferred": 0,
+          "residual": 5
+        },
+        "seed": 2,
+        "search_locality": "remote"
+      }
+    ],
+    "per_session_category": {
+      "LH-01_s0": {
+        "GC": {
+          "cpu_ns": 29686583,
+          "wall_ns": 146116862,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 189
+        },
+        "ORCH_SETUP": {
+          "cpu_ns": 9298570,
+          "wall_ns": 12256606,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 26113,
+          "wall_ns": 114195,
+          "bytes_in": 0,
+          "bytes_out": 261041,
+          "count": 14
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 12679213,
+          "wall_ns": 62448152,
+          "bytes_in": 297097,
+          "bytes_out": 0,
+          "count": 41
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 442813,
+          "wall_ns": 2184994,
+          "bytes_in": 0,
+          "bytes_out": 294473,
+          "count": 27
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 7236080,
+          "wall_ns": 23291393339,
+          "bytes_in": 0,
+          "bytes_out": 296909,
+          "count": 14
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 87439,
+          "wall_ns": 426300,
+          "bytes_in": 2408,
+          "bytes_out": 0,
+          "count": 28
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 0,
+          "wall_ns": 23416064302,
+          "bytes_in": 2408,
+          "bytes_out": 0,
+          "count": 14
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 438382057,
+          "wall_ns": 2157714907,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 56
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 48107868,
+          "wall_ns": 237048143,
+          "bytes_in": 528,
+          "bytes_out": 0,
+          "count": 13
+        },
+        "THREADPOOL": {
+          "cpu_ns": 3502480,
+          "wall_ns": 17239148,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 17
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 25031026,
+          "wall_ns": 5114603,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 26
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 6,
+          "wall_ns": 6,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "RH-01_s0": {
+        "ORCH_SETUP": {
+          "cpu_ns": 9065068,
+          "wall_ns": 4468918,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 13574,
+          "wall_ns": 13180,
+          "bytes_in": 0,
+          "bytes_out": 8486,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 3406204,
+          "wall_ns": 4224627,
+          "bytes_in": 18127,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 184159,
+          "wall_ns": 227659,
+          "bytes_in": 0,
+          "bytes_out": 16005,
+          "count": 7
+        },
+        "GC": {
+          "cpu_ns": 490811,
+          "wall_ns": 605136,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 3501491,
+          "wall_ns": 7544235893,
+          "bytes_in": 0,
+          "bytes_out": 11986,
+          "count": 2
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 44290,
+          "wall_ns": 53763,
+          "bytes_in": 2041,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 0,
+          "wall_ns": 7552355652,
+          "bytes_in": 2041,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 8138064,
+          "wall_ns": 12313952,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 16
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 75525624,
+          "wall_ns": 111325722,
+          "bytes_in": 59,
+          "bytes_out": 0,
+          "count": 5
+        },
+        "THREADPOOL": {
+          "cpu_ns": 44411560,
+          "wall_ns": 54756290,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 44
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 5750636,
+          "wall_ns": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 6
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 5,
+          "wall_ns": 5,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "global": {
+        "GC": {
+          "cpu_ns": 2449671,
+          "wall_ns": 2449671,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "FO-01_s0": {
+        "ORCH_SETUP": {
+          "cpu_ns": 12139328,
+          "wall_ns": 4036551,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 18776,
+          "wall_ns": 13964,
+          "bytes_in": 0,
+          "bytes_out": 19205,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 6921038,
+          "wall_ns": 6933780,
+          "bytes_in": 39063,
+          "bytes_out": 0,
+          "count": 13
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 314775,
+          "wall_ns": 315129,
+          "bytes_in": 0,
+          "bytes_out": 36685,
+          "count": 11
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 3825597,
+          "wall_ns": 7826874794,
+          "bytes_in": 0,
+          "bytes_out": 23025,
+          "count": 2
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 64745,
+          "wall_ns": 64125,
+          "bytes_in": 2228,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "GC": {
+          "cpu_ns": 1068824,
+          "wall_ns": 1068824,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 1445244,
+          "wall_ns": 11416323733,
+          "bytes_in": 3483,
+          "bytes_out": 363,
+          "count": 29
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 16629337,
+          "wall_ns": 16604472,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 30
+        },
+        "THREADPOOL": {
+          "cpu_ns": 23297493,
+          "wall_ns": 23297493,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 44
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 7008673,
+          "wall_ns": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 6769184,
+          "wall_ns": 6769184,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "RE-01_s0": {
+        "ORCH_SETUP": {
+          "cpu_ns": 8599617,
+          "wall_ns": 3711522,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 19804,
+          "wall_ns": 16298,
+          "bytes_in": 0,
+          "bytes_out": 11207,
+          "count": 3
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 3497610,
+          "wall_ns": 5034551,
+          "bytes_in": 16865,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 152767,
+          "wall_ns": 163740,
+          "bytes_in": 0,
+          "bytes_out": 15788,
+          "count": 6
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 4914168,
+          "wall_ns": 10201591173,
+          "bytes_in": 0,
+          "bytes_out": 16111,
+          "count": 3
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 82308,
+          "wall_ns": 86896,
+          "bytes_in": 1026,
+          "bytes_out": 0,
+          "count": 6
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 0,
+          "wall_ns": 10211356439,
+          "bytes_in": 1026,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 4843493,
+          "wall_ns": 5188507,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 12
+        },
+        "GC": {
+          "cpu_ns": 295737,
+          "wall_ns": 317084,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 2199983,
+          "wall_ns": 2447539,
+          "bytes_in": 172,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "THREADPOOL": {
+          "cpu_ns": 6155742,
+          "wall_ns": 6600061,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 13
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 10178198,
+          "wall_ns": 1080166,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 5
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 5,
+          "wall_ns": 5,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "CH-01_s0": {
+        "ORCH_SETUP": {
+          "cpu_ns": 9270986,
+          "wall_ns": 3751623,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 12877,
+          "wall_ns": 10776,
+          "bytes_in": 0,
+          "bytes_out": 4454,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 2125400,
+          "wall_ns": 5458430,
+          "bytes_in": 8599,
+          "bytes_out": 0,
+          "count": 6
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 115534,
+          "wall_ns": 125268,
+          "bytes_in": 0,
+          "bytes_out": 8132,
+          "count": 4
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 4174856,
+          "wall_ns": 3540174494,
+          "bytes_in": 0,
+          "bytes_out": 7506,
+          "count": 2
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 73694,
+          "wall_ns": 79417,
+          "bytes_in": 434,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 0,
+          "wall_ns": 3546833567,
+          "bytes_in": 434,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 3533453,
+          "wall_ns": 3819344,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 8
+        },
+        "GC": {
+          "cpu_ns": 357782,
+          "wall_ns": 387076,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 3381021,
+          "wall_ns": 3662430,
+          "bytes_in": 101,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "THREADPOOL": {
+          "cpu_ns": 6685797,
+          "wall_ns": 7233205,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 6045580,
+          "wall_ns": 8522,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 4,
+          "wall_ns": 4,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "LH-02_s0": {
+        "ORCH_SETUP": {
+          "cpu_ns": 6218695,
+          "wall_ns": 6615897,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 3504,
+          "wall_ns": 5746,
+          "bytes_in": 0,
+          "bytes_out": 214,
+          "count": 1
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 292546,
+          "wall_ns": 575423,
+          "bytes_in": 1983,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 11466,
+          "wall_ns": 22427,
+          "bytes_in": 0,
+          "bytes_out": 214,
+          "count": 1
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 907151,
+          "wall_ns": 4972639633,
+          "bytes_in": 0,
+          "bytes_out": 1606,
+          "count": 1
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 13919,
+          "wall_ns": 27085,
+          "bytes_in": 1769,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 0,
+          "wall_ns": 4975178338,
+          "bytes_in": 1769,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 865104,
+          "wall_ns": 1697347,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 3,
+          "wall_ns": 3,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "LH-01_s1": {
+        "ORCH_SETUP": {
+          "cpu_ns": 8995666,
+          "wall_ns": 3988808,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "GC": {
+          "cpu_ns": 318608,
+          "wall_ns": 353046,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 14370,
+          "wall_ns": 13416,
+          "bytes_in": 0,
+          "bytes_out": 1336,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 1418599,
+          "wall_ns": 1577677,
+          "bytes_in": 3817,
+          "bytes_out": 0,
+          "count": 5
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 70870,
+          "wall_ns": 78500,
+          "bytes_in": 0,
+          "bytes_out": 2107,
+          "count": 3
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 3697758,
+          "wall_ns": 5100374896,
+          "bytes_in": 0,
+          "bytes_out": 4300,
+          "count": 2
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 67117,
+          "wall_ns": 74271,
+          "bytes_in": 1692,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 0,
+          "wall_ns": 5106611107,
+          "bytes_in": 1692,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 3597980,
+          "wall_ns": 3985006,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 5
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 15506129,
+          "wall_ns": 17184252,
+          "bytes_in": 34,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "THREADPOOL": {
+          "cpu_ns": 1449336,
+          "wall_ns": 1605991,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 4430803,
+          "wall_ns": 18011,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 7,
+          "wall_ns": 7,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "RH-01_s1": {
+        "ORCH_SETUP": {
+          "cpu_ns": 9206988,
+          "wall_ns": 5525942,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 14129,
+          "wall_ns": 16252,
+          "bytes_in": 0,
+          "bytes_out": 13902,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 5627641,
+          "wall_ns": 8946394,
+          "bytes_in": 29073,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 299198,
+          "wall_ns": 441851,
+          "bytes_in": 0,
+          "bytes_out": 26826,
+          "count": 7
+        },
+        "GC": {
+          "cpu_ns": 725438,
+          "wall_ns": 1043926,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 3702518,
+          "wall_ns": 7050485461,
+          "bytes_in": 0,
+          "bytes_out": 17402,
+          "count": 2
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 51415,
+          "wall_ns": 71605,
+          "bytes_in": 2155,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 0,
+          "wall_ns": 7060964258,
+          "bytes_in": 2155,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 8292901,
+          "wall_ns": 11933523,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 20
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 68833283,
+          "wall_ns": 115379811,
+          "bytes_in": 59,
+          "bytes_out": 0,
+          "count": 5
+        },
+        "THREADPOOL": {
+          "cpu_ns": 59981389,
+          "wall_ns": 86314913,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 36
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 7388598,
+          "wall_ns": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 6
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 5,
+          "wall_ns": 5,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "FO-01_s1": {
+        "ORCH_SETUP": {
+          "cpu_ns": 13742209,
+          "wall_ns": 5623285,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 22656,
+          "wall_ns": 17549,
+          "bytes_in": 0,
+          "bytes_out": 23013,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 7841112,
+          "wall_ns": 7870469,
+          "bytes_in": 46623,
+          "bytes_out": 0,
+          "count": 13
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 437353,
+          "wall_ns": 438619,
+          "bytes_in": 0,
+          "bytes_out": 44304,
+          "count": 11
+        },
+        "GC": {
+          "cpu_ns": 161077287,
+          "wall_ns": 161077287,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 4440232,
+          "wall_ns": 10126577049,
+          "bytes_in": 0,
+          "bytes_out": 26833,
+          "count": 2
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 63728,
+          "wall_ns": 62912,
+          "bytes_in": 2172,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 1347219,
+          "wall_ns": 13237464674,
+          "bytes_in": 3425,
+          "bytes_out": 363,
+          "count": 29
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 16905249,
+          "wall_ns": 16898758,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 32
+        },
+        "THREADPOOL": {
+          "cpu_ns": 26147026,
+          "wall_ns": 26147026,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 51
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 8056484,
+          "wall_ns": 318384,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 3798628,
+          "wall_ns": 3798628,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "RE-01_s1": {
+        "ORCH_SETUP": {
+          "cpu_ns": 9766633,
+          "wall_ns": 4135184,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 77834,
+          "wall_ns": 60116,
+          "bytes_in": 0,
+          "bytes_out": 154673,
+          "count": 10
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 31200660,
+          "wall_ns": 33913211,
+          "bytes_in": 179356,
+          "bytes_out": 0,
+          "count": 30
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 1181133,
+          "wall_ns": 1181010,
+          "bytes_in": 0,
+          "bytes_out": 177977,
+          "count": 20
+        },
+        "GC": {
+          "cpu_ns": 1170264,
+          "wall_ns": 1170264,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 21011166,
+          "wall_ns": 29720726806,
+          "bytes_in": 0,
+          "bytes_out": 177197,
+          "count": 10
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 268790,
+          "wall_ns": 265895,
+          "bytes_in": 1207,
+          "bytes_out": 0,
+          "count": 20
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 0,
+          "wall_ns": 29781758893,
+          "bytes_in": 1207,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 23606052,
+          "wall_ns": 23597918,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 40
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 8047096,
+          "wall_ns": 8061013,
+          "bytes_in": 696,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "THREADPOOL": {
+          "cpu_ns": 16681651,
+          "wall_ns": 16681651,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 21
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 77520027,
+          "wall_ns": 4032202,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 19
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 1233725,
+          "wall_ns": 1233725,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "CH-01_s1": {
+        "ORCH_SETUP": {
+          "cpu_ns": 9640113,
+          "wall_ns": 4601732,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 14165,
+          "wall_ns": 13071,
+          "bytes_in": 0,
+          "bytes_out": 4618,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 1775040,
+          "wall_ns": 2156629,
+          "bytes_in": 9004,
+          "bytes_out": 0,
+          "count": 6
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 98436,
+          "wall_ns": 110477,
+          "bytes_in": 0,
+          "bytes_out": 8462,
+          "count": 4
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 3010332,
+          "wall_ns": 3858609118,
+          "bytes_in": 0,
+          "bytes_out": 7670,
+          "count": 2
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 56851,
+          "wall_ns": 85370,
+          "bytes_in": 508,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 0,
+          "wall_ns": 3864994513,
+          "bytes_in": 508,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 3409845,
+          "wall_ns": 3827789,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 8
+        },
+        "GC": {
+          "cpu_ns": 325427,
+          "wall_ns": 365427,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 1594741,
+          "wall_ns": 1792936,
+          "bytes_in": 101,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "THREADPOOL": {
+          "cpu_ns": 4987581,
+          "wall_ns": 5600616,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 12
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 5370975,
+          "wall_ns": 666419,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 6,
+          "wall_ns": 6,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "LH-02_s1": {
+        "ORCH_SETUP": {
+          "cpu_ns": 6480264,
+          "wall_ns": 4847005,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 4945,
+          "wall_ns": 6564,
+          "bytes_in": 0,
+          "bytes_out": 214,
+          "count": 1
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 354278,
+          "wall_ns": 585792,
+          "bytes_in": 1976,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 17030,
+          "wall_ns": 28137,
+          "bytes_in": 0,
+          "bytes_out": 214,
+          "count": 1
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 1184407,
+          "wall_ns": 4774441282,
+          "bytes_in": 0,
+          "bytes_out": 1606,
+          "count": 1
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 18284,
+          "wall_ns": 29076,
+          "bytes_in": 1762,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 0,
+          "wall_ns": 4777457379,
+          "bytes_in": 1762,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 735465,
+          "wall_ns": 1213909,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 4,
+          "wall_ns": 4,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "LH-01_s2": {
+        "ORCH_SETUP": {
+          "cpu_ns": 11632427,
+          "wall_ns": 5266440,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "GC": {
+          "cpu_ns": 1403522,
+          "wall_ns": 1403522,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 124875,
+          "wall_ns": 93190,
+          "bytes_in": 0,
+          "bytes_out": 231576,
+          "count": 14
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 47571868,
+          "wall_ns": 47628187,
+          "bytes_in": 263428,
+          "bytes_out": 0,
+          "count": 41
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 2220617,
+          "wall_ns": 2225038,
+          "bytes_in": 0,
+          "bytes_out": 260859,
+          "count": 27
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 30364105,
+          "wall_ns": 17624181034,
+          "bytes_in": 0,
+          "bytes_out": 267444,
+          "count": 14
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 429699,
+          "wall_ns": 426788,
+          "bytes_in": 2346,
+          "bytes_out": 0,
+          "count": 28
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 0,
+          "wall_ns": 17721525249,
+          "bytes_in": 2346,
+          "bytes_out": 0,
+          "count": 14
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 43599800,
+          "wall_ns": 43594793,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 53
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 241006285,
+          "wall_ns": 241053890,
+          "bytes_in": 420,
+          "bytes_out": 0,
+          "count": 13
+        },
+        "THREADPOOL": {
+          "cpu_ns": 19651745,
+          "wall_ns": 19651745,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 14
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 123844206,
+          "wall_ns": 6109647,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 26
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 1966463,
+          "wall_ns": 1966463,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "RH-01_s2": {
+        "ORCH_SETUP": {
+          "cpu_ns": 10820030,
+          "wall_ns": 5631397,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 12971,
+          "wall_ns": 14246,
+          "bytes_in": 0,
+          "bytes_out": 15786,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 4849703,
+          "wall_ns": 8112713,
+          "bytes_in": 32700,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 240065,
+          "wall_ns": 318723,
+          "bytes_in": 0,
+          "bytes_out": 30604,
+          "count": 7
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 3067866,
+          "wall_ns": 7413885201,
+          "bytes_in": 0,
+          "bytes_out": 19286,
+          "count": 2
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 46006,
+          "wall_ns": 60553,
+          "bytes_in": 2014,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "GC": {
+          "cpu_ns": 811579,
+          "wall_ns": 1076910,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 0,
+          "wall_ns": 7422579644,
+          "bytes_in": 2014,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 10350143,
+          "wall_ns": 13735220,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 17
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 74604060,
+          "wall_ns": 116730325,
+          "bytes_in": 59,
+          "bytes_out": 0,
+          "count": 5
+        },
+        "THREADPOOL": {
+          "cpu_ns": 52044224,
+          "wall_ns": 69059122,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 32
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 4835099,
+          "wall_ns": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 6
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 5,
+          "wall_ns": 5,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "FO-01_s2": {
+        "ORCH_SETUP": {
+          "cpu_ns": 10226699,
+          "wall_ns": 3679918,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 20014,
+          "wall_ns": 15478,
+          "bytes_in": 0,
+          "bytes_out": 16546,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 6832265,
+          "wall_ns": 6858961,
+          "bytes_in": 33711,
+          "bytes_out": 0,
+          "count": 13
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 284683,
+          "wall_ns": 285410,
+          "bytes_in": 0,
+          "bytes_out": 31373,
+          "count": 11
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 4040178,
+          "wall_ns": 7940212670,
+          "bytes_in": 0,
+          "bytes_out": 20366,
+          "count": 2
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 56832,
+          "wall_ns": 56359,
+          "bytes_in": 2194,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "GC": {
+          "cpu_ns": 1850629,
+          "wall_ns": 1850629,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 1245277,
+          "wall_ns": 11245003320,
+          "bytes_in": 3447,
+          "bytes_out": 363,
+          "count": 29
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 15480924,
+          "wall_ns": 15469496,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 33
+        },
+        "THREADPOOL": {
+          "cpu_ns": 21659056,
+          "wall_ns": 21659056,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 47
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 8693208,
+          "wall_ns": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 6120027,
+          "wall_ns": 6120027,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "RE-01_s2": {
+        "ORCH_SETUP": {
+          "cpu_ns": 9642954,
+          "wall_ns": 4574578,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 24440,
+          "wall_ns": 19097,
+          "bytes_in": 0,
+          "bytes_out": 10637,
+          "count": 3
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 4137732,
+          "wall_ns": 6302860,
+          "bytes_in": 17402,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 183939,
+          "wall_ns": 196015,
+          "bytes_in": 0,
+          "bytes_out": 16209,
+          "count": 6
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 5786018,
+          "wall_ns": 8671695304,
+          "bytes_in": 0,
+          "bytes_out": 15553,
+          "count": 3
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 93905,
+          "wall_ns": 98785,
+          "bytes_in": 1098,
+          "bytes_out": 0,
+          "count": 6
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 0,
+          "wall_ns": 8683480145,
+          "bytes_in": 1098,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 6014109,
+          "wall_ns": 6402335,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 12
+        },
+        "GC": {
+          "cpu_ns": 404625,
+          "wall_ns": 431060,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 1710802,
+          "wall_ns": 1825810,
+          "bytes_in": 171,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "THREADPOOL": {
+          "cpu_ns": 6935824,
+          "wall_ns": 7388951,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 13656551,
+          "wall_ns": 1433622,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 5
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 6,
+          "wall_ns": 6,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "CH-01_s2": {
+        "ORCH_SETUP": {
+          "cpu_ns": 11606888,
+          "wall_ns": 5295152,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 15792,
+          "wall_ns": 14447,
+          "bytes_in": 0,
+          "bytes_out": 3561,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 2078128,
+          "wall_ns": 5815617,
+          "bytes_in": 6886,
+          "bytes_out": 0,
+          "count": 6
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 117626,
+          "wall_ns": 134769,
+          "bytes_in": 0,
+          "bytes_out": 6347,
+          "count": 4
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 3857556,
+          "wall_ns": 4806656549,
+          "bytes_in": 0,
+          "bytes_out": 6613,
+          "count": 2
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 60114,
+          "wall_ns": 67291,
+          "bytes_in": 507,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 0,
+          "wall_ns": 4814929107,
+          "bytes_in": 507,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 3853818,
+          "wall_ns": 4400491,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 7
+        },
+        "GC": {
+          "cpu_ns": 458857,
+          "wall_ns": 524362,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 2240103,
+          "wall_ns": 2563973,
+          "bytes_in": 100,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "THREADPOOL": {
+          "cpu_ns": 4826330,
+          "wall_ns": 5515312,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 11
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 6061719,
+          "wall_ns": 533219,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 5,
+          "wall_ns": 5,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "LH-02_s2": {
+        "ORCH_SETUP": {
+          "cpu_ns": 6014798,
+          "wall_ns": 3686497,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "PROMPT_ASSEMBLY": {
+          "cpu_ns": 4989,
+          "wall_ns": 6068,
+          "bytes_in": 0,
+          "bytes_out": 214,
+          "count": 1
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 338304,
+          "wall_ns": 519408,
+          "bytes_in": 1825,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 17396,
+          "wall_ns": 27478,
+          "bytes_in": 0,
+          "bytes_out": 214,
+          "count": 1
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 1103998,
+          "wall_ns": 4441802524,
+          "bytes_in": 0,
+          "bytes_out": 1606,
+          "count": 1
+        },
+        "CLIENT_PARSE": {
+          "cpu_ns": 21754,
+          "wall_ns": 33246,
+          "bytes_in": 1611,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 0,
+          "wall_ns": 4444339085,
+          "bytes_in": 1611,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 639038,
+          "wall_ns": 980156,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 3,
+          "wall_ns": 3,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      }
+    },
+    "residual_cpu_ns": 0,
+    "residual_fraction": 0.0,
+    "totals": {
+      "thread_cpu_ns": 2421871977,
+      "wall_ns": 175025131429,
+      "instrumented_cpu_ns": 2424321648
+    },
+    "os_times_user_sys": {
+      "user": 4.359999999999999,
+      "system": 0.42999999999999994
+    },
+    "timeline": []
+  },
+  "session_rows": [
+    {
+      "task_id": "CH-01",
+      "seed": 0,
+      "session_id": "CH-01_s0",
+      "wall_s": 3.573,
+      "host_cpu_ms": 35.78,
+      "llm_wait_s": 3.54,
+      "remote_tool_io_wait_s": 3.547,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 3.38,
+        "THREADPOOL": 6.69,
+        "ORCH_SETUP": 9.27,
+        "ORCH_DISPATCH": 6.05,
+        "CLIENT_HTTP": 4.17,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 3.53,
+        "TOKENIZATION": 2.13,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 9.45,
+        "THREADPOOL": 18.69,
+        "ORCH_SETUP": 25.91,
+        "ORCH_DISPATCH": 16.9,
+        "CLIENT_HTTP": 11.67,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 9.88,
+        "TOKENIZATION": 5.94,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "residual_provenance_ms": 0.0,
+      "residual_provenance_pct": 0.0,
+      "residual_gate_pass": true,
+      "tool_call_counts": {
+        "calculator": 1,
+        "code_exec": 1
+      },
+      "turns": 4
+    },
+    {
+      "task_id": "CH-01",
+      "seed": 1,
+      "session_id": "CH-01_s1",
+      "wall_s": 3.889,
+      "host_cpu_ms": 30.28,
+      "llm_wait_s": 3.859,
+      "remote_tool_io_wait_s": 3.865,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 1.59,
+        "THREADPOOL": 4.99,
+        "ORCH_SETUP": 9.64,
+        "ORCH_DISPATCH": 5.37,
+        "CLIENT_HTTP": 3.01,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 3.41,
+        "TOKENIZATION": 1.78,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 5.27,
+        "THREADPOOL": 16.47,
+        "ORCH_SETUP": 31.83,
+        "ORCH_DISPATCH": 17.74,
+        "CLIENT_HTTP": 9.94,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 11.26,
+        "TOKENIZATION": 5.86,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "residual_provenance_ms": 0.0,
+      "residual_provenance_pct": 0.0,
+      "residual_gate_pass": true,
+      "tool_call_counts": {
+        "code_exec": 1,
+        "calculator": 1
+      },
+      "turns": 4
+    },
+    {
+      "task_id": "CH-01",
+      "seed": 2,
+      "session_id": "CH-01_s2",
+      "wall_s": 4.841,
+      "host_cpu_ms": 35.18,
+      "llm_wait_s": 4.807,
+      "remote_tool_io_wait_s": 4.815,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 2.24,
+        "THREADPOOL": 4.83,
+        "ORCH_SETUP": 11.61,
+        "ORCH_DISPATCH": 6.06,
+        "CLIENT_HTTP": 3.86,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 3.85,
+        "TOKENIZATION": 2.08,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 6.37,
+        "THREADPOOL": 13.72,
+        "ORCH_SETUP": 33.0,
+        "ORCH_DISPATCH": 17.23,
+        "CLIENT_HTTP": 10.97,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 10.96,
+        "TOKENIZATION": 5.91,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "residual_provenance_ms": 0.0,
+      "residual_provenance_pct": 0.0,
+      "residual_gate_pass": true,
+      "tool_call_counts": {
+        "code_exec": 1,
+        "calculator": 1
+      },
+      "turns": 4
+    },
+    {
+      "task_id": "FO-01",
+      "seed": 0,
+      "session_id": "FO-01_s0",
+      "wall_s": 8.482,
+      "host_cpu_ms": 79.5,
+      "llm_wait_s": 7.827,
+      "remote_tool_io_wait_s": 11.416,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 0.0,
+        "THREADPOOL": 23.3,
+        "ORCH_SETUP": 12.14,
+        "ORCH_DISPATCH": 7.01,
+        "CLIENT_HTTP": 3.83,
+        "HTTP_CLIENT": 1.45,
+        "FRAMEWORK": 16.63,
+        "TOKENIZATION": 6.92,
+        "RESIDUAL_UNATTRIBUTED": 6.77
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 0.0,
+        "THREADPOOL": 29.3,
+        "ORCH_SETUP": 15.27,
+        "ORCH_DISPATCH": 8.82,
+        "CLIENT_HTTP": 4.81,
+        "HTTP_CLIENT": 1.82,
+        "FRAMEWORK": 20.92,
+        "TOKENIZATION": 8.71,
+        "RESIDUAL_UNATTRIBUTED": 8.51
+      },
+      "residual_provenance_ms": 6.77,
+      "residual_provenance_pct": 8.51,
+      "residual_gate_pass": true,
+      "tool_call_counts": {
+        "search": 9
+      },
+      "turns": 11
+    },
+    {
+      "task_id": "FO-01",
+      "seed": 1,
+      "session_id": "FO-01_s1",
+      "wall_s": 10.891,
+      "host_cpu_ms": 243.88,
+      "llm_wait_s": 10.127,
+      "remote_tool_io_wait_s": 13.237,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 0.0,
+        "THREADPOOL": 26.15,
+        "ORCH_SETUP": 13.74,
+        "ORCH_DISPATCH": 8.06,
+        "CLIENT_HTTP": 4.44,
+        "HTTP_CLIENT": 1.35,
+        "FRAMEWORK": 16.91,
+        "TOKENIZATION": 7.84,
+        "RESIDUAL_UNATTRIBUTED": 3.8
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 0.0,
+        "THREADPOOL": 10.72,
+        "ORCH_SETUP": 5.63,
+        "ORCH_DISPATCH": 3.3,
+        "CLIENT_HTTP": 1.82,
+        "HTTP_CLIENT": 0.55,
+        "FRAMEWORK": 6.93,
+        "TOKENIZATION": 3.22,
+        "RESIDUAL_UNATTRIBUTED": 1.56
+      },
+      "residual_provenance_ms": 3.8,
+      "residual_provenance_pct": 1.56,
+      "residual_gate_pass": true,
+      "tool_call_counts": {
+        "search": 9
+      },
+      "turns": 11
+    },
+    {
+      "task_id": "FO-01",
+      "seed": 2,
+      "session_id": "FO-01_s2",
+      "wall_s": 8.667,
+      "host_cpu_ms": 76.51,
+      "llm_wait_s": 7.94,
+      "remote_tool_io_wait_s": 11.245,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 0.0,
+        "THREADPOOL": 21.66,
+        "ORCH_SETUP": 10.23,
+        "ORCH_DISPATCH": 8.69,
+        "CLIENT_HTTP": 4.04,
+        "HTTP_CLIENT": 1.25,
+        "FRAMEWORK": 15.48,
+        "TOKENIZATION": 6.83,
+        "RESIDUAL_UNATTRIBUTED": 6.12
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 0.0,
+        "THREADPOOL": 28.31,
+        "ORCH_SETUP": 13.37,
+        "ORCH_DISPATCH": 11.36,
+        "CLIENT_HTTP": 5.28,
+        "HTTP_CLIENT": 1.63,
+        "FRAMEWORK": 20.23,
+        "TOKENIZATION": 8.93,
+        "RESIDUAL_UNATTRIBUTED": 8.0
+      },
+      "residual_provenance_ms": 6.12,
+      "residual_provenance_pct": 8.0,
+      "residual_gate_pass": true,
+      "tool_call_counts": {
+        "search": 9
+      },
+      "turns": 11
+    },
+    {
+      "task_id": "LH-01",
+      "seed": 0,
+      "session_id": "LH-01_s0",
+      "wall_s": 23.842,
+      "host_cpu_ms": 574.48,
+      "llm_wait_s": 23.291,
+      "remote_tool_io_wait_s": 23.416,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 48.11,
+        "THREADPOOL": 3.5,
+        "ORCH_SETUP": 9.3,
+        "ORCH_DISPATCH": 25.03,
+        "CLIENT_HTTP": 7.24,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 438.38,
+        "TOKENIZATION": 12.68,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 8.37,
+        "THREADPOOL": 0.61,
+        "ORCH_SETUP": 1.62,
+        "ORCH_DISPATCH": 4.36,
+        "CLIENT_HTTP": 1.26,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 76.31,
+        "TOKENIZATION": 2.21,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "residual_provenance_ms": 0.0,
+      "residual_provenance_pct": 0.0,
+      "residual_gate_pass": true,
+      "tool_call_counts": {
+        "retrieve": 13
+      },
+      "turns": 27
+    },
+    {
+      "task_id": "LH-01",
+      "seed": 1,
+      "session_id": "LH-01_s1",
+      "wall_s": 5.14,
+      "host_cpu_ms": 39.57,
+      "llm_wait_s": 5.1,
+      "remote_tool_io_wait_s": 5.107,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 15.51,
+        "THREADPOOL": 1.45,
+        "ORCH_SETUP": 9.0,
+        "ORCH_DISPATCH": 4.43,
+        "CLIENT_HTTP": 3.7,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 3.6,
+        "TOKENIZATION": 1.42,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 39.19,
+        "THREADPOOL": 3.66,
+        "ORCH_SETUP": 22.74,
+        "ORCH_DISPATCH": 11.2,
+        "CLIENT_HTTP": 9.35,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 9.09,
+        "TOKENIZATION": 3.59,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "residual_provenance_ms": 0.0,
+      "residual_provenance_pct": 0.0,
+      "residual_gate_pass": true,
+      "tool_call_counts": {
+        "retrieve": 1
+      },
+      "turns": 3
+    },
+    {
+      "task_id": "LH-01",
+      "seed": 2,
+      "session_id": "LH-01_s2",
+      "wall_s": 18.121,
+      "host_cpu_ms": 523.82,
+      "llm_wait_s": 17.624,
+      "remote_tool_io_wait_s": 17.722,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 241.01,
+        "THREADPOOL": 19.65,
+        "ORCH_SETUP": 11.63,
+        "ORCH_DISPATCH": 123.84,
+        "CLIENT_HTTP": 30.36,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 43.6,
+        "TOKENIZATION": 47.57,
+        "RESIDUAL_UNATTRIBUTED": 1.97
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 46.01,
+        "THREADPOOL": 3.75,
+        "ORCH_SETUP": 2.22,
+        "ORCH_DISPATCH": 23.64,
+        "CLIENT_HTTP": 5.8,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 8.32,
+        "TOKENIZATION": 9.08,
+        "RESIDUAL_UNATTRIBUTED": 0.38
+      },
+      "residual_provenance_ms": 1.97,
+      "residual_provenance_pct": 0.38,
+      "residual_gate_pass": true,
+      "tool_call_counts": {
+        "retrieve": 13
+      },
+      "turns": 27
+    },
+    {
+      "task_id": "LH-02",
+      "seed": 0,
+      "session_id": "LH-02_s0",
+      "wall_s": 4.986,
+      "host_cpu_ms": 8.31,
+      "llm_wait_s": 4.973,
+      "remote_tool_io_wait_s": 4.975,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 0.0,
+        "THREADPOOL": 0.0,
+        "ORCH_SETUP": 6.22,
+        "ORCH_DISPATCH": 0.0,
+        "CLIENT_HTTP": 0.91,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 0.87,
+        "TOKENIZATION": 0.29,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 0.0,
+        "THREADPOOL": 0.0,
+        "ORCH_SETUP": 74.81,
+        "ORCH_DISPATCH": 0.0,
+        "CLIENT_HTTP": 10.91,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 10.41,
+        "TOKENIZATION": 3.52,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "residual_provenance_ms": 0.0,
+      "residual_provenance_pct": 0.0,
+      "residual_gate_pass": true,
+      "tool_call_counts": {},
+      "turns": 1
+    },
+    {
+      "task_id": "LH-02",
+      "seed": 1,
+      "session_id": "LH-02_s1",
+      "wall_s": 4.786,
+      "host_cpu_ms": 8.79,
+      "llm_wait_s": 4.774,
+      "remote_tool_io_wait_s": 4.777,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 0.0,
+        "THREADPOOL": 0.0,
+        "ORCH_SETUP": 6.48,
+        "ORCH_DISPATCH": 0.0,
+        "CLIENT_HTTP": 1.18,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 0.74,
+        "TOKENIZATION": 0.35,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 0.0,
+        "THREADPOOL": 0.0,
+        "ORCH_SETUP": 73.68,
+        "ORCH_DISPATCH": 0.0,
+        "CLIENT_HTTP": 13.47,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 8.36,
+        "TOKENIZATION": 4.03,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "residual_provenance_ms": 0.0,
+      "residual_provenance_pct": 0.0,
+      "residual_gate_pass": true,
+      "tool_call_counts": {},
+      "turns": 1
+    },
+    {
+      "task_id": "LH-02",
+      "seed": 2,
+      "session_id": "LH-02_s2",
+      "wall_s": 4.452,
+      "host_cpu_ms": 8.14,
+      "llm_wait_s": 4.442,
+      "remote_tool_io_wait_s": 4.444,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 0.0,
+        "THREADPOOL": 0.0,
+        "ORCH_SETUP": 6.01,
+        "ORCH_DISPATCH": 0.0,
+        "CLIENT_HTTP": 1.1,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 0.64,
+        "TOKENIZATION": 0.34,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 0.0,
+        "THREADPOOL": 0.0,
+        "ORCH_SETUP": 73.89,
+        "ORCH_DISPATCH": 0.0,
+        "CLIENT_HTTP": 13.56,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 7.85,
+        "TOKENIZATION": 4.16,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "residual_provenance_ms": 0.0,
+      "residual_provenance_pct": 0.0,
+      "residual_gate_pass": true,
+      "tool_call_counts": {},
+      "turns": 1
+    },
+    {
+      "task_id": "RE-01",
+      "seed": 0,
+      "session_id": "RE-01_s0",
+      "wall_s": 10.239,
+      "host_cpu_ms": 40.94,
+      "llm_wait_s": 10.202,
+      "remote_tool_io_wait_s": 10.211,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 2.2,
+        "THREADPOOL": 6.16,
+        "ORCH_SETUP": 8.6,
+        "ORCH_DISPATCH": 10.18,
+        "CLIENT_HTTP": 4.91,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 4.84,
+        "TOKENIZATION": 3.5,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 5.37,
+        "THREADPOOL": 15.04,
+        "ORCH_SETUP": 21.01,
+        "ORCH_DISPATCH": 24.86,
+        "CLIENT_HTTP": 12.0,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 11.83,
+        "TOKENIZATION": 8.54,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "residual_provenance_ms": 0.0,
+      "residual_provenance_pct": 0.0,
+      "residual_gate_pass": true,
+      "tool_call_counts": {
+        "code_exec": 2,
+        "calculator": 1
+      },
+      "turns": 6
+    },
+    {
+      "task_id": "RE-01",
+      "seed": 1,
+      "session_id": "RE-01_s1",
+      "wall_s": 29.893,
+      "host_cpu_ms": 191.77,
+      "llm_wait_s": 29.721,
+      "remote_tool_io_wait_s": 29.782,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 8.05,
+        "THREADPOOL": 16.68,
+        "ORCH_SETUP": 9.77,
+        "ORCH_DISPATCH": 77.52,
+        "CLIENT_HTTP": 21.01,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 23.61,
+        "TOKENIZATION": 31.2,
+        "RESIDUAL_UNATTRIBUTED": 1.23
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 4.2,
+        "THREADPOOL": 8.7,
+        "ORCH_SETUP": 5.09,
+        "ORCH_DISPATCH": 40.42,
+        "CLIENT_HTTP": 10.96,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 12.31,
+        "TOKENIZATION": 16.27,
+        "RESIDUAL_UNATTRIBUTED": 0.64
+      },
+      "residual_provenance_ms": 1.23,
+      "residual_provenance_pct": 0.64,
+      "residual_gate_pass": true,
+      "tool_call_counts": {
+        "code_exec": 9,
+        "calculator": 1
+      },
+      "turns": 20
+    },
+    {
+      "task_id": "RE-01",
+      "seed": 2,
+      "session_id": "RE-01_s2",
+      "wall_s": 8.717,
+      "host_cpu_ms": 48.59,
+      "llm_wait_s": 8.672,
+      "remote_tool_io_wait_s": 8.683,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 1.71,
+        "THREADPOOL": 6.94,
+        "ORCH_SETUP": 9.64,
+        "ORCH_DISPATCH": 13.66,
+        "CLIENT_HTTP": 5.79,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 6.01,
+        "TOKENIZATION": 4.14,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 3.52,
+        "THREADPOOL": 14.27,
+        "ORCH_SETUP": 19.85,
+        "ORCH_DISPATCH": 28.11,
+        "CLIENT_HTTP": 11.91,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 12.38,
+        "TOKENIZATION": 8.52,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "residual_provenance_ms": 0.0,
+      "residual_provenance_pct": 0.0,
+      "residual_gate_pass": true,
+      "tool_call_counts": {
+        "code_exec": 2,
+        "calculator": 1
+      },
+      "turns": 6
+    },
+    {
+      "task_id": "RH-01",
+      "seed": 0,
+      "session_id": "RH-01_s0",
+      "wall_s": 7.615,
+      "host_cpu_ms": 150.53,
+      "llm_wait_s": 7.544,
+      "remote_tool_io_wait_s": 7.552,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 75.53,
+        "THREADPOOL": 44.41,
+        "ORCH_SETUP": 9.07,
+        "ORCH_DISPATCH": 5.75,
+        "CLIENT_HTTP": 3.5,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 8.14,
+        "TOKENIZATION": 3.41,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 50.17,
+        "THREADPOOL": 29.5,
+        "ORCH_SETUP": 6.02,
+        "ORCH_DISPATCH": 3.82,
+        "CLIENT_HTTP": 2.33,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 5.41,
+        "TOKENIZATION": 2.26,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "residual_provenance_ms": 0.0,
+      "residual_provenance_pct": 0.0,
+      "residual_gate_pass": true,
+      "tool_call_counts": {
+        "retrieve": 5
+      },
+      "turns": 7
+    },
+    {
+      "task_id": "RH-01",
+      "seed": 1,
+      "session_id": "RH-01_s1",
+      "wall_s": 7.127,
+      "host_cpu_ms": 164.12,
+      "llm_wait_s": 7.05,
+      "remote_tool_io_wait_s": 7.061,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 68.83,
+        "THREADPOOL": 59.98,
+        "ORCH_SETUP": 9.21,
+        "ORCH_DISPATCH": 7.39,
+        "CLIENT_HTTP": 3.7,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 8.29,
+        "TOKENIZATION": 5.63,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 41.94,
+        "THREADPOOL": 36.55,
+        "ORCH_SETUP": 5.61,
+        "ORCH_DISPATCH": 4.5,
+        "CLIENT_HTTP": 2.26,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 5.05,
+        "TOKENIZATION": 3.43,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "residual_provenance_ms": 0.0,
+      "residual_provenance_pct": 0.0,
+      "residual_gate_pass": true,
+      "tool_call_counts": {
+        "retrieve": 5
+      },
+      "turns": 7
+    },
+    {
+      "task_id": "RH-01",
+      "seed": 2,
+      "session_id": "RH-01_s2",
+      "wall_s": 7.488,
+      "host_cpu_ms": 161.68,
+      "llm_wait_s": 7.414,
+      "remote_tool_io_wait_s": 7.423,
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 74.6,
+        "THREADPOOL": 52.04,
+        "ORCH_SETUP": 10.82,
+        "ORCH_DISPATCH": 4.84,
+        "CLIENT_HTTP": 3.07,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 10.35,
+        "TOKENIZATION": 4.85,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 46.14,
+        "THREADPOOL": 32.19,
+        "ORCH_SETUP": 6.69,
+        "ORCH_DISPATCH": 2.99,
+        "CLIENT_HTTP": 1.9,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 6.4,
+        "TOKENIZATION": 3.0,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "residual_provenance_ms": 0.0,
+      "residual_provenance_pct": 0.0,
+      "residual_gate_pass": true,
+      "tool_call_counts": {
+        "retrieve": 5
+      },
+      "turns": 7
+    }
+  ],
+  "per_task_medians": {
+    "LH-01": {
+      "n": 3,
+      "host_cpu_ms": 523.82,
+      "llm_wait_s": 17.624,
+      "wall_s": 18.121,
+      "residual_provenance_pct": 0.0,
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 39.19,
+        "THREADPOOL": 3.66,
+        "ORCH_SETUP": 2.22,
+        "ORCH_DISPATCH": 11.2,
+        "CLIENT_HTTP": 5.8,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 9.09,
+        "TOKENIZATION": 3.59,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 48.11,
+        "THREADPOOL": 3.5,
+        "ORCH_SETUP": 9.3,
+        "ORCH_DISPATCH": 25.03,
+        "CLIENT_HTTP": 7.24,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 43.6,
+        "TOKENIZATION": 12.68,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      }
+    },
+    "RH-01": {
+      "n": 3,
+      "host_cpu_ms": 161.68,
+      "llm_wait_s": 7.414,
+      "wall_s": 7.488,
+      "residual_provenance_pct": 0.0,
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 46.14,
+        "THREADPOOL": 32.19,
+        "ORCH_SETUP": 6.02,
+        "ORCH_DISPATCH": 3.82,
+        "CLIENT_HTTP": 2.26,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 5.41,
+        "TOKENIZATION": 3.0,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 74.6,
+        "THREADPOOL": 52.04,
+        "ORCH_SETUP": 9.21,
+        "ORCH_DISPATCH": 5.75,
+        "CLIENT_HTTP": 3.5,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 8.29,
+        "TOKENIZATION": 4.85,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      }
+    },
+    "FO-01": {
+      "n": 3,
+      "host_cpu_ms": 79.5,
+      "llm_wait_s": 7.94,
+      "wall_s": 8.667,
+      "residual_provenance_pct": 8.0,
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 0.0,
+        "THREADPOOL": 28.31,
+        "ORCH_SETUP": 13.37,
+        "ORCH_DISPATCH": 8.82,
+        "CLIENT_HTTP": 4.81,
+        "HTTP_CLIENT": 1.63,
+        "FRAMEWORK": 20.23,
+        "TOKENIZATION": 8.71,
+        "RESIDUAL_UNATTRIBUTED": 8.0
+      },
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 0.0,
+        "THREADPOOL": 23.3,
+        "ORCH_SETUP": 12.14,
+        "ORCH_DISPATCH": 8.06,
+        "CLIENT_HTTP": 4.04,
+        "HTTP_CLIENT": 1.35,
+        "FRAMEWORK": 16.63,
+        "TOKENIZATION": 6.92,
+        "RESIDUAL_UNATTRIBUTED": 6.12
+      }
+    },
+    "RE-01": {
+      "n": 3,
+      "host_cpu_ms": 48.59,
+      "llm_wait_s": 10.202,
+      "wall_s": 10.239,
+      "residual_provenance_pct": 0.0,
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 4.2,
+        "THREADPOOL": 14.27,
+        "ORCH_SETUP": 19.85,
+        "ORCH_DISPATCH": 28.11,
+        "CLIENT_HTTP": 11.91,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 12.31,
+        "TOKENIZATION": 8.54,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 2.2,
+        "THREADPOOL": 6.94,
+        "ORCH_SETUP": 9.64,
+        "ORCH_DISPATCH": 13.66,
+        "CLIENT_HTTP": 5.79,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 6.01,
+        "TOKENIZATION": 4.14,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      }
+    },
+    "CH-01": {
+      "n": 3,
+      "host_cpu_ms": 35.18,
+      "llm_wait_s": 3.859,
+      "wall_s": 3.889,
+      "residual_provenance_pct": 0.0,
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 6.37,
+        "THREADPOOL": 16.47,
+        "ORCH_SETUP": 31.83,
+        "ORCH_DISPATCH": 17.23,
+        "CLIENT_HTTP": 10.97,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 10.96,
+        "TOKENIZATION": 5.91,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 2.24,
+        "THREADPOOL": 4.99,
+        "ORCH_SETUP": 9.64,
+        "ORCH_DISPATCH": 6.05,
+        "CLIENT_HTTP": 3.86,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 3.53,
+        "TOKENIZATION": 2.08,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      }
+    },
+    "LH-02": {
+      "n": 3,
+      "host_cpu_ms": 8.31,
+      "llm_wait_s": 4.774,
+      "wall_s": 4.786,
+      "residual_provenance_pct": 0.0,
+      "share_pct_by_category": {
+        "TOOL_COMPUTE": 0.0,
+        "THREADPOOL": 0.0,
+        "ORCH_SETUP": 73.89,
+        "ORCH_DISPATCH": 0.0,
+        "CLIENT_HTTP": 13.47,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 8.36,
+        "TOKENIZATION": 4.03,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      },
+      "cpu_ms_by_category": {
+        "TOOL_COMPUTE": 0.0,
+        "THREADPOOL": 0.0,
+        "ORCH_SETUP": 6.22,
+        "ORCH_DISPATCH": 0.0,
+        "CLIENT_HTTP": 1.1,
+        "HTTP_CLIENT": 0.0,
+        "FRAMEWORK": 0.74,
+        "TOKENIZATION": 0.34,
+        "RESIDUAL_UNATTRIBUTED": 0.0
+      }
+    }
+  },
+  "load_records": [
+    {
+      "session_id": "LH-01_s0",
+      "loadavg_before": 0.088,
+      "loadavg_after": 0.056
+    },
+    {
+      "session_id": "RH-01_s0",
+      "loadavg_before": 0.056,
+      "loadavg_after": 0.047
+    },
+    {
+      "session_id": "FO-01_s0",
+      "loadavg_before": 0.047,
+      "loadavg_after": 0.043
+    },
+    {
+      "session_id": "RE-01_s0",
+      "loadavg_before": 0.043,
+      "loadavg_after": 0.033
+    },
+    {
+      "session_id": "CH-01_s0",
+      "loadavg_before": 0.033,
+      "loadavg_after": 0.033
+    },
+    {
+      "session_id": "LH-02_s0",
+      "loadavg_before": 0.033,
+      "loadavg_after": 0.03
+    },
+    {
+      "session_id": "LH-01_s1",
+      "loadavg_before": 0.03,
+      "loadavg_after": 0.027
+    },
+    {
+      "session_id": "RH-01_s1",
+      "loadavg_before": 0.027,
+      "loadavg_after": 0.022
+    },
+    {
+      "session_id": "FO-01_s1",
+      "loadavg_before": 0.022,
+      "loadavg_after": 0.019
+    },
+    {
+      "session_id": "RE-01_s1",
+      "loadavg_before": 0.019,
+      "loadavg_after": 0.01
+    },
+    {
+      "session_id": "CH-01_s1",
+      "loadavg_before": 0.01,
+      "loadavg_after": 0.009
+    },
+    {
+      "session_id": "LH-02_s1",
+      "loadavg_before": 0.009,
+      "loadavg_after": 0.008
+    },
+    {
+      "session_id": "LH-01_s2",
+      "loadavg_before": 0.008,
+      "loadavg_after": 0.005
+    },
+    {
+      "session_id": "RH-01_s2",
+      "loadavg_before": 0.005,
+      "loadavg_after": 0.004
+    },
+    {
+      "session_id": "FO-01_s2",
+      "loadavg_before": 0.004,
+      "loadavg_after": 0.004
+    },
+    {
+      "session_id": "RE-01_s2",
+      "loadavg_before": 0.004,
+      "loadavg_after": 0.003
+    },
+    {
+      "session_id": "CH-01_s2",
+      "loadavg_before": 0.003,
+      "loadavg_after": 0.002
+    },
+    {
+      "session_id": "LH-02_s2",
+      "loadavg_before": 0.002,
+      "loadavg_after": 0.002
+    }
+  ],
+  "loadavg_start": 0.008,
+  "loadavg_end": 0.002,
+  "timer_overhead_ns_per_pair": 9269.73089,
+  "reproduce_cmd": "python -m apu_characterization.experiments.bare_metal_validation --backend openai --seeds 0,1,2",
+  "invariant": {
+    "total_thread_cpu_ns": 2421871977,
+    "residual_fraction": 0.0,
+    "pass": true,
+    "limit": 0.15
+  },
+  "audit": {
+    "pass": true,
+    "publishable_ok": true,
+    "violations": [],
+    "warnings": [
+      "Single-seed run (n=3); replication requires n\u22655 seeds with medians and IQR before headline numbers are quotable"
+    ],
+    "platform": "linux",
+    "windows_tick_ms": null,
+    "min_quotable_session_cpu_ms": 50.0,
+    "n_seeds": 3,
+    "attribution_summary": {
+      "orch_measured_pct_of_host": 20.077019785426916,
+      "orch_reconcile_pct_of_host": 0.0,
+      "orch_reconcile_pct_of_orch": 0.0
+    }
+  }
+}

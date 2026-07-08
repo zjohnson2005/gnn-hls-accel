@@ -33,5 +33,11 @@ Comparison type: **distribution over seeds** (not matched per-call ablation).
 | **SH-01** | `excluded_pending_investigation` | n=1 (seed 0 only); framework-saturated (97.6% FRAMEWORK); agent short-circuited 10-turn plan to 3 searches. See `SH01_DISPOSITION.md`. Excluded from equal-weight headline averages until post-sweep review. |
 | **FO-01** | sweep canary (included) | Fan-out residual bounded <11% at c=1; does not block sweep. See `FO01_RESIDUAL.md`. |
 
+## Platform validation (Track A, footnote-grade)
+
+Native-kernel Linux VM check (4 vCPU DO droplet vs 8-core WSL2 baseline):
+verdict **DELTA**; see `bare_metal_comparison.md`. WSL2 caveat retained for
+composition claims: platform vs core-count effects are not separated in
+this check. Concurrency sweep runs on WSL2 regardless.
 
 Full data: `replication_remote_search_v3.json`

@@ -99,7 +99,7 @@ echo "=== bare-metal validation subset (6 tasks x 3 seeds, c=1) ==="
 # capture_setup rewrites setup.json/EXPERIMENT_SETUP.md, so the tree is
 # runtime-dirty here; that refresh is expected and recorded in the artifact.
 python -m apu_characterization.experiments.bare_metal_validation \
-  --backend openai --seeds 0,1,2 --allow-dirty "$@"
+  --backend openai --seeds 0,1,2 --allow-dirty
 
 LOAD_END="$(cut -d' ' -f1 /proc/loadavg)"
 echo "loadavg at end: ${LOAD_END}"
