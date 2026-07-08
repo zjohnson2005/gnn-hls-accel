@@ -50,6 +50,9 @@ else
   exit 1
 fi
 
+echo "=== pre-flight (git clean — no calibration/setup writes yet) ==="
+"${PY}" -m apu_characterization.setup_validate
+
 echo "=== calibration (mock backend false step-infer rate) ==="
 "${PY}" -m apu_characterization.experiments.step_infer_calibration
 
@@ -57,6 +60,9 @@ echo "=== WSL v3 replication (thread-identity, instr-version 3) ==="
 "${PY}" -m apu_characterization.tests.test_resolution
 "${PY}" -m apu_characterization.tests.test_attribution_provenance
 "${PY}" -m apu_characterization.capture_setup
+
+echo "=== post-capture setup check (ignore driver-refreshed paths) ==="
+"${PY}" -c "from apu_characterization.setup_validate import GIT_IGNORE_RUNTIME_REFRESH, load_and_validate; load_and_validate(ignore_dirty_paths=GIT_IGNORE_RUNTIME_REFRESH); print('post-capture setup OK')"
 
 ALLOW=""
 if [[ "${1:-}" == "--allow-dirty" ]]; then

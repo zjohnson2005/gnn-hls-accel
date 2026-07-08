@@ -34,6 +34,9 @@ apu-validate:
 	@test -f $(V3_ARTIFACT) || (echo "missing $(V3_ARTIFACT)"; exit 1)
 	@$(VENV_ACTIVATE) && python apu_characterization/tools/validate_publishable.py $(V3_ARTIFACT)
 
+apu-preflight:
+	bash -c 'cd "$$(pwd)" && git config core.autocrlf true 2>/dev/null; . .venv-wsl/bin/activate && python apu_characterization/tools/apu_preflight.py'
+
 apu-replicate-unattended:
 	bash apu_characterization/run_apu_replicate_unattended.sh
 

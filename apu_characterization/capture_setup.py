@@ -34,6 +34,13 @@ SETUP_MD = Path("apu_characterization/EXPERIMENT_SETUP.md")
 
 PACKAGES = ("numpy", "psutil", "matplotlib", "tiktoken", "sympy", "py-spy")
 
+# Refreshed by run_linux_replication_v3.sh before OpenAI sessions; not user edits.
+GIT_IGNORE_RUNTIME_REFRESH = (
+    "apu_characterization/out/setup.json",
+    "apu_characterization/EXPERIMENT_SETUP.md",
+    "apu_characterization/out/step_infer_calibration.json",
+)
+
 
 def _run(cmd: list[str]) -> str:
     try:
@@ -144,11 +151,27 @@ def _git_cmd() -> list[str]:
     return ["git"]
 
 
-def probe_git() -> dict[str, str]:
+def probe_git(*, ignore_paths: tuple[str, ...] = ()) -> dict[str, str]:
     git = _git_cmd()[0]
     rev = _run(_git_cmd() + ["rev-parse", "HEAD"]) or "unknown"
-    dirty = _run(_git_cmd() + ["status", "--porcelain"])
-    out: dict[str, str] = {"commit": rev, "dirty": "yes" if dirty else "no"}
+    porcelain = _run(_git_cmd() + ["status", "--porcelain"])
+    ignore = {p.replace("\\", "/") for p in ignore_paths}
+    dirty_lines: list[str] = []
+    for line in porcelain.splitlines():
+        if not line.strip():
+            continue
+        path = line[3:].split(" -> ")[-1].strip().replace("\\", "/")
+        if path in ignore:
+            continue
+        dirty_lines.append(line)
+    out: dict[str, str] = {
+        "commit": rev,
+        "dirty": "yes" if dirty_lines else "no",
+    }
+    if dirty_lines:
+        out["dirty_paths"] = [
+            ln[3:].split(" -> ")[-1].strip() for ln in dirty_lines
+        ]
     if rev == "unknown":
         out["git_path"] = git if Path(git).is_file() else "not found on PATH"
     elif Path(git).is_file():

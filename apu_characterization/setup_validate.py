@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from .capture_setup import probe_git
+from .capture_setup import GIT_IGNORE_RUNTIME_REFRESH, probe_git
 
 SETUP_JSON = Path("apu_characterization/out/setup.json")
 
@@ -17,7 +17,12 @@ REQUIRED_SOFTWARE = ("python", "os")
 REQUIRED_TOP = ("kernel", "setup_digest")
 
 
-def validate_setup(setup: dict[str, Any], *, strict: bool = True) -> list[str]:
+def validate_setup(
+    setup: dict[str, Any],
+    *,
+    strict: bool = True,
+    ignore_dirty_paths: tuple[str, ...] = (),
+) -> list[str]:
     errors: list[str] = []
 
     if not setup.get("setup_digest"):
@@ -32,7 +37,7 @@ def validate_setup(setup: dict[str, Any], *, strict: bool = True) -> list[str]:
             errors.append(f"hardware.{key} missing or unknown")
 
     git = setup.get("git", {})
-    live_git = probe_git()
+    live_git = probe_git(ignore_paths=ignore_dirty_paths)
     for key in REQUIRED_GIT:
         if not live_git.get(key) and not git.get(key):
             errors.append(f"git.{key} missing")
@@ -79,13 +84,19 @@ def validate_setup(setup: dict[str, Any], *, strict: bool = True) -> list[str]:
     return errors
 
 
-def load_and_validate(*, strict: bool = True) -> dict[str, Any]:
+def load_and_validate(
+    *,
+    strict: bool = True,
+    ignore_dirty_paths: tuple[str, ...] = (),
+) -> dict[str, Any]:
     if not SETUP_JSON.is_file():
         raise SystemExit(
             "setup record missing: run `python -m apu_characterization.capture_setup` first"
         )
     setup = json.loads(SETUP_JSON.read_text(encoding="utf-8"))
-    errors = validate_setup(setup, strict=strict)
+    errors = validate_setup(
+        setup, strict=strict, ignore_dirty_paths=ignore_dirty_paths
+    )
     if errors:
         msg = "Setup validation failed:\n" + "\n".join(f"  - {e}" for e in errors)
         raise SystemExit(msg)

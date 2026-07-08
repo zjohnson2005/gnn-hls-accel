@@ -21,7 +21,7 @@ from typing import Any
 
 from ..audit import apply_audit_to_artifact, apply_audit_to_replication_batch
 from ..artifact_refresh import refresh_replication_batch, write_replication_markdown
-from ..setup_validate import load_and_validate
+from ..setup_validate import GIT_IGNORE_RUNTIME_REFRESH, load_and_validate
 from ..stats import aggregate_replication_runs, batch_attribution_summary
 from ..validity import DEBUG_ONLY, PUBLISHABLE
 from .real_agent_breakdown import (
@@ -175,7 +175,11 @@ def main() -> None:
             sys.exit(1)
         return
 
-    load_and_validate(strict=not args.allow_dirty)
+    load_and_validate(
+        strict=not args.allow_dirty,
+        ignore_dirty_paths=GIT_IGNORE_RUNTIME_REFRESH,
+    )
+    measurement_git = _git_state(ignore_paths=GIT_IGNORE_RUNTIME_REFRESH)
     _require_langgraph()
 
     seeds = [int(s.strip()) for s in args.seeds.split(",") if s.strip()]
@@ -206,7 +210,8 @@ def main() -> None:
         "result_validity": validity,
         "generated_utc": datetime.now(timezone.utc).isoformat(),
         "setup_ref": _load_setup_digest(),
-        "git": _git_state(),
+        "git": _git_state(ignore_paths=GIT_IGNORE_RUNTIME_REFRESH),
+        "measurement_git": measurement_git,
         "env": _env_info(),
         "config": {
             "profile": args.profile,
