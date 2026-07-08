@@ -15,6 +15,8 @@ else
 fi
 cd "${REPO}"
 
+git config core.autocrlf true 2>/dev/null || true
+
 VENV="${REPO}/.venv-wsl"
 
 if [[ -z "${OPENAI_API_KEY:-}" ]] && command -v powershell.exe >/dev/null 2>&1; then

@@ -7,6 +7,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from .capture_setup import probe_git
+
 SETUP_JSON = Path("apu_characterization/out/setup.json")
 
 REQUIRED_HARDWARE = ("cpu_model", "cores_logical", "ram_total_gb")
@@ -30,12 +32,17 @@ def validate_setup(setup: dict[str, Any], *, strict: bool = True) -> list[str]:
             errors.append(f"hardware.{key} missing or unknown")
 
     git = setup.get("git", {})
+    live_git = probe_git()
     for key in REQUIRED_GIT:
-        if not git.get(key):
+        if not live_git.get(key) and not git.get(key):
             errors.append(f"git.{key} missing")
-    if git.get("dirty") == "yes":
-        errors.append("git tree is dirty; commit before measurement (or --allow-dirty)")
-    if git.get("commit") in (None, "unknown", ""):
+    if live_git.get("dirty") == "yes":
+        errors.append(
+            "git tree is dirty; commit before measurement (or --allow-dirty). "
+            "On WSL + /mnt/c/ checkouts, run: git config core.autocrlf true"
+        )
+    commit = live_git.get("commit") or git.get("commit")
+    if commit in (None, "unknown", ""):
         hint = git.get("git_path", "git")
         errors.append(
             "git commit unknown; install Git, ensure it is on PATH "

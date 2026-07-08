@@ -15,6 +15,9 @@ fi
 cd "${REPO}"
 VENV="${REPO}/.venv-wsl"
 
+# /mnt/c/ checkouts: WSL git needs autocrlf or every file looks modified.
+git config core.autocrlf true 2>/dev/null || true
+
 _on_replicate_exit() {
   local code=$?
   if [[ -f "${REPO}/apu_characterization/out/replicate_v3.state.json" ]]; then
