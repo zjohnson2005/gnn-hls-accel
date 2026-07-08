@@ -383,12 +383,42 @@ def apply_audit_to_replication_batch(
     combined_audit["warnings"] = all_warnings
     combined["audit"] = combined_audit
 
+    _fanout_canary_warnings(per_seed, all_warnings, workers_key="workers")
+    combined_audit["warnings"] = all_warnings
+
     if combined.get("result_validity") == "publishable":
         if all_violations:
             combined["result_validity"] = "audit_failed"
         elif is_windows:
             combined["result_validity"] = "windows_footnote_only"
     return combined_audit
+
+
+def _fanout_canary_warnings(
+    artifacts: list[dict[str, Any]],
+    warnings: list[str],
+    *,
+    workers_key: str = "workers",
+) -> None:
+    """Warn when fan-out sessions (FO-01 or ≥4 parallel tool calls) exceed 12% residual."""
+    for art in artifacts:
+        cfg = art.get("config", {})
+        workers = cfg.get(workers_key, 1)
+        for sess in art.get("run", {}).get("per_session", []):
+            counts = sess.get("tool_call_counts") or {}
+            max_parallel = max(counts.values(), default=0)
+            if sess.get("task_id") != "FO-01" and max_parallel < 4:
+                continue
+            host_ms = sess.get("process_cpu_ns", 0) / 1e6
+            res_ms = (sess.get("provenance") or {}).get("residual", 0) / 1e6
+            if host_ms > 0 and res_ms > host_ms * 0.12:
+                msg = (
+                    f"workers={workers} seed={cfg.get('seed')}: fan-out session "
+                    f"{sess.get('task_id')} residual {100 * res_ms / host_ms:.1f}% "
+                    f"(>{12}% canary; gate still 15%)"
+                )
+                if msg not in warnings:
+                    warnings.append(msg)
 
 
 def apply_audit_to_concurrency_sweep(combined: dict[str, Any]) -> dict[str, Any]:
@@ -412,6 +442,7 @@ def apply_audit_to_concurrency_sweep(combined: dict[str, Any]) -> dict[str, Any]
             if w not in all_warnings:
                 all_warnings.append(w)
 
+    _fanout_canary_warnings(per_run, all_warnings, workers_key="workers")
     is_windows = sys.platform == "win32"
     combined_audit = {
         "pass": len(all_violations) == 0,

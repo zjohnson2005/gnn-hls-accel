@@ -331,6 +331,14 @@ def render_md(setup: dict[str, Any]) -> str:
             f"- OPENBLAS_NUM_THREADS: {bp.get('OPENBLAS_NUM_THREADS', 'unset')}",
             f"- MKL_NUM_THREADS: {bp.get('MKL_NUM_THREADS', 'unset')}",
             f"- OMP_NUM_THREADS: {bp.get('OMP_NUM_THREADS', 'unset')}",
+            "",
+            "## Concurrency sweep anchor (v3.1)",
+            "",
+            "Replication and real-agent breakdown baseline is **c=1** (`workers=1`):",
+            "10 sessions run sequentially one-at-a-time, not c=10 parallel.",
+            "The sweep varies `--workers` while holding sessions=10.",
+            "Each (workers, seed) level gets the 15% per-session residual gate plus a",
+            "12% fan-out canary on FO-01 or sessions with ≥4 parallel tool calls.",
         ]
     )
 

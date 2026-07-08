@@ -1,0 +1,1028 @@
+{
+  "experiment": "retrieve_locality_ablation",
+  "result_validity": "debug_only",
+  "generated_utc": "2026-07-08T13:00:57.774397+00:00",
+  "setup_ref": {
+    "setup_digest": "6da6d4433aa84601",
+    "task_suite_digest": "a88a9e1058964219",
+    "cpu_model": "Intel(R) Core(TM) Ultra 5 325"
+  },
+  "git": {
+    "commit": "0ca58ff2aa120a06422b493443b8c8c92a84c986",
+    "dirty": "yes",
+    "dirty_paths": [
+      "apu_characterization/audit.py",
+      "apu_characterization/capture_setup.py",
+      "apu_characterization/env_pin.py",
+      "apu_characterization/experiments/concurrency_sweep.py",
+      "apu_characterization/experiments/real_agent_breakdown.py",
+      "apu_characterization/out/replication_remote_search_v3.md",
+      "apu_characterization/run_apu_gate.sh",
+      "apu_characterization/run_linux_replication_v3.sh",
+      "apu_characterization/experiments/retrieve_locality_ablation.py",
+      "apu_characterization/out/FO01_RESIDUAL.md",
+      "apu_characterization/out/SH01_DISPOSITION.md",
+      "apu_characterization/out/replication_remote_search_v3_per_task.md",
+      "apu_characterization/tools/_fo01_residual_chase.py",
+      "apu_characterization/tools/_llm_wait_vs_host.py",
+      "apu_characterization/tools/_v3_per_task_tables.py"
+    ]
+  },
+  "config": {
+    "backend": "scripted",
+    "seeds": [
+      0,
+      1
+    ],
+    "task_ids": [
+      "LH-01"
+    ],
+    "search_locality": "remote",
+    "retrieve_locality_arms": [
+      "local",
+      "remote"
+    ],
+    "instr_version": 3,
+    "comparison_type": "matched_pair_per_seed"
+  },
+  "run": {
+    "env": {
+      "python": "3.14.4",
+      "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+      "cpu_model": "unknown",
+      "blas_pin": {
+        "OPENBLAS_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1"
+      },
+      "cores_logical": 8,
+      "cores_physical": 8,
+      "ram_gb": 7.56
+    },
+    "config": {
+      "profile": "locality_ablation",
+      "seeds": [
+        0,
+        1
+      ],
+      "mode": "sequential",
+      "backend": "scripted",
+      "llm_median_scale": 1.0,
+      "task_ids": [
+        "LH-01"
+      ],
+      "search_locality": "remote",
+      "retrieve_locality_arms": [
+        "local",
+        "remote"
+      ],
+      "instr_version": 3,
+      "total_cpu_basis": "process_time_all_threads"
+    },
+    "per_category": {
+      "GC": {
+        "cpu_ns": 34113,
+        "wall_ns": 35454,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 5
+      },
+      "ORCH_SETUP": {
+        "cpu_ns": 81440558,
+        "wall_ns": 8760273264,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 8
+      },
+      "TOKENIZATION": {
+        "cpu_ns": 83208165,
+        "wall_ns": 255010022,
+        "bytes_in": 177173,
+        "bytes_out": 0,
+        "count": 100
+      },
+      "FRAMEWORK": {
+        "cpu_ns": 256063657,
+        "wall_ns": 610599182,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 197
+      },
+      "TOOL_COMPUTE": {
+        "cpu_ns": 1077515121,
+        "wall_ns": 5356176621,
+        "bytes_in": 886,
+        "bytes_out": 0,
+        "count": 24
+      },
+      "SERIALIZATION": {
+        "cpu_ns": 1937495,
+        "wall_ns": 2039200,
+        "bytes_in": 0,
+        "bytes_out": 110538,
+        "count": 48
+      },
+      "THREADPOOL": {
+        "cpu_ns": 104620718,
+        "wall_ns": 110084990,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 53
+      },
+      "ORCH_DISPATCH": {
+        "cpu_ns": 159653459,
+        "wall_ns": 97583463534,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 96
+      },
+      "RESIDUAL_UNATTRIBUTED": {
+        "cpu_ns": 20,
+        "wall_ns": 20,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 4
+      },
+      "HTTP_CLIENT": {
+        "cpu_ns": 5361494,
+        "wall_ns": 10126569441,
+        "bytes_in": 3738,
+        "bytes_out": 1694,
+        "count": 72
+      }
+    },
+    "per_session": [
+      {
+        "session_id": "LH-01_s0_retrieve_local",
+        "task_id": "LH-01",
+        "turns": 25,
+        "plan_len": 13,
+        "wall_s": 32.97308697099999,
+        "thread_cpu_ns": 1153215402,
+        "process_cpu_ns": 1153215402,
+        "instrumented_cpu_ns": 1153215402,
+        "reconcile_cpu_ns": 5,
+        "orch_measured_cpu_ns": 74360232,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 5,
+        "parallel_cpu_trim_ns": 11638492,
+        "tool_call_counts": {
+          "retrieve": 12
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what vegetables grow in january winter\", \"chunks\": [{\"id\": 72165, \"score\": 0.22240816056728363, \"text\": \"chunk_72165\"}, {\"id\": 69677, \"score\": 0.2182374894618988, \"text\": \"chunk_69677\"}, {\"id\": 60448, \"score\": 0.2125968635082245, \"text\": \"chunk_",
+            "llm_step": 0
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what to plant in february cold soil\", \"chunks\": [{\"id\": 57137, \"score\": 0.23535674810409546, \"text\": \"chunk_57137\"}, {\"id\": 15983, \"score\": 0.2284012883901596, \"text\": \"chunk_15983\"}, {\"id\": 56183, \"score\": 0.22061039507389069, \"text\": \"chunk_56",
+            "llm_step": 2
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what vegetables grow in early spring march\", \"chunks\": [{\"id\": 64766, \"score\": 0.24370718002319336, \"text\": \"chunk_64766\"}, {\"id\": 24296, \"score\": 0.21376372873783112, \"text\": \"chunk_24296\"}, {\"id\": 12269, \"score\": 0.21346528828144073, \"text\": \"",
+            "llm_step": 4
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"when to plant tomatoes in april\", \"chunks\": [{\"id\": 11749, \"score\": 0.20515495538711548, \"text\": \"chunk_11749\"}, {\"id\": 35034, \"score\": 0.2039543241262436, \"text\": \"chunk_35034\"}, {\"id\": 77243, \"score\": 0.20113986730575562, \"text\": \"chunk_77243\"",
+            "llm_step": 6
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what to plant in may after last frost\", \"chunks\": [{\"id\": 3401, \"score\": 0.2054070234298706, \"text\": \"chunk_3401\"}, {\"id\": 26257, \"score\": 0.20184198021888733, \"text\": \"chunk_26257\"}, {\"id\": 36079, \"score\": 0.20030613243579865, \"text\": \"chunk_36",
+            "llm_step": 8
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"which vegetables handle summer heat in june\", \"chunks\": [{\"id\": 735, \"score\": 0.23872175812721252, \"text\": \"chunk_735\"}, {\"id\": 96380, \"score\": 0.2052956223487854, \"text\": \"chunk_96380\"}, {\"id\": 3149, \"score\": 0.20509883761405945, \"text\": \"chunk",
+            "llm_step": 10
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"watering schedule for july vegetable garden\", \"chunks\": [{\"id\": 39691, \"score\": 0.2217865288257599, \"text\": \"chunk_39691\"}, {\"id\": 28151, \"score\": 0.21128779649734497, \"text\": \"chunk_28151\"}, {\"id\": 75948, \"score\": 0.2062172293663025, \"text\": \"c",
+            "llm_step": 12
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what to harvest and replant in august\", \"chunks\": [{\"id\": 82336, \"score\": 0.23022930324077606, \"text\": \"chunk_82336\"}, {\"id\": 75691, \"score\": 0.22502653300762177, \"text\": \"chunk_75691\"}, {\"id\": 2406, \"score\": 0.20810317993164062, \"text\": \"chunk_",
+            "llm_step": 14
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what vegetables grow in september fall\", \"chunks\": [{\"id\": 62952, \"score\": 0.19780917465686798, \"text\": \"chunk_62952\"}, {\"id\": 67612, \"score\": 0.19752120971679688, \"text\": \"chunk_67612\"}, {\"id\": 79276, \"score\": 0.19514426589012146, \"text\": \"chun",
+            "llm_step": 16
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"which crops survive october frost\", \"chunks\": [{\"id\": 9930, \"score\": 0.21149203181266785, \"text\": \"chunk_9930\"}, {\"id\": 70136, \"score\": 0.20449481904506683, \"text\": \"chunk_70136\"}, {\"id\": 71468, \"score\": 0.20053888857364655, \"text\": \"chunk_71468",
+            "llm_step": 18
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"preparing garden soil in november\", \"chunks\": [{\"id\": 57193, \"score\": 0.23019438982009888, \"text\": \"chunk_57193\"}, {\"id\": 12591, \"score\": 0.21744588017463684, \"text\": \"chunk_12591\"}, {\"id\": 55176, \"score\": 0.19662439823150635, \"text\": \"chunk_551",
+            "llm_step": 20
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what can grow in december indoors\", \"chunks\": [{\"id\": 34361, \"score\": 0.219031423330307, \"text\": \"chunk_34361\"}, {\"id\": 61183, \"score\": 0.2146403193473816, \"text\": \"chunk_61183\"}, {\"id\": 86085, \"score\": 0.2016706019639969, \"text\": \"chunk_86085\"}",
+            "llm_step": 22
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "provenance": {
+          "measured": 1153215397,
+          "step_inferred": 0,
+          "residual": 5
+        },
+        "retrieve_locality": "local",
+        "seed": 0,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "LH-01_s0_retrieve_remote",
+        "task_id": "LH-01",
+        "turns": 25,
+        "plan_len": 13,
+        "wall_s": 32.45484406100002,
+        "thread_cpu_ns": 154173886,
+        "process_cpu_ns": 154173886,
+        "instrumented_cpu_ns": 154173886,
+        "reconcile_cpu_ns": 5,
+        "orch_measured_cpu_ns": 60131998,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 5,
+        "parallel_cpu_trim_ns": 17195305,
+        "tool_call_counts": {
+          "retrieve": 12
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what vegetables grow in january winter\", \"chunks\": [{\"id\": 37384, \"score\": 0.99, \"text\": \"chunk_37384\"}, {\"id\": 45303, \"score\": 0.94, \"text\": \"chunk_45303\"}, {\"id\": 53222, \"score\": 0.89, \"text\": \"chunk_53222\"}, {\"id\": 61141, \"score\": 0.84, \"text",
+            "llm_step": 0
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what to plant in february cold soil\", \"chunks\": [{\"id\": 81493, \"score\": 0.99, \"text\": \"chunk_81493\"}, {\"id\": 89412, \"score\": 0.94, \"text\": \"chunk_89412\"}, {\"id\": 97331, \"score\": 0.89, \"text\": \"chunk_97331\"}, {\"id\": 5250, \"score\": 0.84, \"text\": \"",
+            "llm_step": 2
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what vegetables grow in early spring march\", \"chunks\": [{\"id\": 83353, \"score\": 0.99, \"text\": \"chunk_83353\"}, {\"id\": 91272, \"score\": 0.94, \"text\": \"chunk_91272\"}, {\"id\": 99191, \"score\": 0.89, \"text\": \"chunk_99191\"}, {\"id\": 7110, \"score\": 0.84, \"t",
+            "llm_step": 4
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"when to plant tomatoes in april\", \"chunks\": [{\"id\": 14098, \"score\": 0.99, \"text\": \"chunk_14098\"}, {\"id\": 22017, \"score\": 0.94, \"text\": \"chunk_22017\"}, {\"id\": 29936, \"score\": 0.89, \"text\": \"chunk_29936\"}, {\"id\": 37855, \"score\": 0.84, \"text\": \"chu",
+            "llm_step": 6
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what to plant in may after last frost\", \"chunks\": [{\"id\": 11176, \"score\": 0.99, \"text\": \"chunk_11176\"}, {\"id\": 19095, \"score\": 0.94, \"text\": \"chunk_19095\"}, {\"id\": 27014, \"score\": 0.89, \"text\": \"chunk_27014\"}, {\"id\": 34933, \"score\": 0.84, \"text\"",
+            "llm_step": 8
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"which vegetables handle summer heat in june\", \"chunks\": [{\"id\": 46605, \"score\": 0.99, \"text\": \"chunk_46605\"}, {\"id\": 54524, \"score\": 0.94, \"text\": \"chunk_54524\"}, {\"id\": 62443, \"score\": 0.89, \"text\": \"chunk_62443\"}, {\"id\": 70362, \"score\": 0.84, ",
+            "llm_step": 10
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"watering schedule for july vegetable garden\", \"chunks\": [{\"id\": 30622, \"score\": 0.99, \"text\": \"chunk_30622\"}, {\"id\": 38541, \"score\": 0.94, \"text\": \"chunk_38541\"}, {\"id\": 46460, \"score\": 0.89, \"text\": \"chunk_46460\"}, {\"id\": 54379, \"score\": 0.84, ",
+            "llm_step": 12
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what to harvest and replant in august\", \"chunks\": [{\"id\": 13529, \"score\": 0.99, \"text\": \"chunk_13529\"}, {\"id\": 21448, \"score\": 0.94, \"text\": \"chunk_21448\"}, {\"id\": 29367, \"score\": 0.89, \"text\": \"chunk_29367\"}, {\"id\": 37286, \"score\": 0.84, \"text\"",
+            "llm_step": 14
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what vegetables grow in september fall\", \"chunks\": [{\"id\": 83050, \"score\": 0.99, \"text\": \"chunk_83050\"}, {\"id\": 90969, \"score\": 0.94, \"text\": \"chunk_90969\"}, {\"id\": 98888, \"score\": 0.89, \"text\": \"chunk_98888\"}, {\"id\": 6807, \"score\": 0.84, \"text\"",
+            "llm_step": 16
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"which crops survive october frost\", \"chunks\": [{\"id\": 60144, \"score\": 0.99, \"text\": \"chunk_60144\"}, {\"id\": 68063, \"score\": 0.94, \"text\": \"chunk_68063\"}, {\"id\": 75982, \"score\": 0.89, \"text\": \"chunk_75982\"}, {\"id\": 83901, \"score\": 0.84, \"text\": \"c",
+            "llm_step": 18
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"preparing garden soil in november\", \"chunks\": [{\"id\": 66345, \"score\": 0.99, \"text\": \"chunk_66345\"}, {\"id\": 74264, \"score\": 0.94, \"text\": \"chunk_74264\"}, {\"id\": 82183, \"score\": 0.89, \"text\": \"chunk_82183\"}, {\"id\": 90102, \"score\": 0.84, \"text\": \"c",
+            "llm_step": 20
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what can grow in december indoors\", \"chunks\": [{\"id\": 43178, \"score\": 0.99, \"text\": \"chunk_43178\"}, {\"id\": 51097, \"score\": 0.94, \"text\": \"chunk_51097\"}, {\"id\": 59016, \"score\": 0.89, \"text\": \"chunk_59016\"}, {\"id\": 66935, \"score\": 0.84, \"text\": \"c",
+            "llm_step": 22
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "provenance": {
+          "measured": 154173881,
+          "step_inferred": 0,
+          "residual": 5
+        },
+        "retrieve_locality": "remote",
+        "seed": 0,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "LH-01_s1_retrieve_local",
+        "task_id": "LH-01",
+        "turns": 25,
+        "plan_len": 13,
+        "wall_s": 26.419320731,
+        "thread_cpu_ns": 314268299,
+        "process_cpu_ns": 314268299,
+        "instrumented_cpu_ns": 314268299,
+        "reconcile_cpu_ns": 5,
+        "orch_measured_cpu_ns": 54401692,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 5,
+        "parallel_cpu_trim_ns": 10052542,
+        "tool_call_counts": {
+          "retrieve": 12
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what vegetables grow in january winter\", \"chunks\": [{\"id\": 72165, \"score\": 0.22240816056728363, \"text\": \"chunk_72165\"}, {\"id\": 69677, \"score\": 0.2182374894618988, \"text\": \"chunk_69677\"}, {\"id\": 60448, \"score\": 0.2125968635082245, \"text\": \"chunk_",
+            "llm_step": 0
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what to plant in february cold soil\", \"chunks\": [{\"id\": 57137, \"score\": 0.23535674810409546, \"text\": \"chunk_57137\"}, {\"id\": 15983, \"score\": 0.2284012883901596, \"text\": \"chunk_15983\"}, {\"id\": 56183, \"score\": 0.22061039507389069, \"text\": \"chunk_56",
+            "llm_step": 2
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what vegetables grow in early spring march\", \"chunks\": [{\"id\": 64766, \"score\": 0.24370718002319336, \"text\": \"chunk_64766\"}, {\"id\": 24296, \"score\": 0.21376372873783112, \"text\": \"chunk_24296\"}, {\"id\": 12269, \"score\": 0.21346528828144073, \"text\": \"",
+            "llm_step": 4
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"when to plant tomatoes in april\", \"chunks\": [{\"id\": 11749, \"score\": 0.20515495538711548, \"text\": \"chunk_11749\"}, {\"id\": 35034, \"score\": 0.2039543241262436, \"text\": \"chunk_35034\"}, {\"id\": 77243, \"score\": 0.20113986730575562, \"text\": \"chunk_77243\"",
+            "llm_step": 6
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what to plant in may after last frost\", \"chunks\": [{\"id\": 3401, \"score\": 0.2054070234298706, \"text\": \"chunk_3401\"}, {\"id\": 26257, \"score\": 0.20184198021888733, \"text\": \"chunk_26257\"}, {\"id\": 36079, \"score\": 0.20030613243579865, \"text\": \"chunk_36",
+            "llm_step": 8
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"which vegetables handle summer heat in june\", \"chunks\": [{\"id\": 735, \"score\": 0.23872175812721252, \"text\": \"chunk_735\"}, {\"id\": 96380, \"score\": 0.2052956223487854, \"text\": \"chunk_96380\"}, {\"id\": 3149, \"score\": 0.20509883761405945, \"text\": \"chunk",
+            "llm_step": 10
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"watering schedule for july vegetable garden\", \"chunks\": [{\"id\": 39691, \"score\": 0.2217865288257599, \"text\": \"chunk_39691\"}, {\"id\": 28151, \"score\": 0.21128779649734497, \"text\": \"chunk_28151\"}, {\"id\": 75948, \"score\": 0.2062172293663025, \"text\": \"c",
+            "llm_step": 12
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what to harvest and replant in august\", \"chunks\": [{\"id\": 82336, \"score\": 0.23022930324077606, \"text\": \"chunk_82336\"}, {\"id\": 75691, \"score\": 0.22502653300762177, \"text\": \"chunk_75691\"}, {\"id\": 2406, \"score\": 0.20810317993164062, \"text\": \"chunk_",
+            "llm_step": 14
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what vegetables grow in september fall\", \"chunks\": [{\"id\": 62952, \"score\": 0.19780917465686798, \"text\": \"chunk_62952\"}, {\"id\": 67612, \"score\": 0.19752120971679688, \"text\": \"chunk_67612\"}, {\"id\": 79276, \"score\": 0.19514426589012146, \"text\": \"chun",
+            "llm_step": 16
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"which crops survive october frost\", \"chunks\": [{\"id\": 9930, \"score\": 0.21149203181266785, \"text\": \"chunk_9930\"}, {\"id\": 70136, \"score\": 0.20449481904506683, \"text\": \"chunk_70136\"}, {\"id\": 71468, \"score\": 0.20053888857364655, \"text\": \"chunk_71468",
+            "llm_step": 18
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"preparing garden soil in november\", \"chunks\": [{\"id\": 57193, \"score\": 0.23019438982009888, \"text\": \"chunk_57193\"}, {\"id\": 12591, \"score\": 0.21744588017463684, \"text\": \"chunk_12591\"}, {\"id\": 55176, \"score\": 0.19662439823150635, \"text\": \"chunk_551",
+            "llm_step": 20
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what can grow in december indoors\", \"chunks\": [{\"id\": 34361, \"score\": 0.219031423330307, \"text\": \"chunk_34361\"}, {\"id\": 61183, \"score\": 0.2146403193473816, \"text\": \"chunk_61183\"}, {\"id\": 86085, \"score\": 0.2016706019639969, \"text\": \"chunk_86085\"}",
+            "llm_step": 22
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "provenance": {
+          "measured": 314268294,
+          "step_inferred": 0,
+          "residual": 5
+        },
+        "retrieve_locality": "local",
+        "seed": 1,
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "LH-01_s1_retrieve_remote",
+        "task_id": "LH-01",
+        "turns": 25,
+        "plan_len": 13,
+        "wall_s": 30.97765459300001,
+        "thread_cpu_ns": 148177213,
+        "process_cpu_ns": 148177213,
+        "instrumented_cpu_ns": 148177213,
+        "reconcile_cpu_ns": 5,
+        "orch_measured_cpu_ns": 52200095,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 5,
+        "parallel_cpu_trim_ns": 9601611,
+        "tool_call_counts": {
+          "retrieve": 12
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what vegetables grow in january winter\", \"chunks\": [{\"id\": 37384, \"score\": 0.99, \"text\": \"chunk_37384\"}, {\"id\": 45303, \"score\": 0.94, \"text\": \"chunk_45303\"}, {\"id\": 53222, \"score\": 0.89, \"text\": \"chunk_53222\"}, {\"id\": 61141, \"score\": 0.84, \"text",
+            "llm_step": 0
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what to plant in february cold soil\", \"chunks\": [{\"id\": 81493, \"score\": 0.99, \"text\": \"chunk_81493\"}, {\"id\": 89412, \"score\": 0.94, \"text\": \"chunk_89412\"}, {\"id\": 97331, \"score\": 0.89, \"text\": \"chunk_97331\"}, {\"id\": 5250, \"score\": 0.84, \"text\": \"",
+            "llm_step": 2
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what vegetables grow in early spring march\", \"chunks\": [{\"id\": 83353, \"score\": 0.99, \"text\": \"chunk_83353\"}, {\"id\": 91272, \"score\": 0.94, \"text\": \"chunk_91272\"}, {\"id\": 99191, \"score\": 0.89, \"text\": \"chunk_99191\"}, {\"id\": 7110, \"score\": 0.84, \"t",
+            "llm_step": 4
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"when to plant tomatoes in april\", \"chunks\": [{\"id\": 14098, \"score\": 0.99, \"text\": \"chunk_14098\"}, {\"id\": 22017, \"score\": 0.94, \"text\": \"chunk_22017\"}, {\"id\": 29936, \"score\": 0.89, \"text\": \"chunk_29936\"}, {\"id\": 37855, \"score\": 0.84, \"text\": \"chu",
+            "llm_step": 6
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what to plant in may after last frost\", \"chunks\": [{\"id\": 11176, \"score\": 0.99, \"text\": \"chunk_11176\"}, {\"id\": 19095, \"score\": 0.94, \"text\": \"chunk_19095\"}, {\"id\": 27014, \"score\": 0.89, \"text\": \"chunk_27014\"}, {\"id\": 34933, \"score\": 0.84, \"text\"",
+            "llm_step": 8
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"which vegetables handle summer heat in june\", \"chunks\": [{\"id\": 46605, \"score\": 0.99, \"text\": \"chunk_46605\"}, {\"id\": 54524, \"score\": 0.94, \"text\": \"chunk_54524\"}, {\"id\": 62443, \"score\": 0.89, \"text\": \"chunk_62443\"}, {\"id\": 70362, \"score\": 0.84, ",
+            "llm_step": 10
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"watering schedule for july vegetable garden\", \"chunks\": [{\"id\": 30622, \"score\": 0.99, \"text\": \"chunk_30622\"}, {\"id\": 38541, \"score\": 0.94, \"text\": \"chunk_38541\"}, {\"id\": 46460, \"score\": 0.89, \"text\": \"chunk_46460\"}, {\"id\": 54379, \"score\": 0.84, ",
+            "llm_step": 12
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what to harvest and replant in august\", \"chunks\": [{\"id\": 13529, \"score\": 0.99, \"text\": \"chunk_13529\"}, {\"id\": 21448, \"score\": 0.94, \"text\": \"chunk_21448\"}, {\"id\": 29367, \"score\": 0.89, \"text\": \"chunk_29367\"}, {\"id\": 37286, \"score\": 0.84, \"text\"",
+            "llm_step": 14
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what vegetables grow in september fall\", \"chunks\": [{\"id\": 83050, \"score\": 0.99, \"text\": \"chunk_83050\"}, {\"id\": 90969, \"score\": 0.94, \"text\": \"chunk_90969\"}, {\"id\": 98888, \"score\": 0.89, \"text\": \"chunk_98888\"}, {\"id\": 6807, \"score\": 0.84, \"text\"",
+            "llm_step": 16
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"which crops survive october frost\", \"chunks\": [{\"id\": 60144, \"score\": 0.99, \"text\": \"chunk_60144\"}, {\"id\": 68063, \"score\": 0.94, \"text\": \"chunk_68063\"}, {\"id\": 75982, \"score\": 0.89, \"text\": \"chunk_75982\"}, {\"id\": 83901, \"score\": 0.84, \"text\": \"c",
+            "llm_step": 18
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"preparing garden soil in november\", \"chunks\": [{\"id\": 66345, \"score\": 0.99, \"text\": \"chunk_66345\"}, {\"id\": 74264, \"score\": 0.94, \"text\": \"chunk_74264\"}, {\"id\": 82183, \"score\": 0.89, \"text\": \"chunk_82183\"}, {\"id\": 90102, \"score\": 0.84, \"text\": \"c",
+            "llm_step": 20
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what can grow in december indoors\", \"chunks\": [{\"id\": 43178, \"score\": 0.99, \"text\": \"chunk_43178\"}, {\"id\": 51097, \"score\": 0.94, \"text\": \"chunk_51097\"}, {\"id\": 59016, \"score\": 0.89, \"text\": \"chunk_59016\"}, {\"id\": 66935, \"score\": 0.84, \"text\": \"c",
+            "llm_step": 22
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "provenance": {
+          "measured": 148177208,
+          "step_inferred": 0,
+          "residual": 5
+        },
+        "retrieve_locality": "remote",
+        "seed": 1,
+        "search_locality": "remote"
+      }
+    ],
+    "per_session_category": {
+      "LH-01_s0_retrieve_local": {
+        "GC": {
+          "cpu_ns": 20965,
+          "wall_ns": 21177,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "ORCH_SETUP": {
+          "cpu_ns": 27767235,
+          "wall_ns": 1812111471,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 42836371,
+          "wall_ns": 212010549,
+          "bytes_in": 42907,
+          "bytes_out": 0,
+          "count": 25
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 95230358,
+          "wall_ns": 438692732,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 49
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 913428591,
+          "wall_ns": 5186790751,
+          "bytes_in": 443,
+          "bytes_out": 0,
+          "count": 12
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 548701,
+          "wall_ns": 557447,
+          "bytes_in": 0,
+          "bytes_out": 26378,
+          "count": 12
+        },
+        "THREADPOOL": {
+          "cpu_ns": 26790179,
+          "wall_ns": 27060552,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 14
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 46592997,
+          "wall_ns": 25287385123,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 24
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 5,
+          "wall_ns": 5,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "LH-01_s0_retrieve_remote": {
+        "ORCH_SETUP": {
+          "cpu_ns": 20559394,
+          "wall_ns": 1669844786,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 13915558,
+          "wall_ns": 15402271,
+          "bytes_in": 47856,
+          "bytes_out": 0,
+          "count": 25
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 54485613,
+          "wall_ns": 60511598,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 49
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 2748499,
+          "wall_ns": 5397284560,
+          "bytes_in": 1872,
+          "bytes_out": 847,
+          "count": 36
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 363993,
+          "wall_ns": 406245,
+          "bytes_in": 0,
+          "bytes_out": 31331,
+          "count": 12
+        },
+        "THREADPOOL": {
+          "cpu_ns": 22522330,
+          "wall_ns": 25034288,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 12
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 39572604,
+          "wall_ns": 25284347177,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 24
+        },
+        "GC": {
+          "cpu_ns": 5890,
+          "wall_ns": 6548,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 5,
+          "wall_ns": 5,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "LH-01_s1_retrieve_local": {
+        "ORCH_SETUP": {
+          "cpu_ns": 16750277,
+          "wall_ns": 2639421331,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 14593440,
+          "wall_ns": 15008301,
+          "bytes_in": 44412,
+          "bytes_out": 0,
+          "count": 25
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 53030362,
+          "wall_ns": 54677171,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 49
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 164086530,
+          "wall_ns": 169385870,
+          "bytes_in": 443,
+          "bytes_out": 0,
+          "count": 12
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 667684,
+          "wall_ns": 693518,
+          "bytes_in": 0,
+          "bytes_out": 27631,
+          "count": 12
+        },
+        "THREADPOOL": {
+          "cpu_ns": 27488586,
+          "wall_ns": 28367867,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 13
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 37651415,
+          "wall_ns": 23506056431,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 24
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 5,
+          "wall_ns": 5,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "LH-01_s1_retrieve_remote": {
+        "ORCH_SETUP": {
+          "cpu_ns": 16363652,
+          "wall_ns": 2638895676,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 11862796,
+          "wall_ns": 12588901,
+          "bytes_in": 41998,
+          "bytes_out": 0,
+          "count": 25
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 53317324,
+          "wall_ns": 56717681,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 50
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 2612995,
+          "wall_ns": 4729284881,
+          "bytes_in": 1866,
+          "bytes_out": 847,
+          "count": 36
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 357117,
+          "wall_ns": 381990,
+          "bytes_in": 0,
+          "bytes_out": 25198,
+          "count": 12
+        },
+        "THREADPOOL": {
+          "cpu_ns": 27819623,
+          "wall_ns": 29622283,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 14
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 35836443,
+          "wall_ns": 23505674803,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 24
+        },
+        "GC": {
+          "cpu_ns": 7258,
+          "wall_ns": 7729,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 5,
+          "wall_ns": 5,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      }
+    },
+    "residual_cpu_ns": 0,
+    "residual_fraction": 0.0,
+    "totals": {
+      "thread_cpu_ns": 1769834800,
+      "wall_ns": 122853309717,
+      "instrumented_cpu_ns": 1769834800
+    },
+    "os_times_user_sys": {
+      "user": 1.06,
+      "system": 0.7899999999999996
+    },
+    "timeline": []
+  },
+  "per_task": {
+    "LH-01": {
+      "categories": {
+        "GC": {
+          "cpu_ns": 34113,
+          "wall_ns": 35454,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 5
+        },
+        "ORCH_SETUP": {
+          "cpu_ns": 81440558,
+          "wall_ns": 8760273264,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 8
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 83208165,
+          "wall_ns": 255010022,
+          "bytes_in": 177173,
+          "bytes_out": 0,
+          "count": 100
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 256063657,
+          "wall_ns": 610599182,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 197
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 1077515121,
+          "wall_ns": 5356176621,
+          "bytes_in": 886,
+          "bytes_out": 0,
+          "count": 24
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 1937495,
+          "wall_ns": 2039200,
+          "bytes_in": 0,
+          "bytes_out": 110538,
+          "count": 48
+        },
+        "THREADPOOL": {
+          "cpu_ns": 104620718,
+          "wall_ns": 110084990,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 53
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 159653459,
+          "wall_ns": 97583463534,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 96
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 20,
+          "wall_ns": 20,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 5361494,
+          "wall_ns": 10126569441,
+          "bytes_in": 3738,
+          "bytes_out": 1694,
+          "count": 72
+        }
+      },
+      "sessions": [
+        "LH-01_s0_retrieve_local",
+        "LH-01_s0_retrieve_remote",
+        "LH-01_s1_retrieve_local",
+        "LH-01_s1_retrieve_remote"
+      ],
+      "instrumented_cpu_ns": 1769834800,
+      "amenable_strict_ns": 582303334,
+      "amenable_broad_ns": 692285546,
+      "amenable_strict_share": 0.32901564258991856,
+      "amenable_broad_share": 0.3911582855077773
+    }
+  },
+  "per_task_wall_cpu": {
+    "per_task": {
+      "LH-01": {
+        "session_id": "LH-01_s0_retrieve_local",
+        "session_wall_s": 32.97308697099999,
+        "llm_io_wait_s": 0.0,
+        "remote_tool_io_wait_s": 10.126569441,
+        "non_llm_wall_s": 22.846517529999986,
+        "host_cpu_ms": 1153.215402,
+        "llm_io_pct_of_session_wall": 0.0,
+        "remote_tool_io_pct_of_session_wall": 30.71162081338145,
+        "host_cpu_pct_of_session_wall": 3.497444455274265,
+        "tool_cpu_ms": 1077.515121,
+        "harness_cpu_ms": 331.635284,
+        "cpu_by_category_ms": {
+          "GC": 0.034113,
+          "ORCH_SETUP": 81.440558,
+          "TOKENIZATION": 83.208165,
+          "FRAMEWORK": 256.063657,
+          "TOOL_COMPUTE": 1077.515121,
+          "SERIALIZATION": 1.937495,
+          "THREADPOOL": 104.620718,
+          "ORCH_DISPATCH": 159.653459,
+          "RESIDUAL_UNATTRIBUTED": 2e-05,
+          "HTTP_CLIENT": 5.361494
+        },
+        "tool_call_counts": {
+          "retrieve": 12
+        }
+      }
+    },
+    "totals": {
+      "session_wall_s": 32.97308697099999,
+      "llm_io_wait_s": 0.0,
+      "remote_tool_io_wait_s": 10.126569441,
+      "host_cpu_ms": 1153.215402,
+      "llm_io_pct_of_session_wall": 0.0,
+      "remote_tool_io_pct_of_session_wall": 30.71162081338145,
+      "host_cpu_pct_of_session_wall": 3.497444455274265
+    }
+  },
+  "session_rows": [
+    {
+      "session_id": "LH-01_s0_retrieve_local",
+      "task_id": "LH-01",
+      "seed": 0,
+      "retrieve_locality": "local",
+      "session_wall_s": 32.973,
+      "host_cpu_ms": 1153.2,
+      "tool_compute_cpu_ms": 913.4,
+      "remote_retrieve_io_wait_s": 0.0,
+      "llm_io_wait_s": 0.0,
+      "io_pct_of_wall": 0.0,
+      "cpu_pct_of_wall": 3.5,
+      "retrieve_calls": 12
+    },
+    {
+      "session_id": "LH-01_s0_retrieve_remote",
+      "task_id": "LH-01",
+      "seed": 0,
+      "retrieve_locality": "remote",
+      "session_wall_s": 32.455,
+      "host_cpu_ms": 154.2,
+      "tool_compute_cpu_ms": 0.0,
+      "remote_retrieve_io_wait_s": 5.397,
+      "llm_io_wait_s": 0.0,
+      "io_pct_of_wall": 16.6,
+      "cpu_pct_of_wall": 0.5,
+      "retrieve_calls": 12
+    },
+    {
+      "session_id": "LH-01_s1_retrieve_local",
+      "task_id": "LH-01",
+      "seed": 1,
+      "retrieve_locality": "local",
+      "session_wall_s": 26.419,
+      "host_cpu_ms": 314.3,
+      "tool_compute_cpu_ms": 164.1,
+      "remote_retrieve_io_wait_s": 0.0,
+      "llm_io_wait_s": 0.0,
+      "io_pct_of_wall": 0.0,
+      "cpu_pct_of_wall": 1.2,
+      "retrieve_calls": 12
+    },
+    {
+      "session_id": "LH-01_s1_retrieve_remote",
+      "task_id": "LH-01",
+      "seed": 1,
+      "retrieve_locality": "remote",
+      "session_wall_s": 30.978,
+      "host_cpu_ms": 148.2,
+      "tool_compute_cpu_ms": 0.0,
+      "remote_retrieve_io_wait_s": 4.729,
+      "llm_io_wait_s": 0.0,
+      "io_pct_of_wall": 15.3,
+      "cpu_pct_of_wall": 0.5,
+      "retrieve_calls": 12
+    }
+  ],
+  "comparison": [
+    {
+      "seed": 0,
+      "matched_pair": true,
+      "local_host_cpu_ms": 1153.2,
+      "remote_host_cpu_ms": 154.2,
+      "host_cpu_delta_ms": -999.0,
+      "local_tool_compute_ms": 913.4,
+      "remote_tool_compute_ms": 0.0,
+      "tool_compute_delta_ms": -913.4,
+      "local_io_pct": 0.0,
+      "remote_io_pct": 16.6,
+      "io_pct_delta": 16.6,
+      "local_cpu_pct_wall": 3.5,
+      "remote_cpu_pct_wall": 0.5,
+      "retrieve_calls": 12
+    },
+    {
+      "seed": 1,
+      "matched_pair": true,
+      "local_host_cpu_ms": 314.3,
+      "remote_host_cpu_ms": 148.2,
+      "host_cpu_delta_ms": -166.1,
+      "local_tool_compute_ms": 164.1,
+      "remote_tool_compute_ms": 0.0,
+      "tool_compute_delta_ms": -164.1,
+      "local_io_pct": 0.0,
+      "remote_io_pct": 15.3,
+      "io_pct_delta": 15.3,
+      "local_cpu_pct_wall": 1.2,
+      "remote_cpu_pct_wall": 0.5,
+      "retrieve_calls": 12
+    }
+  ],
+  "interpretation": "Remote retrieve moves matmul CPU from TOOL_COMPUTE into HTTP_CLIENT I/O wait (mock round-trip), consistent with the search-locality ablation precedent.",
+  "timer_overhead_ns_per_pair": 7339.97473,
+  "reproduce_cmd": "python -m apu_characterization.experiments.retrieve_locality_ablation --backend scripted --seeds 0,1",
+  "invariant": {
+    "total_thread_cpu_ns": 1769834800,
+    "residual_fraction": 0.0,
+    "pass": true,
+    "limit": 0.15
+  },
+  "audit": {
+    "pass": true,
+    "publishable_ok": true,
+    "violations": [],
+    "warnings": [],
+    "platform": "linux",
+    "windows_tick_ms": null,
+    "min_quotable_session_cpu_ms": 50.0,
+    "n_seeds": 2,
+    "attribution_summary": {
+      "orch_measured_pct_of_host": 13.622402328172099,
+      "orch_reconcile_pct_of_host": 0.0,
+      "orch_reconcile_pct_of_orch": 0.0
+    }
+  }
+}

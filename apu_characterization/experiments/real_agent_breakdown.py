@@ -585,6 +585,12 @@ def run_real_session(
                                 "llm_step": max(0, step_index - 1),
                             }
                         )
+                # Fan-out tool pools may still be finalizing when the stream
+                # chunk arrives; sample after tool messages are recorded.
+                if instr_version >= 3:
+                    from ..thread_identity import sample_session_threads
+
+                    sample_session_threads(acc, burst=True)
 
             last_cpu = now_cpu
             last_wall = now_wall

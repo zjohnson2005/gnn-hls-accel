@@ -22,9 +22,16 @@ TOOL_COMPUTE is not part of harness_strict or harness_broad.
 
 - ORCH reconcile as % of total ORCH (per-seed batches): 0.0 [0.0–0.0] (see apu_characterization/ATTRIBUTION.md)
 
-Execution: 10 sessions per batch, **sequential** (`workers=1`).
+Execution: 10 sessions per batch, **sequential** (`workers=1`, c=1 anchor — not c=10 parallel).
 
 Comparison type: **distribution over seeds** (not matched per-call ablation).
+
+## Task exclusions (v3.1 hygiene)
+
+| Task | Status | Notes |
+|------|--------|-------|
+| **SH-01** | `excluded_pending_investigation` | n=1 (seed 0 only); framework-saturated (97.6% FRAMEWORK); agent short-circuited 10-turn plan to 3 searches. See `SH01_DISPOSITION.md`. Excluded from equal-weight headline averages until post-sweep review. |
+| **FO-01** | sweep canary (included) | Fan-out residual bounded <11% at c=1; does not block sweep. See `FO01_RESIDUAL.md`. |
 
 
 Full data: `replication_remote_search_v3.json`

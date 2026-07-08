@@ -29,4 +29,16 @@ def blas_pin_snapshot() -> dict[str, str]:
     return {var: os.environ.get(var, "unset") for var in BLAS_PIN_VARS}
 
 
+def assert_blas_pinned(*, expected: str = _PIN_VALUE) -> None:
+    """Fail fast if BLAS thread env regressed (v3.1+ publishable runs)."""
+    snap = blas_pin_snapshot()
+    bad = {k: v for k, v in snap.items() if v != expected}
+    if bad:
+        raise SystemExit(
+            "BLAS pin assertion failed (expected all "
+            f"{BLAS_PIN_VARS}={expected}): {bad}. "
+            "Source apu_env.sh or import apu_characterization.env_pin before numpy."
+        )
+
+
 pin_blas_threads()

@@ -5,9 +5,13 @@ scale when multiple LangGraph ReAct sessions run in parallel. Uses the same
 deployment as the Linux replication baseline: OpenAI backend, remote search,
 ``locality_ablation`` payload profile, mixed task suite, 10 sessions per batch.
 
-**Baseline c=1** in the replication and real-agent breakdown runs means
-``workers=1``: all 10 sessions execute sequentially one-at-a-time in a single
-thread pool slot. This sweep varies ``--workers`` while holding sessions=10.
+**Baseline c=1 (v3.1 anchor):** replication and real-agent breakdown use
+``workers=1`` — 10 sessions run sequentially one-at-a-time, **not** c=10 parallel.
+This sweep varies ``--workers`` while holding sessions=10.
+
+**Per-level audit:** each (workers, seed) run gets the standard 15% per-session
+residual gate plus a **12% fan-out canary** on FO-01 or any session with ≥4
+parallel tool calls (``apply_audit_to_concurrency_sweep``). Canary warnings do not fail the sweep.
 
 Run (publishable, Linux/WSL recommended):
   python -m apu_characterization.experiments.concurrency_sweep \\
@@ -32,6 +36,7 @@ from pathlib import Path
 from typing import Any
 
 from ..audit import apply_audit_to_artifact, apply_audit_to_concurrency_sweep
+from ..env_pin import assert_blas_pinned
 from ..profiles import LOCALITY_ABLATION_PROFILE
 from ..setup_validate import load_and_validate
 from ..stats import aggregate_concurrency_by_workers, batch_attribution_summary, summarize_concurrency_run
@@ -237,6 +242,7 @@ def main() -> None:
     workers_list = [int(w.strip()) for w in args.workers.split(",") if w.strip()]
 
     load_and_validate(strict=not args.allow_dirty)
+    assert_blas_pinned()
     _require_langgraph()
 
     if args.backend == "openai" and not seeds:

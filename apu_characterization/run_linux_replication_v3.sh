@@ -53,6 +53,7 @@ else
 fi
 
 echo "=== pre-flight (git clean — no calibration/setup writes yet) ==="
+"${PY}" -c "from apu_characterization.env_pin import assert_blas_pinned; assert_blas_pinned()"
 "${PY}" -m apu_characterization.setup_validate
 
 echo "=== calibration (mock backend false step-infer rate) ==="

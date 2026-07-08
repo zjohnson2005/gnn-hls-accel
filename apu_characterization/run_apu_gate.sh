@@ -38,6 +38,8 @@ if [[ ! -f "${VENV}/bin/activate" ]]; then
 else
   # shellcheck source=/dev/null
   source "${VENV}/bin/activate"
+  echo "=== BLAS pin (v3.1 baseline) ==="
+  python -c "from apu_characterization.env_pin import assert_blas_pinned; assert_blas_pinned()"
   echo "=== unit tests (gate) ==="
   python -m apu_characterization.tests.test_resolution
   python -m apu_characterization.tests.test_instr
