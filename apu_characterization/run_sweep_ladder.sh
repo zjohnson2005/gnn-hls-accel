@@ -33,6 +33,7 @@ source "${REPO}/apu_characterization/apu_env.sh"
 
 LEVELS="5,10,25,50,100"
 SEEDS="0,1,2"
+RESUME=""
 OUT_DIR="${REPO}/apu_characterization/out"
 PID_FILE="${OUT_DIR}/sweep.pid"
 LOG_FILE="${OUT_DIR}/sweep.log"
@@ -44,6 +45,7 @@ for arg in "$@"; do
   case "${arg}" in
     --worker) MODE="worker" ;;
     --allow-dirty) ALLOW="--allow-dirty" ;;
+    --resume) RESUME="--resume" ;;
   esac
 done
 
@@ -88,7 +90,7 @@ if [[ "${MODE}" == "worker" ]]; then
   set +e
   python -m apu_characterization.experiments.concurrency_sweep \
     --backend openai --levels "${LEVELS}" --seeds "${SEEDS}" \
-    --search-locality remote ${ALLOW}
+    --search-locality remote ${ALLOW} ${RESUME}
   rc=$?
   if [[ ${rc} -eq 0 ]]; then
     python apu_characterization/tools/sweep_figures.py || rc=$?

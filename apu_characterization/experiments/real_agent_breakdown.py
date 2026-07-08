@@ -466,10 +466,12 @@ def build_openai_model():
 
     if not os.getenv("OPENAI_API_KEY"):
         raise SystemExit("OPENAI_API_KEY is not set; required for --backend openai")
+    max_retries = int(os.getenv("OE_OPENAI_MAX_RETRIES", "15"))
     return ChatOpenAI(
         model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
         temperature=0,
         timeout=float(os.getenv("OE_OPENAI_TIMEOUT_S", "120")),
+        max_retries=max_retries,
     )
 
 
@@ -818,6 +820,12 @@ def run_real_batch(
     def worker(i: int) -> dict[str, Any]:
         t0 = time.thread_time_ns()
         tok_loc = set_tool_locality(search=search_locality)
+        if backend == "openai" and max_workers > 1:
+            import os
+
+            stagger_s = float(os.getenv("OE_OPENAI_SESSION_STAGGER_S", "0.75"))
+            if stagger_s > 0:
+                time.sleep(i * stagger_s)
         try:
             if task_ids is not None:
                 task = task_by_id(task_ids[i])

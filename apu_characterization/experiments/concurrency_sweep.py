@@ -519,7 +519,70 @@ def _finalize(combined: dict[str, Any], args: argparse.Namespace) -> Path:
     args.out.mkdir(parents=True, exist_ok=True)
     json_path = args.out / f"{stem}.json"
     json_path.write_text(json.dumps(combined, indent=2), encoding="utf-8")
+    checkpoint = args.out / f"{stem}.checkpoint.json"
+    if checkpoint.is_file():
+        checkpoint.unlink()
     return json_path
+
+
+def _checkpoint_path(args: argparse.Namespace) -> Path:
+    return args.out / "concurrency_sweep.checkpoint.json"
+
+
+def _completed_level_seeds(artifacts: list[dict[str, Any]], level: int) -> set[int]:
+    return {
+        int(a.get("config", {}).get("seed", -1))
+        for a in artifacts
+        if int(a.get("config", {}).get("level", -1)) == level
+    }
+
+
+def _write_checkpoint(
+    args: argparse.Namespace,
+    *,
+    anchor: dict[str, Any] | None,
+    by_level: dict[str, Any],
+    per_run_artifacts: list[dict[str, Any]],
+    per_run: list[dict[str, Any]],
+    levels_run: list[int],
+    levels: list[int],
+    seeds: list[int],
+    prev_throughput: float | None,
+    saturation: dict[str, Any] | None,
+    payload_profile: str | None,
+    instr_version: int,
+) -> None:
+    path = _checkpoint_path(args)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "experiment": "concurrency_sweep",
+        "mode": "levels_checkpoint",
+        "generated_utc": datetime.now(timezone.utc).isoformat(),
+        "anchor": anchor,
+        "by_level": by_level,
+        "per_run_artifacts": per_run_artifacts,
+        "per_run": per_run,
+        "levels_run": levels_run,
+        "levels_requested": levels,
+        "seeds": seeds,
+        "prev_throughput": prev_throughput,
+        "saturation": saturation,
+        "config": {
+            "profile": args.profile,
+            "payload_profile": payload_profile or args.profile,
+            "search_locality": args.search_locality,
+            "backend": args.backend,
+            "instr_version": instr_version,
+        },
+    }
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def _load_checkpoint(args: argparse.Namespace) -> dict[str, Any] | None:
+    path = _checkpoint_path(args)
+    if not path.is_file():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _run_levels_mode(args: argparse.Namespace, seeds: list[int], levels: list[int]) -> None:
@@ -549,9 +612,45 @@ def _run_levels_mode(args: argparse.Namespace, seeds: list[int], levels: list[in
     levels_run: list[int] = []
     saturation: dict[str, Any] | None = None
 
+    if args.resume:
+        ckpt = _load_checkpoint(args)
+        if ckpt:
+            per_run_artifacts = list(ckpt.get("per_run_artifacts") or [])
+            per_run = list(ckpt.get("per_run") or [])
+            by_level = dict(ckpt.get("by_level") or by_level)
+            levels_run = list(ckpt.get("levels_run") or [])
+            saturation = ckpt.get("saturation")
+            prev_throughput = ckpt.get("prev_throughput", prev_throughput)
+            print(
+                f"resume: loaded checkpoint with {len(per_run_artifacts)} completed "
+                f"batch(es)",
+                flush=True,
+            )
+        else:
+            print("resume: no checkpoint found; starting fresh", flush=True)
+
     for level in sorted(levels):
-        level_artifacts: list[dict[str, Any]] = []
+        done_seeds = _completed_level_seeds(per_run_artifacts, level)
+        if set(seeds) <= done_seeds:
+            print(f"skip level c={level} (all seeds in checkpoint)", flush=True)
+            if str(level) not in by_level:
+                rows = [
+                    summarize_concurrency_run(a)
+                    for a in per_run_artifacts
+                    if int(a.get("config", {}).get("level", -1)) == level
+                ]
+                by_level[str(level)] = aggregate_concurrency_by_level(rows)[str(level)]
+            if level not in levels_run:
+                levels_run.append(level)
+            continue
+
+        level_artifacts = [
+            a for a in per_run_artifacts if int(a.get("config", {}).get("level", -1)) == level
+        ]
         for seed in seeds:
+            if seed in done_seeds:
+                print(f"skip level c={level} seed={seed} (checkpoint)", flush=True)
+                continue
             task_ids = sample_tasks_with_replacement(level, seed)
             print(
                 f"running level c={level} seed={seed} "
@@ -573,11 +672,27 @@ def _run_levels_mode(args: argparse.Namespace, seeds: list[int], levels: list[in
             )
             level_artifacts.append(art)
             per_run_artifacts.append(art)
+            row = summarize_concurrency_run(art)
+            per_run.append(row)
+            _write_checkpoint(
+                args,
+                anchor=anchor,
+                by_level=by_level,
+                per_run_artifacts=per_run_artifacts,
+                per_run=per_run,
+                levels_run=levels_run,
+                levels=levels,
+                seeds=seeds,
+                prev_throughput=prev_throughput,
+                saturation=saturation,
+                payload_profile=payload_profile,
+                instr_version=instr_version,
+            )
         rows = [summarize_concurrency_run(a) for a in level_artifacts]
-        per_run.extend(rows)
         level_agg = aggregate_concurrency_by_level(rows)[str(level)]
         by_level[str(level)] = level_agg
-        levels_run.append(level)
+        if level not in levels_run:
+            levels_run.append(level)
 
         reason = _saturation_reason(level_agg, prev_throughput)
         if reason and not args.no_saturate_stop:
@@ -828,6 +943,12 @@ def main() -> None:
         dest="no_saturate_stop",
         help="Do not stop the c-ladder when the saturation criterion trips "
         "(smoke/debug; throughput may be API-bound at low c)",
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume from apu_characterization/out/concurrency_sweep.checkpoint.json "
+        "after a failed or interrupted ladder run",
     )
     args = parser.parse_args()
 
