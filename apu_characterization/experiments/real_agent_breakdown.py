@@ -499,7 +499,9 @@ def run_real_session(
     if acc.instr_version >= 3:
         from ..thread_identity import get_thread_registry
 
-        get_thread_registry().begin_session(session_id)
+        get_thread_registry().begin_session(
+            session_id, concurrent=defer_session_reconcile
+        )
     rng = _random.Random(seed)
     tok_session = _session_ctx.set(session_id)
     tok_rng = _rng_ctx.set(rng)
@@ -816,10 +818,6 @@ def run_real_batch(
     def worker(i: int) -> dict[str, Any]:
         t0 = time.thread_time_ns()
         tok_loc = set_tool_locality(search=search_locality)
-        if instr_version >= 3:
-            from ..thread_identity import ThreadRole, get_thread_registry
-
-            get_thread_registry().register_current(ThreadRole.MAIN, f"agent_{i}")
         try:
             if task_ids is not None:
                 task = task_by_id(task_ids[i])

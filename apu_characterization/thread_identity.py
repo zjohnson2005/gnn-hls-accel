@@ -174,8 +174,19 @@ class ThreadRegistry:
                 self._tag_carry_ns.pop(tid, None)
                 drop_tagged_thread(tid)
 
-    def begin_session(self, session_id: str) -> None:
-        """Sequential session start: reset baselines; attribute all threads to *session_id*."""
+    def begin_session(self, session_id: str, *, concurrent: bool = False) -> None:
+        """Session start.
+
+        Sequential (``concurrent=False``): reset baselines and attribute all
+        live threads to *session_id*.
+
+        Concurrent (``concurrent=True``, c>1 sweep): register and baseline
+        only the calling thread. Must not reset the global tagged ledger or
+        reassign other sessions' threads.
+        """
+        if concurrent:
+            self.register_current(ThreadRole.MAIN, session_id)
+            return
         set_active_session(session_id)
         reset_session_tagged_ledger()
         self.register_current(ThreadRole.MAIN, session_id)
