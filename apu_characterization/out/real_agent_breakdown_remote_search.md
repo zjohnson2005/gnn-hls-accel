@@ -2,14 +2,14 @@
 
 > **Publishable run.** Live OpenAI API agent decisions (`--backend openai`), real open-source tool bodies, audit PASS, Linux-resolution platform (or replication n≥5). Numbers may be used in research outputs subject to denominators and deployment caveats in VERIFIABLE_DATA.md and ATTRIBUTION.md.
 
-Generated: 2026-07-08T02:05:52.784376+00:00 from `real_agent_breakdown_remote_search.json`.
+Generated: 2026-07-08T13:18:01.396588+00:00 from `real_agent_breakdown_remote_search.json`.
 All numbers below are read from that artifact.
 
 ## Setup
 
-- setup record: digest `b51a031ccc65f350`, task suite `a88a9e1058964219` (see EXPERIMENT_SETUP.md)
+- setup record: digest `b375dc13337b83a8`, task suite `a88a9e1058964219` (see EXPERIMENT_SETUP.md)
 - cpu (from setup record): Intel(R) Core(TM) Ultra 5 325
-- git commit: `64e80b94f438229ad1314901155b409ba9ac992e` (dirty tree: yes)
+- git commit: `7decfdc59faababef3f4695622ba3eb75f7e39e6` (dirty tree: yes)
 - python: 3.14.4
 - platform: Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.43
 - cpu: unknown, logical cores: 8
@@ -24,8 +24,8 @@ All numbers below are read from that artifact.
 - mock LLM latency scale: 0.05 (scripted backend sleeps (wall only); openai backend ignores this)
 - clocks: wall = perf_counter_ns; CPU = thread_time_ns per region; real-agent total CPU = process_time (all threads, including LangGraph tool executors)
 - nesting: exclusive self-time accounting; an inner region pauses its parent
-- timer overhead: 8436 ns per enter/exit pair
-- batch wall time: 255.04 s
+- timer overhead: 6964 ns per enter/exit pair
+- batch wall time: 73.47 s
 
 ### What each category wraps in this harness
 
@@ -50,28 +50,28 @@ All numbers below are read from that artifact.
 
 sum(category thread-CPU) + residual = total thread-CPU of the run:
 
-- total thread CPU: 402.58 ms
-- instrumented: 404.15 ms
+- total thread CPU: 233.37 ms
+- instrumented: 234.34 ms
 - residual: 0.00 ms (0.0% of total)
 - limit: 15%  ->  PASS
 
 ## Breakdown (thread CPU, exclusive per category — pooled across all sessions)
 
-*Denominators: n=1 seed(s)=[1], search=remote, batch host CPU=403 ms, batch wall=255.0 s, CPU% of wall≈3.18%, workers=1 (1 sessions sequential one-at-a-time)*
+*Denominators: n=1 seed(s)=[1], search=remote, batch host CPU=233 ms, batch wall=73.5 s, CPU% of wall≈1.78%, workers=1 (1 sessions sequential one-at-a-time)*
 
 | Category | CPU ms | Share of total | Wall ms | Count | Bytes in | Bytes out |
 |---|---|---|---|---|---|---|
-| FRAMEWORK | 382.592 | 95.0% | 11211.107 | 29 | 0 | 0 |
-| GC | 7.970 | 2.0% | 234.478 | 85 | 0 | 0 |
-| TOKENIZATION | 5.879 | 1.5% | 507.690 | 13 | 46867 | 0 |
-| ORCH_SETUP | 4.105 | 1.0% | 830.193 | 2 | 0 | 0 |
-| THREADPOOL | 1.835 | 0.5% | 53.971 | 45 | 0 | 0 |
-| CLIENT_HTTP | 1.114 | 0.3% | 10689.032 | 2 | 0 | 26982 |
-| ORCH_DISPATCH | 0.565 | 0.1% | 19.447 | 10 | 0 | 0 |
-| HTTP_CLIENT | 0.069 | 0.0% | 3093.110 | 27 | 1256 | 363 |
-| SERIALIZATION | 0.016 | 0.0% | 0.475 | 11 | 0 | 44599 |
-| CLIENT_PARSE | 0.008 | 0.0% | 0.228 | 4 | 2118 | 0 |
-| PROMPT_ASSEMBLY | 0.001 | 0.0% | 0.026 | 2 | 0 | 23162 |
+| FRAMEWORK | 215.637 | 92.4% | 3212.357 | 31 | 0 | 0 |
+| ORCH_SETUP | 5.773 | 2.5% | 184.900 | 2 | 0 | 0 |
+| TOKENIZATION | 3.599 | 1.5% | 248.871 | 13 | 46852 | 0 |
+| THREADPOOL | 3.425 | 1.5% | 51.244 | 42 | 0 | 0 |
+| GC | 3.324 | 1.4% | 49.720 | 78 | 0 | 0 |
+| CLIENT_HTTP | 1.328 | 0.6% | 11749.091 | 2 | 0 | 26982 |
+| ORCH_DISPATCH | 1.066 | 0.5% | 0.000 | 10 | 0 | 0 |
+| HTTP_CLIENT | 0.140 | 0.1% | 15001.281 | 29 | 3359 | 363 |
+| SERIALIZATION | 0.030 | 0.0% | 0.447 | 11 | 0 | 44599 |
+| CLIENT_PARSE | 0.010 | 0.0% | 0.153 | 4 | 2103 | 0 |
+| PROMPT_ASSEMBLY | 0.002 | 0.0% | 0.026 | 2 | 0 | 23162 |
 | RESIDUAL_UNATTRIBUTED | 0.000 | 0.0% | 0.000 | 1 | 0 | 0 |
 | RESIDUAL | 0.000 | 0.0% | n/a | n/a | n/a | n/a |
 
@@ -104,7 +104,7 @@ strict = direct tiers; broad = direct + partial + overlap tiers. Base is the tas
 
 | Task | Instrumented CPU ms | Amenable strict | Amenable broad |
 |---|---|---|---|
-| FO-01 | 404.2 | 97.3% | 98.0% |
+| FO-01 | 234.3 | 96.5% | 98.6% |
 
 ### Per-task LLM I/O wait vs host CPU
 
@@ -112,23 +112,23 @@ Each row is one session. **LLM I/O wait** = HTTP_CLIENT wall (blocked on OpenAI)
 
 | Task | Session wall s | LLM I/O wait s | Non-LLM wall s | Host CPU ms | I/O % of wall | CPU % of wall | Tool CPU ms | Harness CPU ms | Tools |
 |---|---|---|---|---|---|---|---|---|---|
-| FO-01 | 12.64 | 3.09 | 9.55 | 402.6 | 24.5% | 3.18% | 0.0 | 18.6 | search×9 |
-| **Total** | 12.64 | 3.09 | 9.55 | 402.6 | 24.5% | 3.18% | | | |
+| FO-01 | 13.11 | 11.75 | 0.00 | 233.4 | 89.6% | 1.78% | 0.0 | 15.3 | search×9 |
+| **Total** | 13.11 | 11.75 | 1.36 | 233.4 | 89.6% | 1.78% | | | |
 
 #### Per-task CPU category breakdown
 
-**FO-01** — 402.6 ms host CPU, 12.64 s session wall — tools: search×9
+**FO-01** — 233.4 ms host CPU, 13.11 s session wall — tools: search×9
 
 | Category | CPU ms | Share of task CPU |
 |---|---|---|
-| FRAMEWORK | 382.6 | 94.7% |
-| GC | 8.0 | 2.0% |
-| TOKENIZATION | 5.9 | 1.5% |
-| ORCH_SETUP | 4.1 | 1.0% |
-| THREADPOOL | 1.8 | 0.5% |
-| CLIENT_HTTP | 1.1 | 0.3% |
-| ORCH_DISPATCH | 0.6 | 0.1% |
-| HTTP_CLIENT | 0.1 | 0.0% |
+| FRAMEWORK | 215.6 | 92.0% |
+| ORCH_SETUP | 5.8 | 2.5% |
+| TOKENIZATION | 3.6 | 1.5% |
+| THREADPOOL | 3.4 | 1.5% |
+| GC | 3.3 | 1.4% |
+| CLIENT_HTTP | 1.3 | 0.6% |
+| ORCH_DISPATCH | 1.1 | 0.5% |
+| HTTP_CLIENT | 0.1 | 0.1% |
 | SERIALIZATION | 0.0 | 0.0% |
 | CLIENT_PARSE | 0.0 | 0.0% |
 | PROMPT_ASSEMBLY | 0.0 | 0.0% |
@@ -137,7 +137,7 @@ Each row is one session. **LLM I/O wait** = HTTP_CLIENT wall (blocked on OpenAI)
 
 ### Pooled vs equal-weight (different questions)
 
-*Denominators: n=1 seed(s)=[1], search=remote, batch host CPU=403 ms, batch wall=255.0 s, CPU% of wall≈3.18%, workers=1 (1 sessions sequential one-at-a-time). Comparison type: single-run sample unless replication_batch artifact.*
+*Denominators: n=1 seed(s)=[1], search=remote, batch host CPU=233 ms, batch wall=73.5 s, CPU% of wall≈1.78%, workers=1 (1 sessions sequential one-at-a-time). Comparison type: single-run sample unless replication_batch artifact.*
 
 | Metric | Pooled (headline table) | Equal-weight task average |
 |---|---|---|
@@ -150,7 +150,7 @@ Use **pooled** for capacity planning (dominated by heavy outlier sessions). Use 
 
 | Archetype | Tasks | Mean CPU ms | Strict amenable | Broad amenable |
 |---|---|---|---|---|
-| FO (fanout) | FO-01 | 404.2 | 97.3% | 98.0% |
+| FO (fanout) | FO-01 | 234.3 | 96.5% | 98.6% |
 
 ‡ **Small-base caution:** strict/broad percentages are of mean instrumented CPU near the Windows thread-time tick floor (~15 ms). High amenability % on RH/LH reflects sessions that barely ran local work, not hardware-friendly archetypes. Do not quote without absolute CPU ms; prefer Linux re-run for tick resolution.
 
@@ -164,13 +164,13 @@ This run models **production-shaped search** (remote API + I/O wait). The baseli
 
 | Metric | Local search (baseline) | Remote search (this run) |
 |---|---|---|
-| Batch host CPU | 6203.1 ms | 402.6 ms |
+| Batch host CPU | 6203.1 ms | 233.4 ms |
 | Pooled TOOL_COMPUTE share | 86.1% | 0.0% |
-| Pooled ORCH share | 7.1% | 1.2% |
-| ORCH measured (host %) | 7.1% | 1.2% |
+| Pooled ORCH share | 7.1% | 2.9% |
+| ORCH measured (host %) | 7.1% | 2.9% |
 | ORCH reconcile (host %) | 0.0% | 0.0% |
-| Pooled harness_strict (ORCH_SETUP+ORCH_DISPATCH+TOKENIZATION+SERIALIZATION) | 11.3% | 2.6% |
-| Pooled harness_broad (strict + HTTP + PROMPT + CONTEXT + LOGGING) | 13.6% | 98.4% |
+| Pooled harness_strict (ORCH_SETUP+ORCH_DISPATCH+TOKENIZATION+SERIALIZATION) | 11.3% | 4.5% |
+| Pooled harness_broad (strict + HTTP + PROMPT + CONTEXT + LOGGING) | 13.6% | 99.0% |
 | Equal-weight TOOL_COMPUTE share | 32.6% | 0.0% |
 
 Sessions that invoked local search (SH, and CH-02 when the model chose search) move from the CPU-heavy cluster to I/O-dominated wall time; remaining TOOL_COMPUTE is code_exec and local retrieve only.
@@ -183,7 +183,7 @@ CPU floor for detailed per-task amenability: 200.0 ms
 
 | Bucket | Label | Tasks | Mean host CPU ms | Mean strict amenable |
 |---|---|---|---|---|
-| B1_search_only | search only (no local code/retrieve) | FO-01 | 402.6 | 97.3% |
+| B1_search_only | search only (no local code/retrieve) | FO-01 | 233.4 | 96.5% |
 
 Task archetype labels (SH, RH, …) are prompt-intent only; use behavioral buckets for workload-ground-truth grouping.
 
@@ -191,12 +191,12 @@ Task archetype labels (SH, RH, …) are prompt-intent only; use behavioral bucke
 
 ORCH **measured** = LangGraph stream step residual. ORCH **reconcile** = session-end process CPU not caught by region tags, booked to ORCH_DISPATCH. See `ATTRIBUTION.md`.
 
-- Pooled ORCH: 1.2% of batch host CPU
-- ORCH measured: 1.2% of host
+- Pooled ORCH: 2.9% of batch host CPU
+- ORCH measured: 2.9% of host
 - ORCH reconcile: 0.0% of host
 - Reconcile as % of total ORCH: 0.0%
-- harness_strict (ORCH_SETUP+ORCH_DISPATCH+TOKENIZATION+SERIALIZATION): 2.6%
-- harness_broad (strict + HTTP_CLIENT + PROMPT_ASSEMBLY + CONTEXT_MGMT + LOGGING): 98.4%
+- harness_strict (ORCH_SETUP+ORCH_DISPATCH+TOKENIZATION+SERIALIZATION): 4.5%
+- harness_broad (strict + HTTP_CLIENT + PROMPT_ASSEMBLY + CONTEXT_MGMT + LOGGING): 99.0%
 - Audit rollup: reconcile 0.0% of host CPU
 
 ### Accounting audit
@@ -204,6 +204,7 @@ ORCH **measured** = LangGraph stream step residual. ORCH **reconcile** = session
 - pass: **YES**
 - publishable_ok: **YES**
 - platform: `linux`
+- warning: FO-01: remote-tool I/O % of wall is 114.4% (>100%) — HTTP_CLIENT wall includes mock search/retrieve waits concurrent with session clock; not an additive partition
 - warning: Single-seed run (n=1); replication requires n≥5 seeds with medians and IQR before headline numbers are quotable
 
 ### Wall-time attribution integrity
@@ -214,7 +215,7 @@ CPU category shares partition instrumented CPU (exclusive nesting; invariant PAS
 
 | Task | Session wall s | All-category coverage | Partition coverage |
 |---|---|---|---|
-| FO-01 | 12.64 | 210.7% | 202.3% |
+| FO-01 | 13.11 | 232.7% | 230.9% |
 
 ### Equal-weight category breakdown by archetype
 
@@ -223,23 +224,23 @@ Mean CPU share partitions instrumented CPU (~100% per task). Wall/session exclud
 #### FO (fanout)
 
 - tasks (1): FO-01
-- mean session wall: 12.64 s
-- mean instrumented CPU: 404.2 ms
-- mean amenable strict: 97.3%
-- mean amenable broad: 98.0%
-- partition wall fractions sum: 202.3% (excludes TOOL_COMPUTE, GC, ORCH_SETUP; see wall integrity)
+- mean session wall: 13.11 s
+- mean instrumented CPU: 234.3 ms
+- mean amenable strict: 96.5%
+- mean amenable broad: 98.6%
+- partition wall fractions sum: 230.9% (excludes TOOL_COMPUTE, GC, ORCH_SETUP; see wall integrity)
 
 | Category | Tier | Mean CPU ms | Mean CPU share | Mean wall ms | Wall / session |
 |---|---|---|---|---|---|
-| FRAMEWORK | direct | 382.6 | 94.7% | 11211.1 | 88.7% |
-| GC | none | 8.0 | 2.0% | 234.5 | concurrent† |
-| TOKENIZATION | direct | 5.9 | 1.5% | 507.7 | 4.0% |
-| ORCH_SETUP | direct | 4.1 | 1.0% | 830.2 | n/a |
-| THREADPOOL | partial | 1.8 | 0.5% | 54.0 | 0.4% |
-| CLIENT_HTTP | overlap | 1.1 | 0.3% | 10689.0 | 84.6% |
-| ORCH_DISPATCH | direct | 0.6 | 0.1% | 19.4 | 0.2% |
-| HTTP_CLIENT | overlap | 0.1 | 0.0% | 3093.1 | 24.5% |
-| SERIALIZATION | direct | 0.0 | 0.0% | 0.5 | 0.0% |
+| FRAMEWORK | direct | 215.6 | 92.0% | 3212.4 | 24.5% |
+| ORCH_SETUP | direct | 5.8 | 2.5% | 184.9 | n/a |
+| TOKENIZATION | direct | 3.6 | 1.5% | 248.9 | 1.9% |
+| THREADPOOL | partial | 3.4 | 1.5% | 51.2 | 0.4% |
+| GC | none | 3.3 | 1.4% | 49.7 | concurrent† |
+| CLIENT_HTTP | overlap | 1.3 | 0.6% | 11749.1 | 89.6% |
+| ORCH_DISPATCH | direct | 1.1 | 0.5% | 0.0 | 0.0% |
+| HTTP_CLIENT | overlap | 0.1 | 0.1% | 15001.3 | 114.4% |
+| SERIALIZATION | direct | 0.0 | 0.0% | 0.4 | 0.0% |
 | CLIENT_PARSE | direct | 0.0 | 0.0% | 0.2 | 0.0% |
 | PROMPT_ASSEMBLY | partial | 0.0 | 0.0% | 0.0 | 0.0% |
 | RESIDUAL_UNATTRIBUTED | none | 0.0 | 0.0% | 0.0 | 0.0% |
@@ -248,34 +249,34 @@ Mean CPU share partitions instrumented CPU (~100% per task). Wall/session exclud
 
 - sessions: agent_0
 - tool invocations: search×9
-- instrumented CPU: 404.2 ms
-- hardware amenable: strict 97.3% (393.2 ms), broad 98.0% (396.2 ms)
+- instrumented CPU: 234.3 ms
+- hardware amenable: strict 96.5% (226.1 ms), broad 98.6% (231.0 ms)
 
 | Category | Tier | CPU ms | Share of task | Wall ms | Count | Bytes in | Bytes out |
 |---|---|---|---|---|---|---|---|
-| FRAMEWORK | direct | 382.6 | 94.7% | 11211.1 | 29 | 0 | 0 |
-| GC | none | 8.0 | 2.0% | 234.5 | 85 | 0 | 0 |
-| TOKENIZATION | direct | 5.9 | 1.5% | 507.7 | 13 | 46867 | 0 |
-| ORCH_SETUP | direct | 4.1 | 1.0% | 830.2 | 2 | 0 | 0 |
-| THREADPOOL | partial | 1.8 | 0.5% | 54.0 | 45 | 0 | 0 |
-| CLIENT_HTTP | overlap | 1.1 | 0.3% | 10689.0 | 2 | 0 | 26982 |
-| ORCH_DISPATCH | direct | 0.6 | 0.1% | 19.4 | 10 | 0 | 0 |
-| HTTP_CLIENT | overlap | 0.1 | 0.0% | 3093.1 | 27 | 1256 | 363 |
-| SERIALIZATION | direct | 0.0 | 0.0% | 0.5 | 11 | 0 | 44599 |
-| CLIENT_PARSE | direct | 0.0 | 0.0% | 0.2 | 4 | 2118 | 0 |
+| FRAMEWORK | direct | 215.6 | 92.0% | 3212.4 | 31 | 0 | 0 |
+| ORCH_SETUP | direct | 5.8 | 2.5% | 184.9 | 2 | 0 | 0 |
+| TOKENIZATION | direct | 3.6 | 1.5% | 248.9 | 13 | 46852 | 0 |
+| THREADPOOL | partial | 3.4 | 1.5% | 51.2 | 42 | 0 | 0 |
+| GC | none | 3.3 | 1.4% | 49.7 | 78 | 0 | 0 |
+| CLIENT_HTTP | overlap | 1.3 | 0.6% | 11749.1 | 2 | 0 | 26982 |
+| ORCH_DISPATCH | direct | 1.1 | 0.5% | 0.0 | 10 | 0 | 0 |
+| HTTP_CLIENT | overlap | 0.1 | 0.1% | 15001.3 | 29 | 3359 | 363 |
+| SERIALIZATION | direct | 0.0 | 0.0% | 0.4 | 11 | 0 | 44599 |
+| CLIENT_PARSE | direct | 0.0 | 0.0% | 0.2 | 4 | 2103 | 0 |
 | PROMPT_ASSEMBLY | partial | 0.0 | 0.0% | 0.0 | 2 | 0 | 23162 |
 | RESIDUAL_UNATTRIBUTED | none | 0.0 | 0.0% | 0.0 | 1 | 0 | 0 |
 
 ## Process user/system split
 
-- user: 5.250 s, system: 6.610 s
+- user: 1.880 s, system: 1.640 s
 - per-category kernel-time attribution is approximate; category timers are user-space, syscall-heavy regions surface partly as system time
 
 ## Per-session summary
 
 | Session | Task | Turns | Tool calls | Graph nodes | Dispatches | Wall s | Thread CPU ms |
 |---|---|---|---|---|---|---|---|
-| agent_0 | FO-01 | 11 | search:9 | n/a | n/a | 12.64 | 402.58 |
+| agent_0 | FO-01 | 11 | search:9 | n/a | n/a | 13.11 | 233.37 |
 
 ## Tool usage (all sessions including sub-agents)
 

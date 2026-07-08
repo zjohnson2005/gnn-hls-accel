@@ -6,16 +6,17 @@
 #   bash apu_characterization/run_apu_gate.sh
 set -euo pipefail
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/bin:${PATH}"
-# shellcheck source=apu_env.sh
-source "$(dirname "$0")/apu_env.sh"
 
 if [[ -n "${APU_REPO_ROOT:-}" ]]; then
   REPO="${APU_REPO_ROOT}"
+elif [[ -n "${BASH_SOURCE[0]:-}" && "${BASH_SOURCE[0]}" != bash && -f "${BASH_SOURCE[0]}" ]]; then
+  REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 else
-  cd "$(dirname "$0")/.."
-  REPO="$(pwd)"
+  REPO="$(cd "$(dirname "$0")/.." && pwd)"
 fi
 cd "${REPO}"
+# shellcheck source=apu_env.sh
+source "${REPO}/apu_characterization/apu_env.sh"
 
 git config core.autocrlf true 2>/dev/null || true
 

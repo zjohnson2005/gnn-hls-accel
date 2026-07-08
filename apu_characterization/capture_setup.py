@@ -51,11 +51,90 @@ def _run(cmd: list[str]) -> str:
         return ""
 
 
+def _is_wsl() -> bool:
+    if sys.platform != "linux":
+        return False
+    if "microsoft-standard-wsl" in platform.release().lower():
+        return True
+    try:
+        return "microsoft" in Path("/proc/version").read_text(encoding="utf-8", errors="replace").lower()
+    except OSError:
+        return False
+
+
+def _parse_lscpu() -> dict[str, str]:
+    text = _run(["lscpu"])
+    if not text:
+        return {}
+    out: dict[str, str] = {}
+    for line in text.splitlines():
+        if ":" not in line:
+            continue
+        key, _, val = line.partition(":")
+        out[key.strip()] = val.strip()
+    return out
+
+
+_LSCPU_SUMMARY_KEYS = (
+    "Architecture",
+    "CPU(s)",
+    "Model name",
+    "Vendor ID",
+    "Thread(s) per core",
+    "Core(s) per socket",
+    "Socket(s)",
+    "CPU max MHz",
+    "CPU min MHz",
+    "Hypervisor vendor",
+    "Virtualization type",
+)
+
+
+def _probe_windows_host() -> dict[str, Any]:
+    """Underlying Windows machine when capture runs inside WSL2."""
+    ps = (
+        "$p=Get-CimInstance Win32_Processor; "
+        "$cs=Get-CimInstance Win32_ComputerSystem; "
+        "$os=Get-CimInstance Win32_OperatingSystem; "
+        "[PSCustomObject]@{"
+        "cpu_model=$p.Name; "
+        "cores_physical=$p.NumberOfCores; "
+        "cores_logical=$p.NumberOfLogicalProcessors; "
+        "max_clock_mhz=$p.MaxClockSpeed; "
+        "system_model=$cs.Model; "
+        "ram_total_gb=[math]::Round($cs.TotalPhysicalMemory/1GB,2); "
+        "os_caption=$os.Caption"
+        "} | ConvertTo-Json -Compress"
+    )
+    raw = _run(["powershell.exe", "-NoProfile", "-Command", ps])
+    if not raw:
+        return {}
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        return {}
+    return {k: v for k, v in data.items() if v not in (None, "")}
+
+
 def probe_hardware() -> dict[str, Any]:
+    lscpu = _parse_lscpu() if sys.platform != "win32" else {}
+    cpu_model = (
+        lscpu.get("Model name")
+        or platform.processor()
+        or "unknown"
+    )
     hw: dict[str, Any] = {
-        "cpu_model": platform.processor() or "unknown",
+        "cpu_model": cpu_model,
         "machine": platform.machine(),
     }
+    if lscpu:
+        hw["lscpu"] = {k: lscpu[k] for k in _LSCPU_SUMMARY_KEYS if k in lscpu}
+    if _is_wsl():
+        host = _probe_windows_host()
+        if host:
+            hw["windows_host"] = host
+            if cpu_model in ("", "unknown") and host.get("cpu_model"):
+                hw["cpu_model"] = host["cpu_model"]
     try:
         import psutil
 
@@ -88,9 +167,19 @@ def probe_hardware() -> dict[str, Any]:
         proc = Path("/proc/cpuinfo")
         if proc.is_file():
             for line in proc.read_text(encoding="utf-8", errors="replace").splitlines():
-                if line.lower().startswith("model name"):
+                if line.lower().startswith("model name") and hw["cpu_model"] in ("", "unknown"):
                     hw["cpu_model"] = line.split(":", 1)[1].strip()
-                    break
+                if line.lower().startswith("cpu mhz") and "cpu_freq_mhz_current" not in hw:
+                    try:
+                        hw["cpu_freq_mhz_current"] = float(line.split(":", 1)[1].strip())
+                    except ValueError:
+                        pass
+        max_mhz = lscpu.get("CPU max MHz")
+        if max_mhz:
+            try:
+                hw["cpu_freq_mhz_max"] = float(max_mhz)
+            except ValueError:
+                pass
         governor = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
         if governor.is_file():
             hw["cpu_governor"] = governor.read_text().strip()
@@ -309,14 +398,33 @@ def render_md(setup: dict[str, Any]) -> str:
         f"- RAM: {hw.get('ram_total_gb')} GB total,"
         f" {hw.get('ram_available_gb')} GB available at capture",
         f"- power plan: {hw.get('power_plan', hw.get('cpu_governor', 'not readable'))}",
-        "",
-        "## Software",
-        "",
-        f"- OS: {sw['os']}",
-        f"- Python: {sw['python']} ({sw['python_implementation']})",
-        f"- git commit: `{git['commit']}` (dirty: {git['dirty']})",
-        "- packages:",
     ]
+    if wh := hw.get("windows_host"):
+        lines.extend(
+            [
+                "",
+                "## Windows host (physical machine, probed via powershell.exe from WSL)",
+                "",
+                f"- system model: {wh.get('system_model', 'n/a')}",
+                f"- CPU: {wh.get('cpu_model', 'n/a')}",
+                f"- physical cores: {wh.get('cores_physical', 'n/a')},"
+                f" logical: {wh.get('cores_logical', 'n/a')}",
+                f"- max clock MHz (CIM): {wh.get('max_clock_mhz', 'n/a')}",
+                f"- RAM: {wh.get('ram_total_gb', 'n/a')} GB total",
+                f"- OS: {wh.get('os_caption', 'n/a')}",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "## Software",
+            "",
+            f"- OS: {sw['os']}",
+            f"- Python: {sw['python']} ({sw['python_implementation']})",
+            f"- git commit: `{git['commit']}` (dirty: {git['dirty']})",
+            "- packages:",
+        ]
+    )
     for pkg, ver in sw["packages"].items():
         lines.append(f"  - {ver}" if "==" in ver else f"  - {pkg}: {ver}")
 

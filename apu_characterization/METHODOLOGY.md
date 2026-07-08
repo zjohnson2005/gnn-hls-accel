@@ -48,3 +48,40 @@ Gate G2 (harness share vs c not built on unattributed bucket) is satisfied when
 `RESIDUAL_UNATTRIBUTED` below 15% on every session.
 
 Reference: `out/replication_v1_v2_migration.md`.
+
+## Appendix: bare-metal validation (pre-sweep platform gate)
+
+Purpose: quantify how much of the v3.1 CPU composition is WSL2-specific by
+replicating a 6-task, n=3-seed subset of the c=1 baseline on native Linux.
+The verdict (AGREEMENT / SCHEDULING DELTA / DISAGREEMENT, rules in
+`tools/bare_metal_compare.py`) decides whether the WSL2 caveat is retired
+and which platform the concurrency sweep runs on.
+
+Protocol: `experiments/bare_metal_validation.py` (runner, load hygiene,
+platform label) and `run_bare_metal_native.sh` (native-box driver: clone at
+pinned commit, venv, BLAS pin assertion, capture, self-tests, run).
+Comparison artifact: `out/bare_metal_comparison.md`.
+
+Fill in when executed (values come from artifacts, never hand-typed):
+
+- Machine option used: [A native lab machine | B cloud VM ("native-kernel
+  Linux VM", not "bare metal") | C dual-boot or live-USB on the primary
+  laptop]. Record hostname or instance type.
+- Commit run on the native box: [hash]. Note: the v3.1 baseline artifact
+  was measured at `d5fd7b8`; the native run uses the freeze commit, which
+  differs only by the FO-01 post-tools sampling fix and this experiment.
+  The FO-01 residual comparison must account for that fix (residual is
+  expected to shrink for code reasons, independent of platform).
+- Version deltas vs v3.1 (Python 3.14.4, numpy 2.5.1, psutil 7.2.2,
+  tiktoken 0.13.0, sympy 1.14.0): [list every delta, from the native
+  setup.json].
+- Load hygiene records: 1-min loadavg at start and end plus per-session
+  before/after samples are embedded in the native artifact
+  (`load_records`). Start limit 1.0, mid-run abort limit 2.0.
+- OpenAI key and quota handling: [same key as sweep during a sweep pause |
+  separate key]. The subset costs roughly one v3.1 seed of API usage.
+- Deviations: [none | list].
+
+Non-goals: no concurrency levels beyond the optional labeled `smoke_c5`
+(excluded from all statistics), no ablations, no new tasks. Native sessions
+never merge into v3.1 statistics.
