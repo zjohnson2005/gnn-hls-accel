@@ -260,6 +260,10 @@ def probe_git(*, ignore_paths: tuple[str, ...] = ()) -> dict[str, str]:
     for line in porcelain.splitlines():
         if not line.strip():
             continue
+        # Untracked files (??) are not edits to the pinned commit; out/ sweep
+        # artifacts from prior runs must not block re-smoke.
+        if line.startswith("??"):
+            continue
         path = _porcelain_path(line)
         if not path or path in ignore:
             continue
