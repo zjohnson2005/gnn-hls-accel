@@ -3,23 +3,51 @@
 Everything runs locally, no FPGA server. Windows PowerShell, Python 3.11+.
 All commands run from the repo root: `C:\Users\zjohn\Projects\gnn-hls-accel`.
 
+## Minimal workflow stack
+
+One-command gate before any full replication:
+
+```powershell
+$env:OPENAI_API_KEY = "sk-..."
+.\apu_characterization\run_apu_gate.ps1
+# or from WSL: make apu-gate
+```
+
+Unattended replication + poll (Cursor `/loop 10m make apu-replicate-check`):
+
+```powershell
+.\apu_characterization\run_apu_replicate_unattended.ps1
+wsl make apu-replicate-check   # exit 2 = still running; 0 = done + validated
+```
+
+Nightly CI: `.github/workflows/apu-nightly.yml` (requires `OPENAI_API_KEY` repo secret).
+
+Publishability policy for agents: `.cursor/rules/apu-characterization.mdc`.
+
+## Verifiable data (read this first)
+
+**Policy:** `VERIFIABLE_DATA.md` — synthetic/scripted paths are test-only.
+
+**Recharacterization steps:** `RECHARACTERIZATION.md` — ordered Phase A3 → v2 replication.
+
 ## Result validity (read this first)
+
+**Verifiable data policy:** read `VERIFIABLE_DATA.md` before citing any number.
 
 | Run | Artifact | Valid for papers/slides? |
 |-----|----------|--------------------------|
-| `real_agent_breakdown --backend openai` | `out/real_agent_breakdown.json` | **Yes** — local search baseline |
-| `real_agent_breakdown --backend openai --search-locality remote` | `out/real_agent_breakdown_remote_search.json` | **Yes** — remote search deployment |
-| `tool_locality_ablation --backend openai` | `out/tool_locality_ablation.json` | **Yes (methods)** — matched SH search pairs only; see ATTRIBUTION.md |
-| `replication_batch --backend openai --search-locality remote` | `out/replication_remote_search.json` | **Yes** — remote search replication (n≥5 seeds); must be audit PASS, git clean, ORCH split present |
-| `concurrency_sweep --backend openai` | `out/concurrency_sweep.json` | **Separate workstream** — not part of Phase 0-prime publishable headline |
-| `real_agent_breakdown --backend scripted` | `out/real_agent_breakdown_debug.json` | **No** — instrumentation check only |
-| `tool_locality_ablation --backend scripted` | `out/tool_locality_ablation_debug.json` | **No** — instrumentation check only |
-| `single_agent_breakdown` (mock harness) | `out/single_agent_breakdown_debug.json` | **No** — instrumentation check only |
+| `real_agent_breakdown --backend openai` | `out/real_agent_breakdown.json` | **Yes** (single-seed exploratory; prefer replication) |
+| `replication_batch --backend openai --search-locality remote` | `out/replication_remote_search.json` | **Yes** — primary publishable headline |
+| `tool_locality_ablation --backend openai` | `out/tool_locality_ablation.json` | **Yes (methods)** — matched SH pairs only |
+| `real_agent_breakdown --backend scripted` | `out/real_agent_breakdown_debug.json` | **No** — synthetic model; instrumentation test only |
+| `profile_reconcile_session --backend scripted` | `out/profile_*.json` | **No** — not valid for ATTRIBUTION_VERDICT |
+| `single_agent_breakdown` (mock harness) | `out/single_agent_breakdown_debug.json` | **No** — mock harness only |
+| `concurrency_sweep --backend scripted` | `out/concurrency_sweep.json` | **No** — debug smoke only |
 
-Mock LLM, scripted TaskSpec decisions, and synthetic sleeps verify that timers,
-invariants, and report generation work. **Never cite those numbers as experimental
-results.** If a slide or paper uses a breakdown table, it must come from the
-OpenAI backend artifact with `result_validity: publishable` **and audit PASS on Linux**.
+Synthetic models (`--backend scripted`), mock LLM sleeps, and mock remote HTTP round-trips
+exist only to test timers and invariants. **Verifiable characterization requires
+`--backend openai` on Linux** plus real tool implementations (SymPy, NumPy, regex corpus,
+CPython exec). Mock remote search is a labeled deployment model, not production HTTP.
 
 **CPU attribution model:** read `apu_characterization/ATTRIBUTION.md` before quoting
 ORCH or harness-strict percentages. ORCH is split into **measured** (stream step)
@@ -369,6 +397,47 @@ py -3 apu_characterization/tools/replication_task_breakdown.py
 
 For the final publishable stamp: commit all changes, re-run capture_setup, then
 either `--refresh-only` on a clean tree or full Linux replication (no `--allow-dirty`).
+
+## ORCH reconcile diagnosis and v2 replication (blocks concurrency sweep)
+
+Phase A (diagnose, no harness changes):
+
+```
+py -3 -m apu_characterization.experiments.reconcile_phase_a
+py -3 -m apu_characterization.tests.test_reconcile_worker
+py -3 apu_characterization/tools/generate_attribution_verdict.py --profile-json apu_characterization/out/profile_lh-01_s0.json
+```
+
+Profile one heavy session (LH-01 = task index 8, seed 0) on Linux/WSL with OpenAI.
+Uses a repo-local venv (PEP 668 safe; do not `pip install` system-wide on Debian/WSL):
+
+```
+# PowerShell (API key in this session):
+.\apu_characterization\run_profile_lh01_wsl.ps1
+```
+
+Or in WSL directly:
+
+```
+export OPENAI_API_KEY=sk-...
+bash apu_characterization/run_profile_lh01_wsl.sh
+```
+
+Manual steps (if you already have py-spy on PATH):
+
+```
+bash apu_characterization/run_profile_lh01_wsl.sh
+```
+
+Phase C (v2 replication, clean git, Linux):
+
+```
+py -3 -m apu_characterization.experiments.replication_batch --backend openai --seeds 0,1,2,3,4 --search-locality remote --instr-version 2
+py -3 apu_characterization/tools/replication_v2_compare.py
+```
+
+Artifacts: `out/replication_remote_search_v2.json`, `out/replication_v1_v2_migration.md`.
+Gate G2 for concurrency sweep: satisfied when v2 audit PASS and RESIDUAL_UNATTRIBUTED below 15% every session.
 
 ## Concurrency sweep (separate workstream)
 

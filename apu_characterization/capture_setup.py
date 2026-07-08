@@ -85,6 +85,14 @@ def probe_hardware() -> dict[str, Any]:
         governor = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
         if governor.is_file():
             hw["cpu_governor"] = governor.read_text().strip()
+        else:
+            # WSL2 and many VMs omit cpufreq sysfs; record explicitly so strict
+            # validation can distinguish "not probed" from "not available".
+            kernel = platform.release().lower()
+            if "microsoft-standard-wsl" in kernel or "wsl" in kernel:
+                hw["cpu_governor"] = "n/a (WSL2: no cpufreq sysfs)"
+            else:
+                hw["cpu_governor"] = "n/a (no cpufreq sysfs)"
 
     return hw
 
@@ -102,8 +110,18 @@ def probe_software() -> dict[str, Any]:
         pkg = line.split("==")[0].strip().lower()
         if pkg in PACKAGES:
             versions[pkg] = line.strip()
+    # uv venvs may omit pip; fall back to importlib.metadata.
+    try:
+        from importlib.metadata import PackageNotFoundError, version as pkg_version
+    except ImportError:
+        from importlib_metadata import PackageNotFoundError, version as pkg_version  # type: ignore
     for pkg in PACKAGES:
-        versions.setdefault(pkg, "not installed")
+        if pkg in versions:
+            continue
+        try:
+            versions[pkg] = f"{pkg}=={pkg_version(pkg)}"
+        except PackageNotFoundError:
+            versions[pkg] = "not installed"
     sw["packages"] = versions
     return sw
 

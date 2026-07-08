@@ -1,0 +1,64 @@
+name: APU nightly replication
+
+on:
+  schedule:
+    # Monday 06:00 UTC — unattended v3 replication + validate
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      skip_gate:
+        description: Skip apu-gate (FO-01 smoke) and run replication only
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+concurrency:
+  group: apu-nightly-replication
+  cancel-in-progress: false
+
+jobs:
+  replicate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require OpenAI secret
+        run: |
+          if [ -z "${OPENAI_API_KEY}" ]; then
+            echo "OPENAI_API_KEY secret is not configured on this repository." >&2
+            exit 1
+          fi
+
+      - name: Bootstrap WSL-equivalent venv
+        run: bash apu_characterization/run_wsl_bootstrap.sh
+
+      - name: Fail-fast gate (unit tests + FO-01 smoke)
+        if: github.event.inputs.skip_gate != 'true'
+        run: bash apu_characterization/run_apu_gate.sh
+
+      - name: v3 replication (~1 hr)
+        run: bash apu_characterization/run_linux_replication_v3.sh
+
+      - name: Validate publishable artifact
+        run: |
+          . .venv-wsl/bin/activate
+          python apu_characterization/tools/validate_publishable.py \
+            apu_characterization/out/replication_remote_search_v3.json
+
+      - name: Upload replication artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apu-replication-v3-${{ github.run_id }}
+          path: |
+            apu_characterization/out/replication_remote_search_v3.json
+            apu_characterization/out/replication_remote_search_v3.md
+            apu_characterization/out/setup.json
+          retention-days: 30

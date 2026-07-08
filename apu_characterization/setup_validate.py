@@ -54,6 +54,13 @@ def validate_setup(setup: dict[str, Any], *, strict: bool = True) -> list[str]:
         gov = setup.get("hardware", {}).get("cpu_governor")
         if not gov:
             errors.append("hardware.cpu_governor missing on Linux (re-run capture_setup)")
+        elif gov.startswith("n/a"):
+            kernel = (setup.get("kernel") or "").lower()
+            if "wsl" not in kernel and "microsoft-standard-wsl" not in kernel:
+                errors.append(
+                    f"hardware.cpu_governor unavailable ({gov!r}); "
+                    "native Linux should expose cpufreq sysfs"
+                )
 
     openai = setup.get("openai", {})
     for key in ("model", "temperature", "timeout_s"):
