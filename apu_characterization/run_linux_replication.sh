@@ -23,7 +23,7 @@ echo "=== WSL replication starting (platform: $(uname -s), OPENAI_API_KEY: set) 
 
 echo "=== platform ==="
 python3 -m apu_characterization.tests.test_resolution
-python3 -m apu_characterization.tests.test_instr
+python3 -m apu_characterization.tests.test_inst
 
 echo "=== capture ==="
 python3 -m apu_characterization.capture_setup

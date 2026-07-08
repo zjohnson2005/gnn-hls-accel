@@ -55,20 +55,8 @@ def sync_mock_remote_call(
         raw_request = json.dumps(request)
 
     mu = math.log(max(median_s * latency_scale, 1e-6))
-    cpu0 = time.thread_time_ns()
-    wall0 = time.perf_counter_ns()
-    time.sleep(rng.lognormvariate(mu, sigma))
-    from ..instr import get_run_accumulator
-
-    acc = get_run_accumulator()
-    if acc is not None:
-        totals = acc.totals_for(Category.HTTP_CLIENT, session_id)
-        with acc._lock:
-            totals.add(
-                time.thread_time_ns() - cpu0,
-                time.perf_counter_ns() - wall0,
-                count=1,
-            )
+    with timed(Category.HTTP_CLIENT, session_id):
+        time.sleep(rng.lognormvariate(mu, sigma))
 
     body = {
         "endpoint": request["url"],

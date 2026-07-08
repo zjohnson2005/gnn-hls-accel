@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import ctypes
 import gc
 import os
 import contextvars
+import sys
 import threading
 import time
 from contextlib import contextmanager
@@ -12,6 +14,7 @@ from dataclasses import dataclass, field
 from typing import Any, Iterator
 
 from .taxonomy import Category, INSTRUMENTED
+from .provenance import MEASURED, STEP_INFERRED, Provenance, RESIDUAL
 
 NO_INSTR = os.environ.get("APU_NOINSTR", "0") == "1"
 
@@ -58,7 +61,11 @@ class RunAccumulator:
     """Per-run accumulator keyed by (category, session_id, profile)."""
 
     profile: str = "mixed"
+    instr_version: int = 1
     by_key: dict[tuple[str, str, str], CategoryTotals] = field(default_factory=dict)
+    by_provenance: dict[tuple[str, str, str, str], CategoryTotals] = field(
+        default_factory=dict
+    )
     session_thread_cpu: dict[str, int] = field(default_factory=dict)
     timeline: list[dict[str, Any]] = field(default_factory=list)
     record_timeline: bool = False
@@ -70,6 +77,47 @@ class RunAccumulator:
             if key not in self.by_key:
                 self.by_key[key] = CategoryTotals()
             return self.by_key[key]
+
+    def book_cpu(
+        self,
+        category: Category,
+        session_id: str,
+        cpu_ns: int,
+        wall_ns: int,
+        *,
+        provenance: Provenance = MEASURED,
+        bytes_in: int = 0,
+        bytes_out: int = 0,
+        count: int = 1,
+    ) -> None:
+        """Book CPU to category totals and provenance ledger."""
+        if category in (Category.RESIDUAL, Category.RESIDUAL_UNATTRIBUTED):
+            provenance = RESIDUAL
+        totals = self.totals_for(category, session_id)
+        pkey = (category.value, session_id, self.profile, provenance)
+        with self._lock:
+            totals.add(cpu_ns, wall_ns, bytes_in, bytes_out, count=count)
+            if pkey not in self.by_provenance:
+                self.by_provenance[pkey] = CategoryTotals()
+            self.by_provenance[pkey].add(cpu_ns, wall_ns, bytes_in, bytes_out, count=count)
+
+    def provenance_cpu_ns(self, provenance: Provenance, session_id: str | None = None) -> int:
+        total = 0
+        with self._lock:
+            for (_cat, sid, _prof, prov), t in self.by_provenance.items():
+                if prov != provenance:
+                    continue
+                if session_id is not None and sid != session_id:
+                    continue
+                total += t.cpu_ns
+        return total
+
+    def provenance_summary(self, session_id: str | None = None) -> dict[str, int]:
+        return {
+            MEASURED: self.provenance_cpu_ns(MEASURED, session_id),
+            STEP_INFERRED: self.provenance_cpu_ns(STEP_INFERRED, session_id),
+            RESIDUAL: self.provenance_cpu_ns(RESIDUAL, session_id),
+        }
 
     def aggregate_by_category(self) -> dict[str, CategoryTotals]:
         out: dict[str, CategoryTotals] = {}
@@ -142,6 +190,81 @@ class RunAccumulator:
 _thread_local = threading.local()
 _run_acc: RunAccumulator | None = None
 _gc_hook_installed = False
+
+# ------------------------------------------------------------------
+# Per-thread tagged-CPU ledger (v3 dedup).
+#
+# Thread-identity sampling (psutil) sees ALL CPU a thread burned, including
+# CPU already booked by @timed regions on that thread. To avoid double
+# counting, every timer booking records its CPU against the current kernel
+# TID here; ThreadRegistry.sample_and_book subtracts the tagged delta from
+# the psutil delta and books only the untagged remainder.
+_tagged_tid_cpu: dict[int, int] = {}
+_tagged_tid_lock = threading.Lock()
+
+
+def _read_native_tid() -> int:
+    """Kernel thread id (matches psutil.Process().threads()[].id on Linux)."""
+    if sys.platform == "win32":
+        return int(threading.get_ident())
+    try:
+        with open("/proc/thread-self/id", encoding="ascii") as f:
+            return int(f.read().strip())
+    except OSError:
+        pass
+    if hasattr(os, "gettid"):
+        tid = int(os.gettid())
+        if tid < 1_000_000:
+            return tid
+    try:
+        libc = ctypes.CDLL("libc.so.6", use_errno=True)
+        return int(libc.syscall(186))  # SYS_gettid on x86_64 Linux
+    except OSError:
+        return int(threading.get_ident())
+
+
+def current_native_tid() -> int:
+    """Cached kernel TID for the current thread."""
+    tid = getattr(_thread_local, "native_tid", None)
+    if tid is None:
+        tid = _read_native_tid()
+        _thread_local.native_tid = tid
+    return tid
+
+
+def add_tagged_thread_cpu(cpu_ns: int) -> None:
+    """Record CPU already booked by a timer on the current thread."""
+    if cpu_ns <= 0:
+        return
+    tid = current_native_tid()
+    with _tagged_tid_lock:
+        _tagged_tid_cpu[tid] = _tagged_tid_cpu.get(tid, 0) + cpu_ns
+
+
+def tagged_thread_cpu(tid: int) -> int:
+    with _tagged_tid_lock:
+        return _tagged_tid_cpu.get(tid, 0)
+
+
+def tagged_thread_cpu_snapshot() -> dict[int, int]:
+    with _tagged_tid_lock:
+        return dict(_tagged_tid_cpu)
+
+
+def drop_tagged_thread(tid: int) -> None:
+    """Forget a dead thread's ledger entry (kernel TIDs can be reused)."""
+    with _tagged_tid_lock:
+        _tagged_tid_cpu.pop(tid, None)
+
+
+def reset_session_tagged_ledger() -> None:
+    """Clear per-thread tagged CPU at a sequential session boundary.
+
+    Tagged totals are cumulative within a session only; carrying them across
+    sessions makes psutil net deltas under-book worker threads in later sessions.
+    """
+    with _tagged_tid_lock:
+        _tagged_tid_cpu.clear()
 _gc_session: contextvars.ContextVar[str] = contextvars.ContextVar(
     "apu_gc_session", default="global"
 )
@@ -188,13 +311,22 @@ def _record_frame(
     wall_ns: int,
     bytes_in: int,
     bytes_out: int,
+    *,
+    provenance: Provenance = MEASURED,
 ) -> None:
     acc = get_run_accumulator()
     if acc is None:
         return
-    totals = acc.totals_for(frame.category, frame.session_id)
-    with acc._lock:
-        totals.add(cpu_ns, wall_ns, bytes_in, bytes_out)
+    acc.book_cpu(
+        frame.category,
+        frame.session_id,
+        cpu_ns,
+        wall_ns,
+        provenance=provenance,
+        bytes_in=bytes_in,
+        bytes_out=bytes_out,
+    )
+    add_tagged_thread_cpu(cpu_ns)
     if acc.record_timeline:
         acc.timeline.append(
             {
@@ -216,7 +348,7 @@ def timed(
     bytes_in: int = 0,
     bytes_out: int = 0,
 ) -> Iterator[None]:
-    if NO_INSTR or category == Category.RESIDUAL:
+    if NO_INSTR or category in (Category.RESIDUAL, Category.RESIDUAL_UNATTRIBUTED):
         yield
         return
 
@@ -283,9 +415,8 @@ def install_gc_hooks() -> None:
         acc = get_run_accumulator()
         if acc is not None:
             sid = _gc_session.get()
-            totals = acc.totals_for(Category.GC, sid)
-            with acc._lock:
-                totals.add(cpu_ns, cpu_ns, count=1)
+            acc.book_cpu(Category.GC, sid, cpu_ns, cpu_ns)
+            add_tagged_thread_cpu(cpu_ns)
         _gc_state["start_cpu"] = None
 
     gc.callbacks.append(_gc_callback)

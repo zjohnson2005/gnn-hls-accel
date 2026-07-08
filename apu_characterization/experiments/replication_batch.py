@@ -42,6 +42,7 @@ def _run_one_seed(
     sessions: int,
     llm_scale: float,
     payload_profile: str | None,
+    instr_version: int = 1,
 ) -> dict[str, Any]:
     from ..amenability import compute_category_averages, compute_per_task, compute_per_task_wall_cpu
     from ..behavior import summarize_behavior_buckets
@@ -59,6 +60,7 @@ def _run_one_seed(
         llm_scale,
         search_locality=search_locality,
         payload_profile=payload_profile,
+        instr_version=instr_version,
     )
     batch_wall_s = time.perf_counter() - t0
     pp = payload_profile or (
@@ -79,6 +81,7 @@ def _run_one_seed(
             "sessions": sessions,
             "mode": f"threads/{backend}",
             "llm_median_scale": llm_scale,
+            "instr_version": instr_version,
         },
         "batch_wall_s": batch_wall_s,
         "run": run,
@@ -126,6 +129,13 @@ def main() -> None:
         type=Path,
         default=None,
         help="JSON to refresh (default: out/replication_{search_locality}_search.json)",
+    )
+    parser.add_argument(
+        "--instr-version",
+        type=int,
+        default=1,
+        dest="instr_version",
+        help="1=v1 reconcile; 2=step-inferred (sequential only); 3=thread-identity (measured, concurrency-safe)",
     )
     args = parser.parse_args()
 
@@ -181,13 +191,15 @@ def main() -> None:
             args.sessions,
             args.llm_scale,
             args.payload_profile,
+            instr_version=args.instr_version,
         )
         for seed in seeds
     ]
 
     aggregate = aggregate_replication_runs(per_seed)
     validity = DEBUG_ONLY if args.backend != "openai" else PUBLISHABLE
-    stem = f"replication_{args.search_locality}_search"
+    suffix = "_v3" if args.instr_version >= 3 else ("_v2" if args.instr_version >= 2 else "")
+    stem = f"replication_{args.search_locality}_search{suffix}"
 
     combined: dict[str, Any] = {
         "experiment": "replication_batch",
@@ -204,6 +216,7 @@ def main() -> None:
             "backend": args.backend,
             "comparison_type": "distribution_over_seeds",
             "allow_dirty": bool(args.allow_dirty),
+            "instr_version": args.instr_version,
         },
         "aggregate": aggregate,
         "per_seed_artifacts": per_seed,

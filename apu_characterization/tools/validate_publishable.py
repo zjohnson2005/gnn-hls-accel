@@ -47,6 +47,36 @@ def validate_artifact(data: dict) -> list[str]:
     if git.get("dirty") == "yes" and not data.get("config", {}).get("allow_dirty"):
         errors.append("git dirty without allow_dirty flag")
 
+    cfg = data.get("config") or {}
+    backend = cfg.get("backend")
+    if backend and backend != "openai":
+        errors.append(f"backend={backend!r}; verifiable artifacts require openai")
+
+    instr_version = int(cfg.get("instr_version") or 1)
+    if instr_version >= 3:
+        for key in (
+            "pooled_measured_pct",
+            "pooled_step_inferred_pct",
+            "pooled_residual_provenance_pct",
+        ):
+            if key not in agg:
+                errors.append(f"aggregate missing {key} (v3 replication artifact)")
+    elif instr_version >= 2:
+        for key in (
+            "pooled_residual_unattributed_pct",
+            "pooled_client_http_pct",
+            "pooled_framework_pct",
+        ):
+            if key not in agg:
+                errors.append(f"aggregate missing {key} (v2 replication artifact)")
+
+    for art in per_seed:
+        b = art.get("config", {}).get("backend") or art.get("run", {}).get("config", {}).get(
+            "backend"
+        )
+        if b and b != "openai":
+            errors.append(f"per-seed backend={b!r}; not verifiable")
+
     return errors
 
 

@@ -184,6 +184,27 @@ def audit_real_agent_artifact(artifact: dict[str, Any]) -> dict[str, Any]:
                 f"({min_quotable:.0f} ms); per-task shares not publishable"
             )
 
+        instr_version = int(cfg.get("instr_version") or run.get("config", {}).get("instr_version", 1))
+        prov = sess.get("provenance") or {}
+        residual_prov_ms = prov.get("residual", 0) / 1e6
+        step_infer_ms = prov.get("step_inferred", 0) / 1e6
+        if instr_version >= 2 and host_cpu_ms > min_quotable:
+            res_ms = sess.get("residual_unattributed_cpu_ns", 0) / 1e6
+            res_limit = inv.get("limit", 0.15)
+            # True residual provenance only (not step-inferred mass).
+            if residual_prov_ms > host_cpu_ms * res_limit + slack:
+                violations.append(
+                    f"{label}: residual-provenance {residual_prov_ms:.1f} ms "
+                    f"({100 * residual_prov_ms / host_cpu_ms:.0f}% of host) exceeds "
+                    f"{res_limit * 100:.0f}% gate"
+                )
+            if step_infer_ms > host_cpu_ms * 0.05 + slack:
+                warnings.append(
+                    f"{label}: step-inferred {step_infer_ms:.1f} ms "
+                    f"({100 * step_infer_ms / host_cpu_ms:.0f}% of host) — "
+                    "corroborating tier only; run step_infer_calibration"
+                )
+
     # Per-task rollup (single-session tasks only; skip merged multi-arm rows).
     session_by_task: dict[str, list[dict[str, Any]]] = {}
     for s in per_session:
@@ -222,6 +243,13 @@ def audit_real_agent_artifact(artifact: dict[str, Any]) -> dict[str, Any]:
         violations.append(
             f"Accounting invariant FAIL: residual {residual_frac * 100:.1f}% "
             f">= limit {inv.get('limit', 0.15) * 100:.0f}%"
+        )
+
+    backend = cfg.get("backend") or run.get("config", {}).get("backend")
+    if artifact.get("result_validity") == "publishable" and backend not in (None, "openai"):
+        violations.append(
+            f"publishable artifact has backend={backend!r}; verifiable runs require "
+            "openai (see VERIFIABLE_DATA.md)"
         )
 
     seeds = cfg.get("seeds") or [cfg.get("seed")]
@@ -316,6 +344,32 @@ def apply_audit_to_replication_batch(
         "per_seed": seed_audits,
         "repro": repro,
     }
+    instr_v = int((combined.get("config") or {}).get("instr_version") or 1)
+    agg = combined.get("aggregate") or {}
+    step_pct = (agg.get("pooled_step_inferred_pct") or {}).get("median", 0.0)
+    measured_pct = (agg.get("pooled_measured_pct") or {}).get("median", 0.0)
+    if instr_v >= 3 and step_pct > 5.0:
+        all_violations.append(
+            f"instr v3 must not use step-inferred booking; median step-inferred {step_pct:.1f}%"
+        )
+    if instr_v >= 3 and measured_pct < 20.0:
+        all_warnings.append(
+            f"instr v3 measured tier only {measured_pct:.1f}% of host; check thread registration"
+        )
+    if instr_v == 2 and step_pct > 50.0:
+        cal_path = combined.get("config", {}).get("step_infer_calibration")
+        if not cal_path:
+            all_violations.append(
+                f"step-inferred median {step_pct:.1f}% of host dominates; "
+                "headline claims require measured tier or "
+                "step_infer_calibration.json with false rate <= 5%"
+            )
+            combined_audit["pass"] = False
+            combined_audit["publishable_ok"] = False
+    combined_audit["pass"] = len(all_violations) == 0
+    combined_audit["publishable_ok"] = len(all_violations) == 0 and not is_windows
+    combined_audit["violations"] = all_violations
+    combined_audit["warnings"] = all_warnings
     combined["audit"] = combined_audit
 
     if combined.get("result_validity") == "publishable":

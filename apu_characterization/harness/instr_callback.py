@@ -63,12 +63,17 @@ class InstrLLMCallback(BaseCallbackHandler):
                 text = str(getattr(gen0[0].message, "content", ""))
 
         acc = get_run_accumulator()
-        if acc is not None:
+        use_v2 = acc is not None and acc.instr_version >= 2
+        if not use_v2 and acc is not None:
             totals = acc.totals_for(Category.HTTP_CLIENT, self.session_id)
             with acc._lock:
                 totals.add(cpu_ns, wall_ns, bytes_in=len(text), count=1)
 
-        with timed(Category.SERIALIZATION, self.session_id, bytes_in=len(text)):
+        with timed(
+            Category.CLIENT_PARSE if use_v2 else Category.SERIALIZATION,
+            self.session_id,
+            bytes_in=len(text),
+        ):
             json.dumps({"response_len": len(text)})
         with timed(Category.TOKENIZATION, self.session_id, bytes_in=len(text)):
             from ..harness.mock_llm import _count_tokens

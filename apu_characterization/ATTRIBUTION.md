@@ -53,7 +53,41 @@ not a production workload characterization.
 ## Recommended follow-up
 
 1. **py-spy** one heavy session (RH-02 / LH-01): stacks in reconcile gap.
-2. **Retrieve locality ablation** (RH-01, LH-01) — same design as search.
-3. **Git-clean re-stamp** after code freeze for strict reproducibility.
+2. **Instrumentation v2** (`--instr-version 2`): thread hooks + RESIDUAL_UNATTRIBUTED gate.
+3. **Retrieve locality ablation** (RH-01, LH-01) — same design as search.
+4. **Git-clean re-stamp** after code freeze for strict reproducibility.
 
-See `RUNBOOK.md` for experiment commands.
+See `METHODOLOGY.md` and `out/reconcile_bug_checks.md` for the reconcile diagnosis path.
+
+## v2 attribution (RESIDUAL_UNATTRIBUTED)
+
+Under `--instr-version 2`, session-end gap is booked to `RESIDUAL_UNATTRIBUTED`, not
+`ORCH_DISPATCH`. Publishable v2 replication requires every session below 15% residual.
+Headline tiers: `harness_strict`, `harness_broad`, explicit CLIENT_* / FRAMEWORK / THREADPOOL.
+
+### Epistemic provenance tiers (required for quoting)
+
+Every category total has a **provenance** column:
+
+| Tier | Meaning | Quote for harness headlines? |
+|------|---------|------------------------------|
+| **measured** | Direct `@timed` regions or thread-identity CPU (instr v3) | **Yes** |
+| **step_inferred** | Process-time gap during a LangGraph step assigned by node type (instr v2 fix #1) | **No** — corroborating only; needs mock calibration |
+| **residual** | Session-end gap after all booking | **No** — must stay &lt; 15% |
+
+**Regression to name:** step-inferred booking can drive category totals (e.g. CLIENT_HTTP)
+while driving **residual provenance** near zero. The old RESIDUAL &lt; 15% gate becomes
+vacuous unless it checks **residual provenance**, not step-inferred mass.
+
+**Concurrency:** step-inferred attribution is valid only for `workers=1` sequential runs
+(one session owns the process clock). It **cannot** survive the concurrency sweep.
+Use **`--instr-version 3`** (thread-identity via psutil per-thread CPU) before c&gt;1.
+
+Validation (run regardless of mechanism):
+
+1. `python -m apu_characterization.experiments.step_infer_calibration` — mock backend;
+   false CLIENT_HTTP step-inferred rate must be ≤ 5%.
+2. py-spy stack-walk cross-check — timer vs profiler within 10 pp per major category.
+3. `tests/test_attribution_provenance.py` — synthetic HTTP worker discriminator.
+
+See `provenance.py`, `thread_identity.py`, `out/step_infer_calibration.json`.

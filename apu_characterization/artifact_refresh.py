@@ -85,10 +85,16 @@ def write_replication_markdown(
             f"{aggregate.get('pooled_orch_reconcile_pct', {}).get('median', 0):.1f} "
             f"[{aggregate.get('pooled_orch_reconcile_pct', {}).get('q1', 0):.1f}–"
             f"{aggregate.get('pooled_orch_reconcile_pct', {}).get('q3', 0):.1f}]",
-            f"- Pooled harness strict % (ORCH+TOKEN+SER): "
+            f"- Pooled harness_strict % (ORCH_SETUP+ORCH_DISPATCH+TOKENIZATION+SERIALIZATION): "
             f"{aggregate.get('pooled_harness_strict_pct', aggregate.get('pooled_harness_apu_pct', {})).get('median', 0):.1f} "
             f"[{aggregate.get('pooled_harness_strict_pct', aggregate.get('pooled_harness_apu_pct', {})).get('q1', 0):.1f}–"
             f"{aggregate.get('pooled_harness_strict_pct', aggregate.get('pooled_harness_apu_pct', {})).get('q3', 0):.1f}]",
+            f"- Pooled harness_broad % (strict + HTTP_CLIENT + PROMPT_ASSEMBLY + CONTEXT_MGMT + LOGGING): "
+            f"{aggregate.get('pooled_harness_broad_pct', {}).get('median', 0):.1f} "
+            f"[{aggregate.get('pooled_harness_broad_pct', {}).get('q1', 0):.1f}–"
+            f"{aggregate.get('pooled_harness_broad_pct', {}).get('q3', 0):.1f}]",
+            "",
+            "TOOL_COMPUTE is not part of harness_strict or harness_broad.",
             "",
         ]
     )

@@ -49,7 +49,8 @@ def main() -> None:
     for key, label in [
         ("pooled_tool_compute_pct", "Pooled TOOL %"),
         ("pooled_orch_pct", "Pooled ORCH %"),
-        ("pooled_harness_strict_pct", "Pooled harness strict % (ORCH+TOKEN+SER)"),
+        ("pooled_harness_strict_pct", "Pooled harness_strict % (ORCH+ORCH_DISPATCH+TOKENIZATION+SERIALIZATION)"),
+        ("pooled_harness_broad_pct", "Pooled harness_broad % (strict+HTTP+PROMPT+CONTEXT+LOGGING)"),
         ("pooled_orch_measured_pct", "Pooled ORCH measured %"),
         ("pooled_orch_reconcile_pct", "Pooled ORCH reconcile %"),
     ]:

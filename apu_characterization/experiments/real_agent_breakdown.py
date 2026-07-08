@@ -50,6 +50,8 @@ from ..harness.synth_text import make_text
 from ..instr import (
     CategoryTotals,
     RunAccumulator,
+    add_tagged_thread_cpu,
+    get_run_accumulator,
     install_gc_hooks,
     measure_timer_overhead_ns,
     reset_gc_session,
@@ -84,11 +86,35 @@ from .single_agent_breakdown import (
     write_report,
 )
 
-_session_ctx: contextvars.ContextVar[str] = contextvars.ContextVar(
-    "apu_real_session", default="global"
+from ..session_context import rng_ctx as _rng_ctx
+from ..session_context import session_id_ctx as _session_ctx
+from ..session_context import spec_ctx as _spec_ctx
+# Turn-transition holder: mutable dict shared between the session thread, the
+# LLM callback, and tool executor threads (contextvars propagate the reference).
+# t_llm_ns is stamped when an LLM response is received; the next tool body entry
+# records (now - t_llm_ns) as one turn-transition latency sample.
+_ttl_ctx: contextvars.ContextVar[dict | None] = contextvars.ContextVar(
+    "apu_real_turn_transition", default=None
 )
-_rng_ctx: contextvars.ContextVar[Any] = contextvars.ContextVar("apu_real_rng", default=None)
-_spec_ctx: contextvars.ContextVar[Any] = contextvars.ContextVar("apu_real_spec", default=None)
+
+
+def stamp_llm_response_ns() -> None:
+    """Record 'LLM response received' timestamp for turn-transition latency."""
+    holder = _ttl_ctx.get()
+    if holder is not None:
+        holder["t_llm_ns"] = time.perf_counter_ns()
+
+
+def _record_turn_transition() -> None:
+    """Record one LLM-response-to-tool-start latency sample, if pending."""
+    holder = _ttl_ctx.get()
+    if holder is None:
+        return
+    t0 = holder.get("t_llm_ns")
+    if t0 is None:
+        return
+    holder["t_llm_ns"] = None
+    holder["latencies_ms"].append((time.perf_counter_ns() - t0) / 1e6)
 
 
 def _require_langgraph():
@@ -114,12 +140,17 @@ def build_langchain_tools():
 
     def make_fn(tool_name: str):
         def fn(query: str) -> str:
+            _record_turn_transition()
             session_id = _session_ctx.get()
             rng = _rng_ctx.get()
             spec: ProfileSpec = _spec_ctx.get()
-            # LangGraph tool-node dispatch on the executor thread (exclusive
-            # with inner TOOL_COMPUTE / SERIALIZATION timers).
-            with timed(Category.ORCH_DISPATCH, session_id):
+            acc = get_run_accumulator()
+            outer = (
+                Category.FRAMEWORK
+                if acc is not None and acc.instr_version >= 2
+                else Category.ORCH_DISPATCH
+            )
+            with timed(outer, session_id):
                 try:
                     result = run_tool(tool_name, query, session_id, rng)
                 except Exception as exc:
@@ -139,6 +170,11 @@ def build_langchain_tools():
 
                 with timed(Category.TOKENIZATION, session_id, bytes_in=len(tool_json)):
                     _count_tokens(tool_json)
+
+            if acc is not None and acc.instr_version >= 3:
+                from ..thread_identity import sample_session_threads
+
+                sample_session_threads(acc, burst=True)
 
             return tool_json
 
@@ -237,6 +273,7 @@ def build_scripted_model(task: TaskSpec, spec: ProfileSpec, seed: int, llm_scale
                         for tool, query in script[idx]
                     ],
                 )
+            stamp_llm_response_ns()
             return ChatResult(generations=[ChatGeneration(message=msg)])
 
         @property
@@ -419,6 +456,7 @@ def run_real_session(
     tools: list[Any],
     *,
     replay_steps: list[list[tuple[str, str]]] | None = None,
+    instr_version: int = 1,
 ) -> dict[str, Any]:
     import random as _random
 
@@ -428,6 +466,10 @@ def run_real_session(
     set_run_accumulator(acc)
     reset_thread_state()
     set_gc_session(session_id)
+    if acc.instr_version >= 3:
+        from ..thread_identity import get_thread_registry
+
+        get_thread_registry().begin_session(session_id)
     rng = _random.Random(seed)
     tok_session = _session_ctx.set(session_id)
     tok_rng = _rng_ctx.set(rng)
@@ -475,6 +517,7 @@ def run_real_session(
         proc_start = time.process_time()
         last_cpu = cpu_start
         last_wall = time.perf_counter_ns()
+        last_proc = proc_start
         last_tagged_cpu = tagged_cpu()
         last_tagged_wall = tagged_wall()
         step_index = 0
@@ -485,6 +528,7 @@ def run_real_session(
             now_wall = time.perf_counter_ns()
             now_tagged_cpu = tagged_cpu()
             now_tagged_wall = tagged_wall()
+            proc_now = time.process_time()
             step_cpu = now_cpu - last_cpu
             step_wall = now_wall - last_wall
             step_tagged_cpu = now_tagged_cpu - last_tagged_cpu
@@ -493,9 +537,35 @@ def run_real_session(
             orch_wall = max(0, step_wall - step_tagged_wall)
 
             category = Category.ORCH_SETUP if step_index == 0 else Category.ORCH_DISPATCH
-            totals = acc.totals_for(category, session_id)
-            with acc._lock:
-                totals.add(orch_cpu, orch_wall, count=1)
+            acc.book_cpu(category, session_id, orch_cpu, orch_wall)
+            # Mark this main-thread CPU as tagged so v3 psutil sampling
+            # doesn't book it a second time under FRAMEWORK.
+            add_tagged_thread_cpu(orch_cpu)
+
+            if instr_version >= 3:
+                from ..thread_identity import sample_session_threads
+
+                # Extra pass after tools/agent stream nodes: fan-out tool pools
+                # can finish between LangGraph steps; burst=True catches stragglers.
+                sample_session_threads(
+                    acc, burst=node in ("tools", "agent")
+                )
+            elif instr_version >= 2:
+                # Step-inferred booking (sequential-only; not valid under concurrency).
+                step_proc_ns = int((proc_now - last_proc) * 1e9)
+                step_untagged_proc_ns = max(0, step_proc_ns - step_tagged_cpu)
+                if step_untagged_proc_ns > 0:
+                    from ..provenance import STEP_INFER_NODE_CATEGORIES, STEP_INFERRED
+
+                    cat_name = STEP_INFER_NODE_CATEGORIES.get(node, "CLIENT_HTTP")
+                    off_thread = Category(cat_name)
+                    acc.book_cpu(
+                        off_thread,
+                        session_id,
+                        step_untagged_proc_ns,
+                        step_untagged_proc_ns,
+                        provenance=STEP_INFERRED,
+                    )
 
             if node == "tools":
                 update = chunk.get("tools") or {}
@@ -514,9 +584,17 @@ def run_real_session(
 
             last_cpu = now_cpu
             last_wall = now_wall
+            last_proc = proc_now
             last_tagged_cpu = now_tagged_cpu
             last_tagged_wall = now_tagged_wall
             step_index += 1
+
+        if instr_version >= 3:
+            from ..thread_identity import finalize_session_threads, sample_session_threads
+
+            finalize_session_threads(acc, session_id)
+            # Last-chance sample before session-end gap (fan-out pool threads).
+            sample_session_threads(acc, burst=True)
 
         # Reconcile: session process CPU (all threads: worker, LangGraph tool
         # pool, httpx) minus everything already tagged to this session.
@@ -524,25 +602,69 @@ def run_real_session(
         session_instr_before = tagged_cpu()
         orch_measured_before_ns = _session_orch_cpu_ns(acc, session_id)
         reconcile_added_ns = max(0, session_process_ns - session_instr_before)
-        session_gap = reconcile_added_ns
-        if session_gap > 0:
-            totals = acc.totals_for(Category.ORCH_DISPATCH, session_id)
-            with acc._lock:
-                totals.add(session_gap, session_gap, count=1)
         parallel_trim_ns = _align_session_cpu_to_process(
             acc, session_id, session_process_ns
         )
         session_instr = tagged_cpu()
-        if parallel_trim_ns > 0:
+        session_gap = max(0, session_process_ns - session_instr)
+        orch_measured_ns = 0
+        orch_reconcile_ns = 0
+        residual_unattributed_ns = 0
+
+        if instr_version >= 3:
+            from ..provenance import RESIDUAL
+
+            session_instr = tagged_cpu()
             session_gap = max(0, session_process_ns - session_instr)
-        orch_total_final_ns = _session_orch_cpu_ns(acc, session_id)
-        orch_measured_ns, orch_reconcile_ns = split_session_orch_after_reconcile(
-            orch_measured_before_ns, reconcile_added_ns, orch_total_final_ns
-        )
+            if session_gap > 0:
+                acc.book_cpu(
+                    Category.RESIDUAL_UNATTRIBUTED,
+                    session_id,
+                    session_gap,
+                    session_gap,
+                    provenance=RESIDUAL,
+                )
+            residual_unattributed_ns = session_gap
+            orch_total_final_ns = _session_orch_cpu_ns(acc, session_id)
+            orch_measured_ns = orch_total_final_ns
+            session_instr = tagged_cpu()
+        elif instr_version >= 2:
+            if session_gap > 0:
+                from ..provenance import RESIDUAL
+
+                acc.book_cpu(
+                    Category.RESIDUAL_UNATTRIBUTED,
+                    session_id,
+                    session_gap,
+                    session_gap,
+                    provenance=RESIDUAL,
+                )
+            residual_unattributed_ns = session_gap
+            orch_total_final_ns = _session_orch_cpu_ns(acc, session_id)
+            orch_measured_ns = orch_total_final_ns
+            session_instr = tagged_cpu()
+        else:
+            session_gap_book = reconcile_added_ns
+            if session_gap_book > 0:
+                totals = acc.totals_for(Category.ORCH_DISPATCH, session_id)
+                with acc._lock:
+                    totals.add(session_gap_book, session_gap_book, count=1)
+            if parallel_trim_ns > 0:
+                session_gap = max(0, session_process_ns - session_instr)
+            orch_total_final_ns = _session_orch_cpu_ns(acc, session_id)
+            orch_measured_ns, orch_reconcile_ns = split_session_orch_after_reconcile(
+                orch_measured_before_ns, reconcile_added_ns, orch_total_final_ns
+            )
+            residual_unattributed_ns = 0
+            session_instr = tagged_cpu()
 
         wall_s = time.perf_counter() - wall_start
         session_cpu = session_process_ns
     finally:
+        if acc.instr_version >= 3:
+            from ..thread_identity import end_session
+
+            end_session(session_id)
         reset_gc_session()
         _session_ctx.reset(tok_session)
         _rng_ctx.reset(tok_rng)
@@ -560,11 +682,13 @@ def run_real_session(
         "reconcile_cpu_ns": session_gap,
         "orch_measured_cpu_ns": orch_measured_ns,
         "orch_reconcile_cpu_ns": orch_reconcile_ns,
+        "residual_unattributed_cpu_ns": residual_unattributed_ns,
         "parallel_cpu_trim_ns": parallel_trim_ns,
         "tool_call_counts": tool_call_counts,
         "tool_call_sequence": tool_call_sequence,
         "backend": backend,
         "replay": replay_steps is not None,
+        "provenance": acc.provenance_summary(session_id),
     }
 
 
@@ -579,6 +703,7 @@ def run_real_batch(
     *,
     search_locality: str = LOCALITY_LOCAL,
     payload_profile: str | None = None,
+    instr_version: int = 1,
 ) -> dict[str, Any]:
     if payload_profile is None and search_locality == LOCALITY_REMOTE:
         payload_name = LOCALITY_ABLATION_PROFILE.name
@@ -586,10 +711,19 @@ def run_real_batch(
         payload_name = payload_profile or profile
     spec = PROFILES[payload_name]
     install_gc_hooks()
+    if instr_version >= 3:
+        from ..thread_identity import get_thread_registry, install_thread_identity_hooks
+
+        install_thread_identity_hooks()
+        get_thread_registry().snapshot()
+    elif instr_version >= 2:
+        from ..harness.thread_hooks import install_thread_hooks
+
+        install_thread_hooks()
     _warm_shared_state()
     tools = build_langchain_tools()
 
-    acc = RunAccumulator(profile=spec.name)
+    acc = RunAccumulator(profile=spec.name, instr_version=instr_version)
     os_start = _os_times_snapshot()
     wall_start = time.perf_counter_ns()
     proc_start = time.process_time()
@@ -607,10 +741,22 @@ def run_real_batch(
     def worker(i: int) -> dict[str, Any]:
         t0 = time.thread_time_ns()
         tok_loc = set_tool_locality(search=search_locality)
+        if instr_version >= 3:
+            from ..thread_identity import ThreadRole, get_thread_registry
+
+            get_thread_registry().register_current(ThreadRole.MAIN, f"agent_{i}")
         try:
             task = assign_task(profile, seed, i)
             result = run_real_session(
-                acc, f"agent_{i}", task, spec, seed + i, backend, llm_scale, tools
+                acc,
+                f"agent_{i}",
+                task,
+                spec,
+                seed + i,
+                backend,
+                llm_scale,
+                tools,
+                instr_version=instr_version,
             )
             result["search_locality"] = search_locality
             return result
@@ -619,8 +765,13 @@ def run_real_batch(
             with lock:
                 worker_cpu_ns.append(time.thread_time_ns() - t0)
 
+    # Bypass the patched submit: session workers must not be wrapped in
+    # timed(THREADPOOL), which would book each whole session's thread CPU
+    # to THREADPOOL|global on top of per-session categories (double count).
+    from ..harness.thread_hooks import submit_unwrapped
+
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        futs = [pool.submit(worker, i) for i in range(concurrency)]
+        futs = [submit_unwrapped(pool, worker, i) for i in range(concurrency)]
         for fut in as_completed(futs):
             per_session.append(fut.result())
 
@@ -645,12 +796,17 @@ def run_real_batch(
             "workers": max_workers,
             "total_cpu_basis": "process_time_all_threads",
             "worker_thread_cpu_ns": sum(worker_cpu_ns),
+            "instr_version": instr_version,
         },
         total_thread_cpu_ns=total_process_cpu_ns,
         total_wall_ns=wall_end - wall_start,
         os_times=_os_times_delta(os_start, os_end),
         per_session=sorted(per_session, key=lambda s: s["session_id"]),
     )
+    result["provenance_totals"] = acc.provenance_summary()
+    result["provenance_detail"] = {
+        "|".join(k): v.cpu_ns for k, v in acc.by_provenance.items()
+    }
     return result
 
 
@@ -711,6 +867,7 @@ def main() -> None:
         action="store_true",
         help="Allow experiments when git tree is dirty (not for publishable runs)",
     )
+    parser.add_argument("--instr-version", type=int, default=1, dest="instr_version")
     parser.add_argument("--out", type=Path, default=Path("apu_characterization/out"))
     args = parser.parse_args()
 
@@ -735,6 +892,7 @@ def main() -> None:
         args.workers,
         search_locality=args.search_locality,
         payload_profile=payload_profile,
+        instr_version=args.instr_version,
     )
     batch_wall_s = time.perf_counter() - t0
 
@@ -773,6 +931,7 @@ def main() -> None:
                 if run["config"].get("workers") == 1
                 else f"parallel (workers={run['config'].get('workers')})"
             ),
+            "instr_version": args.instr_version,
         },
         "timer_overhead_ns_per_pair": measure_timer_overhead_ns(100_000),
         "batch_wall_s": batch_wall_s,

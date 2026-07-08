@@ -68,6 +68,12 @@ CATEGORY_REGIONS = {
     "LOGGING": "logger formatting calls in the agent loop",
     "GC": "collector cycles via gc.callbacks (lower bound, excludes refcount frees)",
     "RESIDUAL": "computed: total thread CPU minus sum of instrumented categories",
+    "CLIENT_HTTP": "httpx/OpenAI transport send path (v2 thread hooks)",
+    "CLIENT_PARSE": "response body read, JSON decode, validation (v2)",
+    "FRAMEWORK": "LangGraph/LangChain executor and graph internals (v2)",
+    "THREADPOOL": "concurrent.futures worker dispatch wrapper (v2)",
+    "EVENT_LOOP": "asyncio.run / loop driver overhead (v2)",
+    "RESIDUAL_UNATTRIBUTED": "process_cpu minus all tagged categories (v2 session-end gap)",
 }
 
 
@@ -269,7 +275,10 @@ def _orch_attribution_lines(artifact: dict[str, Any]) -> list[str]:
         f"- ORCH measured: {ba.get('pooled_orch_measured_pct', 0):.1f}% of host",
         f"- ORCH reconcile: {ba.get('pooled_orch_reconcile_pct', 0):.1f}% of host",
         f"- Reconcile as % of total ORCH: {ba.get('orch_reconcile_pct_of_orch', 0):.1f}%",
-        f"- Harness strict (ORCH+TOKEN+SER): {ba.get('pooled_harness_strict_pct', ba.get('pooled_harness_apu_pct', 0)):.1f}%",
+        f"- harness_strict (ORCH_SETUP+ORCH_DISPATCH+TOKENIZATION+SERIALIZATION): "
+        f"{ba.get('pooled_harness_strict_pct', ba.get('pooled_harness_apu_pct', 0)):.1f}%",
+        f"- harness_broad (strict + HTTP_CLIENT + PROMPT_ASSEMBLY + CONTEXT_MGMT + LOGGING): "
+        f"{ba.get('pooled_harness_broad_pct', 0):.1f}%",
     ]
     if audit_attr:
         lines.append(
@@ -362,8 +371,11 @@ def _deployment_reconciliation_lines(
         f"{shares.get('pooled_orch_measured_pct', 0):.1f}% |",
         f"| ORCH reconcile (host %) | {base_shares.get('pooled_orch_reconcile_pct', 0):.1f}% | "
         f"{shares.get('pooled_orch_reconcile_pct', 0):.1f}% |",
-        f"| Pooled harness strict (ORCH+TOKEN+SER) | {base_harness_pct:.1f}% | "
-        f"{harness_pct:.1f}% |",
+        f"| Pooled harness_strict (ORCH_SETUP+ORCH_DISPATCH+TOKENIZATION+SERIALIZATION) | "
+        f"{base_harness_pct:.1f}% | {harness_pct:.1f}% |",
+        f"| Pooled harness_broad (strict + HTTP + PROMPT + CONTEXT + LOGGING) | "
+        f"{base_shares.get('pooled_harness_broad_pct', 0):.1f}% | "
+        f"{shares.get('pooled_harness_broad_pct', 0):.1f}% |",
         f"| Equal-weight TOOL_COMPUTE share | {base_tool_eq:.1f}% | {tool_eq:.1f}% |",
         "",
         "Sessions that invoked local search (SH, and CH-02 when the model chose search) "
@@ -520,7 +532,10 @@ def write_report(
     )
     regions = {**CATEGORY_REGIONS, **artifact.get("category_regions_override", {})}
     for cat in Category:
-        lines.append(f"- `{cat.value}`: {regions[cat.value]}")
+        if cat == Category.RESIDUAL:
+            continue
+        desc = regions.get(cat.value, "see METHODOLOGY.md")
+        lines.append(f"- `{cat.value}`: {desc}")
 
     lines.extend(
         [
@@ -575,7 +590,7 @@ def write_report(
             if cat == Category.RESIDUAL:
                 continue
             tier = TIER.get(cat.value, "none")
-            lines.append(f"- `{cat.value}` [{tier}]: {RATIONALE[cat.value]}")
+            lines.append(f"- `{cat.value}` [{tier}]: {RATIONALE.get(cat.value, 'see METHODOLOGY.md')}")
         lines.extend(
             [
                 "",

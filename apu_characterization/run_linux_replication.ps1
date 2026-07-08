@@ -40,6 +40,12 @@ if ($AllowDirty) {
     $allowArg = "--allow-dirty"
 }
 
-# Pass key explicitly; avoid nested bash -lc quoting bugs on Windows.
-wsl.exe env "OPENAI_API_KEY=$env:OPENAI_API_KEY" bash "$script" $allowArg
+# Pass key explicitly; use clean WSL PATH (Windows PATH breaks bash export).
+$allowArg = ""
+if ($AllowDirty) {
+    $allowArg = "--allow-dirty"
+}
+
+$key = $env:OPENAI_API_KEY -replace "'", "''"
+wsl.exe bash --noprofile --norc -c "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:`$HOME/.local/bin; export OPENAI_API_KEY='$key'; bash '$script' $allowArg"
 exit $LASTEXITCODE

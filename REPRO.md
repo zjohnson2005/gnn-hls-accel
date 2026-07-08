@@ -28,6 +28,12 @@ ARCHIVE Vitis 2023.1 + conda `fifo-advisor`.
 | `cost_model_3d/out/oe_experiment.json` | `bash orchestration_engine/run_oe_cost_model_3d.sh` | Python 3.7+ (conda fifo-advisor on server) | any |
 | `orchestration_engine/characterization/out/phase2/variants_results.json` | `bash orchestration_engine/run_phase2_variants.sh` | Vitis 2025.2.1 csynth subset | ece-rschsrv |
 | Deferred gate refresh | `bash orchestration_engine/run_phase2_deferred.sh` | C1+C2 required; synthetic DSE rejected | ece-rschsrv |
+| `apu_characterization/out/replication_remote_search.json` | `python3 -m apu_characterization.experiments.replication_batch --backend openai --seeds 0,1,2,3,4 --search-locality remote` | Linux WSL2; live OpenAI; real tool bodies; see `apu_characterization/VERIFIABLE_DATA.md` | WSL2 Linux |
+
+**APU gate rules:** Publishable APU artifacts require `--backend openai` (live agent),
+real open-source tool implementations, audit PASS, n≥5 seeds, git-clean stamp.
+`--backend scripted`, mock LLM sleeps, and mock remote HTTP are **test-only** — never
+quotable. Validate with `python3 apu_characterization/tools/validate_publishable.py`.
 
 **LightningSim gate rules:** `dse_report*.json` must have `"source":"lightningsim"`,
 `deadlocks:0`, `evaluations >= 100`, a non-empty `pareto_frontier`, and a live

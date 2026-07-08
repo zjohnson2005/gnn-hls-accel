@@ -1,0 +1,1559 @@
+{
+  "experiment": "step_infer_calibration",
+  "result_validity": "debug_only",
+  "generated_utc": "2026-07-08T02:13:31.686557+00:00",
+  "config": {
+    "backend": "scripted",
+    "profile": "mixed",
+    "seed": 0,
+    "sessions": 10,
+    "search_locality": "remote",
+    "instr_version": 2
+  },
+  "run": {
+    "env": {},
+    "config": {
+      "concurrency": 10,
+      "profile": "mixed",
+      "payload_profile": "locality_ablation",
+      "search_locality": "remote",
+      "seed": 0,
+      "mode": "threads",
+      "backend": "scripted",
+      "llm_median_scale": 0.05,
+      "workers": 10,
+      "total_cpu_basis": "process_time_all_threads",
+      "worker_thread_cpu_ns": 3354115905,
+      "instr_version": 2
+    },
+    "per_category": {
+      "GC": {
+        "cpu_ns": 50086,
+        "wall_ns": 50086,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 7
+      },
+      "ORCH_SETUP": {
+        "cpu_ns": 233462745,
+        "wall_ns": 7069882882,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 20
+      },
+      "TOKENIZATION": {
+        "cpu_ns": 188492414,
+        "wall_ns": 3435210661,
+        "bytes_in": 240654,
+        "bytes_out": 0,
+        "count": 134
+      },
+      "CLIENT_HTTP": {
+        "cpu_ns": 20021167066,
+        "wall_ns": 20021167066,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 56
+      },
+      "TOOL_COMPUTE": {
+        "cpu_ns": 3397392817,
+        "wall_ns": 4404561995,
+        "bytes_in": 1956,
+        "bytes_out": 0,
+        "count": 42
+      },
+      "SERIALIZATION": {
+        "cpu_ns": 1524560,
+        "wall_ns": 1530786,
+        "bytes_in": 0,
+        "bytes_out": 149383,
+        "count": 62
+      },
+      "FRAMEWORK": {
+        "cpu_ns": 33286698608,
+        "wall_ns": 34942974708,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 87
+      },
+      "THREADPOOL": {
+        "cpu_ns": 72590191,
+        "wall_ns": 87056307,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 62
+      },
+      "HTTP_CLIENT": {
+        "cpu_ns": 4056445,
+        "wall_ns": 6940670924,
+        "bytes_in": 2651,
+        "bytes_out": 668,
+        "count": 60
+      },
+      "ORCH_DISPATCH": {
+        "cpu_ns": 130276456,
+        "wall_ns": 3726307672,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 124
+      },
+      "RESIDUAL_UNATTRIBUTED": {
+        "cpu_ns": 14851314819,
+        "wall_ns": 14851314819,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 10
+      }
+    },
+    "per_session": [
+      {
+        "session_id": "agent_0",
+        "task_id": "SH-01",
+        "turns": 19,
+        "plan_len": 10,
+        "wall_s": 4.9887343289999535,
+        "thread_cpu_ns": 13206647523,
+        "process_cpu_ns": 13206647523,
+        "instrumented_cpu_ns": 13206647523,
+        "reconcile_cpu_ns": 4284055990,
+        "orch_measured_cpu_ns": 65987785,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 4284055990,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "search": 8,
+          "calculator": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "search",
+            "query": "{\"query\": \"rain storm\", \"snippets\": [\"... rain storm ... excerpt 9811 ...\", \"... rain storm ... excerpt 6872 ...\", \"... rain storm ... excerpt 7960 ...\", \"... rain storm ... excerpt 6385 ...\", \"... rain storm ... excerpt 1904 ...\"], \"matches_scanned\": 5, \"",
+            "llm_step": 0
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"temperature cold warm\", \"snippets\": [\"... temperature cold warm ... excerpt 9640 ...\", \"... temperature cold warm ... excerpt 2582 ...\", \"... temperature cold warm ... excerpt 6395 ...\", \"... temperature cold warm ... excerpt 3555 ...\", \"... tem",
+            "llm_step": 2
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"wind forecast\", \"snippets\": [\"... wind forecast ... excerpt 7799 ...\", \"... wind forecast ... excerpt 9479 ...\", \"... wind forecast ... excerpt 8709 ...\", \"... wind forecast ... excerpt 6296 ...\", \"... wind forecast ... excerpt 6683 ...\"], \"matc",
+            "llm_step": 4
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"snow season\", \"snippets\": [\"... snow season ... excerpt 2405 ...\", \"... snow season ... excerpt 7083 ...\", \"... snow season ... excerpt 1959 ...\", \"... snow season ... excerpt 8033 ...\", \"... snow season ... excerpt 7308 ...\"], \"matches_scanned\"",
+            "llm_step": 6
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"climate humidity\", \"snippets\": [\"... climate humidity ... excerpt 1885 ...\", \"... climate humidity ... excerpt 7870 ...\", \"... climate humidity ... excerpt 3104 ...\", \"... climate humidity ... excerpt 9676 ...\", \"... climate humidity ... excerpt",
+            "llm_step": 8
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"cloud sun\", \"snippets\": [\"... cloud sun ... excerpt 3214 ...\", \"... cloud sun ... excerpt 6314 ...\", \"... cloud sun ... excerpt 4725 ...\", \"... cloud sun ... excerpt 5258 ...\", \"... cloud sun ... excerpt 4981 ...\"], \"matches_scanned\": 5, \"locali",
+            "llm_step": 10
+          },
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"(72 - 32) * 5 / 9\", \"engine\": \"sympy\", \"query\": \"(72 - 32) * 5 / 9\", \"value\": 22.22222222222222, \"padding\": \"early plan over paper the money step paper on by quickly summary budget second paper large next from from sound first carefully rar",
+            "llm_step": 12
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"storm wind rain\", \"snippets\": [\"... storm wind rain ... excerpt 2128 ...\", \"... storm wind rain ... excerpt 8870 ...\", \"... storm wind rain ... excerpt 8318 ...\", \"... storm wind rain ... excerpt 9388 ...\", \"... storm wind rain ... excerpt 6789 ",
+            "llm_step": 14
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"season climate\", \"snippets\": [\"... season climate ... excerpt 3835 ...\", \"... season climate ... excerpt 3749 ...\", \"... season climate ... excerpt 7599 ...\", \"... season climate ... excerpt 8369 ...\", \"... season climate ... excerpt 8193 ...\"],",
+            "llm_step": 16
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "provenance": {
+          "measured": 107112094,
+          "step_inferred": 8815479439,
+          "residual": 4284055990
+        },
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "agent_1",
+        "task_id": "SH-02",
+        "turns": 21,
+        "plan_len": 11,
+        "wall_s": 5.742501480999977,
+        "thread_cpu_ns": 13223926103,
+        "process_cpu_ns": 13223926103,
+        "instrumented_cpu_ns": 13223926103,
+        "reconcile_cpu_ns": 3006455751,
+        "orch_measured_cpu_ns": 45364524,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 3006455751,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "search": 9,
+          "retrieve": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "search",
+            "query": "{\"query\": \"planet orbit\", \"snippets\": [\"... planet orbit ... excerpt 6168 ...\", \"... planet orbit ... excerpt 4983 ...\", \"... planet orbit ... excerpt 5017 ...\", \"... planet orbit ... excerpt 3167 ...\", \"... planet orbit ... excerpt 7108 ...\"], \"matches_sc",
+            "llm_step": 0
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"moon eclipse\", \"snippets\": [\"... moon eclipse ... excerpt 5259 ...\", \"... moon eclipse ... excerpt 8402 ...\", \"... moon eclipse ... excerpt 4350 ...\", \"... moon eclipse ... excerpt 9425 ...\", \"... moon eclipse ... excerpt 3071 ...\"], \"matches_sc",
+            "llm_step": 2
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"solar eclipse\", \"snippets\": [\"... solar eclipse ... excerpt 1424 ...\", \"... solar eclipse ... excerpt 3514 ...\", \"... solar eclipse ... excerpt 3590 ...\", \"... solar eclipse ... excerpt 6754 ...\", \"... solar eclipse ... excerpt 8424 ...\"], \"matc",
+            "llm_step": 4
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"telescope star\", \"snippets\": [\"... telescope star ... excerpt 6623 ...\", \"... telescope star ... excerpt 2189 ...\", \"... telescope star ... excerpt 9437 ...\", \"... telescope star ... excerpt 4048 ...\", \"... telescope star ... excerpt 1545 ...\"],",
+            "llm_step": 6
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"rocket astronaut\", \"snippets\": [\"... rocket astronaut ... excerpt 4663 ...\", \"... rocket astronaut ... excerpt 6879 ...\", \"... rocket astronaut ... excerpt 8817 ...\", \"... rocket astronaut ... excerpt 7831 ...\", \"... rocket astronaut ... excerpt",
+            "llm_step": 8
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"which planets can be seen without a telescope\", \"chunks\": [{\"id\": 31464, \"score\": 0.22483128309249878, \"text\": \"chunk_31464\"}, {\"id\": 96808, \"score\": 0.19940516352653503, \"text\": \"chunk_96808\"}, {\"id\": 93529, \"score\": 0.19911351799964905, \"text\"",
+            "llm_step": 10
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"mars earth\", \"snippets\": [\"... mars earth ... excerpt 5897 ...\", \"... mars earth ... excerpt 7640 ...\", \"... mars earth ... excerpt 7660 ...\", \"... mars earth ... excerpt 4214 ...\", \"... mars earth ... excerpt 9950 ...\"], \"matches_scanned\": 5, \"",
+            "llm_step": 12
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"gravity light\", \"snippets\": [\"... gravity light ... excerpt 9310 ...\", \"... gravity light ... excerpt 7750 ...\", \"... gravity light ... excerpt 2664 ...\", \"... gravity light ... excerpt 8533 ...\", \"... gravity light ... excerpt 2367 ...\"], \"matc",
+            "llm_step": 14
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"galaxy star\", \"snippets\": [\"... galaxy star ... excerpt 3326 ...\", \"... galaxy star ... excerpt 8865 ...\", \"... galaxy star ... excerpt 1991 ...\", \"... galaxy star ... excerpt 6016 ...\", \"... galaxy star ... excerpt 5674 ...\"], \"matches_scanned\"",
+            "llm_step": 16
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"orbit gravity\", \"snippets\": [\"... orbit gravity ... excerpt 4432 ...\", \"... orbit gravity ... excerpt 2313 ...\", \"... orbit gravity ... excerpt 8478 ...\", \"... orbit gravity ... excerpt 5756 ...\", \"... orbit gravity ... excerpt 8213 ...\"], \"matc",
+            "llm_step": 18
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "provenance": {
+          "measured": 91901661,
+          "step_inferred": 10125568691,
+          "residual": 3006455751
+        },
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "agent_2",
+        "task_id": "CH-01",
+        "turns": 9,
+        "plan_len": 5,
+        "wall_s": 1.5306282939999392,
+        "thread_cpu_ns": 529170609,
+        "process_cpu_ns": 529170609,
+        "instrumented_cpu_ns": 529170609,
+        "reconcile_cpu_ns": 12174142,
+        "orch_measured_cpu_ns": 30878269,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 12174142,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "code_exec": 3,
+          "calculator": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"21171191\", \"exit_code\": 0, \"code_bytes\": 245, \"fallback\": false, \"query\": \"\\nlimit = 20000\\nsieve = [True] * limit\\nsieve[0] = sieve[1] = False\\nfor i in range(2, int(limit ** 0.5) + 1):\\n    if sieve[i]:\\n        for j in range(i * i, limit, i",
+            "llm_step": 0
+          },
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"49994\", \"exit_code\": 0, \"code_bytes\": 92, \"fallback\": false, \"query\": \"\\nxs = [(i * 2654435761) % 100003 for i in range(30000)]\\nxs.sort()\\nresult = xs[len(xs) // 2]\\n\", \"padding\": \"plan into of report answer section often in plan of schedule n",
+            "llm_step": 2
+          },
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"21171191 / 1000000\", \"engine\": \"sympy\", \"query\": \"21171191 / 1000000\", \"value\": 21.171191, \"padding\": \"note together second small note together schedule sound rarely energy schedule sound a rarely in summary third about over a cloth money s",
+            "llm_step": 4
+          },
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"544942611\", \"exit_code\": 0, \"code_bytes\": 82, \"fallback\": false, \"query\": \"\\na, b = 0, 1\\nfor _ in range(50000):\\n    a, b = b, (a + b) % 1000000007\\nresult = a\\n\", \"padding\": \"summary together to paper around small stone detail after in under ",
+            "llm_step": 6
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "provenance": {
+          "measured": 67494730,
+          "step_inferred": 449501737,
+          "residual": 12174142
+        },
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "agent_3",
+        "task_id": "CH-02",
+        "turns": 11,
+        "plan_len": 6,
+        "wall_s": 1.9246830159999035,
+        "thread_cpu_ns": 2269367689,
+        "process_cpu_ns": 2269367689,
+        "instrumented_cpu_ns": 2269367689,
+        "reconcile_cpu_ns": 374884573,
+        "orch_measured_cpu_ns": 30721400,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 374884573,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "code_exec": 3,
+          "search": 1,
+          "calculator": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"4321.94\", \"exit_code\": 0, \"code_bytes\": 122, \"fallback\": false, \"query\": \"\\nbalance = 1000.0\\nrate = 0.05\\nfor year in range(30):\\n    balance = balance * (1 + rate)\\nresult = int(balance * 100) / 100\\n\", \"padding\": \"under quickly next on a nex",
+            "llm_step": 0
+          },
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"1600\", \"exit_code\": 0, \"code_bytes\": 179, \"fallback\": false, \"query\": \"\\ntext = (\\\"the quick brown fox jumps over the lazy dog and runs away \\\" * 800).split()\\ncounts = {}\\nfor w in text:\\n    counts[w] = counts.get(w, 0) + 1\\nresult = max(coun",
+            "llm_step": 2
+          },
+          {
+            "tool": "code_exec",
+            "query": "{\"stdout\": \"49994\", \"exit_code\": 0, \"code_bytes\": 92, \"fallback\": false, \"query\": \"\\nxs = [(i * 2654435761) % 100003 for i in range(30000)]\\nxs.sort()\\nresult = xs[len(xs) // 2]\\n\", \"padding\": \"late paper report previous glass previous stone to slowly ligh",
+            "llm_step": 4
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"bank interest save\", \"snippets\": [\"... bank interest save ... excerpt 9892 ...\", \"... bank interest save ... excerpt 9409 ...\", \"... bank interest save ... excerpt 5799 ...\", \"... bank interest save ... excerpt 8614 ...\", \"... bank interest save",
+            "llm_step": 6
+          },
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"1000 * 1.05 ** 30\", \"engine\": \"sympy\", \"query\": \"1000 * 1.05 ** 30\", \"value\": 4321.942375150667, \"padding\": \"energy recipe a a under result an item for the summary final metal cloth to large detail train a travel between glass for about sec",
+            "llm_step": 8
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "provenance": {
+          "measured": 66053430,
+          "step_inferred": 1828429686,
+          "residual": 374884573
+        },
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "agent_4",
+        "task_id": "RH-01",
+        "turns": 13,
+        "plan_len": 7,
+        "wall_s": 3.4196630729999242,
+        "thread_cpu_ns": 10835899978,
+        "process_cpu_ns": 10835899978,
+        "instrumented_cpu_ns": 10835899978,
+        "reconcile_cpu_ns": 2809115141,
+        "orch_measured_cpu_ns": 23574599,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 2809115141,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "retrieve": 5,
+          "search": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"how do plants grow from soil and water\", \"chunks\": [{\"id\": 62036, \"score\": 0.24042874574661255, \"text\": \"chunk_62036\"}, {\"id\": 32308, \"score\": 0.23644892871379852, \"text\": \"chunk_32308\"}, {\"id\": 65393, \"score\": 0.20028352737426758, \"text\": \"chun",
+            "llm_step": 0
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what is the water cycle rain river ocean\", \"chunks\": [{\"id\": 26282, \"score\": 0.21983951330184937, \"text\": \"chunk_26282\"}, {\"id\": 38109, \"score\": 0.21082967519760132, \"text\": \"chunk_38109\"}, {\"id\": 59782, \"score\": 0.20116263628005981, \"text\": \"ch",
+            "llm_step": 2
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"why do rivers flow into the ocean\", \"chunks\": [{\"id\": 62088, \"score\": 0.2323499321937561, \"text\": \"chunk_62088\"}, {\"id\": 13848, \"score\": 0.22636501491069794, \"text\": \"chunk_13848\"}, {\"id\": 90600, \"score\": 0.22289110720157623, \"text\": \"chunk_9060",
+            "llm_step": 4
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what animals live in a forest\", \"chunks\": [{\"id\": 9679, \"score\": 0.21943385899066925, \"text\": \"chunk_9679\"}, {\"id\": 56206, \"score\": 0.21753814816474915, \"text\": \"chunk_56206\"}, {\"id\": 73688, \"score\": 0.20955711603164673, \"text\": \"chunk_73688\"}, ",
+            "llm_step": 6
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"where do birds go in winter\", \"chunks\": [{\"id\": 83750, \"score\": 0.23776875436306, \"text\": \"chunk_83750\"}, {\"id\": 47468, \"score\": 0.21164986491203308, \"text\": \"chunk_47468\"}, {\"id\": 90497, \"score\": 0.20610789954662323, \"text\": \"chunk_90497\"}, {\"i",
+            "llm_step": 8
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"tree leaf forest\", \"snippets\": [\"... tree leaf forest ... excerpt 8227 ...\", \"... tree leaf forest ... excerpt 7519 ...\", \"... tree leaf forest ... excerpt 2193 ...\", \"... tree leaf forest ... excerpt 9171 ...\", \"... tree leaf forest ... excerpt",
+            "llm_step": 10
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "provenance": {
+          "measured": 1137903106,
+          "step_inferred": 6888881731,
+          "residual": 2809115141
+        },
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "agent_5",
+        "task_id": "RH-02",
+        "turns": 15,
+        "plan_len": 8,
+        "wall_s": 3.1834333360000073,
+        "thread_cpu_ns": 9432272090,
+        "process_cpu_ns": 9432272090,
+        "instrumented_cpu_ns": 9432272090,
+        "reconcile_cpu_ns": 1333885015,
+        "orch_measured_cpu_ns": 25056075,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 1333885015,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "retrieve": 6,
+          "calculator": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"how to bake bread with flour and butter\", \"chunks\": [{\"id\": 99416, \"score\": 0.23358656466007233, \"text\": \"chunk_99416\"}, {\"id\": 80422, \"score\": 0.2049875557422638, \"text\": \"chunk_80422\"}, {\"id\": 53287, \"score\": 0.20419242978096008, \"text\": \"chun",
+            "llm_step": 0
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what temperature should the oven be for baking\", \"chunks\": [{\"id\": 57415, \"score\": 0.24433991312980652, \"text\": \"chunk_57415\"}, {\"id\": 52356, \"score\": 0.20391938090324402, \"text\": \"chunk_52356\"}, {\"id\": 13164, \"score\": 0.1963607668876648, \"text\"",
+            "llm_step": 2
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"how much sugar and salt goes in a recipe\", \"chunks\": [{\"id\": 74693, \"score\": 0.2140953093767166, \"text\": \"chunk_74693\"}, {\"id\": 41702, \"score\": 0.20925256609916687, \"text\": \"chunk_41702\"}, {\"id\": 25515, \"score\": 0.20368345081806183, \"text\": \"chu",
+            "llm_step": 4
+          },
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"350 / 2 + 25\", \"engine\": \"sympy\", \"query\": \"350 / 2 + 25\", \"value\": 200.0, \"padding\": \"early train light with early train to carefully stone an energy first second into after quickly travel carefully slowly energy item at second with answer",
+            "llm_step": 6
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"difference between baking with butter and oil\", \"chunks\": [{\"id\": 66063, \"score\": 0.20825320482254028, \"text\": \"chunk_66063\"}, {\"id\": 53941, \"score\": 0.20788225531578064, \"text\": \"chunk_53941\"}, {\"id\": 23025, \"score\": 0.20750735700130463, \"text\"",
+            "llm_step": 8
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"how long should bread rest before cutting\", \"chunks\": [{\"id\": 71065, \"score\": 0.21553534269332886, \"text\": \"chunk_71065\"}, {\"id\": 60132, \"score\": 0.21522817015647888, \"text\": \"chunk_60132\"}, {\"id\": 98268, \"score\": 0.2092137187719345, \"text\": \"ch",
+            "llm_step": 10
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"simple dinner recipes with vegetables and cheese\", \"chunks\": [{\"id\": 95787, \"score\": 0.20958951115608215, \"text\": \"chunk_95787\"}, {\"id\": 45078, \"score\": 0.20585885643959045, \"text\": \"chunk_45078\"}, {\"id\": 45310, \"score\": 0.20575609803199768, \"te",
+            "llm_step": 12
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "provenance": {
+          "measured": 1034270471,
+          "step_inferred": 7064116604,
+          "residual": 1333885015
+        },
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "agent_6",
+        "task_id": "RE-01",
+        "turns": 3,
+        "plan_len": 4,
+        "wall_s": 1.1218693690000237,
+        "thread_cpu_ns": 299979735,
+        "process_cpu_ns": 299979735,
+        "instrumented_cpu_ns": 299979735,
+        "reconcile_cpu_ns": 3846878,
+        "orch_measured_cpu_ns": 20956643,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 3846878,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "calculator": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"80 / (100 - 80)\", \"engine\": \"sympy\", \"query\": \"80 / (100 - 80)\", \"value\": 4.0, \"padding\": \"from large schedule to the step next quickly sound an market large report together about section schedule by around paper by cloth together budget fi",
+            "llm_step": 0
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "provenance": {
+          "measured": 24885133,
+          "step_inferred": 271247724,
+          "residual": 3846878
+        },
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "agent_7",
+        "task_id": "RE-02",
+        "turns": 3,
+        "plan_len": 4,
+        "wall_s": 1.2677380119999953,
+        "thread_cpu_ns": 324258377,
+        "process_cpu_ns": 324258377,
+        "instrumented_cpu_ns": 324258377,
+        "reconcile_cpu_ns": 72751564,
+        "orch_measured_cpu_ns": 24233766,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 72751564,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "search": 1
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "search",
+            "query": "{\"query\": \"sleep exercise energy\", \"snippets\": [\"... sleep exercise energy ... excerpt 3132 ...\", \"... sleep exercise energy ... excerpt 2067 ...\", \"... sleep exercise energy ... excerpt 7331 ...\", \"... sleep exercise energy ... excerpt 8607 ...\", \"... sle",
+            "llm_step": 0
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "provenance": {
+          "measured": 28730337,
+          "step_inferred": 222776476,
+          "residual": 72751564
+        },
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "agent_8",
+        "task_id": "LH-01",
+        "turns": 25,
+        "plan_len": 13,
+        "wall_s": 3.808708282999987,
+        "thread_cpu_ns": 12644673522,
+        "process_cpu_ns": 12644673522,
+        "instrumented_cpu_ns": 12644673522,
+        "reconcile_cpu_ns": 1737355887,
+        "orch_measured_cpu_ns": 69357180,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 1737355887,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "retrieve": 12
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what vegetables grow in january winter\", \"chunks\": [{\"id\": 72165, \"score\": 0.22240816056728363, \"text\": \"chunk_72165\"}, {\"id\": 69677, \"score\": 0.2182374894618988, \"text\": \"chunk_69677\"}, {\"id\": 60448, \"score\": 0.2125968635082245, \"text\": \"chunk_",
+            "llm_step": 0
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what to plant in february cold soil\", \"chunks\": [{\"id\": 57137, \"score\": 0.23535674810409546, \"text\": \"chunk_57137\"}, {\"id\": 15983, \"score\": 0.2284012883901596, \"text\": \"chunk_15983\"}, {\"id\": 56183, \"score\": 0.22061039507389069, \"text\": \"chunk_56",
+            "llm_step": 2
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what vegetables grow in early spring march\", \"chunks\": [{\"id\": 64766, \"score\": 0.24370718002319336, \"text\": \"chunk_64766\"}, {\"id\": 24296, \"score\": 0.21376372873783112, \"text\": \"chunk_24296\"}, {\"id\": 12269, \"score\": 0.21346528828144073, \"text\": \"",
+            "llm_step": 4
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"when to plant tomatoes in april\", \"chunks\": [{\"id\": 11749, \"score\": 0.20515495538711548, \"text\": \"chunk_11749\"}, {\"id\": 35034, \"score\": 0.2039543241262436, \"text\": \"chunk_35034\"}, {\"id\": 77243, \"score\": 0.20113986730575562, \"text\": \"chunk_77243\"",
+            "llm_step": 6
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what to plant in may after last frost\", \"chunks\": [{\"id\": 3401, \"score\": 0.2054070234298706, \"text\": \"chunk_3401\"}, {\"id\": 26257, \"score\": 0.20184198021888733, \"text\": \"chunk_26257\"}, {\"id\": 36079, \"score\": 0.20030613243579865, \"text\": \"chunk_36",
+            "llm_step": 8
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"which vegetables handle summer heat in june\", \"chunks\": [{\"id\": 735, \"score\": 0.23872175812721252, \"text\": \"chunk_735\"}, {\"id\": 96380, \"score\": 0.2052956223487854, \"text\": \"chunk_96380\"}, {\"id\": 3149, \"score\": 0.20509883761405945, \"text\": \"chunk",
+            "llm_step": 10
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"watering schedule for july vegetable garden\", \"chunks\": [{\"id\": 39691, \"score\": 0.2217865288257599, \"text\": \"chunk_39691\"}, {\"id\": 28151, \"score\": 0.21128779649734497, \"text\": \"chunk_28151\"}, {\"id\": 75948, \"score\": 0.2062172293663025, \"text\": \"c",
+            "llm_step": 12
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what to harvest and replant in august\", \"chunks\": [{\"id\": 82336, \"score\": 0.23022930324077606, \"text\": \"chunk_82336\"}, {\"id\": 75691, \"score\": 0.22502653300762177, \"text\": \"chunk_75691\"}, {\"id\": 2406, \"score\": 0.20810317993164062, \"text\": \"chunk_",
+            "llm_step": 14
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what vegetables grow in september fall\", \"chunks\": [{\"id\": 62952, \"score\": 0.19780917465686798, \"text\": \"chunk_62952\"}, {\"id\": 67612, \"score\": 0.19752120971679688, \"text\": \"chunk_67612\"}, {\"id\": 79276, \"score\": 0.19514426589012146, \"text\": \"chun",
+            "llm_step": 16
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"which crops survive october frost\", \"chunks\": [{\"id\": 9930, \"score\": 0.21149203181266785, \"text\": \"chunk_9930\"}, {\"id\": 70136, \"score\": 0.20449481904506683, \"text\": \"chunk_70136\"}, {\"id\": 71468, \"score\": 0.20053888857364655, \"text\": \"chunk_71468",
+            "llm_step": 18
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"preparing garden soil in november\", \"chunks\": [{\"id\": 57193, \"score\": 0.23019438982009888, \"text\": \"chunk_57193\"}, {\"id\": 12591, \"score\": 0.21744588017463684, \"text\": \"chunk_12591\"}, {\"id\": 55176, \"score\": 0.19662439823150635, \"text\": \"chunk_551",
+            "llm_step": 20
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what can grow in december indoors\", \"chunks\": [{\"id\": 34361, \"score\": 0.219031423330307, \"text\": \"chunk_34361\"}, {\"id\": 61183, \"score\": 0.2146403193473816, \"text\": \"chunk_61183\"}, {\"id\": 86085, \"score\": 0.2016706019639969, \"text\": \"chunk_86085\"}",
+            "llm_step": 22
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "provenance": {
+          "measured": 1300314390,
+          "step_inferred": 9607003245,
+          "residual": 1737355887
+        },
+        "search_locality": "remote"
+      },
+      {
+        "session_id": "agent_9",
+        "task_id": "LH-02",
+        "turns": 15,
+        "plan_len": 12,
+        "wall_s": 3.1218419299999596,
+        "thread_cpu_ns": 9420826393,
+        "process_cpu_ns": 9420826393,
+        "instrumented_cpu_ns": 9420826393,
+        "reconcile_cpu_ns": 1216789878,
+        "orch_measured_cpu_ns": 27608960,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 1216789878,
+        "parallel_cpu_trim_ns": 0,
+        "tool_call_counts": {
+          "retrieve": 4,
+          "calculator": 3
+        },
+        "tool_call_sequence": [
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"how to boil an egg step by step\", \"chunks\": [{\"id\": 32954, \"score\": 0.20035341382026672, \"text\": \"chunk_32954\"}, {\"id\": 55812, \"score\": 0.19882887601852417, \"text\": \"chunk_55812\"}, {\"id\": 99934, \"score\": 0.19821611046791077, \"text\": \"chunk_99934",
+            "llm_step": 0
+          },
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"2 * 3 / 4\", \"engine\": \"sympy\", \"query\": \"2 * 3 / 4\", \"value\": 1.5, \"padding\": \"final third first carefully detail paper rarely with money by item sound of section answer cloth plan from glass second carefully answer paper at an apart next w",
+            "llm_step": 2
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"what does simmer mean in cooking\", \"chunks\": [{\"id\": 45192, \"score\": 0.21993066370487213, \"text\": \"chunk_45192\"}, {\"id\": 27695, \"score\": 0.20982882380485535, \"text\": \"chunk_27695\"}, {\"id\": 55891, \"score\": 0.20925916731357574, \"text\": \"chunk_5589",
+            "llm_step": 4
+          },
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"1.5 * 2 / 3\", \"engine\": \"sympy\", \"query\": \"1.5 * 2 / 3\", \"value\": 1.0, \"padding\": \"for section energy energy at between summary late summary by about from answer sound to third detail travel metal about market budget step with in cloth from",
+            "llm_step": 6
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"how to chop an onion safely\", \"chunks\": [{\"id\": 28681, \"score\": 0.23197311162948608, \"text\": \"chunk_28681\"}, {\"id\": 42606, \"score\": 0.21960601210594177, \"text\": \"chunk_42606\"}, {\"id\": 35587, \"score\": 0.2094384729862213, \"text\": \"chunk_35587\"}, {",
+            "llm_step": 8
+          },
+          {
+            "tool": "calculator",
+            "query": "{\"expression\": \"3 * 1 / 2\", \"engine\": \"sympy\", \"query\": \"3 * 1 / 2\", \"value\": 1.5, \"padding\": \"of apart glass previous an sound section train after slowly metal carefully on stone apart previous section quickly carefully recipe cloth over water on around l",
+            "llm_step": 10
+          },
+          {
+            "tool": "retrieve",
+            "query": "{\"query\": \"how do I know when pasta is done\", \"chunks\": [{\"id\": 66670, \"score\": 0.20855513215065002, \"text\": \"chunk_66670\"}, {\"id\": 63743, \"score\": 0.20853517949581146, \"text\": \"chunk_63743\"}, {\"id\": 77896, \"score\": 0.20516999065876007, \"text\": \"chunk_7789",
+            "llm_step": 12
+          }
+        ],
+        "backend": "scripted",
+        "replay": false,
+        "provenance": {
+          "measured": 247476244,
+          "step_inferred": 7956560271,
+          "residual": 1216789878
+        },
+        "search_locality": "remote"
+      }
+    ],
+    "per_session_category": {
+      "agent_1": {
+        "GC": {
+          "cpu_ns": 6475,
+          "wall_ns": 6475,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "ORCH_SETUP": {
+          "cpu_ns": 19798772,
+          "wall_ns": 779149237,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 12679593,
+          "wall_ns": 324770323,
+          "bytes_in": 42718,
+          "bytes_out": 0,
+          "count": 21
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 1590971721,
+          "wall_ns": 1590971721,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 7
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 1890593,
+          "wall_ns": 3414817576,
+          "bytes_in": 1179,
+          "bytes_out": 285,
+          "count": 27
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 248386,
+          "wall_ns": 248566,
+          "bytes_in": 0,
+          "bytes_out": 29059,
+          "count": 10
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 8540281832,
+          "wall_ns": 8540272562,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 15
+        },
+        "THREADPOOL": {
+          "cpu_ns": 12231109,
+          "wall_ns": 12238685,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 25565752,
+          "wall_ns": 682589333,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 20
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 13796119,
+          "wall_ns": 13837261,
+          "bytes_in": 45,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 3006455751,
+          "wall_ns": 3006455751,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "agent_0": {
+        "GC": {
+          "cpu_ns": 6375,
+          "wall_ns": 6375,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "ORCH_SETUP": {
+          "cpu_ns": 63597578,
+          "wall_ns": 732616215,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 14772750,
+          "wall_ns": 391716057,
+          "bytes_in": 36114,
+          "bytes_out": 0,
+          "count": 19
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 1503378221,
+          "wall_ns": 1503378221,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 1721814,
+          "wall_ns": 2706851392,
+          "bytes_in": 1059,
+          "bytes_out": 265,
+          "count": 24
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 209501,
+          "wall_ns": 210209,
+          "bytes_in": 0,
+          "bytes_out": 24513,
+          "count": 9
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 7316905794,
+          "wall_ns": 7317052264,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 18
+        },
+        "THREADPOOL": {
+          "cpu_ns": 17465989,
+          "wall_ns": 17935934,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 2390207,
+          "wall_ns": 199636204,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 18
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 2143304,
+          "wall_ns": 2151785,
+          "bytes_in": 17,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 4284055990,
+          "wall_ns": 4284055990,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "agent_8": {
+        "GC": {
+          "cpu_ns": 26397,
+          "wall_ns": 26397,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "ORCH_SETUP": {
+          "cpu_ns": 19207183,
+          "wall_ns": 585786246,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 130939430,
+          "wall_ns": 430081334,
+          "bytes_in": 50911,
+          "bytes_out": 0,
+          "count": 25
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 6035926371,
+          "wall_ns": 6035926371,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 12
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 1083189304,
+          "wall_ns": 1142961843,
+          "bytes_in": 443,
+          "bytes_out": 0,
+          "count": 12
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 306457,
+          "wall_ns": 308530,
+          "bytes_in": 0,
+          "bytes_out": 31861,
+          "count": 12
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 3578363530,
+          "wall_ns": 4005986789,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 14
+        },
+        "THREADPOOL": {
+          "cpu_ns": 9208966,
+          "wall_ns": 9304634,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 12
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 50149997,
+          "wall_ns": 960803351,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 24
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 1737355887,
+          "wall_ns": 1737355887,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "agent_5": {
+        "ORCH_SETUP": {
+          "cpu_ns": 18148083,
+          "wall_ns": 764762543,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 5003334,
+          "wall_ns": 309530924,
+          "bytes_in": 25618,
+          "bytes_out": 0,
+          "count": 15
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 3539262637,
+          "wall_ns": 3539262637,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 7
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 997747301,
+          "wall_ns": 1065201672,
+          "bytes_in": 271,
+          "bytes_out": 0,
+          "count": 7
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 115177,
+          "wall_ns": 115264,
+          "bytes_in": 0,
+          "bytes_out": 15494,
+          "count": 7
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 3527230615,
+          "wall_ns": 3938339282,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "THREADPOOL": {
+          "cpu_ns": 3971936,
+          "wall_ns": 3982762,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 7
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 6907992,
+          "wall_ns": 405644454,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 14
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 1333885015,
+          "wall_ns": 1333885015,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "agent_6": {
+        "ORCH_SETUP": {
+          "cpu_ns": 18943910,
+          "wall_ns": 665394599,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 1669924,
+          "wall_ns": 357273701,
+          "bytes_in": 5350,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 271247724,
+          "wall_ns": 271247724,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 1055926,
+          "wall_ns": 1056892,
+          "bytes_in": 15,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 16362,
+          "wall_ns": 16386,
+          "bytes_in": 0,
+          "bytes_out": 3302,
+          "count": 1
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 205936,
+          "wall_ns": 205542,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "THREADPOOL": {
+          "cpu_ns": 980342,
+          "wall_ns": 981916,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 2012733,
+          "wall_ns": 75001885,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 3846878,
+          "wall_ns": 3846878,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "agent_3": {
+        "ORCH_SETUP": {
+          "cpu_ns": 21013162,
+          "wall_ns": 623386487,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "GC": {
+          "cpu_ns": 6651,
+          "wall_ns": 6651,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 6223980,
+          "wall_ns": 393604382,
+          "bytes_in": 16377,
+          "bytes_out": 0,
+          "count": 11
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 437344513,
+          "wall_ns": 437344513,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 5
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 13331434,
+          "wall_ns": 27066468,
+          "bytes_in": 410,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 302434,
+          "wall_ns": 304977,
+          "bytes_in": 0,
+          "bytes_out": 9683,
+          "count": 5
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 1393286720,
+          "wall_ns": 1393280655,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 7
+        },
+        "THREADPOOL": {
+          "cpu_ns": 13071886,
+          "wall_ns": 13074464,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 5
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 9708238,
+          "wall_ns": 327710235,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 194098,
+          "wall_ns": 369358280,
+          "bytes_in": 138,
+          "bytes_out": 39,
+          "count": 3
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 374884573,
+          "wall_ns": 374884573,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "agent_4": {
+        "ORCH_SETUP": {
+          "cpu_ns": 16459087,
+          "wall_ns": 661997404,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 4326249,
+          "wall_ns": 364108618,
+          "bytes_in": 23265,
+          "bytes_out": 0,
+          "count": 13
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 2204293051,
+          "wall_ns": 2204293051,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 5
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 1053919322,
+          "wall_ns": 1071456683,
+          "bytes_in": 167,
+          "bytes_out": 0,
+          "count": 5
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 111262,
+          "wall_ns": 111439,
+          "bytes_in": 0,
+          "bytes_out": 15512,
+          "count": 6
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 4735895381,
+          "wall_ns": 5132039289,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "THREADPOOL": {
+          "cpu_ns": 4586401,
+          "wall_ns": 18458579,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 6
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 7115512,
+          "wall_ns": 193898911,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 12
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 78572,
+          "wall_ns": 272898426,
+          "bytes_in": 134,
+          "bytes_out": 37,
+          "count": 3
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 2809115141,
+          "wall_ns": 2809115141,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "agent_2": {
+        "ORCH_SETUP": {
+          "cpu_ns": 17114655,
+          "wall_ns": 945393548,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 5599357,
+          "wall_ns": 132896198,
+          "bytes_in": 15833,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 449501737,
+          "wall_ns": 449501737,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 5
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 23701531,
+          "wall_ns": 25286317,
+          "bytes_in": 437,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 104250,
+          "wall_ns": 104322,
+          "bytes_in": 0,
+          "bytes_out": 9768,
+          "count": 4
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 1567810,
+          "wall_ns": 1563366,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "THREADPOOL": {
+          "cpu_ns": 5643513,
+          "wall_ns": 5646457,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 4
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 13763614,
+          "wall_ns": 373106674,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 8
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 12174142,
+          "wall_ns": 12174142,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "agent_9": {
+        "ORCH_SETUP": {
+          "cpu_ns": 18298878,
+          "wall_ns": 640896231,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 4407295,
+          "wall_ns": 363756409,
+          "bytes_in": 21675,
+          "bytes_out": 0,
+          "count": 15
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 3766464615,
+          "wall_ns": 3766464615,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 7
+        },
+        "TOOL_COMPUTE": {
+          "cpu_ns": 208508576,
+          "wall_ns": 1055543074,
+          "bytes_in": 151,
+          "bytes_out": 0,
+          "count": 7
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 89477,
+          "wall_ns": 89719,
+          "bytes_in": 0,
+          "bytes_out": 9574,
+          "count": 7
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 4192531731,
+          "wall_ns": 4613807169,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 9
+        },
+        "THREADPOOL": {
+          "cpu_ns": 4425861,
+          "wall_ns": 4427820,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 7
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 9310082,
+          "wall_ns": 479914234,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 14
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 1216789878,
+          "wall_ns": 1216789878,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "agent_7": {
+        "ORCH_SETUP": {
+          "cpu_ns": 20881437,
+          "wall_ns": 670500372,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "TOKENIZATION": {
+          "cpu_ns": 2870502,
+          "wall_ns": 367472715,
+          "bytes_in": 2793,
+          "bytes_out": 0,
+          "count": 3
+        },
+        "CLIENT_HTTP": {
+          "cpu_ns": 222776476,
+          "wall_ns": 222776476,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "HTTP_CLIENT": {
+          "cpu_ns": 171368,
+          "wall_ns": 176745250,
+          "bytes_in": 141,
+          "bytes_out": 42,
+          "count": 3
+        },
+        "SERIALIZATION": {
+          "cpu_ns": 21254,
+          "wall_ns": 21374,
+          "bytes_in": 0,
+          "bytes_out": 617,
+          "count": 1
+        },
+        "FRAMEWORK": {
+          "cpu_ns": 429259,
+          "wall_ns": 427790,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "THREADPOOL": {
+          "cpu_ns": 1004188,
+          "wall_ns": 1005056,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 3352329,
+          "wall_ns": 28002391,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 72751564,
+          "wall_ns": 72751564,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      },
+      "global": {
+        "GC": {
+          "cpu_ns": 4188,
+          "wall_ns": 4188,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 1
+        }
+      }
+    },
+    "residual_cpu_ns": 0,
+    "residual_fraction": 0.0,
+    "totals": {
+      "thread_cpu_ns": 72187022019,
+      "wall_ns": 29886411788,
+      "instrumented_cpu_ns": 72187026207
+    },
+    "os_times_user_sys": {
+      "user": 13.23,
+      "system": 2.75
+    },
+    "timeline": [],
+    "provenance_totals": {
+      "measured": 4106145784,
+      "step_inferred": 53229565604,
+      "residual": 14851314819
+    },
+    "provenance_detail": {
+      "GC|agent_1|locality_ablation|measured": 6475,
+      "GC|agent_0|locality_ablation|measured": 6375,
+      "GC|agent_8|locality_ablation|measured": 26397,
+      "ORCH_SETUP|agent_0|locality_ablation|measured": 63597578,
+      "ORCH_SETUP|agent_1|locality_ablation|measured": 19798772,
+      "ORCH_SETUP|agent_5|locality_ablation|measured": 18148083,
+      "ORCH_SETUP|agent_6|locality_ablation|measured": 18943910,
+      "ORCH_SETUP|agent_3|locality_ablation|measured": 21013162,
+      "ORCH_SETUP|agent_4|locality_ablation|measured": 16459087,
+      "ORCH_SETUP|agent_8|locality_ablation|measured": 19207183,
+      "ORCH_SETUP|agent_2|locality_ablation|measured": 17114655,
+      "ORCH_SETUP|agent_9|locality_ablation|measured": 18298878,
+      "ORCH_SETUP|agent_7|locality_ablation|measured": 20881437,
+      "GC|agent_3|locality_ablation|measured": 6651,
+      "TOKENIZATION|agent_4|locality_ablation|measured": 4326249,
+      "CLIENT_HTTP|agent_4|locality_ablation|step_inferred": 2204293051,
+      "TOKENIZATION|agent_3|locality_ablation|measured": 6223980,
+      "CLIENT_HTTP|agent_3|locality_ablation|step_inferred": 437344513,
+      "TOKENIZATION|agent_1|locality_ablation|measured": 12679593,
+      "CLIENT_HTTP|agent_1|locality_ablation|step_inferred": 1590971721,
+      "TOKENIZATION|agent_7|locality_ablation|measured": 2870502,
+      "CLIENT_HTTP|agent_7|locality_ablation|step_inferred": 222776476,
+      "TOKENIZATION|agent_6|locality_ablation|measured": 1669924,
+      "CLIENT_HTTP|agent_6|locality_ablation|step_inferred": 271247724,
+      "TOKENIZATION|agent_8|locality_ablation|measured": 130939430,
+      "CLIENT_HTTP|agent_8|locality_ablation|step_inferred": 6035926371,
+      "TOKENIZATION|agent_0|locality_ablation|measured": 14772750,
+      "CLIENT_HTTP|agent_0|locality_ablation|step_inferred": 1503378221,
+      "TOKENIZATION|agent_9|locality_ablation|measured": 4407295,
+      "CLIENT_HTTP|agent_9|locality_ablation|step_inferred": 3766464615,
+      "TOKENIZATION|agent_2|locality_ablation|measured": 5599357,
+      "TOOL_COMPUTE|agent_3|locality_ablation|measured": 13331434,
+      "SERIALIZATION|agent_3|locality_ablation|measured": 302434,
+      "CLIENT_HTTP|agent_2|locality_ablation|step_inferred": 449501737,
+      "TOKENIZATION|agent_5|locality_ablation|measured": 5003334,
+      "CLIENT_HTTP|agent_5|locality_ablation|step_inferred": 3539262637,
+      "FRAMEWORK|agent_3|locality_ablation|measured": 2201547,
+      "THREADPOOL|agent_3|locality_ablation|measured": 13071886,
+      "HTTP_CLIENT|agent_1|locality_ablation|measured": 1890593,
+      "ORCH_DISPATCH|agent_3|locality_ablation|measured": 9708238,
+      "HTTP_CLIENT|agent_7|locality_ablation|measured": 171368,
+      "GC|global|locality_ablation|measured": 4188,
+      "TOOL_COMPUTE|agent_6|locality_ablation|measured": 1055926,
+      "SERIALIZATION|agent_6|locality_ablation|measured": 16362,
+      "FRAMEWORK|agent_6|locality_ablation|measured": 205936,
+      "THREADPOOL|agent_6|locality_ablation|measured": 980342,
+      "ORCH_DISPATCH|agent_6|locality_ablation|measured": 2012733,
+      "HTTP_CLIENT|agent_0|locality_ablation|measured": 1721814,
+      "TOOL_COMPUTE|agent_2|locality_ablation|measured": 23701531,
+      "SERIALIZATION|agent_2|locality_ablation|measured": 104250,
+      "FRAMEWORK|agent_2|locality_ablation|measured": 1567810,
+      "THREADPOOL|agent_2|locality_ablation|measured": 5643513,
+      "ORCH_DISPATCH|agent_2|locality_ablation|measured": 13763614,
+      "RESIDUAL_UNATTRIBUTED|agent_6|locality_ablation|residual": 3846878,
+      "SERIALIZATION|agent_7|locality_ablation|measured": 21254,
+      "FRAMEWORK|agent_7|locality_ablation|measured": 429259,
+      "THREADPOOL|agent_7|locality_ablation|measured": 1004188,
+      "ORCH_DISPATCH|agent_7|locality_ablation|measured": 3352329,
+      "RESIDUAL_UNATTRIBUTED|agent_7|locality_ablation|residual": 72751564,
+      "SERIALIZATION|agent_1|locality_ablation|measured": 248386,
+      "FRAMEWORK|agent_1|locality_ablation|measured": 5684862,
+      "THREADPOOL|agent_1|locality_ablation|measured": 12231109,
+      "ORCH_DISPATCH|agent_1|locality_ablation|measured": 25565752,
+      "HTTP_CLIENT|agent_3|locality_ablation|measured": 194098,
+      "RESIDUAL_UNATTRIBUTED|agent_2|locality_ablation|residual": 12174142,
+      "SERIALIZATION|agent_0|locality_ablation|measured": 209501,
+      "FRAMEWORK|agent_0|locality_ablation|measured": 4804576,
+      "THREADPOOL|agent_0|locality_ablation|measured": 17465989,
+      "ORCH_DISPATCH|agent_0|locality_ablation|measured": 2390207,
+      "FRAMEWORK|agent_0|locality_ablation|step_inferred": 7312101218,
+      "FRAMEWORK|agent_3|locality_ablation|step_inferred": 1391085173,
+      "RESIDUAL_UNATTRIBUTED|agent_3|locality_ablation|residual": 374884573,
+      "FRAMEWORK|agent_1|locality_ablation|step_inferred": 8534596970,
+      "TOOL_COMPUTE|agent_4|locality_ablation|measured": 1053919322,
+      "TOOL_COMPUTE|agent_9|locality_ablation|measured": 208508576,
+      "TOOL_COMPUTE|agent_5|locality_ablation|measured": 997747301,
+      "SERIALIZATION|agent_5|locality_ablation|measured": 115177,
+      "SERIALIZATION|agent_9|locality_ablation|measured": 89477,
+      "TOOL_COMPUTE|agent_8|locality_ablation|measured": 1083189304,
+      "SERIALIZATION|agent_8|locality_ablation|measured": 306457,
+      "FRAMEWORK|agent_5|locality_ablation|measured": 2376648,
+      "THREADPOOL|agent_5|locality_ablation|measured": 3971936,
+      "FRAMEWORK|agent_8|locality_ablation|measured": 7286656,
+      "THREADPOOL|agent_8|locality_ablation|measured": 9208966,
+      "SERIALIZATION|agent_4|locality_ablation|measured": 111262,
+      "FRAMEWORK|agent_9|locality_ablation|measured": 2436075,
+      "THREADPOOL|agent_9|locality_ablation|measured": 4425861,
+      "ORCH_DISPATCH|agent_5|locality_ablation|measured": 6907992,
+      "FRAMEWORK|agent_5|locality_ablation|step_inferred": 3524853967,
+      "FRAMEWORK|agent_4|locality_ablation|measured": 51306701,
+      "THREADPOOL|agent_4|locality_ablation|measured": 4586401,
+      "ORCH_DISPATCH|agent_8|locality_ablation|measured": 50149997,
+      "FRAMEWORK|agent_8|locality_ablation|step_inferred": 3571076874,
+      "ORCH_DISPATCH|agent_4|locality_ablation|measured": 7115512,
+      "FRAMEWORK|agent_4|locality_ablation|step_inferred": 4684588680,
+      "ORCH_DISPATCH|agent_9|locality_ablation|measured": 9310082,
+      "FRAMEWORK|agent_9|locality_ablation|step_inferred": 4190095656,
+      "HTTP_CLIENT|agent_4|locality_ablation|measured": 78572,
+      "RESIDUAL_UNATTRIBUTED|agent_5|locality_ablation|residual": 1333885015,
+      "RESIDUAL_UNATTRIBUTED|agent_9|locality_ablation|residual": 1216789878,
+      "RESIDUAL_UNATTRIBUTED|agent_4|locality_ablation|residual": 2809115141,
+      "TOOL_COMPUTE|agent_1|locality_ablation|measured": 13796119,
+      "RESIDUAL_UNATTRIBUTED|agent_8|locality_ablation|residual": 1737355887,
+      "TOOL_COMPUTE|agent_0|locality_ablation|measured": 2143304,
+      "RESIDUAL_UNATTRIBUTED|agent_0|locality_ablation|residual": 4284055990,
+      "RESIDUAL_UNATTRIBUTED|agent_1|locality_ablation|residual": 3006455751
+    }
+  },
+  "calibration": {
+    "batch_host_cpu_ns": 72187022019,
+    "step_inferred_pct": 73.73841462803341,
+    "false_client_http_step_inferred_pct": 27.73513369304849,
+    "pass": false,
+    "note": "Mock LLM has ~zero HTTP transport CPU; step-inferred CLIENT_HTTP during agent steps is false attribution."
+  },
+  "timer_overhead_ns_per_pair": 8147.20419
+}

@@ -41,6 +41,12 @@ TIER: dict[str, str] = {
     Category.LOGGING.value: "partial",
     Category.TOOL_COMPUTE.value: "none",
     Category.GC.value: "none",
+    Category.CLIENT_HTTP.value: "overlap",
+    Category.CLIENT_PARSE.value: "direct",
+    Category.FRAMEWORK.value: "direct",
+    Category.THREADPOOL.value: "partial",
+    Category.EVENT_LOOP.value: "partial",
+    Category.RESIDUAL_UNATTRIBUTED.value: "none",
 }
 
 RATIONALE: dict[str, str] = {
@@ -57,6 +63,12 @@ RATIONALE: dict[str, str] = {
     Category.TOOL_COMPUTE.value: "application compute, not serving-harness work; "
     "out of APU scope by definition",
     Category.GC.value: "CPython runtime internals, not a separable block",
+    Category.CLIENT_HTTP.value: "TLS/HTTP transport owned by NIC/DPU class devices",
+    Category.CLIENT_PARSE.value: "JSON and schema validation map to parse engines",
+    Category.FRAMEWORK.value: "LangGraph dispatch maps to Phase 2 orchestration kernels",
+    Category.THREADPOOL.value: "executor dispatch is partial copy/scheduling offload",
+    Category.EVENT_LOOP.value: "asyncio driver is partial overlap with runtime",
+    Category.RESIDUAL_UNATTRIBUTED.value: "unattributed gap; must be driven to zero in v2",
 }
 
 STRICT_TIERS = ("direct",)

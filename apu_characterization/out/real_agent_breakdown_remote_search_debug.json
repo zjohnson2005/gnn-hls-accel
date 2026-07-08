@@ -1,872 +1,727 @@
 {
   "experiment": "real_agent_breakdown",
   "result_validity": "debug_only",
-  "generated_utc": "2026-07-07T17:44:12.785851+00:00",
+  "generated_utc": "2026-07-08T01:30:55.811058+00:00",
   "setup_ref": {
-    "setup_digest": "fe9707b03e17a5b7",
+    "setup_digest": "fdf16030e576a11e",
     "task_suite_digest": "a88a9e1058964219",
     "cpu_model": "Intel(R) Core(TM) Ultra 5 325"
   },
   "task_assignments": [
     {
-      "task_id": "SH-01",
-      "profile": "search_heavy",
-      "goal": "What causes different kinds of weather? Collect mentions of rain, storms, and temperature changes and summarize the patterns.",
+      "task_id": "FO-01",
+      "profile": "fanout",
+      "goal": "Compare the weather, best food, and main attractions of Paris, Tokyo, and Cairo. Nine searches fan out in one turn; their completions land nearly simultaneously (dispatch burst), then one merge turn.",
       "turns": [
-        "search <- rain storm",
-        "search <- temperature cold warm",
-        "search <- wind forecast",
-        "search <- snow season",
-        "search <- climate humidity",
-        "search <- cloud sun",
-        "calculator <- (72 - 32) * 5 / 9",
-        "search <- storm wind rain",
-        "search <- season climate",
-        "reasoning only"
-      ]
-    },
-    {
-      "task_id": "SH-02",
-      "profile": "search_heavy",
-      "goal": "Put together a short overview of space topics: find what the corpus says about planets, the moon, eclipses, and telescopes.",
-      "turns": [
-        "search <- planet orbit",
-        "search <- moon eclipse",
-        "search <- solar eclipse",
-        "search <- telescope star",
-        "search <- rocket astronaut",
-        "retrieve <- which planets can be seen without a telescope",
-        "search <- mars earth",
-        "search <- gravity light",
-        "search <- galaxy star",
-        "search <- orbit gravity",
-        "reasoning only"
-      ]
-    },
-    {
-      "task_id": "CH-01",
-      "profile": "code_heavy",
-      "goal": "What is the sum of all prime numbers below 20000? Verify with a second computation and sanity-check the magnitude.",
-      "turns": [
-        "code_exec <- limit = 20000 sieve = [True] * limit sieve[0] = sieve[1] = False for i in range(2, int(limit ** 0.5)",
-        "code_exec <- xs = [(i * 2654435761) % 100003 for i in range(30000)] xs.sort() result = xs[len(xs) // 2]",
-        "calculator <- 21171191 / 1000000",
-        "code_exec <- a, b = 0, 1 for _ in range(50000):     a, b = b, (a + b) % 1000000007 result = a",
-        "reasoning only"
-      ]
-    },
-    {
-      "task_id": "CH-02",
-      "profile": "code_heavy",
-      "goal": "If I save 1000 dollars at 5 percent interest for 30 years, how much do I have? Also check a word-frequency count and a median.",
-      "turns": [
-        "code_exec <- balance = 1000.0 rate = 0.05 for year in range(30):     balance = balance * (1 + rate) result = int(",
-        "code_exec <- text = (\"the quick brown fox jumps over the lazy dog and runs away \" * 800).split() counts = {} for ",
-        "code_exec <- xs = [(i * 2654435761) % 100003 for i in range(30000)] xs.sort() result = xs[len(xs) // 2]",
-        "search <- bank interest save",
-        "calculator <- 1000 * 1.05 ** 30",
-        "reasoning only"
-      ]
-    },
-    {
-      "task_id": "RH-01",
-      "profile": "rag_heavy",
-      "goal": "Answer five basic nature questions using retrieval: how plants grow, the water cycle, rivers and oceans, forests, and birds.",
-      "turns": [
-        "retrieve <- how do plants grow from soil and water",
-        "retrieve <- what is the water cycle rain river ocean",
-        "retrieve <- why do rivers flow into the ocean",
-        "retrieve <- what animals live in a forest",
-        "retrieve <- where do birds go in winter",
-        "search <- tree leaf forest",
-        "reasoning only"
-      ]
-    },
-    {
-      "task_id": "RH-02",
-      "profile": "rag_heavy",
-      "goal": "Build a simple guide to home baking by retrieving passages about bread, ingredients, and oven technique.",
-      "turns": [
-        "retrieve <- how to bake bread with flour and butter",
-        "retrieve <- what temperature should the oven be for baking",
-        "retrieve <- how much sugar and salt goes in a recipe",
-        "calculator <- 350 / 2 + 25",
-        "retrieve <- difference between baking with butter and oil",
-        "retrieve <- how long should bread rest before cutting",
-        "retrieve <- simple dinner recipes with vegetables and cheese",
-        "reasoning only"
-      ]
-    },
-    {
-      "task_id": "RE-01",
-      "profile": "reasoning_heavy",
-      "goal": "A train leaves at 9am going 80 km per hour and another leaves at 10am going 100 km per hour on the same route. Reason through when the second catches the first, and verify the arithmetic.",
-      "turns": [
-        "reasoning only",
-        "reasoning only",
-        "calculator <- 80 / (100 - 80)",
-        "reasoning only"
-      ]
-    },
-    {
-      "task_id": "RE-02",
-      "profile": "reasoning_heavy",
-      "goal": "Is it better to sleep eight hours or exercise an extra hour? Reason through the trade-offs, checking one fact in the corpus.",
-      "turns": [
-        "reasoning only",
-        "search <- sleep exercise energy",
-        "reasoning only",
-        "reasoning only"
-      ]
-    },
-    {
-      "task_id": "LH-01",
-      "profile": "long_horizon",
-      "goal": "Help me plan a vegetable garden for the whole year, month by month. One retrieval per month; the growing plan accumulates in context, so state copies and token counts grow within the session.",
-      "turns": [
-        "retrieve <- what vegetables grow in january winter",
-        "retrieve <- what to plant in february cold soil",
-        "retrieve <- what vegetables grow in early spring march",
-        "retrieve <- when to plant tomatoes in april",
-        "retrieve <- what to plant in may after last frost",
-        "retrieve <- which vegetables handle summer heat in june",
-        "retrieve <- watering schedule for july vegetable garden",
-        "retrieve <- what to harvest and replant in august",
-        "retrieve <- what vegetables grow in september fall",
-        "retrieve <- which crops survive october frost",
-        "retrieve <- preparing garden soil in november",
-        "retrieve <- what can grow in december indoors",
-        "reasoning only"
-      ]
-    },
-    {
-      "task_id": "LH-02",
-      "profile": "long_horizon",
-      "goal": "Teach me basic cooking, one lesson at a time, and quiz me as we go. Alternates retrieval, quiz-composition reasoning, and a calculator check on a scaled recipe. Long and chatty; state accumulates every turn.",
-      "turns": [
-        "retrieve <- how to boil an egg step by step",
-        "reasoning only",
-        "calculator <- 2 * 3 / 4",
-        "retrieve <- what does simmer mean in cooking",
-        "reasoning only",
-        "calculator <- 1.5 * 2 / 3",
-        "retrieve <- how to chop an onion safely",
-        "reasoning only",
-        "calculator <- 3 * 1 / 2",
-        "retrieve <- how do I know when pasta is done",
-        "reasoning only",
+        "fan-out 9 calls [search: paris weather forecast rain; search: paris food recipe cheese; search: paris museum castle history; search: tokyo weather season wind; search: tokyo food fish dinner; search: tokyo city station bridge; search: cairo weather sun warm; search: cairo food bread market; search: cairo ancient museum empire]",
         "reasoning only"
       ]
     }
   ],
   "git": {
-    "commit": "unknown",
-    "dirty": "unknown"
+    "commit": "84f0afeeb12156acf32754c6493c2c75ab2a9a4a",
+    "dirty": "yes",
+    "dirty_paths": [
+      ".gitignore",
+      "README.md",
+      "REPRO.md",
+      "apu_characterization/ATTRIBUTION.md",
+      "apu_characterization/EXPERIMENT_SETUP.md",
+      "apu_characterization/PREDICTIONS.md",
+      "apu_characterization/RUNBOOK.md",
+      "apu_characterization/__init__.py",
+      "apu_characterization/amenability.py",
+      "apu_characterization/artifact_refresh.py",
+      "apu_characterization/attribution.py",
+      "apu_characterization/audit.py",
+      "apu_characterization/behavior.py",
+      "apu_characterization/capture_setup.py",
+      "apu_characterization/experiments/__init__.py",
+      "apu_characterization/experiments/real_agent_breakdown.py",
+      "apu_characterization/experiments/replication_batch.py",
+      "apu_characterization/experiments/single_agent_breakdown.py",
+      "apu_characterization/experiments/tool_locality_ablation.py",
+      "apu_characterization/experiments/trace_replay_ablation.py",
+      "apu_characterization/fixtures/__init__.py",
+      "apu_characterization/fixtures/corpus.txt",
+      "apu_characterization/fixtures/fixtures_meta.json",
+      "apu_characterization/fixtures/generate_fixtures.py",
+      "apu_characterization/harness/__init__.py",
+      "apu_characterization/harness/instr_callback.py",
+      "apu_characterization/harness/mock_api.py",
+      "apu_characterization/harness/mock_llm.py",
+      "apu_characterization/harness/orch_engine.py",
+      "apu_characterization/harness/payload_sizes.py",
+      "apu_characterization/harness/react_loop.py",
+      "apu_characterization/harness/runner.py",
+      "apu_characterization/harness/synth_text.py",
+      "apu_characterization/instr.py",
+      "apu_characterization/methodology.py",
+      "apu_characterization/out/README.md",
+      "apu_characterization/out/concurrency_sweep.json",
+      "apu_characterization/out/concurrency_sweep.md",
+      "apu_characterization/out/real_agent_breakdown.json",
+      "apu_characterization/out/real_agent_breakdown.md",
+      "apu_characterization/out/real_agent_breakdown_debug.json",
+      "apu_characterization/out/real_agent_breakdown_debug.md",
+      "apu_characterization/out/real_agent_breakdown_remote_search.json",
+      "apu_characterization/out/real_agent_breakdown_remote_search.md",
+      "apu_characterization/out/real_agent_breakdown_remote_search_debug.json",
+      "apu_characterization/out/real_agent_breakdown_remote_search_debug.md",
+      "apu_characterization/out/replication_remote_search.json",
+      "apu_characterization/out/replication_remote_search.md",
+      "apu_characterization/out/setup.json",
+      "apu_characterization/out/single_agent_breakdown_debug.json",
+      "apu_characterization/out/single_agent_breakdown_debug.md",
+      "apu_characterization/out/tool_locality_ablation.json",
+      "apu_characterization/out/tool_locality_ablation.md",
+      "apu_characterization/out/tool_locality_ablation_debug.json",
+      "apu_characterization/out/tool_locality_ablation_debug.md",
+      "apu_characterization/profiles.py",
+      "apu_characterization/run_linux_replication.ps1",
+      "apu_characterization/run_linux_replication.sh",
+      "apu_characterization/setup_validate.py",
+      "apu_characterization/stats.py",
+      "apu_characterization/tasks.py",
+      "apu_characterization/taxonomy.py",
+      "apu_characterization/tests/__init__.py",
+      "apu_characterization/tests/test_backfill.py",
+      "apu_characterization/tests/test_instr.py",
+      "apu_characterization/tests/test_orch_split.py",
+      "apu_characterization/tests/test_resolution.py",
+      "apu_characterization/tools/__init__.py",
+      "apu_characterization/tools/impl.py",
+      "apu_characterization/tools/replication_task_breakdown.py",
+      "apu_characterization/tools/validate_publishable.py",
+      "apu_characterization/validity.py",
+      "build_all.sh",
+      "cost_model_3d/README.md",
+      "cost_model_3d/__init__.py",
+      "cost_model_3d/experiment.py",
+      "cost_model_3d/kernel_graph.py",
+      "cost_model_3d/oe_kernel_graph.py",
+      "cost_model_3d/partition.py",
+      "cost_model_3d/rules.py",
+      "cost_model_3d/surrogate.py",
+      "cost_model_3d/sweep.py",
+      "cost_model_3d/tech.py",
+      "cost_model_3d/tier_model.py",
+      "docs/callie_gnn_hls4ml_summary.md",
+      "docs/research_positioning.md",
+      "external_hls4ml/templates/catapult/nnet_utils/nnet_image_stream.h",
+      "external_hls4ml/templates/vivado/nnet_utils/nnet_image_stream.h",
+      "external_hls4ml/templates/vivado/nnet_utils/nnet_layernorm.h",
+      "fifo_pareto/README.md",
+      "fifo_pareto/__init__.py",
+      "fifo_pareto/live_demo.py",
+      "fifo_pareto/pareto.py",
+      "fifo_pareto/sweep.py",
+      "fifo_pareto/synthetic.py",
+      "hls4ml_gnn/README.md",
+      "hls4ml_gnn/__init__.py",
+      "hls4ml_gnn/codegen.py",
+      "hls4ml_gnn/converters.py",
+      "hls4ml_gnn/example_generate.py",
+      "hls4ml_gnn/hls_layers.py",
+      "hls4ml_gnn/ir.py",
+      "hls4ml_gnn/nnet_graph.h",
+      "hls4ml_gnn/pyg_adapter.py",
+      "hls4ml_gnn/pyg_parser.py",
+      "hls4ml_gnn/register.py",
+      "hls4ml_gnn/templates.py",
+      "hls4ml_gnn/torch_modules.py",
+      "orchestration_engine/README.md",
+      "orchestration_engine/__init__.py",
+      "orchestration_engine/build.ps1",
+      "orchestration_engine/build.sh",
+      "orchestration_engine/characterization/README.md",
+      "orchestration_engine/characterization/__init__.py",
+      "orchestration_engine/characterization/analyze.py",
+      "orchestration_engine/characterization/energy_calc.py",
+      "orchestration_engine/characterization/epoll_wakeup_bench.py",
+      "orchestration_engine/characterization/langgraph_react/__init__.py",
+      "orchestration_engine/characterization/langgraph_react/agent.py",
+      "orchestration_engine/characterization/langgraph_react/calibrate.py",
+      "orchestration_engine/characterization/langgraph_react/callbacks.py",
+      "orchestration_engine/characterization/langgraph_react/context.py",
+      "orchestration_engine/characterization/langgraph_react/mock_model.py",
+      "orchestration_engine/characterization/langgraph_react/rate_limit.py",
+      "orchestration_engine/characterization/langgraph_react/run.py",
+      "orchestration_engine/characterization/langgraph_react/study.py",
+      "orchestration_engine/characterization/langgraph_react/timing.py",
+      "orchestration_engine/characterization/langgraph_react/tools.py",
+      "orchestration_engine/characterization/out/action_heavy_react_c1.json",
+      "orchestration_engine/characterization/out/action_heavy_react_c1000_summary.md",
+      "orchestration_engine/characterization/out/action_heavy_react_c100_summary.md",
+      "orchestration_engine/characterization/out/action_heavy_react_c10_summary.md",
+      "orchestration_engine/characterization/out/action_heavy_react_c1_summary.md",
+      "orchestration_engine/characterization/out/action_heavy_react_c500_summary.md",
+      "orchestration_engine/characterization/out/balanced_react_c1.json",
+      "orchestration_engine/characterization/out/calibration_action_heavy.json",
+      "orchestration_engine/characterization/out/calibration_reasoning_heavy.json",
+      "orchestration_engine/characterization/out/disaggregation_report.json",
+      "orchestration_engine/characterization/out/example_instrumented_react_summary.md",
+      "orchestration_engine/characterization/out/gate/dispatch_stress.json",
+      "orchestration_engine/characterization/out/gate/epoll_wakeup.json",
+      "orchestration_engine/characterization/out/gate/gate_report.json",
+      "orchestration_engine/characterization/out/gate/gate_report.md",
+      "orchestration_engine/characterization/out/gate/mock_action_heavy_c1.json",
+      "orchestration_engine/characterization/out/gate/mock_action_heavy_c10.json",
+      "orchestration_engine/characterization/out/gate/mock_action_heavy_c100.json",
+      "orchestration_engine/characterization/out/gate/mock_action_heavy_c1000.json",
+      "orchestration_engine/characterization/out/gate/mock_action_heavy_c20.json",
+      "orchestration_engine/characterization/out/gate/mock_action_heavy_c500.json",
+      "orchestration_engine/characterization/out/gate/mock_reasoning_heavy_c1.json",
+      "orchestration_engine/characterization/out/gate/mock_reasoning_heavy_c100.json",
+      "orchestration_engine/characterization/out/gate/mock_reasoning_heavy_c500.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c1.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c10.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c100.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c1000.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c100_rep0.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c100_rep1.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c100_rep2.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c10_rep0.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c10_rep1.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c10_rep2.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c10_rep3.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c10_rep4.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c10_rep5.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c10_rep6.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c10_rep7.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c10_rep8.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c10_rep9.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c1_rep0.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c1_rep1.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c1_rep2.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c1_rep3.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c1_rep4.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c1_rep5.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c1_rep6.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c1_rep7.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c1_rep8.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c1_rep9.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c20.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c20_rep0.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c20_rep1.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c20_rep2.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c20_rep3.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c20_rep4.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c20_rep5.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c20_rep6.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c20_rep7.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c20_rep8.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c20_rep9.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c500.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c500_rep0.json",
+      "orchestration_engine/characterization/out/gate/openai_action_heavy_c500_rep1.json",
+      "orchestration_engine/characterization/out/langgraph_action_heavy_c100_summary.md",
+      "orchestration_engine/characterization/out/langgraph_c100.json",
+      "orchestration_engine/characterization/out/langgraph_openai_action_heavy_c10_summary.md",
+      "orchestration_engine/characterization/out/langgraph_openai_action_heavy_c20_summary.md",
+      "orchestration_engine/characterization/out/langgraph_react.json",
+      "orchestration_engine/characterization/out/phase2/cosim_scatter.json",
+      "orchestration_engine/characterization/out/phase2/cosim_stream.json",
+      "orchestration_engine/characterization/out/phase2/csynth_scatter.json",
+      "orchestration_engine/characterization/out/phase2/phase2_gate.json",
+      "orchestration_engine/characterization/out/phase2/phase2_gate.md",
+      "orchestration_engine/characterization/out/reasoning_heavy_react_c1.json",
+      "orchestration_engine/characterization/out/scale_c1.json",
+      "orchestration_engine/characterization/out/scale_c10.json",
+      "orchestration_engine/characterization/out/scale_c100.json",
+      "orchestration_engine/characterization/out/scale_c1000.json",
+      "orchestration_engine/characterization/out/scale_c500.json",
+      "orchestration_engine/characterization/out/study/langgraph_action_heavy_calibrated_c1.json",
+      "orchestration_engine/characterization/out/study/langgraph_action_heavy_calibrated_c100.json",
+      "orchestration_engine/characterization/out/study/langgraph_action_heavy_calibrated_c500.json",
+      "orchestration_engine/characterization/out/study/langgraph_openai_action_heavy_c1.json",
+      "orchestration_engine/characterization/out/study/langgraph_reasoning_heavy_calibrated_c1.json",
+      "orchestration_engine/characterization/out/study/langgraph_reasoning_heavy_calibrated_c100.json",
+      "orchestration_engine/characterization/out/study/langgraph_reasoning_heavy_calibrated_c500.json",
+      "orchestration_engine/characterization/out/study/study_report.json",
+      "orchestration_engine/characterization/out/study/study_summary.md",
+      "orchestration_engine/characterization/phase1_gate/__init__.py",
+      "orchestration_engine/characterization/phase1_gate/closeout.py",
+      "orchestration_engine/characterization/phase1_gate/crossover.py",
+      "orchestration_engine/characterization/phase1_gate/dispatch_stress.py",
+      "orchestration_engine/characterization/phase1_gate/fanout_analysis.py",
+      "orchestration_engine/characterization/phase1_gate/gate_report.py",
+      "orchestration_engine/characterization/phase1_gate/graph_shape.py",
+      "orchestration_engine/characterization/phase1_gate/metrics.py",
+      "orchestration_engine/characterization/phase1_gate/openai_scaling_sweep.py",
+      "orchestration_engine/characterization/phase1_gate/recalibrate.py",
+      "orchestration_engine/characterization/phase1_gate/scaling_regime.py",
+      "orchestration_engine/characterization/phase1_gate/software_baseline.py",
+      "orchestration_engine/characterization/phase1_gate/structural_proof.py",
+      "orchestration_engine/characterization/profiler.py",
+      "orchestration_engine/characterization/react_sim.py",
+      "orchestration_engine/characterization/regen_cost_model.py",
+      "orchestration_engine/characterization/requirements-langgraph.txt",
+      "orchestration_engine/characterization/run.py",
+      "orchestration_engine/characterization/taxonomy.py",
+      "orchestration_engine/characterization/trace_io.py",
+      "orchestration_engine/characterization/traces/example_react.json",
+      "orchestration_engine/docs/LS_MILESTONE.md",
+      "orchestration_engine/docs/dynamic_graph_cost_model.md",
+      "orchestration_engine/docs/microarchitecture.md",
+      "orchestration_engine/docs/phase0_disaggregation.md",
+      "orchestration_engine/docs/positioning.md",
+      "orchestration_engine/eval/__init__.py",
+      "orchestration_engine/eval/capture_ls_trace.py",
+      "orchestration_engine/eval/compare.py",
+      "orchestration_engine/eval/dse_sweep.py",
+      "orchestration_engine/eval/gen_variants.py",
+      "orchestration_engine/eval/ls_bitcode_inspect.py",
+      "orchestration_engine/eval/ls_capture_gcn_eval.py",
+      "orchestration_engine/eval/ls_capture_oe_eval.py",
+      "orchestration_engine/eval/ls_crash_diag.py",
+      "orchestration_engine/eval/ls_env.py",
+      "orchestration_engine/eval/ls_probe.py",
+      "orchestration_engine/eval/ls_progress.py",
+      "orchestration_engine/eval/ls_validate.py",
+      "orchestration_engine/eval/patch_lightningsim.py",
+      "orchestration_engine/hls/engine_stream.cpp",
+      "orchestration_engine/hls/graph_load.cpp",
+      "orchestration_engine/hls/oe_hls_config.h",
+      "orchestration_engine/hls/orchestration_engine.cpp",
+      "orchestration_engine/hls/orchestration_engine.h",
+      "orchestration_engine/hls_env.sh",
+      "orchestration_engine/hls_env_lightningsim.sh",
+      "orchestration_engine/include/csr_graph.h",
+      "orchestration_engine/include/oe_config.h",
+      "orchestration_engine/include/oe_graph_op_word.h",
+      "orchestration_engine/include/oe_types.h",
+      "orchestration_engine/phase2_gate/__init__.py",
+      "orchestration_engine/phase2_gate/cosim_parser.py",
+      "orchestration_engine/phase2_gate/crossover.py",
+      "orchestration_engine/phase2_gate/csynth_parser.py",
+      "orchestration_engine/phase2_gate/fixtures/sample_scatter_cosim.rpt",
+      "orchestration_engine/phase2_gate/fixtures/sample_scatter_csynth.rpt",
+      "orchestration_engine/phase2_gate/gate_report.py",
+      "orchestration_engine/phase2_gate/hw_metrics.py",
+      "orchestration_engine/phase2_gate/ls_gate.py",
+      "orchestration_engine/run_gcn_stream_cosim.sh",
+      "orchestration_engine/run_hls.tcl",
+      "orchestration_engine/run_hls_graph_load.tcl",
+      "orchestration_engine/run_hls_lightningsim_ex1.tcl",
+      "orchestration_engine/run_hls_oe_engine_ls.tcl",
+      "orchestration_engine/run_hls_oe_engine_ls_cosim_trace.tcl",
+      "orchestration_engine/run_hls_oe_engine_ls_csim_refresh.tcl",
+      "orchestration_engine/run_hls_scatter.tcl",
+      "orchestration_engine/run_hls_scatter_banked.tcl",
+      "orchestration_engine/run_hls_scatter_cosim_only.tcl",
+      "orchestration_engine/run_hls_scatter_stream.tcl",
+      "orchestration_engine/run_hls_scatter_variant.tcl",
+      "orchestration_engine/run_ls_diagnose.sh",
+      "orchestration_engine/run_ls_probe.sh",
+      "orchestration_engine/run_ls_probe_oe.sh",
+      "orchestration_engine/run_ls_tb_rerun.sh",
+      "orchestration_engine/run_ls_validate_gcn.sh",
+      "orchestration_engine/run_next_steps.ps1",
+      "orchestration_engine/run_oe_bench.sh",
+      "orchestration_engine/run_oe_cost_model_3d.sh",
+      "orchestration_engine/run_phase2.sh",
+      "orchestration_engine/run_phase2_deferred.sh",
+      "orchestration_engine/run_phase2_graph_load.sh",
+      "orchestration_engine/run_phase2_lightningsim.sh",
+      "orchestration_engine/run_phase2_lightningsim_ex1.sh",
+      "orchestration_engine/run_phase2_lightningsim_oe.sh",
+      "orchestration_engine/run_phase2_scatter_banked.sh",
+      "orchestration_engine/run_phase2_scatter_cosim_only.sh",
+      "orchestration_engine/run_phase2_scatter_only.sh",
+      "orchestration_engine/run_phase2_scatter_stream.sh",
+      "orchestration_engine/run_phase2_sprint_remainder.sh",
+      "orchestration_engine/run_phase2_variants.sh",
+      "orchestration_engine/run_power.sh",
+      "orchestration_engine/run_power_vivado.sh",
+      "orchestration_engine/software/cpu_baseline.cpp",
+      "orchestration_engine/software/cpu_baseline.h",
+      "orchestration_engine/software/engine_sim.cpp",
+      "orchestration_engine/software/engine_sim.h",
+      "orchestration_engine/software/main_bench.cpp",
+      "orchestration_engine/software/workload_gen.cpp",
+      "orchestration_engine/software/workload_gen.h",
+      "orchestration_engine/sync_and_run_vitis.ps1",
+      "orchestration_engine/tb/oe_engine_stream_ls_top.cpp",
+      "orchestration_engine/tb/oe_engine_stream_tb.cpp",
+      "orchestration_engine/tb/oe_graph_load_tb.cpp",
+      "orchestration_engine/tb/oe_hls_scatter_cosim_tb.cpp",
+      "orchestration_engine/tb/oe_hls_scatter_tb.cpp",
+      "orchestration_engine/tb/oe_hls_stream_tb.cpp",
+      "orchestration_engine/tb/oe_hls_tb.cpp",
+      "orchestration_engine/tb/oe_scatter_banked_tb.cpp",
+      "orchestration_engine/tb/oe_sim_tb.cpp",
+      "push_to_github.ps1",
+      "run_hls.tcl",
+      "run_hls4ml_gnn.py",
+      "run_hls4ml_gnn_dynamic.py",
+      "run_hls4ml_gnn_egnn.py",
+      "run_hls4ml_gnn_gat.py",
+      "run_hls4ml_gnn_gin.py",
+      "run_hls4ml_gnn_multilayer.py",
+      "run_hls4ml_gnn_pyg.py",
+      "run_hls4ml_gnn_sage.py",
+      "run_hls_egnn.tcl",
+      "run_hls_mp.tcl",
+      "run_hls_stream.tcl",
+      "run_hls_stream_cosim.tcl",
+      "run_hls_stream_csim_refresh.tcl",
+      "run_hls_stream_ls.tcl",
+      "run_hls_stream_ls_cosim.tcl",
+      "run_hls_stream_ls_cosim_trace.tcl",
+      "run_hls_sweep.tcl",
+      "src/egnn_layer.cpp",
+      "src/egnn_layer.h",
+      "src/gcn_layer.cpp",
+      "src/gcn_layer.h",
+      "src/gcn_layer_stream.cpp",
+      "src/gcn_layer_stream.h",
+      "src/gnn_config.h",
+      "src/hls_rsqrt.h",
+      "src/mp_layers.cpp",
+      "src/mp_layers.h",
+      "src/mp_template.h",
+      "tb/egnn_tb.cpp",
+      "tb/gcn_stream_tb.cpp",
+      "tb/gcn_tb.cpp",
+      "tb/gin_tb.cpp",
+      "tb/sage_tb.cpp",
+      ".cursor/",
+      ".github/",
+      "Makefile",
+      "apu_characterization/.gitattributes",
+      "apu_characterization/METHODOLOGY.md",
+      "apu_characterization/RECHARACTERIZATION.md",
+      "apu_characterization/VERIFIABLE_DATA.md",
+      "apu_characterization/experiments/profile_reconcile_session.py",
+      "apu_characterization/experiments/reconcile_phase_a.py",
+      "apu_characterization/experiments/step_infer_calibration.py",
+      "apu_characterization/harness/thread_hooks.py",
+      "apu_characterization/harness_tiers.py",
+      "apu_characterization/out/ATTRIBUTION_VERDICT.md",
+      "apu_characterization/out/profile_lh-01_s0.json",
+      "apu_characterization/out/pyspy_lh01.speedscope.json",
+      "apu_characterization/out/pyspy_lh01_buckets.md",
+      "apu_characterization/out/pyspy_sanity.speedscope.json",
+      "apu_characterization/out/reconcile_bug_checks.md",
+      "apu_characterization/out/replication_remote_search_v2.json",
+      "apu_characterization/out/replication_remote_search_v2.md",
+      "apu_characterization/out/replication_remote_search_v3.json",
+      "apu_characterization/out/replication_remote_search_v3.md",
+      "apu_characterization/out/replication_v1_v2_migration.md",
+      "apu_characterization/out/replication_v2_audit_notes.md",
+      "apu_characterization/out/step_infer_calibration.json",
+      "apu_characterization/provenance.py",
+      "apu_characterization/run_apu_gate.ps1",
+      "apu_characterization/run_apu_gate.sh",
+      "apu_characterization/run_apu_replicate_unattended.ps1",
+      "apu_characterization/run_apu_replicate_unattended.sh",
+      "apu_characterization/run_linux_replication_v2.ps1",
+      "apu_characterization/run_linux_replication_v2.sh",
+      "apu_characterization/run_linux_replication_v3.ps1",
+      "apu_characterization/run_linux_replication_v3.sh",
+      "apu_characterization/run_profile_lh01_finish.sh",
+      "apu_characterization/run_profile_lh01_wsl.ps1",
+      "apu_characterization/run_profile_lh01_wsl.sh",
+      "apu_characterization/run_v3_fo01_smoke.ps1",
+      "apu_characterization/run_v3_fo01_smoke_wsl.sh",
+      "apu_characterization/run_v3_smoke_wsl.sh",
+      "apu_characterization/run_wsl_bootstrap.sh",
+      "apu_characterization/session_context.py",
+      "apu_characterization/sysmon.py",
+      "apu_characterization/tests/test_attribution_provenance.py",
+      "apu_characterization/tests/test_reconcile_worker.py",
+      "apu_characterization/thread_identity.py",
+      "apu_characterization/tools/_inspect_v3_violations.py",
+      "apu_characterization/tools/_probe_pool_overhead.py",
+      "apu_characterization/tools/_probe_schedstat.py",
+      "apu_characterization/tools/_probe_thread_clock.py",
+      "apu_characterization/tools/_tid_probe.py",
+      "apu_characterization/tools/apu_replicate_finish_state.py",
+      "apu_characterization/tools/apu_replicate_status.py",
+      "apu_characterization/tools/check_v3_session_residual.py",
+      "apu_characterization/tools/debug_thread_registry.py",
+      "apu_characterization/tools/generate_attribution_verdict.py",
+      "apu_characterization/tools/pyspy_bucketize.py",
+      "apu_characterization/tools/replication_v2_compare.py"
+    ]
   },
   "env": {
-    "python": "3.14.0",
-    "platform": "Windows-11-10.0.26200-SP0",
-    "cpu_model": "Intel64 Family 6 Model 204 Stepping 3, GenuineIntel",
+    "python": "3.14.4",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "cpu_model": "unknown",
     "cores_logical": 8,
     "cores_physical": 8,
-    "ram_gb": 15.6
+    "ram_gb": 7.56
   },
   "config": {
-    "profile": "mixed",
+    "profile": "fanout",
     "payload_profile": "locality_ablation",
     "search_locality": "remote",
-    "seed": 0,
-    "sessions": 10,
+    "seed": 1,
+    "sessions": 1,
     "mode": "threads/scripted",
     "llm_median_scale": 0.05,
     "note_llm_scale": "scripted backend sleeps (wall only); openai backend ignores this",
-    "total_cpu_basis": "sum(session process_time)"
+    "total_cpu_basis": "sum(session process_time)",
+    "comparison_type": "single_run_distribution_sample",
+    "workers": 1,
+    "execution": "sequential (workers=1, one session at a time)",
+    "instr_version": 3
   },
-  "timer_overhead_ns_per_pair": 4218.75,
-  "batch_wall_s": 6.263914500013925,
+  "timer_overhead_ns_per_pair": 3647.78464,
+  "batch_wall_s": 33.82645578600001,
   "run": {
     "env": {},
     "config": {
-      "concurrency": 10,
-      "profile": "mixed",
+      "concurrency": 1,
+      "profile": "fanout",
       "payload_profile": "locality_ablation",
       "search_locality": "remote",
-      "seed": 0,
+      "seed": 1,
       "mode": "threads",
       "backend": "scripted",
       "llm_median_scale": 0.05,
-      "workers": 10,
+      "workers": 1,
       "total_cpu_basis": "process_time_all_threads",
-      "worker_thread_cpu_ns": 296875000
+      "worker_thread_cpu_ns": 127780267,
+      "instr_version": 3
     },
     "per_category": {
-      "GC": {
-        "cpu_ns": 31250000,
-        "wall_ns": 31250000,
-        "bytes_in": 0,
-        "bytes_out": 0,
-        "count": 7
-      },
       "ORCH_SETUP": {
-        "cpu_ns": 109375000,
-        "wall_ns": 2160474000,
+        "cpu_ns": 37399918,
+        "wall_ns": 436086823,
         "bytes_in": 0,
         "bytes_out": 0,
-        "count": 20
+        "count": 2
+      },
+      "GC": {
+        "cpu_ns": 20395,
+        "wall_ns": 22102,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 3
       },
       "TOKENIZATION": {
-        "cpu_ns": 140625000,
-        "wall_ns": 100360100,
-        "bytes_in": 240654,
+        "cpu_ns": 38022054,
+        "wall_ns": 270510270,
+        "bytes_in": 23769,
         "bytes_out": 0,
-        "count": 134
+        "count": 11
       },
-      "TOOL_COMPUTE": {
-        "cpu_ns": 78125000,
-        "wall_ns": 239593300,
-        "bytes_in": 1956,
-        "bytes_out": 0,
-        "count": 42
-      },
-      "SERIALIZATION": {
-        "cpu_ns": 0,
-        "wall_ns": 1569400,
+      "FRAMEWORK": {
+        "cpu_ns": 45041796,
+        "wall_ns": 48678931,
         "bytes_in": 0,
-        "bytes_out": 149383,
+        "bytes_out": 0,
         "count": 62
       },
-      "ORCH_DISPATCH": {
-        "cpu_ns": 4656250000,
-        "wall_ns": 17357716500,
+      "HTTP_CLIENT": {
+        "cpu_ns": 1601120,
+        "wall_ns": 3090231834,
+        "bytes_in": 1323,
+        "bytes_out": 429,
+        "count": 27
+      },
+      "SERIALIZATION": {
+        "cpu_ns": 162650,
+        "wall_ns": 176976,
+        "bytes_in": 0,
+        "bytes_out": 20796,
+        "count": 9
+      },
+      "THREADPOOL": {
+        "cpu_ns": 60854161,
+        "wall_ns": 65945600,
         "bytes_in": 0,
         "bytes_out": 0,
-        "count": 196
+        "count": 81
       },
-      "HTTP_CLIENT": {
-        "cpu_ns": 15625000,
-        "wall_ns": 6925191400,
-        "bytes_in": 2651,
-        "bytes_out": 668,
-        "count": 60
+      "ORCH_DISPATCH": {
+        "cpu_ns": 7966576,
+        "wall_ns": 522684167,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 10
+      },
+      "RESIDUAL_UNATTRIBUTED": {
+        "cpu_ns": 5,
+        "wall_ns": 5,
+        "bytes_in": 0,
+        "bytes_out": 0,
+        "count": 1
       }
     },
     "per_session": [
       {
         "session_id": "agent_0",
-        "task_id": "SH-01",
-        "turns": 19,
-        "plan_len": 10,
-        "wall_s": 4.0540206000441685,
-        "thread_cpu_ns": 656250000,
-        "process_cpu_ns": 656250000,
-        "instrumented_cpu_ns": 15625000,
-        "reconcile_cpu_ns": 640625000,
-        "tool_call_counts": {
-          "search": 8,
-          "calculator": 1
-        },
-        "backend": "scripted",
-        "search_locality": "remote"
-      },
-      {
-        "session_id": "agent_1",
-        "task_id": "SH-02",
-        "turns": 21,
-        "plan_len": 11,
-        "wall_s": 4.829215200035833,
-        "thread_cpu_ns": 640625000,
-        "process_cpu_ns": 640625000,
-        "instrumented_cpu_ns": 78125000,
-        "reconcile_cpu_ns": 562500000,
-        "tool_call_counts": {
-          "search": 9,
-          "retrieve": 1
-        },
-        "backend": "scripted",
-        "search_locality": "remote"
-      },
-      {
-        "session_id": "agent_2",
-        "task_id": "CH-01",
-        "turns": 9,
-        "plan_len": 5,
-        "wall_s": 0.9420107000041753,
-        "thread_cpu_ns": 531250000,
-        "process_cpu_ns": 531250000,
-        "instrumented_cpu_ns": 125000000,
-        "reconcile_cpu_ns": 406250000,
-        "tool_call_counts": {
-          "code_exec": 3,
-          "calculator": 1
-        },
-        "backend": "scripted",
-        "search_locality": "remote"
-      },
-      {
-        "session_id": "agent_3",
-        "task_id": "CH-02",
+        "task_id": "FO-01",
         "turns": 11,
-        "plan_len": 6,
-        "wall_s": 0.9905027999775484,
-        "thread_cpu_ns": 562500000,
-        "process_cpu_ns": 562500000,
-        "instrumented_cpu_ns": 46875000,
-        "reconcile_cpu_ns": 515625000,
+        "plan_len": 2,
+        "wall_s": 1.9828376539999795,
+        "thread_cpu_ns": 189882021,
+        "process_cpu_ns": 189882021,
+        "instrumented_cpu_ns": 189882021,
+        "reconcile_cpu_ns": 5,
+        "orch_measured_cpu_ns": 45366494,
+        "orch_reconcile_cpu_ns": 0,
+        "residual_unattributed_cpu_ns": 5,
+        "parallel_cpu_trim_ns": 15886718,
         "tool_call_counts": {
-          "code_exec": 3,
-          "search": 1,
-          "calculator": 1
+          "search": 9
         },
+        "tool_call_sequence": [
+          {
+            "tool": "search",
+            "query": "{\"query\": \"paris museum castle history\", \"snippets\": [\"... paris museum castle history ... excerpt 9667 ...\", \"... paris museum castle history ... excerpt 7193 ...\", \"... paris museum castle history ... excerpt 2896 ...\", \"... paris museum castle history .",
+            "llm_step": 0
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"cairo weather sun warm\", \"snippets\": [\"... cairo weather sun warm ... excerpt 2203 ...\", \"... cairo weather sun warm ... excerpt 4441 ...\", \"... cairo weather sun warm ... excerpt 3270 ...\", \"... cairo weather sun warm ... excerpt 6575 ...\", \"..",
+            "llm_step": 1
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"cairo food bread market\", \"snippets\": [\"... cairo food bread market ... excerpt 5858 ...\", \"... cairo food bread market ... excerpt 8944 ...\", \"... cairo food bread market ... excerpt 5114 ...\", \"... cairo food bread market ... excerpt 5206 ...\"",
+            "llm_step": 2
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"tokyo weather season wind\", \"snippets\": [\"... tokyo weather season wind ... excerpt 6265 ...\", \"... tokyo weather season wind ... excerpt 4262 ...\", \"... tokyo weather season wind ... excerpt 3534 ...\", \"... tokyo weather season wind ... excerpt",
+            "llm_step": 3
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"tokyo city station bridge\", \"snippets\": [\"... tokyo city station bridge ... excerpt 7083 ...\", \"... tokyo city station bridge ... excerpt 6485 ...\", \"... tokyo city station bridge ... excerpt 7637 ...\", \"... tokyo city station bridge ... excerpt",
+            "llm_step": 4
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"paris weather forecast rain\", \"snippets\": [\"... paris weather forecast rain ... excerpt 6991 ...\", \"... paris weather forecast rain ... excerpt 8168 ...\", \"... paris weather forecast rain ... excerpt 8785 ...\", \"... paris weather forecast rain .",
+            "llm_step": 5
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"cairo ancient museum empire\", \"snippets\": [\"... cairo ancient museum empire ... excerpt 9662 ...\", \"... cairo ancient museum empire ... excerpt 9223 ...\", \"... cairo ancient museum empire ... excerpt 1896 ...\", \"... cairo ancient museum empire .",
+            "llm_step": 6
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"tokyo food fish dinner\", \"snippets\": [\"... tokyo food fish dinner ... excerpt 7273 ...\", \"... tokyo food fish dinner ... excerpt 8491 ...\", \"... tokyo food fish dinner ... excerpt 5693 ...\", \"... tokyo food fish dinner ... excerpt 3263 ...\", \"..",
+            "llm_step": 7
+          },
+          {
+            "tool": "search",
+            "query": "{\"query\": \"paris food recipe cheese\", \"snippets\": [\"... paris food recipe cheese ... excerpt 3849 ...\", \"... paris food recipe cheese ... excerpt 1540 ...\", \"... paris food recipe cheese ... excerpt 9017 ...\", \"... paris food recipe cheese ... excerpt 9416",
+            "llm_step": 8
+          }
+        ],
         "backend": "scripted",
-        "search_locality": "remote"
-      },
-      {
-        "session_id": "agent_4",
-        "task_id": "RH-01",
-        "turns": 13,
-        "plan_len": 7,
-        "wall_s": 1.1019624000182375,
-        "thread_cpu_ns": 562500000,
-        "process_cpu_ns": 562500000,
-        "instrumented_cpu_ns": 31250000,
-        "reconcile_cpu_ns": 531250000,
-        "tool_call_counts": {
-          "retrieve": 5,
-          "search": 1
+        "replay": false,
+        "provenance": {
+          "measured": 205768734,
+          "step_inferred": 0,
+          "residual": 5
         },
-        "backend": "scripted",
-        "search_locality": "remote"
-      },
-      {
-        "session_id": "agent_5",
-        "task_id": "RH-02",
-        "turns": 15,
-        "plan_len": 8,
-        "wall_s": 0.8915929000359029,
-        "thread_cpu_ns": 515625000,
-        "process_cpu_ns": 515625000,
-        "instrumented_cpu_ns": 31250000,
-        "reconcile_cpu_ns": 484375000,
-        "tool_call_counts": {
-          "retrieve": 6,
-          "calculator": 1
-        },
-        "backend": "scripted",
-        "search_locality": "remote"
-      },
-      {
-        "session_id": "agent_6",
-        "task_id": "RE-01",
-        "turns": 3,
-        "plan_len": 4,
-        "wall_s": 0.27407929999753833,
-        "thread_cpu_ns": 234375000,
-        "process_cpu_ns": 234375000,
-        "instrumented_cpu_ns": 0,
-        "reconcile_cpu_ns": 234375000,
-        "tool_call_counts": {
-          "calculator": 1
-        },
-        "backend": "scripted",
-        "search_locality": "remote"
-      },
-      {
-        "session_id": "agent_7",
-        "task_id": "RE-02",
-        "turns": 3,
-        "plan_len": 4,
-        "wall_s": 0.37506659992504865,
-        "thread_cpu_ns": 265625000,
-        "process_cpu_ns": 265625000,
-        "instrumented_cpu_ns": 15625000,
-        "reconcile_cpu_ns": 250000000,
-        "tool_call_counts": {
-          "search": 1
-        },
-        "backend": "scripted",
-        "search_locality": "remote"
-      },
-      {
-        "session_id": "agent_8",
-        "task_id": "LH-01",
-        "turns": 25,
-        "plan_len": 13,
-        "wall_s": 1.4072413999820128,
-        "thread_cpu_ns": 562500000,
-        "process_cpu_ns": 562500000,
-        "instrumented_cpu_ns": 125000000,
-        "reconcile_cpu_ns": 437500000,
-        "tool_call_counts": {
-          "retrieve": 12
-        },
-        "backend": "scripted",
-        "search_locality": "remote"
-      },
-      {
-        "session_id": "agent_9",
-        "task_id": "LH-02",
-        "turns": 15,
-        "plan_len": 12,
-        "wall_s": 0.8420659999828786,
-        "thread_cpu_ns": 500000000,
-        "process_cpu_ns": 500000000,
-        "instrumented_cpu_ns": 31250000,
-        "reconcile_cpu_ns": 468750000,
-        "tool_call_counts": {
-          "retrieve": 4,
-          "calculator": 3
-        },
-        "backend": "scripted",
         "search_locality": "remote"
       }
     ],
     "per_session_category": {
-      "agent_2": {
-        "GC": {
-          "cpu_ns": 31250000,
-          "wall_ns": 31250000,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 1
-        },
-        "ORCH_SETUP": {
-          "cpu_ns": 46875000,
-          "wall_ns": 482949000,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 31250000,
-          "wall_ns": 7652200,
-          "bytes_in": 15833,
-          "bytes_out": 0,
-          "count": 9
-        },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 15625000,
-          "wall_ns": 20847100,
-          "bytes_in": 437,
-          "bytes_out": 0,
-          "count": 4
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 115200,
-          "bytes_in": 0,
-          "bytes_out": 9768,
-          "count": 4
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 406250000,
-          "wall_ns": 784183700,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 13
-        }
-      },
       "agent_0": {
         "ORCH_SETUP": {
-          "cpu_ns": 0,
-          "wall_ns": 269024200,
+          "cpu_ns": 37399918,
+          "wall_ns": 436086823,
           "bytes_in": 0,
           "bytes_out": 0,
           "count": 2
         },
-        "TOKENIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 10545200,
-          "bytes_in": 36114,
-          "bytes_out": 0,
-          "count": 19
-        },
-        "HTTP_CLIENT": {
-          "cpu_ns": 0,
-          "wall_ns": 2706774400,
-          "bytes_in": 1059,
-          "bytes_out": 265,
-          "count": 24
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 170900,
-          "bytes_in": 0,
-          "bytes_out": 24513,
-          "count": 9
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 656250000,
-          "wall_ns": 4376245700,
+        "GC": {
+          "cpu_ns": 20395,
+          "wall_ns": 22102,
           "bytes_in": 0,
           "bytes_out": 0,
-          "count": 28
-        },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 0,
-          "wall_ns": 903200,
-          "bytes_in": 17,
-          "bytes_out": 0,
-          "count": 1
-        }
-      },
-      "agent_3": {
-        "ORCH_SETUP": {
-          "cpu_ns": 15625000,
-          "wall_ns": 159106600,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
+          "count": 3
         },
         "TOKENIZATION": {
-          "cpu_ns": 15625000,
-          "wall_ns": 4302400,
-          "bytes_in": 16377,
+          "cpu_ns": 38022054,
+          "wall_ns": 270510270,
+          "bytes_in": 23769,
           "bytes_out": 0,
           "count": 11
         },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 15625000,
-          "wall_ns": 9940300,
-          "bytes_in": 410,
-          "bytes_out": 0,
-          "count": 4
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 119800,
-          "bytes_in": 0,
-          "bytes_out": 9683,
-          "count": 5
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 515625000,
-          "wall_ns": 1309490300,
+        "FRAMEWORK": {
+          "cpu_ns": 45041796,
+          "wall_ns": 48678931,
           "bytes_in": 0,
           "bytes_out": 0,
-          "count": 16
+          "count": 62
         },
         "HTTP_CLIENT": {
-          "cpu_ns": 0,
-          "wall_ns": 370882000,
-          "bytes_in": 138,
-          "bytes_out": 39,
-          "count": 3
-        }
-      },
-      "agent_4": {
-        "GC": {
-          "cpu_ns": 0,
-          "wall_ns": 0,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "ORCH_SETUP": {
-          "cpu_ns": 0,
-          "wall_ns": 164481500,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 6477100,
-          "bytes_in": 23265,
-          "bytes_out": 0,
-          "count": 13
-        },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 15625000,
-          "wall_ns": 35814200,
-          "bytes_in": 167,
-          "bytes_out": 0,
-          "count": 5
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 174500,
-          "bytes_in": 0,
-          "bytes_out": 15512,
-          "count": 6
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 546875000,
-          "wall_ns": 1374985500,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 19
-        },
-        "HTTP_CLIENT": {
-          "cpu_ns": 0,
-          "wall_ns": 268487400,
-          "bytes_in": 134,
-          "bytes_out": 37,
-          "count": 3
-        }
-      },
-      "agent_5": {
-        "ORCH_SETUP": {
-          "cpu_ns": 15625000,
-          "wall_ns": 231477300,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "GC": {
-          "cpu_ns": 0,
-          "wall_ns": 0,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 1
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 15625000,
-          "wall_ns": 4996000,
-          "bytes_in": 25618,
-          "bytes_out": 0,
-          "count": 15
-        },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 0,
-          "wall_ns": 44779800,
-          "bytes_in": 271,
-          "bytes_out": 0,
-          "count": 7
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 174400,
-          "bytes_in": 0,
-          "bytes_out": 15494,
-          "count": 7
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 484375000,
-          "wall_ns": 1055665800,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 22
-        }
-      },
-      "agent_1": {
-        "ORCH_SETUP": {
-          "cpu_ns": 15625000,
-          "wall_ns": 283193800,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 15625000,
-          "wall_ns": 12420200,
-          "bytes_in": 42718,
-          "bytes_out": 0,
-          "count": 21
-        },
-        "HTTP_CLIENT": {
-          "cpu_ns": 15625000,
-          "wall_ns": 3402090000,
-          "bytes_in": 1179,
-          "bytes_out": 285,
+          "cpu_ns": 1601120,
+          "wall_ns": 3090231834,
+          "bytes_in": 1323,
+          "bytes_out": 429,
           "count": 27
         },
         "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 251700,
+          "cpu_ns": 162650,
+          "wall_ns": 176976,
           "bytes_in": 0,
-          "bytes_out": 29059,
+          "bytes_out": 20796,
+          "count": 9
+        },
+        "THREADPOOL": {
+          "cpu_ns": 60854161,
+          "wall_ns": 65945600,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 81
+        },
+        "ORCH_DISPATCH": {
+          "cpu_ns": 7966576,
+          "wall_ns": 522684167,
+          "bytes_in": 0,
+          "bytes_out": 0,
           "count": 10
         },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 593750000,
-          "wall_ns": 5051240300,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 31
-        },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 0,
-          "wall_ns": 6603500,
-          "bytes_in": 45,
-          "bytes_out": 0,
-          "count": 1
-        }
-      },
-      "agent_6": {
-        "ORCH_SETUP": {
-          "cpu_ns": 0,
-          "wall_ns": 186935700,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 6423000,
-          "bytes_in": 5350,
-          "bytes_out": 0,
-          "count": 3
-        },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 0,
-          "wall_ns": 851100,
-          "bytes_in": 15,
-          "bytes_out": 0,
-          "count": 1
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 18700,
-          "bytes_in": 0,
-          "bytes_out": 3302,
-          "count": 1
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 234375000,
-          "wall_ns": 309872600,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 4
-        }
-      },
-      "agent_8": {
-        "GC": {
-          "cpu_ns": 0,
-          "wall_ns": 0,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "ORCH_SETUP": {
-          "cpu_ns": 0,
-          "wall_ns": 71423700,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 46875000,
-          "wall_ns": 31880900,
-          "bytes_in": 50911,
-          "bytes_out": 0,
-          "count": 25
-        },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 15625000,
-          "wall_ns": 91404100,
-          "bytes_in": 443,
-          "bytes_out": 0,
-          "count": 12
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 361800,
-          "bytes_in": 0,
-          "bytes_out": 31861,
-          "count": 12
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 500000000,
-          "wall_ns": 1568381900,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 37
-        }
-      },
-      "agent_7": {
-        "ORCH_SETUP": {
-          "cpu_ns": 15625000,
-          "wall_ns": 166452100,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 787200,
-          "bytes_in": 2793,
-          "bytes_out": 0,
-          "count": 3
-        },
-        "HTTP_CLIENT": {
-          "cpu_ns": 0,
-          "wall_ns": 176957600,
-          "bytes_in": 141,
-          "bytes_out": 42,
-          "count": 3
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 35000,
-          "bytes_in": 0,
-          "bytes_out": 617,
-          "count": 1
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 250000000,
-          "wall_ns": 454796400,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 4
-        }
-      },
-      "agent_9": {
-        "ORCH_SETUP": {
-          "cpu_ns": 0,
-          "wall_ns": 145430100,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "GC": {
-          "cpu_ns": 0,
-          "wall_ns": 0,
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 5,
+          "wall_ns": 5,
           "bytes_in": 0,
           "bytes_out": 0,
           "count": 1
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 15625000,
-          "wall_ns": 14875900,
-          "bytes_in": 21675,
-          "bytes_out": 0,
-          "count": 15
-        },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 15625000,
-          "wall_ns": 28450000,
-          "bytes_in": 151,
-          "bytes_out": 0,
-          "count": 7
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 147400,
-          "bytes_in": 0,
-          "bytes_out": 9574,
-          "count": 7
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 468750000,
-          "wall_ns": 1072854300,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 22
         }
       }
     },
     "residual_cpu_ns": 0,
     "residual_fraction": 0.0,
     "totals": {
-      "thread_cpu_ns": 5031250000,
-      "wall_ns": 4847588100,
-      "instrumented_cpu_ns": 5031250000
+      "thread_cpu_ns": 189882021,
+      "wall_ns": 1995274338,
+      "instrumented_cpu_ns": 191068675
     },
     "os_times_user_sys": {
-      "user": 0.421875,
-      "system": 0.34375
+      "user": 0.1200000000000001,
+      "system": 0.0900000000000003
     },
-    "timeline": []
+    "timeline": [],
+    "provenance_totals": {
+      "measured": 206955388,
+      "step_inferred": 0,
+      "residual": 5
+    },
+    "provenance_detail": {
+      "ORCH_SETUP|agent_0|locality_ablation|measured": 40529029,
+      "GC|agent_0|locality_ablation|measured": 22102,
+      "TOKENIZATION|agent_0|locality_ablation|measured": 41203217,
+      "FRAMEWORK|agent_0|locality_ablation|measured": 48710991,
+      "HTTP_CLIENT|agent_0|locality_ablation|measured": 1735080,
+      "SERIALIZATION|agent_0|locality_ablation|measured": 176259,
+      "THREADPOOL|agent_0|locality_ablation|measured": 65945600,
+      "ORCH_DISPATCH|agent_0|locality_ablation|measured": 8633110,
+      "RESIDUAL_UNATTRIBUTED|agent_0|locality_ablation|residual": 5
+    }
   },
   "category_regions_override": {
     "ORCH_SETUP": "REAL AGENT MODE: LangGraph first-step CPU residual (framework graph/session construction), the Phase 0 setup definition",
@@ -877,103 +732,70 @@
     "LOGGING": "REAL AGENT MODE: not separately instrumented; inside ORCH buckets",
     "TOOL_COMPUTE": "Local tool bodies only (code_exec, retrieve, calculator). Search is remote: HTTP envelope + I/O wait, not TOOL_COMPUTE."
   },
-  "reproduce_cmd": "python -m apu_characterization.experiments.real_agent_breakdown --backend scripted --profile mixed --seed 0 --sessions 10 --llm-scale 0.05 --search-locality remote --payload-profile locality_ablation",
+  "reproduce_cmd": "python -m apu_characterization.experiments.real_agent_breakdown --backend scripted --profile fanout --seed 1 --sessions 1 --llm-scale 0.05 --search-locality remote --payload-profile locality_ablation",
   "per_task": {
-    "CH-01": {
+    "FO-01": {
       "categories": {
+        "ORCH_SETUP": {
+          "cpu_ns": 37399918,
+          "wall_ns": 436086823,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 2
+        },
         "GC": {
-          "cpu_ns": 31250000,
-          "wall_ns": 31250000,
+          "cpu_ns": 20395,
+          "wall_ns": 22102,
           "bytes_in": 0,
           "bytes_out": 0,
-          "count": 1
-        },
-        "ORCH_SETUP": {
-          "cpu_ns": 46875000,
-          "wall_ns": 482949000,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
+          "count": 3
         },
         "TOKENIZATION": {
-          "cpu_ns": 31250000,
-          "wall_ns": 7652200,
-          "bytes_in": 15833,
+          "cpu_ns": 38022054,
+          "wall_ns": 270510270,
+          "bytes_in": 23769,
           "bytes_out": 0,
-          "count": 9
+          "count": 11
         },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 15625000,
-          "wall_ns": 20847100,
-          "bytes_in": 437,
-          "bytes_out": 0,
-          "count": 4
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 115200,
-          "bytes_in": 0,
-          "bytes_out": 9768,
-          "count": 4
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 406250000,
-          "wall_ns": 784183700,
+        "FRAMEWORK": {
+          "cpu_ns": 45041796,
+          "wall_ns": 48678931,
           "bytes_in": 0,
           "bytes_out": 0,
-          "count": 13
-        }
-      },
-      "sessions": [
-        "agent_2"
-      ],
-      "instrumented_cpu_ns": 531250000,
-      "amenable_strict_ns": 484375000,
-      "amenable_broad_ns": 484375000,
-      "amenable_strict_share": 0.9117647058823529,
-      "amenable_broad_share": 0.9117647058823529
-    },
-    "SH-01": {
-      "categories": {
-        "ORCH_SETUP": {
-          "cpu_ns": 0,
-          "wall_ns": 269024200,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 10545200,
-          "bytes_in": 36114,
-          "bytes_out": 0,
-          "count": 19
+          "count": 62
         },
         "HTTP_CLIENT": {
-          "cpu_ns": 0,
-          "wall_ns": 2706774400,
-          "bytes_in": 1059,
-          "bytes_out": 265,
-          "count": 24
+          "cpu_ns": 1601120,
+          "wall_ns": 3090231834,
+          "bytes_in": 1323,
+          "bytes_out": 429,
+          "count": 27
         },
         "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 170900,
+          "cpu_ns": 162650,
+          "wall_ns": 176976,
           "bytes_in": 0,
-          "bytes_out": 24513,
+          "bytes_out": 20796,
           "count": 9
         },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 656250000,
-          "wall_ns": 4376245700,
+        "THREADPOOL": {
+          "cpu_ns": 60854161,
+          "wall_ns": 65945600,
           "bytes_in": 0,
           "bytes_out": 0,
-          "count": 28
+          "count": 81
         },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 0,
-          "wall_ns": 903200,
-          "bytes_in": 17,
+        "ORCH_DISPATCH": {
+          "cpu_ns": 7966576,
+          "wall_ns": 522684167,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "count": 10
+        },
+        "RESIDUAL_UNATTRIBUTED": {
+          "cpu_ns": 5,
+          "wall_ns": 5,
+          "bytes_in": 0,
           "bytes_out": 0,
           "count": 1
         }
@@ -981,1131 +803,265 @@
       "sessions": [
         "agent_0"
       ],
-      "instrumented_cpu_ns": 656250000,
-      "amenable_strict_ns": 656250000,
-      "amenable_broad_ns": 656250000,
-      "amenable_strict_share": 1.0,
-      "amenable_broad_share": 1.0
-    },
-    "CH-02": {
-      "categories": {
-        "ORCH_SETUP": {
-          "cpu_ns": 15625000,
-          "wall_ns": 159106600,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 15625000,
-          "wall_ns": 4302400,
-          "bytes_in": 16377,
-          "bytes_out": 0,
-          "count": 11
-        },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 15625000,
-          "wall_ns": 9940300,
-          "bytes_in": 410,
-          "bytes_out": 0,
-          "count": 4
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 119800,
-          "bytes_in": 0,
-          "bytes_out": 9683,
-          "count": 5
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 515625000,
-          "wall_ns": 1309490300,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 16
-        },
-        "HTTP_CLIENT": {
-          "cpu_ns": 0,
-          "wall_ns": 370882000,
-          "bytes_in": 138,
-          "bytes_out": 39,
-          "count": 3
-        }
-      },
-      "sessions": [
-        "agent_3"
-      ],
-      "instrumented_cpu_ns": 562500000,
-      "amenable_strict_ns": 546875000,
-      "amenable_broad_ns": 546875000,
-      "amenable_strict_share": 0.9722222222222222,
-      "amenable_broad_share": 0.9722222222222222
-    },
-    "RH-01": {
-      "categories": {
-        "GC": {
-          "cpu_ns": 0,
-          "wall_ns": 0,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "ORCH_SETUP": {
-          "cpu_ns": 0,
-          "wall_ns": 164481500,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 6477100,
-          "bytes_in": 23265,
-          "bytes_out": 0,
-          "count": 13
-        },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 15625000,
-          "wall_ns": 35814200,
-          "bytes_in": 167,
-          "bytes_out": 0,
-          "count": 5
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 174500,
-          "bytes_in": 0,
-          "bytes_out": 15512,
-          "count": 6
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 546875000,
-          "wall_ns": 1374985500,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 19
-        },
-        "HTTP_CLIENT": {
-          "cpu_ns": 0,
-          "wall_ns": 268487400,
-          "bytes_in": 134,
-          "bytes_out": 37,
-          "count": 3
-        }
-      },
-      "sessions": [
-        "agent_4"
-      ],
-      "instrumented_cpu_ns": 562500000,
-      "amenable_strict_ns": 546875000,
-      "amenable_broad_ns": 546875000,
-      "amenable_strict_share": 0.9722222222222222,
-      "amenable_broad_share": 0.9722222222222222
-    },
-    "RH-02": {
-      "categories": {
-        "ORCH_SETUP": {
-          "cpu_ns": 15625000,
-          "wall_ns": 231477300,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "GC": {
-          "cpu_ns": 0,
-          "wall_ns": 0,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 1
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 15625000,
-          "wall_ns": 4996000,
-          "bytes_in": 25618,
-          "bytes_out": 0,
-          "count": 15
-        },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 0,
-          "wall_ns": 44779800,
-          "bytes_in": 271,
-          "bytes_out": 0,
-          "count": 7
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 174400,
-          "bytes_in": 0,
-          "bytes_out": 15494,
-          "count": 7
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 484375000,
-          "wall_ns": 1055665800,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 22
-        }
-      },
-      "sessions": [
-        "agent_5"
-      ],
-      "instrumented_cpu_ns": 515625000,
-      "amenable_strict_ns": 515625000,
-      "amenable_broad_ns": 515625000,
-      "amenable_strict_share": 1.0,
-      "amenable_broad_share": 1.0
-    },
-    "SH-02": {
-      "categories": {
-        "ORCH_SETUP": {
-          "cpu_ns": 15625000,
-          "wall_ns": 283193800,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 15625000,
-          "wall_ns": 12420200,
-          "bytes_in": 42718,
-          "bytes_out": 0,
-          "count": 21
-        },
-        "HTTP_CLIENT": {
-          "cpu_ns": 15625000,
-          "wall_ns": 3402090000,
-          "bytes_in": 1179,
-          "bytes_out": 285,
-          "count": 27
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 251700,
-          "bytes_in": 0,
-          "bytes_out": 29059,
-          "count": 10
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 593750000,
-          "wall_ns": 5051240300,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 31
-        },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 0,
-          "wall_ns": 6603500,
-          "bytes_in": 45,
-          "bytes_out": 0,
-          "count": 1
-        }
-      },
-      "sessions": [
-        "agent_1"
-      ],
-      "instrumented_cpu_ns": 640625000,
-      "amenable_strict_ns": 625000000,
-      "amenable_broad_ns": 640625000,
-      "amenable_strict_share": 0.975609756097561,
-      "amenable_broad_share": 1.0
-    },
-    "RE-01": {
-      "categories": {
-        "ORCH_SETUP": {
-          "cpu_ns": 0,
-          "wall_ns": 186935700,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 6423000,
-          "bytes_in": 5350,
-          "bytes_out": 0,
-          "count": 3
-        },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 0,
-          "wall_ns": 851100,
-          "bytes_in": 15,
-          "bytes_out": 0,
-          "count": 1
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 18700,
-          "bytes_in": 0,
-          "bytes_out": 3302,
-          "count": 1
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 234375000,
-          "wall_ns": 309872600,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 4
-        }
-      },
-      "sessions": [
-        "agent_6"
-      ],
-      "instrumented_cpu_ns": 234375000,
-      "amenable_strict_ns": 234375000,
-      "amenable_broad_ns": 234375000,
-      "amenable_strict_share": 1.0,
-      "amenable_broad_share": 1.0
-    },
-    "LH-01": {
-      "categories": {
-        "GC": {
-          "cpu_ns": 0,
-          "wall_ns": 0,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "ORCH_SETUP": {
-          "cpu_ns": 0,
-          "wall_ns": 71423700,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 46875000,
-          "wall_ns": 31880900,
-          "bytes_in": 50911,
-          "bytes_out": 0,
-          "count": 25
-        },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 15625000,
-          "wall_ns": 91404100,
-          "bytes_in": 443,
-          "bytes_out": 0,
-          "count": 12
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 361800,
-          "bytes_in": 0,
-          "bytes_out": 31861,
-          "count": 12
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 500000000,
-          "wall_ns": 1568381900,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 37
-        }
-      },
-      "sessions": [
-        "agent_8"
-      ],
-      "instrumented_cpu_ns": 562500000,
-      "amenable_strict_ns": 546875000,
-      "amenable_broad_ns": 546875000,
-      "amenable_strict_share": 0.9722222222222222,
-      "amenable_broad_share": 0.9722222222222222
-    },
-    "RE-02": {
-      "categories": {
-        "ORCH_SETUP": {
-          "cpu_ns": 15625000,
-          "wall_ns": 166452100,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 787200,
-          "bytes_in": 2793,
-          "bytes_out": 0,
-          "count": 3
-        },
-        "HTTP_CLIENT": {
-          "cpu_ns": 0,
-          "wall_ns": 176957600,
-          "bytes_in": 141,
-          "bytes_out": 42,
-          "count": 3
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 35000,
-          "bytes_in": 0,
-          "bytes_out": 617,
-          "count": 1
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 250000000,
-          "wall_ns": 454796400,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 4
-        }
-      },
-      "sessions": [
-        "agent_7"
-      ],
-      "instrumented_cpu_ns": 265625000,
-      "amenable_strict_ns": 265625000,
-      "amenable_broad_ns": 265625000,
-      "amenable_strict_share": 1.0,
-      "amenable_broad_share": 1.0
-    },
-    "LH-02": {
-      "categories": {
-        "ORCH_SETUP": {
-          "cpu_ns": 0,
-          "wall_ns": 145430100,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 2
-        },
-        "GC": {
-          "cpu_ns": 0,
-          "wall_ns": 0,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 1
-        },
-        "TOKENIZATION": {
-          "cpu_ns": 15625000,
-          "wall_ns": 14875900,
-          "bytes_in": 21675,
-          "bytes_out": 0,
-          "count": 15
-        },
-        "TOOL_COMPUTE": {
-          "cpu_ns": 15625000,
-          "wall_ns": 28450000,
-          "bytes_in": 151,
-          "bytes_out": 0,
-          "count": 7
-        },
-        "SERIALIZATION": {
-          "cpu_ns": 0,
-          "wall_ns": 147400,
-          "bytes_in": 0,
-          "bytes_out": 9574,
-          "count": 7
-        },
-        "ORCH_DISPATCH": {
-          "cpu_ns": 468750000,
-          "wall_ns": 1072854300,
-          "bytes_in": 0,
-          "bytes_out": 0,
-          "count": 22
-        }
-      },
-      "sessions": [
-        "agent_9"
-      ],
-      "instrumented_cpu_ns": 500000000,
-      "amenable_strict_ns": 484375000,
-      "amenable_broad_ns": 484375000,
-      "amenable_strict_share": 0.96875,
-      "amenable_broad_share": 0.96875
+      "instrumented_cpu_ns": 191068675,
+      "amenable_strict_ns": 128592994,
+      "amenable_broad_ns": 191048275,
+      "amenable_strict_share": 0.6730197610885196,
+      "amenable_broad_share": 0.9998932321062047
     }
   },
   "category_averages": {
     "overall": {
-      "task_count": 10,
+      "task_count": 1,
       "tasks": [
-        "CH-01",
-        "CH-02",
-        "LH-01",
-        "LH-02",
-        "RE-01",
-        "RE-02",
-        "RH-01",
-        "RH-02",
-        "SH-01",
-        "SH-02"
+        "FO-01"
       ],
-      "mean_instrumented_cpu_ms": 503.125,
-      "mean_session_wall_s": 1.5707757900003343,
-      "mean_amenable_strict_share": 0.9772791128646581,
-      "mean_amenable_broad_share": 0.979718137254902,
-      "mean_wall_frac_sum_partition": 1.4001800694661548,
+      "mean_instrumented_cpu_ms": 191.068675,
+      "mean_session_wall_s": 1.9828376539999795,
+      "mean_amenable_strict_share": 0.6730197610885196,
+      "mean_amenable_broad_share": 0.9998932321062047,
+      "mean_wall_frac_sum_partition": 2.0164171156092245,
       "categories": {
+        "FRAMEWORK": {
+          "mean_cpu_ms": 45.041796,
+          "mean_cpu_share": 0.2357361613566431,
+          "mean_wall_ms": 48.678931,
+          "mean_wall_frac": 0.024550134450896658,
+          "in_wall_partition": true,
+          "wall_concurrent": false
+        },
         "GC": {
-          "mean_cpu_ms": 3.125,
-          "mean_cpu_share": 0.0058823529411764705,
-          "mean_wall_ms": 3.125,
-          "mean_wall_frac": 0.0033173720850369843,
+          "mean_cpu_ms": 0.020395,
+          "mean_cpu_share": 0.0001067417251938341,
+          "mean_wall_ms": 0.022102,
+          "mean_wall_frac": 1.1146651343549798e-05,
           "in_wall_partition": false,
           "wall_concurrent": true
         },
         "HTTP_CLIENT": {
-          "mean_cpu_ms": 1.5625,
-          "mean_cpu_share": 0.0024390243902439024,
-          "mean_wall_ms": 692.51914,
-          "mean_wall_frac": 0.2462043502242975,
+          "mean_cpu_ms": 1.60112,
+          "mean_cpu_share": 0.008379814221247936,
+          "mean_wall_ms": 3090.231834,
+          "mean_wall_frac": 1.55848958575407,
           "in_wall_partition": true,
           "wall_concurrent": false
         },
         "ORCH_DISPATCH": {
-          "mean_cpu_ms": 465.625,
-          "mean_cpu_share": 0.9287383338405576,
-          "mean_wall_ms": 1735.7716500000001,
-          "mean_wall_frac": 1.1443496317061526,
+          "mean_cpu_ms": 7.966576,
+          "mean_cpu_share": 0.0416948304058737,
+          "mean_wall_ms": 522.684167,
+          "mean_wall_frac": 0.26360411602310907,
           "in_wall_partition": true,
           "wall_concurrent": false
         },
         "ORCH_SETUP": {
-          "mean_cpu_ms": 10.9375,
-          "mean_cpu_share": 0.022952987551265888,
-          "mean_wall_ms": 216.0474,
+          "mean_cpu_ms": 37.399918,
+          "mean_cpu_share": 0.19574070945956998,
+          "mean_wall_ms": 436.086823,
           "mean_wall_frac": null,
           "in_wall_partition": false,
           "wall_concurrent": false
         },
+        "RESIDUAL_UNATTRIBUTED": {
+          "mean_cpu_ms": 5e-06,
+          "mean_cpu_share": 2.6168601420405516e-08,
+          "mean_wall_ms": 5e-06,
+          "mean_wall_frac": 2.521638617217853e-09,
+          "in_wall_partition": true,
+          "wall_concurrent": false
+        },
         "SERIALIZATION": {
-          "mean_cpu_ms": 0.0,
-          "mean_cpu_share": 0.0,
-          "mean_wall_ms": 0.15694,
-          "mean_wall_frac": 0.00012851646541640625,
+          "mean_cpu_ms": 0.16265,
+          "mean_cpu_share": 0.0008512646042057914,
+          "mean_wall_ms": 0.176976,
+          "mean_wall_frac": 8.925390318414934e-05,
+          "in_wall_partition": true,
+          "wall_concurrent": false
+        },
+        "THREADPOOL": {
+          "mean_cpu_ms": 60.854161,
+          "mean_cpu_share": 0.3184936567964372,
+          "mean_wall_ms": 65.9456,
+          "mean_wall_frac": 0.033258194319120325,
           "in_wall_partition": true,
           "wall_concurrent": false
         },
         "TOKENIZATION": {
-          "mean_cpu_ms": 14.0625,
-          "mean_cpu_share": 0.025587791472834513,
-          "mean_wall_ms": 10.036010000000001,
-          "mean_wall_frac": 0.009497571070288577,
+          "mean_cpu_ms": 38.022054,
+          "mean_cpu_share": 0.19899679526222705,
+          "mean_wall_ms": 270.51027,
+          "mean_wall_frac": 0.13642582863720562,
           "in_wall_partition": true,
           "wall_concurrent": false
-        },
-        "TOOL_COMPUTE": {
-          "mean_cpu_ms": 7.8125,
-          "mean_cpu_share": 0.014399509803921568,
-          "mean_wall_ms": 23.95933,
-          "mean_wall_frac": 0.02183250459526163,
-          "in_wall_partition": false,
-          "wall_concurrent": true
         }
       }
     },
     "by_archetype": {
-      "CH": {
-        "label": "code_heavy",
-        "task_count": 2,
+      "FO": {
+        "label": "fanout",
+        "task_count": 1,
         "tasks": [
-          "CH-01",
-          "CH-02"
+          "FO-01"
         ],
-        "mean_instrumented_cpu_ms": 546.875,
-        "mean_session_wall_s": 0.9662567499908619,
-        "mean_amenable_strict_share": 0.9419934640522876,
-        "mean_amenable_broad_share": 0.9419934640522876,
-        "mean_wall_frac_sum_partition": 1.2708258107524668,
+        "mean_instrumented_cpu_ms": 191.068675,
+        "mean_session_wall_s": 1.9828376539999795,
+        "mean_amenable_strict_share": 0.6730197610885196,
+        "mean_amenable_broad_share": 0.9998932321062047,
+        "mean_wall_frac_sum_partition": 2.0164171156092245,
         "categories": {
+          "FRAMEWORK": {
+            "mean_cpu_ms": 45.041796,
+            "mean_cpu_share": 0.2357361613566431,
+            "mean_wall_ms": 48.678931,
+            "mean_wall_frac": 0.024550134450896658,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
           "GC": {
-            "mean_cpu_ms": 15.625,
-            "mean_cpu_share": 0.029411764705882353,
-            "mean_wall_ms": 15.625,
-            "mean_wall_frac": 0.01658686042518492,
+            "mean_cpu_ms": 0.020395,
+            "mean_cpu_share": 0.0001067417251938341,
+            "mean_wall_ms": 0.022102,
+            "mean_wall_frac": 1.1146651343549798e-05,
             "in_wall_partition": false,
             "wall_concurrent": true
           },
           "HTTP_CLIENT": {
-            "mean_cpu_ms": 0.0,
-            "mean_cpu_share": 0.0,
-            "mean_wall_ms": 185.441,
-            "mean_wall_frac": 0.18721905683073622,
+            "mean_cpu_ms": 1.60112,
+            "mean_cpu_share": 0.008379814221247936,
+            "mean_wall_ms": 3090.231834,
+            "mean_wall_frac": 1.55848958575407,
             "in_wall_partition": true,
             "wall_concurrent": false
           },
           "ORCH_DISPATCH": {
-            "mean_cpu_ms": 460.9375,
-            "mean_cpu_share": 0.8406862745098038,
-            "mean_wall_ms": 1046.837,
-            "mean_wall_frac": 1.0772516763670408,
+            "mean_cpu_ms": 7.966576,
+            "mean_cpu_share": 0.0416948304058737,
+            "mean_wall_ms": 522.684167,
+            "mean_wall_frac": 0.26360411602310907,
             "in_wall_partition": true,
             "wall_concurrent": false
           },
           "ORCH_SETUP": {
-            "mean_cpu_ms": 31.25,
-            "mean_cpu_share": 0.05800653594771242,
-            "mean_wall_ms": 321.0278,
+            "mean_cpu_ms": 37.399918,
+            "mean_cpu_share": 0.19574070945956998,
+            "mean_wall_ms": 436.086823,
             "mean_wall_frac": null,
             "in_wall_partition": false,
             "wall_concurrent": false
           },
+          "RESIDUAL_UNATTRIBUTED": {
+            "mean_cpu_ms": 5e-06,
+            "mean_cpu_share": 2.6168601420405516e-08,
+            "mean_wall_ms": 5e-06,
+            "mean_wall_frac": 2.521638617217853e-09,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
           "SERIALIZATION": {
-            "mean_cpu_ms": 0.0,
-            "mean_cpu_share": 0.0,
-            "mean_wall_ms": 0.1175,
-            "mean_wall_frac": 0.00012162013914491456,
+            "mean_cpu_ms": 0.16265,
+            "mean_cpu_share": 0.0008512646042057914,
+            "mean_wall_ms": 0.176976,
+            "mean_wall_frac": 8.925390318414934e-05,
+            "in_wall_partition": true,
+            "wall_concurrent": false
+          },
+          "THREADPOOL": {
+            "mean_cpu_ms": 60.854161,
+            "mean_cpu_share": 0.3184936567964372,
+            "mean_wall_ms": 65.9456,
+            "mean_wall_frac": 0.033258194319120325,
             "in_wall_partition": true,
             "wall_concurrent": false
           },
           "TOKENIZATION": {
-            "mean_cpu_ms": 23.4375,
-            "mean_cpu_share": 0.04330065359477124,
-            "mean_wall_ms": 5.9773,
-            "mean_wall_frac": 0.006233457415545025,
+            "mean_cpu_ms": 38.022054,
+            "mean_cpu_share": 0.19899679526222705,
+            "mean_wall_ms": 270.51027,
+            "mean_wall_frac": 0.13642582863720562,
             "in_wall_partition": true,
             "wall_concurrent": false
-          },
-          "TOOL_COMPUTE": {
-            "mean_cpu_ms": 15.625,
-            "mean_cpu_share": 0.028594771241830064,
-            "mean_wall_ms": 15.3937,
-            "mean_wall_frac": 0.016083019113731917,
-            "in_wall_partition": false,
-            "wall_concurrent": true
-          }
-        }
-      },
-      "LH": {
-        "label": "long_horizon",
-        "task_count": 2,
-        "tasks": [
-          "LH-01",
-          "LH-02"
-        ],
-        "mean_instrumented_cpu_ms": 531.25,
-        "mean_session_wall_s": 1.1246536999824457,
-        "mean_amenable_strict_share": 0.9704861111111112,
-        "mean_amenable_broad_share": 0.9704861111111112,
-        "mean_wall_frac_sum_partition": 1.2146674736309155,
-        "categories": {
-          "GC": {
-            "mean_cpu_ms": 0.0,
-            "mean_cpu_share": 0.0,
-            "mean_wall_ms": 0.0,
-            "mean_wall_frac": 0.0,
-            "in_wall_partition": false,
-            "wall_concurrent": true
-          },
-          "ORCH_DISPATCH": {
-            "mean_cpu_ms": 484.375,
-            "mean_cpu_share": 0.9131944444444444,
-            "mean_wall_ms": 1320.6181000000001,
-            "mean_wall_frac": 1.1942909786514884,
-            "in_wall_partition": true,
-            "wall_concurrent": false
-          },
-          "ORCH_SETUP": {
-            "mean_cpu_ms": 0.0,
-            "mean_cpu_share": 0.0,
-            "mean_wall_ms": 108.4269,
-            "mean_wall_frac": null,
-            "in_wall_partition": false,
-            "wall_concurrent": false
-          },
-          "SERIALIZATION": {
-            "mean_cpu_ms": 0.0,
-            "mean_cpu_share": 0.0,
-            "mean_wall_ms": 0.2546,
-            "mean_wall_frac": 0.00021607220401858652,
-            "in_wall_partition": true,
-            "wall_concurrent": false
-          },
-          "TOKENIZATION": {
-            "mean_cpu_ms": 31.25,
-            "mean_cpu_share": 0.057291666666666664,
-            "mean_wall_ms": 23.3784,
-            "mean_wall_frac": 0.020160422775408568,
-            "in_wall_partition": true,
-            "wall_concurrent": false
-          },
-          "TOOL_COMPUTE": {
-            "mean_cpu_ms": 15.625,
-            "mean_cpu_share": 0.029513888888888888,
-            "mean_wall_ms": 59.92705,
-            "mean_wall_frac": 0.0493693150160035,
-            "in_wall_partition": false,
-            "wall_concurrent": true
-          }
-        }
-      },
-      "RE": {
-        "label": "reasoning_heavy",
-        "task_count": 2,
-        "tasks": [
-          "RE-01",
-          "RE-02"
-        ],
-        "mean_instrumented_cpu_ms": 250.0,
-        "mean_session_wall_s": 0.3245729499612935,
-        "mean_amenable_strict_share": 1.0,
-        "mean_amenable_broad_share": 1.0,
-        "mean_wall_frac_sum_partition": 1.4203340347649,
-        "categories": {
-          "HTTP_CLIENT": {
-            "mean_cpu_ms": 0.0,
-            "mean_cpu_share": 0.0,
-            "mean_wall_ms": 88.4788,
-            "mean_wall_frac": 0.2359015705948787,
-            "in_wall_partition": true,
-            "wall_concurrent": false
-          },
-          "ORCH_DISPATCH": {
-            "mean_cpu_ms": 242.1875,
-            "mean_cpu_share": 0.9705882352941176,
-            "mean_wall_ms": 382.3345,
-            "mean_wall_frac": 1.1715848662384327,
-            "in_wall_partition": true,
-            "wall_concurrent": false
-          },
-          "ORCH_SETUP": {
-            "mean_cpu_ms": 7.8125,
-            "mean_cpu_share": 0.029411764705882353,
-            "mean_wall_ms": 176.69389999999999,
-            "mean_wall_frac": null,
-            "in_wall_partition": false,
-            "wall_concurrent": false
-          },
-          "SERIALIZATION": {
-            "mean_cpu_ms": 0.0,
-            "mean_cpu_share": 0.0,
-            "mean_wall_ms": 0.026850000000000002,
-            "mean_wall_frac": 8.077259453776143e-05,
-            "in_wall_partition": true,
-            "wall_concurrent": false
-          },
-          "TOKENIZATION": {
-            "mean_cpu_ms": 0.0,
-            "mean_cpu_share": 0.0,
-            "mean_wall_ms": 3.6051,
-            "mean_wall_frac": 0.012766825337050891,
-            "in_wall_partition": true,
-            "wall_concurrent": false
-          },
-          "TOOL_COMPUTE": {
-            "mean_cpu_ms": 0.0,
-            "mean_cpu_share": 0.0,
-            "mean_wall_ms": 0.42555,
-            "mean_wall_frac": 0.0015526528271336878,
-            "in_wall_partition": false,
-            "wall_concurrent": true
-          }
-        }
-      },
-      "RH": {
-        "label": "rag_heavy",
-        "task_count": 2,
-        "tasks": [
-          "RH-01",
-          "RH-02"
-        ],
-        "mean_instrumented_cpu_ms": 539.0625,
-        "mean_session_wall_s": 0.9967776500270702,
-        "mean_amenable_strict_share": 0.9861111111111112,
-        "mean_amenable_broad_share": 0.9861111111111112,
-        "mean_wall_frac_sum_partition": 1.3436315097416887,
-        "categories": {
-          "GC": {
-            "mean_cpu_ms": 0.0,
-            "mean_cpu_share": 0.0,
-            "mean_wall_ms": 0.0,
-            "mean_wall_frac": 0.0,
-            "in_wall_partition": false,
-            "wall_concurrent": true
-          },
-          "HTTP_CLIENT": {
-            "mean_cpu_ms": 0.0,
-            "mean_cpu_share": 0.0,
-            "mean_wall_ms": 134.2437,
-            "mean_wall_frac": 0.1218223961160365,
-            "in_wall_partition": true,
-            "wall_concurrent": false
-          },
-          "ORCH_DISPATCH": {
-            "mean_cpu_ms": 515.625,
-            "mean_cpu_share": 0.9558080808080809,
-            "mean_wall_ms": 1215.32565,
-            "mean_wall_frac": 1.215891513723065,
-            "in_wall_partition": true,
-            "wall_concurrent": false
-          },
-          "ORCH_SETUP": {
-            "mean_cpu_ms": 7.8125,
-            "mean_cpu_share": 0.015151515151515152,
-            "mean_wall_ms": 197.9794,
-            "mean_wall_frac": null,
-            "in_wall_partition": false,
-            "wall_concurrent": false
-          },
-          "SERIALIZATION": {
-            "mean_cpu_ms": 0.0,
-            "mean_cpu_share": 0.0,
-            "mean_wall_ms": 0.17445,
-            "mean_wall_frac": 0.00017697941379179132,
-            "in_wall_partition": true,
-            "wall_concurrent": false
-          },
-          "TOKENIZATION": {
-            "mean_cpu_ms": 7.8125,
-            "mean_cpu_share": 0.015151515151515152,
-            "mean_wall_ms": 5.73655,
-            "mean_wall_frac": 0.005740620488795244,
-            "in_wall_partition": true,
-            "wall_concurrent": false
-          },
-          "TOOL_COMPUTE": {
-            "mean_cpu_ms": 7.8125,
-            "mean_cpu_share": 0.013888888888888888,
-            "mean_wall_ms": 40.297,
-            "mean_wall_frac": 0.04136243720987978,
-            "in_wall_partition": false,
-            "wall_concurrent": true
-          }
-        }
-      },
-      "SH": {
-        "label": "search_heavy",
-        "task_count": 2,
-        "tasks": [
-          "SH-01",
-          "SH-02"
-        ],
-        "mean_instrumented_cpu_ms": 648.4375,
-        "mean_session_wall_s": 4.441617900040001,
-        "mean_amenable_strict_share": 0.9878048780487805,
-        "mean_amenable_broad_share": 1.0,
-        "mean_wall_frac_sum_partition": 1.7514415184408039,
-        "categories": {
-          "HTTP_CLIENT": {
-            "mean_cpu_ms": 7.8125,
-            "mean_cpu_share": 0.012195121951219513,
-            "mean_wall_ms": 3054.4322,
-            "mean_wall_frac": 0.6860787275798362,
-            "in_wall_partition": true,
-            "wall_concurrent": false
-          },
-          "ORCH_DISPATCH": {
-            "mean_cpu_ms": 625.0,
-            "mean_cpu_share": 0.9634146341463414,
-            "mean_wall_ms": 4713.743,
-            "mean_wall_frac": 1.0627291235507355,
-            "in_wall_partition": true,
-            "wall_concurrent": false
-          },
-          "ORCH_SETUP": {
-            "mean_cpu_ms": 7.8125,
-            "mean_cpu_share": 0.012195121951219513,
-            "mean_wall_ms": 276.10900000000004,
-            "mean_wall_frac": null,
-            "in_wall_partition": false,
-            "wall_concurrent": false
-          },
-          "SERIALIZATION": {
-            "mean_cpu_ms": 0.0,
-            "mean_cpu_share": 0.0,
-            "mean_wall_ms": 0.2113,
-            "mean_wall_frac": 4.713797558897744e-05,
-            "in_wall_partition": true,
-            "wall_concurrent": false
-          },
-          "TOKENIZATION": {
-            "mean_cpu_ms": 7.8125,
-            "mean_cpu_share": 0.012195121951219513,
-            "mean_wall_ms": 11.4827,
-            "mean_wall_frac": 0.0025865293346431575,
-            "in_wall_partition": true,
-            "wall_concurrent": false
-          },
-          "TOOL_COMPUTE": {
-            "mean_cpu_ms": 0.0,
-            "mean_cpu_share": 0.0,
-            "mean_wall_ms": 3.75335,
-            "mean_wall_frac": 0.0007950988095592664,
-            "in_wall_partition": false,
-            "wall_concurrent": true
           }
         }
       }
     },
     "wall_diagnostics": {
       "per_task": {
-        "CH-01": {
-          "session_wall_s": 0.9420107000041753,
-          "total_category_wall_s": 1.3269972,
-          "coverage_all_categories": 1.4086859098309605,
-          "coverage_partition_categories": 0.8407028709971128,
-          "concurrent_category_wall_s": 0.0520971
-        },
-        "SH-01": {
-          "session_wall_s": 4.0540206000441685,
-          "total_category_wall_s": 7.3636636,
-          "coverage_all_categories": 1.816385343478521,
-          "coverage_partition_categories": 1.7498027020385638,
-          "concurrent_category_wall_s": 0.0009032
-        },
-        "CH-02": {
-          "session_wall_s": 0.9905027999775484,
-          "total_category_wall_s": 1.8538414,
-          "coverage_all_categories": 1.8716165182689202,
-          "coverage_partition_categories": 1.70094875219025,
-          "concurrent_category_wall_s": 0.0099403
-        },
-        "RH-01": {
-          "session_wall_s": 1.1019624000182375,
-          "total_category_wall_s": 1.8504202,
-          "coverage_all_categories": 1.679204481024035,
-          "coverage_partition_categories": 1.497441745743775,
-          "concurrent_category_wall_s": 0.0358142
-        },
-        "RH-02": {
-          "session_wall_s": 0.8915929000359029,
-          "total_category_wall_s": 1.3370933,
-          "coverage_all_categories": 1.4996679538385735,
-          "coverage_partition_categories": 1.189821273812297,
-          "concurrent_category_wall_s": 0.0447798
-        },
-        "SH-02": {
-          "session_wall_s": 4.829215200035833,
-          "total_category_wall_s": 8.7557995,
-          "coverage_all_categories": 1.8130895264307128,
-          "coverage_partition_categories": 1.7530803348751158,
-          "concurrent_category_wall_s": 0.0066035
-        },
-        "RE-01": {
-          "session_wall_s": 0.27407929999753833,
-          "total_category_wall_s": 0.5041011,
-          "coverage_all_categories": 1.8392527339323061,
-          "coverage_partition_categories": 1.1540977416174725,
-          "concurrent_category_wall_s": 0.0008511
-        },
-        "LH-01": {
-          "session_wall_s": 1.4072413999820128,
-          "total_category_wall_s": 1.7634524,
-          "coverage_all_categories": 1.2531271473772212,
-          "coverage_partition_categories": 1.1374200624977493,
-          "concurrent_category_wall_s": 0.0914041
-        },
-        "RE-02": {
-          "session_wall_s": 0.37506659992504865,
-          "total_category_wall_s": 0.7990283,
-          "coverage_all_categories": 2.130363786405838,
-          "coverage_partition_categories": 1.6865703362724656,
-          "concurrent_category_wall_s": 0.0
-        },
-        "LH-02": {
-          "session_wall_s": 0.8420659999828786,
-          "total_category_wall_s": 1.2617577,
-          "coverage_all_categories": 1.4984071337619702,
-          "coverage_partition_categories": 1.2919148870657584,
-          "concurrent_category_wall_s": 0.02845
+        "FO-01": {
+          "session_wall_s": 1.9828376539999795,
+          "total_category_wall_s": 4.434336708,
+          "coverage_all_categories": 2.236358938055732,
+          "coverage_partition_categories": 2.0164171166261387,
+          "concurrent_category_wall_s": 2.2102e-05
         }
       }
     }
   },
   "per_task_wall_cpu": {
     "per_task": {
-      "CH-01": {
-        "session_id": "agent_2",
-        "session_wall_s": 0.9420107000041753,
-        "llm_io_wait_s": 0.0,
-        "non_llm_wall_s": 0.9420107000041753,
-        "host_cpu_ms": 531.25,
-        "llm_io_pct_of_session_wall": 0.0,
-        "host_cpu_pct_of_session_wall": 56.39532544562873,
-        "tool_cpu_ms": 15.625,
-        "harness_cpu_ms": 515.625,
-        "cpu_by_category_ms": {
-          "GC": 31.25,
-          "ORCH_SETUP": 46.875,
-          "TOKENIZATION": 31.25,
-          "TOOL_COMPUTE": 15.625,
-          "ORCH_DISPATCH": 406.25
-        },
-        "tool_call_counts": {
-          "code_exec": 3,
-          "calculator": 1
-        }
-      },
-      "CH-02": {
-        "session_id": "agent_3",
-        "session_wall_s": 0.9905027999775484,
-        "llm_io_wait_s": 0.370882,
-        "non_llm_wall_s": 0.6196207999775485,
-        "host_cpu_ms": 562.5,
-        "llm_io_pct_of_session_wall": 37.443811366147244,
-        "host_cpu_pct_of_session_wall": 56.789339718449064,
-        "tool_cpu_ms": 15.625,
-        "harness_cpu_ms": 546.875,
-        "cpu_by_category_ms": {
-          "ORCH_SETUP": 15.625,
-          "TOKENIZATION": 15.625,
-          "TOOL_COMPUTE": 15.625,
-          "ORCH_DISPATCH": 515.625
-        },
-        "tool_call_counts": {
-          "code_exec": 3,
-          "search": 1,
-          "calculator": 1
-        }
-      },
-      "LH-01": {
-        "session_id": "agent_8",
-        "session_wall_s": 1.4072413999820128,
-        "llm_io_wait_s": 0.0,
-        "non_llm_wall_s": 1.4072413999820128,
-        "host_cpu_ms": 562.5,
-        "llm_io_pct_of_session_wall": 0.0,
-        "host_cpu_pct_of_session_wall": 39.97182004503206,
-        "tool_cpu_ms": 15.625,
-        "harness_cpu_ms": 546.875,
-        "cpu_by_category_ms": {
-          "TOKENIZATION": 46.875,
-          "TOOL_COMPUTE": 15.625,
-          "ORCH_DISPATCH": 500.0
-        },
-        "tool_call_counts": {
-          "retrieve": 12
-        }
-      },
-      "LH-02": {
-        "session_id": "agent_9",
-        "session_wall_s": 0.8420659999828786,
-        "llm_io_wait_s": 0.0,
-        "non_llm_wall_s": 0.8420659999828786,
-        "host_cpu_ms": 500.0,
-        "llm_io_pct_of_session_wall": 0.0,
-        "host_cpu_pct_of_session_wall": 59.37776848966308,
-        "tool_cpu_ms": 15.625,
-        "harness_cpu_ms": 484.375,
-        "cpu_by_category_ms": {
-          "TOKENIZATION": 15.625,
-          "TOOL_COMPUTE": 15.625,
-          "ORCH_DISPATCH": 468.75
-        },
-        "tool_call_counts": {
-          "retrieve": 4,
-          "calculator": 3
-        }
-      },
-      "RE-01": {
-        "session_id": "agent_6",
-        "session_wall_s": 0.27407929999753833,
-        "llm_io_wait_s": 0.0,
-        "non_llm_wall_s": 0.27407929999753833,
-        "host_cpu_ms": 234.375,
-        "llm_io_pct_of_session_wall": 0.0,
-        "host_cpu_pct_of_session_wall": 85.51357216765551,
-        "tool_cpu_ms": 0.0,
-        "harness_cpu_ms": 234.375,
-        "cpu_by_category_ms": {
-          "ORCH_DISPATCH": 234.375
-        },
-        "tool_call_counts": {
-          "calculator": 1
-        }
-      },
-      "RE-02": {
-        "session_id": "agent_7",
-        "session_wall_s": 0.37506659992504865,
-        "llm_io_wait_s": 0.1769576,
-        "non_llm_wall_s": 0.19810899992504866,
-        "host_cpu_ms": 265.625,
-        "llm_io_pct_of_session_wall": 47.180314118975744,
-        "host_cpu_pct_of_session_wall": 70.82075558129705,
-        "tool_cpu_ms": 0.0,
-        "harness_cpu_ms": 265.625,
-        "cpu_by_category_ms": {
-          "ORCH_SETUP": 15.625,
-          "ORCH_DISPATCH": 250.0
-        },
-        "tool_call_counts": {
-          "search": 1
-        }
-      },
-      "RH-01": {
-        "session_id": "agent_4",
-        "session_wall_s": 1.1019624000182375,
-        "llm_io_wait_s": 0.2684874,
-        "non_llm_wall_s": 0.8334750000182376,
-        "host_cpu_ms": 562.5,
-        "llm_io_pct_of_session_wall": 24.3644792232073,
-        "host_cpu_pct_of_session_wall": 51.045298822418125,
-        "tool_cpu_ms": 15.625,
-        "harness_cpu_ms": 546.875,
-        "cpu_by_category_ms": {
-          "TOOL_COMPUTE": 15.625,
-          "ORCH_DISPATCH": 546.875
-        },
-        "tool_call_counts": {
-          "retrieve": 5,
-          "search": 1
-        }
-      },
-      "RH-02": {
-        "session_id": "agent_5",
-        "session_wall_s": 0.8915929000359029,
-        "llm_io_wait_s": 0.0,
-        "non_llm_wall_s": 0.8915929000359029,
-        "host_cpu_ms": 515.625,
-        "llm_io_pct_of_session_wall": 0.0,
-        "host_cpu_pct_of_session_wall": 57.83188717398229,
-        "tool_cpu_ms": 0.0,
-        "harness_cpu_ms": 515.625,
-        "cpu_by_category_ms": {
-          "ORCH_SETUP": 15.625,
-          "TOKENIZATION": 15.625,
-          "ORCH_DISPATCH": 484.375
-        },
-        "tool_call_counts": {
-          "retrieve": 6,
-          "calculator": 1
-        }
-      },
-      "SH-01": {
+      "FO-01": {
         "session_id": "agent_0",
-        "session_wall_s": 4.0540206000441685,
-        "llm_io_wait_s": 2.7067744,
-        "non_llm_wall_s": 1.3472462000441685,
-        "host_cpu_ms": 656.25,
-        "llm_io_pct_of_session_wall": 66.76765283261041,
-        "host_cpu_pct_of_session_wall": 16.18763358017594,
+        "session_wall_s": 1.9828376539999795,
+        "llm_io_wait_s": 3.090231834,
+        "non_llm_wall_s": 0.0,
+        "host_cpu_ms": 189.882021,
+        "llm_io_pct_of_session_wall": 155.84895857540698,
+        "host_cpu_pct_of_session_wall": 9.576276737379427,
         "tool_cpu_ms": 0.0,
-        "harness_cpu_ms": 656.25,
+        "harness_cpu_ms": 85.17271299999999,
         "cpu_by_category_ms": {
-          "ORCH_DISPATCH": 656.25
+          "ORCH_SETUP": 37.399918,
+          "GC": 0.020395,
+          "TOKENIZATION": 38.022054,
+          "FRAMEWORK": 45.041796,
+          "HTTP_CLIENT": 1.60112,
+          "SERIALIZATION": 0.16265,
+          "THREADPOOL": 60.854161,
+          "ORCH_DISPATCH": 7.966576,
+          "RESIDUAL_UNATTRIBUTED": 5e-06
         },
         "tool_call_counts": {
-          "search": 8,
-          "calculator": 1
-        }
-      },
-      "SH-02": {
-        "session_id": "agent_1",
-        "session_wall_s": 4.829215200035833,
-        "llm_io_wait_s": 3.40209,
-        "non_llm_wall_s": 1.427125200035833,
-        "host_cpu_ms": 640.625,
-        "llm_io_pct_of_session_wall": 70.44809268335683,
-        "host_cpu_pct_of_session_wall": 13.26561301296423,
-        "tool_cpu_ms": 0.0,
-        "harness_cpu_ms": 640.625,
-        "cpu_by_category_ms": {
-          "ORCH_SETUP": 15.625,
-          "TOKENIZATION": 15.625,
-          "HTTP_CLIENT": 15.625,
-          "ORCH_DISPATCH": 593.75
-        },
-        "tool_call_counts": {
-          "search": 9,
-          "retrieve": 1
+          "search": 9
         }
       }
     },
     "totals": {
-      "session_wall_s": 15.707757900003344,
-      "llm_io_wait_s": 6.9251914,
-      "host_cpu_ms": 5031.25,
-      "llm_io_pct_of_session_wall": 44.087714135182374,
-      "host_cpu_pct_of_session_wall": 32.03035106620105
+      "session_wall_s": 1.9828376539999795,
+      "llm_io_wait_s": 3.090231834,
+      "host_cpu_ms": 189.882021,
+      "llm_io_pct_of_session_wall": 155.84895857540698,
+      "host_cpu_pct_of_session_wall": 9.576276737379427
     }
+  },
+  "behavior_buckets": {
+    "session_meta": {
+      "FO-01": {
+        "behavior_bucket": "B1_search_only",
+        "behavior_label": "search only (no local code/retrieve)",
+        "task_label": "FO",
+        "turns": 11,
+        "tool_call_counts": {
+          "search": 9
+        },
+        "host_cpu_ms": 189.882021,
+        "above_cpu_floor": false
+      }
+    },
+    "buckets": {
+      "B1_search_only": {
+        "label": "search only (no local code/retrieve)",
+        "tasks": [
+          "FO-01"
+        ],
+        "task_labels": [
+          "FO"
+        ],
+        "mean_host_cpu_ms": 189.882021,
+        "mean_amenable_strict": 0.6730197610885196,
+        "mean_amenable_broad": 0.9998932321062047
+      }
+    },
+    "cpu_floor_ms": 200.0,
+    "note": "Buckets are assigned from realized tool calls and turn count, not from task archetype labels. Task-label tables are prompt-intent only."
   },
   "amenability_tiers": {
     "ORCH_SETUP": "direct",
@@ -2117,14 +1073,61 @@
     "CONTEXT_MGMT": "partial",
     "LOGGING": "partial",
     "TOOL_COMPUTE": "none",
-    "GC": "none"
+    "GC": "none",
+    "CLIENT_HTTP": "overlap",
+    "CLIENT_PARSE": "direct",
+    "FRAMEWORK": "direct",
+    "THREADPOOL": "partial",
+    "EVENT_LOOP": "partial",
+    "RESIDUAL_UNATTRIBUTED": "none"
   },
   "invariant": {
-    "total_thread_cpu_ns": 5031250000,
-    "instrumented_cpu_ns": 5031250000,
+    "total_thread_cpu_ns": 189882021,
+    "instrumented_cpu_ns": 191068675,
     "residual_cpu_ns": 0,
     "residual_fraction": 0.0,
     "limit": 0.15,
     "pass": true
+  },
+  "batch_attribution": {
+    "pooled_tool_compute_pct": 0.0,
+    "pooled_orch_pct": 23.891937615304823,
+    "pooled_orch_measured_pct": 23.891937615304823,
+    "pooled_orch_reconcile_pct": 0.0,
+    "pooled_residual_unattributed_pct": 2.6332140208261215e-06,
+    "pooled_measured_pct": 108.991565873422,
+    "pooled_step_inferred_pct": 0.0,
+    "pooled_residual_provenance_pct": 2.6332140208261215e-06,
+    "pooled_harness_apu_pct": 44.00163720608388,
+    "pooled_harness_strict_pct": 44.00163720608388,
+    "pooled_harness_broad_pct": 100.61419927692891,
+    "pooled_client_http_pct": 0.0,
+    "pooled_client_parse_pct": 0.0,
+    "pooled_framework_pct": 23.720937750077983,
+    "pooled_threadpool_pct": 32.048405994162025,
+    "pooled_event_loop_pct": 0.0,
+    "batch_host_cpu_ms": 189.882021,
+    "orch_measured_pct_of_orch": 100.0,
+    "orch_reconcile_pct_of_orch": 0.0,
+    "harness_strict_definition": "harness_strict (ORCH_SETUP+ORCH_DISPATCH+TOKENIZATION+SERIALIZATION)",
+    "harness_broad_definition": "harness_broad (strict + HTTP_CLIENT + PROMPT_ASSEMBLY + CONTEXT_MGMT + LOGGING)",
+    "execution_note": "workers=1; concurrency=1 sessions"
+  },
+  "audit": {
+    "pass": true,
+    "publishable_ok": true,
+    "violations": [],
+    "warnings": [
+      "FO-01: I/O % of wall is 155.8% (>100%) \u2014 HTTP_CLIENT wall includes remote-tool waits concurrent with session clock; not an additive partition (see wall integrity table)"
+    ],
+    "platform": "linux",
+    "windows_tick_ms": null,
+    "min_quotable_session_cpu_ms": 50.0,
+    "n_seeds": 1,
+    "attribution_summary": {
+      "orch_measured_pct_of_host": 23.891937615304823,
+      "orch_reconcile_pct_of_host": 0.0,
+      "orch_reconcile_pct_of_orch": 0.0
+    }
   }
 }
