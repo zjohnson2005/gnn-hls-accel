@@ -21,5 +21,5 @@ if ($repo -match '^([A-Z]):\\(.*)$') {
 $key = $env:OPENAI_API_KEY -replace "'", "''"
 
 Write-Host "APU gate (bootstrap + unit tests + FO-01 smoke)..."
-wsl.exe bash --noprofile --norc -c "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:`$HOME/.local/bin; export APU_REPO_ROOT='$wslRepo'; export OPENAI_API_KEY='$key'; cd '$wslRepo' && tr -d '\r' < apu_characterization/run_apu_gate.sh | bash -s --"
+wsl.exe bash --noprofile --norc -c "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:`$HOME/.local/bin; export OPENBLAS_NUM_THREADS=1; export MKL_NUM_THREADS=1; export OMP_NUM_THREADS=1; export APU_REPO_ROOT='$wslRepo'; export OPENAI_API_KEY='$key'; cd '$wslRepo' && tr -d '\r' < apu_characterization/run_apu_gate.sh | bash -s --"
 exit $LASTEXITCODE

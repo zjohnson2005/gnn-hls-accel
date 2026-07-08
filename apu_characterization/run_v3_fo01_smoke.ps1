@@ -23,5 +23,5 @@ $key = $env:OPENAI_API_KEY -replace "'", "''"
 
 Write-Host "FO-01 v3 smoke (OpenAI fan-out, ~2-5 min)..."
 # Strip CR if editor reintroduced Windows line endings; APU_REPO_ROOT avoids `$0` issues if piped.
-wsl.exe bash --noprofile --norc -c "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:`$HOME/.local/bin; export APU_REPO_ROOT='$wslRepo'; export OPENAI_API_KEY='$key'; cd '$wslRepo' && tr -d '\r' < apu_characterization/run_v3_fo01_smoke_wsl.sh | bash -s --"
+wsl.exe bash --noprofile --norc -c "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:`$HOME/.local/bin; export OPENBLAS_NUM_THREADS=1; export MKL_NUM_THREADS=1; export OMP_NUM_THREADS=1; export APU_REPO_ROOT='$wslRepo'; export OPENAI_API_KEY='$key'; cd '$wslRepo' && tr -d '\r' < apu_characterization/run_v3_fo01_smoke_wsl.sh | bash -s --"
 exit $LASTEXITCODE

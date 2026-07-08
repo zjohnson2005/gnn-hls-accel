@@ -9,7 +9,12 @@ from concurrent.futures import ThreadPoolExecutor
 from apu_characterization.instr import RunAccumulator, set_run_accumulator, timed
 from apu_characterization.provenance import MEASURED, RESIDUAL, STEP_INFERRED
 from apu_characterization.taxonomy import Category
-from apu_characterization.thread_identity import ThreadRole, get_thread_registry, sample_session_threads
+from apu_characterization.thread_identity import (
+    ThreadRole,
+    get_thread_registry,
+    sample_session_threads,
+    set_active_session,
+)
 
 
 def _burn_cpu(seconds: float) -> None:
@@ -250,6 +255,104 @@ class TestAttributionProvenance(unittest.TestCase):
         prov = acc.provenance_summary(sid)
         self.assertLess(instr_ms, proc_ms * 1.15 + 5.0)
         self.assertLess(prov[RESIDUAL], proc_ms * 1e6 * 0.15)
+
+    def test_parallel_trim_scales_provenance(self) -> None:
+        """Category trim must scale matching provenance ledger entries."""
+        from apu_characterization.experiments.real_agent_breakdown import (
+            _align_session_cpu_to_process,
+        )
+
+        acc = RunAccumulator(profile="test", instr_version=3)
+        sid = "s0"
+        acc.book_cpu(Category.TOOL_COMPUTE, sid, 100_000_000, 0, provenance=MEASURED)
+        acc.book_cpu(Category.THREADPOOL, sid, 100_000_000, 0, provenance=MEASURED)
+        trimmed = _align_session_cpu_to_process(acc, sid, 100_000_000)
+        self.assertGreater(trimmed, 0)
+        instr = sum(
+            t.cpu_ns for (_cat, s, _prof), t in acc.by_key.items() if s == sid
+        )
+        self.assertLessEqual(instr, 100_000_000 + 1)
+        self.assertAlmostEqual(
+            acc.provenance_summary(sid)[MEASURED], instr, delta=1
+        )
+
+    def test_global_tagged_thread_not_reattributed(self) -> None:
+        """Pre-session MAIN CPU tagged global must not book to the first session."""
+        if __import__("sys").platform == "win32":
+            self.skipTest("thread-identity sampling requires Linux psutil threads")
+        acc = RunAccumulator(profile="test", instr_version=3)
+        set_run_accumulator(acc)
+        reg = get_thread_registry()
+        reg.register_current(ThreadRole.MAIN, "global")
+        reg.snapshot()
+        _burn_cpu(0.05)
+        set_active_session("s0")
+        reg.sample_and_book(acc)
+        self.assertEqual(acc.provenance_summary("s0")[MEASURED], 0)
+        self.assertEqual(acc.totals_for(Category.FRAMEWORK, "s0").cpu_ns, 0)
+
+    def test_langgraph_tool_body_lands_in_tool_compute(self) -> None:
+        """CPU burned inside a LangGraph tool path must book TOOL_COMPUTE, not THREADPOOL."""
+        try:
+            from langgraph.prebuilt import create_react_agent  # noqa: F401
+        except ImportError:
+            self.skipTest("langgraph not installed")
+
+        if __import__("sys").platform == "win32":
+            self.skipTest("thread-identity v3 LangGraph probe requires Linux")
+
+        from apu_characterization.experiments.real_agent_breakdown import (
+            build_langchain_tools,
+            run_real_session,
+        )
+        from apu_characterization.harness.runner import _warm_shared_state
+        from apu_characterization.harness.thread_hooks import install_thread_hooks
+        from apu_characterization.profiles import PROFILES
+        from apu_characterization.tasks import TaskSpec, T
+        from apu_characterization.thread_identity import install_thread_identity_hooks
+
+        install_thread_hooks()
+        install_thread_identity_hooks()
+        _warm_shared_state()
+        get_thread_registry().snapshot()
+
+        burn_iters = 18_000_000
+        burn_code = f"result = sum((i * i) % 997 for i in range({burn_iters}))"
+        task = TaskSpec(
+            task_id="TEST-01",
+            profile="code_heavy",
+            goal="Execute the code and return the numeric result.",
+            turns=(T("code_exec", burn_code),),
+        )
+        spec = PROFILES["code_heavy"]
+        acc = RunAccumulator(profile=spec.name, instr_version=3)
+        tools = build_langchain_tools()
+
+        run_real_session(
+            acc,
+            "agent_0",
+            task,
+            spec,
+            seed=0,
+            backend="scripted",
+            llm_scale=0.001,
+            tools=tools,
+            instr_version=3,
+        )
+
+        sid = "agent_0"
+        tool_ms = acc.totals_for(Category.TOOL_COMPUTE, sid).cpu_ns / 1e6
+        pool_ms = acc.totals_for(Category.THREADPOOL, sid).cpu_ns / 1e6
+        self.assertGreater(
+            tool_ms,
+            30.0,
+            f"TOOL_COMPUTE={tool_ms:.1f}ms expected substantial tool-body burn",
+        )
+        self.assertLess(
+            pool_ms,
+            tool_ms * 0.35,
+            f"THREADPOOL={pool_ms:.1f}ms should not absorb tool-body burn",
+        )
 
 
 if __name__ == "__main__":

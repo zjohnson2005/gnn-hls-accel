@@ -41,6 +41,12 @@ def _register_executor_thread(session_id: str) -> None:
 def _wrap_executor_submit(original: Callable[..., Any]) -> Callable[..., Any]:
     def submit(self, fn: Callable[..., Any], /, *args: Any, **kwargs: Any):
         sid = _session_id()
+        if sid == "global" and _instr_version() >= 3:
+            from ..thread_identity import get_active_session
+
+            active = get_active_session()
+            if active != "global":
+                sid = active
 
         def wrapped() -> Any:
             from ..session_context import session_id_ctx

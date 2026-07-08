@@ -20,6 +20,14 @@ Unattended replication + poll (Cursor `/loop 10m make apu-replicate-check`):
 wsl make apu-replicate-check   # exit 2 = still running; 0 = done + validated
 ```
 
+**Resume after reboot (Task Scheduler):** register once, then work continues on
+next logon without manual start. See `apu_characterization/UNATTENDED_RESUME.md`.
+
+```powershell
+.\apu_characterization\register_unattended_task.ps1
+# log: apu_characterization/out/unattended_run.log
+```
+
 Nightly CI: `.github/workflows/apu-nightly.yml` (requires `OPENAI_API_KEY` repo secret).
 
 Publishability policy for agents: `.cursor/rules/apu-characterization.mdc`.
@@ -77,6 +85,10 @@ vs **reconcile** (session-end gap). Harness strict = ORCH+TOKEN+SER only (not TO
 7. **Denominators baked into captions**: every headline % travels with batch CPU ms,
    seed count, search locality, and c.
 8. **Environment capture**: `capture_setup --strict` refuses dirty git / missing fields.
+9. **BLAS thread pin (v3.1+)**: `apu_env.sh` and `env_pin.py` set
+   `OPENBLAS_NUM_THREADS=1`, `MKL_NUM_THREADS=1`, `OMP_NUM_THREADS=1` before NumPy
+   loads so retrieve CPU attributes to TOOL, not OpenBLAS worker threads. Confirm
+   `blas_pin` in `out/setup.json` after capture.
 
 ## Prerequisites (one time)
 

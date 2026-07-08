@@ -400,6 +400,10 @@ def _align_session_cpu_to_process(
             old = t.cpu_ns
             t.cpu_ns = int(old * scale)
             trimmed += old - t.cpu_ns
+        prov_keys = [k for k in acc.by_provenance if k[1] == session_id]
+        for pkey in prov_keys:
+            pt = acc.by_provenance[pkey]
+            pt.cpu_ns = int(pt.cpu_ns * scale)
     return trimmed
 
 
@@ -721,6 +725,12 @@ def run_real_batch(
 
         install_thread_hooks()
     _warm_shared_state()
+    if instr_version >= 3:
+        from ..thread_identity import get_thread_registry
+
+        # Re-baseline after one-time imports/corpus load so pre-first-session
+        # MAIN-thread CPU is not attributed to agent_0.
+        get_thread_registry().snapshot()
     tools = build_langchain_tools()
 
     acc = RunAccumulator(profile=spec.name, instr_version=instr_version)

@@ -120,10 +120,13 @@ def _git_state(*, ignore_paths: tuple[str, ...] = ()) -> dict[str, str]:
 
 
 def _env_info() -> dict[str, Any]:
+    from ..env_pin import blas_pin_snapshot
+
     info: dict[str, Any] = {
         "python": sys.version.split()[0],
         "platform": platform.platform(),
         "cpu_model": platform.processor() or "unknown",
+        "blas_pin": blas_pin_snapshot(),
     }
     try:
         import psutil

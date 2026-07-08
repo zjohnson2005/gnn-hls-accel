@@ -35,5 +35,5 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "Launching v3 replication in WSL (thread-identity, ~1 hour)..."
 # Invoke the .sh by path (not stdin) so `$0` resolves the repo; cd is a belt-and-suspenders guard.
-wsl.exe bash --noprofile --norc -c "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:`$HOME/.local/bin; export OPENAI_API_KEY='$key'; cd '$wslRepo' && bash '$script' $allowArg"
+wsl.exe bash --noprofile --norc -c "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:`$HOME/.local/bin; export OPENBLAS_NUM_THREADS=1; export MKL_NUM_THREADS=1; export OMP_NUM_THREADS=1; export OPENAI_API_KEY='$key'; cd '$wslRepo' && bash '$script' $allowArg"
 exit $LASTEXITCODE

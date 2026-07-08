@@ -15,6 +15,8 @@ Run: python -m apu_characterization.capture_setup
 
 from __future__ import annotations
 
+from . import env_pin as _env_pin  # noqa: F401 — pin BLAS before numpy in probes
+
 import hashlib
 import json
 import platform
@@ -197,6 +199,12 @@ def probe_openai_config() -> dict[str, Any]:
     }
 
 
+def probe_blas_pin() -> dict[str, str]:
+    from .env_pin import blas_pin_snapshot
+
+    return blas_pin_snapshot()
+
+
 def probe_kernel() -> str:
     if sys.platform == "win32":
         return platform.platform()
@@ -250,6 +258,7 @@ def build_setup() -> dict[str, Any]:
         "git": probe_git(),
         "kernel": probe_kernel(),
         "openai": probe_openai_config(),
+        "blas_pin": probe_blas_pin(),
         "fixtures": probe_fixtures(),
         "agent": AGENT_DESCRIPTION,
         "taxonomy": [c.value for c in Category],
@@ -310,6 +319,20 @@ def render_md(setup: dict[str, Any]) -> str:
     ]
     for pkg, ver in sw["packages"].items():
         lines.append(f"  - {ver}" if "==" in ver else f"  - {pkg}: {ver}")
+
+    bp = setup.get("blas_pin", {})
+    lines.extend(
+        [
+            "",
+            "## BLAS thread pin (v3.1+)",
+            "",
+            "NumPy/OpenBLAS matmul must run single-threaded so retrieve CPU books to",
+            "TOOL_COMPUTE instead of invisible OpenBLAS workers (THREADPOOL).",
+            f"- OPENBLAS_NUM_THREADS: {bp.get('OPENBLAS_NUM_THREADS', 'unset')}",
+            f"- MKL_NUM_THREADS: {bp.get('MKL_NUM_THREADS', 'unset')}",
+            f"- OMP_NUM_THREADS: {bp.get('OMP_NUM_THREADS', 'unset')}",
+        ]
+    )
 
     lines.extend(
         [

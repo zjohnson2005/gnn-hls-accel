@@ -227,7 +227,7 @@ class ThreadRegistry:
                 role = self._role.get(tid, ThreadRole.UNKNOWN)
                 sid = self._session.get(tid) or get_active_session()
                 if sid == "global":
-                    sid = get_active_session()
+                    continue
                 if role == ThreadRole.UNKNOWN and sid != "global":
                     role = ThreadRole.EXECUTOR
                     self._role[tid] = role
@@ -256,7 +256,11 @@ class ThreadRegistry:
             role = self._role.pop(tid, ThreadRole.UNKNOWN)
             sid = self._session.pop(tid, None) or get_active_session()
             if sid == "global":
-                sid = get_active_session()
+                self._last_cpu_ns.pop(tid, None)
+                self._last_tagged_ns.pop(tid, None)
+                self._tag_carry_ns.pop(tid, None)
+                drop_tagged_thread(tid)
+                return
             if cpu_ns is None or tid not in self._last_cpu_ns:
                 self._last_cpu_ns.pop(tid, None)
                 self._last_tagged_ns.pop(tid, None)

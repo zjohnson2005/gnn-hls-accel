@@ -232,11 +232,12 @@ def compute_per_task_wall_cpu(
     per_task: dict[str, Any],
     per_session: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    """Per-task session wall, LLM I/O wait (HTTP wall), and CPU breakdown.
+    """Per-task session wall, LLM I/O wait (CLIENT_HTTP wall), and CPU breakdown.
 
     I/O % and CPU % both use session wall as denominator. They sum to at most
-    ~100% because HTTP wall and host CPU measure different axes (blocked wait
-    vs thread compute), not overlapping category wall fractions.
+    ~100% because CLIENT_HTTP/HTTP_CLIENT wall and host CPU measure different
+    axes (blocked wait vs thread compute), not overlapping category wall fractions.
+    ``remote_tool_io_wait_s`` holds mock remote-tool round-trip wall (HTTP_CLIENT).
     """
     session_by_id = {s["session_id"]: s for s in per_session}
     rows: dict[str, Any] = {}
@@ -247,7 +248,8 @@ def compute_per_task_wall_cpu(
         sw = s["wall_s"]
         cpu_ms = s["process_cpu_ns"] / 1e6
         cats = entry["categories"]
-        http_s = cats.get("HTTP_CLIENT", {}).get("wall_ns", 0) / 1e9
+        llm_io_s = cats.get("CLIENT_HTTP", {}).get("wall_ns", 0) / 1e9
+        remote_tool_io_s = cats.get("HTTP_CLIENT", {}).get("wall_ns", 0) / 1e9
         tool_cpu = cats.get("TOOL_COMPUTE", {}).get("cpu_ns", 0) / 1e6
         orch_cpu = (
             cats.get("ORCH_SETUP", {}).get("cpu_ns", 0)
@@ -255,21 +257,29 @@ def compute_per_task_wall_cpu(
         ) / 1e6
         token_cpu = cats.get("TOKENIZATION", {}).get("cpu_ns", 0) / 1e6
         http_cpu = cats.get("HTTP_CLIENT", {}).get("cpu_ns", 0) / 1e6
+        client_http_cpu = cats.get("CLIENT_HTTP", {}).get("cpu_ns", 0) / 1e6
         gc_cpu = cats.get("GC", {}).get("cpu_ns", 0) / 1e6
         serial_cpu = cats.get("SERIALIZATION", {}).get("cpu_ns", 0) / 1e6
-        harness_cpu = orch_cpu + token_cpu + http_cpu + gc_cpu + serial_cpu
+        harness_cpu = (
+            orch_cpu + token_cpu + http_cpu + client_http_cpu + gc_cpu + serial_cpu
+        )
         cpu_by_category = {
             cat: vals["cpu_ns"] / 1e6
             for cat, vals in cats.items()
             if vals.get("cpu_ns", 0) > 0
         }
+        io_wait_s = llm_io_s + remote_tool_io_s
         rows[task_id] = {
             "session_id": sid,
             "session_wall_s": sw,
-            "llm_io_wait_s": http_s,
-            "non_llm_wall_s": max(0.0, sw - http_s),
+            "llm_io_wait_s": llm_io_s,
+            "remote_tool_io_wait_s": remote_tool_io_s,
+            "non_llm_wall_s": max(0.0, sw - io_wait_s),
             "host_cpu_ms": cpu_ms,
-            "llm_io_pct_of_session_wall": (http_s / sw * 100) if sw else None,
+            "llm_io_pct_of_session_wall": (llm_io_s / sw * 100) if sw else None,
+            "remote_tool_io_pct_of_session_wall": (
+                (remote_tool_io_s / sw * 100) if sw else None
+            ),
             "host_cpu_pct_of_session_wall": (cpu_ms / 1000 / sw * 100) if sw else None,
             "tool_cpu_ms": tool_cpu,
             "harness_cpu_ms": harness_cpu,
@@ -278,15 +288,22 @@ def compute_per_task_wall_cpu(
         }
 
     total_wall = sum(r["session_wall_s"] for r in rows.values())
-    total_io = sum(r["llm_io_wait_s"] for r in rows.values())
+    total_llm_io = sum(r["llm_io_wait_s"] for r in rows.values())
+    total_remote_io = sum(r["remote_tool_io_wait_s"] for r in rows.values())
     total_cpu = sum(r["host_cpu_ms"] for r in rows.values())
     return {
         "per_task": rows,
         "totals": {
             "session_wall_s": total_wall,
-            "llm_io_wait_s": total_io,
+            "llm_io_wait_s": total_llm_io,
+            "remote_tool_io_wait_s": total_remote_io,
             "host_cpu_ms": total_cpu,
-            "llm_io_pct_of_session_wall": (total_io / total_wall * 100) if total_wall else None,
+            "llm_io_pct_of_session_wall": (
+                (total_llm_io / total_wall * 100) if total_wall else None
+            ),
+            "remote_tool_io_pct_of_session_wall": (
+                (total_remote_io / total_wall * 100) if total_wall else None
+            ),
             "host_cpu_pct_of_session_wall": (total_cpu / 1000 / total_wall * 100)
             if total_wall
             else None,

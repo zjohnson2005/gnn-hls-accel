@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from .. import env_pin as _env_pin  # noqa: F401 — pin BLAS before numpy (tools.impl)
+
 import asyncio
 import os
 import threading

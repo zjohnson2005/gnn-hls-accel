@@ -231,11 +231,17 @@ def audit_real_agent_artifact(artifact: dict[str, Any]) -> dict[str, Any]:
     wall_cpu = artifact.get("per_task_wall_cpu", {})
     for task_id, row in wall_cpu.get("per_task", {}).items():
         io_pct = row.get("llm_io_pct_of_session_wall", 0)
+        remote_io_pct = row.get("remote_tool_io_pct_of_session_wall", 0) or 0
         if io_pct > 100.5:
             warnings.append(
-                f"{task_id}: I/O % of wall is {io_pct:.1f}% (>100%) — HTTP_CLIENT wall "
-                "includes remote-tool waits concurrent with session clock; not an additive "
-                "partition (see wall integrity table)"
+                f"{task_id}: LLM I/O % of wall is {io_pct:.1f}% (>100%) — CLIENT_HTTP wall "
+                "can overlap session clock; not an additive partition (see wall integrity table)"
+            )
+        if remote_io_pct > 100.5:
+            warnings.append(
+                f"{task_id}: remote-tool I/O % of wall is {remote_io_pct:.1f}% (>100%) — "
+                "HTTP_CLIENT wall includes mock search/retrieve waits concurrent with session "
+                "clock; not an additive partition"
             )
 
     residual_frac = inv.get("residual_fraction", 0)
@@ -355,6 +361,11 @@ def apply_audit_to_replication_batch(
     if instr_v >= 3 and measured_pct < 20.0:
         all_warnings.append(
             f"instr v3 measured tier only {measured_pct:.1f}% of host; check thread registration"
+        )
+    if instr_v >= 3 and measured_pct > 110.0:
+        all_violations.append(
+            f"instr v3 pooled measured tier {measured_pct:.1f}% of host exceeds 110% — "
+            "provenance trim asymmetry or double-counting (check parallel_cpu_trim scaling)"
         )
     if instr_v == 2 and step_pct > 50.0:
         cal_path = combined.get("config", {}).get("step_infer_calibration")

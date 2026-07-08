@@ -64,10 +64,24 @@ class InstrLLMCallback(BaseCallbackHandler):
 
         acc = get_run_accumulator()
         use_v2 = acc is not None and acc.instr_version >= 2
-        if not use_v2 and acc is not None:
-            totals = acc.totals_for(Category.HTTP_CLIENT, self.session_id)
-            with acc._lock:
-                totals.add(cpu_ns, wall_ns, bytes_in=len(text), count=1)
+        if acc is not None:
+            if use_v2:
+                # LLM round-trip wall (I/O wait axis). CPU stays 0 here: under
+                # v2/v3 the transport CPU is booked by thread-identity
+                # (CLIENT_HTTP), so booking cpu_ns again would double-count.
+                # llm_io_wait_s reads HTTP_CLIENT wall_ns — without this
+                # booking the wall axis reads 0 on live backends.
+                acc.book_cpu(
+                    Category.HTTP_CLIENT,
+                    self.session_id,
+                    0,
+                    wall_ns,
+                    bytes_in=len(text),
+                )
+            else:
+                totals = acc.totals_for(Category.HTTP_CLIENT, self.session_id)
+                with acc._lock:
+                    totals.add(cpu_ns, wall_ns, bytes_in=len(text), count=1)
 
         with timed(
             Category.CLIENT_PARSE if use_v2 else Category.SERIALIZATION,

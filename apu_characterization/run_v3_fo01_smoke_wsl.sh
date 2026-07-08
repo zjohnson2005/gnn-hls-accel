@@ -8,6 +8,8 @@
 #   bash apu_characterization/run_v3_fo01_smoke_wsl.sh
 set -euo pipefail
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/bin:${PATH}"
+# shellcheck source=apu_env.sh
+source "$(dirname "$0")/apu_env.sh"
 if [[ -n "${APU_REPO_ROOT:-}" ]]; then
   REPO="${APU_REPO_ROOT}"
 else
