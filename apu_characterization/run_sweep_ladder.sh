@@ -115,6 +115,12 @@ if [[ -z "${OPENAI_API_KEY:-}" ]]; then
   exit 1
 fi
 
+if [[ -z "${ALLOW}" ]] && [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+  echo "ERROR: uncommitted tracked changes. Commit first or pass --allow-dirty." >&2
+  git status --short --untracked-files=no >&2
+  exit 1
+fi
+
 if [[ ! -f "${REPO}/.venv-wsl/bin/activate" ]]; then
   bash apu_characterization/run_wsl_bootstrap.sh
 fi

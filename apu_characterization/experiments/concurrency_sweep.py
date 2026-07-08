@@ -395,9 +395,10 @@ def _write_markdown_levels(combined: dict[str, Any], out_path: Path) -> None:
     lines.extend(
         [
             "",
-            "Denominators: host CPU ms = sum(session process_time); pooled % = "
-            "category CPU / batch host CPU; util % = 1 s psutil samples over the "
-            "batch window.",
+            "Denominators: c=1 host CPU ms/session = batch host / 10 (sequential "
+            "sessions); c>1 = batch process_time delta / c (not sum of overlapping "
+            "session clocks). Pooled % = category CPU / batch host CPU. util % = "
+            "1 s psutil samples over the batch window.",
             "",
             "## Saturation and capacity (B3)",
             "",
