@@ -10,6 +10,7 @@ from uuid import UUID
 from langchain_core.callbacks.base import BaseCallbackHandler
 
 from ..instr import get_run_accumulator, timed
+from ..session_context import stamp_llm_response_ns
 from ..taxonomy import Category
 
 
@@ -46,6 +47,9 @@ class InstrLLMCallback(BaseCallbackHandler):
         self._wall0[run_id] = time.perf_counter_ns()
 
     def on_llm_end(self, response: Any, *, run_id: UUID, **kwargs: Any) -> None:
+        # Turn-transition latency: mark 'LLM response received' so the next
+        # tool body entry can record the handoff latency (openai backend).
+        stamp_llm_response_ns()
         cpu0 = self._cpu0.pop(run_id, None)
         wall0 = self._wall0.pop(run_id, None)
         if cpu0 is None or wall0 is None:

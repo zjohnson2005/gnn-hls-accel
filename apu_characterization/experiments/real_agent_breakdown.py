@@ -33,7 +33,6 @@ Artifacts: out/real_agent_breakdown.json, out/real_agent_breakdown.md
 from __future__ import annotations
 
 import argparse
-import contextvars
 import json
 import sys
 import threading
@@ -62,7 +61,7 @@ from ..instr import (
 )
 from ..profiles import LOCALITY_ABLATION_PROFILE, PROFILES, ProfileSpec, sample_payload_kb
 from ..tools import LOCALITY_LOCAL, LOCALITY_REMOTE, reset_tool_locality, set_tool_locality
-from ..tasks import TaskSpec, assign_task
+from ..tasks import TaskSpec, assign_task, task_by_id
 from ..audit import apply_audit_to_artifact
 from ..attribution import split_session_orch_after_reconcile
 from ..stats import batch_attribution_summary
@@ -89,32 +88,11 @@ from .single_agent_breakdown import (
 from ..session_context import rng_ctx as _rng_ctx
 from ..session_context import session_id_ctx as _session_ctx
 from ..session_context import spec_ctx as _spec_ctx
-# Turn-transition holder: mutable dict shared between the session thread, the
-# LLM callback, and tool executor threads (contextvars propagate the reference).
-# t_llm_ns is stamped when an LLM response is received; the next tool body entry
-# records (now - t_llm_ns) as one turn-transition latency sample.
-_ttl_ctx: contextvars.ContextVar[dict | None] = contextvars.ContextVar(
-    "apu_real_turn_transition", default=None
-)
-
-
-def stamp_llm_response_ns() -> None:
-    """Record 'LLM response received' timestamp for turn-transition latency."""
-    holder = _ttl_ctx.get()
-    if holder is not None:
-        holder["t_llm_ns"] = time.perf_counter_ns()
-
-
-def _record_turn_transition() -> None:
-    """Record one LLM-response-to-tool-start latency sample, if pending."""
-    holder = _ttl_ctx.get()
-    if holder is None:
-        return
-    t0 = holder.get("t_llm_ns")
-    if t0 is None:
-        return
-    holder["t_llm_ns"] = None
-    holder["latencies_ms"].append((time.perf_counter_ns() - t0) / 1e6)
+# Turn-transition machinery lives in session_context so the LLM callback can
+# stamp response timestamps without a circular import (see session_context).
+from ..session_context import record_turn_transition as _record_turn_transition
+from ..session_context import stamp_llm_response_ns
+from ..session_context import turn_transition_ctx as _ttl_ctx
 
 
 def _require_langgraph():
@@ -478,6 +456,10 @@ def run_real_session(
     tok_session = _session_ctx.set(session_id)
     tok_rng = _rng_ctx.set(rng)
     tok_spec = _spec_ctx.set(spec)
+    # Turn-transition latency samples (LLM response received -> next tool body
+    # entry). The scripted model and InstrLLMCallback both stamp t_llm_ns.
+    ttl_holder: dict[str, Any] = {"t_llm_ns": None, "latencies_ms": []}
+    tok_ttl = _ttl_ctx.set(ttl_holder)
 
     def tagged_cpu() -> int:
         total = 0
@@ -525,9 +507,13 @@ def run_real_session(
         last_tagged_cpu = tagged_cpu()
         last_tagged_wall = tagged_wall()
         step_index = 0
+        # Wall-clock turn boundaries (seconds since session wall_start), one per
+        # LangGraph stream chunk. Consecutive diffs give turn-to-turn latency.
+        turn_boundaries_s: list[float] = []
 
         for chunk in agent.stream(inputs, stream_mode="updates", config=config):
             node = next(iter(chunk.keys()))
+            turn_boundaries_s.append(round(time.perf_counter() - wall_start, 6))
             now_cpu = time.thread_time_ns()
             now_wall = time.perf_counter_ns()
             now_tagged_cpu = tagged_cpu()
@@ -679,6 +665,7 @@ def run_real_session(
         _session_ctx.reset(tok_session)
         _rng_ctx.reset(tok_rng)
         _spec_ctx.reset(tok_spec)
+        _ttl_ctx.reset(tok_ttl)
 
     return {
         "session_id": session_id,
@@ -696,6 +683,8 @@ def run_real_session(
         "parallel_cpu_trim_ns": parallel_trim_ns,
         "tool_call_counts": tool_call_counts,
         "tool_call_sequence": tool_call_sequence,
+        "turn_boundaries_s": turn_boundaries_s,
+        "turn_transition_ms": list(ttl_holder["latencies_ms"]),
         "backend": backend,
         "replay": replay_steps is not None,
         "provenance": acc.provenance_summary(session_id),
@@ -714,7 +703,17 @@ def run_real_batch(
     search_locality: str = LOCALITY_LOCAL,
     payload_profile: str | None = None,
     instr_version: int = 1,
+    task_ids: list[str] | None = None,
 ) -> dict[str, Any]:
+    """Run *concurrency* sessions. Task assignment defaults to the deterministic
+    rotation ``assign_task(profile, seed, i)``; pass ``task_ids`` (one id per
+    session) to override, e.g. for sampling with replacement in the c-ladder
+    concurrency sweep. Existing callers are unaffected.
+    """
+    if task_ids is not None and len(task_ids) != concurrency:
+        raise ValueError(
+            f"task_ids has {len(task_ids)} entries but concurrency={concurrency}"
+        )
     if payload_profile is None and search_locality == LOCALITY_REMOTE:
         payload_name = LOCALITY_ABLATION_PROFILE.name
     else:
@@ -762,7 +761,10 @@ def run_real_batch(
 
             get_thread_registry().register_current(ThreadRole.MAIN, f"agent_{i}")
         try:
-            task = assign_task(profile, seed, i)
+            if task_ids is not None:
+                task = task_by_id(task_ids[i])
+            else:
+                task = assign_task(profile, seed, i)
             result = run_real_session(
                 acc,
                 f"agent_{i}",
@@ -813,6 +815,8 @@ def run_real_batch(
             "total_cpu_basis": "process_time_all_threads",
             "worker_thread_cpu_ns": sum(worker_cpu_ns),
             "instr_version": instr_version,
+            "task_sampling": "explicit_task_ids" if task_ids is not None else "rotation",
+            "task_ids": task_ids,
         },
         total_thread_cpu_ns=total_process_cpu_ns,
         total_wall_ns=wall_end - wall_start,

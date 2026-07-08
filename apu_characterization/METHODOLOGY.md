@@ -49,6 +49,24 @@ Gate G2 (harness share vs c not built on unattributed bucket) is satisfied when
 
 Reference: `out/replication_v1_v2_migration.md`.
 
+## Platform decision for the concurrency sweep (recorded before B1)
+
+The concurrency sweep runs on WSL2 (the v3.1 baseline platform). Native-Linux
+validation (Track A, 4 vCPU DigitalOcean VM, footnote-grade) runs in parallel
+on separate compute and never gates the sweep. Until Track A resolves,
+scheduling-sensitive categories (THREADPOOL, FRAMEWORK, ORCH_DISPATCH) carry
+a stated platform caveat: measured under WSL2 kernel virtualization, not
+native Linux. If Track A returns AGREEMENT, the caveat is retired with one
+sentence citing bare_metal_comparison.md. If Track A returns DELTA, the
+caveat stays as-is with the one-sentence 4 vCPU disclaimer. If the droplet
+is not stood up this week, the fallback is explicit: sweep runs on WSL2;
+native-Linux validation deferred; scheduling-sensitive categories carry the
+platform caveat.
+
+Track A and Track B never share a machine. If both draw on one OpenAI key,
+starts are staggered by 10-15 minutes so the droplet's 18-session run clears
+before the sweep's heavier levels ramp up.
+
 ## Appendix: bare-metal validation (pre-sweep platform gate)
 
 Purpose: quantify how much of the v3.1 CPU composition is WSL2-specific by

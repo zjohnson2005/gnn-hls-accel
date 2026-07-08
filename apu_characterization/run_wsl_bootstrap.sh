@@ -34,11 +34,11 @@ source "${VENV}/bin/activate"
 
 echo "=== installing deps ==="
 if command -v uv >/dev/null 2>&1; then
-  uv pip install py-spy numpy psutil tiktoken sympy \
+  uv pip install py-spy numpy psutil tiktoken sympy matplotlib \
     langgraph langchain-core langchain-openai httpx
 else
   pip install -q --upgrade pip
-  pip install -q py-spy numpy psutil tiktoken sympy \
+  pip install -q py-spy numpy psutil tiktoken sympy matplotlib \
     langgraph langchain-core langchain-openai httpx
 fi
 

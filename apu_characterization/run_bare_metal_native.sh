@@ -12,8 +12,8 @@
 # METHODOLOGY.md, appendix "Bare-metal validation").
 set -euo pipefail
 
-REPO_URL="${1:?usage: run_bare_metal_native.sh REPO_URL COMMIT}"
-COMMIT="${2:?usage: run_bare_metal_native.sh REPO_URL COMMIT}"
+REPO_SOURCE="${1:?usage: run_bare_metal_native.sh REPO_URL_OR_BUNDLE COMMIT}"
+COMMIT="${2:?usage: run_bare_metal_native.sh REPO_URL_OR_BUNDLE COMMIT}"
 WORKDIR="${BARE_METAL_WORKDIR:-${HOME}/apu_bare_metal}"
 
 export OPENBLAS_NUM_THREADS=1
@@ -41,20 +41,30 @@ echo "loadavg at start: ${LOAD1}"
 
 echo "=== clone at pinned commit ==="
 if [[ ! -d "${WORKDIR}/.git" ]]; then
-  git clone "${REPO_URL}" "${WORKDIR}"
+  git clone "${REPO_SOURCE}" "${WORKDIR}"
 fi
 cd "${WORKDIR}"
-git fetch --all --quiet
-git checkout --quiet "${COMMIT}"
-if [[ -n "$(git status --porcelain)" ]]; then
-  echo "REFUSED: tree is dirty after checkout. Clean it first." >&2
-  exit 1
-fi
+git checkout --quiet -f "${COMMIT}" 2>/dev/null || git checkout --quiet -f "${COMMIT}"
+git reset --hard HEAD
+git clean -fdx
 echo "commit: $(git rev-parse HEAD)"
+
+echo "=== system deps (fresh Ubuntu droplets) ==="
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq
+apt-get install -y -qq python3 python3-pip python3-venv git curl ca-certificates
 
 echo "=== venv + pinned deps ==="
 VENV="${WORKDIR}/.venv-native"
+if [[ -d "${VENV}" && ! -f "${VENV}/bin/activate" ]]; then
+  rm -rf "${VENV}"
+fi
 if [[ ! -f "${VENV}/bin/activate" ]]; then
+  if ! command -v uv >/dev/null 2>&1; then
+    echo "=== installing uv (user-local) ==="
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="${HOME}/.local/bin:${PATH}"
+  fi
   if command -v uv >/dev/null 2>&1; then
     uv venv "${VENV}"
   else

@@ -493,6 +493,33 @@ def assign_task(profile: str, seed: int, session_index: int) -> TaskSpec:
     return pool[(seed + session_index) % len(pool)]
 
 
+# 14-task main pool for the concurrency sweep: the mixed suite minus AH-01
+# (api mock turns fold away in real ReAct mode) and MX-01 (cross-tool catch-all
+# outside the per-task report pool). Matches the v3.1 per-task report tasks.
+MAIN_POOL_EXCLUDED_TASK_IDS: tuple[str, ...] = ("AH-01", "MX-01")
+
+
+def main_pool_task_ids() -> tuple[str, ...]:
+    """Task ids of the 14-task main pool (mixed suite minus AH-01, MX-01)."""
+    return tuple(
+        t.task_id for t in TASKS if t.task_id not in MAIN_POOL_EXCLUDED_TASK_IDS
+    )
+
+
+def sample_tasks_with_replacement(level: int, seed: int) -> list[str]:
+    """Sample *level* task ids with replacement from the 14-task main pool.
+
+    Deterministic: seeded with ``sweep-{level}-{seed}`` so a (level, seed) run
+    is reproducible. Unlike ``assign_task`` rotation, tasks may repeat within
+    a batch, which is the intended c-ladder semantics.
+    """
+    import random
+
+    rng = random.Random(f"sweep-{level}-{seed}")
+    pool = main_pool_task_ids()
+    return [rng.choice(pool) for _ in range(level)]
+
+
 def task_by_id(task_id: str) -> TaskSpec:
     for task in TASKS:
         if task.task_id == task_id:

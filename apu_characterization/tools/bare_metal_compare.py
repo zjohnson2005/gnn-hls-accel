@@ -4,10 +4,12 @@ Reads:
   out/replication_remote_search_v3.json           (baseline, platform wsl2)
   out/bare_metal_validation_<label>.json           (native subset)
 
-Writes out/bare_metal_comparison.md with three tables and exactly one verdict:
-  AGREEMENT        composition platform-robust; sweep may run on either platform
-  SCHEDULING DELTA c=1 composition stands; sweep MUST run on native Linux
-  DISAGREEMENT     stop and diagnose before any sweep planning continues
+Writes out/bare_metal_comparison.md with three tables and exactly one of two
+verdicts (asymmetric, footnote-grade; neither outcome triggers a rerun):
+  AGREEMENT  major shares within 10 pp despite fewer cores and a hypervisor;
+             retire the WSL2 caveat with one sentence citing this artifact
+  DELTA      scheduling categories shift beyond 10 pp; keep the WSL2 caveat,
+             state that platform vs core-count effects are not separated here
 
 All numbers are computed from the two artifacts; nothing is hand-typed.
 
@@ -145,12 +147,10 @@ def compute_verdict(
                 else:
                     nonsched_violations.append(msg)
 
-    if nonsched_violations:
-        verdict = "DISAGREEMENT"
-    elif sched_violations or host_violations:
-        verdict = "SCHEDULING DELTA"
-    else:
-        verdict = "AGREEMENT"
+    # Asymmetric two-outcome verdict: the droplet check is footnote-grade.
+    # Any >10 pp shift on a major category (scheduling or not) is DELTA;
+    # host CPU deltas alone do not flip the verdict on a 4 vCPU VM.
+    verdict = "AGREEMENT" if not (sched_violations or nonsched_violations) else "DELTA"
     return verdict, {
         "tasks_compared": tasks,
         "max_major_share_delta_pp": round(max_delta_pp, 1),
@@ -164,56 +164,35 @@ def _verdict_block(verdict: str, detail: dict[str, Any], native_label: str) -> l
     lines = [f"## Verdict: {verdict}", ""]
     if verdict == "AGREEMENT":
         lines += [
-            "Composition is platform-robust; WSL2 vs native deltas were "
-            f"{detail['max_major_share_delta_pp']} pp max on major categories, "
-            "and absolute host CPU agreed within 30% on every task.",
-            "",
-            "**Sweep platform decision:** the WSL2 caveat is retired for "
-            "composition claims. The concurrency sweep may run on whichever "
-            "machine is more practical, stated as validated.",
+            "Major category shares agree within 10 pp despite fewer cores and "
+            f"a hypervisor (max major-share delta {detail['max_major_share_delta_pp']} pp). "
+            "Strong evidence of platform robustness.",
             "",
             "**Limitations sentence for the main report:** "
-            "\"Platform validation on "
+            "\"Platform validation on a "
             f"{native_label} reproduced the WSL2 composition within "
             f"{detail['max_major_share_delta_pp']} pp on all major categories; "
-            "the bare-metal caveat is retired for composition claims.\"",
-        ]
-    elif verdict == "SCHEDULING DELTA":
-        lines += [
-            "The c=1 composition stands, but scheduling-sensitive categories "
-            "(THREADPOOL, FRAMEWORK, ORCH_DISPATCH) or absolute host CPU shifted "
-            "materially between platforms:",
-            "",
-        ]
-        for v in detail["scheduling_violations"] + detail["host_cpu_violations"]:
-            lines.append(f"- {v}")
-        lines += [
-            "",
-            "**Sweep platform decision:** the concurrency sweep MUST run on "
-            "native Linux. WSL2-era contention numbers must be bounded using the "
-            "direction of bias shown above.",
-            "",
-            "**Limitations sentence for the main report:** "
-            "\"Platform validation showed WSL2 shifts scheduling-sensitive "
-            "categories relative to native Linux (see bare_metal_comparison.md); "
-            "c=1 composition claims stand, and the concurrency sweep runs on "
-            "native Linux.\"",
-            "",
-            "**Sweep-spec update required:** add a platform requirement "
-            "(native Linux) to the concurrency sweep before scheduling it.",
+            "the WSL2 caveat is retired for composition claims (see "
+            "bare_metal_comparison.md).\"",
         ]
     else:
         lines += [
-            "Broad composition shifts beyond 10 pp on non-scheduling categories:",
+            "Category shares shifted beyond 10 pp between the 8-core WSL2 "
+            "baseline and the 4 vCPU native VM:",
             "",
         ]
-        for v in detail["nonscheduling_violations"]:
+        for v in detail["scheduling_violations"] + detail["nonscheduling_violations"]:
             lines.append(f"- {v}")
         lines += [
             "",
-            "**Sweep platform decision:** STOP. Diagnose kernel timer "
-            "granularity, Python build, and BLAS linkage before any sweep "
-            "planning continues. Something other than the scheduler differs.",
+            "**Limitations sentence for the main report:** "
+            "\"THREADPOOL share differs on a 4 vCPU native VM relative to the "
+            "8-core WSL2 baseline; platform vs core-count effects are not "
+            "separated in this check.\"",
+            "",
+            "The WSL2 caveat stays as-is. No rerun is triggered: no WSL2 "
+            "matched-core rerun, no dual-boot, unless a future phase needs "
+            "scheduling categories at paper grade.",
         ]
     return lines
 

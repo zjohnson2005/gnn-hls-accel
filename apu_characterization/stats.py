@@ -251,25 +251,107 @@ def summarize_concurrency_run(artifact: dict[str, Any]) -> dict[str, Any]:
     run = artifact["run"]
     total_ns = artifact["invariant"]["total_thread_cpu_ns"]
     shares = _pooled_shares_from_run(run, total_ns)
-    per_session = [
-        {
-            "session_id": s["session_id"],
-            "task_id": s.get("task_id"),
-            "wall_s": s.get("wall_s"),
-            "process_cpu_ms": s.get("process_cpu_ns", 0) / 1e6,
-            "turns": s.get("turns"),
-            "tool_call_counts": s.get("tool_call_counts"),
-            "orch_measured_ms": s.get("orch_measured_cpu_ns", 0) / 1e6,
-            "orch_reconcile_ms": s.get("orch_reconcile_cpu_ns", 0) / 1e6,
-        }
-        for s in run.get("per_session", [])
-    ]
+    per_session_category = run.get("per_session_category", {})
+
+    per_session = []
+    turn_transition_all: list[float] = []
+    boundary_diffs_all: list[float] = []
+    for s in run.get("per_session", []):
+        sid = s["session_id"]
+        cats = per_session_category.get(sid, {})
+        gc_ms = cats.get("GC", {}).get("cpu_ns", 0) / 1e6
+        residual_prov_ms = (s.get("provenance") or {}).get("residual", 0) / 1e6
+        tt = s.get("turn_transition_ms") or []
+        turn_transition_all.extend(tt)
+        bounds = s.get("turn_boundaries_s") or []
+        boundary_diffs_all.extend(
+            (b - a) * 1000.0 for a, b in zip(bounds, bounds[1:])
+        )
+        per_session.append(
+            {
+                "session_id": sid,
+                "task_id": s.get("task_id"),
+                "wall_s": s.get("wall_s"),
+                "process_cpu_ms": s.get("process_cpu_ns", 0) / 1e6,
+                "turns": s.get("turns"),
+                "tool_call_counts": s.get("tool_call_counts"),
+                "orch_measured_ms": s.get("orch_measured_cpu_ns", 0) / 1e6,
+                "orch_reconcile_ms": s.get("orch_reconcile_cpu_ns", 0) / 1e6,
+                "gc_ms": gc_ms,
+                "residual_provenance_ms": residual_prov_ms,
+                "reconcile_ms": s.get("reconcile_cpu_ns", 0) / 1e6,
+                "n_turn_transitions": len(tt),
+            }
+        )
+
+    n_sessions = len(per_session) or 1
+    batch_wall_s = artifact.get("batch_wall_s")
+    sessions = artifact["config"].get("sessions") or run["config"].get("concurrency")
+
+    # Per-decision ORCH_DISPATCH cost. CategoryTotals.count increments once per
+    # booked ORCH_DISPATCH region (one per LangGraph stream step after the
+    # first), which is the dispatch-decision denominator. Not a per-tool-call
+    # counter: fan-out calls within one step are one dispatch decision.
+    od = run.get("per_category", {}).get("ORCH_DISPATCH", {})
+    dispatch_decisions = od.get("count", 0)
+    dispatch_cpu_ns = od.get("cpu_ns", 0)
+    us_per_dispatch = (
+        dispatch_cpu_ns / 1000.0 / dispatch_decisions if dispatch_decisions else None
+    )
+
+    gc_total_ms = sum(p["gc_ms"] for p in per_session)
+    residual_total_ms = sum(p["residual_provenance_ms"] for p in per_session)
+
+    # Turn-transition latency: prefer direct LLM-response-to-tool-entry samples;
+    # fall back to stream-chunk boundary diffs when no tool transitions fired.
+    if turn_transition_all:
+        turn_latency = p50_p99(turn_transition_all)
+        turn_latency_source = "llm_response_to_tool_entry"
+    elif boundary_diffs_all:
+        turn_latency = p50_p99(boundary_diffs_all)
+        turn_latency_source = "stream_chunk_boundary_diffs"
+    else:
+        turn_latency = None
+        turn_latency_source = "unavailable"
+
+    sysmon = artifact.get("sysmon") or {}
+    sysmon_summary = {
+        k: sysmon.get(k)
+        for k in (
+            "status",
+            "n_samples",
+            "cpu_pct_median",
+            "cpu_pct_max",
+            "ctx_switches",
+            "loadavg_start",
+            "loadavg_end",
+        )
+    }
+
     return {
         "workers": run["config"].get("workers"),
+        "level": artifact["config"].get("level"),
+        "sessions": sessions,
         "seed": artifact["config"].get("seed"),
+        "sampled_task_ids": artifact["config"].get("sampled_task_ids"),
         "batch_host_cpu_ms": total_ns / 1e6,
-        "batch_wall_s": artifact.get("batch_wall_s"),
+        "batch_wall_s": batch_wall_s,
+        "throughput_sessions_per_min": (
+            sessions / (batch_wall_s / 60.0) if batch_wall_s and sessions else None
+        ),
+        "host_cpu_ms_per_session": total_ns / 1e6 / n_sessions,
         **shares,
+        "category_cpu_ms": {
+            cat: vals.get("cpu_ns", 0) / 1e6
+            for cat, vals in run.get("per_category", {}).items()
+        },
+        "orch_dispatch_decisions": dispatch_decisions,
+        "orch_dispatch_us_per_decision": us_per_dispatch,
+        "gc_ms_per_session": gc_total_ms / n_sessions,
+        "residual_provenance_ms_per_session": residual_total_ms / n_sessions,
+        "turn_transition_latency_ms": turn_latency,
+        "turn_transition_latency_source": turn_latency_source,
+        "sysmon": sysmon_summary,
         "residual_fraction": artifact["invariant"].get("residual_fraction"),
         "invariant_pass": artifact["invariant"].get("pass"),
         "audit_pass": artifact.get("audit", {}).get("pass"),
@@ -316,4 +398,83 @@ def aggregate_concurrency_by_workers(
             ),
             "comparison_type": "distribution_over_seeds",
         }
+    return out
+
+
+def _median_iqr_optional(values: list[float | None]) -> dict[str, float] | None:
+    xs = [v for v in values if v is not None]
+    return median_iqr(xs) if xs else None
+
+
+def aggregate_concurrency_by_level(runs: list[dict[str, Any]]) -> dict[str, Any]:
+    """Median/IQR over seeds for each concurrency level (c-ladder sweep).
+
+    Input rows come from ``summarize_concurrency_run`` on per-(level, seed)
+    artifacts where workers = sessions = level.
+    """
+    by_level: dict[int, list[dict[str, Any]]] = {}
+    for row in runs:
+        lvl = row.get("level") or row.get("workers")
+        by_level.setdefault(int(lvl), []).append(row)
+
+    out: dict[str, Any] = {}
+    for level in sorted(by_level):
+        rows = by_level[level]
+        cat_ms: dict[str, list[float]] = {}
+        for r in rows:
+            for cat, ms in (r.get("category_cpu_ms") or {}).items():
+                cat_ms.setdefault(cat, []).append(ms)
+        pooled_keys = [k for k in rows[0] if k.startswith("pooled_")]
+        entry: dict[str, Any] = {
+            "level": level,
+            "workers": level,
+            "sessions_per_batch": rows[0].get("sessions"),
+            "n_seeds": len(rows),
+            "seeds": [r["seed"] for r in rows],
+            "batch_host_cpu_ms": median_iqr([r["batch_host_cpu_ms"] for r in rows]),
+            "batch_wall_s": median_iqr([r["batch_wall_s"] for r in rows]),
+            "host_cpu_ms_per_session": median_iqr(
+                [r["host_cpu_ms_per_session"] for r in rows]
+            ),
+            "throughput_sessions_per_min": _median_iqr_optional(
+                [r.get("throughput_sessions_per_min") for r in rows]
+            ),
+            "orch_dispatch_us_per_decision": _median_iqr_optional(
+                [r.get("orch_dispatch_us_per_decision") for r in rows]
+            ),
+            "gc_ms_per_session": median_iqr(
+                [r.get("gc_ms_per_session", 0.0) for r in rows]
+            ),
+            "residual_provenance_ms_per_session": median_iqr(
+                [r.get("residual_provenance_ms_per_session", 0.0) for r in rows]
+            ),
+            "turn_transition_p50_ms": _median_iqr_optional(
+                [
+                    (r.get("turn_transition_latency_ms") or {}).get("p50")
+                    for r in rows
+                ]
+            ),
+            "turn_transition_p99_ms": _median_iqr_optional(
+                [
+                    (r.get("turn_transition_latency_ms") or {}).get("p99")
+                    for r in rows
+                ]
+            ),
+            "cpu_pct_median": _median_iqr_optional(
+                [(r.get("sysmon") or {}).get("cpu_pct_median") for r in rows]
+            ),
+            "cpu_pct_max": _median_iqr_optional(
+                [(r.get("sysmon") or {}).get("cpu_pct_max") for r in rows]
+            ),
+            "ctx_switches": _median_iqr_optional(
+                [(r.get("sysmon") or {}).get("ctx_switches") for r in rows]
+            ),
+            "category_cpu_ms": {
+                cat: median_iqr(vals) for cat, vals in sorted(cat_ms.items())
+            },
+            "comparison_type": "distribution_over_seeds",
+        }
+        for key in pooled_keys:
+            entry[key] = median_iqr([r.get(key, 0.0) for r in rows])
+        out[str(level)] = entry
     return out
