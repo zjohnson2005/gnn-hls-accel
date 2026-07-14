@@ -35,6 +35,7 @@ TAR_PATHS=(
   apu_characterization/run_mcp_bare_metal.sh
   apu_characterization/postprocess_mcp.sh
   apu_characterization/requirements-mcp.txt
+  apu_characterization/validity.py
   apu_characterization/experiments/mcp_tax_matrix.py
   apu_characterization/mcp_tax
   apu_characterization/tests/mcp_tax
