@@ -13,6 +13,10 @@ Policy (non-negotiable for papers, slides, and findings):
 
 - **debug_only** — mock/scripted/synthetic decision path; instrumentation check only.
   Never use for verifiable characterization.
+
+- **protocol_microbenchmark** — controlled deterministic protocol testbench,
+  bare-metal Linux, n≥5, clean git, and MCP-01 audit PASS. Quotable only for
+  MCP protocol/transport CPU and wait tax, never agent or tool-body shares.
 """
 
 from __future__ import annotations
@@ -21,6 +25,7 @@ PUBLISHABLE = "publishable"
 DEBUG_ONLY = "debug_only"
 AUDIT_FAILED = "audit_failed"
 WINDOWS_FOOTNOTE_ONLY = "windows_footnote_only"
+PROTOCOL_MICROBENCHMARK = "protocol_microbenchmark"
 
 VERIFIABLE_BACKEND = "openai"
 
@@ -50,10 +55,22 @@ WINDOWS_FOOTNOTE_BANNER = (
     "Re-run on Linux with test_resolution PASS for publishable numbers."
 )
 
+PROTOCOL_MICROBENCHMARK_BANNER = (
+    "> **Protocol microbenchmark.** Controlled MCP testbench on bare-metal "
+    "Linux with deterministic no-op tools, n≥5, clean git, and MCP-01 audit "
+    "PASS. Quotable only for protocol/transport CPU and wait tax. It is not "
+    "production-agent or tool-compute characterization."
+)
+
 
 def artifact_stem(experiment: str, validity: str) -> str:
     """Base filename without extension."""
-    if validity in (PUBLISHABLE, AUDIT_FAILED, WINDOWS_FOOTNOTE_ONLY):
+    if validity in (
+        PUBLISHABLE,
+        PROTOCOL_MICROBENCHMARK,
+        AUDIT_FAILED,
+        WINDOWS_FOOTNOTE_ONLY,
+    ):
         return experiment
     return f"{experiment}_debug"
 
@@ -83,4 +100,6 @@ def validity_banner(validity: str) -> str:
         return AUDIT_FAILED_BANNER
     if validity == WINDOWS_FOOTNOTE_ONLY:
         return WINDOWS_FOOTNOTE_BANNER
+    if validity == PROTOCOL_MICROBENCHMARK:
+        return PROTOCOL_MICROBENCHMARK_BANNER
     return DEBUG_BANNER
