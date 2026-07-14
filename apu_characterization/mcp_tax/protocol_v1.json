@@ -3,9 +3,9 @@
   "clarifications": {
     "MSG_VALIDATE": "JSON Schema parameter/result validation only; TLS handshake/cert CPU is MSG_TRANSPORT_CPU with provenance transport_tls_handshake.",
     "MSG_DISPATCH": "Frozen booking paths: server method lookup (measured); client_result_dispatch; client_call_inter_region_gaps (untimed CPU inside the client call boundary). Gaps dominate client DISPATCH in v8 raw throttle (~99.5–99.8%); v9 splits gaps into gap_decomposition mechanisms. TurnTrace echo is diffuseness of gaps, not method-dispatch dominance.",
-    "MSG_TRANSPORT_CPU": "Pipe/socket syscall CPU and TLS handshake/crypto path. HTTP/SSE primary transport is connection-per-message (Connection: close); transport_tls_handshake is a per-call handshake tax of that pattern, not reused-session record encryption. Post-return close/wrap is booked under transport_syscall_return when instrumented (leaves the gap).",
+    "MSG_TRANSPORT_CPU": "Pipe/socket syscall CPU and TLS handshake/crypto path. HTTP/SSE primary transport is connection-per-message (Connection: close); transport_tls_handshake is a per-call handshake tax of that pattern, not reused-session record encryption. v10 named subslices: transport_connect, transport_tls_handshake, transport_write, transport_read, transport_syscall_return (generic transport_syscall remains a fallback). Post-return close/wrap is booked under transport_syscall_return when instrumented (leaves the gap).",
     "http_sse_connection": "One TCP(/TLS) connection per measured exchange; handshake belongs in per-message TRANSPORT until a reuse arm exists.",
-    "g6_provenance_coverage": "Any steady category exceeding g6_dominant_category_share of booked steady CPU must have non-generic named provenance covering at least g6_named_provenance_share of that category, or G6 fails as presumptive opaque/gap-fill lump. Three attribution dissolutions (TRANSPORT, then DISPATCH) motivate this stricter rule alongside the 95% single-category detector.",
+    "g6_provenance_coverage": "Any steady category exceeding g6_dominant_category_share of booked steady CPU must have non-generic named provenance covering at least g6_named_provenance_share of that category, or G6 fails as presumptive opaque/gap-fill lump. The 95% single-category detector (g6_single_category_share) FAILs only when the dominant category is opaque or gap-fill-dominated (named direct-work share < g6_named_provenance_share after excluding g6_gap_fill_provenance); a concentration of directly-timed ops (e.g. transport_read) is physics, not an attribution lump. Gap-fill labels (client_call_inter_region_gaps, harness_sdk_uncovered_interior) never satisfy the exemption — that is the DISPATCH pattern recurring one level down. v10.1 amendment after pre-launch re-smoke; Axis 5 read-path fix confirmed concentration persists at theoretical-min syscalls.",
     "g7_gap_split_conservation": "When message_diagnostics[message_id].gap_decomposition is present, Σ(mechanisms) must equal parent_cpu_ns within G3 conservation slack (max(conservation_floor_ns, conservation_fraction * parent)). Silent create/destroy of time in a v9 split fails G7. gap_unattributed is mandatory.",
     "diffuseness_verdict": "Working definition (eight words): cost smeared between named instrumented regions. v1.5: confirm/refute evaluate over named mechanisms (a)–(d) only. gap_unattributed above unattributed_forces_inconclusive_share (default 0.20, same as headline e% bound) forces inconclusive — residual is unmeasured, not a fixable concentrated mechanism. Confirmed: no named mechanism exceeds confirm_max_single_mechanism_share, contributing named mechanisms >= confirm_min_mechanisms spanning >= confirm_min_boundaries, and (e) within bound. Refuted: one named mechanism exceeds refute_single_mechanism_share.",
     "verdict_min_population": "Binding audit.diffuseness_verdict requires >= min_measured_messages per cell and >= min_seeds in the aggregate. Below the floor the classifier emits deferred_insufficient_population and logs advisory_only only. WSL seed-0 smoke cannot return a binding verdict.",
@@ -13,7 +13,8 @@
     "gap_split_precedence": "Overlap carve order for raw mechanism claims: gap_instrumentation then gap_gc then gap_event_loop then gap_syscall_return; remainder is gap_unattributed. Only gap_unattributed is a residual.",
     "gap_syscall_return_subprovenance": "gap_syscall_return splits into gap_syscall_return_measured (named post-return sites still inside the gap) and gap_syscall_return_adjacent (transport-adjacent inter-region intervals). Adjacent-dominated (d) is presumptive gap-fill wearing a mechanism name until measured sites cover it.",
     "gap_gc_scope": "gap_gc captures CPython cyclic collector via gc.callbacks only; refcount-driven deallocation is unmeasured and folds into gap_unattributed, never silently into gap_gc.",
-    "observer_instrumentation_crosscheck": "Per matched stripped/throttle pair, booked gap_instrumentation must not exceed throttle_combined - stripped_combined within G3 slack; else OBSERVER_ATTRIBUTION_SUSPECT. Negative brackets are unusable for the check."
+    "observer_instrumentation_crosscheck": "Per matched stripped/throttle pair, booked gap_instrumentation must not exceed throttle_combined - stripped_combined within G3 slack; else OBSERVER_ATTRIBUTION_SUSPECT. Negative brackets are unusable for the check.",
+    "sub_millisecond_timing": "Absolute half-width 5 µs (5000 ns) frozen before authenticity Axis 1 and v10 TRANSPORT sub-provenance measurement. Half-width = max(0.15*median, 5000 ns, max within-condition IQR). Idle Axis 1 uses cpu/wall < 5% separately. Principle source: CAP-01 died-ledger #5."
   },
   "category_names": [
     "MSG_SERIAL",
@@ -87,6 +88,11 @@
     "g6_dominant_category_share": 0.50,
     "g6_named_provenance_share": 0.80,
     "g6_generic_provenance": ["measured", "test", ""],
+    "g6_single_category_requires_opaque": true,
+    "g6_gap_fill_provenance": [
+      "client_call_inter_region_gaps",
+      "harness_sdk_uncovered_interior"
+    ],
     "diffuseness_verdict": {
       "confirm_max_single_mechanism_share": 0.50,
       "refute_single_mechanism_share": 0.50,
@@ -104,6 +110,31 @@
       "gap_gc",
       "gap_event_loop",
       "gap_syscall_return"
-    ]
+    ],
+    "sub_millisecond_timing": {
+      "principle_source": "CAP-01 died-ledger #5",
+      "half_width_rule": "max(relative_tolerance * median, absolute_half_width_ns, max_within_condition_iqr_ns)",
+      "frozen_before": [
+        "workload_authenticity_audit_axis1",
+        "v10_MSG_TRANSPORT_CPU_sub_provenance"
+      ],
+      "authenticity_axis1_tool_body": {
+        "metric": "tool_cpu_ns_during_synthetic_delay_and_cross_condition_cpu_medians",
+        "idle_cpu_over_wall_max": 0.05,
+        "relative_tolerance": 0.15,
+        "absolute_half_width_ns": 5000,
+        "notes": "5 µs absolute half-width for cross-condition / cross-mode tool-CPU comparisons on bare-metal Linux thread_time_ns. Idle-ratio gate (cpu/wall < 5%) remains separate and is not a relative median band. Do not compare single-digit-µs CPU medians with relative-only ±15%."
+      },
+      "transport_sub_provenance_v10": {
+        "metric": "MSG_TRANSPORT_CPU_subslice_median_ns",
+        "relative_tolerance": 0.15,
+        "absolute_half_width_ns": 5000,
+        "notes": "Same 5 µs floor when splitting TRANSPORT (connect/handshake/write/read/return) or comparing slices across transports. Relative ±15% still governs when the band median exceeds the floor."
+      },
+      "near_zero_share_ratios": {
+        "applies_to": ["G5_iqr_over_median", "G6_G7_category_shares"],
+        "rule": "When a category or mechanism median is below absolute_half_width_ns, treat share and IQR/median quotes as below_measurement_resolution; do not FAIL or headline on relative blow-ups of near-zero denominators without a ledgered absolute floor."
+      }
+    }
   }
 }

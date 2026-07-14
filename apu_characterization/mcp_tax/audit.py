@@ -497,6 +497,21 @@ def _spread(values: Sequence[float]) -> dict[str, float] | None:
     }
 
 
+def _absolute_half_width_ns(cfg: Mapping[str, Any]) -> int:
+    """Frozen sub-millisecond floor for G6 near-zero handling (TRANSPORT v10)."""
+
+    floors = cfg.get("sub_millisecond_timing") or {}
+    if not isinstance(floors, Mapping):
+        return 5000
+    transport = floors.get("transport_sub_provenance_v10") or {}
+    if isinstance(transport, Mapping) and transport.get("absolute_half_width_ns") is not None:
+        return int(transport["absolute_half_width_ns"])
+    axis1 = floors.get("authenticity_axis1_tool_body") or {}
+    if isinstance(axis1, Mapping) and axis1.get("absolute_half_width_ns") is not None:
+        return int(axis1["absolute_half_width_ns"])
+    return 5000
+
+
 def _audit_g6(
     client: Mapping[str, Any],
     server: Mapping[str, Any],
@@ -513,7 +528,12 @@ def _audit_g6(
     transport = str(coordinates.get("transport") or "")
     mode = str(coordinates.get("mode") or "")
     errors: list[str] = []
-    details: dict[str, Any] = {"implementation": implementation, "messages": []}
+    floor_ns = _absolute_half_width_ns(cfg)
+    details: dict[str, Any] = {
+        "implementation": implementation,
+        "messages": [],
+        "absolute_half_width_ns": floor_ns,
+    }
 
     client_norm = endpoint_totals(client)
     messages = client.get("messages") or {}
@@ -562,11 +582,6 @@ def _audit_g6(
                 )
             single_share = float(cfg.get("g6_single_category_share", 0.95))
             dominant = max(booked_cpu.values()) if booked_cpu else 0.0
-            if booked_cpu and dominant / total_cpu > single_share:
-                errors.append(
-                    f"client raw message {message_id} has one category at "
-                    f"{100 * dominant / total_cpu:.1f}% of booked CPU"
-                )
             provenance_by_cat = _message_provenance(client, message_id)
             per_message["provenance"] = provenance_by_cat
             dominant_share = float(cfg.get("g6_dominant_category_share", 0.50))
@@ -575,9 +590,22 @@ def _audit_g6(
                 str(name)
                 for name in (cfg.get("g6_generic_provenance") or ["measured", "test", ""])
             }
-            for category, cpu in booked_cpu.items():
-                if cpu / total_cpu <= dominant_share:
-                    continue
+            # Gap-fill wearing a name one level down must not satisfy the
+            # single-category opaque exemption (DISPATCH pattern recurring).
+            gap_fill_labels = {
+                str(name)
+                for name in (
+                    cfg.get("g6_gap_fill_provenance")
+                    or [
+                        "client_call_inter_region_gaps",
+                        "harness_sdk_uncovered_interior",
+                    ]
+                )
+            }
+            require_opaque = bool(cfg.get("g6_single_category_requires_opaque", True))
+
+            def _named_frac_for(category: str, cpu: float) -> float:
+                """Named share including gap-fill labels (for provenance-coverage)."""
                 prov = provenance_by_cat.get(category) or {}
                 named_ns = sum(
                     float(amount)
@@ -585,7 +613,88 @@ def _audit_g6(
                     if str(name) not in generic
                 )
                 denom = sum(float(amount) for amount in prov.values()) or float(cpu)
-                named_frac = named_ns / denom if denom else 0.0
+                return named_ns / denom if denom else 0.0
+
+            def _direct_work_frac(category: str, cpu: float) -> float:
+                """Named share excluding gap-fill (for 95% single-category exemption)."""
+                prov = provenance_by_cat.get(category) or {}
+                named_ns = sum(
+                    float(amount)
+                    for name, amount in prov.items()
+                    if str(name) not in generic and str(name) not in gap_fill_labels
+                )
+                denom = sum(float(amount) for amount in prov.values()) or float(cpu)
+                return named_ns / denom if denom else 0.0
+
+            # Near-zero category totals are below timer resolution — do not FAIL
+            # as a lump (OPEN_QUESTIONS / sub_millisecond_timing floors).
+            if booked_cpu and dominant / total_cpu > single_share:
+                if dominant < floor_ns:
+                    per_message["below_measurement_resolution"] = {
+                        "reason": "dominant_category_below_absolute_half_width",
+                        "dominant_cpu_ns": dominant,
+                        "absolute_half_width_ns": floor_ns,
+                    }
+                else:
+                    dominant_name = max(booked_cpu, key=booked_cpu.get)
+                    dom_named = _direct_work_frac(dominant_name, dominant)
+                    # v10.1: 95% detector only fires on opaque / gap-fill concentration.
+                    # Named direct-work concentration (e.g. transport_read) is allowed;
+                    # gap-fill labels do not count toward the exemption.
+                    if require_opaque and dom_named >= named_share:
+                        per_message["single_category_named_ok"] = {
+                            "category": dominant_name,
+                            "category_share": dominant / total_cpu,
+                            "named_direct_work_share": dom_named,
+                            "note": (
+                                "single-category concentration with directly-timed "
+                                "named provenance >= g6_named_provenance_share; "
+                                "gap-fill labels do not qualify"
+                            ),
+                        }
+                    else:
+                        errors.append(
+                            f"client raw message {message_id} has one category at "
+                            f"{100 * dominant / total_cpu:.1f}% of booked CPU"
+                        )
+            transport_slices = {
+                "transport_connect",
+                "transport_write",
+                "transport_read",
+                "transport_tls_handshake",
+                "transport_syscall_return",
+                "transport_syscall",
+            }
+            for category, cpu in booked_cpu.items():
+                if cpu / total_cpu <= dominant_share:
+                    continue
+                prov = provenance_by_cat.get(category) or {}
+                # Tag near-zero TRANSPORT subslices for resolution reporting.
+                if category == McpCategory.MSG_TRANSPORT_CPU.value:
+                    sub_res: dict[str, Any] = {}
+                    for label, amount in prov.items():
+                        if str(label) in transport_slices and float(amount) < floor_ns:
+                            sub_res[str(label)] = {
+                                "cpu_ns": float(amount),
+                                "status": "below_measurement_resolution",
+                                "absolute_half_width_ns": floor_ns,
+                            }
+                    if sub_res:
+                        per_message.setdefault(
+                            "transport_subslice_resolution", {}
+                        ).update(sub_res)
+                if cpu < floor_ns:
+                    per_message.setdefault("below_measurement_resolution", {})[
+                        category
+                    ] = {
+                        "reason": "category_below_absolute_half_width",
+                        "cpu_ns": cpu,
+                        "absolute_half_width_ns": floor_ns,
+                        "status": "below_measurement_resolution",
+                    }
+                    # Do not FAIL provenance coverage on below-floor categories.
+                    continue
+                named_frac = _named_frac_for(category, cpu)
                 per_message.setdefault("dominant_provenance", {})[category] = {
                     "category_share": cpu / total_cpu,
                     "named_provenance_share": named_frac,

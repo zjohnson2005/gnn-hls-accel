@@ -583,10 +583,10 @@ def _provenance_tables(cells: Sequence[Mapping[str, Any]]) -> list[str]:
     lines.extend(
         [
             "",
-            "### MSG_TRANSPORT_CPU (per transport — handshake is TLS-only)",
+            "### MSG_TRANSPORT_CPU (per transport — v10 named subslices)",
             "",
-            "| Transport | `transport_syscall` µs/msg | `transport_tls_handshake` µs/msg |",
-            "|---|---:|---:|",
+            "| Transport | connect | write | read | tls_handshake | return |",
+            "|---|---:|---:|---:|---:|---:|",
         ]
     )
     for cell in sorted(
@@ -594,9 +594,16 @@ def _provenance_tables(cells: Sequence[Mapping[str, Any]]) -> list[str]:
     ):
         transport = (cell.get("coordinates") or {}).get("transport")
         prov = (cell.get("provenance_cpu_ns_per_message") or {}).get("MSG_TRANSPORT_CPU") or {}
-        syscall = float((prov.get("transport_syscall") or {}).get("median", 0)) / 1000.0
-        handshake = float((prov.get("transport_tls_handshake") or {}).get("median", 0)) / 1000.0
-        lines.append(f"| {transport} | {syscall:.3f} | {handshake:.3f} |")
+
+        def _us(name: str) -> float:
+            return float((prov.get(name) or {}).get("median", 0)) / 1000.0
+
+        lines.append(
+            f"| {transport} | {_us('transport_connect'):.3f} | "
+            f"{_us('transport_write'):.3f} | {_us('transport_read'):.3f} | "
+            f"{_us('transport_tls_handshake'):.3f} | "
+            f"{_us('transport_syscall_return'):.3f} |"
+        )
     lines.append("")
     return lines
 

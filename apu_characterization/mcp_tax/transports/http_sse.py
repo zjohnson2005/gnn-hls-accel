@@ -267,7 +267,7 @@ class HttpSseTransport:
                     (self.host, self.port), timeout=self._timeout_s
                 )
 
-            raw_socket = instr.transport_cpu(_connect)
+            raw_socket = instr.transport_cpu(_connect, provenance="transport_connect")
             connection: socket.socket | ssl.SSLSocket = raw_socket
             try:
                 if self.scheme == "https":
@@ -286,6 +286,7 @@ class HttpSseTransport:
                 instr.transport_cpu(
                     lambda: connection.sendall(wire_request),
                     bytes_out=len(wire_request),
+                    provenance="transport_write",
                 )
 
                 def _recv_all() -> bytes:
@@ -303,7 +304,10 @@ class HttpSseTransport:
                         chunks.append(chunk)
                     return b"".join(chunks)
 
-                wire_response = instr.transport_cpu(_recv_all)
+                wire_response = instr.transport_cpu(
+                    _recv_all,
+                    provenance="transport_read",
+                )
             finally:
                 # Close on the TRANSPORT timer so post-return buffer/teardown is
                 # not left as untimed harness-owned code between TRANSPORT and FRAME.

@@ -82,9 +82,15 @@ def probe_proc(pid: int, *, fds: Sequence[int] = ()) -> ProcProbe:
         return ProcProbe(pid=pid, available=False, reason=str(exc))
 
 
-def _validate_stdio_message(message: bytes) -> None:
+def _check_stdio_newlines(message: bytes) -> None:
     if b"\n" in message or b"\r" in message:
         raise ValueError("stdio logical messages must not contain raw newlines")
+
+
+def _validate_stdio_message(message: bytes) -> None:
+    """Full JSON object check for untrusted/external stdio payloads."""
+
+    _check_stdio_newlines(message)
     try:
         decoded = message.decode("utf-8")
         value = json.loads(decoded)
@@ -96,6 +102,10 @@ def _validate_stdio_message(message: bytes) -> None:
 
 class StdioTransport:
     """Persistent raw subprocess transport using MCP newline framing."""
+
+    # Capacity-sized reads: Linux pipe default is 64 KiB. Using unbuffered
+    # FileIO.readline() issues one read(1) per byte (~524k syscalls at 512 KiB).
+    _READ_CHUNK = 65536
 
     def __init__(
         self,
@@ -112,6 +122,7 @@ class StdioTransport:
         self._max_response_bytes = max_response_bytes
         self._lock = threading.Lock()
         self._instrumentation: TransportInstrumentation | None = None
+        self._stdout_leftover = bytearray()
         start = clock_ns()
         self._process = subprocess.Popen(
             list(command),
@@ -122,12 +133,15 @@ class StdioTransport:
             # MCP permits diagnostic stderr output.  Leaving an unread PIPE
             # here can deadlock a long matrix cell when its buffer fills.
             stderr=subprocess.DEVNULL,
+            # Unbuffered pipes avoid hidden write buffering; reads use an
+            # explicit capacity-sized os.read loop (see _read_framed_line).
             bufsize=0,
         )
         self._setup_ns = max(0, clock_ns() - start)
         if self._process.stdin is None or self._process.stdout is None:
             self._process.kill()
             raise TransportError("failed to create stdio subprocess pipes")
+        self._stdout_fd = self._process.stdout.fileno()
 
     @property
     def pid(self) -> int:
@@ -138,6 +152,41 @@ class StdioTransport:
 
     def clear_instrumentation(self) -> None:
         self._instrumentation = None
+
+    def _read_framed_line(self) -> bytes:
+        """Read one newline-terminated wire frame with pipe-capacity syscalls.
+
+        ``FileIO.readline`` under ``bufsize=0`` reads one byte per ``read()`` —
+        ~524k syscalls for a 512 KiB MCP line. This loop issues ``os.read`` in
+        ``_READ_CHUNK`` (64 KiB) units, assembles into one ``bytearray``, and
+        parks any post-newline residue for the next exchange.
+        """
+
+        max_with_nl = self._max_response_bytes + 1
+        buf = self._stdout_leftover
+        self._stdout_leftover = bytearray()
+        while True:
+            nl = buf.find(b"\n")
+            if nl >= 0:
+                line = bytes(buf[: nl + 1])
+                rest = buf[nl + 1 :]
+                if rest:
+                    self._stdout_leftover = rest
+                if len(line) > max_with_nl + 1:
+                    raise TransportError("stdio response exceeds configured maximum")
+                return line
+            if len(buf) > max_with_nl:
+                raise TransportError("stdio response exceeds configured maximum")
+            try:
+                chunk = os.read(self._stdout_fd, self._READ_CHUNK)
+            except OSError as exc:
+                raise TransportError(f"stdio read failed: {exc}") from exc
+            if not chunk:
+                code = self._process.poll()
+                raise TransportError(
+                    f"stdio server closed output (exit code {code})"
+                )
+            buf.extend(chunk)
 
     def _probes(self) -> dict[str, dict[str, object]]:
         parent_fds = (
@@ -151,7 +200,14 @@ class StdioTransport:
 
     def exchange(self, logical_request: bytes) -> TransportResult:
         request = require_logical_message(logical_request)
-        _validate_stdio_message(request)
+        # Harness-instrumented path already produced canonical JSON-RPC bytes;
+        # skip full decode+json.loads on the request (authenticity Axis 5).
+        # Untrusted/external callers still get the full object check.
+        instr_preview = self._instrumentation
+        if instr_preview is None:
+            _validate_stdio_message(request)
+        else:
+            _check_stdio_newlines(request)
         with self._lock:
             if self._process.poll() is not None:
                 raise TransportError(
@@ -161,9 +217,9 @@ class StdioTransport:
             before = self._probes() if instr is None else {"skipped": True}
 
             def _frame_request() -> bytes:
-                wire_request = request + b"\n"
-                _validate_stdio_message(request)
-                return wire_request
+                # Delimiter only — request was newline-checked above; harness
+                # path intentionally omits a second json.loads of canonical bytes.
+                return request + b"\n"
 
             if instr is not None:
                 wire_request = instr.frame(
@@ -186,7 +242,11 @@ class StdioTransport:
                 self._process.stdin.flush()
 
             if instr is not None:
-                instr.transport_cpu(_write_request, bytes_out=len(wire_request))
+                instr.transport_cpu(
+                    _write_request,
+                    bytes_out=len(wire_request),
+                    provenance="transport_write",
+                )
                 write_ns = 0
             else:
                 write_start = self._clock_ns()
@@ -194,14 +254,13 @@ class StdioTransport:
                 write_ns = max(0, self._clock_ns() - write_start)
 
             def _read_response() -> bytes:
-                wire = self._process.stdout.readline(self._max_response_bytes + 2)
-                if not wire:
-                    code = self._process.poll()
-                    raise TransportError(f"stdio server closed output (exit code {code})")
-                return wire
+                return self._read_framed_line()
 
             if instr is not None:
-                wire_response = instr.transport_cpu(_read_response)
+                wire_response = instr.transport_cpu(
+                    _read_response,
+                    provenance="transport_read",
+                )
                 read_ns = 0
             else:
                 read_start = self._clock_ns()
@@ -259,6 +318,7 @@ class StdioTransport:
         """Write a JSON-RPC notification without waiting for a forbidden reply."""
 
         request = require_logical_message(logical_request)
+        # Notifications are uninstrumented control-plane traffic; keep full check.
         _validate_stdio_message(request)
         with self._lock:
             if self._process.poll() is not None:

@@ -23,6 +23,7 @@ range ~6.2-11.8 ms. Quotable CPU shares still require
 - `experiments/` - live/mock drivers (replication_batch, real_agent_breakdown, concurrency_sweep, locality ablations).
 - `tools/` - validate_publishable, sweep/latency-collapse report generators, probes.
 - `tests/` - resolution, provenance, audit, reconcile unit tests (run via `make apu-gate`).
+- `tlp01/` - TLP-01 limit study (trace schema, dependence oracles, M0–M5 sim).
 - `fixtures/` - corpus + vectors for real tool bodies.
 - `out/` - artifacts; see `out/ARTIFACT_NOTES.md` and `out/README.md`.
 
@@ -39,6 +40,13 @@ range ~6.2-11.8 ms. Quotable CPU shares still require
   `out/concurrency_sweep_report.md` (validate with `tools/validate_sweep.py`)
 - MCP-01 controlled protocol-tax arm: `METHODOLOGY_MCP.md` and `mcp_tax/`
   (`protocol_microbenchmark`; WSL smoke only, bare-metal publication matrix)
+- CAP-01 capability-scaling arm: `METHODOLOGY_CAP01.md` and `cap01/`
+  (`capability_scaling`; frozen real-model pools, matched replay, WSL smoke
+  only, bare-metal publication matrix, Tier D projection quarantined)
+- TLP-01 turn-level parallelism limit study: `METHODOLOGY_TLP01.md`,
+  `PROMOTION_SUMMARY.md`, and `tlp01/` (`turn_level_parallelism`; S/C
+  brackets; M0–M5; v2 speculation phase diagram; no bare metal; Praetor
+  axis position Tier D only)
 
 Install LangGraph deps from this subtree:
 

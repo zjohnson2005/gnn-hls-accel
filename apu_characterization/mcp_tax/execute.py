@@ -536,7 +536,14 @@ async def _run_sdk_async(
             )
         accumulator.begin_endpoint(metadata={"pid": os.getpid()})
         for step in measured:
-            await _record_sdk_call(accumulator, session, step, wire_dir=wire_dir)
+            await _record_sdk_call(
+                accumulator,
+                session,
+                step,
+                wire_dir=wire_dir,
+                timer_pair_cost_ns=timer_pair_cost_ns,
+                run_dir=run_dir,
+            )
         _finish_client(accumulator, str(measured[-1].index))
 
     if plan.coordinates.transport == "stdio":
@@ -599,7 +606,20 @@ async def _record_sdk_call(
     step: Any,
     *,
     wire_dir: Path | None,
+    timer_pair_cost_ns: int = 0,
+    run_dir: Path | None = None,
 ) -> Any:
+    """Measure one SDK tool call with gap decomposition (authenticity Axis 4a).
+
+    Unlike the pre-v10 path, ``session.call_tool`` is *not* wrapped in a single
+    MSG_SERIAL timer that would absorb the entire interior. Harness-owned
+    SERIAL/DISPATCH boundaries stay thin; uncovered SDK interior becomes the
+    gap parent and is decomposed via ``build_gap_decomposition``.
+    """
+
+    from .gap_measure import build_gap_decomposition, gap_session
+    from .gap_split import GAP_DECOMPOSITION_KEY
+
     message_id = str(step.index)
     accumulator.begin_message(message_id)
     try:
@@ -620,26 +640,75 @@ async def _record_sdk_call(
             "schema_id": step.schema_id,
             "payload": "x" * step.payload_bytes,
         }
-        with mcp_timed(
-            McpCategory.MSG_SERIAL,
-            accumulator=accumulator,
-            message_id=message_id,
-            bytes_out=step.payload_bytes,
-            provenance="harness_sdk_boundary",
-        ):
-            result = await session.call_tool(step.tool_name, arguments)
-        boundary_cpu_ns = max(0, time.thread_time_ns() - boundary_cpu_start)
-        boundary_wall_ns = max(0, time.perf_counter_ns() - boundary_wall_start)
-        nested_cpu_ns = accumulator.message_booked_cpu_ns(message_id)
-        interior_gap = max(0, boundary_cpu_ns - nested_cpu_ns)
-        if interior_gap:
-            accumulator.book(
+        with gap_session(
+            message_id,
+            timer_pair_cost_ns=timer_pair_cost_ns,
+            run_dir=run_dir,
+            boundary_cpu_start=boundary_cpu_start,
+            boundary_wall_start=boundary_wall_start,
+        ) as gap:
+            gap.mark_boundary("pre_serial")
+            with mcp_timed(
                 McpCategory.MSG_SERIAL,
-                interior_gap,
+                accumulator=accumulator,
                 message_id=message_id,
-                wall_ns=interior_gap,
-                provenance="harness_sdk_uncovered_interior",
-            )
+                bytes_out=step.payload_bytes,
+                provenance="harness_sdk_boundary",
+            ):
+                # Thin harness boundary: copy args for the SDK call without
+                # wrapping the await (which would absorb the uncovered interior).
+                call_args = dict(arguments)
+            gap.mark_boundary("serial_to_transport")
+            # Uncovered SDK interior (event loop + transport + SDK parse).
+            result = await session.call_tool(step.tool_name, call_args)
+            gap.mark_boundary("transport_to_serial")
+            gap.mark_boundary("serial_to_dispatch")
+            with mcp_timed(
+                McpCategory.MSG_DISPATCH,
+                accumulator=accumulator,
+                message_id=message_id,
+                provenance="harness_sdk_boundary",
+            ):
+                payload = result
+            gap.mark_boundary("post_dispatch")
+
+            boundary_cpu_ns = max(0, time.thread_time_ns() - boundary_cpu_start)
+            boundary_wall_ns = max(0, time.perf_counter_ns() - boundary_wall_start)
+            nested_cpu_ns = accumulator.message_booked_cpu_ns(message_id)
+            gap_cpu = max(0, boundary_cpu_ns - nested_cpu_ns)
+            if gap_cpu:
+                accumulator.book(
+                    McpCategory.MSG_DISPATCH,
+                    gap_cpu,
+                    message_id=message_id,
+                    wall_ns=gap_cpu,
+                    provenance="harness_sdk_uncovered_interior",
+                )
+            if accumulator.category_hooks_enabled:
+                from .contracts import load_protocol
+
+                precedence = (
+                    load_protocol()
+                    .get("audit", {})
+                    .get("gap_split_precedence")
+                    or None
+                )
+                decomp = build_gap_decomposition(
+                    gap_cpu if gap_cpu else 0,
+                    gap,
+                    precedence=precedence,
+                )
+                if run_dir is not None and decomp.get("overlap_resolutions"):
+                    overlap_dir = Path(run_dir) / "gap_overlaps"
+                    overlap_dir.mkdir(parents=True, exist_ok=True)
+                    (overlap_dir / f"{message_id}.json").write_text(
+                        json.dumps(decomp["overlap_resolutions"], indent=2) + "\n",
+                        encoding="utf-8",
+                    )
+                accumulator.record_message_diagnostic(
+                    message_id, GAP_DECOMPOSITION_KEY, decomp
+                )
+
         nested_cpu_ns = accumulator.message_booked_cpu_ns(message_id)
         accumulator.record_message_diagnostic(
             message_id, "client_call_boundary_ns", boundary_cpu_ns
@@ -656,13 +725,6 @@ async def _record_sdk_call(
             message_id=message_id,
             provenance="client_call_wall_minus_thread_cpu",
         )
-        with mcp_timed(
-            McpCategory.MSG_DISPATCH,
-            accumulator=accumulator,
-            message_id=message_id,
-            provenance="harness_sdk_boundary",
-        ):
-            payload = result
         return payload
     finally:
         accumulator.end_message(message_id)
@@ -716,15 +778,19 @@ def execute_cell(plan: CellPlan, run_dir: Path) -> Mapping[str, Any]:
                 timer_pair_cost_ns=timer_pair_cost_ns,
             )
         elif plan.coordinates.implementation == "reference_sdk":
-            client_accumulator = asyncio.run(
-                _run_sdk_async(
-                    plan,
-                    run_dir,
-                    partitions,
-                    tls=tls,
-                    timer_pair_cost_ns=timer_pair_cost_ns,
+            from .gap_measure import instrumented_asyncio_loop
+
+            # GapSelectorLoop books ready-queue drain into mechanism (a).
+            with instrumented_asyncio_loop():
+                client_accumulator = asyncio.run(
+                    _run_sdk_async(
+                        plan,
+                        run_dir,
+                        partitions,
+                        tls=tls,
+                        timer_pair_cost_ns=timer_pair_cost_ns,
+                    )
                 )
-            )
         else:
             raise AdmissionError(
                 f"unsupported implementation {plan.coordinates.implementation!r}"

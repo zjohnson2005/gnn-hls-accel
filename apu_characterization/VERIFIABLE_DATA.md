@@ -60,6 +60,70 @@ payload/schema/tool-count scaling, and SDK-minus-raw delta. Never quotable as
 production agent CPU share, production latency, tool-body cost, model cost,
 or evidence that synthetic agent runs satisfy the live-OpenAI policy.
 
+## Controlled capability-scaling class (CAP-01)
+
+`result_validity: capability_scaling` is a separate, narrow class for solve
+rate at fixed wall or energy budget. It replays frozen candidates generated
+by a real model before measurement. Timed runs do not call a live model, so
+this class does not license live-agent CPU-share claims.
+
+Publication requires all of:
+
+- native bare-metal Linux; WSL2 is smoke/debug only
+- locked `cap01_v2` protocol with five-domain corpus, pool, classification,
+  generation, verifier-pin, D5-normalization, and answer-space hashes
+- at least 2,048 frozen candidates per task; pool exhaustion is a hard failure
+- identical seed-ordered candidate and latency streams across LangGraph, Rust,
+  and raw Python
+- strictly serial measurement and n=5 seeds per cell
+- clean git stamp, immutable completed run directories, and G1-G7 PASS
+- SCALING population classified by the frozen 50-shuffle calibration before
+  timing
+- the pooled and every per-domain 4000 ms positive-control null check holds
+  before any capability headline
+
+Quotable: paired solve-rate differences at the pre-registered budgets and
+latency scales for this best-of-N verification loop and frozen task
+population. Never quotable as intelligence/IQ, as generalization to other
+agent shapes, as a Praetor measurement, or as production CPU share.
+
+The Tier D 10-50 microsecond point is a dashed projection only and must use
+the label frozen in `METHODOLOGY_CAP01.md`.
+
+## Controlled turn-level parallelism class (TLP-01)
+
+`result_validity: turn_level_parallelism` is a separate, narrow class for the
+trace-driven TLP limit study. No bare metal is required. After T0, analysis
+is offline simulation only.
+
+Publication requires all of:
+
+- frozen `tlp01_v1` protocol (locked after S2 task manifest + expectations)
+- immutable JSONL traces hashed at collection
+- Tier-S ⊆ Tier-C on every trace (G-D)
+- M0 replay within ±5% of recorded makespan (G-V)
+- DAG + event/work conservation (G-A)
+- n=5 seeds for S2 tasks; bands never points (G-R)
+- clean git stamp on published artifacts
+
+Quotable: Tier-S/Tier-C speedup **brackets** per task class for M1 (available
+TLP ceiling), M2−M1 floor-tax gap, M3 width bands, M4 policy×penalty phase
+diagram (boundary location Tier A/B), M5 at optimal policy, predictor
+accuracies. See `PROMOTION_SUMMARY.md`.
+Never quotable as:
+
+- a TLP point estimate (always name the tier and bracket)
+- an achievable M1 oracle number
+- a headline that includes Tier-J (LLM-judged) edges
+- generalization beyond traced task classes/harnesses (S3 absence is a
+  stated limit when absent)
+- a Praetor *measurement* (only Praetor's 20 µs *position* on the penalty
+  axis is Tier D; label every time; promotion path csynth; boundary
+  location is never Tier-D-dependent)
+- "first to parallelize agents" / "nobody harvests TLP" (false; see related
+  work: PASTE/B-PASTE, SPORK, LLMCompiler, GAP)
+- synthetic `--synthetic-debug` smoke outputs
+
 ## Deployment caveats (label in every caption)
 
 The **publishable replication** uses **remote search** implemented as a mock HTTP envelope plus I/O wait (`harness/mock_api.py`). That is a **deliberate deployment model** (tool body off-host), not a claim about production search latency or a specific vendor API.

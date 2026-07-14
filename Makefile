@@ -7,7 +7,7 @@
 # Windows PowerShell (no make required):
 #   .\apu_characterization\run_apu_gate.ps1
 
-.PHONY: apu-bootstrap apu-gate apu-replicate-v3 apu-validate apu-validate-sweep apu-replicate-check apu-replicate-unattended mcp-bootstrap mcp-preflight mcp-gate mcp-matrix-plan mcp-postprocess mcp-validate mcp-bare-metal mcp-clean help
+.PHONY: apu-bootstrap apu-gate apu-replicate-v3 apu-validate apu-validate-sweep apu-replicate-check apu-replicate-unattended cap-gate tlp-gate mcp-bootstrap mcp-preflight mcp-gate mcp-matrix-plan mcp-postprocess mcp-validate mcp-bare-metal mcp-clean help
 
 V3_ARTIFACT := apu_characterization/out/replication_remote_search_v3.json
 SWEEP_ARTIFACT := apu_characterization/out/concurrency_sweep.json
@@ -24,6 +24,8 @@ help:
 	@echo "  apu-validate-sweep       validate live concurrency_sweep.json"
 	@echo "  apu-replicate-unattended start replication in background (Windows/WSL)"
 	@echo "  apu-replicate-check      poll unattended run; validate when finished"
+	@echo "  cap-gate                 CAP-01 v2 unit and contract gate"
+	@echo "  tlp-gate                 TLP-01 unit and contract gate"
 	@echo "  mcp-bootstrap            install exact MCP-01 dependency lock"
 	@echo "  mcp-preflight            verify complete MCP-01 source/runtime bundle"
 	@echo "  mcp-gate                 MCP-01 unit and integration-contract gate"
@@ -57,6 +59,12 @@ apu-replicate-unattended:
 
 apu-replicate-check:
 	@$(VENV_ACTIVATE) && python apu_characterization/tools/apu_replicate_status.py --validate
+
+cap-gate:
+	bash apu_characterization/run_cap01_gate.sh
+
+tlp-gate:
+	bash apu_characterization/run_tlp01_gate.sh
 
 mcp-bootstrap:
 	bash apu_characterization/bootstrap_mcp.sh

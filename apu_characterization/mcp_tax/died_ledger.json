@@ -76,6 +76,31 @@
         "fixphase_resmoke_v9 advisory refuted on gap_unattributed 51–60%",
         "OPEN_QUESTIONS §4 v1.5 amendment"
       ]
+    },
+    {
+      "id": 9,
+      "timestamp_utc": "2026-07-14T22:48:00.000000Z",
+      "claim": "Instrumented raw stdio FRAME includes a second request-side json.loads of harness-canonical bytes",
+      "reason": "Authenticity Axis 5 (mcp01_authenticity_audit.md): the harness already materializes canonical JSON-RPC via canonical_json_bytes / MessageStep.canonical_bytes. Re-decoding and json.loads inside FRAME before the pipe write was redundant inauthentic work no honest protocol peer would redo on bytes it just produced. Removed on the instrumented path only (newline check retained); untrusted/external callers and response-side validation still run full _validate_stdio_message. Justification is authenticity (Axis 5 FLAGGED → fix), not a performance shortcut independent of that finding.",
+      "evidence": [
+        "apu_characterization/out/mcp_tax/mcp01_authenticity_audit.md Axis 5 FLAGGED",
+        "transports/stdio.py: instrumented exchange skips request json.loads; response still fully validated",
+        "Affected category: MSG_FRAME (transport_frame provenance) on raw stdio — not MSG_VALIDATE (schema) and not MSG_SERIAL (canonical materialize remains)",
+        "COMPARABILITY: any v10 vs v9-era stdio MSG_FRAME table must note this category definition change; a FRAME drop is definitional until stated otherwise"
+      ]
+    },
+    {
+      "id": 10,
+      "timestamp_utc": "2026-07-14T23:10:00.000000Z",
+      "claim": "G6 95% single-category FAIL applies even when the dominant category has named provenance >= 80%",
+      "reason": "Retired by v10.1: g6_single_category_requires_opaque=true, scoped so only directly-timed named work (not g6_gap_fill_provenance) exempts. Axis 5 profiling of stdio @ 512 KiB found FileIO.readline under bufsize=0 issued median 524378 one-byte read() syscalls vs theoretical minimum 9 (pipe 64 KiB); fixed via capacity-sized os.read loop (_read_framed_line). Post-fix profile: median ~9–11 syscalls, LEAN. Post-fix Q3: transport_read remained dominant (~98% of TRANSPORT) — concentration is pipe-read physics, not leftover byte-at-a-time debt. Amendment kept with this evidence; gap-fill labels still FAIL the 95% detector.",
+      "evidence": [
+        "pre-fix: stdio_512kib_read_profile.json median_read_syscalls=524378 theoretical_min=9 byte_at_a_time=true",
+        "fix: transports/stdio.py _read_framed_line os.read(fd, 65536)",
+        "post-fix profile + Q3 remeasure: concentration persists in transport_read at theoretical-min syscalls",
+        "protocol_v1.json audit.g6_single_category_requires_opaque + g6_gap_fill_provenance",
+        "METHODOLOGY_MCP.md G6 single-category exemption section"
+      ]
     }
   ],
   "policy": "Append-only. Retire unsupported claims or arms with evidence; never delete prior entries."

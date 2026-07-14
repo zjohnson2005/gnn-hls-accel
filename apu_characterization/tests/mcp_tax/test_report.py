@@ -147,7 +147,10 @@ def test_provenance_table_renders_dispatch_and_transport() -> None:
         },
         "MSG_TRANSPORT_CPU": {
             "transport_tls_handshake": {"median": 950_000.0},
-            "transport_syscall": {"median": 400_000.0},
+            "transport_connect": {"median": 50_000.0},
+            "transport_write": {"median": 200_000.0},
+            "transport_read": {"median": 150_000.0},
+            "transport_syscall_return": {"median": 10_000.0},
         },
     }
     report = render_report(
@@ -166,6 +169,7 @@ def test_provenance_table_renders_dispatch_and_transport() -> None:
     assert "Provenance breakdown" in report
     assert "client_call_inter_region_gaps" in report
     assert "transport_tls_handshake" in report
+    assert "v10 named subslices" in report
     assert "http_sse_tls_on" in report
     assert "950.000" in report
     assert "1595.000" in report

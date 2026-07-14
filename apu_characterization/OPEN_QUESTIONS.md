@@ -170,6 +170,29 @@ name until measured sites cover it — G6 spirit one level down. e% is always
   variance (~3× across re-smokes) needs median+spread on bare metal. SDK−raw
   steady deltas may be mixed-sign — raw may not be lean.
 - **G6 provenance coverage (`mcp_tax_v1.4`):** any category >50% of booked
-  steady CPU must have non-generic named provenance covering ≥80%, else
+  steady CPU must have named provenance covering ≥80%, else
   presumptive gap-fill / opaque lump (alongside the 95% single-category detector).
 - **G7 gap-split conservation:** see above; required on all new aggregates.
+- **Sub-millisecond timing floors (frozen before authenticity Axis 1 / v10
+  TRANSPORT):** `audit.sub_millisecond_timing` in `protocol_v1.json` — absolute
+  half-width **5 µs**, relative ±15%, half-width =
+  `max(rel × median, 5000 ns, max IQR)`. Idle Axis 1 ratio gate remains
+  `cpu/wall < 5%` (separate). Near-zero G5/G6/G7 denominators are
+  `below_measurement_resolution`, not FAIL evidence. Source: CAP-01
+  died-ledger #5. See `METHODOLOGY_MCP.md` checked finding + standing principle.
+  **G6 (v10):** dominant-category lump / provenance-coverage FAILs are suppressed
+  when the category CPU is below `transport_sub_provenance_v10.absolute_half_width_ns`
+  (5000 ns); near-zero TRANSPORT named subslices are tagged
+  `below_measurement_resolution` in G6 details rather than treated as coverage gaps.
+- **v10 Axis 5 / MSG_FRAME definition (stdio raw, instrumented path):** request-side
+  `json.loads` of harness-canonical bytes was removed as **inauthentic redundant
+  work** (died-ledger #9; authenticity audit Axis 5), not as an independent
+  performance cut. **Comparability:** any table comparing v10 stdio MSG_FRAME
+  to v9-era 120×5 stdio MSG_FRAME must note this category-definition change —
+  a FRAME drop is definitional until stated otherwise.
+- **APPLIED (v10.1 + Axis 5 read fix) — G6 95% single-category vs named
+  direct work:** Suppress the 95% FAIL only when *directly-timed* named
+  provenance share ≥ 0.80 after excluding `g6_gap_fill_provenance`. Pre-fix
+  stdio @ 512 KiB: 524 378×1-byte reads vs min 9; post-fix: 9 syscalls, LEAN,
+  `transport_read` still ~84% of TRANSPORT. Died-ledger #10 updated.
+  See `METHODOLOGY_MCP.md` G6 exemption section.

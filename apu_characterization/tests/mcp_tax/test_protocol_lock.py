@@ -35,9 +35,20 @@ class ProtocolLockTests(unittest.TestCase):
         self.assertIn("verdict_min_population", protocol["clarifications"])
         self.assertIn("verdict_per_arm", protocol["clarifications"])
         self.assertIn("gap_syscall_return_subprovenance", protocol["clarifications"])
+        self.assertIn("sub_millisecond_timing", protocol["clarifications"])
         audit = protocol["audit"]
         self.assertEqual(audit["g6_dominant_category_share"], 0.50)
         self.assertEqual(audit["g6_named_provenance_share"], 0.80)
+        self.assertTrue(audit["g6_single_category_requires_opaque"])
+        self.assertIn(
+            "g6_single_category_share",
+            protocol["clarifications"]["g6_provenance_coverage"],
+        )
+        floors = audit["sub_millisecond_timing"]
+        self.assertEqual(floors["authenticity_axis1_tool_body"]["absolute_half_width_ns"], 5000)
+        self.assertEqual(floors["transport_sub_provenance_v10"]["absolute_half_width_ns"], 5000)
+        self.assertEqual(floors["authenticity_axis1_tool_body"]["relative_tolerance"], 0.15)
+        self.assertEqual(floors["authenticity_axis1_tool_body"]["idle_cpu_over_wall_max"], 0.05)
         self.assertEqual(
             audit["diffuseness_verdict"]["confirm_min_mechanisms"], 3
         )

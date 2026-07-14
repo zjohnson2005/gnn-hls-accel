@@ -2,6 +2,25 @@
 
 Protocol lock: `mcp_tax_v1.5` (`mcp_tax/protocol_v1.json`).
 
+## Checked finding: G1–G7 already freeze timer floors
+
+Before the CAP-01 died-ledger #5 principle was backported, MCP-01's core
+gates were reviewed against the relative-only false-FAIL pattern. **Result:
+G1 and G3 were already safe.**
+
+- G1 residual slack floor: `residual_slack_floor_ns = 15_625_000` (15.625 ms)
+- G3 conservation floor: `conservation_floor_ns = 500_000` (0.5 ms)
+
+Neither is a CAP-01-G8-style relative-only µs cost-parity gate. Absolute
+floors were frozen before measurement for those quantities. That is a checked
+finding, not an assumption from the backport.
+
+What remains exposed is everything that will measure or compare **near-zero
+category medians** (single-to-double-digit µs) with relative bands or
+IQR/median ratios — authenticity Axis 1 and v10 TRANSPORT sub-provenance.
+Those floors are frozen below under `audit.sub_millisecond_timing` **before**
+those runs, not after the first FLAGGED result.
+
 ## Scope and validity
 
 MCP-01 measures host CPU and wait introduced by MCP message handling. It uses
@@ -157,6 +176,46 @@ by a 5 second cool-down. Seeds are 0-4. Primary synthetic delay is zero; a
 
 Thresholds do not move after measurement. Failures remain in the report with
 diagnosis.
+
+### Standing principle: timer-resolution floors (cross-project)
+
+Borrowed from CAP-01 died-ledger **#5** (G8 band amendment): any gate over a
+sub-millisecond quantity must freeze its timer-resolution floor at protocol
+freeze time, not discover it via a failed run.
+
+**Frozen before authenticity Axis 1 and v10 TRANSPORT runs** (see
+`protocol_v1.json` → `audit.sub_millisecond_timing`):
+
+| Upcoming quantity | Absolute half-width | Relative |
+|---|---:|---:|
+| Authenticity Axis 1 tool-CPU cross-condition medians | 5 µs (5000 ns) | ±15% |
+| v10 `MSG_TRANSPORT_CPU` subslice medians | 5 µs (5000 ns) | ±15% |
+| Axis 1 idle ratio (`cpu/wall` during synthetic delay) | n/a (ratio gate) | max 5% |
+
+Half-width rule (matches CAP-01 G8 shape):
+`max(0.15 × median, 5000 ns, max within-condition IQR)`.
+
+Near-zero G5/G6/G7 share ratios: when a category median is below 5 µs, treat
+IQR/median and share headlines as `below_measurement_resolution` rather than
+as FAIL evidence without a ledgered absolute floor.
+
+### G6 single-category exemption (`g6_single_category_requires_opaque`)
+
+A category may exceed `g6_single_category_share` (95%) of booked CPU **only**
+when its provenance is **directly timed real work** covering at least
+`g6_named_provenance_share` (80%) after excluding:
+
+- generic labels (`measured`, `test`, empty), and
+- gap-fill labels in `g6_gap_fill_provenance`
+  (`client_call_inter_region_gaps`, `harness_sdk_uncovered_interior`).
+
+This is not a blanket loosening. A named bucket that is itself unattributed
+gap time wearing a label (the DISPATCH pattern one level down) must still
+FAIL. Evidence for keeping the exemption for large-payload stdio TRANSPORT:
+Axis 5 profiling found `FileIO.readline` under `bufsize=0` issued ~524k
+one-byte `read()` syscalls; after fixing to 64 KiB `os.read` chunks (~9
+syscalls, theoretical pipe minimum), `transport_read` remained dominant —
+concentration is pipe-read physics, not implementation debt.
 
 ## Host requirements
 

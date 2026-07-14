@@ -83,10 +83,59 @@ def test_g6_passes_raw_client_shape() -> None:
 
 
 def test_g6_fails_lump_detector() -> None:
+    """Opaque >95% concentration still FAILs the single-category detector."""
     client = _endpoint_dict(
         categories={"MSG_TRANSPORT_CPU": 9900, "MSG_SERIAL": 50, "MSG_FRAME": 50},
         boundary_ns=10000,
-        provenance="transport_syscall",
+        provenance="measured",  # generic → opaque
+    )
+    result = audit_run(client, client, plan=_raw_plan())
+    assert not result["gates"]["G6"]["pass"]
+    assert any("one category at" in err for err in result["gates"]["G6"]["errors"])
+
+
+def test_g6_named_concentration_suppresses_single_category_fail() -> None:
+    """v10.1: >95% with named provenance >=80% is physics, not a lump FAIL."""
+    client = _endpoint_dict(
+        categories={
+            "MSG_TRANSPORT_CPU": 960_000,
+            "MSG_SERIAL": 20_000,
+            "MSG_FRAME": 20_000,
+        },
+        boundary_ns=1_000_000,
+        provenance={
+            "MSG_TRANSPORT_CPU": "transport_write",
+            "MSG_SERIAL": "json_encode",
+            "MSG_FRAME": "stdio_frame",
+        },
+    )
+    for item in client["categories"]:
+        if item["category"] == "MSG_TRANSPORT_CPU":
+            item["totals"]["provenance"] = {
+                "transport_write": 500_000,
+                "transport_read": 460_000,
+            }
+    result = audit_run(client, client, plan=_raw_plan())
+    assert result["gates"]["G6"]["pass"], result["gates"]["G6"]["errors"]
+    assert not any("one category at" in err for err in result["gates"]["G6"]["errors"])
+    messages = result["gates"]["G6"].get("messages") or []
+    assert any(msg.get("single_category_named_ok") for msg in messages), messages
+
+
+def test_g6_gap_fill_named_concentration_still_fails() -> None:
+    """Gap-fill provenance must not satisfy the 95% opaque exemption."""
+    client = _endpoint_dict(
+        categories={
+            "MSG_DISPATCH": 960_000,
+            "MSG_SERIAL": 20_000,
+            "MSG_FRAME": 20_000,
+        },
+        boundary_ns=1_000_000,
+        provenance={
+            "MSG_DISPATCH": "client_call_inter_region_gaps",
+            "MSG_SERIAL": "json_encode",
+            "MSG_FRAME": "stdio_frame",
+        },
     )
     result = audit_run(client, client, plan=_raw_plan())
     assert not result["gates"]["G6"]["pass"]
@@ -126,3 +175,57 @@ def test_g6_passes_named_gap_provenance() -> None:
     )
     result = audit_run(client, client, plan=_raw_plan())
     assert result["gates"]["G6"]["pass"]
+
+
+def test_g6_near_zero_transport_is_below_measurement_resolution() -> None:
+    """Category below absolute half-width (5 µs) must not FAIL as a lump."""
+    client = _endpoint_dict(
+        categories={
+            "MSG_TRANSPORT_CPU": 3000,  # < 5000 ns frozen floor
+            "MSG_SERIAL": 200,
+            "MSG_FRAME": 200,
+        },
+        boundary_ns=3400,
+        provenance={
+            "MSG_TRANSPORT_CPU": "transport_write",
+            "MSG_SERIAL": "json_encode",
+            "MSG_FRAME": "stdio_frame",
+        },
+    )
+    # Make TRANSPORT look like 88% so single-share and dominant checks would
+    # fire without the floor — they must resolve to below_measurement_resolution.
+    result = audit_run(client, client, plan=_raw_plan())
+    assert result["gates"]["G6"]["pass"], result["gates"]["G6"]["errors"]
+    messages = result["gates"]["G6"].get("messages") or []
+    assert messages, "G6 details must include per-message records"
+    assert any(
+        msg.get("below_measurement_resolution") for msg in messages
+    ), messages
+    assert not any("one category at" in err for err in result["gates"]["G6"]["errors"])
+    assert not any("presumptive gap-fill" in err for err in result["gates"]["G6"]["errors"])
+
+
+def test_g6_named_transport_subslices_cover_large_transport() -> None:
+    """v10 named write/read provenance satisfies G6 when TRANSPORT dominates."""
+    client = _endpoint_dict(
+        categories={
+            "MSG_TRANSPORT_CPU": 900_000,
+            "MSG_SERIAL": 50_000,
+            "MSG_FRAME": 50_000,
+        },
+        boundary_ns=1_000_000,
+        provenance={
+            "MSG_TRANSPORT_CPU": "transport_write",  # single label in helper
+            "MSG_SERIAL": "json_encode",
+            "MSG_FRAME": "stdio_frame",
+        },
+    )
+    # Override provenance map to split write/read like the real instrument.
+    for item in client["categories"]:
+        if item["category"] == "MSG_TRANSPORT_CPU":
+            item["totals"]["provenance"] = {
+                "transport_write": 500_000,
+                "transport_read": 400_000,
+            }
+    result = audit_run(client, client, plan=_raw_plan())
+    assert result["gates"]["G6"]["pass"], result["gates"]["G6"]["errors"]

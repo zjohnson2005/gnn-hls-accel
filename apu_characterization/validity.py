@@ -17,6 +17,16 @@ Policy (non-negotiable for papers, slides, and findings):
 - **protocol_microbenchmark** — controlled deterministic protocol testbench,
   bare-metal Linux, n≥5, clean git, and MCP-01 audit PASS. Quotable only for
   MCP protocol/transport CPU and wait tax, never agent or tool-body shares.
+
+- **capability_scaling** — CAP-01 matched replay of frozen real-model
+  candidate pools on bare-metal Linux, n≥5, clean git, and G1-G7 PASS.
+  Quotable only for solve rate at fixed budget in the frozen best-of-N task
+  population, never as a general intelligence or production CPU-share claim.
+
+- **turn_level_parallelism** — TLP-01 trace-driven limit study. Quotable only
+  as Tier-S/Tier-C speedup brackets for traced task classes/harnesses after
+  G-V/G-D/G-A/G-R PASS. Never as a point estimate, never as M1-achievable,
+  never with Tier-J in the headline.
 """
 
 from __future__ import annotations
@@ -26,6 +36,8 @@ DEBUG_ONLY = "debug_only"
 AUDIT_FAILED = "audit_failed"
 WINDOWS_FOOTNOTE_ONLY = "windows_footnote_only"
 PROTOCOL_MICROBENCHMARK = "protocol_microbenchmark"
+CAPABILITY_SCALING = "capability_scaling"
+TURN_LEVEL_PARALLELISM = "turn_level_parallelism"
 
 VERIFIABLE_BACKEND = "openai"
 
@@ -62,12 +74,31 @@ PROTOCOL_MICROBENCHMARK_BANNER = (
     "production-agent or tool-compute characterization."
 )
 
+CAPABILITY_SCALING_BANNER = (
+    "> **Capability-scaling experiment.** Frozen real-model candidate pools "
+    "are replayed as matched task-seed streams through measured LangGraph, "
+    "Rust, and raw-Python best-of-N loops on qualified bare-metal Linux. "
+    "Quotable only for solve rate at fixed budget within the frozen CAP-01 "
+    "task population after G1-G7 PASS. Tier D is projection-only."
+)
+
+TURN_LEVEL_PARALLELISM_BANNER = (
+    "> **Turn-level parallelism limit study.** Trace-driven simulation over "
+    "frozen session traces with a Tier-S/Tier-C dependence bracket. Quotable "
+    "only as S/C speedup bands for traced task classes after G-V/G-D/G-A/G-R "
+    "PASS. M1 is the oracle ceiling, not an achievable claim; M4/M5 are "
+    "deployable figures. Tier-J is never headline-load-bearing. Praetor "
+    "misprediction penalties are Tier D projection-only."
+)
+
 
 def artifact_stem(experiment: str, validity: str) -> str:
     """Base filename without extension."""
     if validity in (
         PUBLISHABLE,
         PROTOCOL_MICROBENCHMARK,
+        CAPABILITY_SCALING,
+        TURN_LEVEL_PARALLELISM,
         AUDIT_FAILED,
         WINDOWS_FOOTNOTE_ONLY,
     ):
@@ -102,4 +133,8 @@ def validity_banner(validity: str) -> str:
         return WINDOWS_FOOTNOTE_BANNER
     if validity == PROTOCOL_MICROBENCHMARK:
         return PROTOCOL_MICROBENCHMARK_BANNER
+    if validity == CAPABILITY_SCALING:
+        return CAPABILITY_SCALING_BANNER
+    if validity == TURN_LEVEL_PARALLELISM:
+        return TURN_LEVEL_PARALLELISM_BANNER
     return DEBUG_BANNER
