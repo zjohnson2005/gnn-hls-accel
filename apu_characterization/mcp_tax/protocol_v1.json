@@ -1,0 +1,109 @@
+{
+  "protocol_version": "mcp_tax_v1.5",
+  "clarifications": {
+    "MSG_VALIDATE": "JSON Schema parameter/result validation only; TLS handshake/cert CPU is MSG_TRANSPORT_CPU with provenance transport_tls_handshake.",
+    "MSG_DISPATCH": "Frozen booking paths: server method lookup (measured); client_result_dispatch; client_call_inter_region_gaps (untimed CPU inside the client call boundary). Gaps dominate client DISPATCH in v8 raw throttle (~99.5–99.8%); v9 splits gaps into gap_decomposition mechanisms. TurnTrace echo is diffuseness of gaps, not method-dispatch dominance.",
+    "MSG_TRANSPORT_CPU": "Pipe/socket syscall CPU and TLS handshake/crypto path. HTTP/SSE primary transport is connection-per-message (Connection: close); transport_tls_handshake is a per-call handshake tax of that pattern, not reused-session record encryption. Post-return close/wrap is booked under transport_syscall_return when instrumented (leaves the gap).",
+    "http_sse_connection": "One TCP(/TLS) connection per measured exchange; handshake belongs in per-message TRANSPORT until a reuse arm exists.",
+    "g6_provenance_coverage": "Any steady category exceeding g6_dominant_category_share of booked steady CPU must have non-generic named provenance covering at least g6_named_provenance_share of that category, or G6 fails as presumptive opaque/gap-fill lump. Three attribution dissolutions (TRANSPORT, then DISPATCH) motivate this stricter rule alongside the 95% single-category detector.",
+    "g7_gap_split_conservation": "When message_diagnostics[message_id].gap_decomposition is present, Σ(mechanisms) must equal parent_cpu_ns within G3 conservation slack (max(conservation_floor_ns, conservation_fraction * parent)). Silent create/destroy of time in a v9 split fails G7. gap_unattributed is mandatory.",
+    "diffuseness_verdict": "Working definition (eight words): cost smeared between named instrumented regions. v1.5: confirm/refute evaluate over named mechanisms (a)–(d) only. gap_unattributed above unattributed_forces_inconclusive_share (default 0.20, same as headline e% bound) forces inconclusive — residual is unmeasured, not a fixable concentrated mechanism. Confirmed: no named mechanism exceeds confirm_max_single_mechanism_share, contributing named mechanisms >= confirm_min_mechanisms spanning >= confirm_min_boundaries, and (e) within bound. Refuted: one named mechanism exceeds refute_single_mechanism_share.",
+    "verdict_min_population": "Binding audit.diffuseness_verdict requires >= min_measured_messages per cell and >= min_seeds in the aggregate. Below the floor the classifier emits deferred_insufficient_population and logs advisory_only only. WSL seed-0 smoke cannot return a binding verdict.",
+    "verdict_per_arm": "Diffuseness verdicts are scoped per implementation arm. SDK answers the TurnTrace-echo (async framework) question; raw_jsonrpc is synchronous (gap_event_loop unmeasured) and answers whether a lean sync path still carries smeared residue. Do not pool arms into one verdict.",
+    "gap_split_precedence": "Overlap carve order for raw mechanism claims: gap_instrumentation then gap_gc then gap_event_loop then gap_syscall_return; remainder is gap_unattributed. Only gap_unattributed is a residual.",
+    "gap_syscall_return_subprovenance": "gap_syscall_return splits into gap_syscall_return_measured (named post-return sites still inside the gap) and gap_syscall_return_adjacent (transport-adjacent inter-region intervals). Adjacent-dominated (d) is presumptive gap-fill wearing a mechanism name until measured sites cover it.",
+    "gap_gc_scope": "gap_gc captures CPython cyclic collector via gc.callbacks only; refcount-driven deallocation is unmeasured and folds into gap_unattributed, never silently into gap_gc.",
+    "observer_instrumentation_crosscheck": "Per matched stripped/throttle pair, booked gap_instrumentation must not exceed throttle_combined - stripped_combined within G3 slack; else OBSERVER_ATTRIBUTION_SUSPECT. Negative brackets are unusable for the check."
+  },
+  "category_names": [
+    "MSG_SERIAL",
+    "MSG_VALIDATE",
+    "MSG_FRAME",
+    "MSG_TRANSPORT_CPU",
+    "MSG_DISPATCH",
+    "SESSION_SETUP",
+    "RESIDUAL"
+  ],
+  "primary": {
+    "transports": ["stdio", "http_sse_tls_on", "http_sse_tls_off"],
+    "payload_bytes": [256, 4096, 65536, 524288],
+    "schema_profiles": ["flat_5", "nested_depth_4", "pathological_large"],
+    "implementations": ["reference_sdk", "raw_jsonrpc"],
+    "mode": "throttle",
+    "tool_count": 1,
+    "seeds": [0, 1, 2, 3, 4],
+    "warmup_messages": 20,
+    "measured_messages": 200,
+    "cool_down_s": 5
+  },
+  "schema_definitions": {
+    "flat_5": {
+      "depth": 1,
+      "property_count": 5,
+      "shape": "five required scalar string properties"
+    },
+    "nested_depth_4": {
+      "depth": 4,
+      "property_count": 20,
+      "shape": "four nested objects with five required scalar leaves each"
+    },
+    "pathological_large": {
+      "depth": 4,
+      "property_count": 256,
+      "shape": "four nested objects with sixty-four required scalar leaves each"
+    }
+  },
+  "observer_subsample": {
+    "fraction": 0.2,
+    "selection": "lowest sha256(cell_id) values",
+    "additional_modes": ["full", "stripped"]
+  },
+  "tool_count_sweep": {
+    "counts": [10, 100, 1000],
+    "payload_bytes": 4096,
+    "schema_profile": "nested_depth_4",
+    "mode": "throttle",
+    "all_active_transports": true,
+    "all_implementations": true
+  },
+  "streamable_http": {
+    "conditional": true,
+    "transport": "http_stream",
+    "admission": "all integration smoke gates pass with pinned stable SDK"
+  },
+  "tool_delay": {
+    "primary_ns": 0,
+    "smoke_ns": 1000000
+  },
+  "audit": {
+    "residual_limit": 0.15,
+    "residual_slack_floor_ns": 15625000,
+    "residual_slack_fraction": 0.05,
+    "conservation_floor_ns": 500000,
+    "conservation_fraction": 0.05,
+    "pathological_iqr_over_median": 1.0,
+    "pathological_max_over_median": 3.0,
+    "g6_single_category_share": 0.95,
+    "g6_dominant_category_share": 0.50,
+    "g6_named_provenance_share": 0.80,
+    "g6_generic_provenance": ["measured", "test", ""],
+    "diffuseness_verdict": {
+      "confirm_max_single_mechanism_share": 0.50,
+      "refute_single_mechanism_share": 0.50,
+      "confirm_min_mechanisms": 3,
+      "confirm_min_boundaries": 2,
+      "mechanism_count_min_share": 0.0,
+      "unattributed_forces_inconclusive_share": 0.20
+    },
+    "verdict_min_population": {
+      "min_measured_messages": 20,
+      "min_seeds": 3
+    },
+    "gap_split_precedence": [
+      "gap_instrumentation",
+      "gap_gc",
+      "gap_event_loop",
+      "gap_syscall_return"
+    ]
+  }
+}

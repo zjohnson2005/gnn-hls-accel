@@ -1,0 +1,82 @@
+{
+  "protocol_version": "mcp_tax_v1.5",
+  "entries": [
+    {
+      "id": 1,
+      "timestamp_utc": "2026-07-14T00:16:40.613726Z",
+      "claim": "Streamable HTTP is admitted to the MCP-01 primary matrix",
+      "reason": "Out of scope for MCP-01: stable SDK symbols alone are insufficient; the executable cross-arm smoke has not passed for this transport.",
+      "evidence": [
+        "stable pinned SDK exposes complete client and server support"
+      ]
+    },
+    {
+      "id": 2,
+      "timestamp_utc": "2026-07-14T01:08:13.799826Z",
+      "claim": "Streamable HTTP is admitted to the MCP-01 primary matrix",
+      "reason": "Out of scope for MCP-01: stable SDK symbols alone are insufficient; the executable cross-arm smoke has not passed for this transport.",
+      "evidence": [
+        "symbol probe positive on pinned SDK; executable cross-arm smoke not executed"
+      ]
+    },
+    {
+      "id": 3,
+      "timestamp_utc": "2026-07-14T01:08:13.811880Z",
+      "claim": "Per-cell TLS fixture creation for MCP-01 matrix runs",
+      "reason": "Replaced by one CA/certificate set scoped to the run root and passed into every TLS cell.",
+      "evidence": [
+        "smoke aggregate previously showed multiple ca_sha256 values"
+      ]
+    },
+    {
+      "id": 4,
+      "timestamp_utc": "2026-07-14T01:08:13.823794Z",
+      "claim": "register_mcp_tax_hook pathway for official MCP SDK instrumentation",
+      "reason": "official mcp==1.28.1 exposes no instrumentation hook API; harness-boundary timers adopted instead.",
+      "evidence": [
+        "sdk_hooks.register_mcp_tax_hook unavailable on pinned SDK"
+      ]
+    },
+    {
+      "id": 5,
+      "timestamp_utc": "2026-07-14T13:30:00.000000Z",
+      "claim": "TLS handshake/cert CPU booked under MSG_VALIDATE",
+      "reason": "Retired in mcp_tax_v1.2: TLS handshake books MSG_TRANSPORT_CPU (provenance transport_tls_handshake). MSG_VALIDATE is JSON Schema validation only so the DFA amenability claim is not crypto-contaminated.",
+      "evidence": [
+        "transport_instrument.validate previously booked MSG_VALIDATE",
+        "replaced by tls_handshake -> MSG_TRANSPORT_CPU"
+      ]
+    },
+    {
+      "id": 6,
+      "timestamp_utc": "2026-07-14T14:00:00.000000Z",
+      "claim": "MCP-01 TurnTrace echo is protocol method-dispatch dominance (MSG_DISPATCH)",
+      "reason": "Retired after v8 provenance: client DISPATCH is ~99.5–99.8% client_call_inter_region_gaps; true method lookup / result routing is only a few µs/msg. The surviving cross-instrument echo is diffuseness of unattributed inter-region cost, not dispatch silicon. Quoting floor-class 2–3 ms/msg tax before gap attribution repeats the Phase-1 headline mistake.",
+      "evidence": [
+        "fixphase_resmoke_v8 provenance tables",
+        "client_call_inter_region_gaps share of MSG_DISPATCH"
+      ]
+    },
+    {
+      "id": 7,
+      "timestamp_utc": "2026-07-14T15:00:00.000000Z",
+      "claim": "Binding diffuseness verdict from WSL seed-0 / n<3 smoke",
+      "reason": "Retired by mcp_tax_v1.4.1 verdict_min_population: binding audit.diffuseness_verdict requires >=20 measured messages and >=3 seeds. Below the floor the classifier emits deferred_insufficient_population with advisory_only only — WSL seed-0 cannot return a binding verdict.",
+      "evidence": [
+        "protocol_v1.json audit.verdict_min_population",
+        "gap_split.classify_with_population_gate"
+      ]
+    },
+    {
+      "id": 8,
+      "timestamp_utc": "2026-07-14T15:30:00.000000Z",
+      "claim": "gap_unattributed >50% of parent gap triggers diffuseness refuted",
+      "reason": "Retired by mcp_tax_v1.5 amendment: confirm/refute evaluate over named mechanisms (a)–(d) only. gap_unattributed above unattributed_forces_inconclusive_share (0.20) forces inconclusive — residual is unmeasured, not a concentrated fixable mechanism. v9 advisory incorrectly returned refuted on dominant (e); the population floor prevented a binding mistake.",
+      "evidence": [
+        "fixphase_resmoke_v9 advisory refuted on gap_unattributed 51–60%",
+        "OPEN_QUESTIONS §4 v1.5 amendment"
+      ]
+    }
+  ],
+  "policy": "Append-only. Retire unsupported claims or arms with evidence; never delete prior entries."
+}

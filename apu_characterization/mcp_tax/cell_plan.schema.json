@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mcp_tax_v1_cell_plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol_version",
+    "seed",
+    "coordinates",
+    "warmup_messages",
+    "measured_messages",
+    "steps"
+  ],
+  "properties": {
+    "protocol_version": {"const": "mcp_tax_v1.5"},
+    "seed": {"type": "integer", "minimum": 0},
+    "coordinates": {"type": "object"},
+    "warmup_messages": {"const": 20},
+    "measured_messages": {"const": 200},
+    "steps": {
+      "type": "array",
+      "minItems": 220,
+      "maxItems": 220,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "index",
+          "method",
+          "tool_name",
+          "schema_id",
+          "payload_bytes",
+          "synthetic_delay_ns"
+        ],
+        "properties": {
+          "index": {"type": "integer", "minimum": 0},
+          "method": {"const": "tools/call"},
+          "tool_name": {"type": "string"},
+          "schema_id": {
+            "enum": ["flat_5", "nested_depth_4", "pathological_large"]
+          },
+          "payload_bytes": {"enum": [256, 4096, 65536, 524288]},
+          "synthetic_delay_ns": {"type": "integer", "minimum": 0}
+        }
+      }
+    }
+  }
+}

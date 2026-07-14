@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mcp_tax_v1_manifest",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "protocol_version",
+    "experiment",
+    "cell_id",
+    "seed",
+    "coordinates",
+    "core_pins",
+    "git",
+    "software",
+    "kernel_version",
+    "timestamp_utc",
+    "cell_plan_sha256"
+  ],
+  "properties": {
+    "protocol_version": {"const": "mcp_tax_v1.5"},
+    "experiment": {"const": "mcp_tax"},
+    "cell_id": {"type": "string", "minLength": 1},
+    "seed": {"type": "integer", "minimum": 0},
+    "coordinates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "transport",
+        "payload_bytes",
+        "schema_profile",
+        "tool_count",
+        "implementation",
+        "mode"
+      ],
+      "properties": {
+        "transport": {
+          "enum": [
+            "stdio",
+            "http_sse_tls_on",
+            "http_sse_tls_off",
+            "http_stream"
+          ]
+        },
+        "payload_bytes": {"enum": [256, 4096, 65536, 524288]},
+        "schema_profile": {
+          "enum": ["flat_5", "nested_depth_4", "pathological_large"]
+        },
+        "tool_count": {"type": "integer", "minimum": 1, "maximum": 1000},
+        "implementation": {"enum": ["reference_sdk", "raw_jsonrpc"]},
+        "mode": {"enum": ["full", "throttle", "stripped"]}
+      }
+    },
+    "core_pins": {
+      "type": "object",
+      "required": ["os_analysis", "client", "server"],
+      "properties": {
+        "os_analysis": {"type": "array", "items": {"type": "integer"}},
+        "client": {"type": "array", "items": {"type": "integer"}},
+        "server": {"type": "array", "items": {"type": "integer"}}
+      }
+    },
+    "cell_plan_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

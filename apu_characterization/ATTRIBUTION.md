@@ -59,6 +59,24 @@ not a production workload characterization.
 
 See `METHODOLOGY.md` and `out/reconcile_bug_checks.md` for the reconcile diagnosis path.
 
+## MCP-01 message attribution
+
+MCP-01 uses an isolated taxonomy under `mcp_tax/taxonomy.py`; it does not add
+message categories to the agent `Category` enum. Client and server endpoints
+each conserve process CPU independently.
+
+- `MSG_SERIAL`: JSON-RPC encode/decode and parse.
+- `MSG_VALIDATE`: JSON Schema validation only; never folded into serialization.
+- `MSG_FRAME`: stdio/HTTP/SSE framing.
+- `MSG_TRANSPORT_CPU`: syscall/TLS CPU only, never blocking wall.
+- `MSG_DISPATCH`: server method lookup and client completion routing.
+- `SESSION_SETUP`: cold connection/capability/catalog setup, reported separately.
+- `RESIDUAL`: process CPU not booked above; G1-gated.
+
+Transport-blocked, runqueue, synthetic-tool-delay, and unattributed wait live
+on a separate wall ledger. Client+server CPU may be summed as derived protocol
+tax, but that sum is not a cross-process wall conservation equation.
+
 ## v2 attribution (RESIDUAL_UNATTRIBUTED)
 
 Under `--instr-version 2`, session-end gap is booked to `RESIDUAL_UNATTRIBUTED`, not
