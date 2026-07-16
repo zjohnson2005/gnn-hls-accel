@@ -6,22 +6,38 @@
 
 Rationale: wiring all six v1 harnesses threatens schedule; raw_python gives call-site control; LangGraph exercises graph-node semantic labels. Remaining v1 harnesses (AutoGen, Rust, +2) stay configured-but-dormant until post-box or a protocol amendment.
 
-## Open question #1 — cloud T_prefill (resolved for machinery)
+## Open question #1 — cloud T_prefill (machinery landed; live survey before C1)
 
-See `SCHEMA.md` provider table. Summary:
+See `SCHEMA.md` / `engines/openai_compat.PROVIDER_FIELD_NOTES`. Implementation uses streaming TTFT + optional `openai-processing-ms`.
 
-| Provider | Fields used | Error bars |
-|----------|-------------|------------|
-| OpenAI | streaming TTFT; `openai-processing-ms` when present; `usage.*` | If server timing present: network = TTFT − processing. Else: subtract NetworkBaseline median; quote ±(P95−median) as half-width |
-| OpenAI-compatible cheap tier | streaming required; usage if present | Same as generic; cell excluded from headline prefill attribution if streaming or usage missing |
+**Pre-launch field survey (run one live smoke per provider, log into `out/turntrace_v2/cloud_ttft_survey/`):**
+
+| Check | OpenAI C1 | Cheap OpenAI-compat C2 |
+|-------|-----------|------------------------|
+| Streaming SSE with `stream_options.include_usage` | ☐ | ☐ |
+| `usage.prompt_tokens` / `completion_tokens` on final chunk | ☐ | ☐ |
+| `openai-processing-ms` (or vendor equivalent) present? | ☐ | ☐ |
+| If no server timing: NetworkBaseline median/P95 from `network_probe.py` (≥100 probes, ≥3 TOD slots) | ☐ | ☐ |
+| TTFT − processing ≥ 0 (no negative network) | ☐ | ☐ |
+| Tool-role messages preserved in request (no TinyLlama remap on cloud engine) | ☐ | ☐ |
+
+Cell is excluded from headline prefill attribution if streaming or usage is missing.
 
 ## Open question #3 — trajectory count vs API budget
 
-Before launching full C1 cell, compute:
+```bash
+python -m apu_characterization.turntrace_v2.budget \
+  --model-c1 MODEL --usd-in-c1 X --usd-out-c1 Y \
+  --model-c2 MODEL --usd-in-c2 X --usd-out-c2 Y \
+  --out apu_characterization/out/turntrace_v2/budget_lock.json
+```
+
+Formula (also in `budget.py`):
 
 ```
-cost ≈ n_traj × n_harness × n_cache_modes × mean_tokens_in × $/1M_in
-     + n_traj × … × mean_tokens_out × $/1M_out
+cost ≈ n_traj × n_harness × n_cache_modes × turns_per_traj
+       × (mean_tokens_in × $/1M_in + mean_tokens_out × $/1M_out)
+     + fixed_per_traj
 ```
 
 **Floor from spec:** ≥10 trajectories per (workload × harness × deployment × cache-mode) cell.
@@ -33,7 +49,21 @@ cost ≈ n_traj × n_harness × n_cache_modes × mean_tokens_in × $/1M_in
 | C1 frontier | 2 (raw, langgraph) | 1 (provider-default) | 10 | TBD | blocked on key + price quote |
 | C2 cheap | 2 | 1 | 10 | TBD | blocked on key + price quote |
 
-Do not start C1 collection until Est. USD is filled and approved.
+Do not start C1 `--live` collection until Est. USD is filled and approved.
+
+## P3 collection entrypoint
+
+```bash
+# Mock plumbing (no API spend) — both harnesses × N trajectories
+python -m apu_characterization.turntrace_v2.collect_cloud \
+  --out apu_characterization/out/turntrace_v2/cloud_c1_mock \
+  --cell C1 --n-trajectories 2
+
+# Live (only after budget lock + TTFT survey)
+python -m apu_characterization.turntrace_v2.collect_cloud \
+  --out apu_characterization/out/turntrace_v2/cloud_c1 \
+  --cell C1 --model MODEL --n-trajectories 10 --live
+```
 
 ## Provisional vs headline
 
