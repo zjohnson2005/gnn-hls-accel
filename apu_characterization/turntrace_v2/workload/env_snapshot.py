@@ -30,12 +30,16 @@ def capture_env_snapshot(
     commit = _git(["rev-parse", "HEAD"], cwd=root)
     dirty = _git(["status", "--porcelain"], cwd=root)
     patch = None
-    if dirty and dirty != "unknown":
-        patch = _git(["diff", "HEAD"], cwd=root) or dirty
-        if len(patch) > 200_000:
+    if dirty and dirty not in ("unknown", ""):
+        diff = _git(["diff", "HEAD"], cwd=root)
+        if diff and diff != "unknown":
+            patch = diff
+        else:
+            patch = dirty
+        if patch and len(patch) > 200_000:
             patch = patch[:200_000] + "\n# truncated\n"
     return EnvSnapshotRef(
-        git_commit=commit,
+        git_commit=commit if commit != "unknown" else "unknown",
         container_image_id=container_image_id,
         dirty_patch=patch,
     )

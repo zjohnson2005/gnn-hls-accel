@@ -1,10 +1,16 @@
 # TurnTrace v2 — protocol notes (pre-hardware)
 
-## Harness subset (P3)
+## Harness subset (P3) — **FINAL for remainder of v2**
 
-**Committed for corpus cells in this phase:** `raw_python`, `langgraph` (3rd slot deferred).
+**Decision (2026-07-16):** stay at **2 harnesses** — `raw_python` + `langgraph` — for all remaining v2 corpus work (no third harness this phase).
 
-Rationale: wiring all six v1 harnesses threatens schedule; raw_python gives call-site control; LangGraph exercises graph-node semantic labels. Remaining v1 harnesses (AutoGen, Rust, +2) stay configured-but-dormant until post-box or a protocol amendment.
+| Factor | Choice |
+|--------|--------|
+| Coverage | Call-site control (raw) + graph-node / fanout labels (langgraph) |
+| Schedule | Third harness would need CPU dry-run + smoke before any `--live`; deferred |
+| D5 evidence | Semantic labels align in *meaning* across both; agreement_rate stable by harness×endpoint |
+
+Remaining v1 harnesses (AutoGen, Rust, +2) stay **configured-but-dormant** until a protocol amendment post-box.
 
 ## Open question #1 — cloud T_prefill (**surveyed 2026-07-16**)
 

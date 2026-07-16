@@ -74,6 +74,16 @@ Client clock starts at request send. TTFT is **first non-empty `delta.content` i
 
 If `openai-processing-ms` is ever missing: fall back to `t_prefill = TTFT_content − NetworkBaseline.median` with half-width `(P95−median)` from the same endpoint's probe set (`network_method=estimated:probe_median`). Cell excluded from headline prefill attribution if streaming or usage is missing.
 
+### Track C — Does `openai-processing-ms` include decode? (resolved 2026-07-16)
+
+**Finding: no evidence it conflates decode.** On the C1/C2 corpus (n=160, `ttft_derived`):
+
+- Pearson corr(`t_prefill_ms`, `tokens_out`) ≈ **−0.05** (null)
+- Pearson corr(`t_prefill_ms`, `t_decode_ms`) ≈ **0.18** (weak)
+- Client-side `t_decode_ms` (first→last content token) is typically larger than `t_prefill_ms` (medians ≈594 ms vs ≈399 ms) and tracks output length separately
+
+Interpretation: `openai-processing-ms` behaves as **server time-to-first-content** (prefill-dominated), not full-request processing including decode. Keep `t_prefill_ms ≈ processing` for OpenAI Chat Completions. D2 may overlay local vs cloud prefill on the same axes with footnote: cloud uses provider processing-ms / TTFT isolate; local uses engine `prompt_ms`. Re-open this finding if a future provider lacks processing-ms or shows corr(processing, tokens_out) ≫ 0.
+
 ### Token reconciliation (cloud)
 `engine_tokens_in` = API `usage.prompt_tokens`. Local tokenizer may be unavailable — `requested_tokens_in` may equal engine counts until a local tokenizer is wired. Expect a non-zero reconciliation delta when local counts exist (same class of F3 finding as CPU); do not assume zero. TinyLlama tool→user remap does **not** apply to cloud engines.
 
