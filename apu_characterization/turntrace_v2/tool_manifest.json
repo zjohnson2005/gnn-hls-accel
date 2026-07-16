@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "description": "Declared read-only vs state-mutating tool classes for mechanism-layer labeling.",
+  "tools": {
+    "read_file": "read_only",
+    "list_dir": "read_only",
+    "grep": "read_only",
+    "search_code": "read_only",
+    "run_tests": "read_only",
+    "git_diff": "read_only",
+    "git_status": "read_only",
+    "edit_file": "state_mutating",
+    "write_file": "state_mutating",
+    "apply_patch": "state_mutating",
+    "run_shell": "state_mutating",
+    "git_commit": "state_mutating"
+  },
+  "replay_policy": {
+    "read_file": "live",
+    "list_dir": "live",
+    "grep": "live",
+    "search_code": "live",
+    "run_tests": "archived",
+    "git_diff": "live",
+    "git_status": "live",
+    "edit_file": "live",
+    "write_file": "live",
+    "apply_patch": "live",
+    "run_shell": "archived",
+    "git_commit": "live",
+    "_default": "archived"
+  }
+}

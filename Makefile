@@ -7,7 +7,7 @@
 # Windows PowerShell (no make required):
 #   .\apu_characterization\run_apu_gate.ps1
 
-.PHONY: apu-bootstrap apu-gate apu-replicate-v3 apu-validate apu-validate-sweep apu-replicate-check apu-replicate-unattended cap-gate tlp-gate mcp-bootstrap mcp-preflight mcp-gate mcp-matrix-plan mcp-postprocess mcp-validate mcp-bare-metal mcp-clean help
+.PHONY: apu-bootstrap apu-gate apu-replicate-v3 apu-validate apu-validate-sweep apu-replicate-check apu-replicate-unattended cap-gate tlp-gate turntrace-v2-gate mcp-bootstrap mcp-preflight mcp-gate mcp-matrix-plan mcp-postprocess mcp-validate mcp-bare-metal mcp-clean help
 
 V3_ARTIFACT := apu_characterization/out/replication_remote_search_v3.json
 SWEEP_ARTIFACT := apu_characterization/out/concurrency_sweep.json
@@ -26,6 +26,7 @@ help:
 	@echo "  apu-replicate-check      poll unattended run; validate when finished"
 	@echo "  cap-gate                 CAP-01 v2 unit and contract gate"
 	@echo "  tlp-gate                 TLP-01 unit and contract gate"
+	@echo "  turntrace-v2-gate        TurnTrace v2 unit + replay acceptance gate"
 	@echo "  mcp-bootstrap            install exact MCP-01 dependency lock"
 	@echo "  mcp-preflight            verify complete MCP-01 source/runtime bundle"
 	@echo "  mcp-gate                 MCP-01 unit and integration-contract gate"
@@ -65,6 +66,9 @@ cap-gate:
 
 tlp-gate:
 	bash apu_characterization/run_tlp01_gate.sh
+
+turntrace-v2-gate:
+	bash apu_characterization/run_turntrace_v2_gate.sh
 
 mcp-bootstrap:
 	bash apu_characterization/bootstrap_mcp.sh

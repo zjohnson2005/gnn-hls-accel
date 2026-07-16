@@ -1,0 +1,133 @@
+{
+  "protocol_version": "turntrace_v2.0",
+  "status": "implementation_scaffold",
+  "validity_class": "turn_decomposition_and_layer1_handoff",
+  "revision": "B",
+  "claim_under_test": "A substantial fraction of conventionally booked model time is orchestration-induced redundant prefill, attributable via f(n)-based necessary/redundant split; v2 also produces a replayable success-labeled corpus for Layer 1 swapped-trajectory execution.",
+  "locked_decisions": {
+    "step_unit": "one_model_call_equals_one_step",
+    "fanout_siblings": "count of independent sibling tool calls after the same LLM decision; not separate steps",
+    "retemplated_tokens": "first_class_callrecord_field; LCP failures count as new tokens",
+    "tool_replay_default": "live_for_deterministic_local; archived_for_network_or_flaky; mode recorded per tool per swapped run",
+    "primary_workload": "swebench_lite_style_coding_loop_layer1_shared"
+  },
+  "deployments": {
+    "CPU0": {"plane": "local_cpu", "role": "prehardware_dryrun_provisional_forever", "provisional": true},
+    "L1a": {"plane": "local", "reasoning_mode": "on", "dormant_until": "box_arrival"},
+    "L1b": {"plane": "local", "reasoning_mode": "off", "dormant_until": "box_arrival"},
+    "L2": {"plane": "local", "role": "small_secondary_model", "dormant_until": "box_arrival"},
+    "L3": {"plane": "local", "role": "second_engine_stretch", "dormant_until": "box_arrival"},
+    "C1": {"plane": "cloud", "role": "frontier_openai_compatible_streaming"},
+    "C2": {"plane": "cloud", "role": "cheap_tier_streaming_required"}
+  },
+  "harness_subset_prehardware": ["raw_python", "langgraph"],
+  "cache_modes": ["engine-default", "cache-disabled", "ideal-cache-simulated"],
+  "call_record_required_fields": [
+    "trajectory_id",
+    "turn_index",
+    "harness_id",
+    "deployment_id",
+    "step_type_semantic",
+    "step_features",
+    "t_orch_pre_ms",
+    "t_orch_post_ms",
+    "t_network_ms",
+    "network_method",
+    "t_prefill_ms",
+    "prefill_method",
+    "t_decode_ms",
+    "context_tokens_in",
+    "engine_tokens_in",
+    "requested_tokens_in",
+    "token_reconciliation_delta",
+    "tokens_out",
+    "call_shape_ratio",
+    "cache_state",
+    "prefix_hit_tokens",
+    "prefill_necessary_tokens",
+    "prefill_redundant_tokens",
+    "t_prefill_necessary_ms",
+    "t_prefill_redundant_ms",
+    "retemplated_tokens",
+    "pred_context_tokens",
+    "pred_cache_state",
+    "pred_decode_tokens",
+    "pred_t_prefill_ms",
+    "pred_t_decode_ms",
+    "energy_j",
+    "model_id",
+    "quantization",
+    "reasoning_mode",
+    "engine",
+    "engine_version",
+    "wall_clock_start",
+    "wall_clock_end",
+    "audit_flags"
+  ],
+  "step_features_required_fields": [
+    "is_tool_call",
+    "tool_class",
+    "repeat_count",
+    "loop_membership",
+    "fanout_siblings",
+    "trajectory_position"
+  ],
+  "trajectory_record_required_fields": [
+    "trajectory_id",
+    "workload_id",
+    "harness_id",
+    "deployment_id",
+    "cache_mode",
+    "task_success",
+    "success_metric",
+    "n_turns",
+    "total_wall_clock_ms",
+    "total_cost_usd",
+    "total_energy_j",
+    "replay_bundle_path"
+  ],
+  "replay_bundle": {
+    "mandatory_for_headline": true,
+    "per_turn_required": [
+      "assembled_context",
+      "raw_model_output",
+      "tool_calls",
+      "tool_results",
+      "sampling_params",
+      "reasoning_mode",
+      "env_snapshot_ref",
+      "tokenizer_id"
+    ],
+    "acceptance": "swapped_step_replay_from_archive_alone_on_ge_3_trajectories",
+    "storage": "append_only_delta_compressed_contexts"
+  },
+  "calibration": {
+    "prefill_n_grid": [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536],
+    "prefill_reps_min": 10,
+    "held_out_fraction": 0.2,
+    "r2_gate": 0.99,
+    "decode_kv_depths": [0, 8192, 32768, 65536],
+    "network_probes_min": 100,
+    "network_tod_slots_min": 3
+  },
+  "audit_gates": {
+    "conservation_rel": 0.02,
+    "conservation_abs_ms": 1.0,
+    "profile_consistency_rel": 0.10
+  },
+  "non_goals": [
+    "routing_policy",
+    "swap_capability_matrix_sweeps",
+    "universal_cross_domain_taxonomy_claims",
+    "speculation_machinery",
+    "custom_finetuned_models",
+    "multi_node_serving",
+    "cache_remediation"
+  ],
+  "deliverables": ["D1", "D2", "D3", "D4", "D5"],
+  "blocked_claims": [
+    "v2 implements routing",
+    "v2 runs Layer 1 swap sweeps at scale",
+    "mechanism layer is validated across domains"
+  ]
+}
