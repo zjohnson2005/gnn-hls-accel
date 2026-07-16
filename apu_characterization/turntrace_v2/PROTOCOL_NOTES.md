@@ -78,6 +78,12 @@ python -m apu_characterization.turntrace_v2.collect_full \
 
 Artifacts: `out/turntrace_v2/cloud_{ttft_survey,smoke,full}/`.
 
+## D5 + P3 completion (2026-07-16)
+
+- **D5 report:** `python -m apu_characterization.turntrace_v2.d5_report` → `out/turntrace_v2/d5/D5_taxonomy_report.md` (idempotent; agreement_rate=1.0 on C1/C2).
+- **Env snapshots (spot-check):** 3 bundles/harness carry `git_commit` + `container_image_id`; `dirty_patch` may be null when clean (`env_snapshot.py` no longer stores the sentinel `"unknown"`).
+- **Track C (D2 gate):** `openai-processing-ms` confirmed prefill-isolate on corpus (corr with `tokens_out`≈0); see SCHEMA § Cloud timing methodology.
+
 ## Provisional vs headline
 
 | Artifact | provisional |
