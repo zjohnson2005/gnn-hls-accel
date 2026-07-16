@@ -60,6 +60,9 @@ def check_profile_consistency(
 ) -> str | None:
     if cache_disabled_only and record.cache_state != "disabled":
         return None
+    # Cloud ttft_derived prefills are not comparable to a local f(n) grid.
+    if record.prefill_method == "ttft_derived":
+        return None
     # Out-of-domain calls are flagged separately; do not also pile on profile_drift.
     if grid_min is not None and grid_max is not None:
         if record.engine_tokens_in < grid_min or record.engine_tokens_in > grid_max:

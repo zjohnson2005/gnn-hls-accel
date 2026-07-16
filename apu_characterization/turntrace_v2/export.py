@@ -9,7 +9,7 @@ from typing import Any, Sequence
 from apu_characterization.turntrace_v2.derive import flatten_call_dicts
 from apu_characterization.turntrace_v2.schema import CallRecord, TrajectoryRecord
 
-SCHEMA_DOC = """# TurnTrace v2 CallRecord / TrajectoryRecord schema
+SCHEMA_DOC = r"""# TurnTrace v2 CallRecord / TrajectoryRecord schema
 
 See `protocol_turntrace_v2.json` for the frozen field list (rev. B).
 
@@ -57,16 +57,25 @@ Predictable-at-issue: pred_* fields logged before the call returns.
 Per trajectory. `replay_bundle_path` MUST be non-null for headline runs.
 `task_success` + `success_metric` feed Layer 1 swapped-trajectory evaluation.
 
-## Cloud TTFT derivation (open question #1)
+## Cloud timing methodology (open question #1 — surveyed 2026-07-16)
 
-Streaming is mandatory. `prefill_method=ttft_derived` for cloud.
+Streaming is mandatory. `prefill_method=ttft_derived` for cloud. Survey artifacts:
+`apu_characterization/out/turntrace_v2/cloud_ttft_survey/`.
 
-| Provider | Available fields | Defensible error bars |
-|----------|------------------|------------------------|
-| OpenAI | SSE first-content timestamp; optional `openai-processing-ms`; `usage.prompt_tokens` / `completion_tokens` via `stream_options.include_usage` | If processing header present: `t_network = TTFT - processing`, `t_prefill ≈ processing`. Else: `t_prefill = TTFT - NetworkBaseline.median`; quote half-width `(P95 - median)` from the same endpoint's probe set. |
-| OpenAI-compatible (C2) | Vendor-dependent usage; rarely server-timing | Same formula with `network_method=estimated:probe_median`. If streaming or usage missing → exclude from headline prefill attribution (`audit_flags`). |
+### First-byte semantics
+Client clock starts at request send. TTFT is **first non-empty `delta.content` in the SSE stream**, not raw TCP first byte (role-only chunks are ignored). Documented in `engines/openai_compat.py` / survey `first_byte_semantics`.
 
-Token reconciliation: always record API usage counts as `engine_tokens_in`; requested content counts as `requested_tokens_in`; flag anomalies via the calibrated envelope.
+### Per-provider (this campaign: both C1 and C2 are OpenAI Chat Completions)
+
+| Cell | Model (survey / full) | Fields observed | Derivation | Error bars |
+|------|----------------------|-----------------|------------|------------|
+| C1 | gpt-4.1-mini / gpt-4.1 | SSE streaming; `usage.prompt_tokens`+`completion_tokens` via `stream_options.include_usage`; **`openai-processing-ms` present** | `t_prefill ≈ openai-processing-ms`; `t_network = TTFT_content − processing` (clamp ≥0) | Quote residual \|TTFT−processing\|; half-width ≈ P95−median of probe prefills. Re-run NetworkBaseline for TOD slots if header absent on a future call. |
+| C2 | gpt-4o-mini / gpt-4o-mini | Same OpenAI path; usage + **`openai-processing-ms` present** | Same as C1 | Same as C1 |
+
+If `openai-processing-ms` is ever missing: fall back to `t_prefill = TTFT_content − NetworkBaseline.median` with half-width `(P95−median)` from the same endpoint's probe set (`network_method=estimated:probe_median`). Cell excluded from headline prefill attribution if streaming or usage is missing.
+
+### Token reconciliation (cloud)
+`engine_tokens_in` = API `usage.prompt_tokens`. Local tokenizer may be unavailable — `requested_tokens_in` may equal engine counts until a local tokenizer is wired. Expect a non-zero reconciliation delta when local counts exist (same class of F3 finding as CPU); do not assume zero. TinyLlama tool→user remap does **not** apply to cloud engines.
 
 Network baselines are **location-dependent**. Laptop/WSL baselines are `provisional: true` and must be re-run from the Strix Halo box network before headline cloud attribution from that host.
 

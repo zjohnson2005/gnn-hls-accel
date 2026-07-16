@@ -6,50 +6,39 @@
 
 Rationale: wiring all six v1 harnesses threatens schedule; raw_python gives call-site control; LangGraph exercises graph-node semantic labels. Remaining v1 harnesses (AutoGen, Rust, +2) stay configured-but-dormant until post-box or a protocol amendment.
 
-## Open question #1 — cloud T_prefill (machinery landed; live survey before C1)
+## Open question #1 — cloud T_prefill (**surveyed 2026-07-16**)
 
-See `SCHEMA.md` / `engines/openai_compat.PROVIDER_FIELD_NOTES`. Implementation uses streaming TTFT + optional `openai-processing-ms`.
+See `SCHEMA.md` § Cloud timing methodology. Artifacts: `out/turntrace_v2/cloud_ttft_survey/`.
 
-**Pre-launch field survey (run one live smoke per provider, log into `out/turntrace_v2/cloud_ttft_survey/`):**
+**Pre-launch field survey:**
 
-| Check | OpenAI C1 | Cheap OpenAI-compat C2 |
-|-------|-----------|------------------------|
-| Streaming SSE with `stream_options.include_usage` | ☐ | ☐ |
-| `usage.prompt_tokens` / `completion_tokens` on final chunk | ☐ | ☐ |
-| `openai-processing-ms` (or vendor equivalent) present? | ☐ | ☐ |
-| If no server timing: NetworkBaseline median/P95 from `network_probe.py` (≥100 probes, ≥3 TOD slots) | ☐ | ☐ |
-| TTFT − processing ≥ 0 (no negative network) | ☐ | ☐ |
-| Tool-role messages preserved in request (no TinyLlama remap on cloud engine) | ☐ | ☐ |
+| Check | C1 (gpt-4.1-mini survey) | C2 (gpt-4o-mini) |
+|-------|--------------------------|------------------|
+| Streaming SSE with `stream_options.include_usage` | ☑ | ☑ |
+| `usage.prompt_tokens` / `completion_tokens` on final chunk | ☑ | ☑ |
+| `openai-processing-ms` present | ☑ | ☑ |
+| First-byte = first content token (not raw TCP) | ☑ | ☑ |
+| Formula + error bars documented in SCHEMA.md | ☑ | ☑ |
+| Tool-role remap not applied on cloud engine | ☑ | ☑ |
 
-Cell is excluded from headline prefill attribution if streaming or usage is missing.
+Both cells use: `t_prefill ≈ openai-processing-ms`; `t_network = TTFT_content − processing`. Probe half-widths logged in survey JSON (C1 prefill median≈334 ms, P95−median≈179 ms on n=5).
 
-## Open question #3 — trajectory count vs API budget
+## Open question #3 — trajectory count vs API budget (**locked**)
 
-```bash
-python -m apu_characterization.turntrace_v2.budget \
-  --model-c1 MODEL --usd-in-c1 X --usd-out-c1 Y \
-  --model-c2 MODEL --usd-in-c2 X --usd-out-c2 Y \
-  --out apu_characterization/out/turntrace_v2/budget_lock.json
-```
+Canonical lock file: `apu_characterization/turntrace_v2/budget_lock.json` (enforced by `spend_guard.py` / `collect_cloud --live`).
 
-Formula (also in `budget.py`):
+**N lock:** 10 traj/cell. Prior: CPU dry-run turns 1–5 prefill/harness-tax CV ≤0.07 → N_raw≪10 for 90% CI half-width ≤15% of mean; spec floor binds. Turn-0 tax CV spike excluded (attribution floor artifact).
 
-```
-cost ≈ n_traj × n_harness × n_cache_modes × turns_per_traj
-       × (mean_tokens_in × $/1M_in + mean_tokens_out × $/1M_out)
-     + fixed_per_traj
-```
+**Pricing (OpenAI published 2026-07-16):** C1 `gpt-4.1` $2/$8 per 1M; C2 `gpt-4o-mini` $0.15/$0.60. Token estimate: 4000 in / 400 out × 6 turns (dry-run ×18 scale — **estimate**).
 
-**Floor from spec:** ≥10 trajectories per (workload × harness × deployment × cache-mode) cell.
+| Cell | Harnesses | Cache | N | Est. USD | Status |
+|------|-----------|-------|---|----------|--------|
+| C1 frontier (gpt-4.1) | 2 | 1 | 10 | **$1.34** | locked |
+| C2 cheap (gpt-4o-mini) | 2 | 1 | 10 | **$0.10** | locked |
+| **Total projected** | | | | **≈ $1.44** | |
+| **Hard ceiling (1.5×)** | | | | **$2.17** | hard-stop |
 
-**Working budget lock (fill before C1 launch):**
-
-| Cell | Harnesses | Cache modes | Trajectories | Est. USD | Status |
-|------|-----------|-------------|--------------|----------|--------|
-| C1 frontier | 2 (raw, langgraph) | 1 (provider-default) | 10 | TBD | blocked on key + price quote |
-| C2 cheap | 2 | 1 | 10 | TBD | blocked on key + price quote |
-
-Do not start C1 `--live` collection until Est. USD is filled and approved.
+`--live` refuses to start if planned+spent > ceiling unless `--allow-spend-override` (logged). Ceiling trip proven in tests (`hard_ceiling_usd=0.001` → exit 2).
 
 ## P3 collection entrypoint
 
@@ -59,11 +48,29 @@ python -m apu_characterization.turntrace_v2.collect_cloud \
   --out apu_characterization/out/turntrace_v2/cloud_c1_mock \
   --cell C1 --n-trajectories 2
 
-# Live (only after budget lock + TTFT survey)
-python -m apu_characterization.turntrace_v2.collect_cloud \
-  --out apu_characterization/out/turntrace_v2/cloud_c1 \
-  --cell C1 --model MODEL --n-trajectories 10 --live
+# TTFT survey (cheap probes)
+python -m apu_characterization.turntrace_v2.ttft_survey \
+  --out apu_characterization/out/turntrace_v2/cloud_ttft_survey
+
+# Live smoke (1× raw_python per cell)
+python -m apu_characterization.turntrace_v2.smoke_live \
+  --out apu_characterization/out/turntrace_v2/cloud_smoke
+
+# Full C1/C2 under budget_lock (phased 10% monitor + replay sample ≥5)
+python -m apu_characterization.turntrace_v2.collect_full \
+  --out apu_characterization/out/turntrace_v2/cloud_full --spent-usd 0.05
 ```
+
+## P2 pre-spend gate status (2026-07-16)
+
+| Step | Status |
+|------|--------|
+| 1 Budget lock (`budget_lock.json`, ceiling enforced) | ☑ Projected **≈ $1.44**; ceiling **$2.17** |
+| 2 TTFT survey + SCHEMA methodology | ☑ both cells |
+| 3 Live smoke C1+C2 + replay + hand flags | ☑ |
+| 4 Full corpus + replay sample ≥5 | ☑ spent ≈ **$1.49** (under ceiling); phase_a flag_rate 0; replay 5/5 each cell |
+
+Artifacts: `out/turntrace_v2/cloud_{ttft_survey,smoke,full}/`.
 
 ## Provisional vs headline
 

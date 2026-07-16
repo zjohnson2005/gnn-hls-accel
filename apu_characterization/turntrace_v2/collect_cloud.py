@@ -39,6 +39,7 @@ from apu_characterization.turntrace_v2.workload.swebench_lite import (
 
 
 HARNESS_IDS = ("raw_python", "langgraph")
+DEFAULT_BUDGET_LOCK = Path(__file__).resolve().parent / "budget_lock.json"
 
 
 def _mock_engine(deployment_id: str, model_id: str) -> Any:
@@ -158,8 +159,16 @@ def _turns_for_task(problem: str, n_turns: int = 4) -> list[HarnessTurn]:
                 call_site_tag="swe_lite_loop",
             )
         )
-        history.append({"role": "assistant", "content": f"tool_call {tool_name}"})
-        history.append({"role": "tool", "content": str(tool_args)})
+        history.append({"role": "assistant", "content": f"tool_call {tool_name} {tool_args}"})
+        # OpenAI Chat Completions rejects bare role=tool without a preceding
+        # assistant tool_calls payload. Carry tool outputs as user turns so the
+        # live path stays valid without inventing tool_call ids (boundary B2).
+        history.append(
+            {
+                "role": "user",
+                "content": f"tool_result ({tool_name}): {tool_args}",
+            }
+        )
     return turns
 
 
@@ -203,6 +212,10 @@ def collect_cell(
     api_key: str | None,
     network_baseline_ms: float,
     n_turns: int = 4,
+    harnesses: tuple[str, ...] = HARNESS_IDS,
+    budget_lock_path: Path | None = None,
+    spent_usd: float = 0.0,
+    allow_spend_override: bool = False,
 ) -> dict:
     out_dir = Path(out_dir)
     traj_dir = out_dir / "trajectories"
@@ -210,6 +223,37 @@ def collect_cell(
     corpus_dir = out_dir / "corpus"
     traj_dir.mkdir(parents=True, exist_ok=True)
     bundle_dir.mkdir(parents=True, exist_ok=True)
+
+    harnesses = tuple(h for h in harnesses if h in HARNESS_IDS)
+    if not harnesses:
+        raise SystemExit(f"no valid harnesses; choose from {HARNESS_IDS}")
+
+    spend_meta: dict[str, Any] = {"enforced": False}
+    if live:
+        from apu_characterization.turntrace_v2.spend_guard import BudgetLock
+
+        lock = BudgetLock.load(budget_lock_path or DEFAULT_BUDGET_LOCK)
+        planned = lock.estimate_run_usd(
+            cell_id=cell_id,
+            n_trajectories=n_trajectories,
+            harnesses=len(harnesses),
+            turns_per_traj=float(n_turns),
+            model_id=model_id,
+        )
+        lock.assert_under_ceiling(
+            planned_usd=planned,
+            spent_usd=spent_usd,
+            allow_override=allow_spend_override,
+            label=f"collect_cloud {cell_id}",
+        )
+        spend_meta = {
+            "enforced": True,
+            "budget_lock": str(lock.path),
+            "planned_usd": planned,
+            "spent_usd_prior": spent_usd,
+            "hard_ceiling_usd": lock.hard_ceiling_usd,
+            "allow_spend_override": allow_spend_override,
+        }
 
     tasks = load_subset(subset_path)
     if not tasks:
@@ -229,11 +273,11 @@ def collect_cell(
     tools = _tools()
     all_calls = []
     all_traj = []
-    harness_counts = {h: 0 for h in HARNESS_IDS}
+    harness_counts = {h: 0 for h in harnesses}
 
     for i in range(n_trajectories):
         task = tasks[i % len(tasks)]
-        for harness_id in HARNESS_IDS:
+        for harness_id in harnesses:
             traj_id = f"{cell_id}-{harness_id}-{i:03d}"
             if harness_id == "raw_python":
                 events, bundle = RawPythonHarness(engine, tools=tools).run_trajectory(
@@ -286,15 +330,17 @@ def collect_cell(
         "model_id": model_id,
         "live": live,
         "n_trajectories_requested": n_trajectories,
+        "harnesses": list(harnesses),
         "harness_counts": harness_counts,
         "n_calls": len(all_calls),
         "n_trajectory_records": len(all_traj),
         "workload_id": WORKLOAD_ID,
         "subset": str(subset_path),
+        "spend": spend_meta,
         "note": (
             "Mock path — no API spend."
             if not live
-            else "LIVE collection — ensure PROTOCOL_NOTES budget lock is filled."
+            else "LIVE collection under budget_lock hard ceiling."
         ),
         "ts": time.time(),
     }
@@ -309,20 +355,57 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--cell", choices=("C1", "C2"), default="C1")
-    p.add_argument("--model", type=str, default="gpt-4.1-mini")
-    p.add_argument("--n-trajectories", type=int, default=2)
+    p.add_argument("--model", type=str, default=None, help="Override model; default from budget_lock")
+    p.add_argument("--n-trajectories", type=int, default=None)
     p.add_argument("--n-turns", type=int, default=4)
     p.add_argument("--subset", type=Path, default=None)
     p.add_argument("--live", action="store_true")
-    p.add_argument("--base-url", type=str, default="https://api.openai.com/v1")
+    p.add_argument("--base-url", type=str, default=None)
     p.add_argument("--api-key", type=str, default=None)
     p.add_argument("--network-baseline-ms", type=float, default=40.0)
+    p.add_argument("--harness", action="append", choices=list(HARNESS_IDS), default=None)
+    p.add_argument("--budget-lock", type=Path, default=DEFAULT_BUDGET_LOCK)
+    p.add_argument("--spent-usd", type=float, default=0.0)
+    p.add_argument(
+        "--allow-spend-override",
+        action="store_true",
+        help="Manual override of hard ceiling (must be intentional; logged in report)",
+    )
+    p.add_argument(
+        "--smoke",
+        action="store_true",
+        help="1× raw_python using cell smoke_model_id from budget_lock",
+    )
     args = p.parse_args(argv)
+
+    model = args.model
+    base_url = args.base_url or "https://api.openai.com/v1"
+    n_traj = args.n_trajectories
+    harnesses: tuple[str, ...] = tuple(args.harness) if args.harness else HARNESS_IDS
+
+    if args.live or args.smoke:
+        from apu_characterization.turntrace_v2.spend_guard import BudgetLock
+
+        lock = BudgetLock.load(args.budget_lock)
+        cell = lock.cell(args.cell)
+        if model is None:
+            model = cell["smoke_model_id"] if args.smoke else cell["model_id"]
+        if args.base_url is None:
+            base_url = str(cell.get("base_url") or base_url)
+        if n_traj is None:
+            n_traj = 1 if args.smoke else int(cell["n_trajectories"])
+        if args.smoke:
+            harnesses = ("raw_python",)
+    else:
+        if model is None:
+            model = "gpt-4.1-mini"
+        if n_traj is None:
+            n_traj = 2
 
     subset = args.subset
     if subset is None:
         subset = args.out / "swe_lite_fixture.json"
-        write_fixture_subset(subset, n=max(3, args.n_trajectories))
+        write_fixture_subset(subset, n=max(3, n_traj))
 
     if args.live:
         key = args.api_key or os.environ.get("OPENAI_API_KEY")
@@ -331,18 +414,30 @@ def main(argv: list[str] | None = None) -> int:
     else:
         key = None
 
-    report = collect_cell(
-        out_dir=args.out,
-        cell_id=args.cell,
-        model_id=args.model,
-        n_trajectories=args.n_trajectories,
-        subset_path=subset,
-        live=bool(args.live),
-        base_url=args.base_url,
-        api_key=key,
-        network_baseline_ms=args.network_baseline_ms,
-        n_turns=args.n_turns,
-    )
+    try:
+        report = collect_cell(
+            out_dir=args.out,
+            cell_id=args.cell,
+            model_id=model,
+            n_trajectories=n_traj,
+            subset_path=subset,
+            live=bool(args.live),
+            base_url=base_url,
+            api_key=key,
+            network_baseline_ms=args.network_baseline_ms,
+            n_turns=args.n_turns,
+            harnesses=harnesses,
+            budget_lock_path=args.budget_lock,
+            spent_usd=args.spent_usd,
+            allow_spend_override=bool(args.allow_spend_override),
+        )
+    except Exception as exc:
+        from apu_characterization.turntrace_v2.spend_guard import SpendCeilingExceeded
+
+        if isinstance(exc, SpendCeilingExceeded):
+            print(json.dumps({"ok": False, "error": "spend_ceiling", "message": str(exc)}, indent=2))
+            return 2
+        raise
     print(json.dumps({"ok": True, "report": report}, indent=2))
     return 0
 
