@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict, dataclass, field
 from typing import Callable, Sequence
 
-from apu_characterization.turntrace_v2.contracts import load_protocol
-from apu_characterization.turntrace_v2.schema import CallRecord
+from apu_characterization.turntrace_v2.contracts import (
+    canonical_json_bytes,
+    load_protocol,
+    sha256_bytes,
+)
+from apu_characterization.turntrace_v2.schema import CallRecord, TrajectoryRecord
+from apu_characterization.turntrace_v2.replay import ReplayBundle
 
 PrefillFn = Callable[[int], float]
 
@@ -95,8 +101,9 @@ def check_cache_state(
         return None
     effective = max(0, record.engine_tokens_in - record.prefix_hit_tokens)
     expected = float(f_prefill(effective))
+    # Non-positive f(effective) cannot verify a warm claim; fail closed.
     if expected <= 0:
-        return None
+        return "cache_state_unverified"
     if abs(record.t_prefill_ms - expected) / expected > tol:
         return "cache_state_unverified"
     return None
@@ -117,6 +124,25 @@ def check_token_reconciliation(
     return None
 
 
+def check_provider_cache_reconciliation(record: CallRecord) -> str | None:
+    """OA-01 three-way cache split with provider block-quantization envelope."""
+    if record.structurally_redundant_tokens > record.engine_tokens_in:
+        return "provider_cache_reconciliation"
+    observed_template_delta = max(0, record.token_reconciliation_delta)
+    envelope = max(256, observed_template_delta + 32)
+    if (
+        record.provider_cached_tokens
+        > record.structurally_redundant_tokens + envelope
+    ):
+        return "provider_cache_reconciliation"
+    expected = max(
+        0, record.structurally_redundant_tokens - record.provider_cached_tokens
+    )
+    if record.actually_recomputed_tokens != expected:
+        return "provider_cache_reconciliation"
+    return None
+
+
 def audit_call_record(
     record: CallRecord,
     *,
@@ -134,6 +160,7 @@ def audit_call_record(
         check_conservation(record),
         check_domain_coverage(record, grid_min=grid_min, grid_max=grid_max),
         check_token_reconciliation(record, delta_lo=token_delta_lo, delta_hi=token_delta_hi),
+        check_provider_cache_reconciliation(record),
     ):
         if flag and flag not in flags:
             flags.append(flag)
@@ -180,9 +207,154 @@ def headline_eligible(records: Sequence[CallRecord]) -> list[CallRecord]:
         "attribution_out_of_domain",
         "token_accounting_anomaly",
         "implausible_cold_sample",
+        "pair_context_divergence",
+        "append_discipline_violated",
+        "quality_parity_failed",
+        "provider_cache_reconciliation",
+        "pair_missing",
+        "cache_truth_unverified",
     }
     return [r for r in records if not (blocked & set(r.audit_flags))]
 
 
 def in_domain(record: CallRecord, *, grid_min: int, grid_max: int) -> bool:
     return grid_min <= record.engine_tokens_in <= grid_max
+
+
+@dataclass
+class PairAuditResult:
+    pair_id: str
+    causal_class: str
+    passed: bool
+    flags: list[str] = field(default_factory=list)
+    n_turns_a: int = 0
+    n_turns_b: int = 0
+
+    def to_dict(self) -> dict[str, object]:
+        return asdict(self)
+
+
+def _flag_records(records: Sequence[CallRecord], flag: str) -> None:
+    for record in records:
+        if flag not in record.audit_flags:
+            record.audit_flags.append(flag)
+
+
+def audit_pair(
+    calls_a: Sequence[CallRecord],
+    calls_b: Sequence[CallRecord],
+    *,
+    trajectory_a: TrajectoryRecord,
+    trajectory_b: TrajectoryRecord,
+    causal_class: str,
+    bundle_a: ReplayBundle | None = None,
+    bundle_b: ReplayBundle | None = None,
+) -> PairAuditResult:
+    """G-PAIR + G-PARITY for one baseline/optimized trajectory pair."""
+    flags: list[str] = []
+    pair_id = trajectory_a.pair_id or trajectory_b.pair_id
+    if (
+        not pair_id
+        or trajectory_a.pair_id != trajectory_b.pair_id
+        or any(record.pair_id != pair_id for record in [*calls_a, *calls_b])
+    ):
+        flags.append("pair_missing")
+    if trajectory_a.arm != "baseline_naive" or trajectory_b.arm != "orchestration_optimized":
+        flags.append("pair_missing")
+    if (
+        trajectory_a.workload_id != trajectory_b.workload_id
+        or trajectory_a.harness_id != trajectory_b.harness_id
+        or trajectory_a.deployment_id != trajectory_b.deployment_id
+    ):
+        flags.append("pair_context_divergence")
+
+    seq_a = [(record.turn_index, record.step_type_semantic) for record in calls_a]
+    seq_b = [(record.turn_index, record.step_type_semantic) for record in calls_b]
+    if seq_a != seq_b:
+        flags.append("pair_context_divergence")
+    else:
+        for record_a, record_b in zip(calls_a, calls_b):
+            record_b.t_orch_overhead_b_ms = (
+                record_b.t_orch_pre_ms
+                + record_b.t_orch_post_ms
+                - record_a.t_orch_pre_ms
+                - record_a.t_orch_post_ms
+            )
+
+    if (
+        trajectory_a.task_success != trajectory_b.task_success
+        or not bool(trajectory_a.task_success)
+        or not bool(trajectory_b.task_success)
+    ):
+        flags.append("quality_parity_failed")
+
+    if causal_class == "Class_I":
+        if bundle_a is None or bundle_b is None or len(bundle_a.turns) != len(bundle_b.turns):
+            flags.append("pair_context_divergence")
+        else:
+            for turn_a, turn_b in zip(bundle_a.turns, bundle_b.turns):
+                hash_a = sha256_bytes(canonical_json_bytes(turn_a.assembled_context))
+                hash_b = sha256_bytes(canonical_json_bytes(turn_b.assembled_context))
+                if (
+                    turn_a.context_byte_sha256 not in (None, hash_a)
+                    or turn_b.context_byte_sha256 not in (None, hash_b)
+                ):
+                    flags.append("pair_context_divergence")
+                    break
+                if hash_a != hash_b:
+                    flags.append("pair_context_divergence")
+                    break
+    elif causal_class == "Class_II":
+        if any(
+            record.turn_index > 0
+            and (
+                record.retemplated_tokens != 0
+                or "append_discipline_violated" in record.audit_flags
+            )
+            for record in calls_b
+        ):
+            flags.append("append_discipline_violated")
+    else:
+        raise ValueError(f"unknown causal class: {causal_class}")
+
+    flags = sorted(set(flags))
+    for flag in flags:
+        _flag_records(calls_a, flag)
+        _flag_records(calls_b, flag)
+    return PairAuditResult(
+        pair_id=pair_id,
+        causal_class=causal_class,
+        passed=not flags,
+        flags=flags,
+        n_turns_a=len(calls_a),
+        n_turns_b=len(calls_b),
+    )
+
+
+def audit_cache_truth(
+    records: Sequence[CallRecord],
+    *,
+    f_prefill: PrefillFn,
+) -> list[str]:
+    """G-CACHE-TRUTH for a local optimized batch with B-CACHE active."""
+    flags: list[str] = []
+    candidates = [
+        record
+        for record in records
+        if record.arm == "orchestration_optimized"
+        and "B-CACHE" in record.interventions_active
+        and record.turn_index > 0
+    ]
+    if not candidates:
+        return ["cache_truth_unverified"]
+    for record in candidates:
+        if record.cache_state not in ("warm-hit", "warm-partial"):
+            if "cache_truth_unverified" not in record.audit_flags:
+                record.audit_flags.append("cache_truth_unverified")
+            flags.append("cache_truth_unverified")
+            continue
+        if check_cache_state(record, f_prefill) is not None:
+            if "cache_truth_unverified" not in record.audit_flags:
+                record.audit_flags.append("cache_truth_unverified")
+            flags.append("cache_truth_unverified")
+    return sorted(set(flags))

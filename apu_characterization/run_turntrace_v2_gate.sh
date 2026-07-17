@@ -24,12 +24,14 @@ from apu_characterization.turntrace_v2.contracts import (
     PROTOCOL_VERSION,
     load_protocol,
     validate_protocol,
+    validate_protocol_lock,
 )
 
 protocol = load_protocol()
 assert protocol["protocol_version"] == PROTOCOL_VERSION
-assert protocol["revision"] == "B"
+assert protocol["revision"] == "C"
 assert not validate_protocol(protocol)
+assert not validate_protocol_lock()
 assert protocol["replay_bundle"]["mandatory_for_headline"] is True
 print(f"protocol contract: {PROTOCOL_VERSION} OK")
 PY

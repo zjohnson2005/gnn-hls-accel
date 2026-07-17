@@ -1,0 +1,114 @@
+{
+  "corpus_bytes": 52502473,
+  "corpus_sha256": "5e001b585e619a80fe6e889205d3dae36802a9a4093c5480c49fd4f9e4ddb40a",
+  "manifest_sha256": "f5427af7019203b7e8d90b145eaf24914bf492699c6340d8cdebc35d3ac1a614",
+  "schema_version": "turntrace_rev_c_payload_v1",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "source_kind": "real_repository_content",
+  "sources": [
+    {
+      "bytes": 52429034,
+      "path": "apu_characterization/fixtures/corpus.txt",
+      "sha256": "19cc1dfd7b8664aa9e43e2458c8d15614236817fd3516b80ebf996692162d716"
+    },
+    {
+      "bytes": 15540,
+      "path": "apu_characterization/METHODOLOGY.md",
+      "sha256": "faf01caa4db63c1ab3d7fabd90a5e1e22b0c483ccfd65861fb71679db81f279b"
+    },
+    {
+      "bytes": 9153,
+      "path": "apu_characterization/METHODOLOGY_TLP01.md",
+      "sha256": "59a4d2395c44a838b338909cbc4b9c59bdf5b3eddf8eb64f46233cbd5c6f7be2"
+    },
+    {
+      "bytes": 12404,
+      "path": "apu_characterization/METHODOLOGY_CAP01.md",
+      "sha256": "e4c4cda21d737bbe31a5d301c319a4377e8380ab349a9515d5b4270e73a55135"
+    },
+    {
+      "bytes": 20680,
+      "path": "apu_characterization/tasks.py",
+      "sha256": "50992b843eca89b9b3560641a81de9ada4b71bf3770bbbf8d8d2aff6891a379b"
+    },
+    {
+      "bytes": 5376,
+      "path": "apu_characterization/turntrace_v2/boundary-cases.md",
+      "sha256": "52572e55ef6d49b7db330bcc58e25a1d87d60cf5df1e1f254e733f8942bfb7b2"
+    },
+    {
+      "bytes": 9483,
+      "path": "apu_characterization/turntrace_v2/export.py",
+      "sha256": "f8764e7db615cc6d832b97eaab2d8f05e45a7d3ac1b62f3d9467a373abee13f3"
+    },
+    {
+      "bytes": 295,
+      "path": "apu_characterization/turntrace_v2/rev_c_payloads/turntrace_pytest_output.txt",
+      "sha256": "98fa1fd29b11cf9b57ef18d29d1de4400af662cd203daf028405dd2cbeaaf980"
+    }
+  ],
+  "task_classes": {
+    "TT-CHAIN": {
+      "box_target_tokens": 10000,
+      "cpu_target_tokens": 4000,
+      "shape": "chained_transform_pipeline",
+      "task_id": "TT-CHAIN",
+      "tool_cycle": [
+        "transform"
+      ],
+      "turns": 15
+    },
+    "TT-DOC": {
+      "box_target_tokens": 20000,
+      "cpu_target_tokens": 6000,
+      "shape": "progressive_long_document_read",
+      "task_id": "TT-DOC",
+      "tool_cycle": [
+        "read_chunk"
+      ],
+      "turns": 16
+    },
+    "TT-EDIT": {
+      "box_target_tokens": 12000,
+      "cpu_target_tokens": 4000,
+      "shape": "edit_verify_loop",
+      "task_id": "TT-EDIT",
+      "tool_cycle": [
+        "read_file",
+        "edit_file",
+        "run_tests"
+      ],
+      "turns": 20
+    },
+    "TT-FAN": {
+      "box_target_tokens": 8000,
+      "cpu_target_tokens": 3000,
+      "shape": "fanout_then_synthesize",
+      "task_id": "TT-FAN",
+      "tool_cycle": [
+        "search",
+        "read_file",
+        "synthesize"
+      ],
+      "turns": 12
+    },
+    "TT-RET": {
+      "box_target_tokens": 16000,
+      "cpu_target_tokens": 5000,
+      "shape": "retrieval_accumulation",
+      "task_id": "TT-RET",
+      "tool_cycle": [
+        "search",
+        "fetch",
+        "append_summary"
+      ],
+      "turns": 18
+    }
+  }
+}

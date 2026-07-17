@@ -11,7 +11,23 @@ from apu_characterization.turntrace_v2.schema import CallRecord, TrajectoryRecor
 
 SCHEMA_DOC = r"""# TurnTrace v2 CallRecord / TrajectoryRecord schema
 
-See `protocol_turntrace_v2.json` for the frozen field list (rev. B).
+See `protocol_turntrace_v2.json` for the frozen field list (rev. C).
+
+## Rev C — paired orchestration intervention
+
+- Validity class: `orchestration_significance_characterization`.
+- `arm`, `interventions_active`, and `pair_id` identify the paired A/B cell.
+- `t_orch_overhead_b_ms` is the paired per-turn Arm-B-minus-Arm-A
+  orchestration delta; absolute per-arm orchestration remains
+  `t_orch_pre_ms + t_orch_post_ms`.
+- Cloud cache accounting is the three-way split:
+  `structurally_redundant_tokens`, `provider_cached_tokens`, and
+  `actually_recomputed_tokens`.
+- Trajectories add `usd_model_cost` and `joules_total`.
+- G-PAIR, G-PARITY, G-CACHE-TRUTH, G-BUDGET-WALL, and G-ARM-A-HONESTY are
+  mandatory before a rev C headline. CPU0 remains provisional forever.
+- The conservative f(n) intercept booking is unchanged and biases against the
+  thesis; an A/B delta survives that common booking by construction.
 
 ## Changelog (P1 fix pass)
 

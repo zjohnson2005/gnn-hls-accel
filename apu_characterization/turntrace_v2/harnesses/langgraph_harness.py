@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Sequence
 
 from apu_characterization.turntrace_v2.derive import RawModelCallEvent
+from apu_characterization.turntrace_v2.arms import ArmConfig, baseline
 from apu_characterization.turntrace_v2.engines import Engine
 from apu_characterization.turntrace_v2.replay import ReplayBundle, ToolCall, TurnBundle
 from apu_characterization.turntrace_v2.workload.env_snapshot import capture_env_snapshot
@@ -35,9 +36,16 @@ class LangGraphHarness:
 
     harness_id = "langgraph"
 
-    def __init__(self, engine: Engine, *, tools: dict[str, ToolFn] | None = None) -> None:
+    def __init__(
+        self,
+        engine: Engine,
+        *,
+        tools: dict[str, ToolFn] | None = None,
+        arm_config: ArmConfig | None = None,
+    ) -> None:
         self.engine = engine
         self.tools = tools or {}
+        self.arm_config = arm_config or baseline()
 
     def run_trajectory(
         self,
@@ -46,6 +54,7 @@ class LangGraphHarness:
         deployment_id: str,
         steps: Sequence[GraphStep],
         workload_id: str,
+        pair_id: str = "",
     ) -> tuple[list[RawModelCallEvent], ReplayBundle]:
         env = capture_env_snapshot()
         bundle = ReplayBundle(
@@ -53,13 +62,38 @@ class LangGraphHarness:
             workload_id=workload_id,
             harness_id=self.harness_id,
             deployment_id=deployment_id,
-            meta={"graph": True},
+            meta={
+                "graph": True,
+                "arm": self.arm_config.arm,
+                "interventions_active": list(self.arm_config.interventions_active),
+                "pair_id": pair_id,
+                "causal_class": self.arm_config.causal_class,
+            },
         )
         events: list[RawModelCallEvent] = []
+        prior_messages: list[dict[str, str]] = []
         for i, step in enumerate(steps):
-            orch_pre = 1.2  # includes graph dispatch proxy
+            orch_pre_start = time.perf_counter()
+            messages = list(step.messages)
+            append_violation = bool(
+                self.arm_config.append_only
+                and i > 0
+                and messages[: len(prior_messages)] != prior_messages
+            )
+            assembled_context = "\n".join(
+                f"{m['role']}: {m['content']}" for m in messages
+            )
+            orch_pre = max(0.0, (time.perf_counter() - orch_pre_start) * 1000.0)
             t0 = time.time()
-            result = self.engine.complete(step.messages, max_tokens=64, temperature=0.0, seed=i)
+            result = self.engine.complete(
+                messages,
+                max_tokens=64,
+                temperature=0.0,
+                seed=i,
+                use_cache=self.arm_config.use_cache,
+                reset_cache=i == 0 and self.arm_config.use_cache,
+            )
+            orch_post_start = time.perf_counter()
             tool_names: list[str] = []
             tool_calls: list[ToolCall] = []
             tool_results: list[Any] = []
@@ -80,7 +114,7 @@ class LangGraphHarness:
                     if step.tool_name in self.tools
                     else {"error": "unknown"}
                 ]
-            orch_post = 1.8
+            orch_post = max(0.0, (time.perf_counter() - orch_post_start) * 1000.0)
             accounted = (
                 orch_pre
                 + result.t_prefill_ms
@@ -94,9 +128,7 @@ class LangGraphHarness:
                     turn_index=i,
                     harness_id=self.harness_id,
                     deployment_id=deployment_id,
-                    assembled_context="\n".join(
-                        f"{m['role']}: {m['content']}" for m in step.messages
-                    ),
+                    assembled_context=assembled_context,
                     raw_model_output=result.text,
                     tool_names=tuple(tool_names),
                     graph_node=step.node_name,
@@ -122,6 +154,14 @@ class LangGraphHarness:
                     wall_clock_end=t0 + accounted / 1000.0,
                     tokenizer_id=result.tokenizer_id,
                     expected_horizon=len(steps),
+                    arm=self.arm_config.arm,
+                    interventions_active=self.arm_config.interventions_active,
+                    pair_id=pair_id,
+                    provider_cached_tokens=result.provider_cached_tokens,
+                    extra={
+                        "append_discipline_violated": append_violation,
+                        "causal_class": self.arm_config.causal_class,
+                    },
                 )
             )
             bundle.append_turn(
@@ -137,4 +177,5 @@ class LangGraphHarness:
                     tokenizer_id=result.tokenizer_id,
                 )
             )
+            prior_messages = messages
         return events, bundle

@@ -42,8 +42,11 @@ class MockEngine:
         *,
         max_tokens: int = 8,
         use_cache: bool = False,
+        reset_cache: bool = False,
         output_text: str | None = None,
     ) -> dict[str, Any]:
+        if reset_cache:
+            self._prefix_cache = None
         tokens = prompt.split()
         prefix_hits = 0
         cache_state = "disabled"

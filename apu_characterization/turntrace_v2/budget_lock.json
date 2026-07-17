@@ -1,35 +1,36 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
+  "campaign": "turntrace_rev_c_cloud_class_ii",
+  "status": "locked_not_live_authorized",
+  "live_authorized": false,
   "locked_at": "2026-07-16",
-  "pricing_source": "https://developers.openai.com/api/docs/pricing (fetched 2026-07-16)",
-  "ci_target": {
-    "confidence": 0.9,
-    "z": 1.645,
-    "halfwidth_frac_of_mean": 0.15,
-    "statement": "N such that turn-indexed mean (prefill / harness-tax on turns 1–5) has 90% CI half-width ≤ 15% of the mean"
+  "pricing_source": "https://developers.openai.com/api/docs/pricing (fetched 2026-07-16; recheck immediately before C-P3)",
+  "payload_manifest_sha256": "f5427af7019203b7e8d90b145eaf24914bf492699c6340d8cdebc35d3ac1a614",
+  "cache_discount_assumption": {
+    "budgeted_provider_cache_hit_rate": 0.0,
+    "conservative_bound": "0% provider cache hits; all input billed at uncached rate",
+    "optimistic_sensitivity_prior": 0.975,
+    "optimistic_prior_source": "TraceLab-style tool-initiated prior supplied by rev C work order; not used for authorization"
   },
   "n_derivation": {
-    "corpus": "apu_characterization/out/turntrace_v2/cpu_dryrun/corpus/call_records.jsonl",
-    "n_trajectories_prior": 5,
-    "signal_primary": "t_prefill_ms",
-    "signal_secondary": "harness_tax = orch_pre + orch_post + t_prefill_redundant",
-    "worst_cv_turns_1_to_5": 0.073,
-    "N_raw_from_worst_cv": 0.64,
-    "spec_floor": 10,
-    "locked_N_per_cell": 10,
-    "turn0_harness_tax_note": "Turn-0 tax CV≈1.54 is an attribution-floor artifact (redundant≈0 on 4/5 trajs); excluded from N lock. Prefill-only turn-0 CV≈0.074 → N_raw≪10.",
-    "reestimate_after_swe_pilot": true
+    "required_seeds": 5,
+    "locked_N_per_cell": 20,
+    "meaning": "full-stack cell has 5 seeds × 2 arms × 2 harnesses = 20 trajectories per task class",
+    "bands": "min/median/max; sparse n<5 seed cells excluded"
   },
   "token_estimate": {
-    "cpu_dryrun_mean_tokens_in": 219.4,
-    "cpu_dryrun_mean_tokens_out": 23.3,
-    "swe_lite_scale_factor_in": 18.0,
-    "flag": "ESTIMATE — dry-run mean_in≈219 scaled ×18 → 4000 tok/call for SWE-bench-lite-ish contexts; re-measure after smoke",
-    "mean_tokens_in_per_call": 4000.0,
-    "mean_tokens_out_per_call": 400.0,
-    "turns_per_traj": 6,
-    "calls_per_cell": 120,
-    "formula_per_cell": "n_traj(10)×harnesses(2)×cache(1)×turns(6)=120 calls"
+    "method": "linear context accumulation from zero to each frozen final-turn target",
+    "task_class_sum_input_tokens_per_full_stack_trajectory": 580000,
+    "full_stack_input_tokens_per_deployment": 11600000,
+    "append_layout_ablation_classes": [],
+    "ablation_input_tokens_per_deployment": 0,
+    "total_input_tokens_per_deployment": 11600000,
+    "mean_tokens_in_per_call": 7160.493827160494,
+    "mean_tokens_out_per_call": 128.0,
+    "turns_full_suite": 81,
+    "calls_per_cell": 1620,
+    "total_output_tokens_per_deployment": 207360,
+    "formula": "full: 5 classes × 5 seeds × 2 arms × 2 harnesses; required B-CACHE and B-APPEND+B-LAYOUT ablations run locally because cloud full-stack already equals the append/layout/shape intervention"
   },
   "cells": [
     {
@@ -40,13 +41,16 @@
       "model_id": "gpt-4.1",
       "smoke_model_id": "gpt-4.1-mini",
       "usd_per_1m_in": 2.0,
+      "usd_per_1m_cached_in": 0.5,
       "usd_per_1m_out": 8.0,
       "harnesses": ["raw_python", "langgraph"],
-      "cache_modes": ["provider_default"],
-      "n_trajectories": 10,
-      "workload": "swebench_lite_layer1",
-      "projected_usd": 1.344,
-      "status": "locked"
+      "arms": ["baseline_naive", "orchestration_optimized"],
+      "classes": ["TT-EDIT", "TT-RET", "TT-FAN", "TT-DOC", "TT-CHAIN"],
+      "n_trajectories": 20,
+      "projected_base_usd": 24.85888,
+      "smoke_and_variance_allowance_usd": 2.485888,
+      "projected_usd": 27.344768,
+      "status": "locked_not_live_authorized"
     },
     {
       "cell_id": "C2",
@@ -56,31 +60,40 @@
       "model_id": "gpt-4o-mini",
       "smoke_model_id": "gpt-4o-mini",
       "usd_per_1m_in": 0.15,
+      "usd_per_1m_cached_in": 0.075,
       "usd_per_1m_out": 0.6,
       "harnesses": ["raw_python", "langgraph"],
-      "cache_modes": ["provider_default"],
-      "n_trajectories": 10,
-      "workload": "swebench_lite_layer1",
-      "projected_usd": 0.1008,
-      "status": "locked"
+      "arms": ["baseline_naive", "orchestration_optimized"],
+      "classes": ["TT-EDIT", "TT-RET", "TT-FAN", "TT-DOC", "TT-CHAIN"],
+      "n_trajectories": 20,
+      "projected_base_usd": 1.864416,
+      "smoke_and_variance_allowance_usd": 0.1864416,
+      "projected_usd": 2.0508576,
+      "status": "locked_not_live_authorized"
     }
   ],
   "totals": {
-    "projected_usd": 1.4448,
+    "projected_base_usd": 26.723296,
+    "projected_usd": 29.3956256,
     "ceiling_multiplier": 1.5,
-    "hard_ceiling_usd": 2.1672,
-    "plain_english": "Projected full C1+C2 corpus ≈ $1.44 USD; hard ceiling $2.17 USD (1.5×). TTFT probes + 2 smoke trajs budgeted separately ≤ $0.25."
+    "hard_ceiling_usd": 44.0934384,
+    "cut_threshold_usd": 60.0,
+    "cut_decision": "No C2 class cut: conservative base projection is below $60; hard ceiling is a stop guard, not the cut criterion."
   },
   "smoke": {
-    "n_trajectories": 1,
-    "harness": "raw_python",
-    "cells": ["C1", "C2"],
-    "use_smoke_model": true,
-    "projected_usd_cap": 0.25
+    "rule": "one paired Class II trajectory per cell, hand-inspected before full collect",
+    "included_in_projection": true
   },
   "enforcement": {
     "collect_cloud_requires_lock": true,
     "hard_stop_on_ceiling": true,
+    "live_authorized_must_be_true": true,
+    "payload_manifest_hash_must_match": true,
     "override_flag": "--allow-spend-override"
-  }
+  },
+  "authorization_blockers": [
+    "C-P1 full gate must pass",
+    "pricing must be rechecked immediately before C-P3",
+    "smoke command must use the rev C paired collector, not rev B collect_cloud"
+  ]
 }

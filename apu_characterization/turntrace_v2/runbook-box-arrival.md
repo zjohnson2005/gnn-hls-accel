@@ -6,8 +6,11 @@
 ## 0. Preconditions (done before unboxing)
 
 - [ ] Pre-hardware phase P1 CPU dry-run tagged `v2-cpu-dryrun-pass`
-- [ ] C1/C2 corpus cells collected (or queued) per P2
+- [ ] Rev B C1/C2 corpus collected; rev C cloud cells either complete or queued under a refreshed budget lock
 - [ ] Harness subset locked in `PROTOCOL_NOTES.md`
+- [ ] Rev C protocol lock and payload-manifest hash verified
+- [x] Rev C C-P1 pairing/parity/cache-truth gates pass on the provisional mechanism cell (`make turntrace-v2-gate`)
+- [ ] Rev C C-P2: ≥16K CPU model calibrated + G-BUDGET-WALL closed before long local suite
 - [ ] This runbook reviewed; power mode choice pinned below
 
 **Pinned power mode for headline runs:** `120W` (change only with a new protocol amendment + full D1 re-run).
@@ -45,16 +48,21 @@ cat /sys/class/hwmon/hwmon*/temp*_input 2>/dev/null | head
 
 Abort and cool down if idle temp is abnormal or power mode flips mid-run.
 
-## 3. D1 calibration (local) — both backends × committed models × reasoning on/off
+## 3. C-D1 calibration — rev C models and full context range
+
+The box's first measurement job is the rev C paired suite, superseding the
+rev B `swebench_lite_layer1` cell list. Select a committed local model with a
+context window that covers the suite (target calibration grid through 64K
+where the model permits). Calibrate every chosen
+`(model, quant, engine, hardware, power_mode)` tuple before either arm runs.
 
 ```bash
 export APU_REPO_ROOT=...
 export PYTHONPATH=$APU_REPO_ROOT
 export TTV2_OUT=$APU_REPO_ROOT/apu_characterization/out/turntrace_v2/box_arrival
 
-# Start llama-server (ROCm) for primary local model — reasoning ON → deployment L1a
-# Start second server or flag for reasoning OFF → L1b
-# Small model → L2
+# Start llama-server (ROCm) for the committed rev C primary local model.
+# Vulkan is the fallback/comparison backend, not a silent replacement.
 
 python -m apu_characterization.turntrace_v2.cpu_dryrun \
   --out $TTV2_OUT/L1a_cal \
@@ -70,7 +78,7 @@ from apu_characterization.turntrace_v2.calibrate_live import (
     calibrate_prefill, calibrate_decode, verify_cache_behavior,
 )
 ident = EngineIdentity(
-    deployment_id="L1a", model_id="PRIMARY", quantization="Q4_K_M",
+    deployment_id="L1a", model_id="REV_C_PRIMARY", quantization="Q4_K_M",
     engine="llama.cpp", engine_version="ROCm-FILL", hardware="strix-halo",
     reasoning_mode="on", provisional=False,
 )
@@ -84,8 +92,9 @@ print("L1a D1 OK")
 PY
 ```
 
-Repeat for L1b (reasoning off), L2 (small model), and Vulkan backend variants.  
+Repeat only for rev C deployment tuples frozen before the run.
 **Gate:** R² ≥ 0.99 held-out on every (model, quant, engine, hardware, power_mode) tuple.
+Also record the rev C f(n)-based total suite wall projection before collection.
 
 ## 4. Network baseline re-run (from the box's physical network)
 
@@ -98,14 +107,26 @@ python -m apu_characterization.turntrace_v2.network_probe \
 # Repeat for ≥3 TOD slots and for C2.
 ```
 
-## 5. Local corpus cells (L1a / L1b / L2)
+## 5. Rev C paired local suite — first box workload
 
 ```bash
-# After D1 PASS, collect ≥10 trajectories per (workload × harness × deployment × cache-mode)
-# Primary workload: swebench_lite_layer1 (same subset as C1/C2)
-# Every headline trajectory: replay bundle + task_success
-# Cache modes: engine-default, cache-disabled; ideal-cache-simulated is post-hoc
+# After C-D1 PASS:
+# - TT-EDIT / TT-RET / TT-FAN / TT-DOC / TT-CHAIN
+# - raw_python + langgraph
+# - baseline_naive + orchestration_optimized
+# - seeds 0..4, temperature=0
+# - full context targets from protocol_turntrace_v2.json
+# - Class I B-CACHE byte-identical pairs and required ablations on >=2 classes
+# - every trajectory: pair_id + replay bundle + task_success
+# - ideal-cache-simulated remains a post-hoc bound
 ```
+
+Before accepting a batch:
+
+1. G-CACHE-TRUTH verifies warm prefill ≈ f(new tokens) within the profile band.
+2. G-PAIR verifies Class I byte hashes and Class II step-sequence/append discipline.
+3. G-PARITY verifies exact paired task-success equality.
+4. Generate C-D2 cards and C-D3 exchange-rate bands before any interpretation.
 
 ## 6. Validate + publishability
 
@@ -117,7 +138,7 @@ python -m apu_characterization.turntrace_v2.runner --synthetic-debug  # smoke on
 
 ## 7. Explicit non-actions on arrival day
 
-- Do not start Layer 1 swap sweeps
+- Do not start Layer 1 swap sweeps or let Layer 1 requirements alter rev C
 - Do not change power mode mid-calibration
 - Do not quote CPU dry-run or laptop network baselines as headline
 - Do not invent cache remediation

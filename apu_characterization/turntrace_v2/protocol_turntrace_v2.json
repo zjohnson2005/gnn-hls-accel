@@ -1,15 +1,35 @@
 {
-  "protocol_version": "turntrace_v2.0",
-  "status": "implementation_scaffold",
-  "validity_class": "turn_decomposition_and_layer1_handoff",
-  "revision": "B",
-  "claim_under_test": "A substantial fraction of conventionally booked model time is orchestration-induced redundant prefill, attributable via f(n)-based necessary/redundant split; v2 also produces a replayable success-labeled corpus for Layer 1 swapped-trajectory execution.",
+  "protocol_version": "turntrace_v2.1",
+  "status": "rev_c_protocol_frozen_pre_intervention",
+  "validity_class": "orchestration_significance_characterization",
+  "revision": "C",
+  "supersedes": "rev B co-mission and rev B D2/D3 deliverable definitions; completed P1/P2/P3/D4/D5 and Track C artifacts remain valid inputs",
+  "claim_under_test": "On multi-turn agent workloads, a substantial fraction of total model-side cost (time, dollars, energy) is orchestration-induced redundant prefill; this fraction (a) grows with turn index, (b) is attributable per-call via the audited f(n) necessary/redundant split, and (c) is causally recoverable by orchestration-layer changes alone, at a measured software cost — yielding an orchestration exchange rate (ΔT_orch spent : model-side cost recovered) that quantifies the leverage of the orchestration layer in today's units.",
+  "pre_registered_null": "Engine/provider default caching may already recover nearly everything, making Arm A approximately equal to Arm B. This banks rung_3c and is a publishable finding about ecosystem defaults.",
+  "claim_rungs": {
+    "rung_1c": {
+      "criterion": "recovered_fraction_ge_0_50_across_ge_3_of_5_task_classes_with_quality_parity",
+      "meaning": "orchestration is a first-order, causally demonstrated cost lever"
+    },
+    "rung_2c": {
+      "criterion": "recovery_concentrated_in_specific_task_classes_or_turn_regimes",
+      "meaning": "leverage exists but is workload-shaped; report the taxonomy"
+    },
+    "rung_3c": {
+      "criterion": "recovered_fraction_lt_0_15_everywhere_or_quality_parity_fails",
+      "meaning": "the induced-cost thesis in its causal form does not hold as tested; bank honestly"
+    }
+  },
   "locked_decisions": {
     "step_unit": "one_model_call_equals_one_step",
     "fanout_siblings": "count of independent sibling tool calls after the same LLM decision; not separate steps",
     "retemplated_tokens": "first_class_callrecord_field; LCP failures count as new tokens",
     "tool_replay_default": "live_for_deterministic_local; archived_for_network_or_flaky; mode recorded per tool per swapped run",
-    "primary_workload": "swebench_lite_style_coding_loop_layer1_shared"
+    "primary_workload": "rev_c_scripted_real_payload_multiturn_suite",
+    "layer1_role": "incidental_byproduct_only_characterization_wins_conflicts",
+    "prefill_intercept_booking": "intercept_to_necessary_conservative_bias_against_thesis; any paired Arm A/Arm B delta survives this booking by construction",
+    "temperature": 0,
+    "replication": "n_ge_5_seeds_per_class_arm_deployment_harness; report_min_median_max_bands_never_points"
   },
   "deployments": {
     "CPU0": {"plane": "local_cpu", "role": "prehardware_dryrun_provisional_forever", "provisional": true},
@@ -22,6 +42,98 @@
   },
   "harness_subset_prehardware": ["raw_python", "langgraph"],
   "cache_modes": ["engine-default", "cache-disabled", "ideal-cache-simulated"],
+  "arms": {
+    "baseline_naive": {
+      "label": "Arm A",
+      "cache_lifetime": "not_retained_across_turns_or_tool_boundaries_where_that_is_the_framework_or_deployment_default",
+      "context_assembly": "full_framework_default_retemplating_each_turn",
+      "prompt_layout": "framework_default; dynamic-first only when traceable to a real default or documented production pattern",
+      "honesty_rule": "may_not_be_artificially_degraded; every behavior requires a citation in PROTOCOL_NOTES"
+    },
+    "orchestration_optimized": {
+      "label": "Arm B",
+      "software_only": true,
+      "headline_interventions": ["B-CACHE", "B-APPEND", "B-LAYOUT", "B-SHAPE"],
+      "interventions": {
+        "B-CACHE": "retain verified engine KV cache across turns and tool boundaries; on cloud infer provider reuse from cached_tokens",
+        "B-APPEND": "immutable append-only context; prior bytes never mutated, reserialized, or reordered; retemplated_tokens must be zero after turn 0",
+        "B-LAYOUT": "static system and tool definitions first; per-turn dynamic content appended last; no upstream timestamp or counter",
+        "B-SHAPE": "cloud-only cache-aware request shaping with provider cached_tokens reconciled to structural LCP"
+      }
+    }
+  },
+  "causal_cleanliness_classes": {
+    "Class_I": {
+      "name": "mechanism_proof",
+      "scope": "local",
+      "intervention": "B-CACHE",
+      "pair_requirement": "per-turn assembled context byte hashes identical across arms",
+      "interpretation": "pure cache-lifetime causation"
+    },
+    "Class_II": {
+      "name": "ecosystem_realistic",
+      "scope": "local_and_cloud",
+      "interventions": ["B-APPEND", "B-LAYOUT", "B-SHAPE_cloud"],
+      "pair_requirement": "same class seed harness deployment and step sequence; parity gate"
+    }
+  },
+  "ablation_requirement": {
+    "headline": "full_stack_all_applicable_interventions",
+    "required_ablations": ["B-CACHE_alone", "B-APPEND_plus_B-LAYOUT_without_cache_retention"],
+    "minimum_task_classes": 2
+  },
+  "task_suite": {
+    "design": "scripted_with_real_payloads; fixed step sequence, deterministic seedable real tool outputs",
+    "seeds": [0, 1, 2, 3, 4],
+    "classes": {
+      "TT-EDIT": {
+        "shape": "edit_verify_loop",
+        "tool_profile": ["read_file", "edit_file", "run_tests", "cycle"],
+        "turns": 20,
+        "context_target_box_tokens": 12000,
+        "context_target_cpu_prebox_tokens": 4000
+      },
+      "TT-RET": {
+        "shape": "retrieval_accumulation",
+        "tool_profile": ["search", "fetch", "append_summary"],
+        "turns": 18,
+        "context_target_box_tokens": 16000,
+        "context_target_cpu_prebox_tokens": 5000
+      },
+      "TT-FAN": {
+        "shape": "fanout_then_synthesize",
+        "tool_profile": ["independent_search_or_read_fanout", "synthesize"],
+        "turns": 12,
+        "context_target_box_tokens": 8000,
+        "context_target_cpu_prebox_tokens": 3000
+      },
+      "TT-DOC": {
+        "shape": "progressive_long_document_read",
+        "tool_profile": ["read_chunk", "accumulate_notes"],
+        "turns": 16,
+        "context_target_box_tokens": 20000,
+        "context_target_cpu_prebox_tokens": 6000
+      },
+      "TT-CHAIN": {
+        "shape": "chained_transform_pipeline",
+        "tool_profile": ["tool_i_output_to_tool_i_plus_1_input"],
+        "turns": 15,
+        "context_target_box_tokens": 10000,
+        "context_target_cpu_prebox_tokens": 4000
+      }
+    },
+    "payload_manifest": "required_and_sha256_locked_before_collection",
+    "sparse_cell_rule": "hard_exclusion_from_bands"
+  },
+  "prebox_feasibility": {
+    "tinyllama_forbidden": "n_ctx_2048_below_every_suite_target",
+    "cpu_model_requirement": "small CPU-viable instruct model, 1-1.5B class preferred, Q4 quant, context_length_ge_16384",
+    "model_tuple_gate": "full prefill/decode/cache calibration before suite; R2_ge_0_99 and domain coverage",
+    "cpu_wall_projection_required_before_launch": true,
+    "cpu_wall_soft_limit_hours": 24,
+    "allowed_cut_order": "reduce CPU-only context targets, then CPU-only seed count; record in PROTOCOL_NOTES",
+    "box_context_grid": "extend to 65536 where selected local model permits"
+  },
   "call_record_required_fields": [
     "trajectory_id",
     "turn_index",
@@ -29,8 +141,12 @@
     "deployment_id",
     "step_type_semantic",
     "step_features",
+    "arm",
+    "interventions_active",
+    "pair_id",
     "t_orch_pre_ms",
     "t_orch_post_ms",
+    "t_orch_overhead_b_ms",
     "t_network_ms",
     "network_method",
     "t_prefill_ms",
@@ -49,6 +165,9 @@
     "t_prefill_necessary_ms",
     "t_prefill_redundant_ms",
     "retemplated_tokens",
+    "provider_cached_tokens",
+    "structurally_redundant_tokens",
+    "actually_recomputed_tokens",
     "pred_context_tokens",
     "pred_cache_state",
     "pred_decode_tokens",
@@ -84,6 +203,11 @@
     "total_wall_clock_ms",
     "total_cost_usd",
     "total_energy_j",
+    "arm",
+    "interventions_active",
+    "pair_id",
+    "usd_model_cost",
+    "joules_total",
     "replay_bundle_path"
   ],
   "replay_bundle": {
@@ -113,7 +237,40 @@
   "audit_gates": {
     "conservation_rel": 0.02,
     "conservation_abs_ms": 1.0,
-    "profile_consistency_rel": 0.10
+    "profile_consistency_rel": 0.10,
+    "G_PAIR": {
+      "headline_pairs_required": true,
+      "class_i": "per-turn context byte hashes identical across arms; otherwise pair_context_divergence and exclude",
+      "class_ii": "identical class seed harness deployment and step sequence; Arm B retemplated_tokens=0 after turn0 or append_discipline_violated"
+    },
+    "G_PARITY": {
+      "rule": "task_success exact equality across paired deterministic temp0 trajectories",
+      "failure": "investigate, exclude pair, and record in boundary-cases.md"
+    },
+    "G_CACHE_TRUTH": {
+      "scope": "local Arm B",
+      "rule": "warm prefill approximately f(new_tokens) within profile consistency band per run batch",
+      "failure": "cell_not_headline"
+    },
+    "G_BUDGET_WALL": {
+      "rule": "CPU f(n) wall projection and refreshed cloud budget_lock must exist before launch"
+    },
+    "G_ARM_A_HONESTY": {
+      "rule": "every baseline behavior mapped to a cited real framework default or documented production pattern in PROTOCOL_NOTES"
+    },
+    "provider_cache_reconciliation": {
+      "rule": "structurally_redundant_tokens <= engine_tokens_in; actually_recomputed_tokens = max(0, structurally_redundant_tokens - provider_cached_tokens); flag provider_cache_reconciliation only when provider_cached_tokens > structurally_redundant_tokens + tolerance_envelope_tokens",
+      "provider_cache_quantum_tokens": 128,
+      "tolerance_envelope_tokens": "max(256, observed_template_delta_tokens + 32)",
+      "rationale": "Provider cache counters are block-quantized and provider-internal serialization differs from the local canonical prompt; this is the existing OA-01 reconciliation rule."
+    }
+  },
+  "headline_derivations": {
+    "exchange_rate": "recovered_model_cost_A_to_B / added_orch_cost_B_minus_A",
+    "currencies": ["ms_per_ms", "usd_per_task_per_ms_per_turn", "joules_per_joule_box_only"],
+    "recovered_fraction": "(redundant_A - redundant_B) / redundant_A",
+    "ideal_bound_capture": "(redundant_A - redundant_B) / (redundant_A - redundant_ideal)",
+    "aggregation": "per class x deployment; min median max across seeds; harnesses reported separately and pooled only when compatible"
   },
   "non_goals": [
     "routing_policy",
@@ -122,12 +279,28 @@
     "speculation_machinery",
     "custom_finetuned_models",
     "multi_node_serving",
-    "cache_remediation"
+    "layer1_driven_design_decisions"
   ],
-  "deliverables": ["D1", "D2", "D3", "D4", "D5"],
+  "deliverables": {
+    "C-D1": "recalibration report plus CPU wall-clock budget projection",
+    "C-D2": "per-task cards for each class x deployment with paired decomposition, cumulative redundant curves, ideal bound, exchange bands, and audit summary",
+    "C-D3": "headline exchange-rate table with recovered_fraction, ideal_bound_capture, ms/$/J currencies, Arm B overhead, and ablation attribution",
+    "C-D4": "cloud economics annex with three-way cache split, real dollars per task, and reconciliation stats",
+    "C-D5": "honest-scope and threats note plus banked rung"
+  },
   "blocked_claims": [
-    "v2 implements routing",
-    "v2 runs Layer 1 swap sweeps at scale",
+    "Rev C intervention demonstrates an APU advantage",
+    "Arm B is hardware or evidence that hardware achieves its projected benefits",
+    "Losslessness beyond exact quality parity on the tested deterministic task suite",
+    "Generality beyond the tested task classes, models, harnesses, deployments, and seeds",
+    "CPU pre-box cell numbers are headline results",
+    "v2 implements routing or runs Layer 1 swap sweeps at scale",
     "mechanism layer is validated across domains"
-  ]
+  ],
+  "protocol_lock": {
+    "canonicalization": "UTF-8 JSON parsed then serialized with sorted keys and compact separators; omit protocol_lock.sha256 before hashing",
+    "sha256": "6c7f11df7fef28b1600f7c1bbfd697c30a8c4b3cca2444a52a120d1601376ced",
+    "lock_artifact": "protocol_turntrace_v2.lock.json",
+    "lock_must_precede": ["rev_c_executable_changes", "payload_collection", "live_calls"]
+  }
 }

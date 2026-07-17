@@ -56,6 +56,11 @@ class RawModelCallEvent:
     expected_horizon: int = 15
     pred_decode_tokens: float | None = None
     prior_semantic_token_ids: tuple[int, ...] | None = None
+    arm: str = "baseline_naive"
+    interventions_active: tuple[str, ...] = ()
+    pair_id: str = ""
+    provider_cached_tokens: int = 0
+    t_orch_overhead_b_ms: float = 0.0
     extra: dict[str, Any] = field(default_factory=dict)
 
     # Back-compat alias used by older call sites.
@@ -147,6 +152,9 @@ def derive_call_records(
             retemplated_tokens=diff.retemplated_tokens,
             ideal_cache=ideal_cache,
         )
+        structurally_redundant = max(0, engine_tokens - new_tokens)
+        provider_cached = max(0, int(ev.provider_cached_tokens))
+        actually_recomputed = max(0, structurally_redundant - provider_cached)
         ratio = float(engine_tokens) / float(out_tokens) if out_tokens else float("inf")
         pred_decode = (
             float(ev.pred_decode_tokens)
@@ -161,6 +169,9 @@ def derive_call_records(
             if predict_decode_ms is not None
             else 0.0
         )
+        initial_flags = ["negative_prefill_residual"] if attr.negative_residual else []
+        if ev.extra.get("append_discipline_violated"):
+            initial_flags.append("append_discipline_violated")
         record = CallRecord(
             trajectory_id=ev.trajectory_id,
             turn_index=ev.turn_index,
@@ -201,7 +212,14 @@ def derive_call_records(
             engine_version=ev.engine_version,
             wall_clock_start=ev.wall_clock_start,
             wall_clock_end=ev.wall_clock_end,
-            audit_flags=["negative_prefill_residual"] if attr.negative_residual else [],
+            arm=ev.arm,  # type: ignore[arg-type]
+            interventions_active=list(ev.interventions_active),
+            pair_id=ev.pair_id,
+            t_orch_overhead_b_ms=float(ev.t_orch_overhead_b_ms),
+            provider_cached_tokens=provider_cached,
+            structurally_redundant_tokens=structurally_redundant,
+            actually_recomputed_tokens=actually_recomputed,
+            audit_flags=initial_flags,
         )
         audit_call_record(
             record,
@@ -225,6 +243,7 @@ def derive_trajectory_record(
     success_metric: str,
     replay_bundle_path: str | None,
     total_cost_usd: float = 0.0,
+    usd_model_cost: float | None = None,
     headline: bool = False,
 ) -> TrajectoryRecord:
     if not calls:
@@ -246,6 +265,13 @@ def derive_trajectory_record(
         total_cost_usd=total_cost_usd,
         total_energy_j=total_energy,
         replay_bundle_path=replay_bundle_path,
+        arm=first.arm,
+        interventions_active=list(first.interventions_active),
+        pair_id=first.pair_id,
+        usd_model_cost=(
+            float(total_cost_usd) if usd_model_cost is None else float(usd_model_cost)
+        ),
+        joules_total=total_energy,
     )
     traj.validate(headline=headline)
     if headline and not replay_bundle_path:

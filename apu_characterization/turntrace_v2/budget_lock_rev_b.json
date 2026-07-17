@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "campaign": "turntrace_rev_b_p2_historical",
+  "locked_at": "2026-07-16",
+  "pricing_source": "https://developers.openai.com/api/docs/pricing (fetched 2026-07-16)",
+  "ci_target": {
+    "confidence": 0.9,
+    "z": 1.645,
+    "halfwidth_frac_of_mean": 0.15,
+    "statement": "N such that turn-indexed mean (prefill / harness-tax on turns 1–5) has 90% CI half-width ≤ 15% of the mean"
+  },
+  "n_derivation": {
+    "corpus": "apu_characterization/out/turntrace_v2/cpu_dryrun/corpus/call_records.jsonl",
+    "n_trajectories_prior": 5,
+    "signal_primary": "t_prefill_ms",
+    "signal_secondary": "harness_tax = orch_pre + orch_post + t_prefill_redundant",
+    "worst_cv_turns_1_to_5": 0.073,
+    "N_raw_from_worst_cv": 0.64,
+    "spec_floor": 10,
+    "locked_N_per_cell": 10,
+    "turn0_harness_tax_note": "Turn-0 tax CV≈1.54 is an attribution-floor artifact (redundant≈0 on 4/5 trajs); excluded from N lock. Prefill-only turn-0 CV≈0.074 → N_raw≪10.",
+    "reestimate_after_swe_pilot": true
+  },
+  "token_estimate": {
+    "cpu_dryrun_mean_tokens_in": 219.4,
+    "cpu_dryrun_mean_tokens_out": 23.3,
+    "swe_lite_scale_factor_in": 18.0,
+    "flag": "HISTORICAL REV B ESTIMATE",
+    "mean_tokens_in_per_call": 4000.0,
+    "mean_tokens_out_per_call": 400.0,
+    "turns_per_traj": 6,
+    "calls_per_cell": 120,
+    "formula_per_cell": "n_traj(10)×harnesses(2)×cache(1)×turns(6)=120 calls"
+  },
+  "cells": [
+    {
+      "cell_id": "C1",
+      "role": "frontier",
+      "provider": "openai",
+      "base_url": "https://api.openai.com/v1",
+      "model_id": "gpt-4.1",
+      "smoke_model_id": "gpt-4.1-mini",
+      "usd_per_1m_in": 2.0,
+      "usd_per_1m_out": 8.0,
+      "harnesses": ["raw_python", "langgraph"],
+      "cache_modes": ["provider_default"],
+      "n_trajectories": 10,
+      "workload": "swebench_lite_layer1",
+      "projected_usd": 1.344,
+      "status": "spent_complete"
+    },
+    {
+      "cell_id": "C2",
+      "role": "cheap",
+      "provider": "openai",
+      "base_url": "https://api.openai.com/v1",
+      "model_id": "gpt-4o-mini",
+      "smoke_model_id": "gpt-4o-mini",
+      "usd_per_1m_in": 0.15,
+      "usd_per_1m_out": 0.6,
+      "harnesses": ["raw_python", "langgraph"],
+      "cache_modes": ["provider_default"],
+      "n_trajectories": 10,
+      "workload": "swebench_lite_layer1",
+      "projected_usd": 0.1008,
+      "status": "spent_complete"
+    }
+  ],
+  "totals": {
+    "projected_usd": 1.4448,
+    "ceiling_multiplier": 1.5,
+    "hard_ceiling_usd": 2.1672,
+    "actual_spent_usd": 1.4948
+  },
+  "smoke": {
+    "n_trajectories": 1,
+    "harness": "raw_python",
+    "cells": ["C1", "C2"],
+    "use_smoke_model": true,
+    "projected_usd_cap": 0.25
+  },
+  "enforcement": {
+    "collect_cloud_requires_lock": true,
+    "hard_stop_on_ceiling": true,
+    "override_flag": "--allow-spend-override"
+  }
+}

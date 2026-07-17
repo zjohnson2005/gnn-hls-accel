@@ -32,6 +32,13 @@ PROVIDER_FIELD_NOTES: dict[str, dict[str, Any]] = {
 }
 
 
+def cached_tokens_from_usage(usage: dict[str, Any]) -> int:
+    details = usage.get("prompt_tokens_details") or usage.get(
+        "input_tokens_details"
+    ) or {}
+    return max(0, int(details.get("cached_tokens") or 0))
+
+
 class OpenAICompatEngine:
     def __init__(
         self,
@@ -160,8 +167,17 @@ class OpenAICompatEngine:
         text = "".join(chunks)
         api_prompt = usage.get("prompt_tokens")
         api_completion = usage.get("completion_tokens")
-        context_tokens = int(api_prompt) if api_prompt is not None else len(json.dumps(messages).split())
-        tokens_out = int(api_completion) if api_completion is not None else max(1, len(text.split()) or 1)
+        provider_cached_tokens = cached_tokens_from_usage(usage)
+        context_tokens = (
+            int(api_prompt)
+            if api_prompt is not None
+            else len(json.dumps(messages).split())
+        )
+        tokens_out = (
+            int(api_completion)
+            if api_completion is not None
+            else max(1, len(text.split()) or 1)
+        )
         if api_prompt is None:
             notes.append("usage_prompt_tokens_missing")
 
@@ -186,6 +202,7 @@ class OpenAICompatEngine:
             engine_token_ids=[],
             usage_prompt_tokens_api=int(api_prompt) if api_prompt is not None else None,
             usage_completion_tokens_api=int(api_completion) if api_completion is not None else None,
+            provider_cached_tokens=provider_cached_tokens,
             server_processing_ms=server_processing_ms,
             raw_response={"usage": usage, "provider_notes": PROVIDER_FIELD_NOTES.get(self.provider, {})},
             audit_notes=notes,

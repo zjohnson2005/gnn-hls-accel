@@ -12,6 +12,10 @@ class SpendCeilingExceeded(RuntimeError):
     """Raised when projected or running spend would exceed budget_lock hard ceiling."""
 
 
+class SpendLockNotAuthorized(RuntimeError):
+    """Raised when a campaign lock exists but is not authorized for live use."""
+
+
 @dataclass
 class BudgetLock:
     path: Path
@@ -41,6 +45,28 @@ class BudgetLock:
             if c["cell_id"] == cell_id:
                 return c
         raise KeyError(f"cell {cell_id} not in budget_lock")
+
+    def assert_live_authorized(
+        self,
+        *,
+        expected_campaign: str | None = None,
+        payload_manifest_sha256: str | None = None,
+    ) -> None:
+        if not bool(self.raw.get("live_authorized")):
+            raise SpendLockNotAuthorized(
+                f"{self.path}: budget is locked but live_authorized is false"
+            )
+        if expected_campaign and self.raw.get("campaign") != expected_campaign:
+            raise SpendLockNotAuthorized(
+                f"{self.path}: campaign {self.raw.get('campaign')!r} does not match "
+                f"{expected_campaign!r}"
+            )
+        if payload_manifest_sha256 is not None:
+            observed = str(self.raw.get("payload_manifest_sha256") or "")
+            if observed != payload_manifest_sha256:
+                raise SpendLockNotAuthorized(
+                    f"{self.path}: payload manifest hash mismatch"
+                )
 
     def estimate_run_usd(
         self,

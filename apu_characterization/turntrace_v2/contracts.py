@@ -1,4 +1,4 @@
-"""Frozen protocol contracts for TurnTrace v2 (rev. B)."""
+"""Frozen protocol contracts for TurnTrace v2 (rev. C)."""
 
 from __future__ import annotations
 
@@ -7,8 +7,10 @@ import json
 from pathlib import Path
 from typing import Any, Mapping
 
-PROTOCOL_VERSION = "turntrace_v2.0"
+PROTOCOL_VERSION = "turntrace_v2.1"
 PROTOCOL_PATH = Path(__file__).with_name("protocol_turntrace_v2.json")
+PROTOCOL_LOCK_PATH = Path(__file__).with_name("protocol_turntrace_v2.lock.json")
+PAYLOAD_MANIFEST_PATH = Path(__file__).with_name("rev_c_payload_manifest.json")
 TOOL_MANIFEST_PATH = Path(__file__).with_name("tool_manifest.json")
 
 CacheState = str  # cold | warm-hit | warm-partial | disabled
@@ -22,6 +24,7 @@ CACHE_MODES = ("engine-default", "cache-disabled", "ideal-cache-simulated")
 CACHE_STATES = ("cold", "warm-hit", "warm-partial", "disabled")
 REASONING_MODES = ("on", "off", "n/a")
 TOOL_CLASSES = ("read_only", "state_mutating", "none")
+ARMS = ("baseline_naive", "orchestration_optimized")
 AUDIT_FLAGS = (
     "residual_exceeds_budget",
     "profile_drift",
@@ -33,6 +36,12 @@ AUDIT_FLAGS = (
     "attribution_out_of_domain",
     "token_accounting_anomaly",
     "implausible_cold_sample",
+    "pair_context_divergence",
+    "append_discipline_violated",
+    "quality_parity_failed",
+    "provider_cache_reconciliation",
+    "pair_missing",
+    "cache_truth_unverified",
 )
 
 FORBIDDEN_CLAIM_FRAGMENTS = (
@@ -64,7 +73,51 @@ def load_protocol(path: Path = PROTOCOL_PATH) -> dict[str, Any]:
 
 
 def protocol_sha256(path: Path = PROTOCOL_PATH) -> str:
-    return sha256_json(load_protocol(path))
+    protocol = load_protocol(path)
+    lock = dict(protocol.get("protocol_lock") or {})
+    lock.pop("sha256", None)
+    protocol["protocol_lock"] = lock
+    return sha256_json(protocol)
+
+
+def validate_protocol_lock(
+    protocol_path: Path = PROTOCOL_PATH,
+    lock_path: Path = PROTOCOL_LOCK_PATH,
+) -> list[str]:
+    errors: list[str] = []
+    if not Path(lock_path).is_file():
+        return [f"missing protocol lock artifact: {lock_path}"]
+    protocol = load_protocol(protocol_path)
+    lock = json.loads(Path(lock_path).read_text(encoding="utf-8"))
+    observed = protocol_sha256(protocol_path)
+    embedded = str((protocol.get("protocol_lock") or {}).get("sha256") or "")
+    locked = str(lock.get("protocol_sha256") or "")
+    if observed != embedded:
+        errors.append(f"embedded protocol hash mismatch: {embedded} != {observed}")
+    if observed != locked:
+        errors.append(f"lock artifact hash mismatch: {locked} != {observed}")
+    if lock.get("protocol_version") != PROTOCOL_VERSION:
+        errors.append("lock artifact protocol_version mismatch")
+    payload_path = Path(lock_path).with_name(
+        str(lock.get("payload_manifest_path") or PAYLOAD_MANIFEST_PATH.name)
+    )
+    if not payload_path.is_file():
+        errors.append(f"missing payload manifest: {payload_path}")
+    else:
+        payload = json.loads(payload_path.read_text(encoding="utf-8"))
+        embedded_payload_hash = str(payload.pop("manifest_sha256", ""))
+        observed_payload_hash = sha256_json(payload)
+        locked_payload_hash = str(lock.get("payload_manifest_sha256") or "")
+        if observed_payload_hash != embedded_payload_hash:
+            errors.append("payload manifest embedded hash mismatch")
+        if observed_payload_hash != locked_payload_hash:
+            errors.append("payload manifest lock hash mismatch")
+        from apu_characterization.turntrace_v2.workload.rev_c_suite import (
+            validate_frozen_payload_manifest,
+        )
+
+        errors.extend(validate_frozen_payload_manifest(payload_path))
+    return errors
 
 
 def load_tool_manifest(path: Path = TOOL_MANIFEST_PATH) -> dict[str, Any]:
@@ -76,10 +129,10 @@ def validate_protocol(protocol: Mapping[str, Any] | None = None) -> list[str]:
     errors: list[str] = []
     if protocol.get("protocol_version") != PROTOCOL_VERSION:
         errors.append("protocol_version mismatch")
-    if protocol.get("validity_class") != "turn_decomposition_and_layer1_handoff":
+    if protocol.get("validity_class") != "orchestration_significance_characterization":
         errors.append("validity_class mismatch")
-    if protocol.get("revision") != "B":
-        errors.append("revision must be B")
+    if protocol.get("revision") != "C":
+        errors.append("revision must be C")
     locked = protocol.get("locked_decisions") or {}
     if locked.get("step_unit") != "one_model_call_equals_one_step":
         errors.append("step_unit must be one_model_call_equals_one_step")
@@ -89,12 +142,21 @@ def validate_protocol(protocol: Mapping[str, Any] | None = None) -> list[str]:
         "step_features",
         "pred_t_prefill_ms",
         "reasoning_mode",
+        "arm",
+        "interventions_active",
+        "pair_id",
+        "provider_cached_tokens",
+        "structurally_redundant_tokens",
+        "actually_recomputed_tokens",
     ):
         if field not in required_call:
             errors.append(f"CallRecord missing required field {field}")
     traj = set(protocol.get("trajectory_record_required_fields") or [])
     if "replay_bundle_path" not in traj:
         errors.append("TrajectoryRecord must require replay_bundle_path")
+    for field in ("arm", "interventions_active", "pair_id", "usd_model_cost", "joules_total"):
+        if field not in traj:
+            errors.append(f"TrajectoryRecord missing required field {field}")
     replay = protocol.get("replay_bundle") or {}
     if not replay.get("mandatory_for_headline"):
         errors.append("replay_bundle.mandatory_for_headline must be true")
@@ -113,4 +175,5 @@ def validate_protocol(protocol: Mapping[str, Any] | None = None) -> list[str]:
     for dep in DEPLOYMENT_IDS:
         if dep not in (protocol.get("deployments") or {}):
             errors.append(f"missing deployment {dep}")
+    errors.extend(validate_protocol_lock())
     return errors

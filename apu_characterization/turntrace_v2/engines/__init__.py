@@ -31,6 +31,7 @@ class CompletionResult:
     engine_token_ids: list[int] = field(default_factory=list)
     usage_prompt_tokens_api: int | None = None
     usage_completion_tokens_api: int | None = None
+    provider_cached_tokens: int = 0
     server_processing_ms: float | None = None
     raw_response: dict[str, Any] = field(default_factory=dict)
     audit_notes: list[str] = field(default_factory=list)

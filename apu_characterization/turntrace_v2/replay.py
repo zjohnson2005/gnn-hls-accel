@@ -41,6 +41,7 @@ class TurnBundle:
     reasoning_mode: str
     env_snapshot_ref: EnvSnapshotRef
     tokenizer_id: str
+    context_byte_sha256: str | None = None
     # Delta storage: if set, assembled_context is reconstructed from prior + delta.
     context_delta_tokens: list[str] | None = None
     context_full_tokens: list[str] | None = None
@@ -56,6 +57,9 @@ class TurnBundle:
             "reasoning_mode": self.reasoning_mode,
             "env_snapshot_ref": self.env_snapshot_ref.to_dict(),
             "tokenizer_id": self.tokenizer_id,
+            "context_byte_sha256": sha256_bytes(
+                canonical_json_bytes(self.assembled_context)
+            ),
             "context_delta_tokens": self.context_delta_tokens,
             "context_full_tokens": self.context_full_tokens,
         }
@@ -80,6 +84,8 @@ class TurnBundle:
                 dirty_patch=env.get("dirty_patch"),
             ),
             tokenizer_id=str(value["tokenizer_id"]),
+            context_byte_sha256=value.get("context_byte_sha256")
+            or sha256_bytes(canonical_json_bytes(value["assembled_context"])),
             context_delta_tokens=list(value["context_delta_tokens"])
             if value.get("context_delta_tokens") is not None
             else None,
@@ -268,6 +274,7 @@ def estimate_bundle_bytes(bundle: ReplayBundle, *, use_deltas: bool = True) -> d
                 reasoning_mode=turn.reasoning_mode,
                 env_snapshot_ref=turn.env_snapshot_ref,
                 tokenizer_id=turn.tokenizer_id,
+                context_byte_sha256=turn.context_byte_sha256,
                 context_delta_tokens=delta,
                 context_full_tokens=None,
             )

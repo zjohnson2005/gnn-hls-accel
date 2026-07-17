@@ -88,6 +88,17 @@ def test_headline_eligible_filters() -> None:
     assert headline_eligible([ok, bad]) == [ok]
 
 
+def test_warm_cache_claim_fails_closed_on_nonpositive_profile() -> None:
+    from apu_characterization.turntrace_v2.audit import check_cache_state
+
+    record = _record(
+        cache_state="warm-hit",
+        prefix_hit_tokens=80,
+        t_prefill_ms=0.0,
+    )
+    assert check_cache_state(record, lambda _n: 0.0) == "cache_state_unverified"
+
+
 def test_attribution_out_of_domain_fires_below_grid_min() -> None:
     """F1: n below fitted floor must flag — the exact silent-extrapolation failure mode."""
     record = _record(

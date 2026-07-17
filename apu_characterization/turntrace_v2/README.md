@@ -1,18 +1,31 @@
-# TurnTrace v2 (rev. B)
+# TurnTrace v2 (rev. C)
 
-Dual-purpose arm: (1) decompose turns into `T_orch + T_prefill + T_decode + T_network` and attribute redundant prefill as orchestration-induced model time; (2) produce a replayable, success-labeled, step-typed corpus for Layer 1 swapped-trajectory execution.
+TurnTrace v2 measures how much of an agent's model-side cost the orchestration
+layer *causes* and tests that claim causally with a paired
+`baseline_naive`/`orchestration_optimized` intervention. Replay bundles and
+task-success labels remain mandatory audit products; downstream routing and
+hardware studies are not dependencies of this characterization.
 
 ## Status
 
-Pre-hardware workstream in progress. Core pipeline + P1 CPU dry-run + P4 D4 freeze + P5 runbook are in-tree.
+Rev. B's completed work is retained. Rev. C protocol freeze is the governing
+next cycle; no rev. C live run is permitted before its CPU wall budget and
+cloud spend lock are recorded.
 
 | Phase | Status |
 |-------|--------|
-| P1 CPU dry-run | Pass (provisional corpus under `out/turntrace_v2/cpu_dryrun/`) |
-| P2 Cloud C1/C2 | Machinery ready (`engines/openai_compat.py`, `network_probe.py`); collection blocked on API key + budget lock in `PROTOCOL_NOTES.md` |
-| P3 Harness + SWE scaffold | `raw_python` + `langgraph` adapters + `swebench_lite` fixture scaffold |
-| P4 D4 analysis | Frozen against ≥3 synthetic configs |
-| P5 Box runbook | `runbook-box-arrival.md` |
+| P1 CPU dry-run | **Done**; tagged `v2-cpu-dryrun-pass`; provisional forever |
+| P2 Cloud C1/C2 | **Done**; live corpus on disk under `out/turntrace_v2/cloud_full/` |
+| P3 Harness subset | **FINAL**: `raw_python` + `langgraph` |
+| P4 D4 analysis | **Done**; synthetic freeze against ≥3 configs |
+| D5 taxonomy | **Done**; idempotent report under `out/turntrace_v2/d5/` |
+| Track C cloud prefill semantics | **Closed**; methodology recorded in exported `SCHEMA.md` |
+| Rev. B D2 figures | **Closed as superseded** by rev. C C-D2/C-D3 figures; never built |
+| Rev. C C-P0 | **Done**; protocol and payload manifests SHA-256 locked |
+| Rev. C C-P1 | **Done**; paired arm flags, five-class suite, schema/gates, economics, exchange derivation, mock end-to-end path, and `make turntrace-v2-gate` green — no quotable A/B numbers yet |
+| Rev. C C-P2 | **Blocked** on new ≥16K CPU model calibration + G-BUDGET-WALL artifact; no long run launched |
+| Rev. C C-P3 | Budget locked conservatively; `live_authorized=false` pending price recheck and smoke readiness |
+| Box | Dormant; `runbook-box-arrival.md` now prioritizes the rev. C full-context A/B suite |
 
 ## Gate
 
@@ -26,21 +39,17 @@ $env:TTV2_REQUIRE_CPU_DRYRUN=1; .\apu_characterization\run_turntrace_v2_gate.ps1
 
 Tag when committing the dry-run-pass state: `git tag v2-cpu-dryrun-pass`
 
-## Locked decisions (see `protocol_turntrace_v2.json`)
+## Rev. C locked decisions (see `protocol_turntrace_v2.json`)
 
 - **Step unit:** one model call = one step; parallel tools after that call are `fanout_siblings`, not separate steps.
 - **Retemplating:** LCP failures count as new tokens; `retemplated_tokens` is a first-class CallRecord field.
 - **Tool replay:** live for deterministic local tools; archived for network/flaky; mode recorded per swapped run.
-
-## Gate
-
-```bash
-make turntrace-v2-gate
-# or
-bash apu_characterization/run_turntrace_v2_gate.sh
-# Windows:
-.\apu_characterization\run_turntrace_v2_gate.ps1
-```
+- **Arms:** paired `baseline_naive` versus software-only
+  `orchestration_optimized`; interventions are toggleable, not harness forks.
+- **Claim form:** recovery, parity, and software exchange-rate bands across
+  seeds; CPU pre-box cells remain provisional forever.
+- **Layer 1:** incidental byproduct only; characterization requirements win
+  every design conflict.
 
 ## Layout
 
@@ -55,7 +64,15 @@ bash apu_characterization/run_turntrace_v2_gate.sh
 | `derive.py` | raw event stream → CallRecords (re-runnable) |
 | `export.py` | JSONL (+ parquet if pyarrow), SCHEMA.md |
 | `runner.py` | `--synthetic-debug` smoke |
+| `arms.py` | rev C arm/intervention configuration (flags, not forks) |
+| `workload/rev_c_suite.py` | five-class deterministic real-payload suite + payload lock |
+| `collect_rev_c.py` | paired mock/local collector; live path remains gated |
+| `economics.py` | provider three-way split and published-rate model cost |
+| `exchange.py` | offline paired recovery/exchange-rate bands |
+| `wall_budget.py` | pre-launch f(n)-based CPU runtime projection |
 
 ## Non-goals
 
-No routing policy, no Layer 1 swap sweeps at scale, no cache remediation, no custom models. See protocol `non_goals`.
+No routing policy, no Layer 1 swap sweeps at scale, no APU-advantage claim
+from Arm B, no losslessness/generalization claim beyond the tested suite, and
+no CPU-cell headline. See protocol `non_goals` and `blocked_claims`.

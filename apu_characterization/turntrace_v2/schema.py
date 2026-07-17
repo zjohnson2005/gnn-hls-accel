@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Literal, Mapping, Sequence
 
 from apu_characterization.turntrace_v2.contracts import (
+    ARMS,
     CACHE_STATES,
     REASONING_MODES,
     TOOL_CLASSES,
@@ -15,6 +16,7 @@ from apu_characterization.turntrace_v2.contracts import (
 ToolClass = Literal["read_only", "state_mutating", "none"]
 CacheState = Literal["cold", "warm-hit", "warm-partial", "disabled"]
 ReasoningMode = Literal["on", "off", "n/a"]
+Arm = Literal["baseline_naive", "orchestration_optimized"]
 
 
 @dataclass
@@ -95,6 +97,13 @@ class CallRecord:
     engine_version: str
     wall_clock_start: float
     wall_clock_end: float
+    arm: Arm = "baseline_naive"
+    interventions_active: list[str] = field(default_factory=list)
+    pair_id: str = ""
+    t_orch_overhead_b_ms: float = 0.0
+    provider_cached_tokens: int = 0
+    structurally_redundant_tokens: int = 0
+    actually_recomputed_tokens: int = 0
     audit_flags: list[str] = field(default_factory=list)
 
     def validate(self) -> None:
@@ -111,6 +120,8 @@ class CallRecord:
             raise ValueError(f"invalid pred_cache_state: {self.pred_cache_state}")
         if self.reasoning_mode not in REASONING_MODES:
             raise ValueError(f"invalid reasoning_mode: {self.reasoning_mode}")
+        if self.arm not in ARMS:
+            raise ValueError(f"invalid arm: {self.arm}")
         if self.engine_tokens_in < 0 or self.tokens_out < 0 or self.requested_tokens_in < 0:
             raise ValueError("token counts must be non-negative")
         if self.context_tokens_in != self.engine_tokens_in:
@@ -121,6 +132,20 @@ class CallRecord:
             raise ValueError("turn_index must be >= 0")
         if self.prefix_hit_tokens > self.engine_tokens_in:
             raise ValueError("prefix_hit_tokens cannot exceed engine_tokens_in")
+        for name, value in (
+            ("provider_cached_tokens", self.provider_cached_tokens),
+            ("structurally_redundant_tokens", self.structurally_redundant_tokens),
+            ("actually_recomputed_tokens", self.actually_recomputed_tokens),
+        ):
+            if value < 0:
+                raise ValueError(f"{name} must be non-negative")
+        if self.structurally_redundant_tokens > self.engine_tokens_in:
+            raise ValueError("structurally_redundant_tokens cannot exceed engine_tokens_in")
+        expected_recomputed = max(
+            0, self.structurally_redundant_tokens - self.provider_cached_tokens
+        )
+        if self.actually_recomputed_tokens != expected_recomputed:
+            raise ValueError("actually_recomputed_tokens mismatch")
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
@@ -151,6 +176,11 @@ class TrajectoryRecord:
     total_cost_usd: float
     total_energy_j: float | None
     replay_bundle_path: str | None
+    arm: Arm = "baseline_naive"
+    interventions_active: list[str] = field(default_factory=list)
+    pair_id: str = ""
+    usd_model_cost: float = 0.0
+    joules_total: float | None = None
 
     def validate(self, *, headline: bool = False) -> None:
         protocol = load_protocol()
@@ -163,13 +193,20 @@ class TrajectoryRecord:
             raise ValueError("headline TrajectoryRecord requires non-null replay_bundle_path")
         if self.n_turns < 0:
             raise ValueError("n_turns must be >= 0")
+        if self.arm not in ARMS:
+            raise ValueError(f"invalid arm: {self.arm}")
+        if self.usd_model_cost < 0:
+            raise ValueError("usd_model_cost must be non-negative")
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
     @classmethod
     def from_dict(cls, value: Mapping[str, Any]) -> "TrajectoryRecord":
-        record = cls(**dict(value))  # type: ignore[arg-type]
+        data = dict(value)
+        data.setdefault("usd_model_cost", float(data.get("total_cost_usd") or 0.0))
+        data.setdefault("joules_total", data.get("total_energy_j"))
+        record = cls(**data)  # type: ignore[arg-type]
         record.validate()
         return record
 

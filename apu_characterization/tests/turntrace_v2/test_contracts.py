@@ -11,7 +11,8 @@ from apu_characterization.turntrace_v2.contracts import (
 def test_protocol_loads_and_validates() -> None:
     protocol = load_protocol()
     assert protocol["protocol_version"] == PROTOCOL_VERSION
-    assert protocol["revision"] == "B"
+    assert protocol["revision"] == "C"
+    assert protocol["validity_class"] == "orchestration_significance_characterization"
     assert not validate_protocol(protocol)
 
 

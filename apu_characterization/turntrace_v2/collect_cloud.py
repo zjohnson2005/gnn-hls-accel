@@ -59,14 +59,29 @@ def _mock_engine(deployment_id: str, model_id: str) -> Any:
         def __init__(self) -> None:
             self.identity = identity
 
-        def complete(self, prompt, **kwargs):
+        def complete(
+            self,
+            prompt,
+            *,
+            max_tokens=8,
+            temperature=0.0,
+            seed=0,
+            use_cache=False,
+            reset_cache=False,
+        ):
+            del temperature, seed
             text = (
                 prompt
                 if isinstance(prompt, str)
                 else " ".join(str(m.get("content", "")) for m in prompt)
             )
-            max_tokens = int(kwargs.get("max_tokens") or 8)
-            r = mock.complete(text or "x", max_tokens=max_tokens)
+            max_tokens = int(max_tokens or 8)
+            r = mock.complete(
+                text or "x",
+                max_tokens=max_tokens,
+                use_cache=bool(use_cache),
+                reset_cache=bool(reset_cache),
+            )
             return CompletionResult(
                 text=r["text"],
                 engine_tokens_in=r["context_tokens_in"],
@@ -233,6 +248,9 @@ def collect_cell(
         from apu_characterization.turntrace_v2.spend_guard import BudgetLock
 
         lock = BudgetLock.load(budget_lock_path or DEFAULT_BUDGET_LOCK)
+        lock.assert_live_authorized(
+            expected_campaign="turntrace_rev_b_p2_historical"
+        )
         planned = lock.estimate_run_usd(
             cell_id=cell_id,
             n_trajectories=n_trajectories,
@@ -432,9 +450,12 @@ def main(argv: list[str] | None = None) -> int:
             allow_spend_override=bool(args.allow_spend_override),
         )
     except Exception as exc:
-        from apu_characterization.turntrace_v2.spend_guard import SpendCeilingExceeded
+        from apu_characterization.turntrace_v2.spend_guard import (
+            SpendCeilingExceeded,
+            SpendLockNotAuthorized,
+        )
 
-        if isinstance(exc, SpendCeilingExceeded):
+        if isinstance(exc, (SpendCeilingExceeded, SpendLockNotAuthorized)):
             print(json.dumps({"ok": False, "error": "spend_ceiling", "message": str(exc)}, indent=2))
             return 2
         raise
