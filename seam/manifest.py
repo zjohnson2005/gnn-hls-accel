@@ -258,6 +258,7 @@ def build_manifest(
             "on_battery": None,
             "battery_pct_start": None,
             "battery_pct_end": None,
+            "charging": None,
             "power_plan": None,
             "display_brightness": None,
             "defender_realtime": None,

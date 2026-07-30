@@ -15,6 +15,7 @@ import pytest
 from seam.errors import PinnedConditionError
 from seam.powerstate import (
     PowerState,
+    _charging_from_battery_flag,
     assert_pinned_for_committed_result,
     capture_power_state,
     check_pinned_conditions,
@@ -31,6 +32,7 @@ def _state(**overrides: Any) -> PowerState:
     fields: dict[str, Any] = {
         "on_battery": False,
         "battery_pct": 100.0,
+        "charging": False,
         "battery_saver": False,
         "power_plan_name": "Best Performance",
         "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
@@ -52,6 +54,38 @@ def test_manifest_block_carries_the_measured_fields() -> None:
     assert block["battery_pct_start"] == 31.0
     assert block["battery_pct_end"] == 30.0
     assert "ec87a53a-19a6-4f4a-980f-ab27cc929b25" in block["power_plan"]
+
+
+def test_manifest_block_records_the_charging_state() -> None:
+    """An AC session under bulk charge is not the same condition as one at full charge.
+
+    Charging consumes adapter headroom and adds chassis heat, both of which depress turbo, so a
+    manifest that records only ``on_battery`` cannot distinguish the two.
+    """
+    charging = manifest_power_state(_state(battery_pct=54.0, charging=True))
+    topped_up = manifest_power_state(_state(battery_pct=100.0, charging=False))
+
+    assert charging["charging"] is True
+    assert charging["battery_pct_start"] == 54.0
+    assert topped_up["charging"] is False
+    assert charging["on_battery"] == topped_up["on_battery"] is False
+
+
+@pytest.mark.parametrize(
+    ("battery_flag", "expected"),
+    [
+        (0x8, True),  # charging
+        (0x9, True),  # charging + high
+        (0x1, False),  # high, not charging
+        (0x0, False),  # neither
+        (128, False),  # no system battery
+        (255, None),  # unknown — an explicit null, not a guess
+    ],
+)
+def test_charging_is_decoded_from_the_battery_flag(
+    battery_flag: int, expected: bool | None
+) -> None:
+    assert _charging_from_battery_flag(battery_flag) is expected
 
 
 def test_manifest_block_leaves_unmeasured_quiescence_controls_null() -> None:

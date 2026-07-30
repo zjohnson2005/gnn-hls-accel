@@ -105,6 +105,7 @@ def test_schema_requires_every_field_named_in_the_spec() -> None:
                 "on_battery",
                 "battery_pct_start",
                 "battery_pct_end",
+                "charging",
                 "power_plan",
                 "display_brightness",
                 "defender_realtime",

@@ -951,3 +951,76 @@ was absent.
 
 **Remaining M1 blocker:** AC-power topology verification under pinned conditions (AF-005 /
 prior entry). Physical reconnect required.
+
+---
+
+## 2026-07-30 — PRE-REGISTERED PREDICTION for the AC-power topology verification
+
+**Class:** pre-registration
+**Milestone:** M1 — attempting to close
+**Status:** recorded **BEFORE** any AC measurement was taken. This entry is committed in its own
+commit, ahead of the runs it predicts, so the prediction cannot have been written to fit a number
+that was already known. A directional claim recorded after seeing the result is worthless.
+**Comparison baseline:** `run_id 0d7c607b-b80b-4563-a5cc-00fa34d51fd8` — separation **1.30883×**,
+CV fast 3.32%, CV slow 0.24%, fast {0,1,2,3} / slow {4,5,6,7}, `EfficiencyClass` ordering matched.
+That session was on battery and is therefore INVALID as a committable platform result, but it is
+citable, and it is the number this prediction is stated against.
+
+### Session conditions declared in advance
+
+AC reconnected. Reported by the owner before this work began: `powercfg /getactivescheme` =
+`ec87a53a-19a6-4f4a-980f-ab27cc929b25` (Best Performance, the pinned plan), `Win32_Battery`
+`BatteryStatus = 2` (AC connected), `EstimatedChargeRemaining = 54`. So the runs below are taken on
+AC **while the battery is taking bulk charge at roughly half capacity.**
+
+### Predictions
+
+1. **The AC separation ratio exceeds 1.30883×.** Mechanism: greater power and thermal headroom on
+   AC lets the Cougar Cove P-cores hold higher turbo residency, while the Darkmont LP-E cores are
+   nearer their ceiling already and gain less. The gap the ratio measures should therefore widen.
+2. **Cluster membership is unchanged:** fast {0,1,2,3}, slow {4,5,6,7}.
+3. `EfficiencyClass` ordering matches the measured split in the documented `higher_is_faster`
+   direction, as it did on battery.
+
+### Charge-state confound, declared before measuring
+
+Charging is a **load**, not a neutral background condition. It draws adapter headroom and adds
+chassis heat, and both depress P-core turbo more than LP-E turbo, because the P-cores are the cores
+with turbo headroom left to lose. Bulk charge at ~54% is close to the worst case for this, since
+charge current is highest well below the constant-voltage knee.
+
+Therefore **a pass under charging load is conservative evidence, not weak evidence.** If the
+separation clears 1.30883× while the charger is pushing current into a half-empty battery, it will
+clear it at full charge too. The confound can only work against the prediction.
+
+### Stop rule, amended for the confound (pre-registered)
+
+- Ratio **> 1.30883×** on every AC run, with the other §4 criteria holding → prediction HELD,
+  mapping committable.
+- Ratio **below 1.30883×** at ~54% charge → **INCONCLUSIVE, not a failed prediction.** Log both
+  attempts, charge above 85%, re-run twice, and only then evaluate against the prediction. Do not
+  investigate hardware or pinning first, and do not touch a threshold.
+- Cluster membership differing from {0,1,2,3} / {4,5,6,7} → **STOP.** That is not a confound. It
+  would contradict both the battery session and the committed platform provenance, and must be
+  understood before anything is written to config.
+- Every run is logged whatever it returns. No run is discarded for being inconvenient.
+
+### Run plan, pre-registered
+
+Two measurement runs of `python -m seam.topology verify` **without** `--write`, evaluated against
+the criteria above; only then a third run with `--write` to persist, which is held to the *same*
+criteria. Splitting measurement from persistence this way keeps the evaluation from being able to
+read a config that the first run already mutated, and it means three AC runs must clear the
+prediction rather than two. `--allow-dirty` is required and recorded: the repository carries
+uncommitted work belonging to the unrelated projects (`apu_characterization/`, `censor/`,
+`orchestration_engine/`), while the SEAM paths are clean.
+
+### Schema extension committed with this prediction (precondition, not a result)
+
+`power_state` recorded `battery_pct_start` and `battery_pct_end` but had **no charging field**, so
+the confound above would not have been recorded in the artifact — only in this log. Added
+`power_state.charging`, decoded from `SYSTEM_POWER_STATUS.BatteryFlag` bit 3, with an unknown flag
+recorded as an explicit `null` rather than `false`. Schema, emitter, and tests changed together;
+suite 178 → 185 tests. Done **before** measuring, so every run below records its own charge state.
+`spec_version` stays `"1.0"`: the field is additive and every manifest valid under the previous
+schema remains valid.

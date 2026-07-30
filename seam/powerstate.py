@@ -49,6 +49,10 @@ _AC_ONLINE: Final = 1
 _BATTERY_PCT_UNKNOWN: Final = 255
 #: ``SYSTEM_POWER_STATUS.SystemStatusFlag`` bit 0: battery saver is engaged.
 _BATTERY_SAVER_ON: Final = 0x1
+#: ``SYSTEM_POWER_STATUS.BatteryFlag`` bit 3: the battery is charging.
+_BATTERY_FLAG_CHARGING: Final = 0x8
+#: ``SYSTEM_POWER_STATUS.BatteryFlag`` sentinel for "unknown".
+_BATTERY_FLAG_UNKNOWN: Final = 255
 
 _ACTIVE_SCHEME_RE: Final = re.compile(
     r"GUID:\s*([0-9a-fA-F-]{36})\s*\((?P<name>.+?)\)\s*$", re.MULTILINE
@@ -79,6 +83,11 @@ class PowerState:
     #: True on battery, False on AC, None if Windows reports ``ACLineStatus=255`` (unknown).
     on_battery: bool | None
     battery_pct: float | None
+    #: True while the battery is taking bulk charge. Charging is a *load*: it consumes adapter
+    #: headroom and adds chassis heat, both of which depress turbo. A measurement on AC at 50% is
+    #: therefore taken under different conditions than the same measurement at 100%, and the
+    #: difference is not visible from ``on_battery`` alone.
+    charging: bool | None
     #: True if Windows battery saver is engaged. Battery saver clamps turbo, so a measurement taken
     #: under it is not comparable with one taken without it.
     battery_saver: bool | None
@@ -90,12 +99,33 @@ class PowerState:
     overlay_guid: str | None
 
 
-def _capture_system_power_status() -> tuple[bool | None, float | None, bool | None]:
+def _charging_from_battery_flag(battery_flag: int) -> bool | None:
+    """Decode ``SYSTEM_POWER_STATUS.BatteryFlag`` into a charging state.
+
+    Split out from the Win32 call so the decoding is unit-testable on any OS.
+
+    Returns:
+        True while charging, False when not, None when Windows reports the flag as unknown. Unknown
+        becomes an explicit null rather than False, because "not observed" and "observed not
+        charging" are different claims about the session.
+    """
+    if battery_flag == _BATTERY_FLAG_UNKNOWN:
+        log_event(
+            "powerstate.battery_flag_unknown",
+            severity="warning",
+            message="Windows reports BatteryFlag as unknown; recording null charging state",
+            battery_flag=battery_flag,
+        )
+        return None
+    return bool(battery_flag & _BATTERY_FLAG_CHARGING)
+
+
+def _capture_system_power_status() -> tuple[bool | None, float | None, bool | None, bool | None]:
     """Read ``GetSystemPowerStatus``.
 
     Returns:
-        ``(on_battery, battery_pct, battery_saver)``, any of which may be None if Windows reports
-        the value as unknown or the call fails.
+        ``(on_battery, battery_pct, charging, battery_saver)``, any of which may be None if Windows
+        reports the value as unknown or the call fails.
     """
     if sys.platform != "win32":
         log_event(
@@ -103,7 +133,7 @@ def _capture_system_power_status() -> tuple[bool | None, float | None, bool | No
             severity="warning",
             message=f"GetSystemPowerStatus is Windows-only; running on {sys.platform!r}",
         )
-        return None, None, None
+        return None, None, None, None
 
     status = _SystemPowerStatus()
     kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)  # type: ignore[attr-defined]
@@ -114,7 +144,7 @@ def _capture_system_power_status() -> tuple[bool | None, float | None, bool | No
             message="GetSystemPowerStatus failed; recording null AC and battery fields",
             win32_error=ctypes.get_last_error(),
         )
-        return None, None, None
+        return None, None, None, None
 
     if status.ACLineStatus == _AC_ONLINE:
         on_battery: bool | None = False
@@ -134,8 +164,10 @@ def _capture_system_power_status() -> tuple[bool | None, float | None, bool | No
         if status.BatteryLifePercent == _BATTERY_PCT_UNKNOWN
         else float(status.BatteryLifePercent)
     )
+
+    charging = _charging_from_battery_flag(int(status.BatteryFlag))
     battery_saver = bool(status.SystemStatusFlag & _BATTERY_SAVER_ON)
-    return on_battery, battery_pct, battery_saver
+    return on_battery, battery_pct, charging, battery_saver
 
 
 def _capture_active_scheme() -> tuple[str | None, str | None]:
@@ -229,11 +261,12 @@ def capture_power_state() -> PowerState:
     :func:`seam.manifest.is_elevated` is, so an unreadable field becomes an explicit null plus a
     logged warning rather than a failed run.
     """
-    on_battery, battery_pct, battery_saver = _capture_system_power_status()
+    on_battery, battery_pct, charging, battery_saver = _capture_system_power_status()
     plan_name, plan_guid = _capture_active_scheme()
     state = PowerState(
         on_battery=on_battery,
         battery_pct=battery_pct,
+        charging=charging,
         battery_saver=battery_saver,
         power_plan_name=plan_name,
         power_plan_guid=plan_guid,
@@ -244,11 +277,13 @@ def capture_power_state() -> PowerState:
         "powerstate.captured",
         message=(
             f"AC={'battery' if state.on_battery else 'online'} "
-            f"battery={state.battery_pct}% saver={state.battery_saver} "
+            f"battery={state.battery_pct}% charging={state.charging} "
+            f"saver={state.battery_saver} "
             f"plan={state.power_plan_name!r} overlay={state.overlay_guid}"
         ),
         on_battery=state.on_battery,
         battery_pct=state.battery_pct,
+        charging=state.charging,
         battery_saver=state.battery_saver,
         power_plan_name=state.power_plan_name,
         power_plan_guid=state.power_plan_guid,
@@ -262,6 +297,11 @@ def manifest_power_state(
 ) -> dict[str, Any]:
     """Render a :class:`PowerState` into the manifest ``power_state`` block.
 
+    ``charging`` is recorded alongside the two battery-percentage endpoints because charging draws
+    adapter headroom and adds chassis heat, so an AC session under bulk charge is a different
+    condition from one at full charge. Without it, ``on_battery: false`` reads as a single condition
+    when it is at least two.
+
     ``display_brightness``, ``defender_realtime``, and ``windows_update_paused`` stay null: they are
     spec §3.2 quiescence controls that nothing yet measures, and a plausible value would be
     fabricated provenance (AM-006's reasoning applied to a different block).
@@ -270,6 +310,7 @@ def manifest_power_state(
         "on_battery": state.on_battery,
         "battery_pct_start": state.battery_pct,
         "battery_pct_end": battery_pct_end,
+        "charging": state.charging,
         "power_plan": (
             None
             if state.power_plan_guid is None
