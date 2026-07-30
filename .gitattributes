@@ -1,0 +1,27 @@
+# Line-ending policy for SEAM provenance artifacts.
+#
+# This repository has core.autocrlf=true, which normalises text files to LF in the index and back to
+# CRLF on checkout. For most source that is invisible and desirable. For a provenance artifact it is
+# not: seam/manifest.py hashes these files from bytes on disk at emit time (blueprint AF-002), so a
+# checkout that rewrites their line endings changes their SHA-256 and silently breaks every manifest
+# that cited them. A hash that depends on which OS performed the checkout is not a provenance hash.
+#
+# `-text` disables end-of-line conversion in both directions, so the bytes committed are the bytes
+# checked out on every platform. Scoped to SEAM provenance paths only: nothing here changes how the
+# pre-existing apu_characterization/, censor/, or orchestration_engine/ projects are handled.
+
+# The five committed probe artifacts (UTF-16LE, produced by PowerShell 5.1 output redirection).
+# Git already classifies UTF-16 as binary, so this is belt-and-braces rather than a behaviour change.
+analysis/_c1_*.txt          -text
+
+# Provenance documents named in configs/platforms/aipc-c1.yaml provenance_artifacts.
+analysis/aipc-c1/MACHINE.md -text
+analysis/aipc-c1/TOOLING.md -text
+
+# AF-002 provenance re-captures. Written LF by analysis/aipc-c1/scripts/reprobe_af002.ps1 and cited
+# by SHA-256 in each capture's DIFF_vs_committed.md.
+analysis/aipc-c1/reprobe_af002_*/** -text
+
+# Sealed run data. raw/<run_id>/ is write-once and covered by a tree hash recorded in .sealed
+# (spec section 9.1); an end-of-line rewrite on checkout would fail verify_sealed().
+raw/**                      -text

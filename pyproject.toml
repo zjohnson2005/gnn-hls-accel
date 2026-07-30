@@ -1,0 +1,95 @@
+# Tooling configuration for the SEAM harness (spec §8).
+#
+# SCOPE NOTE: this repository also contains the unrelated apu_characterization/, censor/, and
+# orchestration_engine/ projects, which predate SEAM and have their own conventions. Every section
+# below is therefore scoped to `seam/` and `tests/` so that adding SEAM's toolchain cannot change
+# how those projects lint, type-check, or test. See AMENDMENTS.md AM-005.
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+# Explicit include: ruff must not start reporting on three pre-existing projects that never opted in.
+include = ["seam/**/*.py", "tests/**/*.py"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "F",      # pyflakes
+    "W",      # pycodestyle warnings
+    "I",      # isort
+    "N",      # pep8-naming
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "A",      # flake8-builtins
+    "C4",     # flake8-comprehensions
+    "PTH",    # flake8-use-pathlib
+    "RET",    # flake8-return
+    "SIM",    # flake8-simplify
+    "ARG",    # unused arguments
+    "TRY",    # tryceratops — catches broad/silent exception handling
+    "RUF",
+]
+ignore = [
+    # Long messages in raise statements are deliberate: an error a researcher reads at 2am should
+    # explain what to do, and TRY003 would push that text into opaque exception subclasses.
+    "TRY003",
+    # `raise ... from exc` is used where the cause is informative; TRY200/B904 overlap is noisy.
+    "TRY300",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests reach into private helpers deliberately: byte-level buffer parsing and clustering are
+# exactly the logic that needs direct unit tests rather than testing only through the public API.
+"tests/**/*.py" = ["SLF001", "ARG001", "E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["seam"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["seam", "tests"]
+# Type hints throughout (spec §8), enforced rather than aspirational.
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_return_any = true
+strict_equality = true
+# Silent failure is a project-level prohibition (spec §9.6); an un-analysed module is a silent gap.
+disallow_untyped_calls = false
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+# Third-party packages without bundled stubs. Listed explicitly rather than globally silenced, so
+# adding a dependency requires a deliberate entry here.
+module = ["psutil", "yaml", "jsonschema", "ruamel", "ruamel.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Pytest fixtures are passed positionally by name and frequently have no useful annotation for the
+# fixture object itself; requiring one adds noise without catching bugs.
+#
+# This pattern only matches because `tests/__init__.py` exists. Without it mypy derives the module
+# names `conftest` / `test_rawstore` / ... and `tests.*` silently matches nothing, which is how the
+# test files ended up being checked under the strict settings meant for `seam/`.
+module = ["tests.*"]
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+# SEAM's suite only. The pre-existing suites under apu_characterization/ and censor/ are invoked by
+# their own tooling and their pass state is not SEAM's responsibility (AMENDMENTS.md AM-005).
+testpaths = ["tests"]
+pythonpath = ["."]
+# -r a surfaces skip reasons, which matters because some tests skip when git is unavailable and a
+# silently skipped test is indistinguishable from a passing one.
+addopts = "-ra --strict-markers"
+# Deliberately NOT `error`: turning every warning into a failure means a DeprecationWarning from a
+# transitive dependency fails the measurement suite, which trains people to ignore red. Warnings
+# originating in SEAM's own code are escalated; third-party noise is not.
+filterwarnings = [
+    "default",
+    "error::DeprecationWarning:seam.*",
+]

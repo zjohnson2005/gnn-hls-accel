@@ -1,0 +1,237 @@
+# Platform A — "aipc-c1"
+#
+# Dell XPS 16 DA16260, Intel Core Ultra 5 325 (Panther Lake), Windows build 26200.
+#
+# Governing documents:
+#   docs/SEAM_research_blueprint.md            (§5 audit standard, §16.1 configuration)
+#   docs/PHASE_MINUS1_IMPLEMENTATION_SPEC.md   (§1 platform constraints, §4 topology)
+#
+# RULES FOR EDITING THIS FILE
+#   1. Every value is either probe-attested, vendor-stated, or measured-by-a-run. Each carries a
+#      `_provenance` sibling saying which. A value with no provenance is a bug.
+#   2. `null` means "not yet measured." Never replace a null with a plausible number. A null that
+#      fails loudly is correct; a guess that propagates is misconduct (blueprint §5.3).
+#   3. Measured values are written by harness code, not by hand, and cite the run_id that
+#      produced them.
+#   4. This file is hashed into every run manifest as `config_hash`. Editing it changes the hash,
+#      which is the intended behaviour: a config change makes a new experimental condition.
+
+platform_id: aipc-c1
+spec_version: "1.0"
+
+identity:
+  cpu: Intel Core Ultra 5 325
+  family: Panther Lake
+  chassis: Dell XPS 16 DA16260
+  os_build: "26200"
+  hostname: computadora
+
+  # Which claims are independently attested by a committed probe artifact, and which are not.
+  # See analysis/aipc-c1/MACHINE.md § "Platform identification evidence (AF-001)".
+  _provenance:
+    cpu: probe_attested          # analysis/_c1_machine_probe.txt line 17
+    family: inferred             # concluded from SKU numbering (E1) + graphics DID (E2)
+    chassis: probe_attested      # analysis/_c1_machine_probe.txt line 7
+    os_build: probe_attested     # analysis/_c1_machine_probe.txt line 4
+    hostname: probe_attested     # analysis/_c1_probe.txt line 2
+
+# ----------------------------------------------------------------------------------------------
+# Provenance artifacts.
+#
+# Hashed AT EMIT TIME by seam.manifest into platform.provenance_artifacts[].sha256. Hashes are
+# deliberately NOT stored here: a stored hash goes stale silently, whereas hashing at emit time
+# pins the exact bytes each run actually relied on (blueprint AF-002).
+#
+# Paths are relative to the repository root. All are READ-ONLY (spec §9.1); the AF-001 correction
+# to MACHINE.md is the single authorised exception and it is complete.
+# ----------------------------------------------------------------------------------------------
+provenance_artifacts:
+  - analysis/aipc-c1/MACHINE.md
+  - analysis/aipc-c1/TOOLING.md
+  - analysis/_c1_machine_probe.txt
+  - analysis/_c1_drivers_probe.txt
+  - analysis/_c1_probe.txt
+  - analysis/_c1_mem_probe.txt
+  - analysis/_c1_tools_probe.txt
+
+# ----------------------------------------------------------------------------------------------
+# CPU topology.
+#
+# Spec §4: "Do not trust the EfficiencyClass ordering blindly." The measured split is the only
+# authority. `expected` is a HYPOTHESIS TO TEST and is kept in a separate key from `measured` so
+# an expectation can never be mistaken for a result.
+#
+# Populate by running:  python -m seam.topology verify --write
+# ----------------------------------------------------------------------------------------------
+topology:
+  verified: false
+
+  # Measured result. null until the microbenchmark has run on this hardware.
+  p_cpus: null
+  lpe_cpus: null
+
+  # Hypothesis, from vendor documentation. NOT evidence. Verification asserts the measured split
+  # against this and FAILS on mismatch rather than silently adopting whatever it found.
+  expected:
+    n_logical_cpus: 8
+    n_p_cores: 4
+    n_lpe_cores: 4
+    smt: false
+    _provenance: vendor_stated   # NOT probe-attested; no artifact records core topology
+
+  # Filled in by verification. Answers spec §10 open question 4.
+  measured:
+    run_id: null
+    timestamp_utc: null
+    efficiency_class_map: null        # {logical_cpu: EfficiencyClass} from Windows
+    scores: null                      # {logical_cpu: benchmark score}
+    cluster_separation_ratio: null    # slow-cluster mean / fast-cluster mean
+    efficiency_class_ordering_matched: null  # OPEN QUESTION 4: did Windows agree with measurement?
+
+  # Microbenchmark parameters. In config, not code (spec §8: no magic numbers).
+  verification:
+    # Work per trial. Fixed iteration counts, not a fixed duration, so the same amount of work is
+    # done on every core and scores are directly comparable.
+    integer_iterations: 4_000_000
+    float_iterations: 2_000_000
+    # Repeats per logical CPU; the minimum is taken as the score. Minimum, not mean, because
+    # interference from other processes can only ever slow a trial down.
+    repeats_per_cpu: 7
+    # Discard this many leading repeats per CPU (cache/branch-predictor warm-up).
+    warmup_repeats: 2
+    # Acceptance thresholds for the clustering.
+    # A 2-means split must separate by at least this ratio to count as two distinct classes.
+    # P-cores here are 2.1/4.5 GHz vs LP-E 1.6/3.4 GHz, so the true gap is large; 1.25 rejects
+    # noise-only splits without assuming a specific ratio.
+    min_cluster_separation_ratio: 1.25
+    # Within-cluster spread must stay below this coefficient of variation, or the clusters are
+    # not clean and verification fails rather than guessing.
+    max_within_cluster_cv: 0.15
+    # Fail if the measured split does not match `expected` exactly.
+    require_expected_split: true
+
+# ----------------------------------------------------------------------------------------------
+# Memory. 16 GB LPDDR5X-7467, soldered, UNIFIED across CPU / iGPU / NPU.
+# ----------------------------------------------------------------------------------------------
+memory:
+  total_mb: 15976
+  unified: true                 # weights + KV cache + iGPU/NPU working sets + OS share one pool
+  upgradeable: false
+
+  # PROHIBITION (spec §9.4, blueprint §16.3 item 4): ~120 GB/s is DERIVED AND UNVERIFIED.
+  # No document, figure, caption, or log line may state a bandwidth number until M2.4 measures it.
+  # The derived figure is deliberately NOT recorded here so it cannot be read out and quoted.
+  bandwidth_gbps_measured: null
+  bandwidth_measured_by_run_id: null
+  _bandwidth_note: >-
+    Derived-but-unverified figure withheld by design. Populate only from an M2.4 STREAM-class
+    measurement, together with the run_id that produced it.
+
+  _provenance:
+    total_mb: probe_attested    # analysis/_c1_machine_probe.txt line 11
+    unified: vendor_stated
+    # NOTE: MACHINE.md's 8 x 2 GiB bank layout and ConfiguredClockSpeed=7467 are NOT attested by
+    # any committed artifact - _c1_mem_probe.txt captured no rows. See AUDIT_LOG.md AF-001
+    # provenance gap 1. Deliberately not restated here.
+
+# ----------------------------------------------------------------------------------------------
+# Accelerators.
+# ----------------------------------------------------------------------------------------------
+accelerators:
+  igpu:
+    name: Intel Xe3
+    cores: 4
+    pci_id: PCI\VEN_8086&DEV_B090
+    openvino_device: GPU
+    _provenance:
+      pci_id: probe_attested     # analysis/_c1_drivers_probe.txt line 4
+      name: inferred             # "Xe3" is a vendor mapping of DID B090, not a probe field
+      cores: vendor_stated
+
+  npu:
+    name: NPU 5
+    model: NPU 5010
+    openvino_device: NPU
+    # PROHIBITION (spec §9.4): 50 TOPS is a PEAK INT8 figure. Never report as achieved.
+    peak_int8_tops: 50
+    achieved_tops_measured: null
+    achieved_measured_by_run_id: null
+    _provenance:
+      name: vendor_stated        # probe attests only "Intel(R) NPU" / ComputeAccelerator
+      peak_int8_tops: vendor_stated_peak_not_achieved
+
+# ----------------------------------------------------------------------------------------------
+# Power envelope. Vendor-stated; not yet measured.
+# ----------------------------------------------------------------------------------------------
+power:
+  min_w: 15
+  base_w: 25
+  turbo_w: 55
+  has_battery: true             # enables whole-device energy (Platform A exclusive)
+  # Blueprint §16.5 / spec §10 open question 3: is 55 W turbo sustainable, and for how long?
+  turbo_sustainable_s: null
+  _provenance:
+    min_w: vendor_stated
+    base_w: vendor_stated
+    turbo_w: vendor_stated
+
+  # Pinned run conditions from analysis/aipc-c1/MACHINE.md § "Pinned run conditions (MANDATORY)".
+  # Sessions violating these are INVALID, not noisy.
+  pinned:
+    power_plan_name: Best Performance
+    power_plan_guid: ec87a53a-19a6-4f4a-980f-ab27cc929b25
+    assert_script: analysis/aipc-c1/scripts/assert_power_pin.ps1
+
+# ----------------------------------------------------------------------------------------------
+# Thermal protocol constants (blueprint §5.4, spec §3.3).
+#
+# ALL NULL BY DESIGN. M2.3 determines and freezes these. Spec §6.1 shows illustrative values
+# (warmup_s: 120, cooldown_ceiling_c: 55, throttle_threshold_pct: 5.0) - those are SCHEMA
+# EXAMPLES, not defaults for this platform. Copying them here would manufacture measured-looking
+# numbers with no run_id. See AMENDMENTS.md AM-006.
+# ----------------------------------------------------------------------------------------------
+thermal:
+  determined_by: M2.3
+  warmup_s: null
+  cooldown_ceiling_c: null
+  throttle_threshold_pct: null
+  tjmax_c: null
+  # Spec §3.6: sample at 10 Hz once any temperature exceeds this fraction of TjMax.
+  high_rate_trigger_fraction_of_tjmax: 0.70
+  sample_rate_hz_default: 1
+  sample_rate_hz_elevated: 10
+
+# ----------------------------------------------------------------------------------------------
+# Execution targets. Four local + cloud. NO dGPU on this platform.
+# ----------------------------------------------------------------------------------------------
+targets:
+  local:
+    - cpu-p
+    - cpu-lpe
+    - igpu
+    - npu
+  cloud:
+    - cloud
+
+# ----------------------------------------------------------------------------------------------
+# Worker pool sizing.
+#
+# 8 logical CPUs, NO SMT. Spec §9.8: never size worker pools by a heuristic, and never by one
+# tuned for a 16-thread part. These are explicit integers for that reason.
+# ----------------------------------------------------------------------------------------------
+concurrency:
+  n_logical_cpus: 8
+  smt: false
+  default_workers: 4            # explicit, = one full core cluster; NOT cpu_count()-derived
+  sampler_workers: 1            # spec §3.6: exactly one background sampler thread
+
+# ----------------------------------------------------------------------------------------------
+# NPU workarounds (spec §5.2). Recorded now so M4 cannot forget them; unused until then.
+# ----------------------------------------------------------------------------------------------
+npu_config:
+  # openvino#34617: NPU fails with "to_shape was called on a dynamic shape" unless both are set.
+  MAX_PROMPT_LEN: 2048
+  NPUW_LLM_PREFILL_CHUNK_SIZE: 1024
+  # openvino#35641: NPU + INT8 weight-only IR crashes with an uncatchable 0xC0000005 at
+  # generate(). Assert INT4 before constructing an NPU LLMPipeline; do not try to catch it.
+  require_int4_weights: true

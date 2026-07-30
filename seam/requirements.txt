@@ -1,0 +1,29 @@
+# SEAM harness dependencies (Phase −1, milestones M0–M1).
+#
+# Pinned with lower bounds and an upper major bound: blueprint §5.7 targets an artifact-evaluation
+# "reusable" badge, which requires pinned dependencies, while an unbounded range would let a major
+# release silently change measurement behaviour.
+#
+# Install:  py -3 -m pip install -r seam/requirements.txt
+#
+# Only what M0/M1 actually use is listed. OpenVINO, openvino-genai, and the telemetry stack arrive
+# with M2/M4 and are deliberately absent — an unused pin is a claim that something was tested.
+
+# Config loading. Configs are data: safe_load only, never executable YAML.
+PyYAML>=6.0,<7
+
+# Round-trip YAML for writing the verified topology back into the platform config without
+# destroying its provenance comments (seam/topology.py). PyYAML cannot do this.
+ruamel.yaml>=0.18,<0.19
+
+# Run-manifest schema validation. A missing validator is a hard failure in seam/manifest.py, not a
+# skipped check, so this is a required dependency rather than an optional one.
+jsonschema>=4.21,<5
+
+# CPU affinity pinning for the cpu-p / cpu-lpe targets (spec §4).
+psutil>=5.9,<8
+
+# --- development / CI ---
+pytest>=8.0,<9
+ruff>=0.5,<1
+mypy>=1.10,<2

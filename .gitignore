@@ -51,3 +51,23 @@ apu_characterization/out/cap01/pools/
 apu_characterization/out/cap01/runs/
 apu_characterization/out/cap01/runtime/
 apu_characterization/out/cap01/bundles/
+
+# ---------------------------------------------------------------------------------------------
+# SEAM (Phase -1)
+#
+# NOTE: raw/ is deliberately NOT ignored. Blueprint §5.3 makes raw/ write-once and checksummed,
+# and §5.7 targets an artifact-evaluation "reusable" badge, both of which require the raw data to
+# be committed. Only the blinding secret below is excluded.
+# ---------------------------------------------------------------------------------------------
+
+# Blinding salt. Committing it would let anyone invert blinded_label from the small space of
+# condition names, making the blind decorative (seam/blinding.py). Back it up out of band: a lost
+# salt cannot be regenerated without orphaning every blinded_label already emitted.
+raw/_blinding/salt.txt
+
+# SEAM toolchain virtualenv (Python 3.11, seam/requirements.txt).
+.venv-seam/
+
+# 187 MB Chrome profile captured during Item 0 tooling validation. Kept on disk as local evidence;
+# it is not provenance for any SEAM claim and no manifest cites it.
+analysis/aipc-c1/tooling_validation/chrome_pm_profile/

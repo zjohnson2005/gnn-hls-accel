@@ -1,0 +1,34 @@
+=== CIM processor core and thread counts ===
+
+
+Name                      : Intel(R) Core(TM) Ultra 5 325
+NumberOfCores             : 8
+NumberOfLogicalProcessors : 8
+MaxClockSpeed             : 2100
+L2CacheSize               : 16384
+L3CacheSize               : 12288
+Description               : Intel64 Family 6 Model 204 Stepping 3
+Revision                  :
+
+
+
+
+=== logical processor count ===
+NumberOfLogicalProcessors=8
+environment_PROCESSOR_COUNT=8
+
+=== per-core EfficiencyClass via GetLogicalProcessorInformationEx (RelationProcessorCore) ===
+core_index=0 EfficiencyClass=1 logical_cpus=[0] group=0 smt=False
+core_index=1 EfficiencyClass=1 logical_cpus=[1] group=0 smt=False
+core_index=2 EfficiencyClass=1 logical_cpus=[2] group=0 smt=False
+core_index=3 EfficiencyClass=1 logical_cpus=[3] group=0 smt=False
+core_index=4 EfficiencyClass=0 logical_cpus=[4] group=0 smt=False
+core_index=5 EfficiencyClass=0 logical_cpus=[5] group=0 smt=False
+core_index=6 EfficiencyClass=0 logical_cpus=[6] group=0 smt=False
+core_index=7 EfficiencyClass=0 logical_cpus=[7] group=0 smt=False
+
+=== NOTE ===
+EfficiencyClass above is the OS HYPOTHESIS only. Spec section 4 requires the P/LP-E split to be
+established by the pinned microbenchmark in seam/topology.py, not by this field. Recording it
+here makes the hypothesis auditable; it does not verify it.
+
