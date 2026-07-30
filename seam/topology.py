@@ -940,6 +940,16 @@ def _write_verified_topology(
 
     yaml_rt = YAML()
     yaml_rt.preserve_quotes = True
+    # Match the committed file's block-sequence indentation, so writing the mapping does not
+    # reindent every unrelated list in the document.
+    yaml_rt.indent(mapping=2, sequence=4, offset=2)
+    # Emit an explicit `null` rather than an empty value. This file's editing rules give `null` a
+    # meaning — "not yet measured", never to be replaced with a plausible number (AMENDMENTS.md
+    # AM-006) — and a blank value cannot be distinguished from a field someone forgot to fill in.
+    yaml_rt.representer.add_representer(
+        type(None),
+        lambda representer, _data: representer.represent_scalar("tag:yaml.org,2002:null", "null"),
+    )
     with yaml_path.open("r", encoding="utf-8") as handle:
         document = yaml_rt.load(handle)
 

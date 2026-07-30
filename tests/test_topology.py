@@ -507,6 +507,31 @@ def test_writing_the_mapping_does_not_relabel_it_as_a_hypothesis(fake_repo: Any)
     )
 
 
+def test_writing_the_mapping_changes_only_the_topology_block(fake_repo: Any) -> None:
+    """Everything outside ``topology:`` must come back byte-identical.
+
+    Round-trip writers drift in ways that look harmless and are not: ruamel's defaults reindent
+    block sequences and render ``null`` as an empty value. The second one is the dangerous one here,
+    because this config gives ``null`` the specific meaning "not yet measured" and applies it to the
+    thermal constants M2.3 has to fill in (AMENDMENTS.md AM-006) — a blank value reads as an
+    oversight instead. A minimal diff also keeps the mapping commit reviewable.
+    """
+    path = fake_repo / "configs" / "platforms" / "aipc-c1.yaml"
+    before = path.read_text(encoding="utf-8").splitlines()
+
+    _write_verified_topology(path, _passing_result(), run_id="d" * 8)
+    after = path.read_text(encoding="utf-8").splitlines()
+
+    def outside_topology(lines: list[str]) -> list[str]:
+        start = next(i for i, line in enumerate(lines) if line.startswith("topology:"))
+        end = next(i for i, line in enumerate(lines[start + 1 :], start + 1) if line == "memory:")
+        return lines[:start] + lines[end:]
+
+    assert outside_topology(after) == outside_topology(before)
+    assert "  bandwidth_gbps_measured: null" in after, "an unmeasured field must stay explicit"
+    assert "  - analysis/aipc-c1/MACHINE.md" in after, "sequence indentation must be preserved"
+
+
 def test_written_mapping_reads_back_as_a_verified_topology(fake_repo: Any) -> None:
     """Round-trip: what the writer emits must be what ``load_verified_topology`` accepts."""
     path = fake_repo / "configs" / "platforms" / "aipc-c1.yaml"
