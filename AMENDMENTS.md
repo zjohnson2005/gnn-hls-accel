@@ -22,6 +22,7 @@ decision) · `DEFERRED` (belongs to a later milestone).
 | AM-007 | 2026-07-29 | Source docs | Source folder holds four documents, not three | OPEN (needs confirmation) |
 | AM-008 | 2026-07-29 | M1 | Topology cannot be verified — no shell | OPEN (blocks M1 accept) |
 | AM-009 | 2026-07-29 | Doc ingest | Governing docs transcribed, not byte-copied | OPEN (verify hashes) |
+| AM-010 | 2026-07-29 | §6.1 manifest schema | Refused topology verification must emit a manifest (AF-006) | RESOLVED |
 
 ---
 
@@ -331,3 +332,62 @@ so the governing documents are pinned the same way the probe artifacts are (blue
 (`AppData\Local\Packages\Claude_...\LocalCache\...`), which is not a durable location. Archive the
 three source documents somewhere stable before that cache is cleared, or the hash comparison above
 becomes impossible.
+
+---
+
+## AM-010 — A refused topology verification emits a manifest; `workload.kind` gains `topology_verify`
+
+**Date:** 2026-07-29 · **Pre/post data:** **Post** — written after two verification runs refused
+(AUDIT_LOG.md, "Topology verification RAN but did NOT establish the mapping") · **Status:** RESOLVED
+
+**Divergence.** Spec §6.1 fixes `workload.kind` to `microbench | aa | h1_pilot`, and the schema
+requires `platform.topology.verified: true` whenever `target` is `cpu-p` or `cpu-lpe`. Under those
+two rules the §4 topology-verification run cannot emit a manifest when it refuses: it has no
+verified topology to declare, and no `kind` that describes it. `seam/topology.py:main` therefore
+raised before `emit()`, and a refusal produced no `run_id`, no `raw/<run_id>/`, and no record
+(AUDIT_LOG.md AF-006).
+
+**Why that is a defect and not merely inconvenient.** Two refused runs produced sixteen per-CPU
+scores measured on real silicon. Spec §9.2 says no number may be reported without a traceable
+manifest ID, so those numbers were formally unquotable — including in the audit entry explaining
+why M1 was not accepted. The rule intended to guarantee traceability was instead discarding
+evidence, and only ever for negative results.
+
+**Decision** (authorised by Z. Johnson, 2026-07-29):
+
+1. `workload.kind` gains a fourth value, `topology_verify`. It is a distinct kind rather than a
+   `microbench` because it is the one workload whose **refusal is itself the result**.
+2. The `cpu-p`/`cpu-lpe` verified-topology precondition is exempted for that kind, and **only** for
+   that kind. The exemption is keyed on `workload.kind`, not on `target`, so no measurement
+   workload can reach it. The run that produces the mapping cannot be required to assert one.
+3. A new schema rule closes the hazard the exemption opens: if `workload.kind` is `topology_verify`
+   and `platform.topology.verified` is `false`, then `integrity.self_check` **must** be `"fail"`. A
+   refusal cannot be recorded as a pass.
+4. A refused run records `p_cpus: null`, `lpe_cpus: null`, `verified: false` in the manifest. The
+   clustering it found lives in `summary.json`, where it reads as a measurement, not a mapping.
+5. `verify_topology()` is split. `measure_topology()` evaluates **every** acceptance criterion and
+   returns a `verdict` plus the reasons; `verify_topology()` raises unless the verdict is `pass`.
+   The CLI emits the manifest and then propagates the error, so a refusal is both citable and loud.
+
+**Rationale.** This is spec §5.1's own principle applied one layer up: "an unsupported cell is a
+data point, not a failure." A verification establishing that the two core types are not separable
+by the current instrument is a finding about the instrument and the platform, and a reviewer should
+be able to trace it. The alternative considered and rejected was AF-006's original suggestion of a
+new `target` value (`host` / `self-check`): `target` enumerates *execution targets*, and inventing
+a non-execution one would weaken a field that M4/M5 rely on for cell identity. `target: cpu-p` is
+retained for the topology run because establishing the `cpu-p` / `cpu-lpe` mapping is its purpose.
+
+**`spec_version` was not bumped.** It stays `"1.0"`. Every manifest valid under the previous schema
+is still valid: the change adds an enum value and *narrows* the schema in the new case (rule 3). No
+existing field changed meaning, and no emitted manifest requires reissue.
+
+**Side effect, deliberate.** The instrument is now named in config
+(`topology.verification.kernel`) and recorded as the manifest's `workload.benchmark`, so changing
+the microbenchmark changes `config_hash`. Which instrument produced a score is part of the run
+identity rather than an implicit property of the code at that commit.
+
+**Also recorded by this change.** The topology run now captures the host power state
+(`seam/powerstate.py`) into the manifest's `power_state` block and logs any deviation from
+MACHINE.md's pinned run conditions. AF-005 was possible because nothing recorded those conditions
+in an artifact. This captures and reports; the *gate* that refuses to start outside them remains
+M2 scope, as AF-005 states.

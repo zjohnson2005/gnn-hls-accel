@@ -249,6 +249,116 @@ def test_cpu_target_requires_verified_topology(
         validate_manifest(manifest)
 
 
+def test_topology_verify_may_run_before_the_topology_is_verified(
+    fake_config: ResolvedConfig,
+    fake_repo: Path,
+    clean_git_state: GitState,
+) -> None:
+    """AF-006 / AM-010: the run that PRODUCES the mapping is exempt from requiring one.
+
+    Without this, a refused verification could not emit a manifest at all, and its per-CPU scores
+    would be unciteable — the exact collision with spec §9.2 that AF-006 records.
+    """
+    manifest = _build(
+        fake_config,
+        fake_repo,
+        clean_git_state,
+        {
+            "kind": "topology_verify",
+            "benchmark": "python_intfp_v1",
+            "task_ids": [],
+            "seed": None,
+            "n_repeats": 7,
+        },
+        target="cpu-p",
+        topology_override={"p_cpus": None, "lpe_cpus": None, "verified": False},
+        self_check="fail",
+    )
+    validate_manifest(manifest)
+
+
+def test_refused_topology_verify_must_record_a_failing_verdict(
+    fake_config: ResolvedConfig,
+    fake_repo: Path,
+    clean_git_state: GitState,
+) -> None:
+    """The exemption must not let a refusal be recorded as a success.
+
+    A manifest that says "topology not verified" while reporting ``self_check: pass`` would read as
+    a successful verification to anyone scanning ``raw/``.
+    """
+    manifest = _build(
+        fake_config,
+        fake_repo,
+        clean_git_state,
+        {
+            "kind": "topology_verify",
+            "benchmark": "python_intfp_v1",
+            "task_ids": [],
+            "seed": None,
+            "n_repeats": 7,
+        },
+        target="cpu-p",
+        topology_override={"p_cpus": None, "lpe_cpus": None, "verified": False},
+        self_check="pass",
+    )
+    with pytest.raises(ManifestValidationError, match="self_check"):
+        validate_manifest(manifest)
+
+
+def test_the_exemption_is_keyed_on_workload_kind_not_on_target(
+    fake_config: ResolvedConfig,
+    fake_repo: Path,
+    clean_git_state: GitState,
+    minimal_workload: dict[str, Any],
+) -> None:
+    """A measurement workload must not inherit the topology-verification exemption."""
+    manifest = _build(
+        fake_config,
+        fake_repo,
+        clean_git_state,
+        minimal_workload,
+        target="cpu-lpe",
+        topology_override={"p_cpus": None, "lpe_cpus": None, "verified": False},
+        self_check="fail",
+    )
+    with pytest.raises(ManifestValidationError):
+        validate_manifest(manifest)
+
+
+@pytest.mark.parametrize("kind", ["microbench", "aa", "h1_pilot", "topology_verify"])
+def test_schema_accepts_every_declared_workload_kind(
+    fake_config: ResolvedConfig,
+    fake_repo: Path,
+    clean_git_state: GitState,
+    kind: str,
+) -> None:
+    manifest = _build(
+        fake_config,
+        fake_repo,
+        clean_git_state,
+        {"kind": kind, "benchmark": "b", "task_ids": [], "seed": None, "n_repeats": 1},
+        topology_override=VERIFIED_TOPOLOGY,
+    )
+    validate_manifest(manifest)
+
+
+def test_schema_rejects_an_unregistered_workload_kind(
+    fake_config: ResolvedConfig,
+    fake_repo: Path,
+    clean_git_state: GitState,
+) -> None:
+    manifest = _build(
+        fake_config,
+        fake_repo,
+        clean_git_state,
+        {"kind": "adhoc", "benchmark": "b", "task_ids": [], "seed": None, "n_repeats": 1},
+        topology_override=VERIFIED_TOPOLOGY,
+    )
+    with pytest.raises(ManifestValidationError, match="kind"):
+        validate_manifest(manifest)
+
+
 def test_verified_topology_must_name_its_cpus(
     fake_config: ResolvedConfig,
     fake_repo: Path,

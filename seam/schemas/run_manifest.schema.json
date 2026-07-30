@@ -259,7 +259,11 @@
       "additionalProperties": false,
       "required": ["kind", "benchmark", "task_ids", "seed", "n_repeats"],
       "properties": {
-        "kind": { "type": "string", "enum": ["microbench", "aa", "h1_pilot"] },
+        "kind": {
+          "description": "'topology_verify' is the §4 core-classification run. It is a distinct kind rather than a 'microbench' because it is the one workload whose REFUSAL is itself the result: a verification that does not establish the mapping still emits a manifest so its per-CPU scores are citable (AMENDMENTS.md AM-010, AUDIT_LOG.md AF-006).",
+          "type": "string",
+          "enum": ["microbench", "aa", "h1_pilot", "topology_verify"]
+        },
         "benchmark": { "type": "string", "minLength": 1 },
         "task_ids": { "type": "array", "items": { "type": "string" } },
         "seed": { "type": ["integer", "null"] },
@@ -372,8 +376,26 @@
       }
     },
     {
-      "description": "A cpu-p or cpu-lpe run is meaningless without a verified core mapping.",
-      "if": { "properties": { "target": { "enum": ["cpu-p", "cpu-lpe"] } }, "required": ["target"] },
+      "description": "A cpu-p or cpu-lpe run is meaningless without a verified core mapping. The single exemption is the run that PRODUCES the mapping: a 'topology_verify' workload cannot assert a verified topology as a precondition of establishing one, and when it refuses it must still be able to record that refusal (AMENDMENTS.md AM-010). The exemption is keyed on workload.kind, not on target, so no measurement workload can escape the precondition.",
+      "if": {
+        "allOf": [
+          {
+            "properties": { "target": { "enum": ["cpu-p", "cpu-lpe"] } },
+            "required": ["target"]
+          },
+          {
+            "not": {
+              "properties": {
+                "workload": {
+                  "properties": { "kind": { "const": "topology_verify" } },
+                  "required": ["kind"]
+                }
+              },
+              "required": ["workload"]
+            }
+          }
+        ]
+      },
       "then": {
         "properties": {
           "platform": {
@@ -382,6 +404,45 @@
             }
           }
         }
+      }
+    },
+    {
+      "description": "A topology_verify run that did not establish the mapping must say so in its verdict. Without this, the AF-006 fix would create a new hazard: a manifest that records a refusal while reporting self_check 'pass', which would read as a successful verification.",
+      "if": {
+        "allOf": [
+          {
+            "properties": {
+              "workload": {
+                "properties": { "kind": { "const": "topology_verify" } },
+                "required": ["kind"]
+              }
+            },
+            "required": ["workload"]
+          },
+          {
+            "properties": {
+              "platform": {
+                "properties": {
+                  "topology": {
+                    "properties": { "verified": { "const": false } },
+                    "required": ["verified"]
+                  }
+                },
+                "required": ["topology"]
+              }
+            },
+            "required": ["platform"]
+          }
+        ]
+      },
+      "then": {
+        "properties": {
+          "integrity": {
+            "properties": { "self_check": { "const": "fail" } },
+            "required": ["self_check"]
+          }
+        },
+        "required": ["integrity"]
       }
     }
   ]

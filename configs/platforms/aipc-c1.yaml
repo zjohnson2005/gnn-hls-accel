@@ -83,15 +83,22 @@ topology:
   measured:
     run_id: null
     timestamp_utc: null
+    kernel: null                      # which registered microbenchmark produced `scores`
     efficiency_class_map: null        # {logical_cpu: EfficiencyClass} from Windows
     scores: null                      # {logical_cpu: benchmark score}
-    cluster_separation_ratio: null    # slow-cluster mean / fast-cluster mean
+    cluster_separation_ratio: null    # fast-cluster mean / slow-cluster mean
+    p_cluster_cv: null                # within-cluster coefficient of variation, fast cluster
+    lpe_cluster_cv: null              # within-cluster coefficient of variation, slow cluster
     efficiency_class_ordering_matched: null  # OPEN QUESTION 4: did Windows agree with measurement?
 
   # Microbenchmark parameters. In config, not code (spec §8: no magic numbers).
   verification:
-    # Work per trial. Fixed iteration counts, not a fixed duration, so the same amount of work is
-    # done on every core and scores are directly comparable.
+    # Which registered kernel in seam.topology measures each core. Named here rather than fixed in
+    # code because the instrument is a property of the measurement: changing it changes
+    # config_hash, and the name is recorded as the manifest's workload.benchmark.
+    kernel: python_intfp_v1
+    # Work per trial for `python_intfp_v1`. Fixed iteration counts, not a fixed duration, so the
+    # same amount of work is done on every core and scores are directly comparable.
     integer_iterations: 4_000_000
     float_iterations: 2_000_000
     # Repeats per logical CPU; the minimum is taken as the score. Minimum, not mean, because

@@ -18,6 +18,13 @@ module treats the OS as a *hypothesis* and measurement as the authority:
 The direction of ``EfficiencyClass`` is deliberately not hardcoded. Both interpretations are
 tested and the result recorded, because assuming a direction would answer open question 4 by
 assertion.
+
+**Measurement and verdict are separate** (``AUDIT_LOG.md`` AF-006). :func:`measure_topology`
+always produces a full :class:`TopologyResult` carrying every acceptance check it applied and
+whether each held; :func:`verify_topology` is the thin wrapper that turns a refusal into an
+exception. The split exists so the CLI can emit a manifest for a refused verification: a refusal
+is a measurement of real silicon, and spec §9.2 ("no number without a ``run_id``") applies to it
+just as much as to a pass.
 """
 
 from __future__ import annotations
@@ -29,6 +36,7 @@ import platform
 import struct
 import sys
 import time
+from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Final, Literal
@@ -40,19 +48,27 @@ from seam.errors import (
     TopologyVerificationError,
 )
 from seam.jsonlog import log_event, utc_now_iso
+from seam.powerstate import capture_power_state, check_pinned_conditions, manifest_power_state
 
 __all__ = [
     "CoreInfo",
     "CpuTarget",
+    "KernelSpec",
     "TopologyResult",
     "VerifiedTopology",
     "affinity_for",
+    "build_kernel",
     "enumerate_cores",
     "load_verified_topology",
+    "measure_topology",
     "verify_topology",
 ]
 
 CpuTarget = Literal["cpu-p", "cpu-lpe"]
+
+#: Verdict recorded by :func:`measure_topology`. ``"refused"`` means the measurement completed but
+#: at least one acceptance criterion did not hold, so the mapping is NOT established.
+TopologyVerdict = Literal["pass", "refused"]
 
 #: ``LOGICAL_PROCESSOR_RELATIONSHIP.RelationProcessorCore``.
 _RELATION_PROCESSOR_CORE: Final = 0
@@ -96,9 +112,13 @@ class CoreInfo:
 
 @dataclass(slots=True)
 class TopologyResult:
-    """Full result of an empirical verification run.
+    """Full result of an empirical verification run, whether it passed or refused.
 
     Serialised verbatim into ``raw/<run_id>/summary.json`` so every field below is traceable.
+
+    ``p_cpus`` and ``lpe_cpus`` name the measured fast and slow clusters. **On a refused run they
+    are a clustering of the scores, not a verified mapping** — ``verdict`` is the field that says
+    which, and nothing may consume them as a mapping unless ``verdict == "pass"``.
     """
 
     timestamp_utc: str
@@ -111,6 +131,11 @@ class TopologyResult:
     cluster_separation_ratio: float
     p_cluster_cv: float
     lpe_cluster_cv: float
+
+    #: ``"pass"`` or ``"refused"``.
+    verdict: TopologyVerdict = "refused"
+    #: One entry per acceptance criterion that did not hold. Empty iff ``verdict == "pass"``.
+    refusal_reasons: list[str] = field(default_factory=list)
 
     # --- Spec §10 open question 4 -------------------------------------------------------------
     #: True iff the EfficiencyClass partition equals the measured partition AND a higher
@@ -274,15 +299,41 @@ def _parse_processor_core_records(raw: bytes) -> list[CoreInfo]:
 # ==================================================================================================
 
 
-def _integer_float_kernel(integer_iterations: int, float_iterations: int) -> tuple[int, float]:
-    """Fixed integer + floating-point work.
+@dataclass(frozen=True, slots=True)
+class KernelSpec:
+    """One fully-parameterised microbenchmark kernel.
+
+    Spec §4 prescribes "a fixed single-thread integer+FP benchmark" but not its implementation, and
+    which implementation runs is a measurable property of a run — so the kernel is selected by name
+    from config (``topology.verification.kernel``) and its name is recorded as the manifest's
+    ``workload.benchmark``. Changing the instrument therefore changes ``config_hash``, and cannot
+    happen invisibly.
+    """
+
+    name: str
+    #: Abstract units of work per trial. Only ratios between CPUs are meaningful, so the unit needs
+    #: to be consistent across CPUs, not comparable across kernels.
+    work_units_per_trial: int
+    #: Runs one trial. Must be deterministic, single-threaded, and allocation-free in its hot path.
+    run: Callable[[], object]
+    #: The resolved parameters, recorded in the summary so a score can be reproduced.
+    params: dict[str, Any]
+
+
+def _python_intfp_v1(integer_iterations: int, float_iterations: int) -> tuple[int, float]:
+    """Fixed integer + floating-point work in pure CPython.
 
     Both accumulators are returned so the interpreter cannot optimise the loops away.
 
     The kernel is deliberately dependency-free and branch-light: each iteration depends on the
     previous accumulator, so it measures single-thread latency-bound throughput rather than the
-    memory system. That is the right discriminator here, since the P/LP-E gap is a frequency and
-    IPC gap (2.1/4.5 GHz vs 1.6/3.4 GHz) rather than a bandwidth gap.
+    memory system.
+
+    **Known limitation (AMENDMENTS.md AM-011).** Every iteration is a handful of CPython bytecodes,
+    so its cost is dominated by interpreter dispatch, reference counting, and small-integer object
+    allocation — work that is much the same on both core types. That compresses the P/LP-E ratio
+    toward 1. Retained as a registered kernel because it is dependency-free and reproduces the
+    earlier refused runs, but it is not the default instrument.
     """
     acc_i = 1
     for i in range(integer_iterations):
@@ -297,11 +348,55 @@ def _integer_float_kernel(integer_iterations: int, float_iterations: int) -> tup
     return acc_i, acc_f
 
 
+def _build_python_intfp_v1(params: Mapping[str, Any]) -> KernelSpec:
+    integer_iterations = int(params["integer_iterations"])
+    float_iterations = int(params["float_iterations"])
+    return KernelSpec(
+        name="python_intfp_v1",
+        work_units_per_trial=integer_iterations + float_iterations,
+        run=lambda: _python_intfp_v1(integer_iterations, float_iterations),
+        params={
+            "integer_iterations": integer_iterations,
+            "float_iterations": float_iterations,
+            "work_unit": "loop_iteration",
+        },
+    )
+
+
+#: Kernel name -> builder. A kernel must be registered here to be selectable, so config cannot name
+#: an instrument that does not exist.
+_KERNEL_BUILDERS: Final[dict[str, Callable[[Mapping[str, Any]], KernelSpec]]] = {
+    "python_intfp_v1": _build_python_intfp_v1,
+}
+
+
+def build_kernel(name: str, params: Mapping[str, Any]) -> KernelSpec:
+    """Build the named kernel from its config parameters.
+
+    Raises:
+        ConfigError: If the kernel is not registered, or a parameter it needs is missing. Never
+            falls back to another kernel: silently measuring with a different instrument than the
+            config names would make every score untraceable.
+    """
+    builder = _KERNEL_BUILDERS.get(name)
+    if builder is None:
+        raise ConfigError(
+            f"unknown topology kernel {name!r}; registered kernels are "
+            f"{sorted(_KERNEL_BUILDERS)}. Refusing to substitute a different instrument."
+        )
+    try:
+        return builder(params)
+    except KeyError as exc:
+        raise ConfigError(
+            f"topology kernel {name!r} requires config parameter {exc.args[0]!r}, which is absent "
+            f"from topology.verification"
+        ) from exc
+
+
 def _bench_one_cpu(
     cpu: int,
     *,
-    integer_iterations: int,
-    float_iterations: int,
+    kernel: KernelSpec,
     repeats: int,
     warmup_repeats: int,
 ) -> float:
@@ -334,11 +429,10 @@ def _bench_one_cpu(
                 f"affinity for logical CPU {cpu} did not take effect; process reports {actual}"
             )
 
-        total_iterations = integer_iterations + float_iterations
         best_ns: int | None = None
         for repeat in range(warmup_repeats + repeats):
             start = time.perf_counter_ns()
-            _integer_float_kernel(integer_iterations, float_iterations)
+            kernel.run()
             elapsed = time.perf_counter_ns() - start
             if repeat < warmup_repeats:
                 continue
@@ -351,7 +445,7 @@ def _bench_one_cpu(
                 f"(best_ns={best_ns}); check repeats_per_cpu > 0"
             )
 
-        return total_iterations / (best_ns / 1e9)
+        return kernel.work_units_per_trial / (best_ns / 1e9)
     finally:
         # Restore affinity even on failure, so a raised error does not leave the process pinned to
         # one core for the remainder of the session.
@@ -479,19 +573,26 @@ def _evaluate_efficiency_class_agreement(
 # ==================================================================================================
 
 
-def verify_topology(config: ResolvedConfig) -> TopologyResult:
-    """Empirically determine the P / LP-E split (spec §4).
+def measure_topology(config: ResolvedConfig) -> TopologyResult:
+    """Measure the P / LP-E split and record whether it meets the §4 acceptance criteria.
+
+    Every acceptance criterion is evaluated and recorded rather than short-circuited, so a refused
+    run still reports its separation ratio, both cluster CVs, and the ``EfficiencyClass``
+    comparison. The earlier refused runs could report none of those, because the first failing
+    check raised (``AUDIT_LOG.md`` AF-006).
+
+    Returns:
+        A :class:`TopologyResult` whose ``verdict`` is ``"pass"`` only if every criterion held.
 
     Raises:
-        TopologyVerificationError: If the clusters do not separate cleanly, do not match the
-            expected split, or the P-cluster is not the faster one. Failure is a hard error, not
-            a warning — a run must not proceed on an ambiguous mapping.
+        TopologyVerificationError: Only for conditions that make a *measurement* impossible — not
+            running on Windows, core enumeration failing, a CPU that cannot be pinned, or a
+            platform that is not the declared part. Those are broken instruments, not verdicts.
     """
     params = config.require("topology.verification")
     expected = config.require("topology.expected")
 
-    integer_iterations = int(params["integer_iterations"])
-    float_iterations = int(params["float_iterations"])
+    kernel = build_kernel(str(params["kernel"]), params)
     repeats = int(params["repeats_per_cpu"])
     warmup_repeats = int(params["warmup_repeats"])
     min_separation = float(params["min_cluster_separation_ratio"])
@@ -529,12 +630,22 @@ def verify_topology(config: ResolvedConfig) -> TopologyResult:
             "the platform identity or the config is wrong"
         )
 
+    log_event(
+        "topology.kernel_selected",
+        message=(
+            f"microbenchmark kernel {kernel.name!r}, "
+            f"{kernel.work_units_per_trial} work-units per trial"
+        ),
+        kernel=kernel.name,
+        work_units_per_trial=kernel.work_units_per_trial,
+        params=kernel.params,
+    )
+
     scores: dict[int, float] = {}
     for cpu in logical_cpus:
         score = _bench_one_cpu(
             cpu,
-            integer_iterations=integer_iterations,
-            float_iterations=float_iterations,
+            kernel=kernel,
             repeats=repeats,
             warmup_repeats=warmup_repeats,
         )
@@ -558,35 +669,57 @@ def verify_topology(config: ResolvedConfig) -> TopologyResult:
 
     fast_cv, slow_cv = _cv(fast_values), _cv(slow_values)
 
+    # The faster cluster is the P cluster by definition of "performance core" — but only if the
+    # criteria below hold, which is what `verdict` records.
+    p_cpus, lpe_cpus = fast_cpus, slow_cpus
+
+    refusal_reasons: list[str] = []
+
     if separation < min_separation:
-        raise TopologyVerificationError(
+        refusal_reasons.append(
             f"clusters do not separate cleanly: ratio {separation:.3f} < required "
-            f"{min_separation:.3f}. The two core types are indistinguishable by this benchmark, "
-            f"so the P/LP-E mapping is NOT established. Scores: {scores}"
+            f"{min_separation:.3f}. The two core types are not distinguishable by this benchmark "
+            f"at this threshold, so the P/LP-E mapping is NOT established."
         )
 
     if fast_cv > max_within_cv or slow_cv > max_within_cv:
-        raise TopologyVerificationError(
+        refusal_reasons.append(
             f"within-cluster spread too high (fast CV {fast_cv:.4f}, slow CV {slow_cv:.4f}, "
             f"limit {max_within_cv:.4f}); clusters are not clean. Likely background load — "
-            f"quiesce the machine and re-run. Scores: {scores}"
+            f"quiesce the machine and re-run."
         )
-
-    # The faster cluster is the P cluster by definition of "performance core".
-    p_cpus, lpe_cpus = fast_cpus, slow_cpus
 
     if require_expected:
         expected_p = int(expected["n_p_cores"])
         expected_lpe = int(expected["n_lpe_cores"])
         if len(p_cpus) != expected_p or len(lpe_cpus) != expected_lpe:
-            raise TopologyVerificationError(
+            refusal_reasons.append(
                 f"measured split {len(p_cpus)}P/{len(lpe_cpus)}LP-E does not match the expected "
                 f"{expected_p}P/{expected_lpe}LP-E. Either the platform is not the declared part "
-                f"or the benchmark is not discriminating. Scores: {scores}"
+                f"or the benchmark is not discriminating."
             )
 
     ordering_matched, partition_matched, direction = _evaluate_efficiency_class_agreement(
         cores, p_cpus, lpe_cpus
+    )
+
+    verdict: TopologyVerdict = "refused" if refusal_reasons else "pass"
+    log_event(
+        "topology.verdict",
+        severity="info" if verdict == "pass" else "warning",
+        message=(
+            f"verification {verdict.upper()}: separation {separation:.3f}x "
+            f"(required {min_separation:.3f}x), CV fast {fast_cv:.4f} / slow {slow_cv:.4f}"
+        ),
+        verdict=verdict,
+        refusal_reasons=refusal_reasons,
+        cluster_separation_ratio=separation,
+        min_cluster_separation_ratio=min_separation,
+        p_cluster_cv=fast_cv,
+        lpe_cluster_cv=slow_cv,
+        scores={cpu: scores[cpu] for cpu in logical_cpus},
+        fast_cpus=p_cpus,
+        slow_cpus=lpe_cpus,
     )
 
     log_event(
@@ -619,9 +752,12 @@ def verify_topology(config: ResolvedConfig) -> TopologyResult:
         efficiency_class_ordering_matched=ordering_matched,
         efficiency_class_partition_matched=partition_matched,
         efficiency_class_direction=direction,
+        verdict=verdict,
+        refusal_reasons=refusal_reasons,
         benchmark={
-            "integer_iterations": integer_iterations,
-            "float_iterations": float_iterations,
+            "kernel": kernel.name,
+            "work_units_per_trial": kernel.work_units_per_trial,
+            **kernel.params,
             "repeats_per_cpu": repeats,
             "warmup_repeats": warmup_repeats,
             "score_estimator": "min_elapsed_over_repeats",
@@ -634,6 +770,26 @@ def verify_topology(config: ResolvedConfig) -> TopologyResult:
             "processor": platform.processor(),
         },
     )
+
+
+def verify_topology(config: ResolvedConfig) -> TopologyResult:
+    """Empirically determine the P / LP-E split, raising unless it is established (spec §4).
+
+    Raises:
+        TopologyVerificationError: If the clusters do not separate cleanly, do not match the
+            expected split, or the P-cluster is not the faster one. Failure is a hard error, not a
+            warning — a caller must not proceed on an ambiguous mapping. Callers that need the
+            measurement regardless of the verdict use :func:`measure_topology` and inspect
+            ``verdict`` themselves.
+    """
+    result = measure_topology(config)
+    if result.verdict != "pass":
+        raise TopologyVerificationError(
+            "topology verification REFUSED: "
+            + " ".join(result.refusal_reasons)
+            + f" Scores: {result.scores}"
+        )
+    return result
 
 
 # ==================================================================================================
@@ -780,11 +936,14 @@ def _write_verified_topology(
     measured = topology["measured"]
     measured["run_id"] = run_id
     measured["timestamp_utc"] = result.timestamp_utc
+    measured["kernel"] = result.benchmark["kernel"]
     measured["efficiency_class_map"] = {
         int(k): int(v) for k, v in result.efficiency_class_map.items()
     }
     measured["scores"] = {int(k): round(v, 3) for k, v in result.scores.items()}
     measured["cluster_separation_ratio"] = round(result.cluster_separation_ratio, 4)
+    measured["p_cluster_cv"] = round(result.p_cluster_cv, 4)
+    measured["lpe_cluster_cv"] = round(result.lpe_cluster_cv, 4)
     measured["efficiency_class_ordering_matched"] = result.efficiency_class_ordering_matched
 
     with yaml_path.open("w", encoding="utf-8") as handle:
@@ -846,14 +1005,28 @@ def main(argv: list[str] | None = None) -> int:
             )
         return 0
 
-    result = verify_topology(config)
+    # Captured BEFORE the benchmark so the manifest records the conditions the scores were taken
+    # under, and so a session outside MACHINE.md's pinned conditions is visible in the artifact
+    # rather than only in someone's memory (AUDIT_LOG.md AF-005).
+    power_state = capture_power_state()
+    pinned_deviations = check_pinned_conditions(power_state, pinned=config.get("power.pinned"))
 
+    result = measure_topology(config)
+    passed = result.verdict == "pass"
+
+    end_power_state = capture_power_state()
+
+    # AF-006: a refused verification emits a manifest too. Its per-CPU scores are measurements of
+    # real silicon and spec §9.2 requires them to be citable to a run_id; spec §5.1's treatment of
+    # an UNSUPPORTED preflight is the same principle — a negative result is a data point.
+    # A refused run records verified=false with null CPU lists, so the clustering it found can
+    # never be read back as a mapping.
     run = emit(
         config=config,
         target="cpu-p",
         workload={
-            "kind": "microbench",
-            "benchmark": "topology_verify",
+            "kind": "topology_verify",
+            "benchmark": result.benchmark["kernel"],
             "task_ids": [],
             "seed": None,
             "n_repeats": result.benchmark["repeats_per_cpu"],
@@ -861,13 +1034,29 @@ def main(argv: list[str] | None = None) -> int:
         condition_label="topology_verify",
         allow_dirty=args.allow_dirty,
         repo_root=root,
-        summary=asdict(result),
-        topology_override={"p_cpus": result.p_cpus, "lpe_cpus": result.lpe_cpus, "verified": True},
+        summary={
+            **asdict(result),
+            "session": {
+                "power_state_start": asdict(power_state),
+                "power_state_end": asdict(end_power_state),
+                "pinned_condition_deviations": pinned_deviations,
+            },
+        },
+        power_state=manifest_power_state(power_state, battery_pct_end=end_power_state.battery_pct),
+        topology_override=(
+            {"p_cpus": result.p_cpus, "lpe_cpus": result.lpe_cpus, "verified": True}
+            if passed
+            else {"p_cpus": None, "lpe_cpus": None, "verified": False}
+        ),
+        self_check="pass" if passed else "fail",
     )
 
-    print(f"\nP-cores   (cpu-p)  : {result.p_cpus}")
-    print(f"LP-E cores(cpu-lpe): {result.lpe_cpus}")
+    print(f"\nverdict            : {result.verdict.upper()}")
+    print(f"fast cluster       : {result.p_cpus}")
+    print(f"slow cluster       : {result.lpe_cpus}")
     print(f"separation ratio   : {result.cluster_separation_ratio:.3f}x")
+    print(f"within-cluster CV  : fast {result.p_cluster_cv:.4f} / slow {result.lpe_cluster_cv:.4f}")
+    print(f"scores (units/s)   : {result.scores}")
     print(f"EfficiencyClass map: {result.efficiency_class_map}")
     print(
         f"open question 4    : EfficiencyClass ordering "
@@ -876,6 +1065,15 @@ def main(argv: list[str] | None = None) -> int:
         f"partition_matched={result.efficiency_class_partition_matched})"
     )
     print(f"run_id             : {run.run_id}")
+
+    if not passed:
+        # The manifest exists, so the refusal is citable; the error still propagates, because a
+        # refused verification must not look like a successful command.
+        raise TopologyVerificationError(
+            f"topology verification REFUSED (run_id={run.run_id}): "
+            + " ".join(result.refusal_reasons)
+            + " The mapping was NOT written to platform config."
+        )
 
     if args.write:
         _write_verified_topology(

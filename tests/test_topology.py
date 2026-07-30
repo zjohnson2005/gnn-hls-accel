@@ -25,7 +25,10 @@ from seam.topology import (
     _parse_processor_core_records,
     _split_into_two_clusters,
     affinity_for,
+    build_kernel,
     load_verified_topology,
+    measure_topology,
+    verify_topology,
 )
 
 _RELATION_PROCESSOR_CORE = 0
@@ -210,6 +213,123 @@ def test_single_efficiency_class_cannot_answer_the_question() -> None:
         cores, [0, 1, 2, 3], [4, 5, 6, 7]
     )
     assert (matched, partition, direction) == (False, False, "undetermined")
+
+
+# ==================================================================================================
+# Kernel selection (spec §8: the instrument is config, not a constant in code)
+# ==================================================================================================
+
+
+def test_build_kernel_refuses_an_unregistered_name() -> None:
+    """Substituting a different instrument than config names would make every score untraceable."""
+    with pytest.raises(ConfigError, match="unknown topology kernel"):
+        build_kernel("kernel_that_does_not_exist", {})
+
+
+def test_build_kernel_names_the_missing_parameter() -> None:
+    with pytest.raises(ConfigError, match="float_iterations"):
+        build_kernel("python_intfp_v1", {"integer_iterations": 10})
+
+
+def test_committed_config_names_a_registered_kernel(real_platform_config: ResolvedConfig) -> None:
+    params = real_platform_config.get("topology.verification")
+    kernel = build_kernel(params["kernel"], params)
+    assert kernel.name == params["kernel"]
+    assert kernel.work_units_per_trial > 0
+
+
+# ==================================================================================================
+# Verdict recording (AUDIT_LOG.md AF-006)
+# ==================================================================================================
+
+
+def _patch_measurement(
+    monkeypatch: pytest.MonkeyPatch, scores: dict[int, float], *, efficiency_classes: list[int]
+) -> None:
+    """Run ``measure_topology`` against fixed scores and a fixed Windows core enumeration."""
+    monkeypatch.setattr("seam.topology.enumerate_cores", lambda: _cores(efficiency_classes))
+    monkeypatch.setattr(
+        "seam.topology._bench_one_cpu", lambda cpu, **_kwargs: scores[cpu]
+    )
+
+
+_PLATFORM_A_CLASSES = [1, 1, 1, 1, 0, 0, 0, 0]
+
+
+def test_measure_topology_passes_on_a_clean_split(
+    fake_config: ResolvedConfig, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    scores = {cpu: (5.0 if cpu < 4 else 4.0) for cpu in range(8)}
+    _patch_measurement(monkeypatch, scores, efficiency_classes=_PLATFORM_A_CLASSES)
+
+    result = measure_topology(fake_config)
+
+    assert result.verdict == "pass"
+    assert result.refusal_reasons == []
+    assert result.p_cpus == [0, 1, 2, 3]
+    assert result.lpe_cpus == [4, 5, 6, 7]
+    assert result.cluster_separation_ratio == pytest.approx(1.25)
+    assert result.efficiency_class_ordering_matched is True
+
+
+def test_measure_topology_records_a_refusal_instead_of_raising(
+    fake_config: ResolvedConfig, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """AF-006: a refusal must still yield the full measurement, not just an exception message.
+
+    The earlier refused runs reported no CV at all, because the separation check raised before the
+    CV was computed. Every criterion is now evaluated and recorded.
+    """
+    scores = {cpu: (5.0 if cpu < 4 else 4.8) for cpu in range(8)}
+    _patch_measurement(monkeypatch, scores, efficiency_classes=_PLATFORM_A_CLASSES)
+
+    result = measure_topology(fake_config)
+
+    assert result.verdict == "refused"
+    assert any("separate cleanly" in reason for reason in result.refusal_reasons)
+    assert result.cluster_separation_ratio == pytest.approx(5.0 / 4.8)
+    assert result.p_cluster_cv == pytest.approx(0.0)
+    assert result.lpe_cluster_cv == pytest.approx(0.0)
+    assert result.scores == scores
+    # Open question 4 is answered for a refused run too — it is a separate question from whether
+    # the separation was large enough.
+    assert result.efficiency_class_direction == "higher_is_faster"
+
+
+def test_measure_topology_reports_every_failing_criterion_not_just_the_first(
+    fake_config: ResolvedConfig, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A 7/1 split that also fails separation must report both, so the diagnosis is complete."""
+    scores = {0: 5.0, 1: 4.99, 2: 4.98, 3: 4.97, 4: 4.96, 5: 4.95, 6: 4.94, 7: 4.6}
+    _patch_measurement(monkeypatch, scores, efficiency_classes=_PLATFORM_A_CLASSES)
+
+    result = measure_topology(fake_config)
+
+    assert result.verdict == "refused"
+    assert any("separate cleanly" in reason for reason in result.refusal_reasons)
+    assert any("does not match the expected" in reason for reason in result.refusal_reasons)
+
+
+def test_verify_topology_still_raises_on_a_refusal(
+    fake_config: ResolvedConfig, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Callers that need a mapping must not be handed an unestablished one."""
+    scores = {cpu: (5.0 if cpu < 4 else 4.8) for cpu in range(8)}
+    _patch_measurement(monkeypatch, scores, efficiency_classes=_PLATFORM_A_CLASSES)
+
+    with pytest.raises(TopologyVerificationError, match="REFUSED"):
+        verify_topology(fake_config)
+
+
+def test_measure_topology_refuses_a_platform_that_is_not_the_declared_part(
+    fake_config: ResolvedConfig, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A wrong CPU count is a broken instrument, not a verdict, so it still raises."""
+    scores = dict.fromkeys(range(4), 5.0)
+    _patch_measurement(monkeypatch, scores, efficiency_classes=[1, 1, 0, 0])
+
+    with pytest.raises(TopologyVerificationError, match="expected 8 logical CPUs"):
+        measure_topology(fake_config)
 
 
 # ==================================================================================================
