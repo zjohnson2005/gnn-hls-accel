@@ -23,6 +23,8 @@ decision) · `DEFERRED` (belongs to a later milestone).
 | AM-008 | 2026-07-29 | M1 | Topology cannot be verified — no shell | OPEN (blocks M1 accept) |
 | AM-009 | 2026-07-29 | Doc ingest | Governing docs transcribed, not byte-copied | RESOLVED (2026-07-30, hashes pinned) |
 | AM-010 | 2026-07-29 | §6.1 manifest schema | Refused topology verification must emit a manifest (AF-006) | RESOLVED |
+| AM-011 | — | — | *Identifier not used — see AM-012* | N/A |
+| AM-012 | 2026-07-30 | M1 topology gate | Run-to-run agreement is a **relative**-difference criterion | RESOLVED (2026-07-30, POST-DATA, Z. Johnson) |
 
 ---
 
@@ -367,3 +369,66 @@ identity rather than an implicit property of the code at that commit.
 MACHINE.md's pinned run conditions. AF-005 was possible because nothing recorded those conditions
 in an artifact. This captures and reports; the *gate* that refuses to start outside them remains
 M2 scope, as AF-005 states.
+
+---
+
+## AM-011 — identifier not used
+
+**Status:** N/A
+
+The task brief opening the M1 closeout referred to "AM-011 (resolved)" and forbade touching it. No
+AM-011 has ever existed in this file, which ran AM-001 → AM-010. Rather than reassign an identifier
+the instructions treated as occupied, it is left unused and the clarification below is numbered
+AM-012. Recorded so the gap does not read as a deleted entry. The same brief cited a blueprint
+"§16.9" that does not exist; both citation errors are logged in `AUDIT_LOG.md` under
+"Owner rulings applied; two write runs; OQ4 CLOSED".
+
+---
+
+## AM-012 — the M1 run-to-run agreement gate is a relative-difference criterion
+
+**Date:** 2026-07-30 · **Pre/post data:** **POST — ruled after seeing the two runs' ratios** ·
+**Status:** RESOLVED · **Authorized by:** Z. Johnson
+
+**Divergence.** The M1 topology stop rule, pre-registered in `AUDIT_LOG.md` on 2026-07-30 and
+restated in the closeout brief, required that run-to-run separation ratios "agree with each other"
+and flagged a difference "more than the larger `cv_fast`" for an explicit report and an owner
+decision. It did not say in what units the comparison is made, and the two readings disagree at the
+observed margin:
+
+| Reading | Run A vs run B | Limit | Result |
+|---|---|---|---|
+| Absolute difference in ratio units vs the CV fraction | 0.0276606546042928 | 0.024060827805485196 | exceeds by 0.0036 |
+| Relative difference vs the CV, which is itself relative | 2.014% | 2.406% | within |
+
+**Ruling.** The criterion is a **relative**-difference criterion. A coefficient of variation is
+dimensionless — a standard deviation divided by a mean — so comparing it against a quantity
+expressed in ratio units is dimensionally incoherent, and the absolute reading was a **units
+mismatch in the wording of the rule**, not a disagreement in the data. Under the correct reading the
+observed spread is roughly **1.1σ** of sampling noise: with `cv_fast ≈ 2.2%` over four cores, a
+cluster mean carries ≈1.1% of sampling error, a single ratio ≈1.3%, and the difference of two ≈1.9%.
+
+**Why this is a specification fix and not a loosened threshold.** The numeric tolerance is
+**unchanged** — the criterion still compares against the larger `cv_fast` of the pair, and no value
+in `topology.verification` was touched (`min_cluster_separation_ratio` stays 1.25,
+`max_within_cluster_cv` stays 0.15). What changed is the *units* in which an ambiguous comparison is
+evaluated. No run's verdict was reclassified: runs A and B each passed every §4 criterion on their
+own, independently of this rule, and both exceeded the pre-registered 1.30883× baseline.
+
+**Recorded as post-data, deliberately.** The ambiguity was discovered *because* the data landed in
+the narrow band where the two readings differ, and the ruling was made with the numbers in view.
+That is stated here rather than presented as a pre-registered detail, because a reader assessing the
+strength of the M1 result is entitled to know which decisions were made after seeing it. The session
+that hit the ambiguity did not resolve it in its own favour: it stopped, reported both readings, and
+referred the question to the owner.
+
+**Scope.** Applies to the run-to-run agreement comparison in the M1 topology stop rule. It does not
+alter blueprint §5.5 A/A variance handling or any M3 noise-floor criterion, which are stated in their
+own terms and are not affected by this wording.
+
+**Standing hazard this leaves.** Applied pairwise across more than two runs, the rule necessarily
+tests the extreme pair, whose spread grows as runs are added. Four AC runs produced five passing
+pairs and one exceedance (B vs D, 2.82% against 2.41%), while every run sits within tolerance of the
+four-run mean. A future revision of the rule should compare each run against the ensemble rather
+than pairwise; that revision is **not** made here, because the current M1 decision is still being
+evaluated under the rule as written.

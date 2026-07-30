@@ -1130,3 +1130,223 @@ lists, and the tripwire test is unchanged.
 2. `python -m seam.topology verify --write --allow-dirty` to persist, held to the same criteria.
 3. Config + tripwire-test update in one commit; then AF-005 closure and AM-008 resolution citing
    that commit SHA.
+
+---
+
+## 2026-07-30 — Owner rulings applied; two write runs; OQ4 CLOSED; mapping commit still held
+
+**Class:** measurement / governance
+**Milestone:** M1 — **still NOT ACCEPTED.** One criterion the owner set for the persisting run did
+not hold; see "The one criterion that did not hold" below.
+**Authorized by:** Z. Johnson (Ruling 1, gate reading; Ruling 2, charge-state correction)
+**Power pin:** `assert_power_pin.ps1` exit **0** before each run below (battery 87%, then 90%)
+
+### Ruling 1 recorded — the agreement gate is a RELATIVE-difference criterion
+
+The owner ruled that the run A vs run B comparison in the previous entry **satisfies** the gate. A
+coefficient of variation is dimensionless, so comparing a difference of separation ratios against a
+CV is only coherent as a relative comparison: 2.014% observed against the larger `cv_fast` of
+2.406%, roughly 1.1σ of sampling noise. The absolute reading (0.0277 vs 0.0241) was a **units
+mismatch in how the criterion was worded**, not a disagreement in the data.
+
+**This ruling was made after seeing the data, and that is stated plainly rather than obscured.** It
+is a units clarification, not a threshold change: the numeric tolerance is untouched, and no run's
+verdict was reclassified by moving a number. Logged as `AMENDMENTS.md` **AM-012**.
+
+### Ruling 2 recorded — charge-state correction to the pre-registration
+
+The pre-registration stated ~54% charge, quoting the owner's pre-session reading. **The actual
+charge state per run, from each manifest:**
+
+| Run | `battery_pct_start` → `end` | `charging` | Relative to the ~85% taper |
+|---|---|---|---|
+| A `3fb88dcd` | 69.0 → 70.0 | true | below — bulk charge |
+| B `963a849e` | 70.0 → 71.0 | true | below — bulk charge |
+| C `855e3590` | 87.0 → 88.0 | true | above — charge current tapering |
+| D `7b5fc2e2` | 90.0 → 90.0 | true | above — near full |
+
+The host had been charging between the owner's reading and the runs. Per the ruling, this is
+corrected here rather than re-measured. **The conservative-evidence argument in the pre-registration
+still holds:** runs A and B were taken under bulk-charge load below the taper point, which is the
+condition that depresses P-core turbo most, and they still cleared the predicted 1.30883×.
+
+The correction also produced *supporting* evidence for the pre-registered mechanism that was not
+available when the prediction was written. Separation rises monotonically as charge load falls:
+1.3599× and 1.3876× under bulk charge (69–71%), 1.3917× and 1.3989× as the current tapers (87–90%).
+That is the direction the pre-registration predicted for charging as a load, observed across the
+charge curve rather than argued from theory.
+
+### Citation error in the task brief — blueprint "§16.9" does not exist
+
+The instructions that opened this work directed the agent to re-read blueprint **§16.9** before
+starting. **There is no §16.9.** At the pinned SHA
+`72d9b6a32ea40d07201d35e22cfc6db6c0f62311a40c15bc5ecf4f9c4567c878` (750 lines), §16 runs 16.1 →
+16.6 (Gate −1) and is followed by Appendix B and Appendix A, and it carries the duplicate §16.2 /
+§16.3 numbering already recorded as AM-002. The governing text used instead was blueprint §5 (audit
+and data-integrity standard), spec §4 (core topology and affinity), and spec §7 / M1 (acceptance
+criteria). Recorded so the phantom citation does not propagate into later milestones.
+
+The same brief referred to "AM-011 (resolved)". **No AM-011 exists** in `AMENDMENTS.md`, which ends
+at AM-010. Since the brief also forbade touching AM-011, that ID is left deliberately unused rather
+than reassigned, and this entry explains the gap.
+
+### Two defects in the config writer, found by reading the written file back
+
+`_write_verified_topology` uses `ruamel.yaml` specifically to preserve this config's provenance
+comments. Both defects broke exactly what it exists to protect, and neither would have failed a
+test or changed a hash — they were found only by diffing the file the harness produced.
+
+1. **A measured list was relabelled as a hypothesis.** The comment introducing `topology.expected`
+   ("Hypothesis, from vendor documentation. **NOT evidence**") is attached to the preceding
+   `lpe_cpus` key. Replacing that key's `null` with a *block* sequence emitted the comment between
+   the key and its items, leaving that text sitting on top of the **measured** LP-E CPU list —
+   asserting the opposite of the truth about those four numbers. Fixed by writing both CPU lists as
+   flow sequences, which keep the value on the key's own line. Commit `1ddc9eb`.
+2. **Every unmeasured `null` was blanked.** ruamel renders `None` as an empty value, so the write
+   rewrote unrelated fields as `field:` instead of `field: null` — `memory.bandwidth_gbps_measured`,
+   both NPU achieved-throughput fields, `power.turbo_sustainable_s`, and **all four `thermal.*`
+   constants**. This config gives `null` the specific meaning "not yet measured, never to be
+   replaced with a plausible number", which is AM-006's entire subject; a blank value cannot be
+   distinguished from a field someone forgot to fill in. Fixed with an explicit `null` representer,
+   plus block-sequence indentation so an unrelated 15-line reindentation stops riding along. Commit
+   `190904e`.
+
+Four regression tests now cover the writer: comments survive, the hypothesis comment stays between
+`lpe_cpus` and `expected`, everything outside the `topology:` block comes back byte-identical, and
+the written file reads back as a verified topology. Suite 185 → 189.
+
+### The two persisting runs
+
+Both were `python -m seam.topology verify --write --allow-dirty` under the pinned conditions, and
+both **PASSED** every §4 criterion. Run C ran on the pre-fix writer; run D ran after fix 1, with fix
+2 not yet found. Neither is discarded — both are sealed and citable, and C's numbers stand as
+measurements regardless of the writer defect that spoiled its config output.
+
+| Quantity | Run C `855e3590-10af-4723-ab38-fb3ae0f16c86` | Run D `7b5fc2e2-dc9d-4741-8e4b-8b6e64a37f5c` |
+|---|---|---|
+| Verdict | **PASS**, no refusal reasons | **PASS**, no refusal reasons |
+| Separation ratio | **1.3917174862228963** | **1.3988665756315648** |
+| CV fast | 0.020705448258056293 | 0.019990792091298136 |
+| CV slow | 0.0029834462281206962 | 0.01973098452292933 |
+| Fast / slow cluster | {0,1,2,3} / {4,5,6,7} | {0,1,2,3} / {4,5,6,7} |
+| `EfficiencyClass` ordering | matched, `higher_is_faster`, partition matched | matched, `higher_is_faster`, partition matched |
+| `integrity.self_check` | `pass` | `pass` |
+| `integrity.raw_sha256` | `b5ad22def2f376dd7cad0e5510e6196fbed84f767cf6b491f71f4090944a6110` | `d80e87c9347a15d06a6609a25957668be2ce5fdf75dc1b69567a340eb3816c8c` |
+| `power_state.on_battery` | false | false |
+| `power_plan` | Best Performance (`ec87a53a-…`) | Best Performance (`ec87a53a-…`) |
+| Effective overlay | `00000000-0000-0000-0000-000000000000` | `00000000-0000-0000-0000-000000000000` |
+| Battery saver | off | off |
+| `pinned_condition_deviations` | **[]** | **[]** |
+| `git_sha` / `git_dirty` / `allow_dirty` | `44212a60…93ecf4` / true / true | `44212a60…93ecf4` / true / true |
+| `config_hash` | `1492611a…51072d` | `1492611a…51072d` |
+| `timestamp_utc` | 2026-07-30T23:34:56.632181+00:00 | 2026-07-30T23:38:18.265168+00:00 |
+| `workload.kind` / `benchmark` | `topology_verify` / `python_intfp_v1` | `topology_verify` / `python_intfp_v1` |
+| Elevated | false | false |
+
+Per-CPU scores, M work-units/s:
+
+| CPU | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---|---|---|---|---|---|---|---|
+| Run C | 14.267 | 14.676 | 13.881 | 14.073 | 10.180 | 10.204 | 10.255 | 10.244 |
+| Run D | 14.297 | 14.748 | 13.947 | 14.251 | 10.330 | 10.281 | 9.891 | 10.419 |
+
+`config_hash` is identical across all four AC runs and to the battery run `0d7c607b`, so the
+instrument and every one of its parameters were unchanged throughout. `git_dirty: true` with
+`allow_dirty: true` records that the writer fixes were applied but not yet committed when C and D
+ran; the SEAM paths carried only those fixes, and all other uncommitted paths belong to the
+unrelated projects in this repository.
+
+### All four AC runs, and the agreement matrix under Ruling 1
+
+| Run | Separation ratio | `cv_fast` | `cv_slow` | Charge | Verdict |
+|---|---|---|---|---|---|
+| A `3fb88dcd` | 1.3876038015371646 | 0.021645 | 0.009692 | 69→70% bulk | PASS |
+| B `963a849e` | 1.3599431469328718 | 0.024061 | 0.008466 | 70→71% bulk | PASS |
+| C `855e3590` | 1.3917174862228963 | 0.020705 | 0.002983 | 87→88% taper | PASS |
+| D `7b5fc2e2` | 1.3988665756315648 | 0.019991 | 0.019731 | 90→90% near full | PASS |
+
+Pairwise, relative difference against the larger `cv_fast` of the pair:
+
+| Pair | Relative difference | Limit | Result |
+|---|---|---|---|
+| A vs B | 2.0135% | 2.4061% | pass |
+| A vs C | 0.2960% | 2.1645% | pass |
+| A vs D | 0.8084% | 2.1645% | pass |
+| B vs C | 2.3095% | 2.4061% | pass |
+| **B vs D** | **2.8218%** | **2.4061%** | **exceeds, by a factor of 1.17** |
+| C vs D | 0.5124% | 2.0705% | pass |
+
+### The one criterion that did not hold
+
+The owner's instruction for the persisting run was that its ratio "must also agree with runs A
+(1.3876038015371646) and B (1.3599431469328718) under the relative reading now authorized," and
+that on any failed criterion the correct action is to stop and report. **Run D agrees with A
+(0.8084%) but not with B (2.8218% against a 2.4061% limit).** So the mapping was **not committed**,
+and `configs/platforms/aipc-c1.yaml` was restored to `verified: false` with null CPU lists pending
+an owner ruling.
+
+Three things about that number, none of which resolve it unilaterally:
+
+1. **Five of six pairs pass.** The single exceedance is between the extreme low (B) and extreme high
+   (D) of four runs. The rule was worded for *two* runs; applied pairwise to four it necessarily
+   tests the extremes, which spread further as runs are added. Measured instead against the
+   four-run mean of 1.384533×, every run is inside its own limit — B deviates 1.78%, D 1.04%.
+2. **Part of the B–D gap is the identified charge-state effect,** not instrument instability: B sat
+   under bulk charge, D near full. That confound was pre-registered, and it moved in the
+   conservative direction.
+3. **Nothing about the committed claim depends on it.** Membership is {0,1,2,3} / {4,5,6,7} in all
+   four AC runs and in the battery run — five for five. The weakest ratio of the five, 1.3599×, is
+   8.8% above the `min_cluster_separation_ratio` of 1.25 and 3.9% above the pre-registered
+   1.30883×. The worst CV of the five is 2.41% against a 15% limit.
+
+**No threshold was moved, no run was discarded, and no test was weakened to get past this.** It is
+also true that run C happens to clear the B pair at 2.3095% where D does not — citing C for that
+reason would be selecting a result by its agreement with a gate, so it is recorded as a fact and
+explicitly not proposed. If a persisting run is cited, it should be the run that actually wrote the
+file, decided on process grounds rather than on which number cooperates.
+
+### Spec §10 open question 4 — **CLOSED**
+
+**Does the Windows `EfficiencyClass` ordering match the empirically measured P/LP-E split? Yes, in
+the documented direction.** On this platform **a higher `EfficiencyClass` value is the faster
+core.**
+
+Windows reports `EfficiencyClass` 1 for CPUs 0–3 and 0 for CPUs 4–7. Measurement independently
+placed CPUs 0–3 in the fast cluster and 4–7 in the slow cluster, in **five for five** runs spanning
+both power conditions and every session validity state:
+
+| Run | Session | `efficiency_class_ordering_matched` | Direction | Partition matched |
+|---|---|---|---|---|
+| `0d7c607b-b80b-4563-a5cc-00fa34d51fd8` | battery, INVALID as a platform result | true | `higher_is_faster` | true |
+| `3fb88dcd-35e7-4826-96b9-8a3edce2b341` | pinned AC | true | `higher_is_faster` | true |
+| `963a849e-e8b3-4bde-83ac-2cc33add2f7e` | pinned AC | true | `higher_is_faster` | true |
+| `855e3590-10af-4723-ab38-fb3ae0f16c86` | pinned AC | true | `higher_is_faster` | true |
+| `7b5fc2e2-dc9d-4741-8e4b-8b6e64a37f5c` | pinned AC | true | `higher_is_faster` | true |
+
+The comparison was computed by the harness and recorded in each manifest, not derived by hand from
+console output, and the direction was never assumed: `_evaluate_efficiency_class_agreement` tests
+both senses and reports the one observed. Spec §4's warning against trusting the ordering blindly
+therefore stands as *methodology* — it was checked rather than assumed — while the answer for
+Platform A is that the ordering can be trusted. **This closure does not license reading the mapping
+from `EfficiencyClass` on any other platform**, and it does not remove the requirement that every
+run assert the committed mapping.
+
+### AF-005 — conditions satisfied, formal closure pending the mapping commit
+
+AF-005 required AC power, the pinned plan, and `assert_power_pin.ps1` run as an aborting gate. All
+four AC runs recorded `on_battery: false`, the pinned Best Performance plan, battery saver off, and
+an **empty** `pinned_condition_deviations` list, with the pin asserted at exit 0 before measuring.
+The finding's substance is discharged; the entry is left formally open only because its closure
+belongs with the M1 acceptance commit, which is held.
+
+### Explicit non-actions
+
+- `configs/platforms/aipc-c1.yaml` restored to `verified: false`, null CPU lists. **The mapping is
+  not committed.**
+- The `test_committed_config_ships_unverified` tripwire is unchanged and still passing, which is
+  what it is for: it failed loudly while the written config sat in the working tree.
+- `verification.*` thresholds untouched: `min_cluster_separation_ratio` 1.25,
+  `max_within_cluster_cv` 0.15, `require_expected_split` true.
+- No M2 work. No `seam/telemetry/`, no energy, thermal, PDH, or LHM code. AM-002, AM-004 and the
+  unused AM-011 identifier untouched.
+- No sealed run modified; the five original `analysis/` probe artifacts untouched.
