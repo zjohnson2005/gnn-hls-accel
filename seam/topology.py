@@ -917,12 +917,20 @@ def _write_verified_topology(
     comments, and this file's comments carry the provenance classification that makes it
     auditable.
 
+    The CPU lists are written **flow style** (``p_cpus: [0, 1, 2, 3]``) rather than as block
+    sequences. That is not cosmetic. The comment introducing ``topology.expected`` is attached to
+    the preceding ``lpe_cpus`` key, so replacing that key's scalar ``null`` with a *block* sequence
+    emits the comment between the key and its items — leaving the text "Hypothesis, from vendor
+    documentation. NOT evidence" sitting on top of the measured LP-E CPU list, which inverts its
+    meaning. A flow sequence stays on the key's own line and the comment keeps its place.
+
     Raises:
         ConfigError: If ``ruamel.yaml`` is unavailable. Not silently downgraded to PyYAML, because
             that would destroy the provenance annotations without saying so.
     """
     try:
         from ruamel.yaml import YAML
+        from ruamel.yaml.comments import CommentedSeq
     except ImportError as exc:
         raise ConfigError(
             "writing verified topology requires ruamel.yaml for comment-preserving round-trip "
@@ -935,10 +943,15 @@ def _write_verified_topology(
     with yaml_path.open("r", encoding="utf-8") as handle:
         document = yaml_rt.load(handle)
 
+    def _inline(cpus: list[int]) -> CommentedSeq:
+        seq = CommentedSeq(cpus)
+        seq.fa.set_flow_style()
+        return seq
+
     topology = document["topology"]
     topology["verified"] = True
-    topology["p_cpus"] = result.p_cpus
-    topology["lpe_cpus"] = result.lpe_cpus
+    topology["p_cpus"] = _inline(result.p_cpus)
+    topology["lpe_cpus"] = _inline(result.lpe_cpus)
 
     measured = topology["measured"]
     measured["run_id"] = run_id

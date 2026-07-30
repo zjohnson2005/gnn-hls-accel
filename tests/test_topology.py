@@ -21,9 +21,11 @@ from seam.config import ResolvedConfig, resolve_config
 from seam.errors import ConfigError, TopologyNotVerifiedError, TopologyVerificationError
 from seam.topology import (
     CoreInfo,
+    TopologyResult,
     _evaluate_efficiency_class_agreement,
     _parse_processor_core_records,
     _split_into_two_clusters,
+    _write_verified_topology,
     affinity_for,
     build_kernel,
     load_verified_topology,
@@ -439,6 +441,83 @@ def test_load_verified_topology_rejects_duplicates(fake_repo: Any) -> None:
     )
     with pytest.raises(ConfigError, match="duplicate"):
         load_verified_topology(config)
+
+
+# ==================================================================================================
+# Writing the verified mapping back to platform config
+# ==================================================================================================
+
+
+def _passing_result() -> TopologyResult:
+    """A minimal passing result, sufficient for the config writer."""
+    scores = {cpu: (14_000_000.0 if cpu < 4 else 10_000_000.0) for cpu in range(8)}
+    return TopologyResult(
+        timestamp_utc="2026-07-30T23:34:56.632181+00:00",
+        n_logical_cpus=8,
+        cores=[],
+        efficiency_class_map={cpu: (1 if cpu < 4 else 0) for cpu in range(8)},
+        scores=scores,
+        p_cpus=[0, 1, 2, 3],
+        lpe_cpus=[4, 5, 6, 7],
+        cluster_separation_ratio=1.4,
+        p_cluster_cv=0.02,
+        lpe_cluster_cv=0.003,
+        verdict="pass",
+        efficiency_class_ordering_matched=True,
+        efficiency_class_partition_matched=True,
+        efficiency_class_direction="higher_is_faster",
+        benchmark={"kernel": "python_intfp_v1"},
+    )
+
+
+def test_writing_the_mapping_preserves_the_provenance_comments(fake_repo: Any) -> None:
+    """The writer uses ruamel precisely to keep these comments; losing them defeats the point."""
+    path = fake_repo / "configs" / "platforms" / "aipc-c1.yaml"
+
+    _write_verified_topology(path, _passing_result(), run_id="a" * 8)
+    text = path.read_text(encoding="utf-8")
+
+    assert "RULES FOR EDITING THIS FILE" in text
+    assert "Hypothesis, from vendor documentation" in text
+    assert "50 TOPS is a PEAK INT8 figure" in text
+    assert "DERIVED AND UNVERIFIED" in text
+
+
+def test_writing_the_mapping_does_not_relabel_it_as_a_hypothesis(fake_repo: Any) -> None:
+    """A block sequence pushes ``expected``'s comment between ``lpe_cpus`` and its items.
+
+    The comment reads "Hypothesis, from vendor documentation. NOT evidence", so landing it on top of
+    the *measured* LP-E list states the exact opposite of the truth about those numbers. The lists
+    are therefore written inline, and this test is what keeps them that way.
+    """
+    path = fake_repo / "configs" / "platforms" / "aipc-c1.yaml"
+
+    _write_verified_topology(path, _passing_result(), run_id="b" * 8)
+    lines = path.read_text(encoding="utf-8").splitlines()
+
+    lpe_line = next(i for i, line in enumerate(lines) if line.strip().startswith("lpe_cpus:"))
+    hypothesis_line = next(
+        i for i, line in enumerate(lines) if "Hypothesis, from vendor documentation" in line
+    )
+    expected_line = next(i for i, line in enumerate(lines) if line.strip() == "expected:")
+
+    assert "[4, 5, 6, 7]" in lines[lpe_line], "the measured list must stay on its own key's line"
+    assert lpe_line < hypothesis_line < expected_line, (
+        "the hypothesis comment must sit between lpe_cpus and expected, not inside the measured list"
+    )
+
+
+def test_written_mapping_reads_back_as_a_verified_topology(fake_repo: Any) -> None:
+    """Round-trip: what the writer emits must be what ``load_verified_topology`` accepts."""
+    path = fake_repo / "configs" / "platforms" / "aipc-c1.yaml"
+
+    _write_verified_topology(path, _passing_result(), run_id="c" * 8)
+    reloaded = load_verified_topology(resolve_config([path], repo_root=fake_repo))
+
+    assert reloaded.verified is True
+    assert reloaded.p_cpus == (0, 1, 2, 3)
+    assert reloaded.lpe_cpus == (4, 5, 6, 7)
+    assert reloaded.run_id == "c" * 8
 
 
 # ==================================================================================================
