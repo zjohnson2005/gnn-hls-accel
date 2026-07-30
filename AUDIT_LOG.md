@@ -715,3 +715,184 @@ reports `topology: {p_cpus: null, lpe_cpus: null, verified: false}`.
 **M2 must not begin.** No telemetry, LHM bridge, energy, or thermal code was written this session.
 The `cpu-p` and `cpu-lpe` targets cannot be used at all until the mapping is verified — the schema
 enforces this, and `affinity_for` refuses.
+
+---
+
+## 2026-07-30 — AF-006 RESOLVED — a refused verification now emits a manifest
+
+**Class:** traceability
+**Milestone:** M1
+**Status:** RESOLVED in `899bf23b4c8909639566dfd924312a574afaeeea`
+**Relationship:** discharges the AF-006 entry above, which was left OPEN as a design decision for
+the spec owner. Decision taken by Z. Johnson on 2026-07-29 and recorded as `AMENDMENTS.md` AM-010.
+
+### What changed
+
+| Change | Where |
+|---|---|
+| `workload.kind` gains `topology_verify` | `seam/schemas/run_manifest.schema.json` |
+| The `cpu-p`/`cpu-lpe` verified-topology precondition is exempted for that kind only, keyed on `workload.kind` rather than on `target` | same |
+| New rule: `topology_verify` + `topology.verified: false` ⇒ `integrity.self_check` **must** be `"fail"` | same |
+| `measure_topology()` evaluates every criterion and returns a `verdict` + reasons; `verify_topology()` raises unless it passed | `seam/topology.py` |
+| The CLI emits the manifest for either verdict, then propagates a refusal | same |
+| The microbenchmark kernel is selected by name from config and recorded as `workload.benchmark` | same, `configs/platforms/aipc-c1.yaml` |
+| Host power state captured into the manifest `power_state` block; pinned-condition deviations logged | `seam/powerstate.py` (new) |
+
+**AF-006's own recommendation was not followed.** It suggested adding a non-execution `target`
+(`host` / `self-check`). `target` enumerates execution targets and M4/M5 identify sweep cells by
+it, so widening it for a diagnostic would weaken a load-bearing field. The workload kind carries
+the diagnostic nature instead, and `target: cpu-p` is retained because establishing the
+`cpu-p` / `cpu-lpe` mapping is precisely what the run does. Reasoning in full in AM-010.
+
+**A hazard the fix creates, and its guard.** An exemption that lets a run declare
+`verified: false` under a CPU target could let a refusal be filed as a success. Schema rule 3
+above makes that combination invalid: a refused verification is *structurally* unable to report
+`self_check: "pass"`. Covered by `test_refused_topology_verify_must_record_a_failing_verdict`.
+
+**Side effect worth stating.** Because the earlier refused runs raised at the first failing check,
+they could not report their within-cluster CV at all — the CV values in the topology entry above
+were computed by hand afterwards. Every criterion is now evaluated and recorded, so a refusal
+reports its full diagnostic picture.
+
+`ruff` clean, `mypy` clean (21 source files), `pytest` **178 passed** (up from 148; 30 new tests,
+none weakened, skipped, xfailed, or deleted).
+
+---
+
+## 2026-07-30 — Pinned run conditions: what was changed on the host, and why
+
+**Class:** session validity
+**Milestone:** M1
+**Relationship:** follows AF-005, which required "plug in, activate the pinned overlay, run
+`assert_power_pin.ps1` as a gate that aborts". This entry records the attempt and its outcome.
+
+### State observed before any change (2026-07-30, ~10:52 local)
+
+| Condition | Observed |
+|---|---|
+| AC | **online** — `ACLineStatus=1`, battery 29→31% and **charging** |
+| Power plan | **Balanced** `381b4222-f694-41f0-9685-ff5bb260df2e` |
+| Power-mode overlay | **`961cc777-2547-4f9d-8174-7d86181b8a7a`** — "Best power efficiency" |
+| Battery saver | off (`SystemStatusFlag=0`) |
+| Background load | ~12% total CPU (was ~26% in the previous session) |
+
+The overlay is the finding here. AF-005 recorded the plan as Balanced but nothing had read the
+Windows **power-mode slider**, which is a separate control: the host was running the *most
+aggressive power-saving* overlay available while the previous topology runs were taken. That
+clamps turbo directly.
+
+### Changes made — power configuration only
+
+1. **Activated the pinned plan** `ec87a53a-19a6-4f4a-980f-ab27cc929b25` ("Best Performance") by
+   GUID. MACHINE.md predicted it "may be omitted from `powercfg /list` on this SKU — activate by
+   GUID", and that is exactly the situation: `powercfg /list` shows only Balanced, but
+   `powercfg /duplicatescheme` refused with *"a power scheme with the specified GUID already
+   exists"*, which is how the scheme's presence was confirmed before activating it. **AF-005's
+   inference that the pinned GUID is an overlay rather than a scheme was incorrect** — it is a
+   hidden scheme, as MACHINE.md says.
+2. **Set the power-mode overlay** to Best Performance `ded574b5-45a0-4f42-8737-46345c09c238`.
+   Under the High-Performance-derived scheme Windows reports the *effective* overlay as the
+   all-zero GUID (the slider does not apply to that scheme), which is what manifests now record.
+   The "Best power efficiency" overlay is no longer in effect either way.
+
+Nothing else was touched. **No user process was killed** and no non-power setting was altered.
+`assert_power_pin.ps1` then exited **0** (`acOk=True planOk=True`) for the first time in this
+project's history.
+
+> **The host is left in the pinned configuration**, since MACHINE.md requires it for every
+> measurement session. To revert: `powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2e`.
+
+### AC power was then lost mid-session, and this is unresolved
+
+Between the pre-run check and the verification run, **the charger disconnected.** Confirmed by
+three independent sources rather than assumed from one:
+
+| Source | Reading |
+|---|---|
+| `GetSystemPowerStatus` | `ACLineStatus=0`, `BatteryFlag=2` |
+| `Win32_Battery` (CIM) | `BatteryStatus=1` (discharging) |
+| `assert_power_pin.ps1` | exit **2** (AC offline) |
+
+Battery fell 31% → 25% monotonically over ~9 minutes of polling. This is a physical disconnection,
+not a software state that this session could restore.
+
+---
+
+## 2026-07-30 — Topology verification PASSED its criteria, on an INVALID session
+
+**Class:** measurement / session validity
+**Milestone:** M1 — **still NOT ACCEPTED**
+**Run ID:** `0d7c607b-b80b-4563-a5cc-00fa34d51fd8`
+**Git SHA:** `899bf23b4c8909639566dfd924312a574afaeeea` (dirty tree, `--allow-dirty`; all
+uncommitted paths belong to the unrelated projects in this repository — SEAM paths were clean)
+**Kernel:** `python_intfp_v1` · **config_hash:** `1492611a666e397eba7cf0869ad9cc3a5bf63e6e9e420874ba247b600251072d`
+
+### Result
+
+| Quantity | Value |
+|---|---|
+| Verdict | **PASS** — every §4 acceptance criterion held |
+| Fast cluster (CPUs) | 0, 1, 2, 3 |
+| Slow cluster (CPUs) | 4, 5, 6, 7 |
+| Cluster separation | **1.309×** (required ≥ 1.25×) |
+| Within-cluster CV | fast 3.32%, slow 0.24% (limit 15%) |
+| `EfficiencyClass` ordering | **MATCHED**, `higher_is_faster`, partitions identical as sets |
+
+Per-CPU scores, M work-units/s:
+
+| CPU | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---|---|---|---|---|---|---|---|
+| `0d7c607b` | 12.909 | 13.959 | 12.858 | 13.302 | 10.167 | 10.100 | 10.127 | 10.121 |
+
+**These numbers are quotable against `run_id: 0d7c607b-b80b-4563-a5cc-00fa34d51fd8`** — the first
+topology measurement in this project that is. That is AF-006's fix working as intended.
+
+### Why the mapping was still NOT committed
+
+The run was taken **on battery** (27% → 26%, discharging), because AC was lost between the
+pre-flight check and the run. MACHINE.md classifies such a session as **INVALID, not noisy**, and
+a passing measurement does not change the classification. Therefore:
+
+- `configs/platforms/aipc-c1.yaml` still carries `topology.verified: false` with null CPU lists.
+- `--write` was **not** passed; had it been, it would now be refused — this session added
+  `assert_pinned_for_committed_result()`, which lets an unpinned session run and emit its manifest
+  but forbids it from writing a result back into platform config. Discarding the run instead would
+  recreate the AF-006 hole; the correct treatment is *citable but not authoritative*.
+- The manifest records the violation itself: `power_state.on_battery: true`, and
+  `summary.json` `session.pinned_condition_deviations` names it. The invalidity travels with the
+  artifact rather than living in this log alone.
+
+### What this run establishes anyway: the earlier refusals were the POWER PLAN
+
+Comparing against the two refused runs (battery + **Balanced** + "Best power efficiency" overlay):
+
+| Session | Fast mean | Slow mean | Ratio |
+|---|---|---|---|
+| Refused run 1 (Balanced) | 5.350 M | 4.772 M | 1.121× |
+| Refused run 2 (Balanced) | 5.475 M | 4.615 M | 1.186× |
+| `0d7c607b` (Best Performance) | 13.257 M | 10.129 M | **1.309×** |
+
+Absolute throughput is **~2.4× higher** under the pinned plan, on the same kernel, on the same
+battery power. The dominant compressor of the P/LP-E gap was the **Balanced plan and the
+power-efficiency overlay**, not the AC/battery axis and **not the CPython kernel**. AF-005's
+hypothesis 1 is substantially confirmed with the plan identified as the specific mechanism;
+hypothesis 2 (interpreter dispatch masking the difference) is **not supported** — `python_intfp_v1`
+discriminates the two core types at 1.309× once the host is not being clamped.
+
+**No kernel replacement was performed**, and the spec §4 instrument stands as pre-registered. The
+owner's Decision 3 (replace the kernel with a native/numpy loop) is therefore not triggered by this
+evidence. `min_cluster_separation_ratio` was not touched and remains 1.25.
+
+### Open question 4 — still provisional, but for a different reason than before
+
+The harness itself computed the comparison this time and recorded it in a manifest, rather than it
+being derived by hand from console output. It **matched**: Windows `EfficiencyClass` 1 on CPUs 0–3
+= the measured-fast cluster, in the documented direction. It is not yet *closed*, because the run
+carrying it is an invalid session. Closing it requires the same numbers from a run on AC power.
+
+### To close M1
+
+1. Reconnect AC power (physical action; outside this session's control).
+2. `python -m seam.topology verify --write --allow-dirty`, ≥2 repeats.
+3. Update the `test_committed_config_ships_unverified` tripwire in the same commit that records
+   the run_id, as the earlier entry requires.

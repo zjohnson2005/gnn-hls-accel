@@ -12,6 +12,7 @@ __all__ = [
     "DirtyTreeError",
     "GitError",
     "ManifestValidationError",
+    "PinnedConditionError",
     "ProvenanceError",
     "RawStoreError",
     "RunSealedError",
@@ -54,6 +55,15 @@ class ProvenanceError(SeamError):
 
     Blueprint §5.2 requires every run to pin the provenance snapshot it relied on, so a missing
     artifact invalidates the run rather than degrading it.
+    """
+
+
+class PinnedConditionError(SeamError):
+    """A session outside MACHINE.md's pinned run conditions tried to commit a platform result.
+
+    MACHINE.md § "Pinned run conditions (MANDATORY)" classifies such a session as **INVALID, not
+    noisy**. The session is still allowed to run and to emit its manifest — the measurement is real
+    and stays citable — but it may not write a result back into platform config.
     """
 
 

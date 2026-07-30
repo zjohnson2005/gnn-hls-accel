@@ -27,10 +27,12 @@ import uuid
 from dataclasses import dataclass
 from typing import Any, Final
 
+from seam.errors import PinnedConditionError
 from seam.jsonlog import log_event
 
 __all__ = [
     "PowerState",
+    "assert_pinned_for_committed_result",
     "capture_power_state",
     "check_pinned_conditions",
     "manifest_power_state",
@@ -327,3 +329,25 @@ def check_pinned_conditions(state: PowerState, *, pinned: dict[str, Any] | None)
         power_plan_guid=state.power_plan_guid,
     )
     return deviations
+
+
+def assert_pinned_for_committed_result(deviations: list[str]) -> None:
+    """Refuse to persist a platform result measured outside the pinned run conditions.
+
+    This is narrower than the run gate AF-005 defers to M2. A session outside pinned conditions may
+    still run and still emit its manifest — the measurement is real, and discarding it would
+    recreate the AF-006 traceability hole. What it may not do is write its result back into
+    ``configs/platforms/`` and become the value every later run asserts.
+
+    Raises:
+        PinnedConditionError: If ``deviations`` is non-empty.
+    """
+    if not deviations:
+        return
+
+    raise PinnedConditionError(
+        "refusing to write a measured result to platform config: this session violates "
+        "MACHINE.md's pinned run conditions, which classifies it as INVALID, not noisy "
+        f"({'; '.join(deviations)}). The run's manifest was still emitted, so the measurement "
+        "remains citable as a diagnostic. Restore the pinned conditions and re-measure."
+    )

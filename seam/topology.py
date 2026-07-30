@@ -48,7 +48,12 @@ from seam.errors import (
     TopologyVerificationError,
 )
 from seam.jsonlog import log_event, utc_now_iso
-from seam.powerstate import capture_power_state, check_pinned_conditions, manifest_power_state
+from seam.powerstate import (
+    assert_pinned_for_committed_result,
+    capture_power_state,
+    check_pinned_conditions,
+    manifest_power_state,
+)
 
 __all__ = [
     "CoreInfo",
@@ -329,11 +334,13 @@ def _python_intfp_v1(integer_iterations: int, float_iterations: int) -> tuple[in
     previous accumulator, so it measures single-thread latency-bound throughput rather than the
     memory system.
 
-    **Known limitation (AMENDMENTS.md AM-011).** Every iteration is a handful of CPython bytecodes,
-    so its cost is dominated by interpreter dispatch, reference counting, and small-integer object
-    allocation — work that is much the same on both core types. That compresses the P/LP-E ratio
-    toward 1. Retained as a registered kernel because it is dependency-free and reproduces the
-    earlier refused runs, but it is not the default instrument.
+    Every iteration is a handful of CPython bytecodes, so a large share of its cost is interpreter
+    dispatch and reference counting rather than the arithmetic itself. That was the standing
+    suspicion for why two earlier runs measured only 1.12x and 1.19x separation (AUDIT_LOG.md,
+    2026-07-29). It was **not** the cause: under MACHINE.md's pinned power plan the same kernel
+    separates the clusters by 1.309x (run `0d7c607b-b80b-4563-a5cc-00fa34d51fd8`), and absolute
+    throughput is ~2.4x higher. The compression was the Balanced power plan and the
+    "Best power efficiency" overlay clamping both core types, not the instrument.
     """
     acc_i = 1
     for i in range(integer_iterations):
@@ -1076,6 +1083,9 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     if args.write:
+        # A pass measured outside the pinned conditions is evidence, but it is not the value every
+        # later run asserts. MACHINE.md calls such a session INVALID; this is where that bites.
+        assert_pinned_for_committed_result(pinned_deviations)
         _write_verified_topology(
             root / "configs" / "platforms" / f"{args.platform_id}.yaml",
             result,

@@ -12,8 +12,10 @@ from typing import Any
 
 import pytest
 
+from seam.errors import PinnedConditionError
 from seam.powerstate import (
     PowerState,
+    assert_pinned_for_committed_result,
     capture_power_state,
     check_pinned_conditions,
     manifest_power_state,
@@ -109,6 +111,27 @@ def test_plan_guid_comparison_is_case_insensitive() -> None:
 def test_platform_without_pinned_conditions_still_checks_ac() -> None:
     assert check_pinned_conditions(_state(), pinned=None) == []
     assert check_pinned_conditions(_state(on_battery=True), pinned=None) != []
+
+
+# ==================================================================================================
+# Committing a result measured outside the pinned conditions
+# ==================================================================================================
+
+
+def test_a_pinned_session_may_commit_its_result() -> None:
+    assert_pinned_for_committed_result([])
+
+
+def test_an_unpinned_session_may_not_commit_its_result() -> None:
+    """MACHINE.md: such a session is INVALID. A passing measurement does not change that."""
+    with pytest.raises(PinnedConditionError, match="INVALID"):
+        assert_pinned_for_committed_result(["AC power required (ACLineStatus=1)"])
+
+
+def test_the_refusal_explains_that_the_measurement_is_still_citable() -> None:
+    """The run is not discarded — discarding it would recreate the AF-006 traceability hole."""
+    with pytest.raises(PinnedConditionError, match="manifest was still emitted"):
+        assert_pinned_for_committed_result(["battery saver"])
 
 
 # ==================================================================================================
