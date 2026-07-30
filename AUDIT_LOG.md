@@ -1024,3 +1024,109 @@ recorded as an explicit `null` rather than `false`. Schema, emitter, and tests c
 suite 178 → 185 tests. Done **before** measuring, so every run below records its own charge state.
 `spec_version` stays `"1.0"`: the field is additive and every manifest valid under the previous
 schema remains valid.
+
+---
+
+## 2026-07-30 — Topology verification PASSED on a VALID pinned AC session (×2)
+
+**Class:** measurement
+**Milestone:** M1 — **not yet accepted at the time of writing**; one pre-registered gate is
+ambiguous and awaits an owner ruling (see "Run-to-run agreement" below)
+**Prediction:** the entry immediately above, committed in `99da687` **before** these runs
+**Power pin:** `analysis/aipc-c1/scripts/assert_power_pin.ps1` exit **0**
+(`AC online=True raw=1`, `Plan active: Best Performance ec87a53a-…`, `acOk=True planOk=True`) —
+run as a gate before measuring, as AF-005 required
+**Git SHA (both runs):** `99da68716227b41c9548ba6e335bc6a1d242dbe9`, `git_dirty: true`,
+`allow_dirty: true` — every uncommitted path belongs to the unrelated projects in this repository;
+the SEAM paths (`seam/`, `tests/`, `configs/`, `docs/`, `AUDIT_LOG.md`, `AMENDMENTS.md`) were clean
+**config_hash (both runs):** `1492611a666e397eba7cf0869ad9cc3a5bf63e6e9e420874ba247b600251072d`
+— identical to the battery session `0d7c607b`, so the instrument and its parameters are unchanged
+**Kernel:** `python_intfp_v1`, 6 000 000 work-units per trial, 7 repeats + 2 warm-up, min-elapsed
+**Elevated:** false (not required for this measurement)
+
+### Results
+
+| Quantity | Run A `3fb88dcd-35e7-4826-96b9-8a3edce2b341` | Run B `963a849e-e8b3-4bde-83ac-2cc33add2f7e` |
+|---|---|---|
+| Verdict | **PASS**, no refusal reasons | **PASS**, no refusal reasons |
+| Separation ratio | **1.3876038015371646** | **1.3599431469328718** |
+| CV fast | 0.021644540218476584 | 0.024060827805485196 |
+| CV slow | 0.009691545939056138 | 0.008466216319797161 |
+| Fast cluster | {0, 1, 2, 3} | {0, 1, 2, 3} |
+| Slow cluster | {4, 5, 6, 7} | {4, 5, 6, 7} |
+| `EfficiencyClass` ordering | **matched**, `higher_is_faster`, partition matched | **matched**, `higher_is_faster`, partition matched |
+| `integrity.self_check` | `pass` | `pass` |
+| `integrity.raw_sha256` | `9eaa8404ddbc8ff40ff3270377bdf0bd11be97882e39a0143941cd15c5d65237` | `9a2dd67a3a4ec8fe38ec64fa38143040faef3dbfbdbe88d5fe8235f633728693` |
+| `timestamp_utc` | 2026-07-30T23:18:49.897357+00:00 | 2026-07-30T23:19:36.922937+00:00 |
+
+`EfficiencyClass` map, both runs: CPUs 0–3 → 1, CPUs 4–7 → 0. The EC convention observed is
+**higher EfficiencyClass = faster core**, which is the documented Windows direction.
+
+Per-CPU scores, M work-units/s:
+
+| CPU | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---|---|---|---|---|---|---|---|
+| Run A | 14.152 | 14.528 | 13.711 | 13.908 | 10.172 | 10.153 | 9.988 | 10.260 |
+| Run B | 14.000 | 14.094 | 13.265 | 13.605 | 9.996 | 10.155 | 10.052 | 10.215 |
+
+### Session conditions, as recorded in the artifacts
+
+Both runs: `power_state.on_battery: false`, `power_plan: "Best Performance
+(ec87a53a-19a6-4f4a-980f-ab27cc929b25)"`, effective overlay `00000000-0000-0000-0000-000000000000`
+(the slider does not apply to this scheme), battery saver off, and
+`session.pinned_condition_deviations: []` — **an empty deviation list for the first time on a
+topology run.** Run A: `battery_pct_start 69.0 → battery_pct_end 70.0`, `charging: true`.
+Run B: `70.0 → 71.0`, `charging: true`.
+
+Charge was **69–71%, not the ~54%** stated when the prediction was written — the host had been
+charging in the interim. Still below the ~85% level at which charge current tapers, so both runs
+were taken under bulk-charge load and the conservative-evidence argument in the prediction applies
+unchanged.
+
+### Prediction outcome: HELD
+
+1. **Separation exceeds 1.30883×** on both runs: 1.38760× (+6.02%) and 1.35994× (+3.90%). The
+   *lower* of the two clears the baseline, so the prediction does not depend on which run is cited.
+2. **Cluster membership unchanged:** {0,1,2,3} fast / {4,5,6,7} slow, identical across both runs and
+   to `0d7c607b`.
+3. `EfficiencyClass` ordering matched in the documented direction on both runs.
+
+The mechanism proposed in advance — P-cores gaining more turbo headroom than LP-E cores under AC —
+is consistent with what moved. Comparing against `0d7c607b` (battery, same plan, same kernel, same
+`config_hash`): the fast-cluster mean rose 13.257 → 14.075 M work-units/s (+6.2%) in run A, while
+the slow-cluster mean was flat, 10.129 → 10.143 M (+0.1%). The ratio widened because the P-cores
+got faster, not because the LP-E cores got slower.
+
+### Run-to-run agreement — the one gate that is ambiguous
+
+The pre-registered stop rule requires the two ratios to "agree with each other," and flags a
+difference "more than the larger `cv_fast`" for an explicit report and an owner decision before
+committing. The observed difference is **0.0276606546042928** and the larger `cv_fast` is
+**0.024060827805485196**. Whether that passes depends on how the comparison is read, and the rule
+did not say:
+
+| Reading | Comparison | Verdict |
+|---|---|---|
+| Absolute difference in ratio units vs the CV fraction | 0.02766 > 0.02406 | **exceeds by 0.0036 (15% over)** |
+| Relative difference vs the CV, which is itself relative | 0.02766 / 1.37377 = **2.014%** < 2.406% | within |
+
+A coefficient of variation is dimensionless, so comparing it to a difference expressed in ratio
+units is dimensionally inconsistent; the second reading is the defensible one. For scale: the
+standard error of a cluster mean over 4 cores is ≈ `cv/√4`, giving ≈1.2% on the fast mean and ≈0.45%
+on the slow, so a single ratio carries ≈1.3% (≈0.018) of sampling error and the difference of two
+carries ≈0.025. The observed 0.0277 is therefore **≈1.1σ** — unremarkable noise, concentrated in the
+fast cluster, where CPU 2 differs most between runs (13.711 vs 13.265 M).
+
+**No threshold was touched and no run was discarded.** Both runs are sealed in `raw/` and citable.
+Because the rule is a pre-registered gate, it is not this session's call to resolve by choosing the
+convenient reading: the ambiguity is recorded here and referred to the owner. `--write` was **not**
+passed, so `configs/platforms/aipc-c1.yaml` still carries `topology.verified: false` with null CPU
+lists, and the tripwire test is unchanged.
+
+### What remains to close M1
+
+1. Owner ruling on the agreement reading above (or a third measurement run to characterise the
+   spread, which must be authorised rather than added to fish for a tighter number).
+2. `python -m seam.topology verify --write --allow-dirty` to persist, held to the same criteria.
+3. Config + tripwire-test update in one commit; then AF-005 closure and AM-008 resolution citing
+   that commit SHA.
