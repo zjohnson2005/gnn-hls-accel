@@ -25,6 +25,7 @@ decision) · `DEFERRED` (belongs to a later milestone).
 | AM-010 | 2026-07-29 | §6.1 manifest schema | Refused topology verification must emit a manifest (AF-006) | RESOLVED |
 | AM-011 | — | — | *Identifier not used — see AM-012* | N/A |
 | AM-012 | 2026-07-30 | M1 topology gate | Run-to-run agreement is a **relative**-difference criterion | RESOLVED (2026-07-30, POST-DATA, Z. Johnson) |
+| AM-013 | 2026-07-30 | M1 topology gate | Agreement is assessed among **settled-charge** runs only | RESOLVED (2026-07-30, POST-DATA, Z. Johnson) |
 
 ---
 
@@ -432,3 +433,63 @@ pairs and one exceedance (B vs D, 2.82% against 2.41%), while every run sits wit
 four-run mean. A future revision of the rule should compare each run against the ensemble rather
 than pairwise; that revision is **not** made here, because the current M1 decision is still being
 evaluated under the rule as written.
+
+**Superseded in part by AM-013**, which resolves that standing hazard by defining the comparator
+set. AM-012's relative-reading clarification itself **stands and is unaffected**: agreement is still
+assessed as a relative difference against the larger `cv_fast` of the compared runs.
+
+---
+
+## AM-013 — the M1 agreement gate is assessed among settled-charge runs only
+
+**Date:** 2026-07-30 · **Pre/post data:** **POST — ruled after seeing all four AC runs' ratios** ·
+**Status:** RESOLVED · **Authorized by:** Z. Johnson
+
+**Ruling.** Run-to-run agreement for the M1 topology gate is assessed **only among runs conducted at
+settled charge**, defined as battery **> 85% and not under bulk charge**.
+
+**Rationale 1 — charge state is a documented covariate on this platform, not noise.** Separation
+rises monotonically as charging load falls:
+
+| Run | Charge condition | Separation ratio |
+|---|---|---|
+| B `963a849e` | bulk charge, 70 → 71% | 1.3599431469328718 |
+| A `3fb88dcd` | bulk charge, 69 → 70% | 1.3876038015371646 |
+| C `855e3590` | taper, 87 → 88% | 1.3917174862228963 |
+| D `7b5fc2e2` | settled, 90 → 90% | 1.3988665756315648 |
+
+This is the **pre-registered mechanism** — P-core turbo headroom — appearing as a covariate.
+Charging draws adapter headroom and adds chassis heat, and both depress P-core turbo more than LP-E
+turbo, so the measured gap between the core types compresses under charge load. The prediction
+registered on 2026-07-30 said so before any of these runs were taken.
+
+**Rationale 2 — runs at different charge conditions are not exchangeable.** An agreement test asks
+whether repeated measurements of the *same* quantity under the *same* conditions scatter more than
+sampling error explains. Pooling bulk-charge and settled-charge runs into that test conflates a real
+physical effect with sampling noise, and then reports the physical effect as instrument instability.
+
+**Rationale 3 — the prior pairwise rule had an n-dependent defect.** It was written for **two**
+runs. Applied pairwise across four it necessarily tests the extremes, and **maximum pairwise spread
+grows with n**, so the rule got *harder to satisfy as evidence accumulated* — the opposite of how
+replication should work. That is a specification defect, and it is being **corrected, not loosened.**
+
+**What is unchanged.** The **numeric tolerance is identical**: the larger `cv_fast` of the compared
+runs, exactly as before. Nothing in `topology.verification` was touched —
+`min_cluster_separation_ratio` stays 1.25, `max_within_cluster_cv` stays 0.15,
+`require_expected_split` stays true. **No run's individual PASS/FAIL verdict was reclassified**: all
+four AC runs passed every §4 criterion on their own, independently of this rule, and each exceeded
+the pre-registered 1.30883× baseline. AM-012 stands and is unaffected.
+
+**Status of runs A and B.** They remain **fully logged, citable, and not discarded.** Nothing is
+deleted, hidden, or marked invalid. Their role changes: from **agreement comparators** to
+**supporting evidence for the charge-state mechanism.** In that role they are more informative than
+they were as comparators — they are the low-charge end of the monotone series in Rationale 1, and
+without them the covariate could not be demonstrated on this platform at all.
+
+**Recorded as post-data, deliberately.** This was ruled with all four ratios in view, after a session
+declined to resolve the ambiguity in its own favour and referred it to the owner. A reader assessing
+the strength of the M1 result is entitled to know that the comparator set was defined after the data
+were seen. What limits the hazard is that the rule is stated as a *condition on the measurement*
+(settled charge) rather than as a tolerance on the outcome, that the tolerance itself did not move,
+and that the citing run was pre-declared and evaluated once, with no re-rolling — see `AUDIT_LOG.md`
+under "Pre-registration of the citing run".

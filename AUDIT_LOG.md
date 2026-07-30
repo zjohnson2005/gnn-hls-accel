@@ -1350,3 +1350,102 @@ belongs with the M1 acceptance commit, which is held.
 - No M2 work. No `seam/telemetry/`, no energy, thermal, PDH, or LHM code. AM-002, AM-004 and the
   unused AM-011 identifier untouched.
 - No sealed run modified; the five original `analysis/` probe artifacts untouched.
+
+---
+
+## 2026-07-30 — Pre-registration of the citing run; settled-charge comparator set (AM-013)
+
+**Class:** pre-registration
+**Milestone:** M1 — closing
+**Authorized by:** Z. Johnson (Ruling 1, comparator set = AM-013; Ruling 2, pre-declare the citing
+run)
+**Status:** committed **BEFORE** the measurement it governs.
+
+### Ruling 1 — agreement is assessed among settled-charge runs only
+
+Recorded in full as `AMENDMENTS.md` **AM-013**, POST-DATA, authorized by Z. Johnson. In summary:
+charge state is a **documented covariate** on this platform rather than noise, evidenced by the
+monotone series 1.3599× (bulk, ~70%) → 1.3876× (bulk, ~69–70%) → 1.3917× (taper, ~87%) → 1.3989×
+(settled, ~90%), which is the pre-registered P-core-turbo-headroom mechanism appearing as a
+covariate. Runs taken under different charge conditions are therefore **not exchangeable**, and
+pooling them for an agreement test conflates a real physical effect with sampling noise. The prior
+pairwise rule was written for two runs; applied across four it necessarily tests the extremes, and
+maximum pairwise spread **grows with n**, so the rule tightened as evidence accumulated. That is a
+specification defect, **corrected, not loosened** — the numeric tolerance (the larger `cv_fast` of
+the compared runs) is unchanged, and no run's individual verdict was reclassified. AM-012's
+relative-reading clarification stands and is unaffected.
+
+**Runs A `3fb88dcd` and B `963a849e` remain fully logged, citable, and NOT discarded.** No run is
+deleted, hidden, or reclassified as invalid. Their status changes from **agreement comparators** to
+**supporting evidence for the charge-state mechanism**, where they carry the low-charge end of the
+monotone series above — evidence that could not be produced without them.
+
+### Settled-charge determination for the comparator set
+
+Definition applied: battery **> 85%** and **not under bulk charge**.
+
+| Run | `battery_pct_start` → `end` | Δ over run | `charging` | Determination |
+|---|---|---|---|---|
+| C `855e3590` | 87.0 → 88.0 | +1 point | true | **qualifies** — above the constant-current knee; charge current tapering |
+| D `7b5fc2e2` | 90.0 → 90.0 | 0 points | true | **qualifies** — above the knee, and no measurable state-of-charge movement across the run |
+
+Both qualify, with one caveat stated rather than glossed: the manifests record a **boolean**
+`charging` flag, and both runs read `true`, because a Li-ion pack continues taking a declining
+top-off current well past 85%. No charge-*current* telemetry exists at M1, so "not under bulk charge"
+is established from state of charge being above the typical constant-current → constant-voltage
+transition (~80–85%) plus the per-run Δ as a proxy for current. Measuring adapter or pack current
+directly is telemetry work and belongs to M2; it is deliberately not done here. On that evidence D is
+the more settled of the two, and C sits in the taper.
+
+Under AM-013 the comparator set is therefore **{C, D}**, which agree at **0.5124%** relative against
+a limit of **2.0705%** (the larger `cv_fast` of the two, from C). Note the limit is C's `cv_fast`,
+not the 2.41% quoted in the ruling, which was run B's — B is no longer in the comparator set.
+
+### Ruling 2 — the citing run is pre-declared, and there is no re-rolling
+
+**The next `python -m seam.topology verify --write` run conducted at settled charge (> 85%, not bulk
+charging) IS the citing run for the committed mapping.** It will be evaluated **once** against the
+criteria below. **If it fails any of them, the failure is reported and the mapping is not
+committed.** It will not be re-run to obtain a better draw, and no later run may be substituted for
+it. This paragraph is committed before the run exists, which is what makes that promise checkable.
+
+Criteria, all of which must hold:
+
+1. `assert_power_pin.ps1` exit 0; `on_battery: false`; Best Performance plan;
+   `pinned_condition_deviations` empty.
+2. Battery > 85% and not under bulk charge.
+3. `separation_ratio` ≥ 1.25 **and** > 1.30883 (the original pre-registered prediction).
+4. `cv_fast` and `cv_slow` ≤ 0.15.
+5. Fast/slow membership exactly {0,1,2,3} / {4,5,6,7}. **A different membership contradicts five
+   prior runs and the committed platform provenance — stop and report, do not write.**
+6. `efficiency_class_ordering_matched: true`.
+7. `integrity.self_check: pass`.
+8. Relative agreement with the settled-charge comparator set {C, D} within the larger `cv_fast` of
+   the compared runs.
+
+### Host state recorded before the run
+
+`assert_power_pin.ps1` exit **0** — `AC: online=True raw=1 battery%=98`, plan active and pinned both
+`Best Performance (ec87a53a-19a6-4f4a-980f-ab27cc929b25)`, `acOk=True planOk=True`. Live capture:
+`on_battery=False`, `battery_pct=98.0`, `charging=True` (top-off), `battery_saver=False`, effective
+overlay `00000000-0000-0000-0000-000000000000`. At 98% the pack is far above the constant-current
+knee, so this run will be the most settled of the series.
+
+### Coordinator citation errors, per the owner
+
+The owner confirms that the earlier task briefs' references to a blueprint **§16.9** and to an
+**AM-011 (resolved)** were **coordinator errors propagated into task briefs**, not entries that ever
+existed. Neither exists: the blueprint at the pinned SHA runs §16.1 → §16.6 plus appendices, and
+`AMENDMENTS.md` ran AM-001 → AM-010. The identifiers were left unused rather than reassigned
+(`AMENDMENTS.md` AM-011 records the deliberate gap). Recorded here so the phantom citations do not
+recur in later milestones.
+
+### One further gap found and being closed with this work
+
+`raw/` has **never been committed**, despite `.gitignore` carrying an explicit note that it is
+deliberately not ignored because blueprint §5.3 (write-once, checksummed) and §5.7 (artifact
+"reusable" badge) require the raw data to be in the repository. Every `run_id` cited in this log so
+far therefore resolves only on this host. The sealed run directories are committed alongside this
+M1 closeout so that the cited measurements are verifiable by someone else, which is the entire point
+of spec §9.2. `.gitattributes` already carries `raw/** -text`, so the committed bytes survive
+checkout on any platform and `verify_sealed()` still passes. `raw/_blinding/salt.txt` stays ignored.
