@@ -1,0 +1,47 @@
+---
+description: SEAM measurement harness governance — Platform A constants, audit rules, milestone gates
+alwaysApply: true
+---
+
+# SEAM — governing rules
+
+Governing docs (re-read the relevant section before implementing):
+`docs/SEAM_research_blueprint.md`, `docs/PHASE_MINUS1_IMPLEMENTATION_SPEC.md`,
+`docs/hybrid_execution_dse_positioning.md`, `AMENDMENTS.md`, `AUDIT_LOG.md`.
+
+## Platform A (aipc-c1) — fixed facts
+
+- Dell XPS 16 DA16260 · Intel Core Ultra 5 325 (**Panther Lake**, not Lunar Lake)
+- 4 P + 4 LP-E · **8 logical CPUs, no SMT** · Xe3 iGPU · NPU 5 · 16 GB LPDDR5X unified · no dGPU
+- Windows build 26200 · never size worker pools by heuristic / `cpu_count()`
+
+## Number prohibitions
+
+- Never report **50 TOPS** as achieved NPU throughput (peak INT8 only)
+- Never state **~120 GB/s** bandwidth until M2.4 measures it (unverified)
+- **180 TOPS** is Platform B aggregate only — never as Platform A or NPU-alone
+- **No number without a `run_id`** / manifest. Figures read only from `derived/`
+
+## Integrity
+
+- `raw/` is **write-once**. Never modify a sealed run. Never edit `analysis/` except documented AF-001
+- No comparison before A/A + noise floor (`derived/noise_floor.json`)
+- Analysis consumes `blinded_label`, never `condition_label`
+- Discard policy: log in `AUDIT_LOG.md`; no silent discards
+- **No silent retries, exception swallowing, or execution-target fallbacks** (log as events)
+- **No per-model prompt tailoring** — invalidates H1
+- Configs YAML, hashed into manifests; no magic numbers in code
+
+## Tooling
+
+- Python **3.11+**, full type hints, **ruff + mypy** clean, **pytest** for non-hardware logic
+- This host has **no sandbox backend**. Every Shell call needing workspace access MUST use
+  `required_permissions: ["all"]`. Verify side effects by reading files back
+
+## Milestone gates
+
+- **M2 blocked until M1 accepted.** No telemetry / LHM / energy code until then
+- `topology.verified: false` must **not** be flipped without on-silicon AC-power measurement
+  (`python -m seam.topology verify --write` under pinned conditions). Do not invent CPU lists
+- Work M0→M1→M2→… in order; show evidence before advancing
+- Amendments to pre-registered gates require `AMENDMENTS.md` + owner authorization (see AM-004)

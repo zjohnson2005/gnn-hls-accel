@@ -896,3 +896,58 @@ carrying it is an invalid session. Closing it requires the same numbers from a r
 2. `python -m seam.topology verify --write --allow-dirty`, ≥2 repeats.
 3. Update the `test_committed_config_ships_unverified` tripwire in the same commit that records
    the run_id, as the earlier entry requires.
+
+---
+
+## 2026-07-30 — Governance restore: blueprint stub, hybrid ingest, AM-004 (PRE-DATA)
+
+**Class:** provenance / pre-registration amendment
+**Milestone:** M1 still NOT ACCEPTED; **M2 not started**
+**Authorized by:** Z. Johnson (AM-004 energy-gate ruling; hybrid ingest; seam rule)
+
+### Found
+
+`docs/SEAM_research_blueprint.md` was committed as a **1-line stub**
+(`@@SEAM_BLUEPRINT_APPEND_POINT@@`, 32 bytes). Agents reading "the blueprint" were reading
+nothing. `docs/hybrid_execution_dse_positioning.md` was absent (AM-007). `.cursor/rules/seam.mdc`
+was absent.
+
+### Actions (docs / amendments only — no M2, no topology flip)
+
+1. **Restored** `docs/SEAM_research_blueprint.md` from the Claude Desktop outputs archive via
+   `robocopy` long-path staging (direct `Copy-Item` fails past MAX_PATH on that cache path).
+   Archive bytes: 56617; **733 lines**; SHA-256
+   `6c2221c6dd774183c3a62d520190964f75a74c115cfcd3f1733ebe0c8377be63`.
+   AM-002 duplicate §16.x numbers **not** renumbered.
+2. **Ingested** `docs/hybrid_execution_dse_positioning.md` (245 lines; SHA-256
+   `ceec363af8a55269a370b63f80473f0cb00f757741be83fa054f56fb7c67d410`). AM-007 → RESOLVED.
+   Phase −1 impact: positioning/claim-scope only (client-side hard; soften five-objective novelty;
+   routing-amortization bound) — **no new measurement gates**. Not added to
+   `configs/platforms/aipc-c1.yaml` `provenance_artifacts` (that list is probe/identity artifacts).
+3. **PHASE_MINUS1_IMPLEMENTATION_SPEC.md** archive SHA matched the repo copy
+   (`cfeada7da592eb59026b98481d52854481dec3d13e549ddc31d6d6b04a81604e`) — not clobbered; then
+   AM-004 edits applied to §3.2 / M2.5.
+4. **AM-004 RESOLVED (PRE-DATA, Z. Johnson).** Gate −1 "15% agreement" and G0 "wall meter within
+   10%" replaced with per-target linear-tracking: $R^2 \ge 0.95$ across ≥8 load levels; slope
+   $\in [1.0,\ 1.5]$ (slope $< 1.0$ HARD FAILURE); intercept vs brightness-differenced idle
+   baseline; min resolvable ΔE per target; fits for `cpu-p` / `cpu-lpe` / `igpu` / `npu` not
+   pooled. Logged in blueprint §14.2 and `AMENDMENTS.md`.
+5. Created `.cursor/rules/seam.mdc` (alwaysApply).
+6. AM-009 → RESOLVED (hashes pinned).
+
+### Post-amendment document pins
+
+| Path | Lines | SHA-256 (after this session's edits) |
+|---|---:|---|
+| `docs/SEAM_research_blueprint.md` | 750 | `72d9b6a32ea40d07201d35e22cfc6db6c0f62311a40c15bc5ecf4f9c4567c878` |
+| `docs/PHASE_MINUS1_IMPLEMENTATION_SPEC.md` | 405 | `f42fad5bdf7377393684483b1f36dcc2da99e4fca94e9dd79292dde356198148` |
+| `docs/hybrid_execution_dse_positioning.md` | 245 | `ceec363af8a55269a370b63f80473f0cb00f757741be83fa054f56fb7c67d410` |
+
+### Explicit non-actions
+
+- `topology.verified` left `false`; no `verify --write`.
+- No M2 / telemetry / LHM / energy code.
+- No test weakened.
+
+**Remaining M1 blocker:** AC-power topology verification under pinned conditions (AF-005 /
+prior entry). Physical reconnect required.

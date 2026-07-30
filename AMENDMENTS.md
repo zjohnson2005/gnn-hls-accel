@@ -16,12 +16,12 @@ decision) · `DEFERRED` (belongs to a later milestone).
 | AM-001 | 2026-07-29 | AF-001 | Mislabel occurs twice, not once | RESOLVED |
 | AM-002 | 2026-07-29 | Blueprint §16 | Duplicate section numbers §16.2/§16.3 | OPEN (doc defect) |
 | AM-003 | 2026-07-29 | §5.2 vs §6.1 | Spec's manifest schema drops blueprint-required fields | RESOLVED (union) |
-| AM-004 | 2026-07-29 | §16.6 vs §3.2 | **Energy acceptance criteria directly conflict** | OPEN (decide before M2.5) |
+| AM-004 | 2026-07-29 | §16.6 vs §3.2 | **Energy acceptance criteria directly conflict** | RESOLVED (2026-07-30, PRE-DATA, Z. Johnson) |
 | AM-005 | 2026-07-29 | Spec §2 | Repo layout: `seam/` is both root and package | RESOLVED |
 | AM-006 | 2026-07-29 | Thermal | §5.4 constants unknown at M1; manifest needs nulls | RESOLVED |
-| AM-007 | 2026-07-29 | Source docs | Source folder holds four documents, not three | OPEN (needs confirmation) |
+| AM-007 | 2026-07-29 | Source docs | Source folder holds four documents, not three | RESOLVED (2026-07-30, hybrid ingested) |
 | AM-008 | 2026-07-29 | M1 | Topology cannot be verified — no shell | OPEN (blocks M1 accept) |
-| AM-009 | 2026-07-29 | Doc ingest | Governing docs transcribed, not byte-copied | OPEN (verify hashes) |
+| AM-009 | 2026-07-29 | Doc ingest | Governing docs transcribed, not byte-copied | RESOLVED (2026-07-30, hashes pinned) |
 | AM-010 | 2026-07-29 | §6.1 manifest schema | Refused topology verification must emit a manifest (AF-006) | RESOLVED |
 
 ---
@@ -128,40 +128,43 @@ Recorded as DEFERRED here so it is not lost.
 
 ## AM-004 — Energy acceptance criteria conflict between blueprint Gate −1 and spec §3.2
 
-**Date:** 2026-07-29 · **Pre/post data:** Pre · **Status:** OPEN — **needs a decision before M2.5**
+**Date opened:** 2026-07-29 · **Date resolved:** 2026-07-30 · **Pre/post data:** **PRE** ·
+**Status:** RESOLVED · **Authorized by:** Z. Johnson
 
-**Divergence.** These two requirements are mutually incompatible, and both are normative:
+**Divergence (historical).** These two requirements were mutually incompatible, and both were
+normative:
 
-> **Blueprint §16.6, Gate −1:** "RAPL and battery-discharge energy **agree within 15%** under
-> sustained load." Failure response: "Investigate attribution; add explicit error term before any
-> energy claim."
+> **Blueprint §16.6, Gate −1 (original):** "RAPL and battery-discharge energy **agree within 15%**
+> under sustained load."
 
-> **Spec §3.2 item 5:** "**Do not require agreement within a fixed percentage** — the two signals
-> measure different things; what matters is that they track linearly with a stable, reported
-> offset." Acceptance is $R^2 \ge 0.95$ with reported slope and intercept.
+> **Blueprint §11 Gate G0 (original energy clause):** "harness energy agrees with wall meter
+> within 10%."
 
-**Analysis.** The spec is physically correct and the blueprint's Gate −1 criterion is not
-achievable as written. Spec §3.2 establishes that S1 (battery discharge) includes display, SSD,
-WiFi, EC, and fans, while S2 (RAPL) covers SoC domains only — so $S1 > S2$ **always**, by a
-margin set by non-SoC baseline power. On a 16″ laptop with a 120 Hz panel (per MACHINE.md, this
-one) display power alone can be several watts, which at low SoC load is far more than 15% of
-package power. A 15%-agreement gate would fail for correct measurements and could only be
-"passed" by mis-attributing baseline power into the SoC term.
+> **Spec §3.2 item 5 (original):** "**Do not require agreement within a fixed percentage**" —
+> require $R^2 \ge 0.95$ with reported slope and intercept.
 
-**Why this is not simply "blueprint governs."** The precedence rule resolves *ambiguity*; it
-cannot make an unachievable criterion achievable. Applying it literally here would gate Phase −1
-on a test that correct instrumentation fails.
+**Owner ruling (Z. Johnson, PRE-DATA).** The gate document was wrong. The RAPL package domain is
+a strict **subset** of platform electrical draw (excludes display, SSD, WiFi, EC, fans, VRM, and
+possibly DRAM). It cannot converge to a fixed 15% (or 10%) agreement with battery-discharge /
+wall-meter energy; at idle the ratio is often 3–5×. A %-agreement gate fails for correct
+instrumentation and would reward mis-attribution of baseline power into the SoC term.
 
-**Recommendation (not yet applied — no M2 work performed).** Amend blueprint §16.6 to replace the
-15%-agreement row with the §3.2 linear-tracking criterion: $R^2 \ge 0.95$ across ≥8 load levels,
-slope/intercept/residuals reported, with the paired idle-load-idle design of §3.2 item 2
-estimating $P_{base}$. Keep the blueprint's failure response, which is already correct
-("add explicit error term before any energy claim").
+**Resolved criterion** (applied to blueprint §16.6 Gate −1, §11 G0 energy clause, and Phase −1
+spec §3.2 steps 5–6 / M2.5):
 
-**Not decided unilaterally** because Gate −1 is a **pre-registration** criterion. Changing a
-pre-registered gate is exactly the class of change that must be visible and human-approved, not
-absorbed by an implementing agent. **No energy code was written this session**, so nothing
-depends on the resolution yet.
+1. **Linearity:** $R^2 \ge 0.95$ across ≥8 load levels spanning idle→turbo.
+2. **Slope:** $\in [1.0,\ 1.5]$. Slope $< 1.0$ is a **HARD FAILURE** (subset cannot grow faster
+   than the whole).
+3. **Intercept:** consistent with an independently measured idle baseline, validated by
+   differencing two display-brightness levels.
+4. **Per execution target:** fit regressions separately for `cpu-p`, `cpu-lpe`, `igpu`, and
+   `npu` — **not pooled**. Target-dependent slope reveals RAPL domain-coverage gaps (e.g. higher
+   slope under NPU-heavy load ⇒ RAPL missing NPU power).
+5. **Resolution:** report the minimum resolvable energy difference **per target**.
+6. Emit `derived/energy_calibration.json` with the per-target fields above.
+
+Failure response unchanged: investigate attribution; add an explicit error term before any
+energy claim. **No energy / M2 code was written as part of this resolution.**
 
 ---
 
@@ -217,28 +220,35 @@ loudly at M2 is correct; a plausible number that silently propagates is not.
 
 ## AM-007 — Source document folder contains four documents, not three
 
-**Date:** 2026-07-29 · **Pre/post data:** Pre · **Status:** OPEN (needs confirmation)
+**Date opened:** 2026-07-29 · **Date resolved:** 2026-07-30 · **Pre/post data:** Pre ·
+**Status:** RESOLVED
 
-**Divergence.** The Phase −1 task specification states the source folder holds "exactly three
-files." It contains **four**:
+**Divergence.** The Phase −1 task specification stated the source folder holds "exactly three
+files." It contained **four**:
 
-- `SEAM_research_blueprint.md` — ingested
-- `PHASE_MINUS1_IMPLEMENTATION_SPEC.md` — ingested
-- `CURSOR_KICKOFF_PROMPT.md` — ingested
-- `hybrid_execution_dse_positioning.md` — **not ingested**
+- `SEAM_research_blueprint.md`
+- `PHASE_MINUS1_IMPLEMENTATION_SPEC.md`
+- `CURSOR_KICKOFF_PROMPT.md`
+- `hybrid_execution_dse_positioning.md`
 
-**Why it matters.** The fourth file is not incidental. Blueprint §2 cites it as normative:
-"Positioning (condensed; **full collision map in `hybrid_execution_dse_positioning.md`**)," and
-Appendix A defers the audit of six unread related-work papers (HERA, HybridFlow, PAAC, PRISM,
-IslandRun, HeRo) to task P-1.7. A blueprint section therefore points at a document the ingest
-instruction excluded.
+**Decision (2026-07-30).** Owner authorized ingest. Copied verbatim to
+`docs/hybrid_execution_dse_positioning.md`
+(SHA-256 `ceec363af8a55269a370b63f80473f0cb00f757741be83fa054f56fb7c67d410`).
 
-**Decision.** Not copied — the instruction named three files explicitly, and silently importing a
-fourth governing-adjacent document exceeds the authorised scope. Flagged for a human decision.
+**Phase −1 impact.** The hybrid doc imposes **positioning / claim-scope** constraints, not
+measurement-harness gates:
 
-**Recommendation.** Copy it to `docs/hybrid_execution_dse_positioning.md` so blueprint §2's
-reference resolves inside the repository. It affects related-work and positioning (P-1.7), not
-M0/M1 measurement code, so nothing in this session depends on it.
+1. Client-side (not datacenter) framing is a hard requirement — already aligned with blueprint
+   §1.3 / R7.
+2. Soften the five-objective novelty claim: claim the *combination* and scope, not the machinery
+   (QEIL v2 already has quality/energy/latency). Affects P-1.7 related-work and thesis wording.
+3. Routing-amortization bound reframes the hardware question; no change to M0–M2 acceptance
+   criteria.
+
+No new Phase −1 measurement AM entries required. Blueprint §2's collision-map reference now
+resolves inside the repository. Not added to `configs/platforms/aipc-c1.yaml`
+`provenance_artifacts` — that list is for probe/identity artifacts hashed at emit time, not
+source positioning docs.
 
 ---
 
@@ -275,63 +285,29 @@ also answers **open question 4** (spec §10). Until then M1 is not accepted and 
 
 ## AM-009 — Governing documents were transcribed, not byte-copied
 
-**Date:** 2026-07-29 · **Pre/post data:** Pre · **Status:** OPEN — verify before relying on the copies
+**Date opened:** 2026-07-29 · **Date resolved:** 2026-07-30 · **Pre/post data:** Pre ·
+**Status:** RESOLVED (hashes pinned; blueprint restored from source)
 
-**Divergence.** The ingest instruction was to copy the three source documents into `docs/`
-**verbatim**. A verbatim copy is a `Copy-Item` operation. With the shell backend dead
-(`AUDIT_LOG.md` AF-003), the only available mechanism was to read each document through the editor
-and write it back out — i.e. **transcription, not copying**.
+**Divergence.** The ingest instruction was to copy source documents into `docs/` **verbatim**.
+With the shell backend dead (AF-003), the 2026-07-29 session transcribed rather than
+byte-copied. Subsequently the committed `docs/SEAM_research_blueprint.md` was found to be a
+**1-line stub** (`@@SEAM_BLUEPRINT_APPEND_POINT@@`, 32 bytes) — agents reading "the blueprint"
+were reading nothing.
 
-**Status per document:**
+**Resolution (2026-07-30).** Restored from the Claude Desktop outputs archive via `robocopy`
+(long-path staging; direct `Copy-Item` failed at MAX_PATH). SHA-256 of archive bytes vs repo
+bytes compared; mismatches overwritten from source. **AM-002 duplicate §16.x numbers left as-is**
+(pre-registration defect; no silent renumbering).
 
-| Document | Method | Confidence |
-|---|---|---|
-| `CURSOR_KICKOFF_PROMPT.md` | Pre-existing in repo; **not rewritten** | High — source and repo copy were read and compared line-for-line and match |
-| `PHASE_MINUS1_IMPLEMENTATION_SPEC.md` | Transcribed (400 lines) | **Spot-verified** — see below |
-| `SEAM_research_blueprint.md` | Transcribed (734 lines) | **Unverified** — no hash comparison possible |
+| Document | Bytes (archive) | SHA-256 (archive / post-restore match) | Notes |
+|---|---:|---|---|
+| `SEAM_research_blueprint.md` | 56617 | `6c2221c6dd774183c3a62d520190964f75a74c115cfcd3f1733ebe0c8377be63` | Restored 733 lines; then AM-004 text applied (new hash — see AUDIT_LOG) |
+| `PHASE_MINUS1_IMPLEMENTATION_SPEC.md` | 25331 | `cfeada7da592eb59026b98481d52854481dec3d13e549ddc31d6d6b04a81604e` | Repo already byte-identical; **not clobbered**; AM-004 then edited §3.2/M2.5 |
+| `CURSOR_KICKOFF_PROMPT.md` | 4143 | (unchanged; pre-existing match) | Not rewritten |
+| `hybrid_execution_dse_positioning.md` | 30542 | `ceec363af8a55269a370b63f80473f0cb00f757741be83fa054f56fb7c67d410` | Newly ingested (AM-007) |
 
-**Spot-verification performed on the implementation spec (2026-07-29).** Line count matches source
-(400), zero line-number prefixes leaked, 11 top-level sections. Three high-risk regions were
-compared directly against the source and match **exactly, at identical line numbers**:
-
-- the fenced repository-tree block (source lines 40–88), including box-drawing characters and
-  comment-column alignment — the one region the transcription flagged as inferred;
-- the §3.2 energy-protocol block (lines 122–131), including `$E_{SoC}^{S1} = \int (P_{S1} -
-  P_{base})\,dt$`, `$R^2 \ge 0.95$`, `≥8`, and `idle→turbo`;
-- the §6.1 manifest JSON block (lines 243–252).
-
-This raises confidence materially but is **not** a substitute for a hash comparison, which remains
-required below. Line-count and section-count agreement cannot detect a single altered character
-outside the sampled regions.
-
-**Why this is a provenance issue and not a nitpick.** The blueprint is the *governing* document: it
-defines the audit standard that every later claim is measured against, and §14.2 makes it the
-pre-registration artifact. A transcription can silently drop or alter exactly the content most at
-risk — LaTeX math, the U+2212 minus in "Phase −1", Greek letters, em dashes, wide markdown tables,
-and the intentional duplicate section numbers recorded in AM-002. A corrupted governing document is
-**worse than a missing one**, because a missing file fails loudly whereas a subtly altered one is
-trusted.
-
-**Decision.** Transcribe, but record the copies as unverified and require a hash check before they
-are treated as authoritative. Transcription was chosen over leaving `docs/` empty because blueprint
-§2 and the kickoff both assume the documents are readable from inside the repository, and later
-agents are instructed to read them from there.
-
-**Required action.** On shell restoration, for each of the three documents:
-
-```powershell
-Get-FileHash -Algorithm SHA256 <source>\<doc>.md
-Get-FileHash -Algorithm SHA256 docs\<doc>.md
-```
-
-If a pair does not match, **overwrite the repository copy from source with `Copy-Item -Force`** —
-do not attempt to reconcile by editing. Then record the confirmed SHA-256 values in `AUDIT_LOG.md`
-so the governing documents are pinned the same way the probe artifacts are (blueprint §5.2).
-
-**Note.** The source folder is an application cache path
-(`AppData\Local\Packages\Claude_...\LocalCache\...`), which is not a durable location. Archive the
-three source documents somewhere stable before that cache is cleared, or the hash comparison above
-becomes impossible.
+**Note.** The source folder is an application cache path and is not durable. Prefer the committed
+`docs/` copies and the hashes in `AUDIT_LOG.md` as the pin.
 
 ---
 

@@ -125,10 +125,16 @@ S1 includes display, SSD, WiFi, EC, and fans; S2 covers SoC domains only. So S1 
 2. **Paired idle-load-idle design.** Measure idle discharge for $T_{idle}$, run load for $T_{load}$, measure idle again. The bracketing idles estimate the non-SoC baseline $P_{base}$.
 3. Compute $E_{SoC}^{S1} = \int (P_{S1} - P_{base})\,dt$ over the load window.
 4. Compare against $E^{S2} = \Delta$ RAPL package energy over the same window.
-5. **Acceptance:** across ≥8 load levels spanning idle→turbo, regress $E_{SoC}^{S1}$ on $E^{S2}$. Require $R^2 \ge 0.95$ and report slope and intercept as the calibration. **Do not require agreement within a fixed percentage** — the two signals measure different things; what matters is that they track linearly with a stable, reported offset.
-6. Emit `derived/energy_calibration.json` with slope, intercept, $R^2$, residual distribution, and the load levels used. Every later energy claim cites this file.
+5. **Acceptance (AM-004, PRE-DATA, authorized by Z. Johnson):** fit the regression **separately for each execution target** (`cpu-p`, `cpu-lpe`, `igpu`, `npu`) — **not pooled**. Across ≥8 load levels spanning idle→turbo per target, require:
+   - $R^2 \ge 0.95$;
+   - slope $\in [1.0,\ 1.5]$ — slope $< 1.0$ is a **HARD FAILURE** (RAPL package is a strict subset of platform draw; the subset cannot grow faster than the whole);
+   - intercept consistent with an independently measured idle baseline, validated by differencing two display-brightness levels;
+   - report the **minimum resolvable energy difference** for that target.
 
-If $R^2 < 0.95$, energy is reported **with an explicit error band**, and any energy-based conclusion is downgraded to qualitative. Say so in the paper.
+   **Do not require agreement within a fixed percentage** — RAPL excludes display, SSD, WiFi, EC, fans, VRM, and possibly DRAM, so %-agreement with battery discharge is physically unachievable and would reward mis-attribution. Target-dependent slope is diagnostic: e.g. a higher slope under NPU-heavy load indicates RAPL missing NPU power.
+6. Emit `derived/energy_calibration.json` with **per-target** slope, intercept, $R^2$, residual distribution, load levels used, and minimum resolvable energy difference. Every later energy claim cites this file and the target it was calibrated under.
+
+If $R^2 < 0.95$ for a target, energy for that target is reported **with an explicit error band**, and any energy-based conclusion for it is downgraded to qualitative. Say so in the paper.
 
 ### 3.3 Thermal and throttle detection
 
@@ -313,10 +319,10 @@ Work strictly in order. Each has hard acceptance criteria; do not advance on a p
 - **M2.2** LHM bridge with RAPL rollover handling; unit test that synthesizes a rollover and asserts correct accumulation.
 - **M2.3** Thermal: determine and freeze warm-up duration, throttle threshold, cooldown ceiling. Include a sustained-load run characterizing whether 55 W turbo is sustainable and for how long.
 - **M2.4** STREAM-class memory bandwidth benchmark. Report measured vs the ~120 GB/s derived figure. **Until this lands, no document may state a bandwidth number.**
-- **M2.5** Energy cross-validation per §3.2, emitting `derived/energy_calibration.json`.
+- **M2.5** Energy cross-validation per §3.2 / AM-004, emitting `derived/energy_calibration.json` with **per-target** fits (`cpu-p`, `cpu-lpe`, `igpu`, `npu`): $R^2$, slope $\in [1.0,\ 1.5]$, intercept (brightness-differenced idle baseline), residuals, load levels, and minimum resolvable energy difference. Pooled regression is not acceptable.
 - **M2.6** Sampler overhead characterization, including on LP-E cores.
 
-**Accept:** calibration $R^2 \ge 0.95$ with slope/intercept/residuals reported; thermal constants committed to platform config; measured bandwidth recorded; overhead quantified.
+**Accept:** per-target calibration $R^2 \ge 0.95$ with slope/intercept/residuals and min resolvable ΔE reported (AM-004); thermal constants committed to platform config; measured bandwidth recorded; overhead quantified.
 
 ### M3 — A/A test, variance baseline, cloud backend, agent harness
 
