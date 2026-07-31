@@ -1449,3 +1449,171 @@ far therefore resolves only on this host. The sealed run directories are committ
 M1 closeout so that the cited measurements are verifiable by someone else, which is the entire point
 of spec §9.2. `.gitattributes` already carries `raw/** -text`, so the committed bytes survive
 checkout on any platform and `verify_sealed()` still passes. `raw/_blinding/salt.txt` stays ignored.
+
+---
+
+## 2026-07-30 — Citing run `fb5cd2d5`; mapping committed; AF-005 CLOSED; **M1 ACCEPTED**
+
+**Class:** milestone acceptance
+**Milestone:** M1 — **ACCEPTED**
+**Citing run:** `fb5cd2d5-e850-4de1-9b90-d368b5aa9994` (run E), the run pre-declared in the entry
+immediately above and committed as such in `282241a` **before it was taken**
+**Citing commit:** `a3d23236998e00375c533f3e02561fbb6f457804`
+**Evaluated:** **once.** No re-run, no substitution, no better draw sought.
+
+### Result of the single pre-declared attempt
+
+| Field | Value |
+|---|---|
+| `run_id` | `fb5cd2d5-e850-4de1-9b90-d368b5aa9994` |
+| `verdict` | **pass**, `refusal_reasons: []` |
+| `timestamp_utc` | 2026-07-30T23:57:04.876946+00:00 |
+| fast / slow cluster | **[0, 1, 2, 3] / [4, 5, 6, 7]** |
+| `cluster_separation_ratio` | **1.380460703128493** |
+| `p_cluster_cv` (fast) | 0.024219564166094075 |
+| `lpe_cluster_cv` (slow) | 0.005110664657290979 |
+| `efficiency_class_map` | {0:1, 1:1, 2:1, 3:1, 4:0, 5:0, 6:0, 7:0} |
+| `efficiency_class_ordering_matched` | **true** (`direction=higher_is_faster`, `partition_matched=true`) |
+| scores (units/s) | 0: 14420532.531038996 · 1: 14711359.449755926 · 2: 13787043.488011707 · 3: 14105907.62464274 · 4: 10298410.165766643 · 5: 10256424.282289617 · 6: 10363233.045448476 · 7: 10390492.007114023 |
+| kernel | `python_intfp_v1`, 6 000 000 work units, 7 repeats, 2 warmup, `min_elapsed_over_repeats` |
+| `power_state` | `on_battery: false`, battery **99.0 → 99.0%**, `charging: true` (top-off), saver off, plan `Best Performance (ec87a53a-…)`, overlay `00000000-…` start and end |
+| `pinned_condition_deviations` | **[]** (empty) |
+| `integrity` | `self_check: pass`, `raw_sha256: 9505097e97dcfacb914e8bdc99134e423d7dd463c6838652cff75d851d64f464` |
+| git | `282241a1c78390d780ec4e66b1de9515c4e9ed8c`, `git_dirty: true`, `allow_dirty: true`, branch `rev-c-p2` |
+| `config_hash` | `1492611a666e397eba7cf0869ad9cc3a5bf63e6e9e420874ba247b600251072d` — identical to runs A–D |
+| labels | `condition_label: topology_verify` → `blinded_label: cond_b836743d2f3b` |
+| `elevated` | false |
+
+`assert_power_pin.ps1` exit **0** immediately before the run: `AC: online=True raw=1 battery%=99`,
+plan active and pinned both `Best Performance`, `acOk=True planOk=True`. Seal re-verified **after**
+the commit: `raw integrity OK`.
+
+### Every pre-declared criterion, checked
+
+| # | Criterion | Result |
+|---|---|---|
+| 1 | pin exit 0, `on_battery: false`, Best Performance, deviations empty | **PASS** |
+| 2 | battery > 85%, not bulk charge | **PASS** — 99%, no state-of-charge movement across the run |
+| 3 | separation ≥ 1.25 **and** > 1.30883 | **PASS** — 1.380460703128493 |
+| 4 | `cv_fast`, `cv_slow` ≤ 0.15 | **PASS** — 0.0242 / 0.0051 |
+| 5 | membership exactly {0,1,2,3} / {4,5,6,7} | **PASS** — no stop condition triggered |
+| 6 | `efficiency_class_ordering_matched` | **PASS** — true |
+| 7 | `integrity.self_check` | **PASS** |
+| 8 | relative agreement with settled-charge set {C, D} | **PASS** — see below |
+
+Criterion 8, computed against the larger `cv_fast` of each pair per AM-012:
+
+| Pair | Relative difference | Limit (larger `cv_fast`) | Verdict |
+|---|---|---|---|
+| E vs C `855e3590` | **0.8121%** | 2.4220% (E) | PASS |
+| E vs D `7b5fc2e2` | **1.3245%** | 2.4220% (E) | PASS |
+
+The prediction registered in `99da687` before any AC run said separation would exceed 1.30883× with
+membership {0,1,2,3}/{4,5,6,7}. Five AC runs have now met it, this one included.
+
+### The full series, all five AC runs, none discarded
+
+| Run | `run_id` | Battery | Separation | `cv_fast` | `cv_slow` | Verdict | Role |
+|---|---|---|---|---|---|---|---|
+| B | `963a849e` | 70 → 71%, bulk | 1.3599431469328718 | 0.024061 | 0.008466 | pass | supporting evidence — charge-state mechanism |
+| A | `3fb88dcd` | 69 → 70%, bulk | 1.3876038015371646 | 0.021645 | 0.009692 | pass | supporting evidence — charge-state mechanism |
+| C | `855e3590` | 87 → 88%, taper | 1.3917174862228963 | 0.020705 | 0.002983 | pass | settled-charge comparator |
+| D | `7b5fc2e2` | 90 → 90%, settled | 1.3988665756315648 | 0.019991 | 0.019731 | pass | settled-charge comparator |
+| **E** | **`fb5cd2d5`** | **99 → 99%, settled** | **1.380460703128493** | **0.024220** | **0.005111** | **pass** | **citing run — committed** |
+
+**Runs A and B are not discarded, hidden, or invalidated.** Both passed every §4 criterion on their
+own and both remain fully citable. Under AM-013 their role is **supporting evidence for the
+charge-state mechanism** rather than agreement comparators, and in that role they are the low-charge
+end of the monotone series that demonstrates the covariate at all.
+
+One honest observation about the series, recorded because it would be easy to omit: E at 99% is
+**not** the highest ratio — it sits below C and D despite being the most settled. So the monotone
+relationship in AM-013's Rationale 1 does not extend cleanly to the top of the charge curve, and the
+four-point monotonicity is better read as *bulk charge depresses separation* than as *separation
+tracks state of charge*. That does not affect any verdict: E clears every pre-declared criterion,
+including agreement with both comparators, and the mechanism claim in AM-013 concerns bulk-charge
+load specifically. But the covariate should be treated as **charging load**, not as charge level, and
+a future M2 run that draws on this should say so.
+
+### Verification of the config write
+
+Only the `topology:` block changed — `git diff` on `configs/platforms/aipc-c1.yaml` touches nothing
+else. Read back and diffed after the real write, the nulls that must stay null are **all intact**:
+`bandwidth_gbps_measured`, `bandwidth_measured_by_run_id`, `achieved_tops_measured`,
+`achieved_measured_by_run_id`, `turbo_sustainable_s`, `warmup_s`, `cooldown_ceiling_c`,
+`throttle_threshold_pct`, `tjmax_c` — nine in total, spanning the memory, NPU, and thermal blocks.
+They are written as explicit `null`, not blanked, which is what the two writer defects fixed in
+`1ddc9eb` and `190904e` were about. `topology.verification` thresholds are byte-unchanged:
+`min_cluster_separation_ratio: 1.25`, `max_within_cluster_cv: 0.15`, `require_expected_split: true`.
+
+### The AM-008 tripwire: how its protective purpose survives
+
+`test_committed_config_ships_unverified` asserted `verified: false`. That assertion cannot survive a
+real measurement, but its *purpose* can, and the purpose was never "verified must be false" — it was
+**"`verified: true` must not appear without a measurement behind it."** That is now enforced by three
+tests instead of one:
+
+1. `test_committed_config_carries_the_measured_mapping` pins the citing `run_id` **by name**. Changing
+   the committed mapping therefore requires editing the test in the same commit — exactly the
+   review-visibility mechanism the original tripwire relied on.
+2. `test_committed_mapping_is_reproducible_from_its_own_recorded_scores` re-derives the split from the
+   eight committed per-CPU scores using the **production** `_split_into_two_clusters`, checks the
+   recorded separation ratio against those scores, checks it clears the config's own thresholds, and
+   checks the `EfficiencyClass` map agrees with the split. Hand-flipping the flag now requires
+   fabricating eight numbers that genuinely cluster — a far higher bar than typing `[0,1,2,3]`.
+3. `test_committed_verification_thresholds_are_unchanged` pins 1.25 / 0.15 / true, closing the other
+   route to a cheap pass: lowering a threshold instead of forging a measurement.
+
+The three refusal tests (`load_verified_topology` and both `affinity_for` targets, including under
+`allow_unverified`) were reading the **real** config and passing only because it happened to be
+unverified. They would have silently stopped testing refusal the moment this commit landed. They now
+run against an explicit `unverified_config` fixture, so spec §4's "refuse rather than guess"
+guarantee is tested on purpose rather than by accident. No test was weakened, skipped, xfailed, or
+deleted; the suite went from 189 to **191**.
+
+### Toolchain
+
+**191 passed** (was 189), **ruff clean**, **mypy clean** (21 source files). The writer-defect
+regression tests pass, including the one asserting that everything outside the `topology:` block
+round-trips byte-identically.
+
+### AF-005 — **CLOSED**
+
+AF-005 required AC power, the pinned plan, and `assert_power_pin.ps1` run as an aborting gate. All
+five AC runs recorded `on_battery: false`, the pinned Best Performance plan, battery saver off, and an
+empty `pinned_condition_deviations`, with the pin asserted at exit 0 before each measurement. The
+citing run satisfies it. Its substance was discharged earlier; formal closure was held for the
+acceptance commit, which is now `a3d2323`. **Closed.** The finding's forward-looking part is not
+closed by this and is not claimed to be: a *gate that refuses to start* outside pinned conditions
+remains M2 scope, as AF-005 itself states. What exists today records and reports deviations.
+
+### Spec §10 open question 4 — **CLOSED**
+
+Does Windows' `EfficiencyClass` agree with the measured P/LP-E split on Platform A? **Yes.** Across
+all five AC runs — `3fb88dcd`, `963a849e`, `855e3590`, `7b5fc2e2`, `fb5cd2d5` —
+`efficiency_class_ordering_matched: true`, with `direction: higher_is_faster` and
+`partition_matched: true`: CPUs 0–3 report `EfficiencyClass 1` and are the fast cluster, CPUs 4–7
+report `0` and are the slow cluster. The convention on this platform is therefore
+**higher `EfficiencyClass` = faster core**.
+
+**Scoped to Platform A only.** Windows does not define the numeric direction as a contract, and the
+opposite convention is reported on other vendors' hybrid parts. This closure **does not** license
+reading the mapping from `EfficiencyClass` on Platform B or any other machine, and it does not remove
+the requirement that every run assert the committed mapping rather than infer one.
+
+### M1 — **ACCEPTED**
+
+Acceptance rests on: the P/LP-E mapping measured under pinned AC conditions and committed at
+`a3d2323` citing `fb5cd2d5`; five independent AC runs agreeing on membership and all exceeding the
+pre-registered prediction; AF-005 discharged; open question 4 closed; AM-008 resolved; the manifest,
+schema, blinding, and write-once machinery green at 191 tests with ruff and mypy clean; and the raw
+artifacts now committed so the citations resolve off this host.
+
+**M2 was not started.** No `seam/telemetry/`, no energy, thermal, PDH, or LHM code was written. No
+verification threshold was adjusted. No run was discarded. No sealed run was modified. The five
+original `analysis/` probe artifacts are untouched. AM-002, AM-004, and AM-012 were not edited.
+
+**`topology.verified: true` is now committed, which arms every downstream consumer.** `cpu-p` and
+`cpu-lpe` resolve from this point on, and the first M2 code to call `affinity_for` will get a real
+CPU list rather than a refusal. That is the intended effect, and it is also the reason the tripwire
+was strengthened rather than merely retargeted.

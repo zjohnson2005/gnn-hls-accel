@@ -20,7 +20,7 @@ decision) · `DEFERRED` (belongs to a later milestone).
 | AM-005 | 2026-07-29 | Spec §2 | Repo layout: `seam/` is both root and package | RESOLVED |
 | AM-006 | 2026-07-29 | Thermal | §5.4 constants unknown at M1; manifest needs nulls | RESOLVED |
 | AM-007 | 2026-07-29 | Source docs | Source folder holds four documents, not three | RESOLVED (2026-07-30, hybrid ingested) |
-| AM-008 | 2026-07-29 | M1 | Topology cannot be verified — no shell | OPEN (blocks M1 accept) |
+| AM-008 | 2026-07-29 | M1 | Topology cannot be verified — no shell | RESOLVED (2026-07-30, `a3d2323`) |
 | AM-009 | 2026-07-29 | Doc ingest | Governing docs transcribed, not byte-copied | RESOLVED (2026-07-30, hashes pinned) |
 | AM-010 | 2026-07-29 | §6.1 manifest schema | Refused topology verification must emit a manifest (AF-006) | RESOLVED |
 | AM-011 | — | — | *Identifier not used — see AM-012* | N/A |
@@ -257,7 +257,8 @@ source positioning docs.
 
 ## AM-008 — Topology verification could not be executed
 
-**Date:** 2026-07-29 · **Pre/post data:** Pre · **Status:** OPEN — **blocks M1 acceptance**
+**Date opened:** 2026-07-29 · **Date resolved:** 2026-07-30 · **Pre/post data:** Pre ·
+**Status:** **RESOLVED** — mapping measured and committed in `a3d23236998e00375c533f3e02561fbb6f457804`
 
 **Divergence.** Spec §4 and M1's acceptance criterion require the P/LP-E split to be verified
 empirically and the verified mapping committed to `configs/platforms/aipc-c1.yaml`. The shell
@@ -283,6 +284,30 @@ guessing the mapping would silently answer that question with an assumption.
 
 **Required action.** Run `python -m seam.topology verify --write` on the target hardware. This
 also answers **open question 4** (spec §10). Until then M1 is not accepted and M2 must not begin.
+
+### Resolution (2026-07-30) — commit `a3d23236998e00375c533f3e02561fbb6f457804`
+
+`python -m seam.topology verify --write` ran on Platform A under pinned AC conditions. The committed
+mapping is **`p_cpus: [0, 1, 2, 3]`, `lpe_cpus: [4, 5, 6, 7]`, `verified: true`**, citing run
+**`fb5cd2d5-e850-4de1-9b90-d368b5aa9994`** — separation **1.380460703128493×** against a
+pre-registered prediction of > 1.30883×, within-cluster CV 0.0242 / 0.0051,
+`efficiency_class_ordering_matched: true`. That run was **pre-declared** as the citing run in
+`AUDIT_LOG.md` and committed as such in `282241a` before it was taken, then evaluated once with no
+re-rolling. Five independent AC runs agree on the membership. Full results, the criteria checklist,
+and the series are in `AUDIT_LOG.md` under "Citing run `fb5cd2d5`".
+
+**Open question 4 is closed with it**: on Platform A, higher `EfficiencyClass` = faster core, matched
+in all five runs. Scoped to Platform A only — it does not license inferring the mapping elsewhere.
+
+**What the resolution did not do.** No verification threshold was adjusted (1.25 / 0.15 /
+`require_expected_split: true` are byte-unchanged), the measured block is still stored separately from
+the `topology.expected` hypothesis, and `affinity_for()` still refuses on any config that is not
+verified — now tested against an explicit unverified fixture rather than incidentally against the real
+config. The tripwire that guarded this amendment was **strengthened rather than retired**: the
+committed `run_id` is pinned by name, and the split is re-derived from the committed per-CPU scores
+with the production clustering function, so `verified: true` cannot be hand-written without
+fabricating a measurement that actually clusters. See `AUDIT_LOG.md`, "how its protective purpose
+survives".
 
 ---
 
