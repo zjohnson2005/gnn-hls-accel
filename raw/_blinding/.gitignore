@@ -1,0 +1,17 @@
+# ---------------------------------------------------------------------------------------------
+# Blinding secrets — nothing in this directory is committed.
+#
+# The root .gitignore excludes salt.txt. That is necessary but not sufficient: unblind_map.json is
+# the same secret in materialized form. Publishing either one lets any reader — or any future agent
+# working in this repo — recover condition_label from blinded_label, which makes the blind
+# decorative (seam/blinding.py). Analysis is required to consume blinded_label only, and that
+# requirement is only enforceable while the mapping stays out of the history.
+#
+# This lives here rather than in the root .gitignore so the rule travels with the directory it
+# protects and cannot be lost to an unrelated edit upstream.
+#
+# Back this directory up out of band. A lost salt cannot be regenerated: a new one would orphan
+# every blinded_label already emitted.
+# ---------------------------------------------------------------------------------------------
+*
+!.gitignore
