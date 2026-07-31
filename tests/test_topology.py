@@ -13,6 +13,7 @@ Windows calls are mocked, so the suite runs anywhere. Two areas get the most att
 from __future__ import annotations
 
 import struct
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -554,6 +555,18 @@ def test_writing_the_mapping_preserves_the_provenance_comments(fake_repo: Any) -
     assert "Hypothesis, from vendor documentation" in text
     assert "50 TOPS is a PEAK INT8 figure" in text
     assert "DERIVED AND UNVERIFIED" in text
+
+
+def test_committed_config_fences_cluster_ratio_as_non_performance() -> None:
+    """Governance Item 6: the ~1.38x ratio must not be mistakable for a performance figure."""
+    root = Path(__file__).resolve().parents[1]
+    text = (root / "configs" / "platforms" / "aipc-c1.yaml").read_text(encoding="utf-8")
+    assert "CLUSTERING DISCRIMINANT ONLY" in text
+    assert "MUST NOT be cited as a P-core vs LP-E-core performance" in text
+    # Comment must sit above the ratio key, not after a later key has stolen it.
+    disc = text.index("CLUSTERING DISCRIMINANT ONLY")
+    ratio = text.index("cluster_separation_ratio:")
+    assert disc < ratio
 
 
 def test_writing_the_mapping_does_not_relabel_it_as_a_hypothesis(fake_repo: Any) -> None:

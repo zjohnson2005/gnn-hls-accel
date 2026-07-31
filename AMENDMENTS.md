@@ -14,7 +14,7 @@ decision) · `DEFERRED` (belongs to a later milestone).
 | ID | Date | Scope | Summary | Status |
 |---|---|---|---|---|
 | AM-001 | 2026-07-29 | AF-001 | Mislabel occurs twice, not once | RESOLVED |
-| AM-002 | 2026-07-29 | Blueprint §16 | Duplicate section numbers §16.2/§16.3 | OPEN (doc defect) |
+| AM-002 | 2026-07-29 | Blueprint §16 | Duplicate section numbers §16.2/§16.3 | RESOLVED (2026-07-30, as-delivered SHA `11da7b34…`) |
 | AM-003 | 2026-07-29 | §5.2 vs §6.1 | Spec's manifest schema drops blueprint-required fields | RESOLVED (union) |
 | AM-004 | 2026-07-29 | §16.6 vs §3.2 | **Energy acceptance criteria directly conflict** | RESOLVED (2026-07-30, PRE-DATA, Z. Johnson) |
 | AM-005 | 2026-07-29 | Spec §2 | Repo layout: `seam/` is both root and package | RESOLVED |
@@ -23,9 +23,11 @@ decision) · `DEFERRED` (belongs to a later milestone).
 | AM-008 | 2026-07-29 | M1 | Topology cannot be verified — no shell | RESOLVED (2026-07-30, `a3d2323`) |
 | AM-009 | 2026-07-29 | Doc ingest | Governing docs transcribed, not byte-copied | RESOLVED (2026-07-30, hashes pinned) |
 | AM-010 | 2026-07-29 | §6.1 manifest schema | Refused topology verification must emit a manifest (AF-006) | RESOLVED |
-| AM-011 | — | — | *Identifier not used — see AM-012* | N/A |
+| AM-011 | — | — | *Identifier deliberately unused* (incoming blueprint raw/-policy renumbered to AM-014) | N/A |
 | AM-012 | 2026-07-30 | M1 topology gate | Run-to-run agreement is a **relative**-difference criterion | RESOLVED (2026-07-30, POST-DATA, Z. Johnson) |
 | AM-013 | 2026-07-30 | M1 topology gate | Agreement is assessed among **settled-charge** runs only | RESOLVED (2026-07-30, POST-DATA, Z. Johnson) |
+| AM-014 | 2026-07-30 | raw/ retention | Threshold-based raw/ commit policy (100 MB ceiling) | RESOLVED (PRE-DATA w.r.t. M2) |
+| AM-015 | 2026-07-30 | process | From M2 onward, acceptance criteria are pre-registered before data collection | RESOLVED (PRE-DATA) |
 
 ---
 
@@ -55,33 +57,23 @@ exception. Widening that exception is recorded.
 
 ## AM-002 — Blueprint §16 has duplicate section numbers
 
-**Date:** 2026-07-29 · **Pre/post data:** Pre · **Status:** OPEN (documentation defect)
+**Date opened:** 2026-07-29 · **Date resolved:** 2026-07-30 · **Pre/post data:** Pre ·
+**Status:** RESOLVED
 
-**Divergence.** `§16` numbers two different subsections `16.2` and two different subsections
-`16.3`:
+**Divergence.** Commit `13284ef` restored a blueprint predating the AM-002 renumber, so `§16`
+had two `16.2` and two `16.3` subsections and no `§16.9`. Cross-references (P-1.10, P-1.15) were
+ambiguous.
 
-| Number | First use | Second use |
-|---|---|---|
-| §16.2 | "The controlled-contrast axis" | "Tier 1 — fully executable now" |
-| §16.3 | "Consequences to propagate" | "Tier 2 — XPS 16 measurements with lasting value" |
+**Resolution.** Human-placed corrected blueprint verified as-delivered:
 
-**Why it matters.** Internal cross-references become ambiguous, and both are load-bearing:
+| Document | Bytes | Lines | SHA-256 (as-delivered) |
+|---|---:|---:|---|
+| `docs/SEAM_research_blueprint.md` | 61725 | 744 | `11da7b34936522fc37531f1321d7150f7f3788da6de6cce0f7472e6a92ef4cfd` |
 
-- **P-1.10** cites "the two-signal validation described in §16.2." Neither §16.2 describes a
-  validation protocol. The intended target is the *Platform A exclusives* bullet list, which
-  sits under the first §16.2 ("two independent energy signals … let P0.4 proceed without a wall
-  meter"). Resolvable by content.
-- **P-1.15** cites "§16.3(3)," meaning item 3 of "Consequences to propagate" (16 GB unified is a
-  hard constraint). The second §16.3 is a table with no item 3. Also resolvable by content, but
-  only because the numbering happens to fail loudly.
-
-**Decision.** No renumbering performed — the blueprint is the pre-registration artifact and is
-tagged; silently renumbering sections in a pre-registered document is worse than the defect.
-Cross-references resolved by content as above and recorded here.
-
-**Recommendation.** Fix in the next blueprint revision by renaming the Tier subsections to
-§16.4–§16.6 and shifting the existing §16.4–§16.6 accordingly, logged as a normal §14.2
-amendment.
+§16 now reads **16.1–16.9 sequential with no duplicates**; §16.9 (topology/power-pinning note)
+is present. The blueprint's own §14 amendment log records AM-002 RESOLVED. This file cites the
+**as-delivered** SHA above; subsequent governance-pass edits (AM-014 renumber in the blueprint)
+produce a new standing pin recorded under AM-009.
 
 ---
 
@@ -327,15 +319,30 @@ were reading nothing.
 bytes compared; mismatches overwritten from source. **AM-002 duplicate §16.x numbers left as-is**
 (pre-registration defect; no silent renumbering).
 
-| Document | Bytes (archive) | SHA-256 (archive / post-restore match) | Notes |
-|---|---:|---|---|
-| `SEAM_research_blueprint.md` | 56617 | `6c2221c6dd774183c3a62d520190964f75a74c115cfcd3f1733ebe0c8377be63` | Restored 733 lines; then AM-004 text applied (new hash — see AUDIT_LOG) |
-| `PHASE_MINUS1_IMPLEMENTATION_SPEC.md` | 25331 | `cfeada7da592eb59026b98481d52854481dec3d13e549ddc31d6d6b04a81604e` | Repo already byte-identical; **not clobbered**; AM-004 then edited §3.2/M2.5 |
-| `CURSOR_KICKOFF_PROMPT.md` | 4143 | (unchanged; pre-existing match) | Not rewritten |
-| `hybrid_execution_dse_positioning.md` | 30542 | `ceec363af8a55269a370b63f80473f0cb00f757741be83fa054f56fb7c67d410` | Newly ingested (AM-007) |
+### Pin chain (do not delete; history is the audit)
 
-**Note.** The source folder is an application cache path and is not durable. Prefer the committed
-`docs/` copies and the hashes in `AUDIT_LOG.md` as the pin.
+**Standing pins (post governance-pass edits, 2026-07-30):**
+
+| Document | Bytes | SHA-256 | Notes |
+|---|---:|---|---|
+| `docs/SEAM_research_blueprint.md` | 62321 | `ca5b0c44b3918acf454669aec5fa41c815acc6a76d4c83fc10a18b94792dfe8c` | After AM-014 renumber/substance replace in §5.3 + §14 |
+| `docs/PHASE_MINUS1_IMPLEMENTATION_SPEC.md` | 29092 | `89d8feeff92b2947acd5446837c5d2d22aef0135280c5c52c0839182dca72e6c` | After §3.0 elevation preflight inserted |
+| `docs/CURSOR_KICKOFF_PROMPT.md` | 4143 | `3a4a3a38cbdef5cb0568940bf0ce55bea8d6999893dfef3b84192fdfb8cd5031` | Unchanged |
+| `docs/hybrid_execution_dse_positioning.md` | 30542 | `ceec363af8a55269a370b63f80473f0cb00f757741be83fa054f56fb7c67d410` | Unchanged |
+
+**Superseded archive entries (oldest → newest):**
+
+| Document | Bytes | SHA-256 | Notes |
+|---|---:|---|---|
+| blueprint (archive, pre-AM-004) | 56617 | `6c2221c6dd774183c3a62d520190964f75a74c115cfcd3f1733ebe0c8377be63` | Claude Desktop restore |
+| blueprint (post-AM-004, pre-AM-002-resync) | 58977 | `72d9b6a32ea40d07201d35e22cfc6db6c0f62311a40c15bc5ecf4f9c4567c878` | Duplicate §16.2/§16.3 |
+| blueprint (**as-delivered** AM-002-fixed) | 61725 | `11da7b34936522fc37531f1321d7150f7f3788da6de6cce0f7472e6a92ef4cfd` | §16.1–16.9; hash-verified before edit |
+| spec (archive, pre-AM-004) | 25331 | `cfeada7da592eb59026b98481d52854481dec3d13e549ddc31d6d6b04a81604e` | Pre-AM-004 |
+| spec (post-AM-004, pre-resync) | 26384 | `f42fad5bdf7377393684483b1f36dcc2da99e4fca94e9dd79292dde356198148` | Pre human resync |
+| spec (**as-delivered** before §3.0) | 27171 | `5b0275da53be54d382e1b67e28d71c8429d98b4c277c7362f58d0beaaf166ad2` | Hash-verified before elevation insert |
+
+**Note.** Prefer committed `docs/` copies and this table as the pin. Do not edit hashes to force a
+match (CRLF / trailing-newline mismatches must be reported).
 
 ---
 
@@ -398,16 +405,20 @@ M2 scope, as AF-005 states.
 
 ---
 
-## AM-011 — identifier not used
+## AM-011 — identifier deliberately unused
 
 **Status:** N/A
 
-The task brief opening the M1 closeout referred to "AM-011 (resolved)" and forbade touching it. No
-AM-011 has ever existed in this file, which ran AM-001 → AM-010. Rather than reassign an identifier
-the instructions treated as occupied, it is left unused and the clarification below is numbered
-AM-012. Recorded so the gap does not read as a deleted entry. The same brief cited a blueprint
-"§16.9" that does not exist; both citation errors are logged in `AUDIT_LOG.md` under
-"Owner rulings applied; two write runs; OQ4 CLOSED".
+AM-011 is permanently reserved as unused. Two independent collisions made reassignment unsafe:
+
+1. An M1 closeout brief referred to a non-existent "AM-011 (resolved)"; the gap was left rather
+   than filled under a false claim of prior resolution.
+2. An incoming blueprint draft numbered a raw/-retention amendment **AM-011**. That identifier
+   remains unused here; the amendment is issued as **AM-014** with revised substance (see below).
+   The renumber is recorded so a reader comparing blueprint drafts to this file does not treat
+   two different texts as the same amendment.
+
+The clarification that followed the first collision is AM-012.
 
 ---
 
@@ -518,3 +529,57 @@ were seen. What limits the hazard is that the rule is stated as a *condition on 
 (settled charge) rather than as a tolerance on the outcome, that the tolerance itself did not move,
 and that the citing run was pre-declared and evaluated once, with no re-rolling — see `AUDIT_LOG.md`
 under "Pre-registration of the citing run".
+
+---
+
+## AM-014 — raw/ retention policy, threshold-based
+
+**Date:** 2026-07-30 · **Pre/post data:** **PRE-DATA with respect to M2** · **Status:** RESOLVED ·
+**Authorized by:** Z. Johnson
+
+**Renumber note.** An incoming blueprint draft numbered this substance **AM-011**. That identifier
+is deliberately unused in this repository (see AM-011 above). The amendment is issued here as
+**AM-014**.
+
+**Policy.** `raw/` payloads **ARE committed to git** while total payload size remains under a
+declared ceiling of **100 MB** (`configs/repo.yaml` → `raw_retention.ceiling_mb`). Above that
+ceiling, `raw/` payloads move to an externally archived, separately checksummed bundle, and
+`raw/MANIFEST.sha256` — the committed index of run directories and seal hashes — becomes the
+authoritative in-repo audit record.
+
+**Rationale.** At M1 scale (7 sealed runs, JSON manifests and summaries; measured ~0.09 MB) committing
+`raw/` costs almost nothing and buys off-host verification, which is why commit `503a845` was
+right. That breaks at M2: `samples.ndjson` at 1–10 Hz produces ~6k samples per 10-minute run, and
+M5's sweep is hundreds of runs. The ceiling is declared **now**, before the pressure exists, so the
+transition is a pre-registered rule rather than an ad hoc reaction. The §5.3 immutability properties
+are enforced by `seam/rawstore.py` in both regimes.
+
+**Supersedes** the blanket "do not commit `raw/`" ruling originally drafted as AM-011. That blanket
+ruling is contradicted by `503a845` and is superseded **before it ever took effect**.
+
+**Mechanical enforcement.** `seam/raw_retention.py` + `tests/test_raw_retention.py` measure payload
+size (excluding `raw/_blinding/**`) and **fail** when the ceiling is exceeded. The ceiling is not
+remembered; it is checked.
+
+---
+
+## AM-015 — From M2 onward, acceptance criteria are pre-registered before data collection
+
+**Date:** 2026-07-30 · **Pre/post data:** **PRE-DATA** · **Status:** RESOLVED ·
+**Authorized by:** Z. Johnson
+
+**Rule.** Beginning with M2, every agreement gate, acceptance criterion, comparator set, and stop
+rule for a milestone **must be written into `AUDIT_LOG.md` and/or `AMENDMENTS.md` before any
+measurement run for that milestone is taken**. A criterion formulated after seeing the numbers for
+the milestone it accepts is a post-data amendment and must be labelled as such; it is not a
+substitute for pre-registration.
+
+**Worked example — M1 cost.** The charge-load *mechanism* was pre-registered (`99da687`). The
+agreement *criterion* (AM-012 relative difference) and the *comparator restriction* (AM-013
+settled-charge set) were both **POST-DATA**. The B-vs-D pair failed the all-pairs agreement gate
+(2.8218% vs 2.4061% limit, 1.17× over), and that failure was resolved by a post-data criterion
+choice. See `AUDIT_LOG.md` subsection **"M1 limitation: post-data agreement criterion"**. That is
+the cost this rule exists to avoid repeating.
+
+**Does not retroactively relabel AM-012 or AM-013 as pre-data.** Their POST-DATA labels stand.
+**Does not authorize re-running M1** to manufacture a cleaner history.

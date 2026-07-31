@@ -21,6 +21,11 @@ Governing docs (re-read the relevant section before implementing):
 - Never state **~120 GB/s** bandwidth until M2.4 measures it (unverified)
 - **180 TOPS** is Platform B aggregate only — never as Platform A or NPU-alone
 - **No number without a `run_id`** / manifest. Figures read only from `derived/`
+- Never cite `topology.measured.cluster_separation_ratio` (~1.38× from `python_intfp_v1`)
+  as a P-core vs LP-E-core **performance** figure — it is an interpreter-bound clustering
+  discriminant only. Representative throughput comes from M5 microbenchmarks.
+- `raw/` payloads are committed while under the AM-014 ceiling (100 MB in
+  `configs/repo.yaml`); above that, external archive + `raw/MANIFEST.sha256`
 
 ## Integrity
 
@@ -40,8 +45,10 @@ Governing docs (re-read the relevant section before implementing):
 
 ## Milestone gates
 
-- **M2 blocked until M1 accepted.** No telemetry / LHM / energy code until then
-- `topology.verified: false` must **not** be flipped without on-silicon AC-power measurement
-  (`python -m seam.topology verify --write` under pinned conditions). Do not invent CPU lists
+- M1 is **ACCEPTED** (`a3d2323`, citing `fb5cd2d5`). Topology mapping is committed.
+- Do **not** start M2 telemetry / LHM / RAPL until the governance pass lands elevation
+  requirements in the Phase −1 spec and a battery-pinned profile is defined
 - Work M0→M1→M2→… in order; show evidence before advancing
+- From M2 onward, agreement and acceptance criteria are **pre-registered before data
+  collection** for that milestone (M1 AM-012/AM-013 are the worked example of the cost)
 - Amendments to pre-registered gates require `AMENDMENTS.md` + owner authorization (see AM-004)

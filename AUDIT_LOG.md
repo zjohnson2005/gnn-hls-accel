@@ -1617,3 +1617,104 @@ original `analysis/` probe artifacts are untouched. AM-002, AM-004, and AM-012 w
 `cpu-lpe` resolve from this point on, and the first M2 code to call `affinity_for` will get a real
 CPU list rather than a refusal. That is the intended effect, and it is also the reason the tripwire
 was strengthened rather than merely retargeted.
+
+---
+
+## 2026-07-30 — M1 limitation: post-data agreement criterion
+
+**This is the weakest link in the M1 evidence chain. It is stated plainly, not buried.**
+
+### What was pre-registered vs what was not
+
+- The charge-load **mechanism** was pre-registered in commit `99da687` **before** any AC topology
+  measurement: charging draws adapter headroom and adds chassis heat; both depress P-core turbo
+  more than LP-E turbo; therefore separation should widen on AC relative to the battery baseline
+  `0d7c607b` (1.3088335685389512).
+- The agreement **criterion** (relative difference of separation ratios vs the larger `cv_fast` of
+  the pair) was formulated **POST-DATA** as AM-012, after runs A (`3fb88dcd`, 1.3876038015371646)
+  and B (`963a849e`, 1.3599431469328718) exposed a units ambiguity in the stop-rule wording.
+- The **comparator restriction** to settled-charge runs {C, D} was applied **POST-DATA** as
+  AM-013, after the all-pairs matrix showed B vs D exceeding the limit — though AM-013 applies a
+  pre-registered mechanism (charge load as covariate) to justify the restriction.
+
+### The B-vs-D failure and how it was resolved
+
+| Pair | Relative difference | Limit (larger cv_fast) | Result |
+|---|---:|---:|---|
+| B `963a849e` vs D `7b5fc2e2` | **2.8218%** | **2.4061%** | **FAIL (1.17× over)** |
+
+**Therefore: the B-vs-D failure was resolved by a post-data criterion choice.** Those words are
+deliberate. The mapping was not committed under the all-pairs rule; it was committed after the
+comparator set was restricted to settled-charge runs {C `855e3590`, D `7b5fc2e2`}, which agree at
+0.5124% against a 2.0705% limit, and after citing run E `fb5cd2d5` (1.380460703128493) agreed with
+both under AM-012.
+
+AM-012 and AM-013 remain labelled **POST-DATA**. They are not retroactively relabelled as
+pre-data. M1 was not re-run to manufacture a cleaner history.
+
+### Runs A and B
+
+Runs A and B were **reclassified as supporting evidence** for the charge-load mechanism, **not
+discarded**. Their numbers remain in this log and in `raw/`:
+
+| Run | Ratio | Charge |
+|---|---:|---|
+| A `3fb88dcd` | 1.3876038015371646 | 69→70% bulk charging |
+| B `963a849e` | 1.3599431469328718 | 70→71% bulk charging |
+
+### Forward binding
+
+From M2 onward, agreement and acceptance criteria are pre-registered before data collection for
+that milestone (AM-015). M1 is the worked example of the cost of doing otherwise.
+
+---
+
+## 2026-07-30 — Charge-load effect size calibration (walk-back)
+
+The pre-registration (`99da687`) and early narrative described a pass under charging as
+**"conservative evidence."** That characterization is **an overstatement** given the measured
+effect size.
+
+| Set | Mean separation ratio | Runs |
+|---|---:|---|
+| Bulk-charge A/B | ~1.3738 | `3fb88dcd` (1.3876038015371646), `963a849e` (1.3599431469328718) |
+| Settled C/D | ~1.3953 | `855e3590` (1.3917174862228963), `7b5fc2e2` (1.3988665756315648) |
+| Citing E | 1.380460703128493 | `fb5cd2d5` at 99→99% |
+
+**Effect size:** the bulk-vs-settled gap is on the order of **~1%**, against run-to-run variation on
+the order of **~2%** (AM-012 relative spreads and within-cluster `cv_fast` values). The
+charge-load effect is **real in direction** (bulk charge compresses separation relative to
+settled C/D) but **not clearly separable from noise at this n**.
+
+**"Conservative evidence" is walked back.** A pass under charging is not stronger evidence than a
+pass at rest at the precision this instrument and this n provide.
+
+### Preserved corrections (do not weaken)
+
+1. The covariate is **charging LOAD**, not charge **LEVEL** (E at 99% sits **below** C and D in
+   ratio; SOC monotonicity is **NOT established**).
+2. Do **not** use the charge-load mechanism to justify any future comparator exclusion without
+   first measuring the effect with adequate n.
+
+---
+
+## 2026-07-30 — Governance pass COMPLETED (Items 1–6)
+
+| Item | Status |
+|---|---|
+| 1 Re-sync governing docs / close AM-002 | **DONE** — as-delivered blueprint `11da7b34…` / spec `5b0275da…` hash-verified; §16.1–16.9 confirmed; AM-002 RESOLVED citing as-delivered blueprint SHA |
+| 2 AM-011 unused; AM-014 in blueprint | **DONE** — both blueprint AM-011 occurrences renumbered to AM-014 with threshold-based substance; blanket "NOT committed" ruling does not survive as policy; AM-011 remains deliberately unused in `AMENDMENTS.md` |
+| 3 Post-data disclosure | **DONE** — subsection above; AM-015 forward-binding rule |
+| 4 Charge-load calibration | **DONE** — ~1% vs ~2% noise; "conservative evidence" walked back |
+| 5 Elevation requirement in spec §3 | **DONE** — §3.0 inserted; S2 bullet cross-references refusal pattern; **no telemetry code** |
+| 6 Fence 1.38× ratio | **DONE** — YAML comment + `seam.mdc` + regression test |
+
+### Document pin chain (standing = post-edit)
+
+| Role | Blueprint SHA-256 | Spec SHA-256 |
+|---|---|---|
+| Standing (post-edit) | `ca5b0c44b3918acf454669aec5fa41c815acc6a76d4c83fc10a18b94792dfe8c` | `89d8feeff92b2947acd5446837c5d2d22aef0135280c5c52c0839182dca72e6c` |
+| As-delivered (superseded) | `11da7b34936522fc37531f1321d7150f7f3788da6de6cce0f7472e6a92ef4cfd` | `5b0275da53be54d382e1b67e28d71c8429d98b4c277c7362f58d0beaaf166ad2` |
+| Prior restore (superseded) | `72d9b6a32ea40d07201d35e22cfc6db6c0f62311a40c15bc5ecf4f9c4567c878` | `f42fad5bdf7377393684483b1f36dcc2da99e4fca94e9dd79292dde356198148` |
+
+**No M2 code.** No `seam/telemetry/`. No measurement runs. No M1 re-run.

@@ -95,6 +95,36 @@ seam/
 
 Linux `powercap`/`/sys` RAPL does not exist here, and WSL2 cannot reach the NPU. **All measurement runs on native Windows.**
 
+### 3.0 Elevation preflight (required before any energy measurement)
+
+Every manifest to date records `elevated: false`. RAPL MSR reads and the LHM bridge both require
+an elevated Windows session. Energy measurement therefore cannot begin from an unelevated process.
+
+**Preflight.** Before any run that reads S2 (RAPL) or starts the LHM bridge, the harness runs an
+elevation preflight and records the result in the manifest. The check method (e.g. Windows token
+elevation via `ctypes` / `IsUserAnAdmin`, or an equivalent documented probe) is named in the
+manifest alongside the boolean.
+
+**Refusal pattern.** An energy run started in an unelevated session must **REFUSE**, by the same
+pattern as `assert_pinned_for_committed_result()`: emit a schema-valid manifest that records the
+refusal reason (`elevated: false`, check method, bridge state), then stop. Refusal is a data
+point, not a crash. Do not attempt MSR reads after refusal.
+
+**Manifest fields (energy runs).** In addition to the existing `elevated` boolean, record:
+- `elevation_check_method` — how elevation was determined;
+- `rapl_bridge.implementation` — e.g. `lhm_bridge` or `pcm`;
+- `rapl_bridge.version` — pinned version string;
+- `rapl_bridge.driver_or_service_state` — running / missing / access-denied / etc.
+
+**Operator workflow (Windows).** Obtain an elevated session before energy collection: launch an
+elevated terminal ("Run as administrator"), activate `.venv-seam`, and start the harness from that
+process. Confirm the preflight records `elevated: true` before the first S2 sample. Do not rely on
+UAC prompts mid-run.
+
+**Open question for M2.1 (do not assume).** Does elevation itself change any other pinned
+condition — power plan, process priority, scheduler behaviour, or Defender exclusions? If it
+might, characterize that before treating elevated and unelevated quiesce baselines as exchangeable.
+
 ### 3.1 Three energy signals, deliberately redundant
 
 **S1 — Battery discharge (whole device, ground truth-ish).**
@@ -110,7 +140,7 @@ WMI namespace `root\WMI`, class `BatteryStatus`: `DischargeRate` (mW), `Remainin
 Requires a signed kernel driver on Windows. Implement `tools/lhm_bridge/` — a minimal C# service using **LibreHardwareMonitorLib** that exposes a localhost JSON endpoint polled from Python. Alternative: Intel PCM `pcm.exe -csv`. Pick one, pin its version, record it in the manifest.
 
 - Handle 32-bit counter **wraparound** explicitly. This is the classic RAPL bug: counters roll over in tens of seconds under load. Accumulate deltas, detect rollover, never subtract raw values across long windows.
-- Requires elevation. Fail loudly if not elevated.
+- Requires elevation. See §3.0 — refuse with a recorded manifest; do not crash.
 
 **S3 — SRUM (sanity only).**
 `powercfg /srumutil` for per-process energy attribution. Minute-granularity; use for cross-checks, never per-run.
@@ -125,16 +155,21 @@ S1 includes display, SSD, WiFi, EC, and fans; S2 covers SoC domains only. So S1 
 2. **Paired idle-load-idle design.** Measure idle discharge for $T_{idle}$, run load for $T_{load}$, measure idle again. The bracketing idles estimate the non-SoC baseline $P_{base}$.
 3. Compute $E_{SoC}^{S1} = \int (P_{S1} - P_{base})\,dt$ over the load window.
 4. Compare against $E^{S2} = \Delta$ RAPL package energy over the same window.
-5. **Acceptance (AM-004, PRE-DATA, authorized by Z. Johnson):** fit the regression **separately for each execution target** (`cpu-p`, `cpu-lpe`, `igpu`, `npu`) — **not pooled**. Across ≥8 load levels spanning idle→turbo per target, require:
-   - $R^2 \ge 0.95$;
-   - slope $\in [1.0,\ 1.5]$ — slope $< 1.0$ is a **HARD FAILURE** (RAPL package is a strict subset of platform draw; the subset cannot grow faster than the whole);
-   - intercept consistent with an independently measured idle baseline, validated by differencing two display-brightness levels;
-   - report the **minimum resolvable energy difference** for that target.
+5. **Acceptance — the three-part criterion (AM-004, authorized 2026-07-29).** Across ≥8 load levels spanning idle→turbo, regress $E_{SoC}^{S1}$ on $E^{S2}$ **separately for each execution target** (`cpu-p`, `cpu-lpe`, `igpu`, `npu`). Require:
 
-   **Do not require agreement within a fixed percentage** — RAPL excludes display, SSD, WiFi, EC, fans, VRM, and possibly DRAM, so %-agreement with battery discharge is physically unachievable and would reward mis-attribution. Target-dependent slope is diagnostic: e.g. a higher slope under NPU-heavy load indicates RAPL missing NPU power.
-6. Emit `derived/energy_calibration.json` with **per-target** slope, intercept, $R^2$, residual distribution, load levels used, and minimum resolvable energy difference. Every later energy claim cites this file and the target it was calibrated under.
+   **(a) Linearity.** $R^2 \ge 0.95$. Catches saturation, mis-scaling, and counter-rollover bugs.
 
-If $R^2 < 0.95$ for a target, energy for that target is reported **with an explicit error band**, and any energy-based conclusion for it is downgraded to qualitative. Say so in the paper.
+   **(b) Slope** $\in [1.0, 1.5]$. Slope above 1 is expected and physical — fans spin up under load, VRM efficiency degrades with current, and DRAM may sit outside `MSR_PKG_ENERGY_STATUS`. Report the excess over 1.0 as the load-dependent non-SoC coefficient. **Slope below 1.0 is a hard failure:** a subset cannot grow faster than the whole, so a signal is broken. Stop and fix.
+
+   **(c) Intercept** consistent with the independently measured idle baseline $P_{base}$ from step 2 — not merely a fitted nuisance parameter. Validate $P_{base}$ directly by differencing two display-brightness levels.
+
+   **Do not require agreement within a fixed percentage.** The two signals measure different physical quantities and cannot converge; RAPL package energy is a strict subset of platform draw. What matters is that they track linearly with a stable, reported offset.
+
+6. Emit `derived/energy_calibration.json` with, **per target**: slope, intercept, $R^2$, residual distribution, load levels used, and **minimum resolvable energy difference**. Every later energy claim cites this file.
+
+7. **Per-target slope divergence is a first-class finding, not pooled residual.** If NPU-heavy workloads show a systematically higher slope than CPU-heavy ones, RAPL is not capturing NPU power. Given that NPU energy is central to this project, surface that explicitly and document which domains are uncounted. Do not report energy for an affected target without stating the omission.
+
+If $R^2 < 0.95$, energy is reported **with an explicit error band**, and any energy-based conclusion is downgraded to qualitative. Say so in the paper. The minimum resolvable energy difference determines whether energy can serve as a DSE objective at all — report it whether or not the gate passes.
 
 ### 3.3 Thermal and throttle detection
 
@@ -319,10 +354,10 @@ Work strictly in order. Each has hard acceptance criteria; do not advance on a p
 - **M2.2** LHM bridge with RAPL rollover handling; unit test that synthesizes a rollover and asserts correct accumulation.
 - **M2.3** Thermal: determine and freeze warm-up duration, throttle threshold, cooldown ceiling. Include a sustained-load run characterizing whether 55 W turbo is sustainable and for how long.
 - **M2.4** STREAM-class memory bandwidth benchmark. Report measured vs the ~120 GB/s derived figure. **Until this lands, no document may state a bandwidth number.**
-- **M2.5** Energy cross-validation per §3.2 / AM-004, emitting `derived/energy_calibration.json` with **per-target** fits (`cpu-p`, `cpu-lpe`, `igpu`, `npu`): $R^2$, slope $\in [1.0,\ 1.5]$, intercept (brightness-differenced idle baseline), residuals, load levels, and minimum resolvable energy difference. Pooled regression is not acceptable.
+- **M2.5** Energy cross-validation per §3.2, emitting `derived/energy_calibration.json`.
 - **M2.6** Sampler overhead characterization, including on LP-E cores.
 
-**Accept:** per-target calibration $R^2 \ge 0.95$ with slope/intercept/residuals and min resolvable ΔE reported (AM-004); thermal constants committed to platform config; measured bandwidth recorded; overhead quantified.
+**Accept:** per-target regressions satisfy the §3.2 three-part criterion — $R^2 \ge 0.95$, slope $\in [1.0, 1.5]$ with **none below 1.0**, intercepts consistent with independently measured idle baseline; `derived/energy_calibration.json` records slope, intercept, $R^2$, residuals, load levels, and minimum resolvable energy difference **for every execution target**; any target-dependent slope divergence documented as a RAPL domain-coverage finding; thermal constants committed to platform config; measured bandwidth recorded; sampler overhead quantified.
 
 ### M3 — A/A test, variance baseline, cloud backend, agent harness
 

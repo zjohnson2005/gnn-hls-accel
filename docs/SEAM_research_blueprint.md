@@ -219,7 +219,7 @@ integrity:
 
 ### 5.3 Data handling
 
-- **Raw is immutable.** Write-once directory, checksummed, never edited. All derived artifacts regenerable from raw by a single command.
+- **Raw is immutable.** Write-once directory, checksummed, never edited. All derived artifacts regenerable from raw by a single command. **Retention (AM-014, PRE-DATA w.r.t. M2):** `raw/` payloads **ARE committed to git** while total payload size remains under a declared ceiling of **100 MB** (`configs/repo.yaml` → `raw_retention.ceiling_mb`). Above that ceiling, payloads move to an externally archived, separately checksummed bundle, and `raw/MANIFEST.sha256` — the committed index of run directories and seal hashes — becomes the authoritative in-repo audit record. At M1 scale committing raw costs almost nothing and buys off-host verification (commit `503a845`); at M2/`samples.ndjson` and M5 sweep scale the ceiling is pre-declared so the transition is not ad hoc. §5.3 immutability is enforced by `seam/rawstore.py` in both regimes. Supersedes a draft blanket "do not commit `raw/`" ruling that never took effect (identifier AM-011 is deliberately unused in the repo amendments log).
 - **Three-tier layout.** `raw/` → `derived/` → `figures/`. A figure must name the derived tables it consumes; a derived table must name the run IDs it consumes.
 - **No manual data entry, ever.** Numbers reach papers through scripts.
 - **Discard policy declared in advance.** A run is discarded only for: harness self-check failure, throttle events exceeding the §5.4 threshold, or API error. Discards are logged with reason and counted in the paper. Post-hoc discarding for being an inconvenient value is misconduct.
@@ -486,7 +486,7 @@ Each gate has a measurable criterion and a pre-committed response. **A failed ga
 
 | Gate | Week | Criterion | If PASS | If FAIL |
 |---|---|---|---|---|
-| **G0 — Platform** | 2 | A local model runs on NPU 5 at usable throughput; energy calibration meets Gate −1 / AM-004 criteria **per execution target** (not a fixed %-agreement with a wall meter); A/A shows no false positive; CV known for all primary metrics | Proceed to Phase 1 | If NPU only: drop NPU, reframe local targets as CPU+iGPU, continue. If harness fails: **stop all science**, fix instrumentation. No exceptions. |
+| **G0 — Platform** | 2 | A local model runs on NPU 5 at usable throughput; **energy cross-validation passes the §16.8 three-part criterion** (on Platform B a wall meter substitutes for battery discharge as the whole-system signal — note it measures AC input including PSU conversion loss, so it is likewise a superset of RAPL and the same physics applies); A/A shows no false positive; CV known for all primary metrics | Proceed to Phase 1 | If NPU only: drop NPU, reframe local targets as CPU+iGPU, continue. If harness fails: **stop all science**, fix instrumentation. No exceptions. |
 | **G1 — Characterization** | 4 | Wall-time and energy decompositions complete with CIs; taxonomy $\kappa \ge 0.75$; frozen benchmark list committed | Proceed to Phase 2 | Revise taxonomy or narrow benchmark families; do not proceed on an unreliable taxonomy |
 | **G2 — H1 / behavioral non-invariance** | 8 | $\ge 20\%$ median divergence in $\ge 2$ metrics, CI-separated from noise floor | **Full SEAM.** Closed-loop is justified; this is the flagship path | $< 5\%$: publish the null, descope to open-loop DSE. Between 5–20%: descope to token/step-count surrogate only; drop success prediction |
 | **G3 — Surrogate validity (H5)** | 12 | Held-out (by configuration) MAPE $\le 15\%$ tokens/steps; success within 10 pp | Closed-loop results are quotable as point estimates | 15–30%: emit intervals, not points; state limitation prominently. $>30\%$: report as negative result on surrogate feasibility |
@@ -573,24 +573,10 @@ Every deviation from this protocol is recorded here with date, what changed, why
 | 2026-07-29 | — | v1.0 committed | Initial pre-registration | Pre |
 | 2026-07-29 | §3, §16 | Added Phase −1. Dell XPS 16 promoted from stopgap to **Platform A**, satisfying the §3 second-platform requirement and R6. Phase −1 inserted ahead of Phase 0. | EVO-T2 not yet in hand; H1 is platform-independent and can be resolved early. Sequencing improvement, not a concession. | Pre |
 | 2026-07-29 | §4, §16.1 | **Retracted the two-generation NPU axis.** It rested on a false premise: Platform A was assumed Meteor Lake, but hardware probe artifacts identify it as **Panther Lake, Core Ultra 5 325** — the same generation as the EVO-T2. Replaced with a *controlled-contrast* axis (NPU held constant, iGPU width / memory capacity / thread count / thermal envelope varying). Added **H7**. | Corrected platform identification. The controlled contrast is a stronger design than the cross-generation one, which would have confounded NPU IP, driver stack, process node, and capacity simultaneously. | Pre |
+| 2026-07-29 | §11 (G0), §16.8 (Gate −1) | **AM-004 — RESOLVED, authorized by Z. Johnson.** Replaced "RAPL and battery agree within 15%" (and the parallel "wall meter within 10%" in G0) with a three-part physical criterion: (a) linearity $R^2 \ge 0.95$ across ≥8 load levels; (b) slope $\in [1.0, 1.5]$, **slope < 1.0 a hard failure**; (c) intercept consistent with an independently measured idle platform baseline. Regressions fit **per execution target**. Adds a reported minimum resolvable energy difference. | The original criterion was physically unsatisfiable. RAPL package energy is a strict subset of platform draw, and the excluded terms — display, SSD, WiFi, EC, fans, VRM losses, possibly DRAM — are large. At idle the signals differ by roughly 3–5×; only near maximum load does the gap approach 15%. The criterion was satisfiable at one operating point only, and reachable elsewhere only by mis-attributing platform baseline power into the SoC term. The replacement tests what the gate intended (instrument trustworthiness) and adds a slope<1 sanity check the original lacked. | **Pre** — no energy data collected |
+| 2026-07-29 | §16 | **AM-002 — RESOLVED.** Renumbered duplicated §16 subsections. The 2026-07-29 platform-correction amendment introduced a second §16.1–§16.3, colliding with the existing Tier sections. Now: 16.1 Platform A, 16.2 controlled-contrast axis, 16.3 consequences, 16.4 Tier 1, 16.5 Tier 2, 16.6 Tier 3, 16.7 ordering, 16.8 Gate −1, 16.9 topology/power-pinning note. | Document defect introduced by the amending author; cross-references were ambiguous. | Pre |
+| 2026-07-30 | §5.3 | **AM-014 — RESOLVED (PRE-DATA w.r.t. M2), authorized by Z. Johnson.** Threshold-based `raw/` retention. Payloads **ARE committed to git** while under a declared **100 MB** ceiling; above it, payloads move to an externally archived, separately checksummed bundle and `raw/MANIFEST.sha256` becomes the authoritative in-repo audit index. Ceiling declared in `configs/repo.yaml` and enforced by `seam/raw_retention.py`. §5.3 immutability remains enforced by `seam/rawstore.py` in both regimes. **Renumber:** an earlier draft of this amendment was numbered AM-011; that identifier is deliberately unused in `AMENDMENTS.md` (collision with a prior unused slot), so the amendment is issued as AM-014. The draft blanket "raw/ is NOT committed to git" ruling is **superseded before it ever took effect** — commit `503a845` correctly committed M1 sealed runs (~0.09 MB) for off-host verification. | At M1 scale committing raw is cheap and valuable; at M2 (1–10 Hz `samples.ndjson`) and M5 (hundreds of runs) it is not. Declaring the ceiling now makes the transition a pre-registered rule rather than an ad hoc reaction. | **Pre** w.r.t. M2 |
 | 2026-07-29 | Appendix B | **Audit finding AF-001** logged: `analysis/aipc-c1/MACHINE.md` line 12 mislabels the platform "(Lunar Lake)." Because MACHINE.md is the provenance source for run manifests (§5.2), the error would propagate into every manifest's platform identity. Caught before data collection. | Provenance integrity | Pre |
-| 2026-07-30 | §16.6 Gate −1; §11 G0 | **AM-004 (PRE-DATA)** — authorized by Z. Johnson. Replaced fixed %-agreement energy gates (Gate −1 "RAPL vs battery within 15%"; G0 "wall meter within 10%") with per-target linear-tracking criteria. See detailed entry below. | RAPL package is a strict subset of platform draw; 15%/10% agreement is physically unachievable and would reward mis-attribution | **PRE** |
-
-**AM-004 — Energy gate criteria (PRE-DATA; authorized by Z. Johnson, 2026-07-30).**
-
-> **PRE-DATA.** Decided before any energy calibration data were collected. Do not treat as a post-hoc relaxation.
-
-Rationale: the RAPL package domain is a strict **subset** of platform electrical draw (excludes display, SSD, WiFi, EC, fans, VRM, and possibly DRAM). It cannot converge to a fixed 15% (or 10%) agreement with battery-discharge / wall-meter energy; at idle the ratio is often 3–5×. A %-agreement gate fails for correct instrumentation.
-
-**Replacement criteria** (apply to Gate −1 and to the energy clause of Gate G0):
-
-1. **Linearity:** $R^2 \ge 0.95$ across ≥8 load levels spanning idle→turbo.
-2. **Slope:** $\in [1.0,\ 1.5]$. Slope $< 1.0$ is a **HARD FAILURE** (the subset cannot grow faster than the whole).
-3. **Intercept:** consistent with an independently measured idle baseline, validated by differencing two display-brightness levels.
-4. **Per execution target:** fit regressions separately for `cpu-p`, `cpu-lpe`, `igpu`, and `npu` — **not pooled**. Target-dependent slope reveals RAPL domain-coverage gaps (e.g. a higher slope under NPU-heavy load indicates RAPL missing NPU power).
-5. **Resolution:** report the minimum resolvable energy difference **per target**.
-
-Failure response unchanged: investigate attribution; add an explicit error term before any energy claim. Full record: `AMENDMENTS.md` AM-004; Phase −1 spec §3.2 / M2.5.
 
 ---
 
@@ -653,7 +639,7 @@ Both platforms are Panther Lake with NPU 5. That removes the two-generation NPU 
 4. **~120 GB/s is derived, not measured.** LPDDR5X-7467 on a 128-bit bus. Confirm by STREAM-class benchmark before it appears anywhere.
 5. **Never cite 50 TOPS as achieved throughput.** It is a peak INT8 figure. Measure achieved tokens/s.
 
-### 16.2 Tier 1 — fully executable now, zero dependence on the EVO-T2
+### 16.4 Tier 1 — fully executable now, zero dependence on the EVO-T2
 
 | ID | Task | Serves | Notes |
 |---|---|---|---|
@@ -666,7 +652,7 @@ Both platforms are Panther Lake with NPU 5. That removes the two-generation NPU 
 | P-1.7 | Audit the six unread papers (HERA, HybridFlow, PAAC, PRISM, IslandRun, HeRo); write the differentiation table | Appendix A, related work | Cheap, removes a known blind spot |
 | P-1.8 | Network characterization from the actual deployment network | §9.3 | Diurnal RTT/bandwidth/jitter per endpoint |
 
-### 16.3 Tier 2 — XPS 16 measurements with lasting value
+### 16.5 Tier 2 — Platform A measurements with lasting value
 
 | ID | Task | Serves | Notes |
 |---|---|---|---|
@@ -678,29 +664,37 @@ Both platforms are Panther Lake with NPU 5. That removes the two-generation NPU 
 | P-1.15 | Memory contention study: weights + KV cache + iGPU/NPU working set within 16 GB unified, as context length grows | §16.3(3) | The binding constraint on Platform A; likely a headline limitation figure |
 | P-1.14 | Measurement-overhead characterization | §5.1 | Especially on LP-E cores |
 
-### 16.4 Tier 3 — genuinely blocked until the EVO-T2 arrives
+### 16.6 Tier 3 — genuinely blocked until the EVO-T2 arrives
 
 - Panther Lake / NPU 5 throughput, energy, and bandwidth figures
 - The cross-generation H2 experiment (needs both halves)
 - OCuLink FPGA attach, the HLS datapath, and OmniSim cross-validation (S12, Phase 3b)
 - Any claim about 18A silicon
 
-### 16.5 Phase −1 ordering
+### 16.7 Phase −1 ordering
 
 1. **P-1.9 (NPU bring-up) and P-1.2/P-1.3 (harness + A/A) in parallel, first.** One resolves the largest technical unknown; the other is a prerequisite for all measurement.
 2. **P-1.1 (H1 pilot) immediately after A/A passes.** Nothing else in the program matters if H1 fails, and it is cheap to test.
 3. P-1.5, P-1.6, P-1.7 run continuously alongside.
 4. Tier 2 measurements as the harness stabilizes.
 
-### 16.6 Gate −1 (before Phase 0 / EVO-T2 arrival)
+### 16.8 Gate −1 (before Phase 0 / EVO-T2 arrival)
 
 | Criterion | Response if failed |
 |---|---|
 | A/A passes; per-metric CV known | Stop; fix harness. No comparison is valid without this. |
-| **Energy (AM-004, PRE-DATA, authorized by Z. Johnson):** per execution target (`cpu-p`, `cpu-lpe`, `igpu`, `npu`), RAPL vs battery-discharge tracks linearly with $R^2 \ge 0.95$ across ≥8 load levels (idle→turbo); slope $\in [1.0,\ 1.5]$ (slope $< 1.0$ = **HARD FAILURE**); intercept consistent with independently measured idle baseline validated by differencing two display-brightness levels; minimum resolvable energy difference reported per target. **Not** fixed %-agreement. | Investigate attribution; add explicit error term before any energy claim |
+| **Energy cross-validation passes the three-part criterion** (AM-004): per-execution-target regression of baseline-corrected battery energy on RAPL energy across ≥8 load levels gives (a) $R^2 \ge 0.95$, (b) slope $\in [1.0, 1.5]$, (c) intercept consistent with an independently measured idle platform baseline. Minimum resolvable energy difference reported per target. | **Slope < 1.0 on any target: hard failure** — a subset cannot grow faster than the whole, so a signal is broken. Stop and fix. $R^2 < 0.95$: report energy with an explicit error band and downgrade all energy-based conclusions to qualitative. **Target-dependent slope divergence:** treat as a RAPL domain-coverage gap, document which domains are uncounted, and do not report energy for the affected target without stating the omission. |
 | H1 pilot yields a directional answer with CIs separated from the noise floor | If inconclusive, increase $n$ before expanding scope — do not proceed to build on an unresolved premise |
 | NPU verdict recorded (works / doesn't / with what caveats) | Feeds G0 and R1 directly |
 | Benchmark lists frozen and committed; taxonomy $\kappa \ge 0.75$ | Revise taxonomy before it becomes load-bearing |
+| **Topology mapping committed from a pinned (AC) session** | See §16.9 |
+
+### 16.9 Note on the topology verification and power pinning
+
+The Phase −1 harness correctly refused to commit a P/LP-E mapping measured in an unpinned (battery) session. Two observations for whoever closes this out:
+
+1. **The mapping and the evidence have different power sensitivity.** Which logical CPUs are P versus LP-E is a static hardware property. The *separation ratio* used to verify it is not — it depends on power plan, thermal headroom, and DVFS state. So a battery-session result is weaker evidence, not a different answer.
+2. **Therefore the AC re-run has a predictable direction.** On AC with greater thermal and power headroom, P-cores have more turbo room than LP-E cores, so the separation ratio should come out **larger** than the 1.309× observed on battery. If the AC run yields a *smaller* ratio, something is wrong — with the pinning, the thermal state, or the kernel — and it must be investigated before the mapping is committed. Record this as a directional prediction before running, so the confirmation is meaningful rather than post-hoc.
 
 **Configuration facts: resolved.** See §16.1. Remaining action: correct AF-001 and re-verify AF-002 when the shell backend is restored.
 

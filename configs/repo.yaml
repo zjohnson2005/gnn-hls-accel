@@ -1,0 +1,11 @@
+# Repository-wide integrity policy (not platform-specific).
+# See AMENDMENTS.md AM-014. No magic numbers in code — the ceiling lives here.
+
+raw_retention:
+  # raw/ payloads ARE committed while total payload size stays under this ceiling.
+  # Above it, payloads move to an externally archived, separately checksummed bundle,
+  # and raw/MANIFEST.sha256 becomes the authoritative in-repo audit record.
+  ceiling_mb: 100
+  # Paths under raw/ excluded from the size sum (secrets that defeat blinding).
+  exclude_globs:
+    - "_blinding/**"
