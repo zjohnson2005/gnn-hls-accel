@@ -339,17 +339,73 @@ def test_measure_topology_refuses_a_platform_that_is_not_the_declared_part(
 # ==================================================================================================
 
 
-def test_committed_config_ships_unverified(real_platform_config: ResolvedConfig) -> None:
-    """AMENDMENTS.md AM-008: the committed config must NOT claim a verified mapping.
+#: The AC run whose measurement is committed to ``configs/platforms/aipc-c1.yaml``. Named here so
+#: that changing the committed mapping *requires* editing this file in the same commit, which is the
+#: mechanism the original AM-008 tripwire relied on to make such a change visible in review.
+CITING_RUN_ID = "fb5cd2d5-e850-4de1-9b90-d368b5aa9994"
 
-    This test is the tripwire against a future agent writing a plausible ``[0,1,2,3]`` into the
-    config to make M1 look green. When verification genuinely runs, this test is updated in the
-    same commit that records the measurement's run_id — which makes the change visible in review.
+
+def test_committed_config_carries_the_measured_mapping(real_platform_config: ResolvedConfig) -> None:
+    """The committed mapping must be exactly what the citing run measured (AMENDMENTS.md AM-008).
+
+    Replaces ``test_committed_config_ships_unverified``, which asserted the pre-M1 state. Its purpose
+    was never "verified must be false" — it was that ``verified: true`` may not appear without a
+    measurement behind it. That purpose now lives in three places: this test pins the run_id, the
+    test below re-derives the split from the recorded scores so the numbers cannot be invented, and
+    ``test_committed_verification_thresholds_are_unchanged`` stops the thresholds being lowered to
+    let a weaker measurement through.
     """
-    assert real_platform_config.get("topology.verified") is False
-    assert real_platform_config.get("topology.p_cpus") is None
-    assert real_platform_config.get("topology.lpe_cpus") is None
-    assert real_platform_config.get("topology.measured.run_id") is None
+    assert real_platform_config.get("topology.verified") is True
+    assert real_platform_config.get("topology.p_cpus") == [0, 1, 2, 3]
+    assert real_platform_config.get("topology.lpe_cpus") == [4, 5, 6, 7]
+    assert real_platform_config.get("topology.measured.run_id") == CITING_RUN_ID
+    assert real_platform_config.get("topology.measured.efficiency_class_ordering_matched") is True
+    assert real_platform_config.get("topology.measured.kernel") == "python_intfp_v1"
+
+
+def test_committed_mapping_is_reproducible_from_its_own_recorded_scores(
+    real_platform_config: ResolvedConfig,
+) -> None:
+    """The committed split must fall out of the committed per-CPU scores.
+
+    This is the substantive half of the tripwire. Flipping ``verified: true`` by hand no longer costs
+    one line: the eight scores must genuinely cluster into the claimed split, reproduce the recorded
+    separation ratio, and clear the config's own acceptance thresholds. Fabricating that is a far
+    higher bar than writing a plausible ``[0,1,2,3]``, and it is checked with the same clustering
+    function the measurement used.
+    """
+    measured = real_platform_config.require("topology.measured")
+    scores = {int(cpu): float(score) for cpu, score in measured["scores"].items()}
+
+    fast, slow = _split_into_two_clusters(scores)
+    assert fast == real_platform_config.get("topology.p_cpus")
+    assert slow == real_platform_config.get("topology.lpe_cpus")
+
+    fast_mean = sum(scores[cpu] for cpu in fast) / len(fast)
+    slow_mean = sum(scores[cpu] for cpu in slow) / len(slow)
+    # Scores are rounded to 3 decimals in the config, so the ratio agrees to rounding, not exactly.
+    assert fast_mean / slow_mean == pytest.approx(measured["cluster_separation_ratio"], abs=1e-3)
+
+    thresholds = real_platform_config.require("topology.verification")
+    assert measured["cluster_separation_ratio"] >= thresholds["min_cluster_separation_ratio"]
+    assert measured["p_cluster_cv"] <= thresholds["max_within_cluster_cv"]
+    assert measured["lpe_cluster_cv"] <= thresholds["max_within_cluster_cv"]
+
+    # The measured EfficiencyClass map must agree with the committed split in the direction the
+    # runs observed on this platform: higher EfficiencyClass = faster core (spec §10 question 4).
+    ec_map = {int(cpu): int(cls) for cpu, cls in measured["efficiency_class_map"].items()}
+    assert {ec_map[cpu] for cpu in fast} == {1}
+    assert {ec_map[cpu] for cpu in slow} == {0}
+
+
+def test_committed_verification_thresholds_are_unchanged(
+    real_platform_config: ResolvedConfig,
+) -> None:
+    """Acceptance thresholds are pre-registered; lowering one to pass a run is the failure mode."""
+    thresholds = real_platform_config.require("topology.verification")
+    assert thresholds["min_cluster_separation_ratio"] == 1.25
+    assert thresholds["max_within_cluster_cv"] == 0.15
+    assert thresholds["require_expected_split"] is True
 
 
 def test_expected_split_is_stored_separately_from_measured(
@@ -361,27 +417,44 @@ def test_expected_split_is_stored_separately_from_measured(
     assert expected["n_p_cores"] == 4
     assert expected["n_lpe_cores"] == 4
     assert expected["smt"] is False
-    assert real_platform_config.get("topology.measured.scores") is None
+    assert expected["_provenance"] == "vendor_stated"
+
+    # The two blocks stay distinct: the hypothesis carries no run_id and no scores, the measurement
+    # carries both. That separation is what keeps a vendor claim from being read as a result.
+    assert "run_id" not in expected
+    assert "scores" not in expected
+    assert real_platform_config.get("topology.measured.run_id") == CITING_RUN_ID
+    assert real_platform_config.get("topology.measured.scores") is not None
 
 
-def test_load_verified_topology_refuses_unverified_config(fake_config: ResolvedConfig) -> None:
+def test_load_verified_topology_refuses_unverified_config(
+    unverified_config: ResolvedConfig,
+) -> None:
     with pytest.raises(TopologyNotVerifiedError, match="no verified"):
-        load_verified_topology(fake_config)
+        load_verified_topology(unverified_config)
 
 
-def test_affinity_for_refuses_unverified_config(fake_config: ResolvedConfig) -> None:
+def test_affinity_for_refuses_unverified_config(unverified_config: ResolvedConfig) -> None:
+    """Both CPU targets must refuse rather than guess, even now that a mapping exists upstream.
+
+    The committed config carries a measured mapping since M1, so this behaviour no longer gets tested
+    incidentally. It is the guarantee spec §4 actually asks for — a machine whose split has not been
+    measured must not be handed one — so it is tested explicitly against a config built unverified.
+    """
     for target in ("cpu-p", "cpu-lpe"):
         with pytest.raises(TopologyNotVerifiedError):
-            affinity_for(target, fake_config)  # type: ignore[arg-type]
+            affinity_for(target, unverified_config)  # type: ignore[arg-type]
 
 
-def test_affinity_for_refuses_even_with_allow_unverified(fake_config: ResolvedConfig) -> None:
+def test_affinity_for_refuses_even_with_allow_unverified(
+    unverified_config: ResolvedConfig,
+) -> None:
     """There is no defensible default ordering, so the waiver still cannot produce a mapping.
 
     The waiver exists to make the *attempt* auditable, not to hand back a guess.
     """
     with pytest.raises(TopologyNotVerifiedError, match="no fallback mapping"):
-        affinity_for("cpu-p", fake_config, allow_unverified=True)
+        affinity_for("cpu-p", unverified_config, allow_unverified=True)
 
 
 # ==================================================================================================

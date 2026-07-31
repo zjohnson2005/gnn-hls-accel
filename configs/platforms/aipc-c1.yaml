@@ -64,11 +64,11 @@ provenance_artifacts:
 # Populate by running:  python -m seam.topology verify --write
 # ----------------------------------------------------------------------------------------------
 topology:
-  verified: false
+  verified: true
 
   # Measured result. null until the microbenchmark has run on this hardware.
-  p_cpus: null
-  lpe_cpus: null
+  p_cpus: [0, 1, 2, 3]
+  lpe_cpus: [4, 5, 6, 7]
 
   # Hypothesis, from vendor documentation. NOT evidence. Verification asserts the measured split
   # against this and FAILS on mismatch rather than silently adopting whatever it found.
@@ -81,15 +81,31 @@ topology:
 
   # Filled in by verification. Answers spec §10 open question 4.
   measured:
-    run_id: null
-    timestamp_utc: null
-    kernel: null                      # which registered microbenchmark produced `scores`
-    efficiency_class_map: null        # {logical_cpu: EfficiencyClass} from Windows
-    scores: null                      # {logical_cpu: benchmark score}
-    cluster_separation_ratio: null    # fast-cluster mean / slow-cluster mean
-    p_cluster_cv: null                # within-cluster coefficient of variation, fast cluster
-    lpe_cluster_cv: null              # within-cluster coefficient of variation, slow cluster
-    efficiency_class_ordering_matched: null  # OPEN QUESTION 4: did Windows agree with measurement?
+    run_id: fb5cd2d5-e850-4de1-9b90-d368b5aa9994
+    timestamp_utc: '2026-07-30T23:57:04.876946+00:00'
+    kernel: python_intfp_v1           # which registered microbenchmark produced `scores`
+    efficiency_class_map:             # {logical_cpu: EfficiencyClass} from Windows
+      0: 1
+      1: 1
+      2: 1
+      3: 1
+      4: 0
+      5: 0
+      6: 0
+      7: 0
+    scores:                           # {logical_cpu: benchmark score}
+      0: 14420532.531
+      1: 14711359.45
+      2: 13787043.488
+      3: 14105907.625
+      4: 10298410.166
+      5: 10256424.282
+      6: 10363233.045
+      7: 10390492.007
+    cluster_separation_ratio: 1.3805  # fast-cluster mean / slow-cluster mean
+    p_cluster_cv: 0.0242              # within-cluster coefficient of variation, fast cluster
+    lpe_cluster_cv: 0.0051            # within-cluster coefficient of variation, slow cluster
+    efficiency_class_ordering_matched: true  # OPEN QUESTION 4: did Windows agree with measurement?
 
   # Microbenchmark parameters. In config, not code (spec §8: no magic numbers).
   verification:

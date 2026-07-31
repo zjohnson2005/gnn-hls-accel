@@ -76,8 +76,8 @@ def fake_config(fake_repo: Path) -> ResolvedConfig:
 def verified_config(fake_repo: Path) -> ResolvedConfig:
     """Platform config with a verified 4/4 topology, for tests that need one.
 
-    The mapping is supplied as an explicit test override rather than committed to the real config,
-    so a test fixture can never be mistaken for a measurement (AMENDMENTS.md AM-008).
+    The mapping is supplied as an explicit test override rather than read from the real config, so a
+    test's expectations stay independent of whatever the committed measurement currently says.
     """
     return resolve_config(
         [fake_repo / "configs" / "platforms" / "aipc-c1.yaml"],
@@ -87,6 +87,29 @@ def verified_config(fake_repo: Path) -> ResolvedConfig:
                 "p_cpus": [0, 1, 2, 3],
                 "lpe_cpus": [4, 5, 6, 7],
                 "measured": {"run_id": "00000000-0000-4000-8000-000000000000"},
+            }
+        },
+        repo_root=fake_repo,
+    )
+
+
+@pytest.fixture
+def unverified_config(fake_repo: Path) -> ResolvedConfig:
+    """Platform config with **no** verified mapping.
+
+    Since M1 the committed config carries a measured mapping, so the unverified state has to be
+    constructed explicitly. It still has to be tested: refusing to guess the P/LP-E split is the
+    behaviour spec §4 requires, and it would otherwise lose its coverage the moment the real config
+    stopped supplying it by accident.
+    """
+    return resolve_config(
+        [fake_repo / "configs" / "platforms" / "aipc-c1.yaml"],
+        overrides={
+            "topology": {
+                "verified": False,
+                "p_cpus": None,
+                "lpe_cpus": None,
+                "measured": {"run_id": None},
             }
         },
         repo_root=fake_repo,
