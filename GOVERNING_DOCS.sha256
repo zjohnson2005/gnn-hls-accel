@@ -1,0 +1,43 @@
+# SEAM governing documents — standing SHA-256 pins (AM-009).
+#
+# Verified live against the working tree 2026-08-03.
+# Encoding: UTF-8, no BOM, LF line endings, single trailing newline.
+# .gitattributes sets -text on these four paths and on this file (AF-007, extended by AM-026 on
+# 2026-08-03 — before that date docs/ was NOT covered and committing any governing document would
+# have rewritten LF to CRLF and broken all four pins at once). Verify with:
+#     git check-attr text -- <path>        # must report "unset", i.e. -text applied
+#
+# Verify:  python tools/hooks/verify_pins.py
+#          (also runs automatically as a pre-commit hook)
+#
+# On a mismatch, decide WHICH CASE before acting:
+#   KNOWN SUPERSESSION  — the doc changed via a logged amendment. Update the pin,
+#                         archive the superseded hash below, commit both together.
+#   UNEXPLAINED DRIFT   — no amendment covers it. Stop and investigate.
+#   ENCODING            — a CRLF save or altered trailing newline. Restore LF;
+#                         do NOT edit the pin to match.
+# Never edit this list to silence a mismatch you do not understand.
+
+d9b3f345aa769507f5875ea9c28a94949689a8f285cf37b69029fa65ab48952f  docs/SEAM_research_blueprint.md
+9a905a340c513b40cd26a7d381b7d8ba9a28be316eaab04126aeb65cd5e1ca5b  docs/PHASE_MINUS1_IMPLEMENTATION_SPEC.md
+ceec363af8a55269a370b63f80473f0cb00f757741be83fa054f56fb7c67d410  docs/hybrid_execution_dse_positioning.md
+3a4a3a38cbdef5cb0568940bf0ce55bea8d6999893dfef3b84192fdfb8cd5031  docs/CURSOR_KICKOFF_PROMPT.md
+
+# --- superseded, retained for chain legibility -----------------------------
+#
+# docs/SEAM_research_blueprint.md
+#   a8d1d3d3f6a0d99a10b7b508d64ca4eb080b4f7bfea2167cb4028bfd2c7f0c3f  post-AM-025/026 (superseded by AM-027, 2026-08-04)
+#   373f8e25b86f68b68f29f85cc7b1db49dfd87294977322c4232fee0969043aa9  v2.0 as pinned 2026-08-02 (superseded by AM-025/026, 2026-08-03).
+#                                                                     NOTE: at audit on 2026-08-03 this hash matched NEITHER the working
+#                                                                     tree NOR HEAD. v2.0 was pinned against a transient working-tree
+#                                                                     state and never committed; HEAD still carries ca5b0c44 (pre-v2.0).
+#                                                                     Retained for chain legibility, not as a recoverable state.
+#   ffe349804fa36de9ac94473ecd9372c6cc1234c91424242e5fc39040a67b1253  v1.0 final, post-AM-019 (superseded by v2.0, 2026-08-02)
+#   6c2221c6dd774183c3a62d520190964f75a74c115cfcd3f1733ebe0c8377be63  pre-AM-004 archive
+#   11da7b34936522fc37531f1321d7150f7f3788da6de6cce0f7472e6a92ef4cfd  as-delivered, pre-AM-014/002 renumber
+#   ca5b0c44b3918acf454669aec5fa41c815acc6a76d4c83fc10a18b94792dfe8c  post-governance pass, pre-AM-019 blueprint half
+#
+# docs/PHASE_MINUS1_IMPLEMENTATION_SPEC.md
+#   f42fad5bdf7377393684483b1f36dcc2da99e4fca94e9dd79292dde356198148  pre-resync
+#   5b0275da53be54d382e1b67e28d71c8429d98b4c277c7362f58d0beaaf166ad2  as-delivered
+#   89d8feeff92b2947acd5446837c5d2d22aef0135280c5c52c0839182dca72e6c  post-governance pass, pre-AM-017/019

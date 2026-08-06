@@ -3,742 +3,865 @@
 **Silicon-aware Exploration of Agentic Model partitioning**
 
 Sharc Lab, Georgia Institute of Technology
-Version 1.0 — July 29, 2026
-Status: **binding protocol.** Deviations require a dated amendment entry in §14, not a silent edit.
+Version 2.0 — 2026-08-02
+Supersedes v1.0 (2026-07-29). Status: **binding protocol.**
 
 ---
 
-## 0. How to use this document
+## 0. Operating mode
 
-This is a pre-registration and execution protocol, not a proposal. Three rules:
+**This is the most important section. It governs every other.**
 
-1. **§4 hypotheses and §5 audit standards are committed before data collection.** Once Phase 1 begins, hypotheses may be added but not silently revised. Amendments go in §14 with a date and a reason.
-2. **Gates in §11 are hard.** A failed gate triggers the declared response, not a workaround. The scientific value of this project depends on the gates being real.
-3. **Any number that appears in a paper must trace to a run manifest ID** (§5.2). No number enters a figure without a reproducible provenance chain.
+v1.0 was organized around shipping a defensible paper by a conference deadline. That produced
+a timeline, a deadline-motivated two-paper split, staged experiments, and gates that partly
+asked "can we finish in time." All of it is withdrawn.
+
+### 0.1 The four standing rules
+
+**R1 — Timing is not a constraint.** No decision is made to save time. Schedule appears in
+this document only as *sequencing* — what unblocks what — never as a reason to reduce, stage,
+defer, or simplify. There is no deadline. No scope is "too expensive."
+
+**R2 — The claim strengthens monotonically.** Every change must add an axis, tighten a bound,
+remove a confound, or extend coverage. A change trading claim strength for any other benefit
+is rejected. Scope moves in one direction.
+
+**R3 — Maximize contribution yield per session.** The objective is the number and value of
+measurements and contributions produced. Each session should end with a recorded measurement,
+a resolved finding, or a strengthened arm — obtained *within* the protocol, never by relaxing
+it. Rigor is not traded against yield; the audit standard in §6 is what makes a measurement
+worth having at all.
+
+**R4 — Protect the main line.** Arms are added only if additive (§1.2 filter). An arm that
+would displace the main line is recorded as a future direction and not started. Expansive
+thinking is required; drift is not.
+
+### 0.2 What this forbids
+
+Proposing a reduced version of an experiment. Staged calibration where full calibration is
+possible. Deferring an arm because it is slow. Splitting papers to hit dates. Choosing a
+weaker instrument because a stronger one takes longer. Any sentence of the form "given the
+time available, we could instead…"
+
+### 0.3 What replaces the forcing function
+
+A deadline is a crude forcing function, but it is one. Removing it creates a real risk (§13,
+K2) that the instrument becomes the work. Two mechanisms replace it:
+
+- **The contribution ledger (§9).** Contributions are recorded as obtained. The ledger, not a
+  calendar, measures progress.
+- **The yield queue (§8.3).** At any moment there is a defined highest-yield available
+  measurement. Work proceeds from the queue, not down a schedule.
 
 ---
 
-## 1. Thesis
+## 1. Thesis and main line
 
 ### 1.1 The claim
 
-Existing design-space exploration for agentic AI serving assumes **agent behavior is invariant to the serving decision.** Simulators replay recorded traces: prompt content, generated-token counts, tool durations, and turn structure are treated as inputs. This assumption is defensible for datacenter serving, where policies change *when* work runs but not *what* work is produced.
+Existing design-space exploration for agentic AI serving assumes **agent behavior is invariant
+to the serving decision.** Simulators replay recorded traces: prompt content, generated-token
+counts, tool durations, and turn structure are inputs. That assumption is defensible for
+datacenter serving, where policy changes *when* work runs but not *what* work is produced.
 
-It is false for hybrid execution. When a step moves from a frontier cloud model to a local small model, the agent produces different output lengths, retries differently, calls different tools, takes a different number of turns, and may fail where it previously succeeded. The workload is a *function of* the configuration.
+It is false for hybrid execution. Moving a step from a frontier cloud model to a local small
+model changes output lengths, retry behavior, which tools are called, how many turns occur,
+and whether the task succeeds. The workload is a *function of* the configuration.
 
-SEAM is a design-time, hardware-aware, accuracy-aware DSE framework for hybrid client↔cloud agentic execution that (a) models this behavioral coupling explicitly, and (b) treats local silicon configuration as a decision variable rather than an experimental constant.
+SEAM is a design-time, hardware-aware, accuracy-aware DSE framework for hybrid client↔cloud
+agentic execution that (a) models this behavioral coupling explicitly, (b) treats local
+silicon configuration as a decision variable rather than an experimental constant, and (c)
+admits a **time-varying** device state, which no prior DSE formulation does.
 
-### 1.2 Formal problem statement
+### 1.2 The main line, and the filter that protects it
 
-Let an agentic program be a dynamically-unfolding DAG $G$ whose nodes are *steps* $s \in S$, each with a type $\tau(s) \in \mathcal{T}$ (plan, tool-call synthesis, tool-result summarization, code generation, verification, final response, …).
+**Main line question.** *Does local silicon configuration change the optimal device↔cloud
+partition for agentic workloads, and if so, what silicon is required to reach a target
+operating point?*
 
-Decision variables:
+A chain of five results:
 
-| Symbol | Space | Meaning |
-|---|---|---|
-| $h$ | $\mathcal{H}$ | Local hardware configuration: NPU throughput/precision, on-chip SRAM, memory capacity, memory bandwidth, power cap, optional custom datapath parameters |
-| $\pi$ | $\Pi$ | Partition/routing policy mapping step types (or steps) to execution targets |
-| $n$ | $\mathcal{N}$ | Network regime: RTT, bandwidth, jitter, availability |
-| $c$ | $\mathcal{C}$ | Privacy constraint: which step payload classes may cross the trust boundary |
+1. **Behavior responds to capability** (H1) — the premise
+2. **The optimal partition shifts with silicon** (H2, H7, H8, H9, H10) — the headline
+3. **The routing amortization bound** (H3, H12) — when coordination cost binds
+4. **The tool is trustworthy** (H5, H6) — SEAM validated
+5. **The silicon sizing rule** (S10) — the actionable output
 
-Execution targets $\mathcal{D} = \{$LP-E cores, P-cores, Xe3 iGPU, NPU, [FPGA via OCuLink], cloud endpoint(s)$\}$.
+**Additive/displacing filter.** A proposed arm is **additive** if it varies a coordinate of
+the §2 design space *and* feeds one of the five results above. It is **displacing** if it
+requires a different workload class, a different thesis, or answers a question outside that
+chain.
 
-**The coupling that defines this work.** The realized program is not $G$ but
-$$G' = \Phi(G, h, \pi, n, c)$$
-where $\Phi$ is the *behavioral response operator*. All prior tools assume $\Phi = \mathrm{id}$.
+Additive arms are added without hesitation and without regard to cost. Displacing directions
+go in §12.4 and are **not started**, however attractive.
 
-Objective vector, all evaluated on $G'$:
-$$\mathbf{f} = \big(\underbrace{A}_{\text{task success}},\ \underbrace{\$}_{\text{cloud cost}},\ \underbrace{L}_{\text{JCT}},\ \underbrace{E}_{\text{device energy}},\ \underbrace{P}_{\text{privacy leakage}}\big)$$
+Worked example: *reasoning mode* varies a workload coordinate and feeds H2 → additive, now a
+required two-arm axis. *Speculative decoding* is a different hybrid execution mechanism rather
+than a point in the routing design space → displacing, recorded as a future paper, not started.
 
-Goal: recover the Pareto set $\mathcal{P} \subseteq \mathcal{H} \times \Pi$ under regimes $(n, c)$, and extract from it an interpretable **silicon sizing rule** $h^*(W, \mathbf{f}^{\text{target}})$.
-
-### 1.3 Scope boundaries — non-negotiable
+### 1.3 Scope boundary
 
 **In scope:** client device ↔ cloud. Single-device local execution. Design-time exploration.
 
-**Out of scope, permanently:** datacenter/cluster infrastructure, multi-tenant serving, cluster TCO. This is not a preference. The datacenter framing is academically staked (Asgar, Nguyen & Katti, arXiv 2507.19635) and commercially occupied (Gimlet Labs). Any drift toward it converts a defensible contribution into an unfavourable comparison.
-
-**Deliberately deferred:** distributed multi-device edge orchestration; federated/multi-user; training.
+**Permanently out of scope:** datacenter/cluster infrastructure, multi-tenant serving, cluster
+TCO. Academically staked (Asgar, Nguyen & Katti, arXiv 2507.19635) and commercially occupied
+(Gimlet Labs). This is a positioning requirement, and the one boundary R2 does not override.
 
 ---
 
-## 2. Positioning (condensed; full collision map in `hybrid_execution_dse_positioning.md`)
+## 2. Formal problem statement
 
-| Prior work | What it establishes | What SEAM adds |
+Let an agentic program be a dynamically-unfolding DAG $G$ whose nodes are *steps* $s$, each
+with type $\tau(s)$ (plan, tool-call synthesis, tool-result summarization, code generation,
+code repair, verification, reflection, final response).
+
+### 2.1 Decision variables
+
+**Local hardware configuration** $h \in \mathcal{H}$:
+
+| Coordinate | Domain | Note |
 |---|---|---|
-| Rainone et al., *When Cloud Agents Meet Device Agents* (2605.30102) | Hybrid device+cloud MAS design space is real and currently navigated ad hoc | Automated search; hardware as variable; validated cost model |
-| AgentServeSim (2606.09613) | Program-centric agent serving simulation; 6% JCT error under trace replay | Client side; closed-loop behavior; accuracy/cost/energy/privacy objectives; non-profilable silicon |
+| execution target | {cpu-lpe, cpu-p, igpu, npu, fpga-gate} | 5-way |
+| power cap | {15, 25, 55} W | |
+| power source | {battery, mains} | **Platform A exclusive** |
+| quantization | {INT4, INT8, FP16} | capacity × throughput |
+| available memory | induced pressure below 16 GB; 64 GB on B | |
+| platform | {A: 16 GB / 4×Xe3 / 8T, B: 64 GB / 12×Xe3 / 16C} | NPU held constant |
+
+**Partition policy** $\pi \in \Pi$:
+
+| Coordinate | Domain |
+|---|---|
+| escalation semantics | {predictive, preemptive} |
+| per-step deadline $D$ | continuous; grid derived per arm (§7.4) |
+| KV residency on escalation | {discard, retain, transfer} |
+| granularity | {step, phase, session} |
+
+**Workload configuration** $w \in \mathcal{W}$:
+
+| Coordinate | Domain |
+|---|---|
+| reasoning mode | {off, on} |
+| concurrency $c$ | {1, 2, 4, 8} concurrent agents |
+| model capability rung | within-family ladder (~0.6B / 4B / 8B) |
+| benchmark family | five families (§7.2) |
+
+**Environment:** network regime $n \in \mathcal{N}$; privacy constraint $c_p \in \mathcal{C}$.
+
+### 2.2 The time-varying coordinate
+
+Device thermal state $\theta(t)$ is **not a decision variable.** It is a state that evolves
+during evaluation and modulates achievable throughput:
+
+$$R_{\text{decode}} = R_{\text{decode}}(h, \theta(t))$$
+
+Every prior DSE formulation in this space treats the design point as static. Admitting
+$\theta(t)$ makes the objective surface non-stationary *within a single evaluation*, which is
+the formal content of H8 and the reason no static policy can be optimal.
+
+### 2.3 The behavioral coupling
+
+The realized program is not $G$ but
+$$G' = \Phi(G, h, \pi, w, n, c_p, \theta)$$
+where $\Phi$ is the **behavioral response operator**. All prior tools assume $\Phi = \mathrm{id}$.
+
+### 2.4 Objectives
+
+All evaluated on $G'$:
+$$\mathbf{f} = \big(A_{\text{accuracy}},\ \$_{\text{cloud}},\ L_{\text{JCT}},\ E_{\text{device}},\ P_{\text{leakage}}\big)$$
+
+**Goal.** Recover the Pareto set $\mathcal{P} \subseteq \mathcal{H} \times \Pi \times \mathcal{W}$
+under regimes $(n, c_p, \theta)$, and extract an interpretable **silicon sizing rule**
+$h^*(W, \mathbf{f}^{\text{target}})$.
+
+---
+
+## 3. Positioning
+
+| Prior work | Establishes | SEAM adds |
+|---|---|---|
+| Rainone et al., *When Cloud Agents Meet Device Agents* (2605.30102) | Hybrid device+cloud design space real, navigated ad hoc | Automated search; hardware as variable; validated cost model; time-varying state |
+| AgentServeSim (2606.09613) | Program-centric agent serving simulation; 6% JCT error under trace replay | Client side; closed-loop behavior; five objectives; non-profilable silicon; non-stationarity |
 | LLMServingSim 2.0, Vidur, TokenSim, LLMCompass | Hardware DSE machinery for LLM serving | Agent program semantics; trust boundary; behavioral coupling |
-| HERA, HybridFlow, PAAC, PRISM, IslandRun, HeRo, Agent.xpu | Runtime routing/partition policies on fixed hardware | SEAM consumes these as candidate $\pi$; does not compete with them |
-| MALBO (2511.11788) | MOBO over agent team composition (accuracy, cost) | Hardware in the loop; five objectives; energy and latency from measurement |
-| QEIL v2 (2602.06057) | Multi-objective edge allocation with quality, energy, latency | Genuinely agentic workloads; honest client hardware; hardware as variable; $ and privacy |
-| Asgar/Nguyen/Katti (2507.19635) | Cost-model-driven heterogeneous agent placement, TCO | Client scope; calibrated rather than roofline; validated rather than preliminary |
-| HW-NAS accuracy surrogates; Neurosurgeon lineage | Methodological precedent — this is *why* the approach is sound | New scope, not new machinery. Claim scope, not invention. |
+| HERA, HybridFlow, PAAC, PRISM, IslandRun, HeRo, Agent.xpu | Runtime routing policies on fixed hardware | Consumed as candidate $\pi$; not competitors |
+| MALBO (2511.11788) | MOBO over agent team composition | Hardware in the loop; five objectives; measured energy |
+| QEIL v2 (2602.06057) | Multi-objective edge allocation including quality | Genuinely agentic workloads; honest client hardware; hardware as variable; characterized instruments |
+| Asgar/Nguyen/Katti (2507.19635) | Cost-model-driven heterogeneous placement | Client scope; calibrated not roofline; validated not preliminary |
+| HW-NAS accuracy surrogates; Neurosurgeon lineage | Methodological precedent | New scope, not new machinery. Claim scope. |
 
-**Relationship to routers, stated once, precisely:** SEAM is design-time; routers are run-time. SEAM's output is a hardware configuration plus a policy envelope; a router's output is a per-request decision. SEAM takes published routers as inputs to its search space. The contribution is making explicit the hardware–policy coupling that the routing literature holds constant.
-
----
-
-## 3. Platform
-
-**Primary measurement platform.** GMKtec EVO-T2, Intel Core Ultra X7 358H (Panther Lake, Intel 18A), 16 cores (4P / 8E / 4LP), Intel NPU 5, Arc B390 iGPU (12 Xe3 cores @ up to 2.5 GHz), 64 GB LPDDR5X-8533, dual M.2 (PCIe 5.0 + 4.0), OCuLink.
-
-**Facts requiring week-1 verification — do not cite until measured:**
-
-- Peak memory bandwidth. LPDDR5X-8533 on a 128-bit bus derives to ≈136 GB/s; **treat as unverified** until confirmed by STREAM-class microbenchmark.
-- NPU-only TOPS. The platform's advertised 180 TOPS is a CPU+GPU+NPU aggregate. **Never cite 180 TOPS as NPU capability.** Measure achieved NPU throughput directly.
-- NPU power telemetry. Whether NPU 5 exposes per-domain power via level-zero sysman / powercap is unconfirmed. If unavailable, energy attribution must fall back to package-level differencing with an explicit error model.
-- OpenVINO / NPU driver support for target model architectures and quantizations.
-- OCuLink FPGA attach: enumeration, DMA bandwidth, driver stack.
-
-**Secondary platform (required, for external validity).** One additional client-class device with a different vendor's NPU or a different memory configuration. Without a second platform, every result is single-platform and reviewers will discount it. Identify by week 4; a laptop with Core Ultra series 2, a Ryzen AI part, or an Apple silicon machine all qualify.
-
-**FPGA (Phase 3b).** Board attached over OCuLink for the custom-datapath design point and for OmniSim cross-validation.
-
-**Cloud endpoints.** Minimum two providers, **pinned to dated model snapshots.** Frontier models are silently updated; an unpinned endpoint invalidates longitudinal comparison. Record snapshot ID and access date on every call.
+**Relationship to routers, stated once.** SEAM is design-time; routers are run-time. SEAM emits
+a hardware configuration plus a policy envelope; a router emits a per-request decision. SEAM
+consumes published routers as inputs. The contribution is making explicit the hardware–policy
+coupling the routing literature holds constant.
 
 ---
 
-## 4. Pre-registered hypotheses
+## 4. Platforms
 
-Each hypothesis states a predicted direction, a falsification criterion, and the consequence of falsification. Committed to git before Phase 1 data collection.
+**Platform A — Dell XPS 16 DA16260, Intel Core Ultra 5 325 (Panther Lake).**
+4 Cougar Cove P + 4 Darkmont LP-E (8C/8T, no SMT), 12 MB L3, Intel 18A compute tile. Xe3 iGPU,
+4 cores (`VEN_8086&DEV_B090`). NPU 5, 50 TOPS INT8 peak. 16 GB LPDDR5X-7467, soldered, unified
+across CPU/iGPU/NPU. 15/25/55 W. Battery. No discrete GPU.
 
-### H1 — Behavioral non-invariance (load-bearing)
+**Platform B — GMKtec EVO-T2, Intel Core Ultra X7 358H (Panther Lake).**
+16 cores (4P+8E+4LP). Arc B390, 12 Xe3 cores. NPU 5. 64 GB LPDDR5X-8533. Mains only. OCuLink →
+external FPGA.
 
-**Statement.** For a fixed agent task, the realized execution differs materially between local-model and cloud-model step assignment.
+**The controlled contrast.** NPU held constant (same generation, same driver stack) while iGPU
+width varies 3×, threads 2×, memory capacity 4×, and thermal envelope differs. Any partition
+flip is attributable to capacity, bandwidth, iGPU width, or thermals — not to generational IP
+change. Cleaner than a cross-generation comparison, which would confound all of those at once.
 
-**Predicted.** Median relative difference $\ge 20\%$ in at least two of: total generated tokens, step count, distinct tool invocations.
+**Platform A exclusives** (B cannot produce these): battery-vs-mains as a partition axis; two
+independent energy signals (RAPL and battery discharge) that cross-validate without a wall
+meter; the hard thermal case (55 W turbo in a laptop chassis), the ideal substrate for H8.
 
-**Falsified if.** All three metrics show median relative difference $< 5\%$ with 95% bootstrap CI excluding 20%.
+**Never cite as measured:** 50 TOPS (peak INT8), ~120 GB/s (derived, LPDDR5X-7467 × 128-bit),
+180 TOPS (Platform B CPU+GPU+NPU aggregate), 1.38× cluster separation ratio (interpreter-bound
+clustering discriminant, not a performance ratio).
 
-**Consequence of falsification.** Claim A (closed-loop simulation) collapses. Descope SEAM to open-loop DSE and *publish the null result* — "trace replay is adequate for hybrid agentic DSE" is a genuine, useful finding that saves the field effort. Do not quietly reframe.
+---
 
-### H2 — Silicon-dependent optimum (headline result)
+## 5. Pre-registered hypotheses
 
-**Statement.** The Pareto-optimal partition policy changes as a function of local hardware configuration.
+Each states a predicted direction, a falsification criterion, and a consequence. **Under R1 no
+consequence is ever "reduce scope."** A falsified hypothesis redirects investigation and is
+itself a publishable result.
 
-**Predicted.** There exist $h_1, h_2 \in \mathcal{H}$ and target region such that $\arg\max$ policy differs, i.e. rank inversion in the policy ordering.
+### H1 — Behavioral non-invariance (premise)
 
-**Falsified if.** Policy ranking is invariant (Kendall's $\tau \ge 0.9$) across the full swept $\mathcal{H}$.
+For a fixed task, realized execution differs between local and cloud step assignment.
 
-**Consequence.** H2 falsified means hardware genuinely doesn't matter for policy choice — which would validate the entire routing literature's implicit assumption and is publishable as such, but SEAM's premise weakens to sizing-only.
+*Predicted:* median relative difference ≥ 20% in ≥2 of {generated characters/bytes, step count,
+distinct tool invocations}. Metrics must be **tokenizer-independent** (§6.8).
+
+*Falsified if:* all three < 5% with 95% bootstrap CI excluding 20%, **in every step type**.
+
+**Stratification (AM-025).** Divergence is not uniform across step types — a tool-call formatting
+step is near-deterministic while a planning step is high-entropy. A statistic pooled over steps
+therefore measures the *step mixture of the benchmark*, not the phenomenon, and fails in both
+directions: a real effect concentrated in planning steps is diluted below the falsification floor
+by a majority of low-variance formatting steps, or an effect present in one type is reported as
+general. Report per-step-type effects as **primary**; the pooled figure is secondary and is never
+the basis for falsification. Same requirement on H2 (a single policy ranking over a mixture is a
+weighted average of possibly opposing rankings) and H5 (pooled MAPE conceals *which* step types
+the surrogate cannot predict, which is exactly what a surrogate consumer needs).
+
+*Consequence:* publish the null — "trace replay is adequate for hybrid agentic DSE" is a genuine
+finding that saves the field effort. Then investigate *why*: capability gap too small, workload
+too structured, ladder too narrow? Widen the ladder and re-test. Do not descope.
+
+### H2 — Silicon-dependent optimum (headline)
+
+The Pareto-optimal partition policy changes as a function of local hardware configuration.
+
+*Predicted:* rank inversion in policy ordering across $\mathcal{H}$.
+*Falsified if:* Kendall's $\tau \ge 0.9$ across the full swept space.
+*Consequence:* falsification would validate the routing literature's implicit assumption — a
+major result in itself. Investigate which coordinate is responsible.
 
 ### H3 — Routing amortization bound
 
-**Statement.** There exists a step-granularity threshold $G$ below which per-step routing decision overhead exceeds the benefit of finer partitioning, and $G$ depends on local compute throughput and network RTT.
+There exists a step-granularity threshold $G$ below which per-step routing decision overhead
+exceeds the benefit of finer partitioning; $G$ depends on local throughput and network RTT.
 
-**Predicted.** $G$ is identifiable and monotone in RTT.
-
-**Falsified if.** No crossover exists within the achievable parameter range (i.e., software routing overhead is negligible everywhere tested).
-
-**Consequence.** Publishable either way. If falsified, this is the honest negative result that closes the "hardware routing accelerator" direction — including the earlier orchestration-engine concept — and that is a service to the field.
+*Predicted:* $G$ identifiable and monotone in RTT.
+*Falsified if:* no crossover in the achievable range.
+*Consequence:* publishable either way. See H12 — the bound becomes *measured* rather than
+modeled once the hardware gating engine exists.
 
 ### H4 — Escalation cascade
 
-**Statement.** A failed or low-quality local step costs more than its own re-execution because it induces additional downstream steps.
+A failed or low-quality local step costs more than its own re-execution because it induces
+additional downstream steps.
 
-**Predicted.** Cascade factor $> 1.5$ (extra steps per local failure).
-
-**Falsified if.** Cascade factor $\le 1.1$.
+*Predicted:* cascade factor > 1.5.
+*Falsified if:* ≤ 1.1.
+*Vehicle:* preemptive escalation semantics — abandoned local work is a cascade cost by
+construction.
 
 ### H5 — Behavioral surrogate validity
 
-**Statement.** $\Phi$ can be approximated by a surrogate $\hat{\Phi}$ that generalizes to held-out configurations.
+$\Phi$ admits a surrogate $\hat{\Phi}$ generalizing to held-out configurations.
 
-**Predicted.** Held-out prediction: token count and step count within 15% MAPE; task success within 10 percentage points.
+*Predicted:* held-out (by configuration, never random split) token and step count within 15%
+MAPE; task success within 10 pp.
+*Falsified if:* > 30% MAPE.
+*Consequence:* emit interval-valued objectives rather than point estimates; report as a
+limitation of the approach.
 
-**Falsified if.** Held-out error exceeds 30% MAPE.
+### H6 — Rank preservation (the metric that matters)
 
-**Consequence.** H5 falsified means closed-loop simulation is not credible with available data. Report as a limitation of the approach and fall back to bounded interval prediction rather than point estimates.
+SEAM ranks design points in the order measured reality does.
 
-### H7 — NPU/iGPU crossover shift under constant NPU (added 2026-07-29)
+*Predicted:* Kendall's $\tau \ge 0.8$ on held-out design points.
+*Falsified if:* $\tau < 0.6$. A DSE tool that cannot rank is not a DSE tool.
 
-**Statement.** With NPU capability held constant (NPU 5, 50 TOPS on both platforms) and iGPU width varying 3× (4 → 12 Xe3 cores), the operating region in which the NPU outperforms the iGPU contracts on the wider-iGPU platform.
+### H7 — NPU/iGPU crossover shift under constant NPU
 
-**Predicted.** The crossover boundary in (sequence length × batch size × model size) space shifts monotonically against the NPU on Platform B.
+With NPU capability held constant (NPU 5, 50 TOPS both platforms) and iGPU width varying 3×
+(4 → 12 Xe3 cores), the region where NPU outperforms iGPU contracts on the wider-iGPU platform.
 
-**Falsified if.** The crossover boundary is invariant across platforms within bootstrap CI.
+*Predicted:* crossover boundary shifts monotonically against the NPU on Platform B.
+*Falsified if:* boundary invariant within bootstrap CI.
+*Why it matters:* mechanistic and falsifiable, and only testable *because* the NPU is held
+constant. "The same accelerator becomes the wrong choice purely because of what sits next to it"
+is the thesis in miniature.
 
-**Why it matters.** This is a mechanistic, falsifiable prediction rather than a measurement report, and it is only testable *because* the NPU is held constant. If confirmed, it is direct evidence for H2 with a clean causal attribution: the same accelerator becomes the wrong choice purely because of what sits next to it. That sentence is the paper's thesis in miniature.
+### H8 — Thermal non-stationarity (added v2.0)
 
-### H6 — Rank preservation (the metric that actually matters)
+Device thermal state evolves under sustained agentic load, degrading throughput, so the optimal
+partition is **time-varying within a single session**. No static policy is optimal.
 
-**Statement.** SEAM ranks design points in the same order as measured reality.
+*Predicted:* under a **fixed** deadline policy, escalation rate drifts monotonically upward over
+a sustained session, attributable to thermal degradation rather than workload drift.
 
-**Predicted.** Kendall's $\tau \ge 0.8$ between simulated and measured ordering on a held-out design subset.
+*Falsified if:* escalation rate is stationary within CI over a session long enough to reach
+thermal steady state, on the platform with the tightest thermal envelope.
 
-**Falsified if.** $\tau < 0.6$. A DSE tool that cannot rank is not a DSE tool.
+*Why this is the strongest new arm:* every routing and partitioning paper in §3 implicitly
+assumes constant device capability. If capability is time-varying and the partition depends on
+it, no fixed policy can be optimal and the DSE framing becomes *more* necessary. It also
+reframes §6.4 — thermal state ceases to be a confound to exclude and becomes an axis to
+measure. Same instrumentation, dramatically more value.
+
+*Control requirement:* workload drift must be excluded as an alternative explanation. Randomize
+or hold task order fixed, and show the drift tracks package temperature and frequency rather
+than task position.
+
+### H9 — Concurrency shifts the partition (added v2.0)
+
+The optimal partition depends on the number of concurrent agents sharing the device.
+
+*Predicted:* escalation rate and the Pareto frontier shift materially across $c \in \{1,2,4,8\}$,
+with 16 GB unified memory binding earlier than compute.
+*Falsified if:* frontiers coincide within CI across $c$.
+*Why:* real deployments run several agents. Unexplored, and it makes the unified-memory
+constraint bite where it is most realistic.
+
+### H10 — Power source shifts the partition (added v2.0)
+
+The optimal partition differs on battery versus mains.
+
+*Predicted:* on battery, DVFS and power limits reduce local throughput, shifting the escalation
+curve; the energy objective additionally reweights the frontier.
+*Falsified if:* curves coincide within CI after controlling for thermal state.
+*Platform A exclusive.*
+
+### H11 — Cross-boundary KV residency (added v2.0)
+
+The disposition of local KV state on escalation (discard / retain / transfer) materially affects
+JCT and memory pressure.
+
+*Predicted:* retain dominates at short tool gaps, discard at long, with a crossover determined
+by available memory.
+*Falsified if:* no measurable difference across policies.
+*Why:* InferCept/Continuum's question at the device↔cloud boundary, which nobody has studied and
+AgentServeSim structurally cannot model.
+
+### H12 — Hardware gating changes the bound (added v2.0)
+
+A custom HLS routing/gating engine moves the H3 amortization threshold $G$ measurably.
+
+*Predicted:* hardware decision latency is lower than software by a margin that shifts $G$ by a
+reportable factor.
+*Falsified if:* $G$ unchanged within CI — which would mean routing overhead never binds, closing
+the hardware-acceleration direction with a measured answer rather than an assumed one.
+
+*Why this is the differentiator:* every paper in §3 is software. Nobody else has an HLS group,
+OmniSim, and OCuLink on the same bench. H3 becomes a bound *measured against silicon we
+designed*, and the OmniSim-vs-FPGA error quantifies the fidelity of every hypothetical-silicon
+claim in the paper.
 
 ---
 
-## 5. Audit and data-integrity standard
+## 6. Audit and data-integrity standard
 
-This section is the difference between a paper that survives review and one that doesn't. It applies to every phase.
+Unchanged in substance from v1.0 and **not subject to R1 or R2** — rigor is the precondition for
+a measurement being worth having, never a cost to be traded.
 
-### 5.1 Threats this standard exists to neutralize
+### 6.1 Threats
 
-| Threat | Why it is severe here | Control |
+| Threat | Why severe here | Control |
 |---|---|---|
-| **Thermal throttling** | A small-chassis mini PC under sustained CPU+iGPU+NPU load will throttle. Throttling silently corrupts latency *and* energy, and correlates with condition (heavier configs throttle more), producing systematic bias, not noise. | §5.4 thermal protocol. Mandatory. |
-| **LLM nondeterminism** | Identical inputs yield different outputs even at temperature 0 under batching. Any comparison without a variance baseline is uninterpretable. | §5.5 A/A testing and variance-first ordering |
-| **Cloud API drift** | Frontier endpoints change without notice; a result from week 3 may not reproduce in week 12. | Pinned dated snapshots; weekly canary (§5.6) |
-| **Measurement overhead** | Instrumentation can perturb the thing measured, especially on LP-E cores. | Overhead characterization run; report as error term |
-| **Multiple comparisons** | The design grid has hundreds of cells; some will look significant by chance. | Pre-declared primary endpoints; Benjamini–Hochberg on secondary |
-| **Selection bias in benchmarks** | Cherry-picked tasks make any policy look good. | Frozen task list, committed before Phase 2 |
-| **Analysis drift** | Analysis choices made after seeing data. | Analysis scripts committed before unblinding |
+| Thermal throttling | Correlates with condition → systematic bias, not noise | §6.4. **Under H8 also an axis** |
+| LLM nondeterminism | Identical inputs differ even at temperature 0 | §6.5 variance-first ordering |
+| Cloud API drift | Weights pinned, serving infrastructure documented as mutable | Pinned snapshot + daily canary |
+| Self-certifying provenance | Hashing what you received proves nothing about what you should have received | §6.7 |
+| Concurrency on shared paths | Two writers produced a corrupt 2.26 GB IR that still loaded | §6.6 |
+| Measurement overhead | Instrumentation perturbs the measured, especially on LP-E | Characterized, reported as error term |
+| Multiple comparisons | Hundreds of cells | Pre-declared primary endpoints; Benjamini–Hochberg on secondary |
+| Benchmark selection bias | Cherry-picking flatters any policy | Frozen task lists, committed pre-collection |
+| Analysis drift | Choices made after seeing data | Analysis committed before unblinding |
 
-### 5.2 Run manifest (mandatory, machine-generated)
+### 6.2 Run manifest
 
-Every experimental run emits an immutable manifest. No manifest, no data.
+Every run emits an immutable manifest. No manifest, no data. Required: run identity; git state;
+config hash; platform and topology with verified P/LP-E mapping; driver versions; power state
+(source, charging, SoC, pinned profile); thermal (ambient, warm-up, throttle residency,
+exclusion verdict, **regime: confound or axis**); target; **confinement mechanism**; model spec
+with per-file verification method; **reasoning mode**; workload; policy; network; condition and
+blinded labels; outputs; integrity self-check.
 
-```yaml
-run_id: <uuid>
-timestamp_utc: <iso8601>
-git_sha: <commit of harness>
-config_hash: <sha256 of resolved config>
-platform:
-  host_id, cpu_model, microcode, bios_version
-  npu_driver_version, openvino_version, gpu_driver_version
-  kernel, os_build
-  power_profile, cpu_governor, power_cap_w
-thermal:
-  ambient_c_start, ambient_c_end
-  pkg_temp_series_path, throttle_events: <count>
-models:
-  local: {name, revision_sha, quantization, runtime, precision}
-  cloud: {provider, model_snapshot_id, access_date, pricing_table_version}
-workload:
-  benchmark, task_ids: [...], seed, n_repeats
-policy: {name, version, params}
-network: {regime_name, measured_rtt_ms_p50/p95, measured_bw_mbps, shaping_rule}
-outputs:
-  raw_log_path, energy_trace_path, token_ledger_path
-integrity:
-  raw_sha256, harness_self_check: pass|fail
+### 6.3 Data handling
+
+Raw is immutable, write-once, checksummed. All derived artifacts regenerable from raw by one
+command. Three tiers: `raw/` → `derived/` → `figures/`. No manual data entry. Discard only for
+harness self-check failure, throttle residency above threshold (confound regime only), or API
+error — every discard logged with reason and counted in the paper. Post-hoc discarding of
+inconvenient values is misconduct.
+
+**Retention (AM-014):** `raw/` payloads committed while total size is under the ceiling in
+`configs/repo.yaml`; above it, payloads move to an externally checksummed archive and
+`raw/MANIFEST.sha256` becomes the in-repo audit index.
+
+### 6.4 Thermal protocol — and its dual role
+
+Fixed ambient, logged. Warm-up to steady state, duration determined empirically and frozen.
+Inter-run cooldown to a fixed ceiling. Temperature and throttle-residency logged ≥1 Hz. Runs
+above threshold flagged, excluded from primary analysis, reported in a throttling table.
+Condition order randomized within blocks so thermal drift cannot align with condition.
+
+**Dual role under H8.** The above governs experiments where thermal state is a *confound*. H8
+experiments deliberately do not exclude throttling — they measure it. Every run declares which
+regime it belongs to, and the two are **never pooled**.
+
+### 6.5 Variance before comparison
+
+**No comparison runs before its noise floor is measured.**
+
+A/A negative control: same configuration twice, labeled as two conditions, through the entire
+pipeline including analysis. Must report no difference; if it does, the harness is broken.
+Repeated at the start of each phase. Positive control: a known-large contrast must register.
+Variance characterization: CV with $n \ge 20$ on a fixed config, reported in the paper. Any
+effect below 2× CV is reported as null. Bootstrap 95% CIs, effect sizes, distributions for
+heavy-tailed quantities.
+
+### 6.6 Mutual exclusion
+
+Two concurrent writers produced a corrupt 2.26 GB IR that still loaded and would have yielded a
+complete, plausible, wrong result. Any operation writing a shared path — downloads,
+`AUDIT_LOG.md`, config writes, `raw/` seals — takes a lockfile. Parallel agents are assigned
+disjoint tracks (§8.2) and do not write outside them.
+
+### 6.7 External verification of external artifacts
+
+**Provenance that self-certifies proves nothing.** Hashing what you received records a fact about
+your disk, not about the artifact.
+
+Every externally sourced artifact is verified against an external authority before it can produce
+provenance. Model weights: per-file SHA-256 against the publisher's `lfs.oid`, **not size alone**
+— size catches overlap-append but not a misaligned resume splice landing at the correct length.
+Governing documents: hash against a recorded expected value. The per-file verification *method*
+is recorded, so a size-only-verified file is visibly weaker provenance than a hash-verified one.
+
+### 6.8 Cross-boundary measurement confounds
+
+Two artifacts masquerade as behavioral divergence across the local/cloud boundary. Both bias
+toward the hypothesis, which is the dangerous direction.
+
+**Tokenizer.** Claude 4.7+ uses a tokenizer producing ~30% more tokens for identical text.
+Therefore **Δ tokens must not be a primary behavioral metric.** Primary behavioral metrics are
+tokenizer-independent: generated characters or bytes, or all outputs re-tokenized under one
+declared reference tokenizer. Native token counts are retained for cost accounting only, where
+they are correct by definition.
+
+**Reasoning mode.** Declared explicitly on both sides per arm, recorded in every manifest, never
+inherited as a default on one side only. Discriminate on **non-empty thinking content**, never
+marker presence — Qwen3's `enable_thinking=false` pre-fills an empty `<think></think>` pair into
+the prompt, so the marker is present by construction. Verify both directions.
+
+### 6.9 Weekly integrity ritual
+
+Re-run the canary against its reference distribution; drift beyond CI is an incident. Re-run A/A.
+Verify raw checksums. Regenerate all figures from raw end-to-end and diff. Log discards. Append
+to `AUDIT_LOG.md`.
+
+### 6.10 Artifact standard
+
+Target artifact-evaluation "reusable": one-command setup, pinned dependencies, recorded seeds,
+documented runtimes, a small-scale mode reproducing headline figures in under an hour, and a
+documented path for different hardware.
+
+---
+
+## 7. The measurement program
+
+Organized by dependency, not by date. Each block states what it produces and what it unblocks.
+
+### 7.1 Instrument (I)
+
+| ID | Produces | Unblocks |
+|---|---|---|
+| I1 | Manifest, topology, integrity, raw store | everything |
+| I2 | S1 battery characterization | energy on A |
+| I3 | RAPL bridge + elevation preflight | energy on both platforms |
+| I4 | Thermal constants **and** H8 thermal-state instrumentation | H8; §6.4 both regimes |
+| I5 | Memory bandwidth (STREAM-class) | capacity/bandwidth claims |
+| I6 | **Full per-target energy cross-validation** — ≥8 load levels × 4 targets, anchored, randomized order, multi-cycle blocked design with repeated anchor | all energy objectives |
+| I7 | Confinement mechanism verification, symmetric across arms | every target comparison |
+| I8 | Network regime characterization + shaping | $\mathcal{N}$ sweeps |
+
+**I6 note.** Multi-cycle is the design, not a fallback. Randomize load-level order within cycle —
+the measured −13% SoC drift in reported discharge would otherwise load onto the slope. Include a
+common anchor level in every cycle and treat cross-cycle comparability as a measured question.
+
+### 7.2 Workload (W)
+
+Five frozen benchmark families, committed before collection: software engineering (verifiable),
+function/tool calling (machine-checkable), retrieval-augmented QA (privacy-relevant),
+web/computer-use (variable tool latency), long-horizon planning (deep dependency chains).
+
+Step-type taxonomy published with inter-rater reliability; Cohen's $\kappa \ge 0.75$ before the
+taxonomy becomes load-bearing.
+
+Per-program: step count distribution; per-step prompt/completion tokens, tool type and duration;
+wall-time decomposition (local compute / cloud inference / tool execution / orchestration /
+idle); energy decomposition over the same categories; prefix reuse $\eta$; DAG structure
+(critical path, parallelism width, dynamic branching factor); privacy sensitivity classification;
+cost per completed task.
+
+### 7.3 Behavioral response (B)
+
+Measures $\Phi$. The scientific core.
+
+OFAT across step types to identify sensitive types, then full factorial on the sensitive subset,
+with reference and all-local corners as anchors. Randomized order, day-blocked, canary in every
+block, $n \ge 30$ per cell adjusted by power analysis.
+
+Response metrics: Δ characters/bytes (tokenizer-independent), Δ step count, Δ tool-call
+distribution, Δ success, behavioral divergence index (normalized DAG edit distance), escalation
+cascade factor, capability elasticity $\partial(\text{steps})/\partial(\text{capability})$.
+
+**The decisive analysis:** take the reference trace, apply a partition policy, compute what a
+trace-replay simulator would predict, compare to what actually happened. This converts a
+methodological criticism into a measured quantity and is the paper's central argument.
+
+### 7.4 Partition experiments (P)
+
+The main-line series. Deadline-aware local-first policy; escalation when predicted local latency
+exceeds $D$.
+
+**Predictive semantics:**
+$t_{\text{pred}} = \text{prompt}/R_{\text{prefill}} + n_{\text{out}}^{\text{pred}}/R_{\text{decode}}$,
+with $n_{\text{out}}^{\text{pred}}$ the per-step-type median measured per arm, frozen, identical
+across targets. **Isolation invariant:** between arms only $R_{\text{prefill}}$ and
+$R_{\text{decode}}$ differ — enforced in code, with confinement mechanism and reasoning mode
+joined to the invariant.
+
+**Deadline grid:** derived from measured $t_{\text{pred}}$ distributions; ≥4 absolute values
+spanning the union of both targets' transition regions. **Identical across targets within an
+arm** — per-target quantile deadlines would destroy the rescaling test, the strongest internal
+check available.
+
+**Pre-registered rescaling prediction, per arm:**
+$$\text{escalation\_rate}_{\text{lpe}}(D) \approx \text{escalation\_rate}_{\text{p}}(D \cdot R_p/R_{\text{lpe}})$$
+Failure to collapse indicates something other than compute speed is driving the partition, and
+catches affinity leakage, thermal confounds, and predictor bugs in one test.
+
+**Preemptive semantics** run as a second axis: start locally, abandon at deadline, pay
+local_partial + cloud_full. H4's vehicle.
+
+Axes swept: execution target (5-way) × deadline × reasoning mode (2) × escalation semantics (2)
+× concurrency (4) × power source (2, A only) × power cap (3) × quantization × platform (2) ×
+network regime × KV residency (3).
+
+### 7.5 Hardware design point (H)
+
+HLS routing/gating engine, simulated in OmniSim, validated against a real FPGA over OCuLink,
+integrated as a fifth execution target. Produces H12 and the OmniSim-vs-FPGA fidelity figure that
+underwrites every hypothetical-silicon claim in the paper.
+
+### 7.6 Tool (T)
+
+Closed-loop discrete-event executor consulting $\hat{\Phi}$ at each step; calibrated hardware,
+network, privacy and cost models; MOBO (qEHVI) over the joint space with random/grid/NSGA-II/
+expert baselines.
+
+**Four-level validation ladder:** L1 component-wise against measurement; L2 end-to-end open-loop
+(replay, behavior given) — apples-to-apples with AgentServeSim's claim; L3 end-to-end closed-loop
+(behavior predicted) — the novel claim; L4 **rank preservation** on held-out design points, the
+only metric determining whether the tool is useful.
+
+**Honest fidelity accounting:** report error decomposed by which terms were *given* versus
+*predicted*, under both L2 and L3. A methodological contribution and a polite, devastating
+critique of headline error numbers obtained under replay.
+
+---
+
+## 8. Execution model
+
+### 8.1 Dependency graph
+
+```
+I1 ─┬─► I2 ─► I3 ─► I4 ─► I6 ────────────► energy objectives
+    │                └─► H8 instrumentation
+    ├─► I7 ─────────────────────────────► all target comparisons
+    ├─► I5, I8
+    ├─► W ──► B ──► T
+    └─► P (needs I7 + W + local backends)
+                    └─► H (needs Platform B + OCuLink)
 ```
 
-### 5.3 Data handling
+### 8.2 Tracks
 
-- **Raw is immutable.** Write-once directory, checksummed, never edited. All derived artifacts regenerable from raw by a single command. **Retention (AM-014, PRE-DATA w.r.t. M2):** `raw/` payloads **ARE committed to git** while total payload size remains under a declared ceiling of **100 MB** (`configs/repo.yaml` → `raw_retention.ceiling_mb`). Above that ceiling, payloads move to an externally archived, separately checksummed bundle, and `raw/MANIFEST.sha256` — the committed index of run directories and seal hashes — becomes the authoritative in-repo audit record. At M1 scale committing raw costs almost nothing and buys off-host verification (commit `503a845`); at M2/`samples.ndjson` and M5 sweep scale the ceiling is pre-declared so the transition is not ad hoc. §5.3 immutability is enforced by `seam/rawstore.py` in both regimes. Supersedes a draft blanket "do not commit `raw/`" ruling that never took effect (identifier AM-011 is deliberately unused in the repo amendments log).
-- **Three-tier layout.** `raw/` → `derived/` → `figures/`. A figure must name the derived tables it consumes; a derived table must name the run IDs it consumes.
-- **No manual data entry, ever.** Numbers reach papers through scripts.
-- **Discard policy declared in advance.** A run is discarded only for: harness self-check failure, throttle events exceeding the §5.4 threshold, or API error. Discards are logged with reason and counted in the paper. Post-hoc discarding for being an inconvenient value is misconduct.
+Three tracks proceed in parallel and do not contend. Each agent is assigned exactly one and does
+not write outside it.
 
-### 5.4 Thermal protocol (mandatory)
+- **Instrument** — I2 … I8
+- **Agent** — W, B, T (cloud-bound; the long calendar pole regardless of deadline pressure)
+- **Local execution / hardware** — backends, P, H
 
-1. Fixed ambient, logged. Record chassis orientation and any added cooling.
-2. **Warm-up to steady state** before measurement; discard the transient. Determine warm-up duration empirically in Phase 0 and fix it.
-3. **Inter-run cooldown** to a fixed package temperature ceiling before the next run begins.
-4. Log package/core temperature and throttle-residency counters at ≥1 Hz throughout.
-5. **A run with throttle residency above the Phase-0-determined threshold is flagged and excluded from primary analysis, and reported in a throttling table.** Do not claim zero throttling; measure it and report it.
-6. Randomize condition order within a block so thermal drift cannot align with condition.
+### 8.3 The yield queue
 
-### 5.5 Variance before comparison, and A/A testing
+At any moment the next work item is the highest-yield *available* measurement, judged by: does it
+produce a result on the main line; does it unblock more than one downstream item; does it
+strengthen a claim already made. The queue is re-derived at the start of each session from
+`seam_status()`, never assumed from the last session.
 
-**Ordering rule: no comparison is run before its noise floor is measured.**
-
-- **A/A (negative control).** Run the *same* configuration twice, labeled as two different conditions, through the full pipeline including analysis. The pipeline must report no significant difference. If it reports one, the harness or analysis is broken — fix it before any A/B. Repeat A/A at the start of each phase.
-- **Positive control.** A configuration with a known-large effect (e.g. 8B vs 0.5B local model) must register clearly. If it doesn't, sensitivity is insufficient.
-- **Variance characterization.** For each metric, estimate run-to-run CV with $n \ge 20$ repeats on a fixed config. Report CV in the paper. Any claimed effect smaller than $2\times$ CV is reported as null.
-- **Sample sizing.** Pilot to estimate variance, then power analysis for the smallest effect worth detecting. Declare $n$ per cell before collection. Default floor: $n = 30$ per cell for behavioral metrics, $n = 20$ for hardware microbenchmarks.
-- **Reporting.** Bootstrap 95% CIs, not standard error bars. Effect sizes, not just p-values. Distributions (violin/ECDF) for anything with heavy tails — tool durations and JCT both are.
-
-### 5.6 Weekly integrity ritual (Fridays, non-negotiable)
-
-1. Re-run the **canary experiment** — one fixed config, fixed task set. Compare to the reference distribution. Drift beyond CI is an incident: investigate before continuing.
-2. Re-run A/A.
-3. Verify raw checksums.
-4. Regenerate all figures from raw end-to-end; diff against committed figures.
-5. Log the week's discards with reasons.
-6. Append to `AUDIT_LOG.md`: canary result, drift verdict, incidents, discards, amendments.
-
-### 5.7 Artifact standard
-
-Target artifact-evaluation "reusable." Single-command environment setup, pinned dependencies, seeds recorded, expected runtimes documented, a small-scale mode that reproduces headline figures in under an hour, and a documented path for someone with different hardware.
+**A session ending without a recorded measurement, resolved finding, or strengthened arm should
+be explained in `AUDIT_LOG.md`** — not as blame, but as a signal that queue ordering or the
+instrument needs attention.
 
 ---
 
-## 6. Phase 0 — Instrumentation and platform bring-up (Weeks 1–2)
+## 9. Contribution ledger
 
-**Purpose.** Establish that the platform and harness can produce trustworthy numbers. Nothing scientific happens until this passes.
+Replaces v1.0's deadline-driven paper split. Contributions are recorded as obtained; papers are
+assembled when a set is strong enough.
 
-### 6.1 Tasks
-
-| ID | Task | Output |
+| # | Contribution | Status |
 |---|---|---|
-| P0.1 | NPU bring-up: get a candidate local model executing on NPU 5 via OpenVINO. Record achieved prefill/decode throughput. | Feasibility verdict + throughput table |
-| P0.2 | iGPU and CPU execution paths for the same model set | Throughput table per target |
-| P0.3 | Energy harness: RAPL package/core/uncore/DRAM via powercap; NPU and iGPU domains if exposed | Energy sampling library |
-| P0.4 | **External power validation**: compare harness-reported energy against a wall-socket meter over sustained load | Agreement figure + error model |
-| P0.5 | Thermal harness: temperature and throttle-residency logging; determine warm-up duration and throttle threshold | Thermal protocol constants |
-| P0.6 | Latency and token ledger: monotonic timing, prompt/completion token accounting, cost accounting from dated pricing tables | Ledger schema |
-| P0.7 | Network characterization and shaping: measure real RTT/bandwidth/jitter to each cloud endpoint across a day; build `tc`/netem regimes | Network regime definitions |
-| P0.8 | Measurement overhead characterization | Overhead error term |
-| P0.9 | Run-manifest emitter and integrity self-check | Harness |
-| P0.10 | A/A + positive control + variance baseline | Noise floor table |
-| P0.11 | OCuLink FPGA enumeration and DMA bandwidth (can slip to Phase 3b) | Feasibility verdict |
+| C1 | Agent behavior is not invariant to the serving decision (H1) | pending |
+| C2 | Trace-replay simulators structurally invalid for hybrid partitioning — measured error | pending |
+| C3 | The optimal partition shifts with local silicon (H2, H7) | pending |
+| C4 | The optimal partition is time-varying within a session (H8) | pending |
+| C5 | Routing amortization bound, measured against custom silicon (H3, H12) | pending |
+| C6 | Silicon sizing rule for on-device agents (S10) | pending |
+| C7 | SEAM: validated closed-loop DSE framework (H5, H6) | pending |
+| C8 | Honest fidelity accounting as a methodological standard | pending |
+| C9 | Client-platform measurement pathologies | **accruing** |
+| C10 | NPU/iGPU/CPU crossover surfaces on Panther Lake | pending |
+| C11 | Concurrency and power-source effects on partition (H9, H10) | pending |
+| C12 | Cross-boundary KV residency (H11) | pending |
 
-### 6.2 Numbers Phase 0 must produce
+**C9 detail** (already accruing, and worth more than it appears): battery-counter
+characterization — time-cadenced ~19 s updates with an 8% systematic between rate and capacity
+estimators and −13% SoC-dependent drift; OpenVINO `PCORE_ONLY` silently falling through to all
+cores on Panther Lake while `ECORE_ONLY` binds; a corrupt IR that loads and generates; a
+credential leak-scan silently skipping on precisely the machine where it matters; UTF-16LE probe
+artifacts making three provenance tests vacuous; CRLF making committed artifact hashes
+platform-dependent.
 
-- Achieved tokens/s (prefill, decode) per (model, quantization, target ∈ {LP-E, P-core, iGPU, NPU}) — a matrix, not a single number
-- Measured peak memory bandwidth (STREAM-class)
-- Joules per 1k tokens per target
-- Harness energy vs wall meter: agreement %
-- Warm-up duration to steady state; throttle onset time under sustained load
-- Run-to-run CV for JCT, energy, token count, task success
-- Cloud RTT p50/p95/p99 per endpoint, and diurnal variation
-- Instrumentation overhead as % of measured latency
-
-**Gate 0 must pass before Phase 1.** See §11.
-
----
-
-## 7. Phase 1 — Workload characterization (Weeks 3–4)
-
-**Purpose.** Establish, in numbers, what agentic workloads actually consist of on a client device, and where the time, energy, money, and privacy exposure go. This is the empirical foundation for every later model and the source of the paper's motivation figures.
-
-### 7.1 Benchmark suite (frozen before collection; committed to git)
-
-Five families, chosen for structural diversity rather than popularity:
-
-1. **Software engineering** — SWE-bench Verified subset (long horizon, heavy tool use, verifiable success)
-2. **Function/tool calling** — BFCL v4 (short horizon, high step count, machine-checkable)
-3. **Retrieval-augmented QA** — a RAG agent over a local corpus (privacy-relevant: local file content)
-4. **Web/computer-use agent** — highly variable tool latency, external nondeterminism
-5. **Long-horizon planner** — deep dependency chains, wide branching
-
-For each: fixed task ID list, fixed seeds, fixed harness version. **Task lists are frozen and published.** No task is added or removed after Phase 2 begins.
-
-### 7.2 Step-type taxonomy
-
-Define and publish an operational taxonomy with an inter-rater reliability check. Proposed types: `plan`, `tool_call_synthesis`, `tool_result_summarize`, `code_generate`, `code_repair`, `verify`, `reflect`, `final_response`.
-
-**Reliability requirement.** Two annotators independently label ≥200 steps; report Cohen's $\kappa$. Target $\kappa \ge 0.75$. If lower, the taxonomy is not operational — revise it before it becomes a load-bearing abstraction. Automated classification (rules or a classifier) is then validated against the human labels and its error rate reported.
-
-### 7.3 Measurements per program
-
-- Step count: mean, median, p95, max, full ECDF
-- Per step: prompt tokens, completion tokens, tool type, tool wall duration
-- **Wall-time decomposition**: local compute / cloud inference (network + queue + generate) / tool execution / orchestration and framework overhead / idle. This decomposition is the client-side analogue of the GT–Intel CPU-centric result and it is what determines whether any hardware acceleration of coordination is worth pursuing.
-- **Energy decomposition** over the same categories
-- Prefix reuse rate $\eta$ across consecutive steps
-- DAG structure: critical path length, mean/max parallelism width, dynamic branching factor, fraction of steps whose existence depends on a prior step's content
-- **Privacy sensitivity classification** per step payload: does it contain local file content, PII, credentials, or proprietary context? Publish the classifier and its validation.
-- Cost: dollars per completed task at current pinned pricing
-
-### 7.4 Deliverable
-
-`characterization_report.md` + committed derived tables + figures. This is also the motivation section of the paper.
+Each is a defect a competitor would have shipped. QEIL v2 reports energy from hardware counters
+with no characterization; anyone measuring P-versus-LP-E on Panther Lake with OpenVINO has
+leaking affinity and does not know it. These are documented instances of measurements that would
+look clean and be wrong.
 
 ---
 
-## 8. Phase 2 — Behavioral response characterization (Weeks 5–8)
+## 10. Gates
 
-**Purpose.** Measure $\Phi$. This is the scientific core and the novel contribution. It either validates or kills the project's central premise.
+Purely scientific. **No gate response is ever "reduce scope."**
 
-### 8.1 Design
-
-**Factors.**
-- Step-type assignment: for each step type $\tau$, assign {local, cloud}, holding all other types at cloud reference
-- Local model ladder: ≥4 points spanning capability (e.g. ~1B, ~4B, ~8B, ~8B-INT4) — capability *and* quantization
-- Cloud reference: pinned frontier snapshot
-- Task families: all five from §7.1
-
-**Design choice.** Full factorial over all step types is combinatorially infeasible. Use:
-1. **One-factor-at-a-time (OFAT)** across step types to establish main effects and identify the sensitive types
-2. **Full factorial** restricted to the 3 most sensitive types identified by OFAT, to capture interactions
-3. **Reference and all-local corners** as anchors
-
-Randomize execution order across the full grid. Block by day to absorb API drift; include the canary in every block.
-
-$n \ge 30$ per cell, adjusted upward by the Phase 0 power analysis.
-
-### 8.2 Response metrics
-
-| Metric | Definition | Why |
+| Gate | Criterion | If unmet |
 |---|---|---|
-| $\Delta$ tokens | Relative change in total generated tokens | Direct driver of latency, energy, and cost |
-| $\Delta$ steps | Relative change in realized step count | The term trace replay fixes |
-| $\Delta$ tool calls | Change in count and type distribution | Control-flow divergence |
-| $\Delta$ success | Change in task success rate | The objective nobody models |
-| **Behavioral divergence index** | Normalized edit distance between realized DAG and reference DAG | Single scalar for "how different was the run" |
-| **Escalation cascade factor** | Extra downstream steps induced per local step failure | Tests H4; explains why local failures are expensive |
-| **Capability elasticity** | $\partial(\text{steps}) / \partial(\text{model capability})$ | Quotable derived quantity; feeds the surrogate |
+| **G-instrument** | Energy signals pass §10.1; A/A shows no false positive; CV known for all primary metrics; confinement verified symmetric | Stop measurement, fix instrumentation. No exceptions. |
+| **G-provenance** | Every externally sourced artifact hash-verified against external authority | No artifact without verified provenance enters an experiment |
+| **G-behavior (H1)** | Divergence CI-separated from noise floor, in tokenizer-independent units | Publish the null; investigate cause; widen the capability ladder and re-test |
+| **G-surrogate (H5)** | Held-out-by-configuration MAPE within threshold | Emit intervals not points; report as approach limitation |
+| **G-rank (H6)** | Kendall's $\tau \ge 0.8$ on held-out design points | Do not publish as a DSE tool; publish characterization and behavioral results |
+| **G-publication** | Every figure regenerates from raw; audit log complete; no unexplained discards; every number traces to a manifest | Do not submit. Fix reproducibility. |
 
-### 8.3 The decisive analysis
+### 10.1 Energy cross-validation criterion (AM-004)
 
-Report, per step type, the distribution of $\Delta$ tokens / $\Delta$ steps / $\Delta$ success with bootstrap CIs, alongside the Phase 0 noise floor on the same axes. **H1 is evaluated only against the measured noise floor.** A visually large shift that falls inside run-to-run variance is null.
-
-Then: quantify the error a trace-replay simulator would incur. Take the reference trace, apply a partition policy, and compute what replay would predict versus what actually happened. **This figure is the paper's central argument.** It converts a methodological criticism into a measured quantity.
-
-### 8.4 Gate 2 decision point (Week 8)
-
-This is the project's fork. See §11.
+Per execution target, regress baseline-corrected whole-device energy on RAPL across ≥8 load
+levels: (a) $R^2 \ge 0.95$; (b) slope $\in [1.0, 1.5]$, with **slope < 1.0 a hard failure** since
+a subset cannot grow faster than the whole; (c) intercept consistent with an independently
+measured idle baseline. Report minimum resolvable energy difference per target.
+**Target-dependent slope divergence indicates a RAPL domain-coverage gap** — critical for the NPU,
+and it must be surfaced rather than pooled away.
 
 ---
 
-## 9. Phase 3 — Cost-model calibration (Weeks 7–10, overlaps Phase 2)
+## 11. Studies and figures
 
-### 9.1 Phase 3a — Measured hardware characterization
+| Study | Tests | Claim |
+|---|---|---|
+| S1 | H1 | Divergence distributions vs noise floor |
+| S2 | H1 | Trace-replay prediction error under policy change — **central argument** |
+| S3 | §7.2 | Wall-time and energy decomposition on client hardware |
+| S4 | I6 | NPU/iGPU/CPU crossover surfaces, both platforms |
+| S5 | H2 | Policy ranking vs hardware configuration — **headline** |
+| S6 | H3 | Amortization threshold vs throughput and RTT |
+| S7 | H4 | Cascade factor by step type, preemptive semantics |
+| S8 | H5, L1–L4 | Validation ladder, error decomposed given-vs-predicted |
+| S9 | — | Five-objective Pareto fronts per regime |
+| S10 | — | Silicon sizing rule — the industry-facing result |
+| S11 | — | Search efficiency vs random/grid/NSGA-II/expert |
+| S12 | H12 | HLS gating engine; OmniSim-vs-FPGA error — **the differentiator** |
+| S13 | — | Cross-platform replication of S1 and S5 |
+| S14 | H8 | Escalation rate vs elapsed session time under fixed policy — **non-stationarity** |
+| S15 | H9 | Partition vs concurrency; memory-binding onset |
+| S16 | H10 | Battery vs mains frontiers |
+| S17 | H11 | KV residency policy vs tool-gap duration |
 
-Microbenchmark sweeps producing calibrated performance and energy models:
+**Stratification (AM-025).** S1, S2, S5 and S8 report **per-step-type** results as primary, pooled
+as secondary. S7 already does this and is the template. The cost is sample size — sufficient steps
+of each type per cell — which is accepted under R1. Stratify only where step type can plausibly
+moderate the effect; S16 (power source) and S3 (energy decomposition) pool.
 
-- Prefill throughput vs sequence length, per (model, quantization, target)
-- Decode throughput vs batch size and context length
-- Memory footprint and KV cache growth
-- Energy per token, per target, at multiple power caps
-- **Crossover surfaces**: the (sequence length, batch, model size) regions where NPU beats iGPU beats CPU. These curves are a contribution in their own right — nobody has published them for Panther Lake.
-- Power-cap sweep: performance and energy vs cap, to expose the thermal/energy design axis
-- Contention: what happens when NPU and iGPU run concurrently (the realistic agentic case)
-
-Model form: piecewise/regression fits with reported residuals. **Every fitted model reports held-out error.** No unvalidated analytical model enters SEAM.
-
-### 9.2 Phase 3b — Non-existent silicon (the Sharc Lab differentiator)
-
-For hardware configurations that cannot be profiled because they do not exist:
-
-1. Design the candidate device-side datapath in HLS — including the routing/gating engine that Claim H3 evaluates
-2. Simulate with **OmniSim / LightningSim** for fast, RTL-accurate latency
-3. **Validate the simulation against a real FPGA over OCuLink** — measured, not asserted
-4. Report OmniSim-vs-FPGA error explicitly; this number is the credibility of every hypothetical-silicon result in the paper
-
-This is the capability no competitor has: AgentServeSim's profile-based operator model structurally cannot evaluate silicon that does not exist.
-
-### 9.3 Network and cost models
-
-- Empirical RTT/bandwidth/jitter distributions per endpoint, with diurnal variation
-- Defined regimes: `datacenter-adjacent`, `residential-broadband`, `mobile`, `degraded`, `offline`
-- Dollar cost from dated pricing tables, versioned in the repo
-- Device amortization model for TCO comparisons — **secondary, not a headline** (vendor white papers already cover the economics; leading with TCO reads as known)
-
-### 9.4 Privacy leakage model
-
-The weakest-defined objective; treat it with corresponding care.
-
-- Operational definition: leakage = volume and sensitivity-weighted count of payload classes crossing the trust boundary
-- Sensitivity classes defined and published; classifier validated against human labels with reported agreement
-- **Explicitly report what this metric does not capture** (inference attacks, aggregation risk, provider-side retention). Overclaiming here is the fastest way to lose a security-literate reviewer.
-- If the classifier cannot be validated to acceptable agreement, demote privacy from an objective to a *hard constraint* (feasible / infeasible) and say so.
+**Step-type taxonomy.** Declared and frozen before S1, recorded in every manifest. Assignment is
+made from the agent's own control flow, never inferred post hoc from output, so it cannot be
+contaminated by the behavior being measured.
 
 ---
 
-## 10. Phase 4 — SEAM construction and validation (Weeks 9–14)
+## 12. Publication and positioning
 
-### 10.1 Architecture
+### 12.1 Claim staking
 
-```
- ┌──────────────────────────────────────────────────────────┐
- │ Frontend: agent program → step-typed dynamic DAG          │
- └──────────────────────────┬───────────────────────────────┘
-                            ▼
- ┌──────────────────────────────────────────────────────────┐
- │ Closed-loop discrete-event executor                       │
- │  at each step: consult Φ̂ → mutate remaining DAG           │
- └───┬───────────┬──────────────┬──────────────┬────────────┘
-     ▼           ▼              ▼              ▼
- ┌────────┐ ┌─────────┐ ┌────────────┐ ┌──────────────┐
- │  Φ̂     │ │Hardware │ │  Network   │ │ Privacy /    │
- │behav.  │ │perf+    │ │  model     │ │ cost models  │
- │surrogate│ │energy   │ │            │ │              │
- │(Ph. 2) │ │(Ph. 3a/b)│ │  (Ph. 3c)  │ │  (Ph. 3d)    │
- └────────┘ └─────────┘ └────────────┘ └──────────────┘
-                            ▼
- ┌──────────────────────────────────────────────────────────┐
- │ Multi-objective search: qEHVI MOBO over H × Π            │
- │ baselines: random, grid, NSGA-II, expert-hand            │
- └──────────────────────────┬───────────────────────────────┘
-                            ▼
- ┌──────────────────────────────────────────────────────────┐
- │ Outputs: Pareto fronts · sensitivity · silicon sizing rule│
- └──────────────────────────────────────────────────────────┘
-```
+The competitive window is independent of the working schedule. Katti at Intel, Gimlet Labs
+commercializing, QEIL v2 already extending the heterogeneous-agentic idea to consumer edge
+hardware. **Preprint as soon as any §9 contribution is defensible**, independent of eventual
+venue. Public code and traces with the preprint.
 
-### 10.2 The behavioral surrogate $\hat{\Phi}$
+### 12.2 Assembly
 
-Trained on Phase 2 data. Predicts, conditioned on (step type, assigned model, context state): completion-token distribution, continuation/termination probability, tool-type distribution, step success probability.
+Papers are assembled from the ledger when a set is strong, not at a date. Natural groupings:
+C1+C2+C9 (behavior and measurement validity); C3+C4+C10+C11 (silicon dependence); C5+C12+C6
+(bound, hardware, sizing); C7+C8 (the tool). Groupings, not commitments.
 
-**Requirements.**
-- Predict *distributions*, not point values — the variance is the phenomenon
-- Held-out validation by **configuration**, not by random split. Random splits leak; you must predict configurations never seen.
-- Report calibration (reliability diagrams for success prediction), not just accuracy
-- Where H5 confidence is insufficient, propagate uncertainty and emit **interval-valued** objectives rather than false precision
+### 12.3 Venues
 
-### 10.3 Four-level validation ladder
+ICCAD, DAC, MLSys, FCCM, ASPLOS as they arise. Venue selection follows the contribution set,
+never the reverse.
 
-| Level | What is validated | Metric | Why it matters |
+### 12.4 Recorded future directions — not started
+
+Displacing rather than additive under R4. Recorded so they are not lost, and not begun.
+
+- **Speculative decoding as a hybrid mode** (local draft, cloud verify). A different execution
+  mechanism rather than a point in the routing design space. Feasible — OpenVINO GenAI supports
+  it on NPU. Strongest available direction change; its own paper.
+- Distributed multi-device edge orchestration.
+- Federated / multi-user settings.
+- Training-time considerations.
+
+---
+
+## 13. Risk register
+
+Schedule risk removed under R1. What remains:
+
+| # | Risk | Severity | Mitigation |
 |---|---|---|---|
-| L1 | Each component model against measurement | Held-out MAPE per model | Prevents compensating errors |
-| L2 | End-to-end **open-loop** (replay, behavior given) | JCT/throughput error | Apples-to-apples with AgentServeSim's claim |
-| L3 | End-to-end **closed-loop** (behavior predicted) | JCT + step count + success error | The novel claim; nobody has reported this |
-| L4 | **Rank preservation** on held-out design points | Kendall's $\tau$, top-$k$ overlap | The only metric that determines whether the tool is useful |
-
-**Honest fidelity accounting (a contribution in itself).** Report error decomposed by which terms were *given* versus *predicted*, under both L2 and L3. This makes explicit what a "6% error" headline conceals, and it establishes SEAM as the credible instrument in the subfield. Frame it as a methodological standard, not an attack.
-
-### 10.4 Search evaluation
-
-Compare MOBO against random search, grid, NSGA-II, and a hand-tuned expert baseline. Metrics: hypervolume vs evaluation budget (with CIs over repeated seeds), and evaluations-to-target-Pareto-point. The claim is sample efficiency versus ad hoc exploration — the status quo Rainone et al. named in print — not superiority over specialized routers.
+| K1 | Competing publication closes the window | High | §12.1 preprint on first defensible contribution |
+| K2 | **Loss of forcing function** — instrument becomes the work | **High** | §0.3 ledger + yield queue; §8.3 session accountability |
+| K3 | Scope dilution — arms displace the main line | Medium-High | §1.2 filter, applied explicitly to every proposal |
+| K4 | Instrument-defect arrival rate not declining | Medium | Each defect is C9 material; track the rate and investigate if it does not fall |
+| K5 | Surrogate does not generalize | Medium-High | Interval-valued outputs; reported as approach limitation |
+| K6 | Cross-cycle comparability in multi-cycle energy design | Medium | Repeated anchor level per cycle; cycle effect modeled, not assumed |
+| K7 | Platform B delay | Low | ~85% of the program runs on A; B is generalization |
+| K8 | Concurrency corruption on shared paths | Medium | §6.6 mutual exclusion, after two occurrences |
+| K9 | Network fault selectivity affects the cloud track | Medium | Probe every dependent endpoint with contemporaneous controls before it matters |
 
 ---
 
-## 11. Gates — hard decision points
+## 14. Amendment log
 
-Each gate has a measurable criterion and a pre-committed response. **A failed gate triggers the declared response.** The purpose of writing them now is to remove the temptation to rationalize later.
+Every divergence recorded with date, reason, and a **PRE-DATA / POST-DATA** label relative to the
+affected measurement. Post-hoc amendments permitted but must be labeled. Identifiers never reused.
 
-| Gate | Week | Criterion | If PASS | If FAIL |
+| Date | Section | Change | Reason | Pre/post |
 |---|---|---|---|---|
-| **G0 — Platform** | 2 | A local model runs on NPU 5 at usable throughput; **energy cross-validation passes the §16.8 three-part criterion** (on Platform B a wall meter substitutes for battery discharge as the whole-system signal — note it measures AC input including PSU conversion loss, so it is likewise a superset of RAPL and the same physics applies); A/A shows no false positive; CV known for all primary metrics | Proceed to Phase 1 | If NPU only: drop NPU, reframe local targets as CPU+iGPU, continue. If harness fails: **stop all science**, fix instrumentation. No exceptions. |
-| **G1 — Characterization** | 4 | Wall-time and energy decompositions complete with CIs; taxonomy $\kappa \ge 0.75$; frozen benchmark list committed | Proceed to Phase 2 | Revise taxonomy or narrow benchmark families; do not proceed on an unreliable taxonomy |
-| **G2 — H1 / behavioral non-invariance** | 8 | $\ge 20\%$ median divergence in $\ge 2$ metrics, CI-separated from noise floor | **Full SEAM.** Closed-loop is justified; this is the flagship path | $< 5\%$: publish the null, descope to open-loop DSE. Between 5–20%: descope to token/step-count surrogate only; drop success prediction |
-| **G3 — Surrogate validity (H5)** | 12 | Held-out (by configuration) MAPE $\le 15\%$ tokens/steps; success within 10 pp | Closed-loop results are quotable as point estimates | 15–30%: emit intervals, not points; state limitation prominently. $>30\%$: report as negative result on surrogate feasibility |
-| **G4 — Rank preservation (H6)** | 14 | Kendall's $\tau \ge 0.8$ on held-out design points | Tool is validated; write the DSE studies | $0.6 \le \tau < 0.8$: publish as preliminary, restrict claims to coarse regions. $\tau < 0.6$: **do not publish as a DSE tool.** Publish characterization + behavioral finding only |
-| **G5 — Submission** | 15 | All figures regenerate from raw; audit log complete; no unexplained discards; every number traces to a manifest | Submit | Delay to next venue. **Do not submit unreproducible results.** |
+| 2026-08-02 | all | **v2.0.** Operating mode replaced (§0): timing removed as a constraint; monotonic claim strengthening; yield maximization; main-line protection filter. Timeline replaced by dependency graph and yield queue. Deadline-driven paper split replaced by contribution ledger. Staged energy calibration withdrawn — full per-target multi-cycle design reinstated. Preemptive escalation, four local targets, both reasoning arms, and the HLS gating engine moved in scope. Added H8 (thermal non-stationarity), H9 (concurrency), H10 (power source), H11 (KV residency), H12 (hardware gating). Added §2.2 time-varying state, §6.6 mutual exclusion, §6.7 external verification, §6.8 cross-boundary confounds. Gates rewritten to remove every "reduce scope" response. | Directive: no time constraint; aggressive and expansive; impact and arm count must only increase; main line protected. | Pre, w.r.t. every hypothesis |
 
----
+| 2026-08-03 | Appendix A.2, §5, §7.3, §11 | **AM-025 — the absence-claim rule and the step-type stratification correction.** (a) Standing rule: no absence claim enters any external artifact without a documented search recorded in Appendix A.2. (b) AUDIT-001 recorded; proposed H14 (step type selects execution target), H15 (tool mix drives θ(t)/c(t)), and the capacity→intensity coupling are all **withdrawn before pre-registration** as occupied or contradicted. (c) **Stratification correction:** H1, H2 and H5 currently pool behavioral metrics across step types, which makes each a measurement of the benchmark's step mixture rather than of the phenomenon. All three, and studies S1/S2/S5/S8, report **per-step-type** effects as primary with the pooled statistic demoted to secondary. H1's falsification criterion applies per type; a pooled median cannot falsify a type-specific effect. | Three prior absence claims collapsed under searches that should have preceded them. The pooling defect is a validity error independent of novelty; Agent Memory (2606.06448) is precedent for phase-aware attribution. | **Pre**, w.r.t. H1/H2/H5 and S1/S2/S5/S8 |
 
-## 12. Studies and figure plan
+| 2026-08-04 | §7.3, Appendix A.2, §9 | **AM-027 — router proxy correction, and the narrative-provenance failure.** (a) **Authorized:** the router's prompt-token proxy changes from `chars // 4` to `chars // 4 + 621`, where 621 is the measured fixed chat-template scaffold. Measured bias falls from **−77.4% to −1.03%**; slope 0.9594, R² 0.9983, residual SD 11.93 tok, intercept 637.1 → 41.3. The scaffold constant is per-model and per-template and must be re-measured, not inherited, whenever either changes. Applies to all runs after this amendment; prior runs keep the uncorrected proxy and report the filter boundary as an interval. (b) **C9 entry — numbers without provenance.** Decode figures of 15.1 and 7.4 tok/s circulated through the meeting brief, the opening pitch, a collaborator meeting, and a drafted external email. A provenance audit found **no sealed run producing either value**, and **no INT8 arm exists at all** — the nearest sealed artifact is `5eb09eba`, an interleaved INT4 P-core/LP-E contrast at 15.801/8.401 (1.881×) whose confinement classification returned UNCLEAR on A1–A6. The quantization framing built on those numbers is withdrawn entirely. | The proxy defect was quantified by B3 and is a one-constant fix with a large effect on filter placement. The provenance failure is the pin-and-seal discipline holding inside `raw/` and `derived/` while failing completely in the narrative layer, where no gate exists. | **Pre**, w.r.t. every run after this date |
 
-Each study maps to a hypothesis and a figure. Numbered so drafts can reference them.
+**AM-027(b) standing rule — the narrative gate.** No quantitative claim enters a brief, pitch,
+slide, email, or paper without a **run_id** attached at the point of use. A number whose run_id
+cannot be named is withdrawn, not caveated. This extends AM-009's pin discipline from governing
+documents to external communications, which is where it was missing.
 
-| Study | Tests | Figure | Claim it supports |
-|---|---|---|---|
-| S1 | H1 | Divergence distributions per step type vs noise floor | Behavior is not invariant |
-| S2 | H1 | Trace-replay prediction error under policy change | Existing simulators are structurally invalid here — **central argument** |
-| S3 | §7.3 | Wall-time and energy decomposition on client hardware | Motivation; also determines whether coordination acceleration is worth pursuing |
-| S4 | Phase 3a | NPU/iGPU/CPU crossover surfaces on Panther Lake | Standalone contribution; nobody has published these |
-| S5 | H2 | Policy ranking vs hardware configuration (rank-inversion heatmap) | **Headline**: fixed routing policies are overfit to one device |
-| S6 | H3 | Amortization threshold $G$ vs local throughput and RTT | The bound; publishable either direction |
-| S7 | H4 | Cascade factor by step type | Explains the cost structure of local failure |
-| S8 | H5, L1–L4 | Validation ladder, error decomposed by given-vs-predicted | Credibility; methodological contribution |
-| S9 | — | 5-objective Pareto fronts per network/privacy regime | The tool's product |
-| S10 | — | Silicon sizing rule: minimum $h$ for a target operating point | The actionable industry-facing result |
-| S11 | — | Search efficiency vs random/grid/NSGA-II/hand | Justifies MOBO |
-| S12 | H3, Phase 3b | HLS gating-engine design point; OmniSim-vs-FPGA error | Sharc Lab differentiator; evaluates silicon that cannot be profiled |
-| S13 | — | Second-platform replication of S1 and S5 | External validity — without this, everything is single-platform |
-
----
-
-## 13. Publication strategy — and the honest recommendation
-
-### 13.1 The scope problem
-
-Today is July 29, 2026. MLSys 2027 closes **Oct 30** (13 weeks); DAC 2027 abstract **Nov 11**, paper **Nov 18** (16 weeks); ICCAD 2027 ≈ **April 2027**; FCCM 2027 ≈ Nov–Dec 2026 (confirm).
-
-Phases 0–4 as specified are approximately 14 weeks of work **if nothing goes wrong**, for one student, including building a validated behavioral surrogate and an FPGA cross-validation. That is not a realistic single-submission schedule. Compressing it produces exactly the thin, roofline-grade evaluation this project is positioned to criticize — which would be self-defeating.
-
-### 13.2 Recommended: two papers
-
-**Paper 1 — "Agent behavior is not invariant to the serving decision"** (characterization + behavioral response). Phases 0–2 plus S1, S2, S3, S4, and a second-platform replication. Target **DAC 2027 (Nov 18)** or **MLSys 2027 (Oct 30)** if Phase 2 runs clean.
-
-This is a complete, self-contained paper with a sharp, falsifiable, useful claim. It invalidates a methodological assumption held across ~10 recent papers, it is measurement-driven, and it does not depend on the tool existing. It also stakes the claim publicly and fast, which matters given the ~12-month window.
-
-**Paper 2 — SEAM** (the tool). Phases 3b, 4, plus S5–S13. Target **ICCAD 2027 (April)** or **MLSys 2028**, with an arXiv preprint and public code as soon as G4 passes.
-
-**Why this is better, not just safer.** Paper 1 is the *citation* for Paper 2's premise. Publishing the characterization first means SEAM arrives with its foundational assumption already peer-reviewed, which is a much stronger position than asserting both at once in a compressed evaluation.
-
-### 13.3 Alternative: single submission
-
-Possible only if G2 passes decisively by week 8 and the surrogate proves easy. Requires dropping S12 (FPGA/OmniSim) and S13 (second platform). Dropping S13 is a serious external-validity concession. **Not recommended.**
-
-### 13.4 Preprint and code timing
-
-arXiv preprint of Paper 1 at week 10 regardless of venue decision. Code and traces public at preprint. The field moves monthly; a staked public claim is worth more than a polished private one.
-
----
-
-## 14. Risk register and amendment log
-
-### 14.1 Risks
-
-| # | Risk | P | Impact | Mitigation | Owner action |
-|---|---|---|---|---|---|
-| R1 | Intel NPU stack cannot run target models at usable throughput | Med-High | Blocks NPU as a target | **De-risk in week 1.** Fallback: CPU+iGPU only, reframed | G0 |
-| R2 | H1 falsified — behavior barely shifts | Med | Kills flagship claim | Pre-committed null publication path | G2 |
-| R3 | Surrogate doesn't generalize | Med-High | Closed-loop not quotable | Interval-valued outputs; report as limitation | G3 |
-| R4 | Thermal throttling corrupts measurements | **High** | Systematic bias, not noise | §5.4 protocol, mandatory | G0 |
-| R5 | Cloud API drift mid-study | High | Longitudinal invalidity | Pinned snapshots, daily canary, blocked design | Weekly ritual |
-| R6 | Single-platform criticism | High | Reviewer rejection | Second platform by week 4 — treat as required, not optional | G1 |
-| R7 | Scope creep into datacenter | Med | Unfavourable comparison to Gimlet/Asgar | §1.3 is a hard boundary | Every review |
-| R8 | Competing publication appears | Med-High | Novelty loss | Week-10 preprint | Fixed date |
-| R9 | OCuLink FPGA path costs more than budgeted | Med | Loses the differentiator | Defer to Paper 2; not on Paper 1's critical path | Phase 3b |
-| R10 | Privacy metric not defensible | Med | Objective must be dropped | Pre-declared demotion to hard constraint | §9.4 |
-| R11 | Multiple-comparison false positives | Med | Retracted claims | Pre-declared primary endpoints, BH correction | §5.1 |
-| R12 | Student time / coursework collision | High | Schedule slip | Two-paper split absorbs this | §13.2 |
-
-### 14.2 Amendment log
-
-Every deviation from this protocol is recorded here with date, what changed, why, and whether it was decided before or after seeing relevant data. **Post-hoc amendments are permitted but must be labeled as such.**
-
-| Date | Section | Change | Reason | Pre/post data |
-|---|---|---|---|---|
-| 2026-07-29 | — | v1.0 committed | Initial pre-registration | Pre |
-| 2026-07-29 | §3, §16 | Added Phase −1. Dell XPS 16 promoted from stopgap to **Platform A**, satisfying the §3 second-platform requirement and R6. Phase −1 inserted ahead of Phase 0. | EVO-T2 not yet in hand; H1 is platform-independent and can be resolved early. Sequencing improvement, not a concession. | Pre |
-| 2026-07-29 | §4, §16.1 | **Retracted the two-generation NPU axis.** It rested on a false premise: Platform A was assumed Meteor Lake, but hardware probe artifacts identify it as **Panther Lake, Core Ultra 5 325** — the same generation as the EVO-T2. Replaced with a *controlled-contrast* axis (NPU held constant, iGPU width / memory capacity / thread count / thermal envelope varying). Added **H7**. | Corrected platform identification. The controlled contrast is a stronger design than the cross-generation one, which would have confounded NPU IP, driver stack, process node, and capacity simultaneously. | Pre |
-| 2026-07-29 | §11 (G0), §16.8 (Gate −1) | **AM-004 — RESOLVED, authorized by Z. Johnson.** Replaced "RAPL and battery agree within 15%" (and the parallel "wall meter within 10%" in G0) with a three-part physical criterion: (a) linearity $R^2 \ge 0.95$ across ≥8 load levels; (b) slope $\in [1.0, 1.5]$, **slope < 1.0 a hard failure**; (c) intercept consistent with an independently measured idle platform baseline. Regressions fit **per execution target**. Adds a reported minimum resolvable energy difference. | The original criterion was physically unsatisfiable. RAPL package energy is a strict subset of platform draw, and the excluded terms — display, SSD, WiFi, EC, fans, VRM losses, possibly DRAM — are large. At idle the signals differ by roughly 3–5×; only near maximum load does the gap approach 15%. The criterion was satisfiable at one operating point only, and reachable elsewhere only by mis-attributing platform baseline power into the SoC term. The replacement tests what the gate intended (instrument trustworthiness) and adds a slope<1 sanity check the original lacked. | **Pre** — no energy data collected |
-| 2026-07-29 | §16 | **AM-002 — RESOLVED.** Renumbered duplicated §16 subsections. The 2026-07-29 platform-correction amendment introduced a second §16.1–§16.3, colliding with the existing Tier sections. Now: 16.1 Platform A, 16.2 controlled-contrast axis, 16.3 consequences, 16.4 Tier 1, 16.5 Tier 2, 16.6 Tier 3, 16.7 ordering, 16.8 Gate −1, 16.9 topology/power-pinning note. | Document defect introduced by the amending author; cross-references were ambiguous. | Pre |
-| 2026-07-30 | §5.3 | **AM-014 — RESOLVED (PRE-DATA w.r.t. M2), authorized by Z. Johnson.** Threshold-based `raw/` retention. Payloads **ARE committed to git** while under a declared **100 MB** ceiling; above it, payloads move to an externally archived, separately checksummed bundle and `raw/MANIFEST.sha256` becomes the authoritative in-repo audit index. Ceiling declared in `configs/repo.yaml` and enforced by `seam/raw_retention.py`. §5.3 immutability remains enforced by `seam/rawstore.py` in both regimes. **Renumber:** an earlier draft of this amendment was numbered AM-011; that identifier is deliberately unused in `AMENDMENTS.md` (collision with a prior unused slot), so the amendment is issued as AM-014. The draft blanket "raw/ is NOT committed to git" ruling is **superseded before it ever took effect** — commit `503a845` correctly committed M1 sealed runs (~0.09 MB) for off-host verification. | At M1 scale committing raw is cheap and valuable; at M2 (1–10 Hz `samples.ndjson`) and M5 (hundreds of runs) it is not. Declaring the ceiling now makes the transition a pre-registered rule rather than an ad hoc reaction. | **Pre** w.r.t. M2 |
-| 2026-07-29 | Appendix B | **Audit finding AF-001** logged: `analysis/aipc-c1/MACHINE.md` line 12 mislabels the platform "(Lunar Lake)." Because MACHINE.md is the provenance source for run manifests (§5.2), the error would propagate into every manifest's platform identity. Caught before data collection. | Provenance integrity | Pre |
-
----
-
-## 15. Immediate next actions (week 1)
-
-1. Commit this document to the repo. Tag `blueprint-v1.0`. This is the pre-registration timestamp.
-2. **P0.1 first, before anything else** — attempt NPU bring-up. This single result determines the project's shape and is the highest-variance unknown.
-3. Order/borrow: wall-socket power meter, second client platform, FPGA board with OCuLink cable.
-4. Stand up the repo skeleton: `raw/`, `derived/`, `figures/`, `harness/`, `configs/`, `AUDIT_LOG.md`, `AMENDMENTS.md`.
-5. Freeze and commit the benchmark task lists (§7.1).
-6. Take §1, §4, §11, and §13.2 to Callie. The two decisions that need her input: the two-paper split, and whether the FPGA/OmniSim path belongs in Paper 1 or Paper 2.
-
----
-
-## 16. Phase −1 — Pre-platform work on the XPS 16 (starts immediately)
-
-### 16.1 Platform A: Dell XPS 16 DA16260, Core Ultra 5 325 (Panther Lake)
-
-**Confirmed configuration** (source: committed hardware probe artifacts, `analysis/aipc-c1/MACHINE.md`, `analysis/_c1_machine_probe.txt`, `analysis/_c1_drivers_probe.txt`, `apu_characterization/out/setup.json`, recorded 2026-07-28; OS build 26200. **Recorded, not live** — see AF-002):
-
-- **CPU:** Intel Core Ultra 5 325, Panther Lake. 4 Cougar Cove P-cores (2.1 / 4.5 GHz) + 4 Darkmont LP-E cores (1.6 / 3.4 GHz). **8C/8T, no SMT.** 12 MB L3. Compute tile Intel 18A; GPU tile Intel 3.
-- **iGPU:** Intel Xe3, **4 cores** (PCI `VEN_8086&DEV_B090`)
-- **NPU:** NPU 5, **50 TOPS INT8**
-- **Memory:** 16 GB LPDDR5X-7467, soldered, 8 × 2 GiB banks, **unified with iGPU and NPU**. Not upgradeable.
-- **Power:** 15 W min / 25 W base / **55 W max turbo**, in a 16″ laptop chassis, with a battery
-- **No discrete GPU.**
-
-Local execution targets: {LP-E cores, P-cores, Xe3 iGPU, NPU 5} — four, plus cloud. Five-way partition space, as planned.
-
-### 16.2 The controlled-contrast axis (replaces the retracted cross-generation axis)
-
-Both platforms are Panther Lake with NPU 5. That removes the two-generation NPU comparison, and **replaces it with a better-controlled experiment.**
-
-| Axis | Platform A (U5 325) | Platform B (X7 358H) | Ratio |
-|---|---|---|---|
-| **NPU** | NPU 5, 50 TOPS | NPU 5, ~50 TOPS | **≈1× — held constant** |
-| iGPU width | 4 Xe3 cores | 12 Xe3 cores (Arc B390) | **3×** |
-| CPU threads | 8 | 16 cores | **2×** |
-| Memory capacity | 16 GB | 64 GB | **4×** |
-| Memory bandwidth | ~120 GB/s (derived) | ~136 GB/s (derived) | 1.13× |
-| Sustained power / thermal | 55 W peak, laptop, battery-capable | mini PC, mains | — |
-
-**Why this is stronger than what it replaces.** A cross-generation comparison would have confounded NPU IP revision, driver stack, process node, iGPU architecture, and memory capacity simultaneously — no effect could be attributed. Here the NPU is *held constant in both capability and driver stack*, while everything around it varies by 2–4×. Any observed flip in the optimal partition must be attributable to capacity, bandwidth, iGPU width, or thermal envelope. **This is now the primary H2 experiment**, and it is a controlled contrast rather than a generational anecdote.
-
-**Second consequence: Phase −1 work is ~fully transferable.** Same generation means the same OpenVINO build, NPU driver, and level-zero stack. NPU bring-up on Platform A *is* NPU bring-up for Platform B. R1 (NPU stack risk) drops from Med-High to Low-Med once P-1.9 passes.
-
-**Third: the platforms map onto real market segments.** 16 GB unified is the *volume* AI PC configuration; 64 GB is the headroom configuration. So S10's silicon sizing rule answers the question OEMs are actually asking — **is 16 GB sufficient for agentic workloads, or is 32/64 GB required?** Frame S10 this way.
-
-**Platform A exclusives** (Platform B cannot produce these):
-- Battery vs. mains operation as a design axis — DVFS and power-cap behavior differ, and battery energy is the objective users actually feel
-- Two independent energy signals (RAPL *and* battery discharge), which cross-validate each other and let P0.4 proceed **without a wall meter**
-- The hard thermal case: 55 W turbo in a laptop chassis. A §5.4 protocol proven here transfers upward safely.
-- The *constrained* regime: 8 threads and 16 GB unified. Given that the GT–Intel CPU-centric result found CPU-side tool processing dominating agentic latency, an 8-thread part is where that bottleneck bites hardest — which makes Platform A the more informative platform for S3, not the weaker one.
-
-### 16.3 Consequences to propagate
-
-1. **8 threads, not 16.** Any manifest, budget, or model assuming thread-parallel CPU throughput must be revised. Concurrency defaults in the harness need re-tuning.
-2. **No dGPU target.** Remove it from P-1.12's target set.
-3. **16 GB unified is a hard constraint.** Weights, KV cache, iGPU/NPU working sets, OS, and framework share one pool. INT4-quantized ~8B is the realistic ceiling; FP16 8B is out. Long contexts will contend with weights — measure the contention, don't assume it away.
-4. **~120 GB/s is derived, not measured.** LPDDR5X-7467 on a 128-bit bus. Confirm by STREAM-class benchmark before it appears anywhere.
-5. **Never cite 50 TOPS as achieved throughput.** It is a peak INT8 figure. Measure achieved tokens/s.
-
-### 16.4 Tier 1 — fully executable now, zero dependence on the EVO-T2
-
-| ID | Task | Serves | Notes |
-|---|---|---|---|
-| P-1.1 | **H1 pilot: behavioral response via model-capability contrast** | H1, H4, S1, S2, S7 | **Highest priority.** H1 asks whether agent behavior changes when model capability changes. That is a property of *models*, not of silicon. Run it with cloud endpoints at differing capability plus local models on the XPS. **The project's load-bearing hypothesis can be resolved before the AI PC ships.** |
-| P-1.2 | Harness: run-manifest emitter, token ledger, cost accounting, integrity self-check | §5.2 | Platform-independent |
-| P-1.3 | A/A negative control, positive control, variance baseline | §5.5, G0 | Must precede every comparison |
-| P-1.4 | Analysis pipeline: `raw/` → `derived/` → `figures/`, one-command regeneration | §5.3, G5 | Build before there is data to be tempted by |
-| P-1.5 | Freeze benchmark task lists; build annotation tooling; run the step-type taxonomy $\kappa$ study | §7.1, §7.2, G1 | Needs a second annotator — recruit now |
-| P-1.6 | Phase 1 workload characterization, cloud-side | §7.3, S3 | Step counts, token distributions, tool durations, DAG structure, prefix reuse, privacy classification. Only the *local* energy split waits. |
-| P-1.7 | Audit the six unread papers (HERA, HybridFlow, PAAC, PRISM, IslandRun, HeRo); write the differentiation table | Appendix A, related work | Cheap, removes a known blind spot |
-| P-1.8 | Network characterization from the actual deployment network | §9.3 | Diurnal RTT/bandwidth/jitter per endpoint |
-
-### 16.5 Tier 2 — Platform A measurements with lasting value
-
-| ID | Task | Serves | Notes |
-|---|---|---|---|
-| P-1.9 | **NPU 5 bring-up via OpenVINO** | G0 / R1 | Same NPU generation as Platform B, so this result transfers directly. Outcome is a hard input to whether NPU stays a target. |
-| P-1.10 | Energy harness: RAPL domains + battery discharge, cross-validated | P0.3, P0.4, G0 | The two-signal validation described in §16.2 — no wall meter needed |
-| P-1.11 | Thermal harness and protocol constants: warm-up duration, throttle threshold, cooldown ceiling. Characterize 55 W turbo sustainability in the laptop chassis. | §5.4, G0 | Developed on the hard case |
-| P-1.12 | Crossover surfaces: prefill/decode throughput and J/token per (model, quantization, target ∈ {LP-E, P, Xe3 iGPU, NPU 5}) | S4, H7, Phase 3a | Platform A half of the controlled contrast. **No dGPU.** |
-| P-1.13 | Power-cap sweep (15/25/55 W), battery-vs-mains, and memory-pressure sweep under 16 GB unified | H2 first signal, Platform A exclusive | Usable hardware axes without new silicon |
-| P-1.15 | Memory contention study: weights + KV cache + iGPU/NPU working set within 16 GB unified, as context length grows | §16.3(3) | The binding constraint on Platform A; likely a headline limitation figure |
-| P-1.14 | Measurement-overhead characterization | §5.1 | Especially on LP-E cores |
-
-### 16.6 Tier 3 — genuinely blocked until the EVO-T2 arrives
-
-- Panther Lake / NPU 5 throughput, energy, and bandwidth figures
-- The cross-generation H2 experiment (needs both halves)
-- OCuLink FPGA attach, the HLS datapath, and OmniSim cross-validation (S12, Phase 3b)
-- Any claim about 18A silicon
-
-### 16.7 Phase −1 ordering
-
-1. **P-1.9 (NPU bring-up) and P-1.2/P-1.3 (harness + A/A) in parallel, first.** One resolves the largest technical unknown; the other is a prerequisite for all measurement.
-2. **P-1.1 (H1 pilot) immediately after A/A passes.** Nothing else in the program matters if H1 fails, and it is cheap to test.
-3. P-1.5, P-1.6, P-1.7 run continuously alongside.
-4. Tier 2 measurements as the harness stabilizes.
-
-### 16.8 Gate −1 (before Phase 0 / EVO-T2 arrival)
-
-| Criterion | Response if failed |
-|---|---|
-| A/A passes; per-metric CV known | Stop; fix harness. No comparison is valid without this. |
-| **Energy cross-validation passes the three-part criterion** (AM-004): per-execution-target regression of baseline-corrected battery energy on RAPL energy across ≥8 load levels gives (a) $R^2 \ge 0.95$, (b) slope $\in [1.0, 1.5]$, (c) intercept consistent with an independently measured idle platform baseline. Minimum resolvable energy difference reported per target. | **Slope < 1.0 on any target: hard failure** — a subset cannot grow faster than the whole, so a signal is broken. Stop and fix. $R^2 < 0.95$: report energy with an explicit error band and downgrade all energy-based conclusions to qualitative. **Target-dependent slope divergence:** treat as a RAPL domain-coverage gap, document which domains are uncounted, and do not report energy for the affected target without stating the omission. |
-| H1 pilot yields a directional answer with CIs separated from the noise floor | If inconclusive, increase $n$ before expanding scope — do not proceed to build on an unresolved premise |
-| NPU verdict recorded (works / doesn't / with what caveats) | Feeds G0 and R1 directly |
-| Benchmark lists frozen and committed; taxonomy $\kappa \ge 0.75$ | Revise taxonomy before it becomes load-bearing |
-| **Topology mapping committed from a pinned (AC) session** | See §16.9 |
-
-### 16.9 Note on the topology verification and power pinning
-
-The Phase −1 harness correctly refused to commit a P/LP-E mapping measured in an unpinned (battery) session. Two observations for whoever closes this out:
-
-1. **The mapping and the evidence have different power sensitivity.** Which logical CPUs are P versus LP-E is a static hardware property. The *separation ratio* used to verify it is not — it depends on power plan, thermal headroom, and DVFS state. So a battery-session result is weaker evidence, not a different answer.
-2. **Therefore the AC re-run has a predictable direction.** On AC with greater thermal and power headroom, P-cores have more turbo room than LP-E cores, so the separation ratio should come out **larger** than the 1.309× observed on battery. If the AC run yields a *smaller* ratio, something is wrong — with the pinning, the thermal state, or the kernel — and it must be investigated before the mapping is committed. Record this as a directional prediction before running, so the confirmation is meaningful rather than post-hoc.
-
-**Configuration facts: resolved.** See §16.1. Remaining action: correct AF-001 and re-verify AF-002 when the shell backend is restored.
-
----
-
-## Appendix B — Audit findings log
-
-Per §5, integrity findings are logged, not silently fixed. Each entry records what was found, its blast radius, and the corrective action.
-
-### AF-001 — Platform mislabel in the provenance document
-
-**Found:** 2026-07-29, before data collection. `analysis/aipc-c1/MACHINE.md` line 12 labels the platform "(Lunar Lake)." The platform is Panther Lake (Core Ultra 5 325).
-
-**Blast radius:** MACHINE.md is the provenance source for the `platform` block of every run manifest (§5.2). Uncorrected, every manifest inherits a wrong platform identity, and any figure caption or paper claim derived from manifests would misattribute the silicon generation. This is precisely the failure class §5 exists to catch.
-
-**Evidence for Panther Lake:** (a) SKU numbering — `Core Ultra 5 325` is a 3xx part, i.e. Core Ultra Series 3 = Panther Lake; Lunar Lake parts are 2xxV. (b) Graphics device ID `VEN_8086&DEV_B090` is in the Xe3 range; Lunar Lake's is `64A0` (Xe2). (c) Core names Cougar Cove / Darkmont are Panther Lake; Lunar Lake is Lion Cove / Skymont.
-
-**Provenance-hygiene note:** the 4 P + 4 LP-E, 8C/8T topology **does not discriminate** between the two — Lunar Lake has the identical 4+4/8T signature (4 Lion Cove + 4 Skymont). The SKU number and the graphics DID carry the argument; the topology does not. Also confirm whether "Cougar Cove / Darkmont" is a field reported by the probe or an inference added during identification — if the latter, it cannot serve as independent evidence. Keep the discriminating evidence explicit in MACHINE.md so the identification is auditable rather than asserted.
-
-**Action:** correct line 12; add the three discriminators as inline evidence; record the correction commit SHA here.
-
-### AF-002 — Probe artifacts are recorded, not live
-
-**Found:** 2026-07-29. Shell backend unavailable this session, so §16.1 rests on artifacts recorded 2026-07-28 rather than a live probe. Internal agreement across four artifacts and consistency with the reported OS build (26200) make them credible.
-
-**Blast radius:** low but non-zero. Driver and firmware versions in particular can change between recording and measurement, and §5.2 requires those in every manifest.
-
-**Action:** on shell restoration, re-run the probe, diff against the committed artifacts, and record the probe-artifact SHA-256 values in the manifest emitter so every run pins the exact provenance snapshot it relied on.
+Prior v1.0 amendments AM-001 … AM-024 remain in force and are recorded in `AMENDMENTS.md`.
 
 ---
 
 ## Appendix A — Unverified assumptions
 
-Every item here must be confirmed by measurement before it appears in a paper. Flagged so they cannot silently become "facts."
+Confirmed by measurement before appearing in any paper.
 
 | Assumption | Status | Resolved by |
 |---|---|---|
-| Platform B ≈136 GB/s peak memory bandwidth (derived from LPDDR5X-8533, 128-bit) | **Unverified** | P0 STREAM benchmark |
-| Platform A ≈120 GB/s peak memory bandwidth (derived from LPDDR5X-7467, 128-bit) | **Unverified** | P-1 STREAM benchmark |
-| Platform B NPU 5 is the same ~50 TOPS bin as Platform A (the X7 358H's 180 TOPS is a CPU+GPU+NPU aggregate) | **Unverified — load-bearing for H7's "NPU held constant" claim** | Vendor spec confirmation + P0.1 measurement |
-| NPU 5 standalone achieved throughput (50 TOPS is peak INT8, not achieved) | **Unverified** | P-1.9 / P0.1 |
-| NPU per-domain power telemetry exists | **Unverified** | P0.3 |
-| OpenVINO supports target models/quantizations on NPU 5 | **Unverified** | P0.1 |
-| OCuLink FPGA attach is practical | **Unverified** | P0.11 |
-| OmniSim applies to the intended datapath style | **Unverified** | Consult Rishov/Callie |
-| Routing overhead is ~5% of response time at request granularity | From practitioner analysis, **not peer-reviewed** | S6 |
-| HERA / HybridFlow / PAAC / PRISM / IslandRun / HeRo evaluation quality | **Abstracts only — not audited** | Read before related-work is written |
+| Platform A ≈120 GB/s peak bandwidth (derived, LPDDR5X-7467 × 128-bit) | **Unverified** | I5 |
+| Platform B ≈136 GB/s (derived, LPDDR5X-8533 × 128-bit) | **Unverified** | I5 on B |
+| Platform B NPU is the same ~50 TOPS bin as A | **Unverified — load-bearing for H7's "NPU held constant"** | Vendor confirmation + measurement |
+| NPU 5 achieved throughput (50 TOPS is peak INT8) | **Unverified** | Local backend bring-up |
+| OpenVINO `PCORE_ONLY` fall-through: defect or configuration | **Under investigation** | A2 with `ENABLE_CPU_PINNING=YES` |
+| NPU engine PDH counters exist on build 26200 | **Unverified** | I3 |
+| RAPL covers NPU power domains | **Unverified — determines whether NPU energy is reportable at all** | I6 per-target slopes |
+| OCuLink FPGA attach is practical | **Unverified** | H block |
+| `api.anthropic.com` handshake reliability on this network | **Unverified** | Probe with contemporaneous controls |
+| Routing overhead ≈5% of response time at request granularity | Practitioner analysis, **not peer-reviewed** | S6 |
+| HERA / HybridFlow / PAAC / PRISM / IslandRun / HeRo evaluation quality | **Abstracts only — not audited** | Before related work is written |
+
+---
+
+## Appendix A.2 — Literature audits behind absence claims
+
+**Standing rule (AM-025).** No absence claim — "nobody has done X," "this has not been
+measured," "this is unexplored" — enters a pitch, a brief, an abstract, or a paper without a
+documented search recorded here. Three prior instances of an absence claim surviving into a
+draft and then collapsing under a search that should have been run first.
+
+Each entry records the date, what was searched, what was found, and the verdict on the claim
+that motivated the search.
+
+### AUDIT-001 — Workload composition as a hardware axis (2026-08-03)
+
+**Motivating claim (proposed H14/H15, PRE-DATA):** that agent step type determines the optimal
+execution target, and that tool mix determines the device state trajectories θ(t) and c(t).
+
+**Searched:** Agent.xpu granularity; tool-gap characterization scope; agent step-type taxonomies
+with hardware measurements; duty cycle as emergent vs imposed; workload-composition-driven
+hardware sizing; capacity-forced re-prefill on constrained devices.
+
+| Finding | Source | Effect |
+|---|---|---|
+| Prefill/decode **operator-accelerator affinity** on client SoC; elastic operator binding; stage-divergent batching. Granularity is operator, stage, and **flow criticality** (reactive vs proactive) — *not* step semantics. | Agent.xpu, [2506.24045](https://arxiv.org/abs/2506.24045) | Physics of phase→target is published. Step-semantic parameterization is not, but the gap is narrow. |
+| Memory-system + NPU co-design DSE that **balances throughput and power between prefilling and decoding devices** for agentic workloads. SRAM/HBM/LPDDR/GDDR/HBF. Microsoft Research. | MemExplorer, [2604.16007](https://arxiv.org/abs/2604.16007) | **Most dangerous paper for the sizing framing.** Datacenter/multi-device NPU, two objectives, no cloud boundary, no accuracy. |
+| First systems characterization of agent memory; taxonomy on four axes; **phase-aware profiling attributing cost to construction, retrieval, generation**; ten systems, two suites. | Agent Memory, [2606.06448](https://arxiv.org/abs/2606.06448) | Step-type cost attribution is published. Precedent *for* stratification, not against it. |
+| Tool-type characterization: which tool types dominate, which contribute most latency, failure rates, **how tool intent shifts** (early read/explore → later execute/write). Also: with prefix caching, agent execution is **decode-dominated**, not long-prompt. | Agentic AI Workload Characteristics, [2605.26297](https://arxiv.org/html/2605.26297v1) | Tool-type characterization and trajectory phase shift are published. The decode-dominance finding **contradicts** the assumed prefill-heavy step types. |
+| Idle durations **highly heterogeneous within a trajectory** (>10× range, long tail dominates total idle). Tool latency volatility "largely stems from factors external to the agent runtime — network jitter, backend load, queuing, rate limiting." | MORI, [2606.00866](https://arxiv.org/html/2606.00866) | **Actively undermines H15.** If gap length is externally dominated, tool mix does not cleanly determine duty cycle. |
+| Sustained-load thermal characterization on mobile/NPU/GPU; one-second inter-iteration gap does not permit thermal recovery; duty-cycling or external cooling required for interactive use. | [2603.23640](https://arxiv.org/html/2603.23640v2) | Adjacent to H8. Duty cycle treated as an **imposed** operating condition. |
+| Edge KV budget forces eviction → **full re-prefill** (M4 Pro, 10.2 GB budget, 3 agents at 8K FP16, 15.7 s re-prefill at 4K). Solved with persistent Q4 KV cache. | [2603.04428](https://arxiv.org/html/2603.04428v1) | The capacity → eviction → re-prefill loop on client silicon is **published with numbers**. |
+| KV cache TTL across tool gaps in multi-turn agent scheduling. | Continuum, [2511.02230](https://arxiv.org/pdf/2511.02230) | Already cited under H11. |
+
+**Verdicts.**
+
+- **H14 as proposed (step type selects target): DO NOT PRE-REGISTER.** Phase→target affinity is
+  published (Agent.xpu); prefill/decode balance as a sizing variable is published (MemExplorer);
+  the workload-side composition shift is published (2605.26297).
+- **H15 as proposed (tool mix drives θ(t), c(t)): DO NOT PRE-REGISTER.** MORI's own
+  characterization contradicts the mechanism — gap length is dominated by factors external to the
+  agent. A weaker form survives (local tools have no network variance, so a local-tool-heavy
+  agent has a predictable duty cycle) but it is not worth a hypothesis slot on current evidence.
+- **Capacity → arithmetic-intensity coupling: DO NOT PRE-REGISTER.** Occupied by 2603.04428.
+- **Stratification correction: PROCEED.** Not a novelty question. Pooling behavioral metrics
+  across step types makes H1/H2/H5 measure the benchmark's step mixture rather than the
+  phenomenon. Agent Memory's phase-aware attribution is precedent for doing it.
+
+**Strategic finding.** The on-device agentic *characterization* layer is being built out rapidly
+by well-resourced groups. SEAM should stop attempting to own it and cite it. Every source above
+optimizes or characterizes a **local system in isolation**; not one admits a cloud boundary. Once
+a step may escalate, the sizing question changes in kind — "is this NPU large enough" becomes
+"large enough for what fraction, given that the remainder escalates, at what accuracy and dollar
+cost." That question is untouched by all eight findings and is where SEAM's claim now lives.
+
+**Positioning consequence.** §3 and the positioning document are missing an entire cluster
+(on-device agentic characterization and memory co-design). Six of the sources above appear in
+neither. This must be closed before related work is written; a reviewer who knows this literature
+would otherwise read SEAM as unaware of it.

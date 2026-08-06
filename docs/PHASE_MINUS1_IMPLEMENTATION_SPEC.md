@@ -192,6 +192,58 @@ If $R^2 < 0.95$, energy is reported **with an explicit error band**, and any ene
 
 `telemetry/sampler.py`: one background thread, configurable rate (default 1 Hz, 10 Hz when any temperature exceeds 70% of TjMax per §5.4), writing a newline-delimited JSON time series to `raw/<run_id>/samples.ndjson`. All signals share one clock. The sampler records its own overhead so §5.1's measurement-overhead term is quantified rather than assumed.
 
+### 3.7 Pinned profiles by measurement class
+
+AF-005 established a pinned regime built around AC power. S1 battery telemetry is only
+valid on battery. These cannot be the same profile, so pinning becomes profile-scoped
+and the harness selects by measurement class.
+
+**Why a state-of-charge window is not sufficient.** M1 established empirically that the
+covariate is charging **load**, not charge **level**: citing run E at 99% SoC produced a
+lower separation ratio than runs C (87-88%) and D (90%). A pack at 99% still drawing
+top-off current is a different electrical state from one at rest. A battery profile
+must therefore assert *not charging and settled*, not merely *unplugged* or *above X%*.
+
+**Profiles.**
+
+`ac-pinned` — existing AF-005 regime. Topology verification, thermal characterization
+(M2.3), anything requiring sustained turbo.
+  on_battery: false; power_plan declared; display brightness, WiFi, Defender declared.
+
+`battery-pinned` — S1 telemetry and energy calibration.
+  on_battery: true
+  charging: false
+  ac_disconnected_for_s: >= settle_s          # settle_s determined by M2.1
+  discharge_rate_stable: true                  # rolling mean within band for window
+  soc_window_pct: [lo, hi]                     # declared; bounds set by M2.1 finding
+  display_brightness_pct, power_plan, wifi_state, defender_realtime: fixed and recorded
+  background_quiesced: true
+
+**Enforcement.** The harness asserts the profile appropriate to the measurement class and
+refuses a mismatch, using the `assert_pinned_for_committed_result()` pattern: emit a
+manifest recording the refusal and its reason, then stop. Refusal is a data point.
+
+Class -> profile mapping (extend as milestones land):
+  topology_verify              -> ac-pinned
+  battery_counter_char (M2.1)  -> battery-pinned
+  thermal_char (M2.3)          -> ac-pinned
+  energy_calibration (M2.5)    -> battery-pinned AND elevated (§3.0)
+
+**Compound constraint on M2.5.** §3.2 regresses S1 against S2 across >=8 load levels, so
+both signals must come from the *same* runs. Those runs must therefore satisfy
+battery-pinned AND elevated simultaneously. Neither constraint can be relaxed: unelevated
+means no RAPL, and on-AC means no valid S1.
+
+**Known cross-dependency, unresolved at M2.1.** Thermal constants (M2.3) are determined
+under ac-pinned, but energy runs execute under battery-pinned. Whether the warm-up
+duration, throttle threshold, and cooldown ceiling transfer across profiles is an open
+question. Do not assume they do. M2.3 must either characterize both profiles or state
+the limitation explicitly.
+
+Profile definitions and numeric bounds (`settle_s`, SoC window, discharge-rate band,
+brightness, plan GUID) live in `configs/platforms/aipc-c1.yaml` — **no magic numbers in
+code**. Bounds that M2.1 has not yet measured remain `null` until that finding lands.
+
 ---
 
 ## 4. Core topology and affinity (`seam/topology.py`)
@@ -327,7 +379,28 @@ One record per agent step. This is the substrate for H1.
 
 ## 7. Milestones
 
-Work strictly in order. Each has hard acceptance criteria; do not advance on a partial pass.
+**Ordering (AM-019).** After M0→M1, work follows a **dependency graph**, not a linear
+instrument-first chain. Tracks I (instrument), A (agent), and L (local execution) proceed in
+**parallel**. The controlling Phase −1 gate is **H1 resolution** (blueprint G2 / §16.7), not
+completion of every instrument layer. A milestone may remain incomplete when finishing it does
+not reduce a live risk. Blueprint §16.7 ("nothing else in the program matters if H1 fails")
+governs when sequence and prose conflict.
+
+```
+M0 (provenance) → M1 (manifest + topology) ─┬→ TRACK I  : instrument
+                                            ├→ TRACK A  : agent
+                                            └→ TRACK L  : local execution
+
+TRACK I: M2 (CERTIFY RAPL) ───────────────→ M5 microbenchmarks
+TRACK A: M3 harness + A/A + noise ────────→ M6 H1 pilot
+TRACK L: M4 local backends
+
+M-SLICE (first-class): gated on M1 + minimal M3 + minimal M4.
+         First end-to-end data point about the research question.
+```
+
+Energy calibration beyond RAPL certification is **Paper 2** material (blueprint §13.2). Paper 1
+S1/S2 do not require joules; S4 may ship tokens/sec first, with J/token added after RAPL Stage A.
 
 ### M0 — Provenance repair (blueprint AF-001, AF-002)
 
@@ -348,20 +421,56 @@ Work strictly in order. Each has hard acceptance criteria; do not advance on a p
 - `topology.py` verifies the P/LP-E split empirically (§4) and the verified mapping is committed.
 - `pytest` green; `raw/` write-once enforced by a guard that fails on modification attempts.
 
-### M2 — Telemetry
+### TRACK I — Instrument
 
-- **M2.1** Characterize S1: actual battery-counter update period and quantization step. Document both.
-- **M2.2** LHM bridge with RAPL rollover handling; unit test that synthesizes a rollover and asserts correct accumulation.
-- **M2.3** Thermal: determine and freeze warm-up duration, throttle threshold, cooldown ceiling. Include a sustained-load run characterizing whether 55 W turbo is sustainable and for how long.
-- **M2.4** STREAM-class memory bandwidth benchmark. Report measured vs the ~120 GB/s derived figure. **Until this lands, no document may state a bandwidth number.**
-- **M2.5** Energy cross-validation per §3.2, emitting `derived/energy_calibration.json`.
-- **M2.6** Sampler overhead characterization, including on LP-E cores.
+### M2 — CERTIFY RAPL (re-scoped AM-019; was "characterize energy")
 
-**Accept:** per-target regressions satisfy the §3.2 three-part criterion — $R^2 \ge 0.95$, slope $\in [1.0, 1.5]$ with **none below 1.0**, intercepts consistent with independently measured idle baseline; `derived/energy_calibration.json` records slope, intercept, $R^2$, residuals, load levels, and minimum resolvable energy difference **for every execution target**; any target-dependent slope divergence documented as a RAPL domain-coverage finding; thermal constants committed to platform config; measured bandwidth recorded; sampler overhead quantified.
+Platform B is mains-only (no battery). RAPL is the only energy signal common to both platforms
+and is therefore the **reporting currency**. M2 answers a binary question: is RAPL trustworthy,
+and does it cover the NPU? Precision beyond that certification gates nothing on Track A/L.
+
+- **M2.1** Characterize S1 battery counter (Platform A). **CLOSED** — run
+  `911965cf-257c-4276-954b-17611a5e75eb`; profile bounds and AM-018 estimator locked. Remains
+  citable for battery-side work; not the cross-platform reporting currency.
+- **M2.2** LHM bridge with RAPL rollover handling; unit test that synthesizes a rollover and
+  asserts correct accumulation. Requires elevation (§3.0).
+- **Stage A (certification gate).** Per execution target: **5** load levels, one cycle, anchored
+  idle, **randomized order**. Emit pass/fail on RAPL trust and NPU domain coverage. Unblocks
+  J/token on S4.
+- **Stage B (confirmatory, conditional on Stage A).** Full ≥8-level cross-validation per §3.2 /
+  AM-004, emitting `derived/energy_calibration.json`. **Paper 2 / cost-model material** — does
+  not gate H1 or tokens/sec crossovers. (Former "M2.5" acceptance bar lives here.)
+- **M2.3** Thermal constants under **`ac-pinned`** (§3.7); 55 W turbo sustainability. Does not
+  block Track A. Address battery-pinned transfer or state the limitation.
+- **M2.4** STREAM-class bandwidth. **Until this lands, no document may state a bandwidth number.**
+  Does not block Track A.
+- **M2.6** Sampler overhead, including on LP-E cores.
+
+**Accept (Stage A):** RAPL certified trustworthy per target with NPU coverage verdict recorded
+(or explicit domain-coverage gap). **Accept (Stage B, later):** §3.2 three-part criterion on ≥8
+levels. Incomplete instrument work must not serialize Track A when it does not reduce H1 risk.
+
+### M5 — Microbenchmark sweeps (S4, H7 groundwork)
+
+Depends on Track I for calibrated J/token; **tokens/sec crossovers may proceed once local
+backends (Track L) exist**, with J/token added after RAPL Stage A.
+
+Sweep dimensions: target × model × quantization × prompt length × generated tokens × batch
+(where applicable) × power cap (15/25/55 W) × AC/battery.
+
+Metrics per cell: prefill tokens/s, decode tokens/s, TTFT, J/token (when RAPL Stage A passed),
+peak memory, throttle residency, preflight verdict.
+
+Order randomized within thermal blocks; cooldown enforced between runs; canary cell in every block.
+
+**Accept:** crossover surfaces with bootstrap CIs; every cell traceable to a manifest; figures
+regenerate from `raw/` in one command. Tokens/sec surfaces are a standalone result.
+
+### TRACK A — Agent
 
 ### M3 — A/A test, variance baseline, cloud backend, agent harness
 
-The gating milestone.
+Does **not** wait on M2. Track A gating milestone for comparisons.
 
 - **M3.1** `agent/harness.py`: a fixed agent scaffold where **only the model endpoint swaps.** Identical prompts, tools, stopping criteria, and retry logic across conditions. Emits step records per §6.2. Any per-model prompt tailoring invalidates H1 — forbid it.
 - **M3.2** Cloud backend with **pinned dated model snapshots**, versioned pricing tables, and a token/cost ledger. Retries are logged as events, never silently swallowed.
@@ -371,25 +480,10 @@ The gating milestone.
 
 **Accept (Gate −1, partial):** A/A reports no significant difference; positive control registers; `noise_floor.json` committed. **If A/A fails, stop and fix the harness. No comparison is valid until it passes.**
 
-### M4 — Local backends
-
-Implement `openvino_cpu` (both affinity variants), `openvino_igpu`, `openvino_npu` behind the §5.1 protocol, with all §5.2 guards.
-
-**Accept:** for each of the four targets and every model in the ladder, `preflight()` returns a definite verdict without crashing; at least one model generates correct output on **each** target, or produces a documented `UNSUPPORTED` reason. **The NPU verdict is recorded regardless of outcome — this is the P-1.9 deliverable and a hard input to blueprint G0/R1.**
-
-### M5 — Microbenchmark sweeps (S4, H7 groundwork)
-
-Sweep dimensions: target × model × quantization × prompt length × generated tokens × batch (where applicable) × power cap (15/25/55 W) × AC/battery.
-
-Metrics per cell: prefill tokens/s, decode tokens/s, TTFT, J/token (calibrated), peak memory, throttle residency, preflight verdict.
-
-Order randomized within thermal blocks; cooldown enforced between runs; canary cell in every block.
-
-**Accept:** crossover surfaces plotted for NPU vs iGPU vs CPU-P vs CPU-LPE with bootstrap CIs; every cell traceable to a manifest; all figures regenerate from `raw/` in one command. This is the Platform A half of the controlled contrast — Platform B replicates it later.
-
 ### M6 — H1 pilot (the decisive experiment)
 
-Runs on cloud endpoints alone, so it does **not** block on M4/M5.
+Depends on M3 (A/A + noise floor). Does **not** wait on M2 or M5. Cloud endpoints alone suffice
+for the first directional answer; local targets enrich later.
 
 - Two benchmark families to start: a tool-calling suite (cheap, machine-checkable) and a small verified software-engineering subset (expensive, high value). Task lists **frozen and committed before collection.**
 - Conditions: reference (all steps to the strongest model) versus per-step-type reassignment to a weaker model, one step type at a time (OFAT).
@@ -398,7 +492,33 @@ Runs on cloud endpoints alone, so it does **not** block on M4/M5.
 - **The decisive figure:** the trace-replay counterfactual. Take the reference trace, apply a partition policy, compute what a replay-based simulator would predict, and compare against what actually happened. This converts a methodological criticism into a measured quantity.
 - Every effect is reported against `derived/noise_floor.json`. Effects smaller than 2× CV are reported as null.
 
-**Accept:** H1 has a directional answer with bootstrap CIs separated from the noise floor, or an explicit statement that $n$ must increase. Result written to `AUDIT_LOG.md` and mapped to blueprint Gate G2.
+**Accept:** H1 has a directional answer with bootstrap CIs separated from the noise floor, or an explicit statement that $n$ must increase. Result written to `AUDIT_LOG.md` and mapped to blueprint Gate G2. **This is the controlling Phase −1 gate (AM-019).**
+
+### TRACK L — Local execution
+
+### M4 — Local backends
+
+Does **not** wait on M2. Implement `openvino_cpu` (both affinity variants), `openvino_igpu`,
+`openvino_npu` behind the §5.1 protocol, with all §5.2 guards.
+
+**Accept:** for each of the four targets and every model in the ladder, `preflight()` returns a definite verdict without crashing; at least one model generates correct output on **each** target, or produces a documented `UNSUPPORTED` reason. **The NPU verdict is recorded regardless of outcome — this is the P-1.9 deliverable and a hard input to blueprint G0/R1.**
+
+### M-SLICE — First end-to-end slice (AM-019)
+
+**First-class milestone.** Gated on **M1 + minimal M3 + minimal M4** — not on full Track I.
+Produces the first end-to-end data point about the research question (step counts, tokens, wall
+clock) before instrument completeness.
+
+**Minimal M3:** harness with endpoint swap only (M3.1), at least one cloud backend (M3.2), and
+enough A/A / noise evidence that a single-cell comparison is not obviously invalid (full M3.3–M3.5
+preferred; document any deferral).
+
+**Minimal M4:** at least one local target that `preflight()` accepts for one ladder model, **or**
+an explicit cloud-only slice with the local gap logged.
+
+**Accept:** one sealed end-to-end run (or small cell) with schema-valid manifests, step records,
+token ledger, and a written interpretation against the noise floor or an explicit "noise floor
+pending" caveat. Logged in `AUDIT_LOG.md` as M-SLICE.
 
 ---
 
@@ -425,7 +545,9 @@ Runs on cloud endpoints alone, so it does **not** block on M4/M5.
 7. No per-model prompt tailoring in the agent harness. Only the endpoint may vary.
 8. Do not tune worker-pool sizes with heuristics assuming more than 8 logical CPUs.
 9. Do not "fix" a failing preflight by changing the model until the failure is recorded as a data point.
-10. Do not skip a milestone's acceptance criteria to reach M6 faster. M6 is worthless without M3.
+10. Do not skip **M3** (A/A + noise floor) to reach M6/H1 — comparisons without A/A are invalid.
+    Incomplete Track I work must not be used as a reason to delay Track A when it does not reduce
+    H1 risk (AM-019). Do not claim joule-based results before RAPL Stage A certification.
 
 ---
 
@@ -433,6 +555,16 @@ Runs on cloud endpoints alone, so it does **not** block on M4/M5.
 
 1. Do NPU engine PDH counters exist on build 26200? If not, what is the fallback and its error?
 2. What is the real battery-counter update period and quantization step?
+   **CLOSED (M2.1, run `911965cf-257c-4276-954b-17611a5e75eb`).** Under battery-pinned
+   constant `cpu_spin_all_logical` load for 1799.85 s (17910 samples @ 10 Hz): update-period
+   median **19.7902616 s** (IQR [7.3849894, 23.4181828]; bootstrap CI95 for the median
+   [15.9701433, 20.4923018]). Capacity deltas are **not** a single quantum (median step
+   92 mWh, IQR [34, 126], CI95 for median [81.0, 104.25]; smallest observed non-zero step
+   11 mWh; no value ≥70% of changes). Prefer **ΔRemainingCapacity** over DischargeRate
+   (integrated rate / Σ|Δcap| = 1.080). Minimum viable energy-run duration for ≥20 capacity
+   changes at the median period: **395.805232 s** (CI95 [319.402866, 409.846036]).
+   Profile bounds landed: `settle_s=360`, `soc_window_pct=[40,85]`,
+   `discharge_rate_stable_band_frac=0.05`.
 3. Is 55 W turbo sustainable in this chassis, and for how long before throttle?
 4. Does the Windows `EfficiencyClass` ordering match the empirically measured P/LP-E split?
 5. Which models in the ladder actually compile and run on NPU 5 via OpenVINO GenAI, and at what `MAX_PROMPT_LEN` ceiling?

@@ -1,0 +1,78 @@
+# SEAM pre-commit hooks.
+#
+# These enforce mechanically what has so far been enforced by discipline and
+# agent instruction. Governance that depends on remembering is governance that
+# fails at 2am.
+#
+# Install once:   pip install pre-commit && pre-commit install
+# Run manually:   pre-commit run --all-files
+#
+# Scope note: `files:` patterns keep these hooks off the three pre-existing
+# projects in this repo that never opted into SEAM's toolchain, matching the
+# explicit include list in pyproject.toml.
+
+default_language_version:
+  python: python3.11
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^(seam|tests|tools)/.*\.py$
+      - id: ruff-format
+        files: ^(seam|tests|tools)/.*\.py$
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      # Belt and braces with .gitattributes -text (AF-007). A CRLF save
+      # invalidates a pinned governing-document hash.
+      - id: mixed-line-ending
+        args: [--fix=lf]
+        files: ^(seam|tests|tools|configs|docs)/|^(AUDIT_LOG|AMENDMENTS)\.md$
+      - id: end-of-file-fixer
+        files: ^(seam|tests|tools|configs)/
+      - id: check-yaml
+        files: ^configs/
+      - id: check-json
+        files: ^seam/schemas/
+      - id: check-merge-conflict
+      # AUDIT_LOG.md is append-only and may be written by parallel agents;
+      # a botched merge there is the most expensive kind in this repo.
+      - id: check-added-large-files
+        args: [--maxkb=10240]
+
+  - repo: local
+    hooks:
+      - id: no-key-material
+        name: block API key material
+        entry: py -3 tools/hooks/check_no_secrets.py
+        language: system
+        pass_filenames: true
+        stages: [pre-commit]
+
+      - id: verify-doc-pins
+        name: verify governing document SHA-256 pins (AM-009)
+        entry: py -3 tools/hooks/verify_pins.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+
+      - id: check-amendment-ledgers
+        name: fail on divergent AMENDMENTS.md / Blueprint §14 dual definitions
+        entry: py -3 tools/hooks/check_amendment_ledgers.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+
+      - id: raw-ceiling
+        name: enforce AM-014 raw/ payload ceiling
+        entry: py -3 tools/hooks/check_raw_ceiling.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]

@@ -28,6 +28,25 @@ decision) · `DEFERRED` (belongs to a later milestone).
 | AM-013 | 2026-07-30 | M1 topology gate | Agreement is assessed among **settled-charge** runs only | RESOLVED (2026-07-30, POST-DATA, Z. Johnson) |
 | AM-014 | 2026-07-30 | raw/ retention | Threshold-based raw/ commit policy (100 MB ceiling) | RESOLVED (PRE-DATA w.r.t. M2) |
 | AM-015 | 2026-07-30 | process | From M2 onward, acceptance criteria are pre-registered before data collection | RESOLVED (PRE-DATA) |
+| AM-016 | 2026-07-30 | §3.7 | Pinned profiles by measurement class (`ac-pinned` / `battery-pinned`) | RESOLVED (PRE-DATA w.r.t. M2) |
+| AM-017 | 2026-07-30 | §7 M2.1 / §10 OQ2 | S1 battery-counter characterization; profile bounds + OQ2 closed | RESOLVED (POST-DATA) |
+| AM-018 | 2026-07-30 | §3.2 S1 estimator | Commit `ΔRemainingCapacity` as sole S1 energy estimator for M2.5 | RESOLVED (**PRE-DATA w.r.t. M2.5**) |
+| AM-019 | 2026-08-02 | §7 milestones | Dependency graph replaces linear M0→M6 chain; M2=CERTIFY RAPL; M-SLICE | RESOLVED (**PRE-DATA w.r.t. H1–H4**) |
+| AM-020 | 2026-08-02 | §7 M3.2 | Model pinning is provider convention, not dated alias | RESOLVED (**PRE-DATA**) |
+| AM-021 | 2026-08-02 | H1 metrics | Cross-model token deltas invalid (tokenizer hazard) | RESOLVED (**PRE-DATA**) |
+| AM-022 | 2026-08-02 | M-SLICE | Predictive deadline policy pre-registration | RESOLVED (**PRE-DATA**; n_out_pred wording amended by AM-024) |
+| AM-023 | 2026-08-02 | §5.3 | Pre-converted IR allowed; manifest must discriminate provenance | RESOLVED (**PRE-DATA**) |
+| AM-024 | 2026-08-02 | M-SLICE | Reasoning mode is an explicit two-arm axis | RESOLVED (**PRE-DATA**) |
+| AM-025 | 2026-08-02 | Blueprint §0 | TOMBSTONE → AM-033 (Operating mode R1–R4); Blueprint §14 definition retained | RETIRED (tombstone) |
+| AM-026 | 2026-08-02 | Blueprint v2.0 | Withdrawals: staged energy, two-paper split, deferred axes | RESOLVED (**PRE-DATA**) |
+| AM-027 | 2026-08-02 | §8 / §10 | TOMBSTONE → AM-034 (Structural / yield / gates); Blueprint §14 definition retained | RETIRED (tombstone) |
+| AM-028 | 2026-08-02 | §5 | New hypotheses H8–H12 | RESOLVED (**PRE-DATA**) |
+| AM-029 | 2026-08-02 | §2.2 | Time-varying coordinate θ(t) — thermal as evolving state | RESOLVED (**PRE-DATA**) |
+| AM-030 | 2026-08-02 | §6.4–§6.8 | Mutual exclusion; external verification; cross-boundary confounds; thermal dual regime | RESOLVED (**PRE-DATA**) |
+| AM-031 | 2026-08-02 | Pins | Blueprint pin 373f8e25… (v2.0); ffe34980… archived as v1.0-final | RESOLVED (**PRE-DATA**) |
+| AM-032 | 2026-08-04 | E-FILTER C2 | Withdraw 8 s headline deadline | RESOLVED (**PRE-DATA**) |
+| AM-033 | 2026-08-02 | Blueprint §0 | Operating mode R1–R4 replaces deadline-driven protocol (reissued from AM-025) | RESOLVED (**PRE-DATA** w.r.t. every hypothesis) |
+| AM-034 | 2026-08-02 | §8 / §10 | Dependency graph + yield queue; gates never reduce scope (reissued from AM-027) | RESOLVED (**PRE-DATA**) |
 
 ---
 
@@ -325,8 +344,8 @@ bytes compared; mismatches overwritten from source. **AM-002 duplicate §16.x nu
 
 | Document | Bytes | SHA-256 | Notes |
 |---|---:|---|---|
-| `docs/SEAM_research_blueprint.md` | 62321 | `ca5b0c44b3918acf454669aec5fa41c815acc6a76d4c83fc10a18b94792dfe8c` | After AM-014 renumber/substance replace in §5.3 + §14 |
-| `docs/PHASE_MINUS1_IMPLEMENTATION_SPEC.md` | 29092 | `89d8feeff92b2947acd5446837c5d2d22aef0135280c5c52c0839182dca72e6c` | After §3.0 elevation preflight inserted |
+| `docs/SEAM_research_blueprint.md` | 64861 | `ffe349804fa36de9ac94473ecd9372c6cc1234c91424242e5fc39040a67b1253` | After AM-019 §11 gate rewrite (G0 = RAPL certification; new confirmatory G0-B; G1 energy conditional) |
+| `docs/PHASE_MINUS1_IMPLEMENTATION_SPEC.md` | 35968 | `9a905a340c513b40cd26a7d381b7d8ba9a28be316eaab04126aeb65cd5e1ca5b` | After AM-019 dependency-graph §7 rewrite; supersedes prior standing pin |
 | `docs/CURSOR_KICKOFF_PROMPT.md` | 4143 | `3a4a3a38cbdef5cb0568940bf0ce55bea8d6999893dfef3b84192fdfb8cd5031` | Unchanged |
 | `docs/hybrid_execution_dse_positioning.md` | 30542 | `ceec363af8a55269a370b63f80473f0cb00f757741be83fa054f56fb7c67d410` | Unchanged |
 
@@ -337,9 +356,13 @@ bytes compared; mismatches overwritten from source. **AM-002 duplicate §16.x nu
 | blueprint (archive, pre-AM-004) | 56617 | `6c2221c6dd774183c3a62d520190964f75a74c115cfcd3f1733ebe0c8377be63` | Claude Desktop restore |
 | blueprint (post-AM-004, pre-AM-002-resync) | 58977 | `72d9b6a32ea40d07201d35e22cfc6db6c0f62311a40c15bc5ecf4f9c4567c878` | Duplicate §16.2/§16.3 |
 | blueprint (**as-delivered** AM-002-fixed) | 61725 | `11da7b34936522fc37531f1321d7150f7f3788da6de6cce0f7472e6a92ef4cfd` | §16.1–16.9; hash-verified before edit |
+| blueprint (post-AM-014, pre-AM-019) | 62321 | `ca5b0c44b3918acf454669aec5fa41c815acc6a76d4c83fc10a18b94792dfe8c` | Layer-based G0 still in force |
 | spec (archive, pre-AM-004) | 25331 | `cfeada7da592eb59026b98481d52854481dec3d13e549ddc31d6d6b04a81604e` | Pre-AM-004 |
 | spec (post-AM-004, pre-resync) | 26384 | `f42fad5bdf7377393684483b1f36dcc2da99e4fca94e9dd79292dde356198148` | Pre human resync |
 | spec (**as-delivered** before §3.0) | 27171 | `5b0275da53be54d382e1b67e28d71c8429d98b4c277c7362f58d0beaaf166ad2` | Hash-verified before elevation insert |
+| spec (post-§3.0, pre-§3.7) | 29092 | `89d8feeff92b2947acd5446837c5d2d22aef0135280c5c52c0839182dca72e6c` | Elevation preflight only |
+| spec (post-§3.7 / AM-016, pre-M2.1 OQ2) | 32411 | `a102d201311405e2d921b4c71dcf79aff9b3fc9994e8a1f438a353945bc6d7f2` | Profiles defined; OQ2 still open |
+| spec (post-M2.1 OQ2 / AM-017, pre-AM-019) | 33236 | `18cf9264cef0b08ea01c3d42d1d1d01389a296f6477aac96059816dcc2778328` | Linear milestone chain still in force |
 
 **Note.** Prefer committed `docs/` copies and this table as the pin. Do not edit hashes to force a
 match (CRLF / trailing-newline mismatches must be reported).
@@ -583,3 +606,543 @@ the cost this rule exists to avoid repeating.
 
 **Does not retroactively relabel AM-012 or AM-013 as pre-data.** Their POST-DATA labels stand.
 **Does not authorize re-running M1** to manufacture a cleaner history.
+
+---
+
+## AM-016 — Pinned profiles by measurement class (`ac-pinned` / `battery-pinned`)
+
+**Date:** 2026-07-30 · **Pre/post data:** **PRE-DATA with respect to M2** · **Status:** RESOLVED ·
+**Authorized by:** Z. Johnson
+
+**Divergence.** AF-005 / `assert_pinned_for_committed_result()` established a single pinned regime
+centred on **AC power**. Spec §3.1 states S1 battery telemetry is only valid **on battery**. Those
+constraints cannot share one profile.
+
+**Ruling.** Pinning is **profile-scoped**. The harness selects the profile by measurement class and
+refuses a mismatch (emit refusal manifest, stop — same pattern as `assert_pinned_for_committed_result()`).
+
+| Profile | Use | Core asserts |
+|---|---|---|
+| `ac-pinned` | topology, thermal (M2.3), sustained turbo | `on_battery: false`; declared plan / brightness / WiFi / Defender |
+| `battery-pinned` | S1 char (M2.1), energy calibration (M2.5) | `on_battery: true`; `charging: false`; settled after `settle_s`; discharge-rate stable; SoC window; quiesce fields recorded |
+
+**Why SoC window alone is insufficient.** M1 showed the covariate is charging **load**, not charge
+**level** (citing run E `fb5cd2d5` at 99% SoC had a *lower* separation ratio than C/D). A pack
+drawing top-off current is not at rest. Battery profile must assert *not charging and settled*.
+
+**Compound constraint (M2.5).** Energy calibration regresses S1 vs S2 on the *same* runs →
+`battery-pinned` **AND** elevated (§3.0). Neither may be relaxed.
+
+**Cross-dependency left open.** Thermal constants from M2.3 (`ac-pinned`) must not be assumed to
+transfer to `battery-pinned` energy runs. M2.3 either characterizes both or states the limitation.
+
+**Spec locus.** Phase −1 spec **§3.7**; M2.1/M2.3/M2.5 acceptance bullets updated. Numeric bounds
+(`settle_s`, SoC window, discharge-rate band) stay `null` in platform YAML until M2.1 measures them.
+**No telemetry code in this amendment** — documentation only.
+
+---
+
+## AM-017 — M2.1 S1 battery-counter characterization landed (OQ2 closed)
+
+**Date:** 2026-07-30 · **Pre/post data:** **POST-DATA** (citing run
+`911965cf-257c-4276-954b-17611a5e75eb`) · **Status:** RESOLVED · **Authorized by:** Z. Johnson
+(unplug confirmation for Step 5)
+
+**Ruling.** Spec §10 open question 2 is closed with the distributions and CIs recorded in that
+question's CLOSED annotation. Platform YAML `power.profiles.battery-pinned` receives
+`settle_s=360`, `soc_window_pct=[40, 85]`, `discharge_rate_stable_band_frac=0.05`, each citing
+the run_id. Standing spec pin updated to
+`18cf9264cef0b08ea01c3d42d1d1d01389a296f6477aac96059816dcc2778328` (33236 bytes). Prior
+`a102d201…` archived under AM-009.
+
+**Does not authorize M2.2–M2.5.** Thermal constants remain null; RAPL/STREAM absent.
+
+---
+
+## AM-018 — S1 energy estimator is `ΔRemainingCapacity` only (PRE-DATA w.r.t. M2.5)
+
+**Date:** 2026-07-30 · **Pre/post data:** **PRE-DATA with respect to M2.5** · **Status:** RESOLVED ·
+**Authorized by:** Z. Johnson
+
+**Context.** M2.1 citing run `911965cf-257c-4276-954b-17611a5e75eb` measured a systematic
+**8.0%** discrepancy between the two S1 sub-signals under constant synthetic load:
+
+| Estimator | Energy (mWh) |
+|---|---:|
+| Σ\|ΔRemainingCapacity\| | **9054.0** |
+| ∫ DischargeRate dt | **9779.1244081429** |
+| rate / Δcap ratio | **1.080088845608891** |
+
+Choosing which S1 signal to regress against RAPL **after** seeing the M2.5 slope would be
+indefensible: the rate-based estimator would inflate the slope by ~8% inside the AM-004 band
+`[1.0, 1.5]`.
+
+**Ruling (locked before M2.5 data).**
+
+1. **S1 energy for all energy work, including the §3.2 / M2.5 regression, is
+   `ΔRemainingCapacity` over the analysis window.** This matches spec §3.2's stated preference
+   ("Preferred estimator is *not* instantaneous rate but `ΔRemainingCapacity`").
+2. The **8.0%** rate-vs-Δcap discrepancy is a **measured Platform A property**, recorded above
+   with both totals (citing `911965cf…`). It is not discarded as noise.
+3. **Integrated `DischargeRate` is retained as a CROSS-CHECK ONLY.** It must not be substituted
+   into the M2.5 regression (or any energy acceptance arithmetic) under any circumstance —
+   including if the Δcap-based slope is inconvenient.
+4. This amendment is labelled **PRE-DATA w.r.t. M2.5** deliberately: the estimator is fixed
+   before RAPL pairing data exist.
+
+**Does not change** the M2.1 min-viable duration numeric (`395.805232` s). **Does not authorize**
+starting M2.5.
+
+---
+
+## AM-019 — Structural correction: dependency graph replaces linear milestone chain
+
+**Date:** 2026-08-02 · **Pre/post data:** **PRE-DATA with respect to H1, H2, H3, H4, and every
+figure except S3/S4 energy** · **Status:** RESOLVED · **Authorized by:** Z. Johnson
+
+**Defect.** The Phase −1 milestone chain (M0→M1→M2→M3→M4→M5→M6, "work strictly in order")
+encoded an instrument-first ordering. Blueprint §16.7 simultaneously states that the H1 pilot
+has priority because "nothing else in the program matters if H1 fails." Where binding sequence
+conflicts with prose guidance, sequence wins. The result: weeks of horizontal layer-building
+with zero end-to-end evidence about the research question, and a serialization of M2 and M3
+which have no dependency on each other.
+
+Instrument-first is correct when all measurements depend equally on the instrument, when the
+instrument is the dominant risk, and when the scientific question is settled. None holds here.
+H1 requires step counts, token counts, and a wall clock. The dominant risk is scientific. The
+question is open.
+
+**Correction — true dependency graph.**
+
+```
+M0 (provenance) → M1 (manifest + topology) ─┬→ TRACK I  : instrument
+                                            ├→ TRACK A  : agent
+                                            └→ TRACK L  : local execution
+
+TRACK I: M2 telemetry ────────────────→ M5 microbenchmarks
+TRACK A: M3 harness + A/A + noise ────→ M6 H1 pilot
+TRACK L: M4 local backends
+
+M-SLICE (new, first-class): gated on M1 + minimal M3 + minimal M4.
+         Produces the first end-to-end data point about the research question.
+```
+
+Tracks I, A, and L proceed in **PARALLEL** after M1. No track blocks another.
+
+**M2 re-scoped.** From "characterize energy" to **CERTIFY RAPL.** Rationale: Platform B is
+mains-only and has no battery, so RAPL is the only energy signal common to both platforms and
+is therefore the reporting currency. M2's job is the binary question of whether RAPL is
+trustworthy and whether it covers the NPU. **Stage A** (5 levels/target, one cycle, anchored,
+randomized order) answers it. **Stage B** (full ≥8 levels) is confirmatory and conditional on
+Stage A. Precision beyond certification gates nothing.
+
+**Gates become risk-based, not layer-based.** The controlling gate for Phase −1 is H1
+resolution (blueprint G2), not milestone completion. A milestone may be left incomplete if
+completing it does not reduce a live risk.
+
+**Energy is Paper 2 material.** Blueprint §13.2 places cost-model calibration in Phase 3.
+Paper 1's claim rests on S1 and S2, neither of which requires a joule. S4's crossover surfaces
+may be reported in tokens/sec first, with J/token added once RAPL is certified — throughput
+crossovers across four targets are a standalone result.
+
+**Spec locus.** Phase −1 spec **§7** rewritten; prohibition §9.10 softened to match. Standing spec
+pin `9a905a340c513b40cd26a7d381b7d8ba9a28be316eaab04126aeb65cd5e1ca5b` (35968 bytes); prior
+`18cf9264…` archived under AM-009.
+
+**Blueprint locus.** **§11** rewritten: gates declared risk-based; **G0** energy criterion becomes
+RAPL **certification** (Stage A); new confirmatory **G0-B** carries the full ≥8-level AM-004
+criterion into Phase 3 / Paper 2 and explicitly does **not** block G1/G2; **G1** energy
+decomposition is conditional on G0-B. §14.2 changelog row added. Blueprint §16.7 is **affirmed**
+(H1 priority), not rewritten. Standing blueprint pin
+`ffe349804fa36de9ac94473ecd9372c6cc1234c91424242e5fc39040a67b1253` (64861 bytes); prior
+`ca5b0c44…` archived under AM-009.
+
+**AM-004 is not weakened.** Its physics (R²≥0.95, slope∈[1.0,1.5], slope<1.0 a hard failure,
+intercept vs measured idle baseline) is carried verbatim into G0-B. AM-019 changes **when** that
+criterion is required, not what it says.
+
+**Does not erase M2.1.** Battery-counter characterization (`911965cf…`) remains citable Platform A
+evidence and feeds S1 when battery energy is used; it is not the cross-platform reporting
+currency.
+
+---
+
+## AM-020 — Model pinning is "provider convention", not "dated alias"
+
+**Date:** 2026-08-02 · **Pre/post data:** **PRE-DATA** (no cloud call has been made) ·
+**Status:** RESOLVED · **Authorized by:** Z. Johnson
+
+**Defect.** Spec §7 M3.2 requires "pinned **dated** model snapshots". That rule encodes an
+OpenAI-style convention as if it were universal. For Anthropic models from the 4.6 generation
+onward, model IDs are **dateless by design and the dateless ID *is* the pinned snapshot**: weights
+are never updated under an existing ID, and a new version ships as a new ID. Constructing a dated
+variant of `claude-sonnet-5` would produce an identifier that does not exist, and the run would
+fail — or worse, silently resolve elsewhere.
+
+**Correction.** The requirement becomes: **use a pinned snapshot identifier expressed in the
+provider's own convention**, and record in the manifest (a) the exact identifier string sent on the
+wire, (b) the provider, (c) the convention under which that identifier is a pin, and (d) the
+identifier the API reports back in its response. Where a provider offers dated IDs, dated IDs
+remain mandatory; a floating alias such as `-latest` remains **forbidden** under every convention.
+
+**Pinning does not eliminate drift.** Anthropic documents that serving infrastructure — routing,
+classifiers, sampling implementation — may change under a fixed ID and produce minor behavioral
+differences. The pin fixes the weights, not the serving stack. The daily canary run is therefore
+**retained**, and this is its recorded justification.
+
+**Spec locus.** §7 M3.2. **Applies to** M-SLICE and all later cloud work.
+
+---
+
+## AM-021 — Cross-model token deltas are not a valid behavioral metric (tokenizer hazard)
+
+**Date:** 2026-08-02 · **Pre/post data:** **PRE-DATA with respect to H1 and M-SLICE** ·
+**Status:** RESOLVED · **Authorized by:** Z. Johnson
+
+**Defect.** Spec §7 M6 lists "Δ total tokens" among the primary H1 comparison metrics, and the
+blueprint's behavioral-divergence framing inherits it. Claude 4.7 and later use a **newer tokenizer
+that emits roughly 30% more tokens for identical text** than earlier models. Sonnet 5 is on the new
+tokenizer; local models use their own, unrelated ones. A Δ-token comparison between a local model
+and a cloud model therefore measures **tokenizer disagreement plus behavior**, and cannot separate
+them.
+
+This bias is **directed toward the hypothesis**: H1 predicts divergence, and a pure tokenizer
+artifact would manufacture apparent divergence of roughly the same magnitude as the ≥20% G2
+threshold. Discovering this after collection would be unrecoverable, because no post-hoc correction
+distinguishes the two sources in already-collected counts.
+
+**Ruling (locked before any H1 or M-SLICE data).**
+
+1. **Native token counts are retained for COST accounting only**, where they are exactly correct —
+   the provider bills on its own tokenizer.
+2. **Primary behavioral metrics become tokenizer-independent.** Generated **characters** and
+   **UTF-8 bytes** are recorded for every step and are the reporting currency for output volume.
+3. Where a token-denominated behavioral comparison is unavoidable, all outputs are **re-tokenized
+   under one declared reference tokenizer**, recorded by name and revision in the manifest. A
+   mixed-tokenizer delta is never reported.
+4. Step counts, tool-call counts, tool-call type distributions, and task success are unaffected —
+   they were never tokenizer-dependent, and they carry H1.
+
+**Spec locus.** §6.2 step record gains `completion_chars` / `completion_bytes`; §7 M6's metric list
+is qualified. **Applies to** M-SLICE immediately.
+
+---
+
+## AM-022 — M-SLICE escalation policy pre-registration
+
+**Date:** 2026-08-02 · **Pre/post data:** **PRE-DATA** (frozen before the throughput baseline and
+before any main-run collection) · **Status:** RESOLVED · **Authorized by:** Z. Johnson
+
+Pre-registers the mechanism under test in M-SLICE so that neither the policy nor the success
+criterion can be adjusted after seeing the curves.
+
+**1. Semantics are PREDICTIVE, not preemptive.** For step `s` on target `T` with deadline `D`:
+
+```
+t_pred(s,T) = prompt_tokens(s) / R_prefill(T) + n_out_pred(step_type(s)) / R_decode(T)
+escalate  iff  t_pred(s,T) > D
+```
+
+`R_prefill(T)` and `R_decode(T)` are measured per target in the step-1 baseline. `n_out_pred(τ)` is
+the **median** output length per step type from the step-1 profiling pass, **frozen before the main
+run and identical across both arms**. It is not an oracle and is not recomputed per run. Prefill is
+included because it is real local work that grows through a trajectory, so later steps escalate
+more often — realistic and wanted. The deadline is **per-step**; a trajectory budget is a different
+policy and is not tested here.
+
+**2. Isolation invariant.** Between the `cpu-p` and `cpu-lpe` arms the **only** differing terms are
+`R_prefill` and `R_decode`. Tasks, seeds, prompts, step types, `n_out_pred`, and `D` are identical.
+This is asserted in code and covered by a test that fails if any other input differs between arms.
+
+**3. The deadline is ADVISORY, not enforced.** Because `n_out_pred` is a median, roughly half of
+locally-executed steps will overrun `D`. This is a property of the predictor, not a defect. The
+**overrun rate is logged and reported alongside the escalation curve** as the predictor's error
+rate.
+
+**4. Pre-registered quantitative prediction.**
+
+```
+escalation_rate_lpe(D)  ≈  escalation_rate_p(D × R_p / R_lpe)
+```
+
+The two curves should be **one curve, horizontally rescaled by the measured throughput ratio**.
+This is tested explicitly. **If they do not collapse under that rescaling, something other than
+compute speed is driving the realized partition, and that is reported prominently rather than
+smoothed over.**
+
+**5. Escalated steps.** Cloud latency counts toward JCT; **zero local time is charged**, which
+follows from predictive semantics. A failed cloud call is retried **once**, then falls back to
+local with the step **marked**. Every retry and every fallback is logged as an event, because both
+perturb the realized partition and must be visible in analysis.
+
+**6. Decision cost is instrumented.** The wall-clock cost of evaluating the predictor itself is
+measured and recorded per step. It is not expected to bind at this scale, but it is precisely the
+quantity that **H3's routing-amortization bound** concerns, so the slice establishes its baseline
+now.
+
+**7. PREEMPTIVE semantics are DEFERRED as a declared future axis.** Starting locally, abandoning at
+the deadline, and paying `local_partial + cloud_full` is where **H4's escalation-cascade cost**
+lives — abandoned local work is a cascade cost by definition. Folding it into this slice would
+conflate "escalated more often" with "wasted more time per escalation" and destroy the attribution
+this slice is built to obtain. The deferral is recorded here as a pre-registered decision, not left
+as an omission.
+
+**Spec locus.** New M-SLICE policy section; consumed by `seam/agent/policy.py`.
+
+---
+
+## AM-023 — Pre-converted OpenVINO IR is a documented §5.3 weakening; manifests must discriminate
+
+**Date:** 2026-08-02 · **Pre/post data:** **PRE-DATA** (before M-SLICE collection) ·
+**Status:** RESOLVED · **Authorized by:** Z. Johnson
+
+**Divergence.** Spec §5.3 requires conversion to be "scripted and reproducible; never
+hand-converted." Obtaining a Hub-published INT4 OpenVINO IR skips our export path: the NNCF
+parameters (mode, ratio, group size) were chosen by the publisher, not by us. That is a real
+weakening of the reproducibility guarantee.
+
+**Decision.**
+
+1. Pre-converted IRs are **permitted** for M-SLICE when self-conversion is blocked by the
+   measured TLS handshake fault to `huggingface.co` (AUDIT_LOG, 2026-08-02) or when the
+   download budget favors a ~2 GB IR over an ~8 GB FP16 export source.
+2. Every such IR carries a `FetchedModelSpec` (`source: pre-converted`, `self_converted: false`,
+   `source_repo`, `download_method`, publisher quantization, our computed `ir_sha256`).
+3. Self-exported IRs continue to carry a `ModelSpec` with `export_command` and our own
+   `quantization_config`.
+4. The run-manifest `model.provenance` object **must** discriminate the two paths via
+   `kind ∈ {self_exported, pre_converted}` and `self_converted`. Flattening them into
+   `name/revision/quantization/ir_sha256` alone is a protocol violation — analysis would be
+   unable to tell which provenance path produced a number.
+5. The audit log notes, for each pre-converted IR, that conversion parameters were not under
+   our control.
+
+**Spec locus.** §5.3; `seam/model_provenance.py`; `seam/schemas/run_manifest.schema.json`.
+
+---
+
+## AM-024 — Reasoning mode is an explicit two-arm axis (amends AM-022)
+
+**Date:** 2026-08-02 · **Pre/post data:** **PRE-DATA** (before throughput baseline) ·
+**Status:** RESOLVED · **Authorized by:** Z. Johnson
+
+**Decision.** Qwen3 hybrid reasoning is **not** disabled by default. It is an experimental axis
+with two arms:
+
+| Arm | Local `enable_thinking` | Cloud reasoning | Role |
+|---|---|---|---|
+| 1 `thinking_off` | false | matched OFF | Fast, low variance; validates mechanism; runs FIRST |
+| 2 `thinking_on` | true | matched ON | Primary scientific arm; amplifies silicon effect |
+
+**Why not simply disable thinking.** Thinking multiplies absolute time differences between
+targets (~10× wider discriminating window in the owner's arithmetic). It is also a primary
+channel of behavioral response to capability (H1), a local model that reasons long and still
+fails is the escalation cascade (H4), and "what silicon makes local reasoning viable" is the
+OEM sizing question (S10). The between-arm comparison — reasoning workloads more
+silicon-sensitive than non-reasoning, by a measurable factor — is itself a headline result.
+
+**Amendments to AM-022.**
+
+- `n_out_pred` is measured **separately per reasoning arm and per step type**, frozen before
+  that arm's main run, and identical across **targets** within the arm. It is **not** shared
+  across reasoning arms (AM-022's "identical across both arms" referred to cpu-p/cpu-lpe; that
+  still holds *within* a reasoning arm).
+- Deadlines are chosen **per arm** in absolute terms spanning the union of both targets'
+  transition regions. Deadlines are **identical across targets within an arm**; setting them
+  at each target's own quantiles would destroy the rescaling test.
+- The rescaling prediction is tested **per arm**. Holding in Arm 1 but breaking in Arm 2 is a
+  finding about reasoning-mode variance, not a bug.
+- Arm 2 has a hard wall-clock timeout per local step, well above the largest deadline. Timeout
+  hits are a **distinct category**, not deadline escalations.
+- Boundary matching: reasoning mode is declared explicitly on **both** local and cloud sides
+  per arm and recorded in every manifest. Empirically assert presence of `<think>` blocks in
+  Arm 2 and absence in Arm 1.
+- Sequence: complete and report Arm 1 before starting Arm 2. If the mechanism fails in the
+  fast arm, do not spend days discovering the same failure slowly.
+- Wall-clock: estimate Arm 2 runtime from step-1 before committing; if unacceptable, reduce
+  **task count**, never deadline count.
+
+**Spec locus.** `configs/mslice.yaml` `reasoning_arms`; manifest `model.reasoning_mode`.
+
+---
+
+## AM-025 — TOMBSTONE (retired; content moved to AM-033)
+
+**Date originally logged:** 2026-08-02 · **Status:** RETIRED (tombstone) · **Reissued as:** AM-033
+
+**Collision.** This identifier was also assigned in Blueprint §14 (2026-08-03) to the
+absence-claim rule and step-type stratification correction. Sealed artifacts bind AM-025 /
+AM-027 to Blueprint semantics; the Blueprint definition prevailed on sealed-usage grounds.
+Identifiers are never reused — this entry is retired, not overwritten.
+
+**Moved content.** Living definition: **AM-033 — Operating mode R1–R4 (blueprint v2.0 §0)**.
+
+---
+
+## AM-026 — Withdrawals under v2.0 (not deferred)
+
+**Date:** 2026-08-02 · **Pre/post data:** **PRE-DATA** · **Status:** RESOLVED ·
+**Authorized by:** Z. Johnson
+
+Explicitly withdrawn so they cannot drift back as "future work":
+
+| Withdrawn | Replaced by |
+|---|---|
+| Stage A / Stage B energy calibration staging | Full per-target multi-cycle design (`configs/energy.yaml`, ≥8 levels × 4 targets) |
+| Deadline-driven two-paper split | Contribution ledger (`configs/project_state.yaml` `contribution_ledger`) |
+| Preemptive escalation deferral | In scope as a second axis (`policy.escalation_semantics`) |
+| CPU-only slice as permanent bound | Four local targets in the design space |
+| FPGA/HLS gating engine as later-paper-only | In scope now (H12, S12) |
+| Single reasoning arm | Two arms required (AM-024) |
+
+AM-019 language that introduced Stage A certification staging is **superseded** by this entry for
+energy design. Historical AM-019 text is retained for chain legibility; operative design is
+`configs/energy.yaml`.
+
+---
+
+## AM-027 — TOMBSTONE (retired; content moved to AM-034)
+
+**Date originally logged:** 2026-08-02 · **Status:** RETIRED (tombstone) · **Reissued as:** AM-034
+
+**Collision.** This identifier was also assigned in Blueprint §14 (2026-08-04) to the router
+proxy correction and narrative-provenance failure. Two sealed trees
+(`raw/6bdfe71b-ee3d-4cb7-9d24-c01381baa2d9`, `raw/f4fd4f79-7c5e-4da7-b5fa-8316dd4e83b0`) bind
+AM-027 to Blueprint §14 dated 2026-08-04 and mark the prior AMENDMENTS.md AM-027 as stale.
+The Blueprint definition prevailed on sealed-usage grounds. Identifiers are never reused —
+this entry is retired, not overwritten.
+
+**Moved content.** Living definition: **AM-034 — Structural: dependency graph, yield queue,
+gates never descope**.
+
+---
+
+## AM-028 — New hypotheses H8–H12
+
+**Date:** 2026-08-02 · **Pre/post data:** **PRE-DATA** · **Status:** RESOLVED
+
+Added: H8 thermal non-stationarity, H9 concurrency, H10 power source, H11 cross-boundary KV
+residency, H12 hardware gating changes the bound. Manifest fields `thermal.regime`,
+`workload.concurrency`, `power_state.power_source`, `policy.kv_residency` exist so these axes
+cannot be run without being recorded.
+
+---
+
+## AM-029 — Time-varying coordinate θ(t) (blueprint §2.2)
+
+**Date:** 2026-08-02 · **Pre/post data:** **PRE-DATA** · **Status:** RESOLVED
+
+Thermal state evolves during evaluation; it is a **state**, not a decision variable. That is
+what makes the objective surface non-stationary within a single evaluation (H8). Manifest
+`thermal.regime ∈ {confound, axis}` forbids silent pooling of the two regimes in analysis.
+
+---
+
+## AM-030 — New audit standards §6.4–§6.8
+
+**Date:** 2026-08-02 · **Pre/post data:** **PRE-DATA** · **Status:** RESOLVED
+
+- §6.6 mutual exclusion: `seam/locks.py`; wired into `fetch_model` and `audit_append`; test
+  refuses a second writer.
+- §6.7 external verification: LFS `lfs.oid` SHA-256 in `fetch_model`; same-size-wrong-content
+  regression in `tests/test_fetch_verification.py`.
+- §6.8 cross-boundary confounds: tokenizer-independent primary metrics in `configs/mslice.yaml`;
+  reasoning discriminant is non-empty content (`seam/reasoning.py`).
+- §6.4 thermal dual regime: `thermal.regime` in the run-manifest schema.
+
+---
+
+## AM-031 — Blueprint pin v2.0
+
+**Date:** 2026-08-02 · **Pre/post data:** **PRE-DATA** · **Status:** RESOLVED
+
+Standing pin `373f8e25b86f68b68f29f85cc7b1db49dfd87294977322c4232fee0969043aa9` for
+`docs/SEAM_research_blueprint.md`. Prior `ffe349804fa36de9ac94473ecd9372c6cc1234c91424242e5fc39040a67b1253`
+archived in `GOVERNING_DOCS.sha256` as v1.0-final (KNOWN SUPERSESSION). Confirm, do not "fix"
+by editing the pin list to silence drift.
+
+---
+
+## AM-032 — Withdraw E-FILTER 8 s headline deadline (C2)
+
+**Date:** 2026-08-04 · **Pre/post data:** **PRE-DATA** (w.r.t. E-FILTER C2 run) · **Status:** RESOLVED
+
+Withdraws the pre-registered `p95_step_target_s: 8.0` headline deadline for E-FILTER under the
+C2 amendment (`docs/CURSOR_PROMPT_C2_efilter.md`).
+
+**Reason:** Stage-1 decode floor placed every step near ~13.3 s (`n_out_pred`/`R_decode` constant
+term). The 8 s target sat below the achievable floor and made P1–P3 vacuous. Absolute wall-clock
+claims are also not admissible while `R` remains unverified pending A4; the over-provisioning
+ratio is invariant to uniform throughput scaling when the deadline grid is data-derived.
+
+**Replacement:** P1–P3 evaluate at the **material deadline on the derived `t_pred` grid**
+(≥8 points spanning the observed range). Deadlines are reported in distribution units
+(empirical CDF / fraction of observed `t_pred` range); seconds are secondary with caveat
+`R unverified pending A4`. `configs/efilter.yaml` sets `p95_step_target_s: null` /
+`p95_step_target_status: withdrawn_AM-032`.
+
+**Does not invalidate:** sealed Stage-1 run `1a0166b9-cbaf-43f4-8d76-bcd7c01841e0` as a baseline
+point for P6 (over-provisioning 1.243×, CI 1.115–1.409, peak context 1826).
+
+---
+
+## AM-033 — Operating mode R1–R4 (blueprint v2.0 §0)
+
+**Date:** 2026-08-02 · **Pre/post data:** **PRE-DATA with respect to every hypothesis** ·
+**Status:** RESOLVED · **Authorized by:** Z. Johnson ·
+**Reissued from:** AM-025 (tombstoned 2026-08-06; dual-definition collision with Blueprint §14)
+
+**Change.** Timing removed as a constraint (R1). The claim strengthens monotonically (R2).
+Yield maximization per session (R3). Main-line protection via the additive/displacing filter (R4).
+Owner directive — replaces the v1.0 deadline-driven operating mode.
+
+**Enforcement.** `.cursor/rules/seam-core.mdc` (`alwaysApply: true`) carries R1–R4 as standing
+agent constraints. Gates that answer unmet criteria with "reduce scope" are forbidden in
+`configs/project_state.yaml` gate commentary and seam-core.
+
+---
+
+## AM-034 — Structural: dependency graph, yield queue, gates never descope
+
+**Date:** 2026-08-02 · **Pre/post data:** **PRE-DATA** · **Status:** RESOLVED ·
+**Reissued from:** AM-027 (tombstoned 2026-08-06; dual-definition collision with Blueprint §14)
+
+Timeline → dependency graph + yield queue. Milestone chain → parallel tracks after M1.
+Gates rewritten so **no** gate response is ever "reduce scope." Recorded in
+`configs/project_state.yaml` (`tracks`, `yield_queue`, gate names) and seam-core.
+
+---
+
+## Finding note — C9 practical context ceiling (C2b)
+
+**Date:** 2026-08-04 · **Status:** RECORDED · **Not an AM number**
+
+Citing partial pilot `0fe5e4c7-bb38-4666-826b-2c512b17a969` (IN_PROGRESS; not sealed — do not
+mutate). At 9114 tokens KV ≈ 672 MB should fit with a ~2.6 GB model under KV-only arithmetic, but
+re-prefill activation bound the practical ceiling near ~9100 vs architectural 40960 (4.5× below).
+Contradicts meeting-brief KV-only capacity arithmetic. Artifact:
+`derived/efilter/c9_practical_ceiling_note.json`. C2b response: `context_cap_tokens=7000`,
+`max_tokens=128`, OpenVINO GenAI structured tool-call decoding.
+
+---
+
+## DEFERRED-BY-DEPENDENCY — adopted confinement mechanism citing run_id
+
+**Date:** 2026-08-02 · **Status:** DEFERRED-BY-DEPENDENCY · **Blocker:** A1–A6 confinement
+matrix on the verified 4B under quiesced conditions (not started in this dispatch; download may
+still be in flight).
+
+`configs/mslice.yaml` `openvino.adopted_mechanism` and
+`configs/project_state.yaml` `milestones.M_SLICE.confinement` remain null until that matrix
+resolves. Not deferred for cost or time (R1 forbids that).
+
+---
+
+## DEFERRED-BY-DEPENDENCY — Phase 4 sustained-burst execution
+
+**Date:** 2026-08-02 · **Status:** DEFERRED-BY-DEPENDENCY · **Blocker:** First paid action is
+gated on Phase 3 reasoning discriminant PASS; this dispatch takes no spend.
+
+Requirement is **landed** in `configs/canary.yaml` (`sustained_burst.required_before_collection`,
+n_calls≥10, prompt_chars_min≥20000) with a test that fails if removed. Execution of the burst
+itself awaits the paid-phase gate.
