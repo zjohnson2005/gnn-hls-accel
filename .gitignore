@@ -1,0 +1,91 @@
+# Vitis HLS build artifacts
+gcn_proj/
+gcn_*_proj/
+oe_proj/
+oe_scatter_proj/
+oe_scatter_cosim_proj/
+oe_stream_proj/
+mp_*_proj/
+gen_proj/
+*.log
+*.jou
+.Xil/
+vitis_hls.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.venv-wsl/
+.venv-mcp/
+.venv-oa01/
+venv/
+
+# Local zips / exports (keep source, not bundles)
+orchestration_engine.zip
+hls4ml_gnn_extension.zip
+ls_milestone_pack/
+ls_milestone_gnn-hls-accel.zip
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Secrets
+.env
+*.env
+
+# Large mock trace (regenerate locally; c1–c1000 stay tracked)
+orchestration_engine/characterization/out/gate/mock_action_heavy_c5000.json
+
+.cursor/
+
+# MCP-01 retained local measurements and generated localhost TLS material
+apu_characterization/out/mcp_tax/runs/
+apu_characterization/out/mcp_tax/runtime/
+apu_characterization/out/mcp_tax/bundles/
+
+# CAP-01 generated candidate pools and retained measurements
+apu_characterization/out/cap01/pools/
+apu_characterization/out/cap01/runs/
+apu_characterization/out/cap01/runtime/
+apu_characterization/out/cap01/bundles/
+
+# OA-01 retained raw traces, subject outputs, replay bundles, and evaluator logs
+apu_characterization/out/oa01/runs/
+apu_characterization/out/oa01/evaluation/
+
+# ---------------------------------------------------------------------------------------------
+# SEAM (Phase -1)
+#
+# NOTE: raw/ is deliberately NOT ignored. Blueprint §5.3 makes raw/ write-once and checksummed,
+# and §5.7 targets an artifact-evaluation "reusable" badge, both of which require the raw data to
+# be committed. Only the blinding secret below is excluded.
+# ---------------------------------------------------------------------------------------------
+
+# Blinding salt. Committing it would let anyone invert blinded_label from the small space of
+# condition names, making the blind decorative (seam/blinding.py). Back it up out of band: a lost
+# salt cannot be regenerated without orphaning every blinded_label already emitted.
+raw/_blinding/salt.txt
+
+# SEAM toolchain virtualenv (Python 3.11, seam/requirements.txt).
+.venv-seam/
+
+# 187 MB Chrome profile captured during Item 0 tooling validation. Kept on disk as local evidence;
+# it is not provenance for any SEAM claim and no manifest cites it.
+analysis/aipc-c1/tooling_validation/chrome_pm_profile/
+
+models/
+
+apu_characterization/out/
+
+# derived/ holds raw measurement artifacts (2000+ files, 64 MB). Summary-level
+# reports are committed by explicit path; raw session directories are not, until
+# the matrix sealer emits one sealed artifact per session.
+derived/**
+!derived/**/
+!derived/**/*.md
+!derived/bfcl_feasibility/multi_turn_gpu_probe_report.json
+!derived/bfcl_feasibility/cloud_multi_turn_report.json
