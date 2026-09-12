@@ -1,0 +1,31 @@
+{
+  "probe": "npu_property_inventory",
+  "mode": "offline_binary_and_core",
+  "note": "Load not attempted this session (Tier-1 contaminated). Strings from openvino_genai.dll / openvino_intel_npu_plugin.dll + Core SUPPORTED_PROPERTIES.",
+  "available_devices_include_npu": true,
+  "core_supported_properties_sample": [
+    "CACHE_DIR",
+    "CACHE_MODE",
+    "INFERENCE_PRECISION_HINT",
+    "NPU_COMPILER_DYNAMIC_QUANTIZATION",
+    "NPU_DEVICE_ALLOC_MEM_SIZE",
+    "NPU_DEVICE_TOTAL_MEM_SIZE",
+    "NPU_MAX_TILES"
+  ],
+  "core_lacks_kv_cache_precision": true,
+  "genai_npuw_static_shape_keys": {
+    "MAX_PROMPT_LEN": "GenAI config option; error text: Set the \"MAX_PROMPT_LEN\" config option to increase the limit.",
+    "NPUW_LLM_MAX_PROMPT_LEN": "NPUW / intel_npu plugin",
+    "NPUW_LLM_MIN_RESPONSE_LEN": "NPUW",
+    "NPUW_LLM_PREFILL_CHUNK_SIZE": "NPUW chunked prefill (openvino#34617)",
+    "NPUW_LLM_MAX_GENERATION_TOKEN_LEN": "NPUW",
+    "NPUW_LLM_BATCH_DIM": "NPUW",
+    "NPUW_LLM_SEQ_LEN_DIM": "NPUW"
+  },
+  "platform_defaults_aipc_c1": {
+    "MAX_PROMPT_LEN": 2048,
+    "NPUW_LLM_PREFILL_CHUNK_SIZE": 1024
+  },
+  "load_probe_mode": "run_npu_load",
+  "load_probe_status": "BLOCKED_ON_OPERATOR"
+}

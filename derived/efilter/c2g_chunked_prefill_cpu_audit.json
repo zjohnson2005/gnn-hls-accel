@@ -1,0 +1,159 @@
+{
+
+  "audit_id": "c2g_chunked_prefill_cpu_audit",
+
+  "governing": "docs/CURSOR_PROMPT_C2g.md §4",
+
+  "audited_utc": "2026-08-05T13:00:00+00:00",
+
+  "question": "Does the OpenVINO GenAI / CPU pipeline expose a chunked-prefill equivalent of NPUW_LLM_PREFILL_CHUNK_SIZE?",
+
+  "available": false,
+
+  "stack": {
+
+    "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+
+    "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+
+    "backend_path": "seam/backends/local_openvino.py LocalOpenVinoBackend",
+
+    "pipeline": "openvino_genai.LLMPipeline(model_dir, \"CPU\", **properties)"
+
+  },
+
+  "npu_reference": {
+
+    "property": "NPUW_LLM_PREFILL_CHUNK_SIZE",
+
+    "where_recorded": "configs/platforms/aipc-c1.yaml npu_config; manifest npu_config",
+
+    "default_in_platform": 1024,
+
+    "note": "NPUW_* properties apply to the NPU plugin / NPUW path only."
+
+  },
+
+  "property_names_tried": [
+
+    {
+
+      "name": "NPUW_LLM_PREFILL_CHUNK_SIZE",
+
+      "as": "LLMPipeline CPU kwargs / plugin property",
+
+      "result": "NPU-specific; not a CPU plugin property. Present only in platform npu_config / manifest schema."
+
+    },
+
+    {
+
+      "name": "PREFILL_CHUNK_SIZE",
+
+      "as": "GenerationConfig attribute / LLMPipeline kwarg",
+
+      "result": "absent from openvino_genai.GenerationConfig dir() and from intel_cpu properties"
+
+    },
+
+    {
+
+      "name": "LLM_PREFILL_CHUNK_SIZE",
+
+      "as": "plugin property name",
+
+      "result": "not present in openvino.properties.intel_cpu (only TbbPartitioner exposed)"
+
+    },
+
+    {
+
+      "name": "CPU_PREFILL_CHUNK_SIZE",
+
+      "as": "plugin property name",
+
+      "result": "not present"
+
+    },
+
+    {
+
+      "name": "INFERENCE_PREFILL_CHUNK_SIZE",
+
+      "as": "plugin property name",
+
+      "result": "not present"
+
+    },
+
+    {
+
+      "name": "CHUNK_SIZE",
+
+      "as": "GenerationConfig / pipeline option",
+
+      "result": "not present on GenerationConfig; only WhisperDecodedResultChunk / streamer text chunks unrelated to prefill"
+
+    },
+
+    {
+
+      "name": "scheduler_config.max_num_batched_tokens",
+
+      "as": "openvino_genai.SchedulerConfig field passed as LLMPipeline property",
+
+      "result": "EXISTS but is ContinuousBatchingPipeline scheduling (default 256), not a stateful-LLMPipeline activation bound equivalent to NPUW_LLM_PREFILL_CHUNK_SIZE. Enabling it changes pipeline mode (prefix caching / paged attention semantics) and is not clearly safe for the E-FILTER CPU path."
+
+    },
+
+    {
+
+      "name": "scheduler_config.dynamic_split_fuse",
+
+      "as": "SchedulerConfig field",
+
+      "result": "EXISTS (default true) for ContinuousBatching only; splits prompt/generate scheduling phases, not a drop-in chunked-prefill knob for the current backend."
+
+    }
+
+  ],
+
+  "evidence": [
+
+    "Runtime dir(openvino_genai.GenerationConfig): no chunk/prefill-size attributes.",
+
+    "Runtime dir(openvino.properties.intel_cpu): ['TbbPartitioner'] only.",
+
+    "LocalOpenVinoBackend.properties() sets SCHEDULING_CORE_TYPE / ENABLE_CPU_PINNING / INFERENCE_NUM_THREADS only; constructs stateful LLMPipeline without scheduler_config.",
+
+    "OpenVINO GenAI docs: add {\"scheduler_config\": SchedulerConfig} to create continuous batching pipeline — a different execution path from the stateful CPU pipeline used here.",
+
+    "NPUW_LLM_PREFILL_CHUNK_SIZE is required in run_manifest.schema.json under npu_config and documented in PHASE_MINUS1_IMPLEMENTATION_SPEC for NPU dynamic-shape mitigation — CPU path has no parallel requirement."
+
+  ],
+
+  "config_flag": {
+
+    "path": "configs/efilter.yaml chunked_prefill",
+
+    "enabled": false,
+
+    "wired_for_enablement": false,
+
+    "reason": "No safe CPU equivalent to enable; flag records the negative audit only."
+
+  },
+
+  "c9_implication": {
+
+    "note_path": "derived/efilter/c9_prefill_activation_bound_note.json",
+
+    "statement": "On this stack (OpenVINO GenAI stateful LLMPipeline on CPU), usable agent context is bounded by prefill activation memory, not by KV cache size."
+
+  },
+
+  "verdict": "NOT_AVAILABLE_ON_CPU_STATEFUL_PATH"
+
+}
+
+

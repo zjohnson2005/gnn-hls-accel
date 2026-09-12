@@ -1,0 +1,27 @@
+{
+  "ledger": "C9",
+  "title": "Practical context ceiling bound by re-prefill activation, not KV-only arithmetic",
+  "status": "RECORDED",
+  "date": "2026-08-04",
+  "citing_run_id": "0fe5e4c7-bb38-4666-826b-2c512b17a969",
+  "citing_run_state": "IN_PROGRESS/PARTIAL (pilot crashed; not sealed — do not mutate)",
+  "observed": {
+    "peak_context_tokens": 9114,
+    "kv_bytes_at_peak_approx_mb": 672,
+    "model_weights_approx_gb": 2.6,
+    "architectural_max_position_embeddings": 40960,
+    "practical_ceiling_tokens_approx": 9100,
+    "ratio_architectural_over_practical": 4.5
+  },
+  "finding": "At 9114 tokens the analytic KV cache is ~672 MB against a ~2.6 GB model — that should fit under a KV-only capacity story. The C2 pilot instead hit free-memory / paging / canary invalidation because every step re-prefills the whole context (cache probe: no cross-call reuse), so prefill activation memory scales with context on every step. Practical ceiling ~9100 tokens vs architectural 40960 (4.5× below).",
+  "contradicts": {
+    "document": "docs/MEETING_BRIEF_hybrid_execution.md",
+    "claim_class": "KV-only capacity arithmetic for local context headroom",
+    "note": "Brief is the human's to amend; this note flags the contradiction only."
+  },
+  "c2b_response": {
+    "context_cap_tokens": 7000,
+    "max_tokens": 128,
+    "constrained_decoding": "openvino_genai_structured_output_config_tag_jsonschema"
+  }
+}

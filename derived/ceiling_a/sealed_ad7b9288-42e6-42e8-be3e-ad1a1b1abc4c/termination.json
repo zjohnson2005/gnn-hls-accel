@@ -1,0 +1,44 @@
+{
+  "class": "operator_or_harness_stop_after_timeout_cells",
+  "evidence": {
+    "checkpoint_phase": "ladder",
+    "heartbeat_n_tokens": 40000,
+    "heartbeat_phase": "ladder",
+    "heartbeat_round": 0,
+    "last_log_event": "ceiling_a.round_order",
+    "last_log_payload": {
+      "arm_order": [
+        "A",
+        "A_prime"
+      ],
+      "n": 40000,
+      "round": 1,
+      "stage": "ladder"
+    },
+    "last_log_ts": "2026-08-07T13:09:37.822137+00:00",
+    "n40000_r0_timeouts": [
+      {
+        "event": "delta_n.repeat",
+        "failure_mode": "timeout:1800s@generating",
+        "outcome": "fail",
+        "phase": "generating",
+        "tag": "A_prime.n40000.ladder.r0.a0",
+        "ts": "2026-08-07T12:39:01.715807+00:00",
+        "wall_s": 1800.1
+      },
+      {
+        "event": "delta_n.repeat",
+        "failure_mode": "timeout:1800s@generating",
+        "outcome": "fail",
+        "phase": "generating",
+        "tag": "A.n40000.ladder.r0.a0",
+        "ts": "2026-08-07T13:09:35.034696+00:00",
+        "wall_s": 1800.11
+      }
+    ],
+    "round_1_ordered": true,
+    "work_stub_A_n40000_r1": "derived/ceiling_a/ad7b9288-42e6-42e8-be3e-ad1a1b1abc4c/work/A.n40000.ladder.r1.a0.result.json",
+    "work_stub_A_n40000_r1_exists": true
+  },
+  "note": "Launch log ends at ceiling_a.round_order n=40000 round=1. A.n40000.ladder.r1 work stub exists with phase=generating and no generation block; A_prime r1 was not started. Process did not seal. Treat as force-killed / stopped mid-ladder."
+}

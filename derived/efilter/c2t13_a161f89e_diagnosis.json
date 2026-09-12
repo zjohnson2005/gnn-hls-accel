@@ -1,0 +1,49 @@
+{
+  "run_id": "a161f89e-fcc2-4cb8-9b04-c215358a2f88",
+  "task_id": "C2T13",
+  "block_id": "C2T13:0",
+  "order_index": 0,
+  "source": "raw/a161f89e-fcc2-4cb8-9b04-c215358a2f88/tasks.jsonl (read-only)",
+  "gate_tripped": "paging_gate (baseline_relative hard page reads)",
+  "invalid_reasons": [
+    "sustained hard page reads: 2 consecutive samples > 1.0 (gate_mode=baseline_relative) >= 2"
+  ],
+  "thresholds": {
+    "gate_mode": "baseline_relative",
+    "hard_page_reads_threshold_per_s": 1.0,
+    "sustained_nonzero_consecutive_samples": 2,
+    "baseline_run_id": "e6bae93f-998c-42c4-ac8c-6351cf389f57",
+    "exclude_on_failure": true,
+    "threshold_unchanged_under_c2d": true
+  },
+  "measured": {
+    "machine_measurement_valid": false,
+    "canary_drift_authoritative": "settled",
+    "canary_relative_drift": 0.013395899241752569,
+    "canary_relative_drift_immediate": 0.10084540710238718,
+    "free_memory_mb_before_task": 1845.8984375,
+    "free_memory_mb_after_task": 943.00390625,
+    "free_memory_mb_after_teardown": 2065.21875,
+    "context_tokens_by_step": [816, 3115, 4878],
+    "context_ratio_cmax_over_cmin": 5.977941176470588,
+    "terminated_reason": "context_cap",
+    "projected_next_context_tokens": 9651
+  },
+  "companion_warmup_invalidation": {
+    "from_pilot_log": "derived/efilter/c2c_pilot_20260804_201349.out.log",
+    "reason": "sustained hard page reads: 3 consecutive samples > 1.0 (gate_mode=baseline_relative) >= 2",
+    "counted_toward_pilot_gate_under_c2c": true,
+    "counts_under_c2d": false
+  },
+  "pilot_gate_under_c2c": {
+    "median_ratio": 7.121621621621622,
+    "invalidations": 2,
+    "cleared": false,
+    "seal": "failed — UnicodeEncodeError on U+2192 before _emit"
+  },
+  "reevaluation_under_c2d_scoped_window": {
+    "warmup_invalidation": "would NOT count (sample_paging=False; outside timed window)",
+    "C2T13_task_invalidation": "WOULD STILL COUNT — recorded on the timed task machine_measurement block (order_index=0), not on warmup. Page-read gate tripped inside the task sampling window. No teardown/reload preceded C2T13 (first task). Free memory fell 1845->943 MiB during the task; residual post-warmup faulting cannot be ruled out from tasks.jsonl alone (memory_pressure samples were not persisted on the task record), but under C2d the recorded locus remains an in-block invalidation.",
+    "would_pilot_clear_on_this_run_alone": "unknown — depends on whether subsequent tasks had timed-block invalidations; log showed invalidations=2 = warmup+C2T13. Under C2d that becomes 1 (C2T13 only), so this specific run would still fail the zero-invalidation gate unless C2T13's paging was itself an artifact of sampling setup (it was not: sampler already wrapped only the yielded block)."
+  }
+}

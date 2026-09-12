@@ -1,0 +1,81 @@
+{
+  "authoritative_cold_control": {
+    "artifact": "derived/bfcl_feasibility/session_residency/_cold_control/session_residency_cold_control_gpu_only.json",
+    "entry_id": "multi_turn_base_0",
+    "passed": true,
+    "turn1_prompt_tokens": 4193,
+    "turn1_ttft_s": 5.033091796,
+    "turn2_generate_input_tokens": 4364,
+    "turn2_prompt_tokens": 4364,
+    "turn2_ttft_s": 5.784677734,
+    "turn2_ttft_s_rounded": 5.785,
+    "turn2_over_turn1_raw": 1.149328875463252,
+    "turn2_over_turn1_rounded": 1.149,
+    "model_load_s": 6.011851599992951,
+    "note": "Gate artifact for DISPATCH L positive control (gpu_only, prefix_caching=False). Copied into seal as cold_control_as_found.json."
+  },
+  "dispatch_n_claimed": {
+    "source": "DISPATCH N operator narrative (2026-08-11); not backed by any a621ff7d artifact",
+    "turn2_ttft_s": 6.554,
+    "turn2_over_turn1": 1.035,
+    "turn2_prompt_tokens": 4364,
+    "cited_in_seal_as": "validity_chain.cold_control.dispatch_narrative_check"
+  },
+  "provenance_investigation": {
+    "investigated_utc": "2026-08-11T20:00:00+00:00",
+    "grep_scope": "derived/bfcl_feasibility/session_residency/**",
+    "finding": "6.554 and 1.035 do not appear as turn2_ttft_s or turn2_over_turn1_raw in any a621ff7d artifact. No alternate cold-control run or pass record exists at those values.",
+    "nearest_accidental_matches": [
+      {
+        "value": 6.554,
+        "claimed_field": "dispatch turn2_ttft_s",
+        "actual_field": "steps[].wall_s",
+        "session_id": "4f31cbaa-fba8-4ef3-bf59-f4f77dc8272b",
+        "status": "superseded",
+        "artifact": "derived/bfcl_feasibility/session_residency/4f31cbaa-fba8-4ef3-bf59-f4f77dc8272b/session_residency_A_RESIDENT_report.json",
+        "path": "gpu_probe.per_entry[13].turn_metrics[0].steps[1].wall_s",
+        "actual_value": 6.5522361,
+        "note": "Wall time on a warm RESIDENT matrix cell, not cold-control TTFT."
+      },
+      {
+        "value": 6.554,
+        "claimed_field": "dispatch turn2_ttft_s",
+        "actual_field": "steps[].wall_s",
+        "session_id": "a621ff7d-2919-463d-aaf6-673f9e6bafbc",
+        "status": "standing matrix (not validity gate)",
+        "artifact": "derived/bfcl_feasibility/session_residency/a621ff7d-2919-463d-aaf6-673f9e6bafbc/session_residency_gpu_only_NON_RESIDENT_report.json",
+        "path": "gpu_probe.per_entry[3|9|10].turn_metrics[1].steps[*].wall_s",
+        "actual_value_range": [6.5355204, 6.5682681],
+        "note": "Matrix-cell wall times on turn index 1; not the cold-control gate artifact."
+      },
+      {
+        "value": 1.035,
+        "claimed_field": "dispatch turn2/turn1 ratio",
+        "actual_field": "steps[].ttft_s",
+        "session_id": "24634b40-3f38-40f4-b722-6127143d3500",
+        "status": "superseded",
+        "artifact": "derived/bfcl_feasibility/session_residency/24634b40-3f38-40f4-b722-6127143d3500/session_residency_A_RESIDENT_report.json",
+        "path": "gpu_probe.per_entry[14].turn_metrics[2].steps[0].ttft_s",
+        "actual_value": 1.035203735,
+        "note": "Single-step warm RESIDENT TTFT, not turn2/turn1 cold-control ratio."
+      }
+    ],
+    "token_count_4364": {
+      "status": "correct in both dispatch narrative and gate artifact",
+      "sources": [
+        "derived/bfcl_feasibility/session_residency/_cold_control/session_residency_cold_control_gpu_only.json",
+        "derived/bfcl_feasibility/session_residency/a621ff7d-2919-463d-aaf6-673f9e6bafbc/session_residency_gpu_only_NON_RESIDENT_report.json (multi_turn_base_0 turn 1)"
+      ]
+    }
+  },
+  "loaders": {
+    "use_for_validity_chain": "authoritative_cold_control",
+    "ignore_for_validity_chain": "dispatch_n_claimed.turn2_ttft_s and dispatch_n_claimed.turn2_over_turn1",
+    "sealed_tree": "derived/bfcl_feasibility/session_residency/sealed_a621ff7d-2919-463d-aaf6-673f9e6bafbc",
+    "sealed_tree_sha256": "b3e28b1dda14cd6a46a94fd74338d8e9b0bf94c88982607debc27a0b96453c26",
+    "sealed_tree_mutated": false,
+    "pointer": "derived/bfcl_feasibility/session_residency/a621ff7d-2919-463d-aaf6-673f9e6bafbc/SEAL_POINTER.json"
+  },
+  "run_id": "a621ff7d-2919-463d-aaf6-673f9e6bafbc",
+  "session_id": "a621ff7d-2919-463d-aaf6-673f9e6bafbc"
+}

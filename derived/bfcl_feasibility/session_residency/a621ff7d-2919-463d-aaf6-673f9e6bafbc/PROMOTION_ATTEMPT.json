@@ -1,0 +1,64 @@
+{
+  "attempted_utc": "2026-08-11T19:48:14.300073+00:00",
+  "dry_validate": {
+    "allow_dirty": true,
+    "condition_label": "session_residency|arms=A,gpu_only|modes=RESIDENT,NON_RESIDENT|n_entries=20|promote_from_derived",
+    "config_hash": "1b15c45ff9476c7693072c421bb2781de40a69b030ed3275efc5c5dcdb57eb4b",
+    "emit_will_need_allow_dirty": false,
+    "git_dirty": true,
+    "launch_context": "ssh_detached",
+    "measurement_session_id": 0,
+    "measurement_window_station": null,
+    "model_ir_sha256": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+    "model_name": "Qwen3-4B-int4-ov",
+    "note": "Dry construction validated against run_manifest.schema.json with synthetic empty tier-1 isolation_evidence. Live emit() re-resolves isolation_mode=remote and will refuse while Cursor/Chrome are resident.",
+    "ok": true,
+    "summary_keys": [
+      "admissibility",
+      "cells_completed",
+      "cells_failed",
+      "cells_ok",
+      "derived_seal_path",
+      "derived_seal_style",
+      "derived_tree_sha256",
+      "kind",
+      "matrix",
+      "measurement_isolation_mode",
+      "measurement_launch_context",
+      "measurement_placement",
+      "notes",
+      "promotion",
+      "results",
+      "run_id",
+      "session_id"
+    ],
+    "target": "cpu-placement",
+    "workload": {
+      "benchmark": "bfcl_session_residency_resident_vs_nonresident",
+      "concurrency": 1,
+      "kind": "session_residency",
+      "n_repeats": 1,
+      "seed": 20260810,
+      "task_ids": [
+        "gpu_only:RESIDENT:n20",
+        "gpu_only:NON_RESIDENT:n20",
+        "A:RESIDENT:n20",
+        "A:NON_RESIDENT:n20"
+      ]
+    }
+  },
+  "emit_wired": true,
+  "gate": "resolve_isolation_mode(remote) \u2192 schema kind \u2192 dry_validate \u2192 seam.manifest.emit(retro_seal=True)",
+  "note": "Promotion refused: tier-1 operator-controlled software is resident. Close Cursor/Chrome (and other tier-1 names), then retry --attempt-raw-promote. Do not invent enforce=False. Emit wiring is present; dry_validate records whether the promote payload would schema-validate without writing raw/.",
+  "raw_emit": false,
+  "refusal": "isolation_mode was declared `remote` but tier-1 operator-controlled software is resident on this machine:\n  - Cursor.exe (pid 2724, private 56 MiB)\n  - Cursor.exe (pid 5492, private 102 MiB)\n  - Cursor.exe (pid 6720, private 11 MiB)\n  - Cursor.exe (pid 7612, private 75 MiB)\n  - Cursor.exe (pid 7724, private 151 MiB)\n  - Cursor.exe (pid 8748, private 75 MiB)\n  - Cursor.exe (pid 11396, private 14 MiB)\n  - Cursor.exe (pid 12336, private 186 MiB)\n  - Cursor.exe (pid 13180, private 24 MiB)\n  - Cursor.exe (pid 14480, private 585 MiB)\n  - Cursor.exe (pid 18096, private 267 MiB)\n  - Cursor.exe (pid 18496, private 95 MiB)\n  - Cursor.exe (pid 22992, private 12 MiB)\n  - Cursor.exe (pid 23096, private 79 MiB)\n  - Cursor.exe (pid 25204, private 101 MiB)\n  - Cursor.exe (pid 25448, private 290 MiB)\n  - chrome.exe (pid 2760, private 11 MiB)\n  - chrome.exe (pid 3276, private 68 MiB)\n  - chrome.exe (pid 3392, private 205 MiB)\n  - chrome.exe (pid 3460, private 35 MiB)\n  - chrome.exe (pid 3700, private 2 MiB)\n  - chrome.exe (pid 4360, private 271 MiB)\n  - chrome.exe (pid 4576, private 29 MiB)\n  - chrome.exe (pid 9996, private 8 MiB)\n  - chrome.exe (pid 12340, private 34 MiB)\n  - chrome.exe (pid 13420, private 499 MiB)\n  - chrome.exe (pid 13608, private 70 MiB)\n  - chrome.exe (pid 13684, private 24 MiB)\n  - chrome.exe (pid 16464, private 217 MiB)\n  - chrome.exe (pid 19164, private 18 MiB)\n  - chrome.exe (pid 21836, private 26 MiB)\n  - chrome.exe (pid 24516, private 180 MiB)\nRemote mode means the machine is closed down and driven over SSH. Measuring with these running and labelling it `remote` would pool a contended run with quiet ones, which is the failure behind the unexplained 1.98x. Close them, or declare `local` and accept that the result may not be compared against remote-mode runs. (Tier-2 shell/vendor agents such as msedgewebview2 are recorded only and do not refuse; the Available-MBytes floor is the memory gate.)",
+  "schema_gate": "workload.kind session_residency accepted",
+  "seal_path": "derived/bfcl_feasibility/session_residency/sealed_a621ff7d-2919-463d-aaf6-673f9e6bafbc",
+  "session_id": "a621ff7d-2919-463d-aaf6-673f9e6bafbc",
+  "status": "refused_isolation_gate",
+  "tier1_count": 32,
+  "tier1_resident_names": [
+    "Cursor.exe",
+    "chrome.exe"
+  ]
+}

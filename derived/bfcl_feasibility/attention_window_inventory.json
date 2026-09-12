@@ -1,0 +1,44 @@
+{
+  "aggregation_modes": [
+    "ADAPTIVE_RKV",
+    "NORM_SUM",
+    "SUM"
+  ],
+  "mode": "attention_window_inventory",
+  "probe": "attention_window_support",
+  "scheduler_config_defaults": {
+    "cache_eviction_config": "<openvino_genai.py_openvino_genai.CacheEvictionConfig object at 0x000001C62FE4A6F0>",
+    "sparse_attention_config": {
+      "mode": "SparseAttentionMode.TRISHAPE",
+      "num_retained_recent_tokens_in_cache": 1920,
+      "num_retained_start_tokens_in_cache": 128
+    },
+    "use_cache_eviction": false,
+    "use_sparse_attention": false
+  },
+  "sparse_attention_modes": [
+    "TRISHAPE",
+    "XATTENTION"
+  ],
+  "stack": {
+    "has_CacheEvictionConfig": true,
+    "has_ContinuousBatchingPipeline": true,
+    "has_PipelineConfig": false,
+    "has_SchedulerConfig": true,
+    "has_SparseAttentionConfig": true,
+    "openvino_genai": "2026.2.1.0-3123-7dea0459b2a"
+  },
+  "verdict": {
+    "attention_sink_field": "CacheEvictionConfig.start_size",
+    "axis_exists": true,
+    "enable_flag": "SchedulerConfig.use_cache_eviction",
+    "max_cache_field": "CacheEvictionConfig.max_cache_size",
+    "mechanism": "SchedulerConfig.use_cache_eviction + SchedulerConfig.cache_eviction_config (openvino_genai.CacheEvictionConfig)",
+    "note": "No PipelineConfig class in this package. No ATTENTION_SINK / SLIDING_WINDOW plugin property on Core SUPPORTED_PROPERTIES. Eviction is the GenAI CacheEvictionConfig path (start tokens retained = sink; recent tokens = window). SparseAttentionConfig.TRISHAPE also exposes num_retained_start_tokens_in_cache / num_retained_recent_tokens_in_cache for sparse prefill, which is related but not KV eviction.",
+    "pipeline_config_class": null,
+    "pipeline_path": "ContinuousBatchingPipeline, or LLMPipeline with {\"scheduler_config\": SchedulerConfig(...)}",
+    "plain_plugin_property_named_attention_sink": false,
+    "plain_plugin_property_named_sliding_window": false,
+    "sliding_recent_field": "CacheEvictionConfig.recent_size"
+  }
+}

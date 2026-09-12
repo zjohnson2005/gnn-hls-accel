@@ -1,0 +1,37 @@
+{
+    "reason":  "ac_lost_mid_run",
+    "detail":  "killed mid block 4 A2; exit 4294967295 (Windows killed)",
+    "stopped_at_utc":  "2026-08-03T13:21:52.4547161Z",
+    "power":  {
+                  "on_battery":  false,
+                  "pct":  62,
+                  "charging":  true,
+                  "BatteryStatus":  2
+              },
+    "cells_ok_true_count":  24,
+    "log_path":  "derived/mslice/affinity_matrix_run.log",
+    "last_15_log_lines":  [
+                              "  ok=True decode_tok_s=9.9815608598731",
+                              "  cooldown 30.0s à",
+                              "",
+                              "--- A4: ECORE_ONLY, ENABLE_CPU_PINNING=YES ---",
+                              "  ok=True decode_tok_s=8.766412547771726",
+                              "  cooldown 30.0s à",
+                              "",
+                              "--- A0: unconfined reference: no SCHEDULING_CORE_TYPE, no process affinity ---",
+                              "  ok=True decode_tok_s=15.866124025392343",
+                              "  cooldown 30.0s à",
+                              "",
+                              "--- A2: PCORE_ONLY, ENABLE_CPU_PINNING=YES ---",
+                              "  ok=False decode_tok_s=None",
+                              "  ERROR: child exited 4294967295",
+                              "  cooldown 30.0s à"
+                          ],
+    "artifacts":  {
+                      "affinity_matrix_json":  false,
+                      "phase_d":  false
+                  },
+    "matrix_processes_running":  false,
+    "rerun_required":  true,
+    "rerun_instruction":  "Plug AC power; re-run full affinity matrix from scratch under AC. Do not resume partial on battery. Partial results not publishable."
+}

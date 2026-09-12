@@ -1,0 +1,92 @@
+{
+  "arm_id": "gpu_only",
+  "classification": "OTHER",
+  "compile_error": "OSError: [Errno 22] Invalid argument",
+  "compile_ok": false,
+  "decode_tok_s": null,
+  "device_config": {
+    "arm_id": "gpu_only",
+    "cpu_properties": {
+      "ENABLE_CPU_PINNING": true,
+      "INFERENCE_NUM_THREADS": 4,
+      "SCHEDULING_CORE_TYPE": "PCORE_ONLY"
+    },
+    "generate_device": "GPU",
+    "label": "gpu only (single pipeline)",
+    "load_sequence": [
+      {
+        "device": "GPU",
+        "properties": {}
+      }
+    ]
+  },
+  "diagnostics": {
+    "config_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\delta_n.yaml",
+    "context_field_errors": {
+      "is_interactive": "GetUserObjectInformationW(UOI_FLAGS) size query returned 0, GetLastError=0"
+    },
+    "loads": [],
+    "max_new_tokens": 64,
+    "prompt": null,
+    "prompt_meta": null,
+    "prompt_mode": "ladder_exact",
+    "rss_window": null,
+    "text_head": null,
+    "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\tools\\smoke_gpu_exec.py\", line 345, in _smoke_body\n    prompt, prompt_meta = _build_ladder_prompt(\n                          ^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\tools\\smoke_gpu_exec.py\", line 193, in _build_ladder_prompt\n    entry = prompt_for(\n            ^^^^^^^^^^^\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\delta_n.py\", line 144, in prompt_for\n    _log(\"delta_n.prompt_built\", **entry)\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\delta_n.py\", line 65, in _log\n    print(json.dumps({\"event\": event, \"ts\": _utc(), **fields}, sort_keys=True), flush=True)\nOSError: [Errno 22] Invalid argument\n",
+    "ttft_ns": null,
+    "ttft_ns_perf_metrics": null,
+    "ttft_ns_streamer": null,
+    "ttft_source": null,
+    "working_set_lock": null
+  },
+  "execute_error": null,
+  "execute_ok": false,
+  "free_physical_at_peak": null,
+  "free_physical_mb_start": null,
+  "hostname": "computadora",
+  "is_interactive": null,
+  "kv_bytes_expected": null,
+  "launch_context": "ssh_foreground",
+  "model_id": "Qwen3-4B-int4-ov",
+  "n_tokens": 12000,
+  "ov_version": null,
+  "path_head": [
+    "C:\\windows\\system32",
+    "C:\\windows",
+    "C:\\windows\\System32\\Wbem",
+    "C:\\windows\\System32\\WindowsPowerShell\\v1.0\\",
+    "C:\\windows\\System32\\OpenSSH\\",
+    "C:\\Program Files\\dotnet\\"
+  ],
+  "peak_ws_bytes": null,
+  "power_request": {
+    "clear_last_error": 0,
+    "cleared": true,
+    "close_last_error": 0,
+    "closed": true,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x294",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM gpu_smoke; PowerRequestSystemRequired for compile+generate",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "gpu_smoke",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "prefill_s": null,
+  "process_id": 32912,
+  "python_exe": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\.venv-seam\\Scripts\\python.exe",
+  "python_in_venv": true,
+  "python_version": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "session_id": 0,
+  "timestamp_utc": "2026-08-08T00:02:10.108215+00:00",
+  "tokens_generated": null,
+  "wall_s": null,
+  "window_station": "Service-0x0-18ebbd55$",
+  "wslock_granted": null
+}

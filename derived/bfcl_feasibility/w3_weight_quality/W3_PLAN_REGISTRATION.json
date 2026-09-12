@@ -1,0 +1,47 @@
+{
+  "entry_assert": {
+    "mode": "prefix",
+    "n_reference": 20,
+    "n_run": 200
+  },
+  "entry_population": {
+    "api_filter": false,
+    "difficulty_filter": false,
+    "note": "No difficulty or API filter; original 20 were file first 20 \u2014 population never biased vs benchmark.",
+    "selection": "select_multi_turn_entries / _select_from_spec questions[:n]"
+  },
+  "kind": "w3_plan_registration",
+  "note": "Scale-to-200 pre-registration (DISPATCH \u2014 dry-run only, no launch).",
+  "power_analysis": {
+    "alpha": 0.05,
+    "design_effect": 2.0,
+    "endpoint": "per_turn_f2 two-proportion (int4 vs int8)",
+    "mde_absolute_accuracy": {
+      "design_effect_2": 0.10625053061953821,
+      "design_effect_2_pp": 10.6,
+      "unadjusted": 0.07513047070574437,
+      "unadjusted_pp": 7.5
+    },
+    "n_turns_planning": {
+      "int4_pilot_turns": 68,
+      "int8_pilot_turns": 70,
+      "n_entries_run": 200,
+      "projected_n_turns_per_arm": 690,
+      "source": "scaled from 20-entry pilot; restate at sealed"
+    },
+    "pilot_20_entry_superseded": {
+      "int4_per_turn": "30/68",
+      "int8_per_turn": "33/70",
+      "mde_pp_approx": 23.8,
+      "note": "Underpowered at MDE ~24 pp; superseded by n=200, not contradicted.",
+      "p": 0.72,
+      "z": 0.36
+    },
+    "planning_p_pooled": 0.45652173913043476,
+    "power": 0.8,
+    "predicted_direction": null,
+    "predicted_direction_note": "No predicted direction for the quality effect. Same reason as amendment 2026-08-28c.",
+    "two_sided": true
+  },
+  "recorded_utc": "2026-08-30T18:20:46.266937+00:00"
+}

@@ -1,0 +1,1663 @@
+{
+  "arm": {
+    "deadline_sentinel": "DEADLINE_DISABLED_S",
+    "escalation": "disabled",
+    "id": "arm_l",
+    "min_sentinel_headroom": "1.0e6"
+  },
+  "backend_config": {
+    "affinity_cpus": null,
+    "affinity_mechanism": "openvino_scheduling_core_type",
+    "enable_thinking": false,
+    "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "properties": {
+      "INFERENCE_NUM_THREADS": 4
+    },
+    "reasoning_mode": "thinking_off"
+  },
+  "cache_instrumented": false,
+  "cache_probe": {
+    "cache_instrumentation_note": "openvino_genai LLMPipeline exposes no cache_read/cache_creation counters; cached_prompt_tokens is a structural zero, not a measurement",
+    "cache_instrumented": false,
+    "cached_prompt_tokens_reported": [
+      0,
+      0,
+      0
+    ],
+    "call_labels": [
+      "first(P1)",
+      "repeat(P1)",
+      "control(P2, length-matched, distinct)"
+    ],
+    "probe_position": "after warmup",
+    "prompt_tokens": [
+      655,
+      655,
+      654
+    ],
+    "reuse_criterion": "ttft(repeat)/ttft(first) < 0.5 AND ttft(repeat)/ttft(distinct control) < 0.5; the control is what separates prefix reuse from first-call warmup",
+    "reuse_observed": false,
+    "ttft_ratio_second_over_control": 0.32624735370278,
+    "ttft_ratio_second_over_first": 1.7078918708615194,
+    "ttft_s": [
+      0.47226419,
+      0.806576171,
+      2.472284179
+    ],
+    "verdict": "no cross-call prefix reuse; full re-prefill"
+  },
+  "config_sha256": {
+    "efilter_yaml": "f683224d7cdf1869886f8de7f59c46d123e0fad4d8643f6c4ef957712ac87c2c",
+    "model_spec": "c774de4d71ffa48cb063553fd492fd928093e196726e4460ccb93e1f9be2f654",
+    "task_list": "bb8e4c5bc914e05aa04815c96006be9db2ae3dbc19ec911386c705c05c985142"
+  },
+  "confinement": {
+    "default_placement_citing_run_id": "5eb09eba-b321-4b7e-b7df-e9b01194d388",
+    "mechanism": null,
+    "reason": "mslice-a1a6 found zero mechanisms CONFINED in both prefill and decode (run 5eb09eba-b321-4b7e-b7df-e9b01194d388); none adopted, so none applied",
+    "target_label_basis": "OpenVINO default placement measured to load p_cpus=[0,1,2,3] regardless of thread count; the manifest target names where work ran, not a confinement claim"
+  },
+  "context_growth": {
+    "curve": [
+      {
+        "max_context_tokens": 665,
+        "mean_context_tokens": 654.8,
+        "min_context_tokens": 648,
+        "n": 20,
+        "step_idx": 0
+      },
+      {
+        "max_context_tokens": 946,
+        "mean_context_tokens": 854.2,
+        "min_context_tokens": 774,
+        "n": 20,
+        "step_idx": 1
+      },
+      {
+        "max_context_tokens": 1481,
+        "mean_context_tokens": 1101.4,
+        "min_context_tokens": 986,
+        "n": 5,
+        "step_idx": 2
+      },
+      {
+        "max_context_tokens": 1659,
+        "mean_context_tokens": 1414.5,
+        "min_context_tokens": 1170,
+        "n": 2,
+        "step_idx": 3
+      },
+      {
+        "max_context_tokens": 1334,
+        "mean_context_tokens": 1334.0,
+        "min_context_tokens": 1334,
+        "n": 1,
+        "step_idx": 4
+      },
+      {
+        "max_context_tokens": 1498,
+        "mean_context_tokens": 1498.0,
+        "min_context_tokens": 1498,
+        "n": 1,
+        "step_idx": 5
+      },
+      {
+        "max_context_tokens": 1662,
+        "mean_context_tokens": 1662.0,
+        "min_context_tokens": 1662,
+        "n": 1,
+        "step_idx": 6
+      },
+      {
+        "max_context_tokens": 1826,
+        "mean_context_tokens": 1826.0,
+        "min_context_tokens": 1826,
+        "n": 1,
+        "step_idx": 7
+      }
+    ],
+    "growth_ratio_last_over_first": 2.7886377519853394,
+    "max_context_tokens_observed": 1826,
+    "max_realized_steps": 8,
+    "mean_growth_tokens_per_step": 167.31428571428572
+  },
+  "escalation": {
+    "cloud_call_attempts": 0,
+    "deadline_s": 1000000000.0,
+    "escalated_steps": 0,
+    "headroom_factor": 70941524.35111399,
+    "max_observed_t_pred_s": 14.096116613602158,
+    "sentinel": "DEADLINE_DISABLED_S",
+    "sentinel_is_finite": true,
+    "verified_by": "policy.assert_escalation_disabled per step, on the logged deadline"
+  },
+  "experiment_id": "efilter-stage1",
+  "kv_geometry": {
+    "config_path": "C:/Users/zjohn/Projects/gnn-hls-accel/models/Qwen3-4B-int4-ov/config.json",
+    "config_sha256": "8de935ea1cdb814c2795b8ca82764009cc2f0cfbe28af8e46559d371ece31cfe",
+    "excludes": [
+      "weights",
+      "activations",
+      "allocator_slack",
+      "runtime_internal_copies"
+    ],
+    "formula": "2 * n_layers * n_kv_heads * head_dim * dtype_bytes",
+    "head_dim": 128,
+    "kv_bytes_per_token": 73728,
+    "kv_dtype": "u8",
+    "kv_dtype_bytes": 1,
+    "kv_dtype_source": "device_readback",
+    "model_name": "qwen3",
+    "n_attention_heads": 32,
+    "n_kv_heads": 8,
+    "n_layers": 36
+  },
+  "mode": "full",
+  "n_steps": 51,
+  "n_tasks": 20,
+  "openvino": {
+    "genai": "2026.2.1.0-3123-7dea0459b2a",
+    "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2"
+  },
+  "per_task": [
+    {
+      "completion_tokens_by_step": [
+        141,
+        70
+      ],
+      "context_tokens_by_step": [
+        656,
+        836
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 50
+      },
+      "jct_s": 55.1990615,
+      "kv_bytes_resident_by_step": [
+        58761216,
+        66797568
+      ],
+      "order_index": 0,
+      "peak_rss_bytes": 2595811328,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        656,
+        836
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T09",
+      "terminated_reason": "submitted",
+      "wall_s": 55.20124329999089
+    },
+    {
+      "completion_tokens_by_step": [
+        164,
+        95
+      ],
+      "context_tokens_by_step": [
+        649,
+        836
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 34
+      },
+      "jct_s": 36.9622045,
+      "kv_bytes_resident_by_step": [
+        59940864,
+        68640768
+      ],
+      "order_index": 1,
+      "peak_rss_bytes": 2567782400,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        649,
+        836
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T07",
+      "terminated_reason": "submitted",
+      "wall_s": 36.96354249998694
+    },
+    {
+      "completion_tokens_by_step": [
+        171,
+        142,
+        142,
+        142,
+        142,
+        142,
+        142,
+        142
+      ],
+      "context_tokens_by_step": [
+        649,
+        842,
+        1006,
+        1170,
+        1334,
+        1498,
+        1662,
+        1826
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 125
+      },
+      "jct_s": 137.6300199,
+      "kv_bytes_resident_by_step": [
+        60456960,
+        72548352,
+        84639744,
+        96731136,
+        108822528,
+        120913920,
+        133005312,
+        145096704
+      ],
+      "order_index": 2,
+      "peak_rss_bytes": 2690088960,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        649,
+        842,
+        1006,
+        1170,
+        1334,
+        1498,
+        1662,
+        1826
+      ],
+      "realized_steps": 8,
+      "success": false,
+      "task_id": "T04",
+      "terminated_reason": "max_steps",
+      "wall_s": 137.63007479999214
+    },
+    {
+      "completion_tokens_by_step": [
+        117,
+        191
+      ],
+      "context_tokens_by_step": [
+        662,
+        819
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 17
+      },
+      "jct_s": 18.3724743,
+      "kv_bytes_resident_by_step": [
+        57434112,
+        74465280
+      ],
+      "order_index": 3,
+      "peak_rss_bytes": 2712801280,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        662,
+        819
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T19",
+      "terminated_reason": "submitted",
+      "wall_s": 18.372534599970095
+    },
+    {
+      "completion_tokens_by_step": [
+        139,
+        150
+      ],
+      "context_tokens_by_step": [
+        651,
+        831
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 17
+      },
+      "jct_s": 17.8702566,
+      "kv_bytes_resident_by_step": [
+        58245120,
+        72327168
+      ],
+      "order_index": 4,
+      "peak_rss_bytes": 2718474240,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        651,
+        831
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T10",
+      "terminated_reason": "submitted",
+      "wall_s": 17.87031010002829
+    },
+    {
+      "completion_tokens_by_step": [
+        160,
+        133
+      ],
+      "context_tokens_by_step": [
+        654,
+        855
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 17
+      },
+      "jct_s": 18.4045946,
+      "kv_bytes_resident_by_step": [
+        60014592,
+        72843264
+      ],
+      "order_index": 5,
+      "peak_rss_bytes": 2725343232,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        654,
+        855
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T02",
+      "terminated_reason": "submitted",
+      "wall_s": 18.404629299999215
+    },
+    {
+      "completion_tokens_by_step": [
+        224,
+        79
+      ],
+      "context_tokens_by_step": [
+        649,
+        900
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 21
+      },
+      "jct_s": 23.0072352,
+      "kv_bytes_resident_by_step": [
+        64364544,
+        72179712
+      ],
+      "order_index": 6,
+      "peak_rss_bytes": 2744713216,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        649,
+        900
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T01",
+      "terminated_reason": "submitted",
+      "wall_s": 23.007278400007635
+    },
+    {
+      "completion_tokens_by_step": [
+        265,
+        512,
+        160,
+        192
+      ],
+      "context_tokens_by_step": [
+        654,
+        946,
+        1481,
+        1659
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 84
+      },
+      "jct_s": 92.1229734,
+      "kv_bytes_resident_by_step": [
+        67756032,
+        107495424,
+        120987648,
+        136470528
+      ],
+      "order_index": 7,
+      "peak_rss_bytes": 2858692608,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        654,
+        946,
+        1481,
+        1659
+      ],
+      "realized_steps": 4,
+      "success": true,
+      "task_id": "T16",
+      "terminated_reason": "submitted",
+      "wall_s": 92.12301460001618
+    },
+    {
+      "completion_tokens_by_step": [
+        152,
+        78
+      ],
+      "context_tokens_by_step": [
+        648,
+        838
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 15
+      },
+      "jct_s": 15.8621473,
+      "kv_bytes_resident_by_step": [
+        58982400,
+        67534848
+      ],
+      "order_index": 8,
+      "peak_rss_bytes": 2854707200,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        648,
+        838
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T14",
+      "terminated_reason": "submitted",
+      "wall_s": 15.86276780004846
+    },
+    {
+      "completion_tokens_by_step": [
+        208,
+        60,
+        102
+      ],
+      "context_tokens_by_step": [
+        654,
+        900,
+        988
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 24
+      },
+      "jct_s": 26.2188212,
+      "kv_bytes_resident_by_step": [
+        63553536,
+        70778880,
+        80363520
+      ],
+      "order_index": 9,
+      "peak_rss_bytes": 2857570304,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        654,
+        900,
+        988
+      ],
+      "realized_steps": 3,
+      "success": true,
+      "task_id": "T18",
+      "terminated_reason": "submitted",
+      "wall_s": 26.218861100031063
+    },
+    {
+      "completion_tokens_by_step": [
+        147,
+        93
+      ],
+      "context_tokens_by_step": [
+        655,
+        842
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 15
+      },
+      "jct_s": 16.1295878,
+      "kv_bytes_resident_by_step": [
+        59129856,
+        68935680
+      ],
+      "order_index": 10,
+      "peak_rss_bytes": 2857717760,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        655,
+        842
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T06",
+      "terminated_reason": "submitted",
+      "wall_s": 16.129662799998187
+    },
+    {
+      "completion_tokens_by_step": [
+        245,
+        76,
+        97
+      ],
+      "context_tokens_by_step": [
+        657,
+        941,
+        1046
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 26
+      },
+      "jct_s": 28.17426,
+      "kv_bytes_resident_by_step": [
+        66502656,
+        74981376,
+        84271104
+      ],
+      "order_index": 11,
+      "peak_rss_bytes": 2703020032,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        657,
+        941,
+        1046
+      ],
+      "realized_steps": 3,
+      "success": true,
+      "task_id": "T11",
+      "terminated_reason": "submitted",
+      "wall_s": 28.17494890000671
+    },
+    {
+      "completion_tokens_by_step": [
+        124,
+        94
+      ],
+      "context_tokens_by_step": [
+        658,
+        821
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 19
+      },
+      "jct_s": 20.3628748,
+      "kv_bytes_resident_by_step": [
+        57655296,
+        67461120
+      ],
+      "order_index": 12,
+      "peak_rss_bytes": 2694991872,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        658,
+        821
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T15",
+      "terminated_reason": "submitted",
+      "wall_s": 20.363145700015593
+    },
+    {
+      "completion_tokens_by_step": [
+        85,
+        111
+      ],
+      "context_tokens_by_step": [
+        656,
+        782
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 15
+      },
+      "jct_s": 15.697386,
+      "kv_bytes_resident_by_step": [
+        54632448,
+        65839104
+      ],
+      "order_index": 13,
+      "peak_rss_bytes": 2714079232,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        656,
+        782
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T20",
+      "terminated_reason": "submitted",
+      "wall_s": 15.697456100024283
+    },
+    {
+      "completion_tokens_by_step": [
+        172,
+        165
+      ],
+      "context_tokens_by_step": [
+        660,
+        881
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 24
+      },
+      "jct_s": 26.4259604,
+      "kv_bytes_resident_by_step": [
+        61341696,
+        77119488
+      ],
+      "order_index": 14,
+      "peak_rss_bytes": 2699472896,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        660,
+        881
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T13",
+      "terminated_reason": "submitted",
+      "wall_s": 26.426110800006427
+    },
+    {
+      "completion_tokens_by_step": [
+        129,
+        197
+      ],
+      "context_tokens_by_step": [
+        665,
+        843
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 24
+      },
+      "jct_s": 26.2314476,
+      "kv_bytes_resident_by_step": [
+        58540032,
+        76677120
+      ],
+      "order_index": 15,
+      "peak_rss_bytes": 2709168128,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        665,
+        843
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T03",
+      "terminated_reason": "submitted",
+      "wall_s": 26.23154519998934
+    },
+    {
+      "completion_tokens_by_step": [
+        84,
+        124
+      ],
+      "context_tokens_by_step": [
+        657,
+        774
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 14
+      },
+      "jct_s": 15.3325887,
+      "kv_bytes_resident_by_step": [
+        54632448,
+        66207744
+      ],
+      "order_index": 16,
+      "peak_rss_bytes": 2697117696,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        657,
+        774
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T12",
+      "terminated_reason": "submitted",
+      "wall_s": 15.332861399976537
+    },
+    {
+      "completion_tokens_by_step": [
+        180,
+        77
+      ],
+      "context_tokens_by_step": [
+        657,
+        878
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 24
+      },
+      "jct_s": 25.4984619,
+      "kv_bytes_resident_by_step": [
+        61710336,
+        70410240
+      ],
+      "order_index": 17,
+      "peak_rss_bytes": 2700767232,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        657,
+        878
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T17",
+      "terminated_reason": "submitted",
+      "wall_s": 25.498533200006932
+    },
+    {
+      "completion_tokens_by_step": [
+        132,
+        116
+      ],
+      "context_tokens_by_step": [
+        651,
+        822
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 21
+      },
+      "jct_s": 22.5095197,
+      "kv_bytes_resident_by_step": [
+        57729024,
+        69156864
+      ],
+      "order_index": 18,
+      "peak_rss_bytes": 2701135872,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        651,
+        822
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T08",
+      "terminated_reason": "submitted",
+      "wall_s": 22.509578299999703
+    },
+    {
+      "completion_tokens_by_step": [
+        205,
+        61,
+        105
+      ],
+      "context_tokens_by_step": [
+        654,
+        897,
+        986
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 27
+      },
+      "jct_s": 29.6087659,
+      "kv_bytes_resident_by_step": [
+        63332352,
+        70631424,
+        80437248
+      ],
+      "order_index": 19,
+      "peak_rss_bytes": 2702311424,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        654,
+        897,
+        986
+      ],
+      "realized_steps": 3,
+      "success": true,
+      "task_id": "T05",
+      "terminated_reason": "submitted",
+      "wall_s": 29.608806399977766
+    }
+  ],
+  "policy": {
+    "escalation_semantics": "predictive",
+    "kind": "predictive_local_first",
+    "kv_residency": "discard",
+    "n_out_observed_medians": {
+      "answer_synthesis": 105,
+      "tool_call_synthesis": 142
+    },
+    "n_out_pred_source": "frozen from the pilot's observed medians (configs/efilter.yaml)",
+    "n_out_pred_tokens": {
+      "answer_synthesis": 82,
+      "tool_call_synthesis": 142
+    },
+    "n_out_pred_tokens_used": {
+      "answer_synthesis": 82,
+      "tool_call_synthesis": 142
+    },
+    "prompt_token_source": "chars_div_4_proxy"
+  },
+  "pre_registration": "docs/EXPERIMENT_escalation_filter.md",
+  "quiesce": {
+    "battery_pct": 100.0,
+    "battery_saver": false,
+    "captured_utc": "2026-08-03T23:24:08.185388+00:00",
+    "charge_rate_mw": 0.0,
+    "charging": false,
+    "charging_complete": true,
+    "charging_complete_definition": "powerstate.is_charging_complete() AND on_battery is False; the helper alone returns True for a discharging machine because its callers gate AC separately",
+    "charging_complete_reason": "charging_false",
+    "cloud_credential_check_method": "os.environ direct read; load_dotenv deliberately NOT called",
+    "cloud_credential_present": false,
+    "defender_realtime": "enabled",
+    "deviations": [],
+    "display_brightness": 50.0,
+    "forbidden_process_hits": [],
+    "on_battery": false,
+    "overlay_guid": "00000000-0000-0000-0000-000000000000",
+    "package_temp_c": null,
+    "package_temp_evidence": "Get-CimInstance : Not supported \nAt line:1 char:1\n+ Get-CimInstance -Namespace root/WMI -ClassName MSAcpi_ThermalZoneTemp ...\n+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n  ",
+    "package_temp_source": "unavailable_pending_M2.2_M2.3",
+    "power_online_wmi": true,
+    "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+    "power_plan_name": "Best Performance"
+  },
+  "run_id": "1a0166b9-cbaf-43f4-8d76-bcd7c01841e0",
+  "run_wall_s": 1812.442690900003,
+  "step_type_limitation": "step_type is hardcoded to tool_call_synthesis except on the terminal step; the taxonomy is NOT expanded here (that is its own amendment). Stratify by step_idx.",
+  "success_rate": 0.95,
+  "thermal": {
+    "cooldown_between_tasks_s": 60,
+    "frequency_sample_interval_s": 1.0,
+    "package_temp_source": "unavailable_pending_M2.2_M2.3",
+    "regime": "confound",
+    "throttle_detection": "frequency_pdh",
+    "warmup_s": 120
+  },
+  "throughput": {
+    "measured_by_run_id": "inline_warmup",
+    "r_decode_tok_s": 10.650699012168726,
+    "r_prefill_tok_s": 1601.501497743809,
+    "target": "cpu-p",
+    "warmup": {
+      "discarded_first": true,
+      "measured_by": "inline warmup of this run; recorded in this run's sealed summary",
+      "n_generations": 9,
+      "n_scored": 8,
+      "r_decode_cv": 0.17013389013652963,
+      "r_decode_tok_s": 10.650699012168726,
+      "r_prefill_cv": 0.03632092162433752,
+      "r_prefill_tok_s": 1601.501497743809,
+      "samples": [
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 32.273,
+          "i": 0,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 8.682628520213578,
+          "r_prefill_tok_s": 33.66167924563149,
+          "ttft_s": 19.458328125,
+          "ttft_source": "perf_metrics",
+          "wall_s": 32.2424752
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 42.987,
+          "i": 1,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 10.814246604651945,
+          "r_prefill_tok_s": 1509.9124472772287,
+          "ttft_s": 0.433799987,
+          "ttft_source": "perf_metrics",
+          "wall_s": 10.6980379
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 53.648,
+          "i": 2,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 10.810909367767183,
+          "r_prefill_tok_s": 1665.7786625263734,
+          "ttft_s": 0.393209503,
+          "ttft_source": "perf_metrics",
+          "wall_s": 10.6606159
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 64.434,
+          "i": 3,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 10.703057829536034,
+          "r_prefill_tok_s": 1588.3543507978068,
+          "ttft_s": 0.412376495,
+          "ttft_source": "perf_metrics",
+          "wall_s": 10.7832445
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 75.688,
+          "i": 4,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 10.231653305622102,
+          "r_prefill_tok_s": 1624.7440894730844,
+          "ttft_s": 0.403140411,
+          "ttft_source": "perf_metrics",
+          "wall_s": 11.251827
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 86.587,
+          "i": 5,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 10.598340194801416,
+          "r_prefill_tok_s": 1544.2645818921917,
+          "ttft_s": 0.424150115,
+          "ttft_source": "perf_metrics",
+          "wall_s": 10.8974882
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 97.487,
+          "i": 6,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 10.590592167265013,
+          "r_prefill_tok_s": 1576.407243704401,
+          "ttft_s": 0.41550177,
+          "ttft_source": "perf_metrics",
+          "wall_s": 10.8965021
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 108.192,
+          "i": 7,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 10.778806139218386,
+          "r_prefill_tok_s": 1614.6486446898114,
+          "ttft_s": 0.40566101,
+          "ttft_source": "perf_metrics",
+          "wall_s": 10.7036475
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 127.582,
+          "i": 8,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 5.842474232625609,
+          "r_prefill_tok_s": 1681.2114730819587,
+          "ttft_s": 0.389600006,
+          "ttft_source": "perf_metrics",
+          "wall_s": 19.3884001
+        }
+      ],
+      "warmup_s_actual": 127.582,
+      "warmup_s_requested": 120.0
+    }
+  }
+}

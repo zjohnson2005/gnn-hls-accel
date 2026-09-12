@@ -1,0 +1,81 @@
+{
+  "arms": [
+    "gpu_only_f16"
+  ],
+  "criterion": "completion",
+  "gpu_only_f16_pin_note": "gpu_only_f16 requests KV_CACHE_PRECISION=f16 and has matched readback=f16 on prior cells (not the old bare gpu_only that read back dynamic).",
+  "ir_bytes": 2290768181,
+  "ir_sha256": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+  "kind": "c1_kv_precision_ceiling",
+  "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+  "pre_registered_predictions": {
+    "M_available_mb": 6918.62890625,
+    "W_ir_bytes": 2290768181,
+    "arms": {
+      "gpu_only_f16": {
+        "binding": "MEMORY",
+        "k_plus_w_B_per_token": 234827,
+        "n_max": 21138.71080838234,
+        "n_max_memory": 21138.71080838234,
+        "n_max_position": 40960.0,
+        "predicted_ceiling": 21139
+      },
+      "gpu_only_u4": {
+        "binding": "MEMORY",
+        "k_plus_w_B_per_token": 135000,
+        "n_max": 36769.92624444445,
+        "n_max_memory": 36769.92624444445,
+        "n_max_position": 40960.0,
+        "predicted_ceiling": 36770
+      },
+      "gpu_only_u8": {
+        "binding": "MEMORY",
+        "k_plus_w_B_per_token": 171532,
+        "n_max": 28938.85714035865,
+        "n_max_memory": 28938.85714035865,
+        "n_max_position": 40960.0,
+        "predicted_ceiling": 28939
+      }
+    },
+    "declared_risk": {
+      "extrapolation": "Model fitted on n<=12000; predictions extrapolate to ~40000 (~3.4x beyond measured range).",
+      "workspace_not_constant": "Workspace residual ~87,371 B/token (f16) vs ~98,000 (u8/u4), a 12% spread. A miss on the secondary is as likely extrapolation error as model error \u2014 do not conflate them in the artifact."
+    },
+    "example_at_M_10200_mb": {
+      "f16": 35788,
+      "note": "operator-stated reference at M=10200 MB; this run uses measured M",
+      "u4": 62257,
+      "u8": 48994
+    },
+    "formula": "n_max_memory=(M-W)/(k+w); n_max=min(n_max_memory, n_max_position)",
+    "k_plus_w_source": "41e419bd measured B/token (f16 234827, u8 171532, u4 ~135000)",
+    "primary_prediction": {
+      "claim": "u8 and u4 give the SAME ceiling, 40960, because both are position-limited. u4 buys zero context over u8 on this machine while still costing prefill latency.",
+      "falsified_if": "u4 exceeds u8 beyond the bisection resolution (+/- 250 tokens)"
+    },
+    "secondary_prediction": {
+      "claim": "f16 walls by memory below 40960, near 35800 +/- 10% at M~10200 MB (recomputed from this run's M).",
+      "falsified_if": "f16 reaches the position limit",
+      "predicted_ceiling_at_this_M": 21139
+    }
+  },
+  "search": {
+    "criterion": "completion",
+    "high": 12500,
+    "low": 12000,
+    "pass_requires_all_repeats": true,
+    "repeats_per_probe": 1,
+    "resolution_tokens": 250,
+    "slo_s": null
+  },
+  "session_id": "295c32f3-0a7f-4837-abea-db5e150c8b62",
+  "slo_s": null,
+  "started_utc": "2026-09-08T18:43:59.813843+00:00",
+  "status": "running",
+  "watchdog": {
+    "interval_s": 60,
+    "kill_log": "derived\\c2_ttft\\completion_iso_295c32f3-0a7f-4837-abea-db5e150c8b62\\watchdog_kills.jsonl",
+    "mechanism": "Popen_CREATE_NEW_PROCESS_GROUP",
+    "pid": 22472
+  }
+}

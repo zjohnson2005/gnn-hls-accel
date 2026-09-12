@@ -1,0 +1,71 @@
+{
+  "a621_entries_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\session_residency\\a621ff7d-2919-463d-aaf6-673f9e6bafbc\\session_residency_entries_gpu_only_RESIDENT.json",
+  "a621_reference_session": "a621ff7d-2919-463d-aaf6-673f9e6bafbc",
+  "abort_methodology_note": "Watchdog logged only watchdog_start_kill; sibling died under DETACHED_PROCESS. WorkloadsSessionHost pid 6040 started ~4 min later and survived the session (~2.18 GB). Cleanest evidence of a guard reporting healthy while doing nothing. Do not delete.",
+  "abort_reason": "watchdog_failed_wsh_resident_2177mb",
+  "aborted_utc": "2026-09-02T01:24:09.921042+00:00",
+  "arm_cli": "cpu-p",
+  "arm_id": "A",
+  "arm_map_note": "cpu-p \u2192 delta_n.yaml id A; gpu_only \u2192 gpu_only",
+  "entry_assert": {
+    "mode": "exact",
+    "n_reference": 20,
+    "n_run": 20
+  },
+  "feasibility_table": {
+    "cells": [
+      "cpu-p \u00d7 NON_RESIDENT",
+      "cpu-p \u00d7 RESIDENT",
+      "gpu_only \u00d7 NON_RESIDENT",
+      "gpu_only \u00d7 RESIDENT"
+    ],
+    "n_entries_rationale": "20 not 200: original table is n=20; comparability > power; cpu-p at 200 \u2248 27 h.",
+    "one_arm_per_invocation": true,
+    "source": "docs/README_characterizations.md Axis 1\u00d72",
+    "this_cell": "cpu-p \u00d7 NON_RESIDENT"
+  },
+  "generation_config": {
+    "apply_chat_template": false,
+    "do_sample": false,
+    "identical_note": "Same generate_turn GenerationConfig as a621ff7d run_session_residency (do_sample=False, max_new_tokens=512, apply_chat_template=False).",
+    "identical_to_a621ff7d": true,
+    "max_new_tokens": 512,
+    "mode": "greedy",
+    "pairing_seed": 20260810,
+    "sampler_active": false,
+    "source": "tools/bfcl_feasibility_probe.py generate_turn GenerationConfig"
+  },
+  "ir_sha256": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+  "kind": "x2_feasibility_table",
+  "max_new_tokens": 512,
+  "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+  "n_entries": 20,
+  "onset": {
+    "chosen_2h_gate": "PROVISIONAL \u2014 this arm is the derivation source",
+    "per_entry_fields": [
+      "uptime_s",
+      "available_mb",
+      "available_method"
+    ],
+    "purpose": "Within-arm TTFT vs uptime_s. If upward trend inside one long arm (esp. cpu-p NON_RESIDENT ~9630 s), replace chosen 2 h gate with measured knee."
+  },
+  "residency_mode": "NON_RESIDENT",
+  "seed": 20260810,
+  "session_id": "91905556-3e51-4018-99f9-aaf421a31728",
+  "started_utc": "2026-09-01T18:16:47.782616+00:00",
+  "status": "aborted",
+  "watchdog": {
+    "enabled": true,
+    "handle": {
+      "interval_s": 300,
+      "kill_log": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\x2_feasibility_table\\91905556-3e51-4018-99f9-aaf421a31728\\watchdog_kills.jsonl",
+      "kind": "process",
+      "mechanism": "sibling_powershell_process",
+      "pid": 2556,
+      "script": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\x2_feasibility_table\\91905556-3e51-4018-99f9-aaf421a31728\\_wsh_watchdog.ps1"
+    },
+    "interval_s": 300,
+    "note": "Sibling powershell re-kill every interval_s for life of worker; not Start-Job. Measured WSH respawn ~10-15 min.",
+    "process": "WorkloadsSessionHost"
+  }
+}

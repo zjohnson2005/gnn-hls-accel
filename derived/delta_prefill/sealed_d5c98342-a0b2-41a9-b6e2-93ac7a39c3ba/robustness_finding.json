@@ -1,0 +1,32 @@
+{
+  "admissibility": "robustness_finding",
+  "cell": {
+    "arm": "gpu_only",
+    "artifact": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_prefill\\d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba\\delta_prefill_ssh_detached_armgpu_only_RESIDENT_nc12000_d500_r1.json",
+    "cell_index": 6,
+    "classification_recorded": "OTHER",
+    "delta": 500,
+    "elapsed_s": 2856.468,
+    "ended_utc": "2026-08-10T00:03:04.1323550Z",
+    "execute_error_from_cell_json": "RuntimeError: Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\graph\\impls\\onednn\\primitive_onednn_base.h:550:\ncould not execute a primitive\n\n",
+    "exit_code": -1,
+    "mode": "RESIDENT",
+    "n_cached": 12000,
+    "repeat": 1,
+    "started_utc": "2026-08-09T23:15:27.6647793Z"
+  },
+  "cell_duration_context": {
+    "citing_session_id": "d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba",
+    "hung_elapsed_s": 2856.468,
+    "ok_max_elapsed_s": 616.846
+  },
+  "class": "post_record_hung_child_operator_kill",
+  "note": "Not merely a bad cell: after CL_OUT_OF_RESOURCES / oneDNN failure the child wrote its cell record, then spun one core ~47 min until the operator killed it (exit=-1). Matrix continued; twelve cells remained after this hang. generation.timeout_s bounds generate() inside the child only \u2014 nothing bounded the post-record hang. Recorded verbatim as a harness robustness finding.",
+  "onednn_stderr_source": "derived/delta_prefill/_launches/delta_prefill_20260809_183202.log",
+  "onednn_stderr_verbatim": "onednn_verbose,v1,primitive,error,ocl,errcode -5,CL_OUT_OF_RESOURCES,src\\gpu\\intel\\ocl\\kernel.cpp:232,src\\gpu\\intel\\ocl\\kernel.cpp:232",
+  "operator_kill": {
+    "elapsed_s_observed": 2856.468,
+    "exit_code": -1,
+    "narrative": "child spun one core ~47 min after writing its record and was killed by the operator, exit=-1"
+  }
+}

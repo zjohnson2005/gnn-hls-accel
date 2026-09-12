@@ -1,0 +1,20 @@
+{
+  "analysis_in_plan": false,
+  "analysis_location": "Write-ThreeNumbers stdout in launch log only (derived/delta_prefill/_launches/delta_prefill_20260823_150728.log); never persisted into plan/summary",
+  "cell_files_on_disk": {
+    "canary": 25,
+    "cartesian_complete": true,
+    "matrix": 288
+  },
+  "plan_cells_ps_list_serialization": "plan.cells was {value:[...], Count:288} from ConvertTo-Json on List[object]; seal_delta_prefill_session.py expected a JSON array and globbed delta_prefill_*.json (0 hits). This sealer unwraps value.",
+  "plan_sha256": "b586697e620369f35b8f72d3d85fd0feb50944791dac8fd02f4b11b02bce1b7f",
+  "result_json": {
+    "last_result_json_exists": true,
+    "registered_result_path": "derived/delta_prefill/_launches/delta_prefill_20260823_150728.result.json",
+    "registered_result_path_exists": false,
+    "session_result_json_exists": false,
+    "why": "Orchestrate registers result_path=$tagLaunch.result.json, but DetachedWorker writes only derived/delta_prefill/_launches/last_result.json (run_delta_prefill_matrix.ps1 ~1509). Session-dir result.json is written only on the HeartbeatOnly verify_detach path (~1068), not on the matrix worker path. Fix deferred per dispatch."
+  },
+  "summary_is_byte_identical_copy_of_plan": true,
+  "summary_sha256": "b586697e620369f35b8f72d3d85fd0feb50944791dac8fd02f4b11b02bce1b7f"
+}

@@ -1,0 +1,185 @@
+{
+  "affinity_readback": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "completed": true,
+  "exception": null,
+  "failure_mode": null,
+  "generation": {
+    "commit_bytes_end": 3829231616,
+    "commit_bytes_start": 638193664,
+    "completion_chars": 309,
+    "completion_tokens_reported": 64,
+    "free_memory_mb_end": 2338.6640625,
+    "free_memory_mb_min": 2337.6640625,
+    "free_memory_mb_start": 7429.0703125,
+    "free_physical_mb_at_peak": 2338.625,
+    "free_physical_mb_min": 2337.6640625,
+    "free_physical_mb_start": 7429.0703125,
+    "n_rss_samples": 519,
+    "peak_commit_bytes": 3829313536,
+    "peak_rss_bytes": 5828145152,
+    "prompt_tokens_reported": 2048,
+    "r_decode_tok_s": 14.58430917549093,
+    "r_prefill_tok_s": 73.15150612496956,
+    "rss_bytes_end": 5828136960,
+    "rss_bytes_start": 472174592,
+    "rss_interval_s": 0.05,
+    "rss_sampler_overhead_s": 0.205547,
+    "text_head": "It seems you've provided a repetitive passage that is commonly known as the \" pangram,\" a sentence that uses every letter of the English alphabet at least once. The original version is:\n\n**\"The quick ",
+    "ttft_ns": 27996689453,
+    "ttft_source": "perf_metrics",
+    "wall_s": 32.31640040001366
+  },
+  "loads": [
+    {
+      "available_delta_mb": 388.12890625,
+      "compile_s": 1.8537571000051685,
+      "device": "CPU",
+      "memory_after": {
+        "available_mb": 7429.37890625,
+        "percent": 53.5,
+        "rss_mb": 449.69140625,
+        "used_mb": 8546.796875
+      },
+      "memory_before": {
+        "available_mb": 7817.5078125,
+        "percent": 51.1,
+        "rss_mb": 52.359375,
+        "used_mb": 8158.66796875
+      },
+      "properties": {
+        "ENABLE_CPU_PINNING": true,
+        "INFERENCE_NUM_THREADS": 4,
+        "SCHEDULING_CORE_TYPE": "PCORE_ONLY"
+      },
+      "rss_delta_mb": 397.33203125
+    }
+  ],
+  "memory_after_generate": {
+    "available_mb": 2338.65625,
+    "percent": 85.4,
+    "rss_mb": 5558.1640625,
+    "used_mb": 13637.51953125
+  },
+  "memory_after_import": {
+    "available_mb": 7817.50390625,
+    "percent": 51.1,
+    "rss_mb": 51.98828125,
+    "used_mb": 8158.671875
+  },
+  "memory_baseline": {
+    "available_mb": 7842.32421875,
+    "percent": 50.9,
+    "rss_mb": 19.33984375,
+    "used_mb": 8133.8515625
+  },
+  "memory_before_generate": {
+    "available_mb": 7429.0703125,
+    "percent": 53.5,
+    "rss_mb": 450.2890625,
+    "used_mb": 8547.10546875
+  },
+  "memory_resident_before_inference": {
+    "available_mb": 7429.37890625,
+    "percent": 53.5,
+    "rss_mb": 449.6953125,
+    "used_mb": 8546.796875
+  },
+  "phase": "done",
+  "power_request": {
+    "clear_last_error": 0,
+    "cleared": true,
+    "close_last_error": 0,
+    "closed": true,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x1c8",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "measurement_child",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "spec": {
+    "affinity_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "generate_device": "CPU",
+    "load_sequence": [
+      {
+        "device": "CPU",
+        "properties": {
+          "ENABLE_CPU_PINNING": true,
+          "INFERENCE_NUM_THREADS": 4,
+          "SCHEDULING_CORE_TYPE": "PCORE_ONLY"
+        }
+      }
+    ],
+    "max_new_tokens": 64,
+    "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "prompt_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n2048.txt",
+    "rss_interval_s": 0.05,
+    "wslock": {
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "mode": "request"
+    }
+  },
+  "standing_reservation": {
+    "available_delta_mb": 412.9453125,
+    "basis": "delta from process baseline (pre-import) to all backends compiled and resident, before any measured generation; rss and system-available disagree when weights are file-backed or shared, and both are reported without attribution",
+    "rss_delta_mb": 430.35546875
+  },
+  "working_set_limits_after": {
+    "flags": 9,
+    "hard_min_enabled": true,
+    "maximum_bytes": 12884901888,
+    "minimum_bytes": 4294967296,
+    "read": true
+  },
+  "working_set_lock": {
+    "after": {
+      "flags": 9,
+      "hard_min_enabled": true,
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "read": true
+    },
+    "before": {
+      "flags": 10,
+      "hard_min_enabled": false,
+      "maximum_bytes": 1413120,
+      "minimum_bytes": 204800,
+      "read": true
+    },
+    "call": "SetProcessWorkingSetSizeEx",
+    "flags": 1,
+    "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+    "granted": true,
+    "last_error": 0,
+    "privilege": {
+      "attempted": true,
+      "granted": true,
+      "last_error": 0,
+      "last_error_meaning": "ERROR_SUCCESS",
+      "privilege": "SeIncreaseWorkingSetPrivilege",
+      "step": "AdjustTokenPrivileges"
+    },
+    "requested": true,
+    "requested_maximum_bytes": 12884901888,
+    "requested_minimum_bytes": 4294967296,
+    "returned": true
+  }
+}

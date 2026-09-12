@@ -1,0 +1,2677 @@
+{
+  "source_report": "derived/bfcl_feasibility/multi_turn_gpu_probe_report.json",
+  "source_entries": "derived/bfcl_feasibility/multi_turn_probe_entries.json",
+  "trajectory_level": {
+    "accuracy": 0.05,
+    "correct": 1,
+    "n": 20
+  },
+  "wall_clock_s": {
+    "max": 138.63900289998855,
+    "mean": 26.211920694998845,
+    "min": 5.828487899998436,
+    "n": 20,
+    "sum": 524.2384138999769
+  },
+  "per_turn_accuracy": {
+    "correct_turns": 30,
+    "total_turns": 70,
+    "accuracy": 0.42857142857142855,
+    "definition": "Structural multiset equality of parsed execute-call signatures (function name + normalized args) per user turn. bfcl_eval.multi_turn_checker does NOT expose a per-turn accuracy aggregate; it returns a single valid bool and short-circuits on first failure (state/response checks). Per-turn figures here are DERIVED from sealed model_result_decoded vs gold reference."
+  },
+  "first_divergence_turn_histogram": {
+    "0": 11,
+    "1": 4,
+    "2": 2,
+    "3": 2,
+    "none(all_correct)": 1
+  },
+  "first_divergence_type_counts": {
+    "wrong_arguments": 9,
+    "extra_call": 1,
+    "wrong_function": 4,
+    "missing_required_call": 5,
+    "none": 1
+  },
+  "n_entries_diverge_turn0": 11,
+  "passing_entry_ids": [
+    "multi_turn_base_12"
+  ],
+  "entries": [
+    {
+      "id": "multi_turn_base_0",
+      "n_user_turns": 4,
+      "n_correct_turns": 0,
+      "per_turn_correct": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "per_turn_labels": [
+        "wrong_arguments",
+        "wrong_arguments",
+        "wrong_arguments",
+        "wrong_function"
+      ],
+      "first_divergence_turn": 0,
+      "first_divergence_type": "wrong_arguments",
+      "first_divergence_detail": {
+        "missing_required": [
+          "cd"
+        ],
+        "extra_calls": [],
+        "wrong_args_funcs": [
+          "mv"
+        ],
+        "wrong_function": false,
+        "model_names": [
+          "mkdir",
+          "mv"
+        ],
+        "gold_names": [
+          "cd",
+          "mkdir",
+          "mv"
+        ],
+        "model_calls": [
+          "mkdir(dir_name='temp')",
+          "mv(source='final_report.pdf',destination='temp/final_report.pdf')"
+        ],
+        "gold_calls": [
+          "cd(folder='document')",
+          "mkdir(dir_name='temp')",
+          "mv(source='final_report.pdf', destination='temp')"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        4193,
+        4345,
+        4471,
+        4604
+      ],
+      "context_growth_delta_tokens_measured": 623,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:instance_state_mismatch",
+      "wall_s": 18.562490900003468,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:instance_state_mismatch",
+        "official_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+        "official_fail_turn": 0
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "mkdir",
+            "mv"
+          ],
+          "gold_names": [
+            "cd",
+            "mkdir",
+            "mv"
+          ],
+          "model_calls": [
+            "mkdir(dir_name='temp')",
+            "mv(source='final_report.pdf',destination='temp/final_report.pdf')"
+          ],
+          "gold_calls": [
+            "cd(folder='document')",
+            "mkdir(dir_name='temp')",
+            "mv(source='final_report.pdf', destination='temp')"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "grep"
+          ],
+          "gold_names": [
+            "cd",
+            "grep"
+          ],
+          "model_calls": [
+            "grep(file_name='document.txt',pattern='budget analysis')"
+          ],
+          "gold_calls": [
+            "cd(folder='temp')",
+            "grep(file_name='final_report.pdf',pattern='budget analysis')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "sort"
+          ],
+          "gold_names": [
+            "sort"
+          ],
+          "model_calls": [
+            "sort(file_name='final_report.pdf')"
+          ],
+          "gold_calls": [
+            "sort('final_report.pdf')"
+          ]
+        },
+        {
+          "turn": 3,
+          "correct": false,
+          "label": "wrong_function",
+          "model_names": [
+            "mkdir",
+            "mv",
+            "mv",
+            "diff"
+          ],
+          "gold_names": [
+            "cd",
+            "mv",
+            "cd",
+            "diff"
+          ],
+          "model_calls": [
+            "mkdir(dir_name='temp')",
+            "mv(source='previous_report.pdf',destination='temp/previous_report.pdf')",
+            "mv(source='final_report.pdf',destination='temp/final_report.pdf')",
+            "diff(file_name1='final_report.pdf',file_name2='previous_report.pdf')"
+          ],
+          "gold_calls": [
+            "cd(folder='..')",
+            "mv(source='previous_report.pdf',destination='temp')",
+            "cd(folder='temp')",
+            "diff(file_name1='final_report.pdf',file_name2='previous_report.pdf')"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_1",
+      "n_user_turns": 4,
+      "n_correct_turns": 1,
+      "per_turn_correct": [
+        false,
+        false,
+        false,
+        true
+      ],
+      "per_turn_labels": [
+        "extra_call",
+        "wrong_function",
+        "missing_required_call",
+        "none"
+      ],
+      "first_divergence_turn": 0,
+      "first_divergence_type": "extra_call",
+      "first_divergence_detail": {
+        "missing_required": [],
+        "extra_calls": [
+          "pwd"
+        ],
+        "wrong_args_funcs": [],
+        "wrong_function": false,
+        "model_names": [
+          "pwd",
+          "ls"
+        ],
+        "gold_names": [
+          "ls"
+        ],
+        "model_calls": [
+          "pwd()",
+          "ls(a=True)"
+        ],
+        "gold_calls": [
+          "ls(a=True)"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        2609,
+        2781,
+        2941,
+        3096
+      ],
+      "context_growth_delta_tokens_measured": 559,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:instance_state_mismatch",
+      "wall_s": 16.039461799999117,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:instance_state_mismatch",
+        "official_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+        "official_fail_turn": 1
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": false,
+          "label": "extra_call",
+          "model_names": [
+            "pwd",
+            "ls"
+          ],
+          "gold_names": [
+            "ls"
+          ],
+          "model_calls": [
+            "pwd()",
+            "ls(a=True)"
+          ],
+          "gold_calls": [
+            "ls(a=True)"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": false,
+          "label": "wrong_function",
+          "model_names": [
+            "cd",
+            "mkdir"
+          ],
+          "gold_names": [
+            "cd",
+            "mv"
+          ],
+          "model_calls": [
+            "cd(folder='workspace')",
+            "mkdir(dir_name='archive')"
+          ],
+          "gold_calls": [
+            "cd(folder='workspace')",
+            "mv(source='log.txt',destination='archive')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": false,
+          "label": "missing_required_call",
+          "model_names": [
+            "grep"
+          ],
+          "gold_names": [
+            "cd",
+            "grep"
+          ],
+          "model_calls": [
+            "grep(file_name='log.txt',pattern='Error')"
+          ],
+          "gold_calls": [
+            "cd(folder='archive')",
+            "grep(file_name='log.txt',pattern='Error')"
+          ]
+        },
+        {
+          "turn": 3,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "tail"
+          ],
+          "gold_names": [
+            "tail"
+          ],
+          "model_calls": [
+            "tail(file_name='log.txt',lines=20)"
+          ],
+          "gold_calls": [
+            "tail(file_name='log.txt',lines=20)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_2",
+      "n_user_turns": 5,
+      "n_correct_turns": 1,
+      "per_turn_correct": [
+        false,
+        true,
+        false,
+        false,
+        false
+      ],
+      "per_turn_labels": [
+        "wrong_arguments",
+        "none",
+        "extra_call",
+        "wrong_function",
+        "missing_required_call"
+      ],
+      "first_divergence_turn": 0,
+      "first_divergence_type": "wrong_arguments",
+      "first_divergence_detail": {
+        "missing_required": [],
+        "extra_calls": [
+          "cd",
+          "echo",
+          "mkdir"
+        ],
+        "wrong_args_funcs": [
+          "cd"
+        ],
+        "wrong_function": false,
+        "model_names": [
+          "cd",
+          "mkdir",
+          "cd",
+          "touch",
+          "echo"
+        ],
+        "gold_names": [
+          "cd",
+          "touch"
+        ],
+        "model_calls": [
+          "cd(folder='document')",
+          "mkdir(dir_name='document')",
+          "cd(folder='document')",
+          "touch(file_name='TeamNotes.txt')",
+          "echo(content='This is a new document for tracking fresh ideas. You can start adding your ideas here.',file_name='TeamNotes.txt')"
+        ],
+        "gold_calls": [
+          "cd(folder='documents')",
+          "touch(file_name='TeamNotes.txt')"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        3819,
+        4510,
+        4736,
+        5211
+      ],
+      "context_growth_delta_tokens_measured": 3924,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:force_terminated",
+      "wall_s": 138.63900289998855,
+      "force_quit": true,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:instance_state_mismatch",
+        "official_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+        "official_fail_turn": 0
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "cd",
+            "mkdir",
+            "cd",
+            "touch",
+            "echo"
+          ],
+          "gold_names": [
+            "cd",
+            "touch"
+          ],
+          "model_calls": [
+            "cd(folder='document')",
+            "mkdir(dir_name='document')",
+            "cd(folder='document')",
+            "touch(file_name='TeamNotes.txt')",
+            "echo(content='This is a new document for tracking fresh ideas. You can start adding your ideas here.',file_name='TeamNotes.txt')"
+          ],
+          "gold_calls": [
+            "cd(folder='documents')",
+            "touch(file_name='TeamNotes.txt')"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "echo"
+          ],
+          "gold_names": [
+            "echo"
+          ],
+          "model_calls": [
+            "echo(content='Collaboration leads to success. Innovation ignites growth.',file_name='TeamNotes.txt')"
+          ],
+          "gold_calls": [
+            "echo(content='Collaboration leads to success. Innovation ignites growth.',file_name='TeamNotes.txt')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": false,
+          "label": "extra_call",
+          "model_names": [
+            "diff",
+            "ls",
+            "cat"
+          ],
+          "gold_names": [
+            "diff"
+          ],
+          "model_calls": [
+            "diff(file_name1='ideas.txt',file_name2='TeamNotes.txt')",
+            "ls(a=False)",
+            "cat(file_name='TeamNotes.txt')"
+          ],
+          "gold_calls": [
+            "diff(file_name1='ideas.txt', file_name2='TeamNotes.txt')"
+          ]
+        },
+        {
+          "turn": 3,
+          "correct": false,
+          "label": "wrong_function",
+          "model_names": [
+            "ls",
+            "mkdir",
+            "cp",
+            "cp",
+            "cp",
+            "cp",
+            "cp",
+            "cp",
+            "cp",
+            "cp",
+            "cp",
+            "cp",
+            "cp",
+            "cp",
+            "cp",
+            "cp",
+            "cp",
+            "cp",
+            "cp",
+            "cp",
+            "cp"
+          ],
+          "gold_names": [
+            "cp",
+            "cd",
+            "mv"
+          ],
+          "model_calls": [
+            "ls(a=False)",
+            "mkdir(dir_name='archive')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')",
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          "gold_calls": [
+            "cp(source='TeamNotes.txt',destination='Archived')",
+            "cd(folder='Archived')",
+            "mv(source='TeamNotes.txt',destination='IdeasArchive.txt')"
+          ]
+        },
+        {
+          "turn": 4,
+          "correct": false,
+          "label": "missing_required_call",
+          "model_names": [],
+          "gold_names": [
+            "cat"
+          ],
+          "model_calls": [],
+          "gold_calls": [
+            "cat(file_name='IdeasArchive.txt')"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_3",
+      "n_user_turns": 2,
+      "n_correct_turns": 1,
+      "per_turn_correct": [
+        true,
+        false
+      ],
+      "per_turn_labels": [
+        "none",
+        "wrong_function"
+      ],
+      "first_divergence_turn": 1,
+      "first_divergence_type": "wrong_function",
+      "first_divergence_detail": {
+        "missing_required": [
+          "cd"
+        ],
+        "extra_calls": [
+          "cp"
+        ],
+        "wrong_args_funcs": [
+          "cp"
+        ],
+        "wrong_function": false,
+        "model_names": [
+          "cp",
+          "cp",
+          "cp"
+        ],
+        "gold_names": [
+          "cd",
+          "cd",
+          "cp",
+          "cp"
+        ],
+        "model_calls": [
+          "cp(source='projects/photography/test_image1.jpg',destination='backup_tests')",
+          "cp(source='projects/photography/test_document.txt',destination='backup_tests')",
+          "cp(source='projects/photography/backup_tests',destination='backup_tests')"
+        ],
+        "gold_calls": [
+          "cd(folder='projects')",
+          "cd(folder='photography')",
+          "cp(source='test_image1.jpg',destination='backup_tests')",
+          "cp(source='test_document.txt',destination='backup_tests')"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        2629,
+        2812
+      ],
+      "context_growth_delta_tokens_measured": 370,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:instance_state_mismatch",
+      "wall_s": 16.261978399998043,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:instance_state_mismatch",
+        "official_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+        "official_fail_turn": 1
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "find"
+          ],
+          "gold_names": [
+            "find"
+          ],
+          "model_calls": [
+            "find(path='.',name='test')"
+          ],
+          "gold_calls": [
+            "find(path='.',name='test')"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": false,
+          "label": "wrong_function",
+          "model_names": [
+            "cp",
+            "cp",
+            "cp"
+          ],
+          "gold_names": [
+            "cd",
+            "cd",
+            "cp",
+            "cp"
+          ],
+          "model_calls": [
+            "cp(source='projects/photography/test_image1.jpg',destination='backup_tests')",
+            "cp(source='projects/photography/test_document.txt',destination='backup_tests')",
+            "cp(source='projects/photography/backup_tests',destination='backup_tests')"
+          ],
+          "gold_calls": [
+            "cd(folder='projects')",
+            "cd(folder='photography')",
+            "cp(source='test_image1.jpg',destination='backup_tests')",
+            "cp(source='test_document.txt',destination='backup_tests')"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_4",
+      "n_user_turns": 3,
+      "n_correct_turns": 2,
+      "per_turn_correct": [
+        true,
+        true,
+        false
+      ],
+      "per_turn_labels": [
+        "none",
+        "none",
+        "wrong_arguments"
+      ],
+      "first_divergence_turn": 2,
+      "first_divergence_type": "wrong_arguments",
+      "first_divergence_detail": {
+        "missing_required": [],
+        "extra_calls": [],
+        "wrong_args_funcs": [
+          "post_tweet"
+        ],
+        "wrong_function": false,
+        "model_names": [
+          "post_tweet"
+        ],
+        "gold_names": [
+          "post_tweet"
+        ],
+        "model_calls": [
+          "post_tweet(content='Here is the sorted result of the report: \\n\\nInitial report content\\nUnsorted data\\nMore unsorted data',tags=['#currenttechtrend'],mentions=['Julia'])"
+        ],
+        "gold_calls": [
+          "post_tweet(content='Initial report content More unsorted data Unsorted data', mentions=['@Julia'], tags=['#currenttechtrend'])"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        4394,
+        4493,
+        4621
+      ],
+      "context_growth_delta_tokens_measured": 360,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:instance_state_mismatch",
+      "wall_s": 14.790964200001326,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:instance_state_mismatch",
+        "official_error_message": "Model instance for TwitterAPI does not match the state with ground truth instance.",
+        "official_fail_turn": 2
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "ls"
+          ],
+          "gold_names": [
+            "ls"
+          ],
+          "model_calls": [
+            "ls(a=True)"
+          ],
+          "gold_calls": [
+            "ls(a=True)"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "sort"
+          ],
+          "gold_names": [
+            "sort"
+          ],
+          "model_calls": [
+            "sort(file_name='report.txt')"
+          ],
+          "gold_calls": [
+            "sort(file_name='report.txt')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "post_tweet"
+          ],
+          "gold_names": [
+            "post_tweet"
+          ],
+          "model_calls": [
+            "post_tweet(content='Here is the sorted result of the report: \\n\\nInitial report content\\nUnsorted data\\nMore unsorted data',tags=['#currenttechtrend'],mentions=['Julia'])"
+          ],
+          "gold_calls": [
+            "post_tweet(content='Initial report content More unsorted data Unsorted data', mentions=['@Julia'], tags=['#currenttechtrend'])"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_5",
+      "n_user_turns": 4,
+      "n_correct_turns": 2,
+      "per_turn_correct": [
+        false,
+        false,
+        true,
+        true
+      ],
+      "per_turn_labels": [
+        "wrong_function",
+        "wrong_function",
+        "none",
+        "none"
+      ],
+      "first_divergence_turn": 0,
+      "first_divergence_type": "wrong_function",
+      "first_divergence_detail": {
+        "missing_required": [
+          "cd",
+          "mv"
+        ],
+        "extra_calls": [
+          "find"
+        ],
+        "wrong_args_funcs": [],
+        "wrong_function": true,
+        "model_names": [
+          "find"
+        ],
+        "gold_names": [
+          "cd",
+          "mv"
+        ],
+        "model_calls": [
+          "find(path='.',name='analysis_report.csv')"
+        ],
+        "gold_calls": [
+          "cd(folder='project')",
+          "mv(source='analysis_report.csv',destination='archive')"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        4200,
+        4330,
+        4509,
+        4753
+      ],
+      "context_growth_delta_tokens_measured": 606,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:instance_state_mismatch",
+      "wall_s": 18.69200350000756,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:instance_state_mismatch",
+        "official_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+        "official_fail_turn": 0
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": false,
+          "label": "wrong_function",
+          "model_names": [
+            "find"
+          ],
+          "gold_names": [
+            "cd",
+            "mv"
+          ],
+          "model_calls": [
+            "find(path='.',name='analysis_report.csv')"
+          ],
+          "gold_calls": [
+            "cd(folder='project')",
+            "mv(source='analysis_report.csv',destination='archive')"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": false,
+          "label": "wrong_function",
+          "model_names": [
+            "mv"
+          ],
+          "gold_names": [
+            "cat",
+            "sort"
+          ],
+          "model_calls": [
+            "mv(source='analysis_report.csv',destination='archive/analysis_report.csv')"
+          ],
+          "gold_calls": [
+            "cat(file_name='archive_summary.txt')",
+            "sort(file_name='archive_summary.txt')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "authenticate_twitter",
+            "post_tweet"
+          ],
+          "gold_names": [
+            "authenticate_twitter",
+            "post_tweet"
+          ],
+          "model_calls": [
+            "authenticate_twitter(username='dr_smith',password='securePass123')",
+            "post_tweet(content='Managed to archive important data files!',tags=['#DataManagement', '#Efficiency'])"
+          ],
+          "gold_calls": [
+            "authenticate_twitter(username='dr_smith', password='securePass123')",
+            "post_tweet(content='Managed to archive important data files!',tags=['#DataManagement','#Efficiency'])"
+          ]
+        },
+        {
+          "turn": 3,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "comment"
+          ],
+          "gold_names": [
+            "comment"
+          ],
+          "model_calls": [
+            "comment(tweet_id=0,comment_content='Another successful task completed today!')"
+          ],
+          "gold_calls": [
+            "comment(tweet_id=0,comment_content='Another successful task completed today!')"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_6",
+      "n_user_turns": 5,
+      "n_correct_turns": 3,
+      "per_turn_correct": [
+        false,
+        true,
+        true,
+        true,
+        false
+      ],
+      "per_turn_labels": [
+        "missing_required_call",
+        "none",
+        "none",
+        "none",
+        "wrong_arguments"
+      ],
+      "first_divergence_turn": 0,
+      "first_divergence_type": "missing_required_call",
+      "first_divergence_detail": {
+        "missing_required": [
+          "cd"
+        ],
+        "extra_calls": [],
+        "wrong_args_funcs": [],
+        "wrong_function": false,
+        "model_names": [
+          "touch"
+        ],
+        "gold_names": [
+          "cd",
+          "touch"
+        ],
+        "model_calls": [
+          "touch(file_name='Annual_Report_2023.docx')"
+        ],
+        "gold_calls": [
+          "cd(folder='communal')",
+          "touch(file_name='Annual_Report_2023.docx')"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        2824,
+        2956,
+        3130,
+        3301,
+        3420
+      ],
+      "context_growth_delta_tokens_measured": 672,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:instance_state_mismatch",
+      "wall_s": 22.46694749999733,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:instance_state_mismatch",
+        "official_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+        "official_fail_turn": 0
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": false,
+          "label": "missing_required_call",
+          "model_names": [
+            "touch"
+          ],
+          "gold_names": [
+            "cd",
+            "touch"
+          ],
+          "model_calls": [
+            "touch(file_name='Annual_Report_2023.docx')"
+          ],
+          "gold_calls": [
+            "cd(folder='communal')",
+            "touch(file_name='Annual_Report_2023.docx')"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "echo"
+          ],
+          "gold_names": [
+            "echo"
+          ],
+          "model_calls": [
+            "echo(content='Company Earning: 2000 Company Expenditure: 500 Company Name: Gorilla',file_name='Annual_Report_2023.docx')"
+          ],
+          "gold_calls": [
+            "echo(content='Company Earning: 2000 Company Expenditure: 500 Company Name: Gorilla',file_name='Annual_Report_2023.docx')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "cat"
+          ],
+          "gold_names": [
+            "cat"
+          ],
+          "model_calls": [
+            "cat(file_name='Annual_Report_2023.docx')"
+          ],
+          "gold_calls": [
+            "cat(file_name='Annual_Report_2023.docx')"
+          ]
+        },
+        {
+          "turn": 3,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "wc"
+          ],
+          "gold_names": [
+            "wc"
+          ],
+          "model_calls": [
+            "wc(file_name='Annual_Report_2023.docx',mode='w')"
+          ],
+          "gold_calls": [
+            "wc(file_name='Annual_Report_2023.docx',mode='w')"
+          ]
+        },
+        {
+          "turn": 4,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "echo"
+          ],
+          "gold_names": [
+            "cd",
+            "cd",
+            "touch",
+            "echo"
+          ],
+          "model_calls": [
+            "echo(content='The number of words in Annual_Report_2023.docx is 9.',file_name='report_word_count.txt')"
+          ],
+          "gold_calls": [
+            "cd(folder='..')",
+            "cd(folder='shared')",
+            "touch(file_name='report_word_count.txt')",
+            "echo(content='9',file_name='report_word_count.txt')"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_7",
+      "n_user_turns": 3,
+      "n_correct_turns": 2,
+      "per_turn_correct": [
+        true,
+        false,
+        true
+      ],
+      "per_turn_labels": [
+        "none",
+        "wrong_function",
+        "none"
+      ],
+      "first_divergence_turn": 1,
+      "first_divergence_type": "wrong_function",
+      "first_divergence_detail": {
+        "missing_required": [
+          "find"
+        ],
+        "extra_calls": [
+          "ls"
+        ],
+        "wrong_args_funcs": [],
+        "wrong_function": true,
+        "model_names": [
+          "ls"
+        ],
+        "gold_names": [
+          "find"
+        ],
+        "model_calls": [
+          "ls(a=True)"
+        ],
+        "gold_calls": [
+          "find(path='.',name='goal')"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        4413,
+        4558,
+        4682
+      ],
+      "context_growth_delta_tokens_measured": 321,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:execution_response_mismatch",
+      "wall_s": 14.299609800000326,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:execution_response_mismatch",
+        "official_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 1.",
+        "official_fail_turn": 1
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "cd",
+            "mkdir"
+          ],
+          "gold_names": [
+            "cd",
+            "mkdir"
+          ],
+          "model_calls": [
+            "cd(folder='academic_venture')",
+            "mkdir(dir_name='academic_hub')"
+          ],
+          "gold_calls": [
+            "cd(folder='academic_venture')",
+            "mkdir(dir_name='academic_hub')"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": false,
+          "label": "wrong_function",
+          "model_names": [
+            "ls"
+          ],
+          "gold_names": [
+            "find"
+          ],
+          "model_calls": [
+            "ls(a=True)"
+          ],
+          "gold_calls": [
+            "find(path='.',name='goal')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "cat"
+          ],
+          "gold_names": [
+            "cat"
+          ],
+          "model_calls": [
+            "cat(file_name='goals.txt')"
+          ],
+          "gold_calls": [
+            "cat(file_name='goals.txt')"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_8",
+      "n_user_turns": 4,
+      "n_correct_turns": 3,
+      "per_turn_correct": [
+        true,
+        true,
+        false,
+        true
+      ],
+      "per_turn_labels": [
+        "none",
+        "none",
+        "wrong_arguments",
+        "none"
+      ],
+      "first_divergence_turn": 2,
+      "first_divergence_type": "wrong_arguments",
+      "first_divergence_detail": {
+        "missing_required": [
+          "authenticate_twitter"
+        ],
+        "extra_calls": [],
+        "wrong_args_funcs": [
+          "post_tweet"
+        ],
+        "wrong_function": false,
+        "model_names": [
+          "post_tweet"
+        ],
+        "gold_names": [
+          "authenticate_twitter",
+          "post_tweet"
+        ],
+        "model_calls": [
+          "post_tweet(content=\"Here are the differences between my experiment log and the previous study log:\\n\\nexperiment_log.txt:\\nObservation 1: Normal Observation 2: Anomaly detected Observation 3: Normal Observation 4: Anomaly detected \\n\\nprevious_study_log.txt:\\nObservation A: Normal Observation B: Normal Observation C: Anomaly detected\\n\\nDifferences:\\n1. The previous study's log has a different set of observations (A, B, C) compared to my experiment (1, 2, 3).\\n2. My experiment shows two anomalies (Observations 2 and 4), while the previous study only has one anomaly (Observation C).\\n3. The previous study's log does not mention any anomalies in Observations A and B, whereas my experiment notes anomalies in Observations 2 and 4.\\n\\nThese differences may indicate novel discoveries or deviations from the previous study's findings, which could influence our hypothesis.\",tags=['#experiment', '#anomaly', '#research'],mentions=['@dr_smith'])"
+        ],
+        "gold_calls": [
+          "authenticate_twitter(username='dr_smith', password='securePass123')",
+          "post_tweet(content='- Observation 1: Normal Observation 2: Anomaly detected Observation 3: Normal Observation 4: Anomaly detected \\n+ Observation A: Normal Observation B: Normal Observation C: Anomaly detected')"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        4427,
+        4621,
+        4995,
+        5775
+      ],
+      "context_growth_delta_tokens_measured": 1397,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:instance_state_mismatch",
+      "wall_s": 39.35692960000597,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:instance_state_mismatch",
+        "official_error_message": "Model instance for TwitterAPI does not match the state with ground truth instance.",
+        "official_fail_turn": 2
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "grep"
+          ],
+          "gold_names": [
+            "grep"
+          ],
+          "model_calls": [
+            "grep(file_name='experiment_log.txt',pattern='Anomaly')"
+          ],
+          "gold_calls": [
+            "grep(file_name='experiment_log.txt',pattern='Anomaly')"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "diff"
+          ],
+          "gold_names": [
+            "diff"
+          ],
+          "model_calls": [
+            "diff(file_name1='experiment_log.txt',file_name2='previous_study_log.txt')"
+          ],
+          "gold_calls": [
+            "diff(file_name1='experiment_log.txt', file_name2='previous_study_log.txt')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "post_tweet"
+          ],
+          "gold_names": [
+            "authenticate_twitter",
+            "post_tweet"
+          ],
+          "model_calls": [
+            "post_tweet(content=\"Here are the differences between my experiment log and the previous study log:\\n\\nexperiment_log.txt:\\nObservation 1: Normal Observation 2: Anomaly detected Observation 3: Normal Observation 4: Anomaly detected \\n\\nprevious_study_log.txt:\\nObservation A: Normal Observation B: Normal Observation C: Anomaly detected\\n\\nDifferences:\\n1. The previous study's log has a different set of observations (A, B, C) compared to my experiment (1, 2, 3).\\n2. My experiment shows two anomalies (Observations 2 and 4), while the previous study only has one anomaly (Observation C).\\n3. The previous study's log does not mention any anomalies in Observations A and B, whereas my experiment notes anomalies in Observations 2 and 4.\\n\\nThese differences may indicate novel discoveries or deviations from the previous study's findings, which could influence our hypothesis.\",tags=['#experiment', '#anomaly', '#research'],mentions=['@dr_smith'])"
+          ],
+          "gold_calls": [
+            "authenticate_twitter(username='dr_smith', password='securePass123')",
+            "post_tweet(content='- Observation 1: Normal Observation 2: Anomaly detected Observation 3: Normal Observation 4: Anomaly detected \\n+ Observation A: Normal Observation B: Normal Observation C: Anomaly detected')"
+          ]
+        },
+        {
+          "turn": 3,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "comment"
+          ],
+          "gold_names": [
+            "comment"
+          ],
+          "model_calls": [
+            "comment(tweet_id=1,comment_content='Cheers!')"
+          ],
+          "gold_calls": [
+            "comment(tweet_id=1,comment_content='Cheers!')"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_9",
+      "n_user_turns": 3,
+      "n_correct_turns": 0,
+      "per_turn_correct": [
+        false,
+        false,
+        false
+      ],
+      "per_turn_labels": [
+        "wrong_function",
+        "wrong_arguments",
+        "wrong_arguments"
+      ],
+      "first_divergence_turn": 0,
+      "first_divergence_type": "wrong_function",
+      "first_divergence_detail": {
+        "missing_required": [
+          "cd"
+        ],
+        "extra_calls": [
+          "find"
+        ],
+        "wrong_args_funcs": [],
+        "wrong_function": true,
+        "model_names": [
+          "find"
+        ],
+        "gold_names": [
+          "cd"
+        ],
+        "model_calls": [
+          "find(path='Documentation',name='FinalReport.txt')"
+        ],
+        "gold_calls": [
+          "cd(folder='Documentation')"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        2687,
+        2873,
+        3021
+      ],
+      "context_growth_delta_tokens_measured": 401,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:execution_response_mismatch",
+      "wall_s": 13.285797399992589,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:execution_response_mismatch",
+        "official_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+        "official_fail_turn": 0
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": false,
+          "label": "wrong_function",
+          "model_names": [
+            "find"
+          ],
+          "gold_names": [
+            "cd"
+          ],
+          "model_calls": [
+            "find(path='Documentation',name='FinalReport.txt')"
+          ],
+          "gold_calls": [
+            "cd(folder='Documentation')"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "cp"
+          ],
+          "gold_names": [
+            "cp",
+            "cd",
+            "mv"
+          ],
+          "model_calls": [
+            "cp(source='Documentation/FinalReport.txt',destination='Archives/ArchivedFinalReport2024.txt')"
+          ],
+          "gold_calls": [
+            "cp(source='FinalReport.txt',destination='Archives')",
+            "cd(folder='Archives')",
+            "mv(source='FinalReport.txt',destination='ArchivedFinalReport2024.txt')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "sort"
+          ],
+          "gold_names": [
+            "sort"
+          ],
+          "model_calls": [
+            "sort(file_name='Archives/ArchivedFinalReport2024.txt')"
+          ],
+          "gold_calls": [
+            "sort(file_name='ArchivedFinalReport2024.txt')"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_10",
+      "n_user_turns": 5,
+      "n_correct_turns": 2,
+      "per_turn_correct": [
+        false,
+        false,
+        true,
+        false,
+        true
+      ],
+      "per_turn_labels": [
+        "missing_required_call",
+        "wrong_arguments",
+        "none",
+        "missing_required_call",
+        "none"
+      ],
+      "first_divergence_turn": 0,
+      "first_divergence_type": "missing_required_call",
+      "first_divergence_detail": {
+        "missing_required": [
+          "cd"
+        ],
+        "extra_calls": [],
+        "wrong_args_funcs": [],
+        "wrong_function": false,
+        "model_names": [
+          "mkdir"
+        ],
+        "gold_names": [
+          "cd",
+          "mkdir"
+        ],
+        "model_calls": [
+          "mkdir(dir_name='Projects')"
+        ],
+        "gold_calls": [
+          "cd(folder='workspace')",
+          "mkdir(dir_name='Projects')"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        2598,
+        2702,
+        2856,
+        2991,
+        3125
+      ],
+      "context_growth_delta_tokens_measured": 581,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:instance_state_mismatch",
+      "wall_s": 18.12614520000352,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:instance_state_mismatch",
+        "official_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+        "official_fail_turn": 0
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": false,
+          "label": "missing_required_call",
+          "model_names": [
+            "mkdir"
+          ],
+          "gold_names": [
+            "cd",
+            "mkdir"
+          ],
+          "model_calls": [
+            "mkdir(dir_name='Projects')"
+          ],
+          "gold_calls": [
+            "cd(folder='workspace')",
+            "mkdir(dir_name='Projects')"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "mv"
+          ],
+          "gold_names": [
+            "mv",
+            "cd",
+            "mv"
+          ],
+          "model_calls": [
+            "mv(source='proposal_document',destination='Projects/final_proposal_2024')"
+          ],
+          "gold_calls": [
+            "mv(source='proposal.docx',destination='Projects')",
+            "cd(folder='Projects')",
+            "mv(source='proposal.docx',destination='final_proposal_2024')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "touch"
+          ],
+          "gold_names": [
+            "touch"
+          ],
+          "model_calls": [
+            "touch(file_name='notes.md')"
+          ],
+          "gold_calls": [
+            "touch(file_name='notes.md')"
+          ]
+        },
+        {
+          "turn": 3,
+          "correct": false,
+          "label": "missing_required_call",
+          "model_names": [
+            "echo"
+          ],
+          "gold_names": [
+            "touch",
+            "echo",
+            "diff"
+          ],
+          "model_calls": [
+            "echo(content='Hello',file_name='summary.txt')"
+          ],
+          "gold_calls": [
+            "touch(file_name='summary.txt')",
+            "echo(content='Hello',file_name='summary.txt')",
+            "diff(file_name1='notes.md',file_name2='summary.txt')"
+          ]
+        },
+        {
+          "turn": 4,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "wc"
+          ],
+          "gold_names": [
+            "wc"
+          ],
+          "model_calls": [
+            "wc(file_name='summary.txt',mode='c')"
+          ],
+          "gold_calls": [
+            "wc(file_name='summary.txt',mode='c')"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_11",
+      "n_user_turns": 2,
+      "n_correct_turns": 1,
+      "per_turn_correct": [
+        true,
+        false
+      ],
+      "per_turn_labels": [
+        "none",
+        "missing_required_call"
+      ],
+      "first_divergence_turn": 1,
+      "first_divergence_type": "missing_required_call",
+      "first_divergence_detail": {
+        "missing_required": [
+          "post_tweet"
+        ],
+        "extra_calls": [],
+        "wrong_args_funcs": [],
+        "wrong_function": false,
+        "model_names": [],
+        "gold_names": [
+          "post_tweet"
+        ],
+        "model_calls": [],
+        "gold_calls": [
+          "post_tweet(content='file1.txt, file2.txt',tags=['#fileshowcase'])"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        4393,
+        4546
+      ],
+      "context_growth_delta_tokens_measured": 153,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:empty_turn_model_response",
+      "wall_s": 9.222715299998526,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:empty_turn_model_response",
+        "official_error_message": "Model response list is empty for turn 1",
+        "official_fail_turn": 1
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "ls"
+          ],
+          "gold_names": [
+            "ls"
+          ],
+          "model_calls": [
+            "ls(a=True)"
+          ],
+          "gold_calls": [
+            "ls(a=True)"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": false,
+          "label": "missing_required_call",
+          "model_names": [],
+          "gold_names": [
+            "post_tweet"
+          ],
+          "model_calls": [],
+          "gold_calls": [
+            "post_tweet(content='file1.txt, file2.txt',tags=['#fileshowcase'])"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_12",
+      "n_user_turns": 3,
+      "n_correct_turns": 3,
+      "per_turn_correct": [
+        true,
+        true,
+        true
+      ],
+      "per_turn_labels": [
+        "none",
+        "none",
+        "none"
+      ],
+      "first_divergence_turn": null,
+      "first_divergence_type": null,
+      "first_divergence_detail": null,
+      "prompt_tokens_first_step_per_turn_measured": [
+        2813,
+        2945,
+        3059
+      ],
+      "context_growth_delta_tokens_measured": 297,
+      "trajectory_valid": true,
+      "trajectory_error_type": null,
+      "wall_s": 10.014925099996617,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": true,
+        "official_error_type": null,
+        "official_error_message": null,
+        "official_fail_turn": null
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "cd",
+            "touch"
+          ],
+          "gold_names": [
+            "cd",
+            "touch"
+          ],
+          "model_calls": [
+            "cd(folder='Documents')",
+            "touch(file_name='summary.txt')"
+          ],
+          "gold_calls": [
+            "cd(folder='Documents')",
+            "touch(file_name='summary.txt')"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "echo"
+          ],
+          "gold_names": [
+            "echo"
+          ],
+          "model_calls": [
+            "echo(content='quantum computing',file_name='summary.txt')"
+          ],
+          "gold_calls": [
+            "echo(content='quantum computing',file_name='summary.txt')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "wc"
+          ],
+          "gold_names": [
+            "wc"
+          ],
+          "model_calls": [
+            "wc(file_name='summary.txt',mode='w')"
+          ],
+          "gold_calls": [
+            "wc(file_name='summary.txt',mode='w')"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_13",
+      "n_user_turns": 2,
+      "n_correct_turns": 0,
+      "per_turn_correct": [
+        false,
+        false
+      ],
+      "per_turn_labels": [
+        "wrong_arguments",
+        "missing_required_call"
+      ],
+      "first_divergence_turn": 0,
+      "first_divergence_type": "wrong_arguments",
+      "first_divergence_detail": {
+        "missing_required": [
+          "cd"
+        ],
+        "extra_calls": [],
+        "wrong_args_funcs": [
+          "tail"
+        ],
+        "wrong_function": false,
+        "model_names": [
+          "tail"
+        ],
+        "gold_names": [
+          "cd",
+          "tail"
+        ],
+        "model_calls": [
+          "tail(file_name='documents/alpha.txt',lines=1)"
+        ],
+        "gold_calls": [
+          "cd(folder='documents')",
+          "tail(file_name='report.txt',lines=1)"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        4412,
+        4559
+      ],
+      "context_growth_delta_tokens_measured": 147,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:execution_response_mismatch",
+      "wall_s": 5.828487899998436,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:execution_response_mismatch",
+        "official_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+        "official_fail_turn": 0
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "tail"
+          ],
+          "gold_names": [
+            "cd",
+            "tail"
+          ],
+          "model_calls": [
+            "tail(file_name='documents/alpha.txt',lines=1)"
+          ],
+          "gold_calls": [
+            "cd(folder='documents')",
+            "tail(file_name='report.txt',lines=1)"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": false,
+          "label": "missing_required_call",
+          "model_names": [],
+          "gold_names": [
+            "diff"
+          ],
+          "model_calls": [],
+          "gold_calls": [
+            "diff(file_name1='report.txt',file_name2='summary.txt')"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_14",
+      "n_user_turns": 4,
+      "n_correct_turns": 3,
+      "per_turn_correct": [
+        true,
+        true,
+        true,
+        false
+      ],
+      "per_turn_labels": [
+        "none",
+        "none",
+        "none",
+        "missing_required_call"
+      ],
+      "first_divergence_turn": 3,
+      "first_divergence_type": "missing_required_call",
+      "first_divergence_detail": {
+        "missing_required": [
+          "send_message"
+        ],
+        "extra_calls": [],
+        "wrong_args_funcs": [],
+        "wrong_function": false,
+        "model_names": [
+          "message_login",
+          "add_contact"
+        ],
+        "gold_names": [
+          "message_login",
+          "add_contact",
+          "send_message"
+        ],
+        "model_calls": [
+          "message_login(user_id='USR001')",
+          "add_contact(user_name='John Levy')"
+        ],
+        "gold_calls": [
+          "message_login(user_id='USR001')",
+          "add_contact(user_name='John Levy')",
+          "send_message(receiver_id='USR005',message='Latest Quarter Performance has been well.')"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        3680,
+        3825,
+        4076,
+        4293
+      ],
+      "context_growth_delta_tokens_measured": 726,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:instance_state_mismatch",
+      "wall_s": 19.98891430000367,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:instance_state_mismatch",
+        "official_error_message": "Model instance for MessageAPI does not match the state with ground truth instance.",
+        "official_fail_turn": 3
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "cd",
+            "find"
+          ],
+          "gold_names": [
+            "cd",
+            "find"
+          ],
+          "model_calls": [
+            "cd(folder='ResearchDocs')",
+            "find(path='.',name='report.csv')"
+          ],
+          "gold_calls": [
+            "cd(folder='ResearchDocs')",
+            "find(path='.',name='report.csv')"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "grep"
+          ],
+          "gold_names": [
+            "grep"
+          ],
+          "model_calls": [
+            "grep(file_name='report.csv',pattern='Quarterly Financial Overview')"
+          ],
+          "gold_calls": [
+            "grep(file_name='report.csv',pattern='Quarterly Financial Overview')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "tail"
+          ],
+          "gold_names": [
+            "tail"
+          ],
+          "model_calls": [
+            "tail(file_name='report.csv',lines=5)"
+          ],
+          "gold_calls": [
+            "tail(file_name='report.csv',lines=5)"
+          ]
+        },
+        {
+          "turn": 3,
+          "correct": false,
+          "label": "missing_required_call",
+          "model_names": [
+            "message_login",
+            "add_contact"
+          ],
+          "gold_names": [
+            "message_login",
+            "add_contact",
+            "send_message"
+          ],
+          "model_calls": [
+            "message_login(user_id='USR001')",
+            "add_contact(user_name='John Levy')"
+          ],
+          "gold_calls": [
+            "message_login(user_id='USR001')",
+            "add_contact(user_name='John Levy')",
+            "send_message(receiver_id='USR005',message='Latest Quarter Performance has been well.')"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_15",
+      "n_user_turns": 5,
+      "n_correct_turns": 3,
+      "per_turn_correct": [
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      "per_turn_labels": [
+        "none",
+        "none",
+        "none",
+        "wrong_arguments",
+        "missing_required_call"
+      ],
+      "first_divergence_turn": 3,
+      "first_divergence_type": "wrong_arguments",
+      "first_divergence_detail": {
+        "missing_required": [],
+        "extra_calls": [
+          "wc"
+        ],
+        "wrong_args_funcs": [
+          "wc"
+        ],
+        "wrong_function": false,
+        "model_names": [
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc",
+          "wc"
+        ],
+        "gold_names": [
+          "wc",
+          "wc",
+          "wc"
+        ],
+        "model_calls": [
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')",
+          "wc(file_name='DataSet1.csv',mode='lwc')"
+        ],
+        "gold_calls": [
+          "wc(file_name='DataSet1.csv',mode='l')",
+          "wc(file_name='DataSet1.csv',mode='w')",
+          "wc(file_name='DataSet1.csv',mode='c')"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        4687,
+        4869,
+        5055,
+        5228
+      ],
+      "context_growth_delta_tokens_measured": 2504,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:force_terminated",
+      "wall_s": 88.09320769998885,
+      "force_quit": true,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:execution_response_mismatch",
+        "official_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 3.",
+        "official_fail_turn": 3
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "touch"
+          ],
+          "gold_names": [
+            "touch"
+          ],
+          "model_calls": [
+            "touch(file_name='DataSet1.csv')"
+          ],
+          "gold_calls": [
+            "touch(file_name='DataSet1.csv')"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "echo"
+          ],
+          "gold_names": [
+            "echo"
+          ],
+          "model_calls": [
+            "echo(content='Student | Math | Computer Science\\nAlice | 5 | 9\\nBob | 10 | 7',file_name='DataSet1.csv')"
+          ],
+          "gold_calls": [
+            "echo(content='Student | Math | Computer Science\\nAlice | 5 | 9\\nBob | 10 | 7',file_name='DataSet1.csv')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "tail"
+          ],
+          "gold_names": [
+            "tail"
+          ],
+          "model_calls": [
+            "tail(file_name='DataSet1.csv',lines=1)"
+          ],
+          "gold_calls": [
+            "tail(file_name='DataSet1.csv',lines=1)"
+          ]
+        },
+        {
+          "turn": 3,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc",
+            "wc"
+          ],
+          "gold_names": [
+            "wc",
+            "wc",
+            "wc"
+          ],
+          "model_calls": [
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')",
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          "gold_calls": [
+            "wc(file_name='DataSet1.csv',mode='l')",
+            "wc(file_name='DataSet1.csv',mode='w')",
+            "wc(file_name='DataSet1.csv',mode='c')"
+          ]
+        },
+        {
+          "turn": 4,
+          "correct": false,
+          "label": "missing_required_call",
+          "model_names": [],
+          "gold_names": [
+            "mean"
+          ],
+          "model_calls": [],
+          "gold_calls": [
+            "mean(numbers=[3,16,60])"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_16",
+      "n_user_turns": 3,
+      "n_correct_turns": 2,
+      "per_turn_correct": [
+        false,
+        true,
+        true
+      ],
+      "per_turn_labels": [
+        "wrong_arguments",
+        "none",
+        "none"
+      ],
+      "first_divergence_turn": 0,
+      "first_divergence_type": "wrong_arguments",
+      "first_divergence_detail": {
+        "missing_required": [
+          "cd",
+          "mv"
+        ],
+        "extra_calls": [],
+        "wrong_args_funcs": [
+          "cp"
+        ],
+        "wrong_function": false,
+        "model_names": [
+          "cp"
+        ],
+        "gold_names": [
+          "cd",
+          "cp",
+          "cd",
+          "mv"
+        ],
+        "model_calls": [
+          "cp(source='research_notes.txt',destination='archives/2024_research_backup.txt')"
+        ],
+        "gold_calls": [
+          "cd(folder='research')",
+          "cp(source='research_notes.txt',destination='archives')",
+          "cd(folder='archives')",
+          "mv(source='research_notes.txt',destination='2024_research_backup.txt')"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        2717,
+        2879,
+        3037
+      ],
+      "context_growth_delta_tokens_measured": 387,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:instance_state_mismatch",
+      "wall_s": 13.2492854000011,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:instance_state_mismatch",
+        "official_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+        "official_fail_turn": 0
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "cp"
+          ],
+          "gold_names": [
+            "cd",
+            "cp",
+            "cd",
+            "mv"
+          ],
+          "model_calls": [
+            "cp(source='research_notes.txt',destination='archives/2024_research_backup.txt')"
+          ],
+          "gold_calls": [
+            "cd(folder='research')",
+            "cp(source='research_notes.txt',destination='archives')",
+            "cd(folder='archives')",
+            "mv(source='research_notes.txt',destination='2024_research_backup.txt')"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "sort"
+          ],
+          "gold_names": [
+            "sort"
+          ],
+          "model_calls": [
+            "sort(file_name='2024_research_backup.txt')"
+          ],
+          "gold_calls": [
+            "sort(file_name='2024_research_backup.txt')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "wc"
+          ],
+          "gold_names": [
+            "wc"
+          ],
+          "model_calls": [
+            "wc(file_name='2024_research_backup.txt',mode='l')"
+          ],
+          "gold_calls": [
+            "wc(file_name='2024_research_backup.txt',mode='l')"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_17",
+      "n_user_turns": 3,
+      "n_correct_turns": 0,
+      "per_turn_correct": [
+        false,
+        false,
+        false
+      ],
+      "per_turn_labels": [
+        "missing_required_call",
+        "wrong_arguments",
+        "missing_required_call"
+      ],
+      "first_divergence_turn": 0,
+      "first_divergence_type": "missing_required_call",
+      "first_divergence_detail": {
+        "missing_required": [
+          "ls"
+        ],
+        "extra_calls": [],
+        "wrong_args_funcs": [],
+        "wrong_function": false,
+        "model_names": [],
+        "gold_names": [
+          "ls"
+        ],
+        "model_calls": [],
+        "gold_calls": [
+          "ls(a=True)"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        3687,
+        3758,
+        4007
+      ],
+      "context_growth_delta_tokens_measured": 433,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:empty_turn_model_response",
+      "wall_s": 15.815482399993925,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:empty_turn_model_response",
+        "official_error_message": "Model response list is empty for turn 0",
+        "official_fail_turn": 0
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": false,
+          "label": "missing_required_call",
+          "model_names": [],
+          "gold_names": [
+            "ls"
+          ],
+          "model_calls": [],
+          "gold_calls": [
+            "ls(a=True)"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "cd",
+            "find",
+            "cat"
+          ],
+          "gold_names": [
+            "cd",
+            "cat"
+          ],
+          "model_calls": [
+            "cd(folder='project folder')",
+            "find(path='.',name=\"Kelly's test report\")",
+            "cat(file_name=\"Kelly's test report\")"
+          ],
+          "gold_calls": [
+            "cd(folder='project')",
+            "cat(file_name='test_report.docx')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": false,
+          "label": "missing_required_call",
+          "model_names": [
+            "add_contact",
+            "view_messages_sent"
+          ],
+          "gold_names": [
+            "add_contact",
+            "send_message",
+            "view_messages_sent"
+          ],
+          "model_calls": [
+            "add_contact(user_name='Kelly')",
+            "view_messages_sent()"
+          ],
+          "gold_calls": [
+            "add_contact(user_name='Kelly')",
+            "send_message(receiver_id='USR005',message='Kelly Total Score: 96')",
+            "view_messages_sent()"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_18",
+      "n_user_turns": 3,
+      "n_correct_turns": 0,
+      "per_turn_correct": [
+        false,
+        false,
+        false
+      ],
+      "per_turn_labels": [
+        "wrong_arguments",
+        "missing_required_call",
+        "missing_required_call"
+      ],
+      "first_divergence_turn": 0,
+      "first_divergence_type": "wrong_arguments",
+      "first_divergence_detail": {
+        "missing_required": [
+          "cp",
+          "mkdir"
+        ],
+        "extra_calls": [],
+        "wrong_args_funcs": [
+          "cp"
+        ],
+        "wrong_function": false,
+        "model_names": [
+          "cp"
+        ],
+        "gold_names": [
+          "mkdir",
+          "cp",
+          "cp",
+          "cp",
+          "cp"
+        ],
+        "model_calls": [
+          "cp(source='Quarter1_Reports/*.txt',destination='Archived_Quarter1')"
+        ],
+        "gold_calls": [
+          "mkdir(dir_name='Archived_Quarter1')",
+          "cp(source='report1.txt',destination='Archived_Quarter1')",
+          "cp(source='report2.txt',destination='Archived_Quarter1')",
+          "cp(source='History101.txt',destination='Archived_Quarter1')",
+          "cp(source='History202.txt',destination='Archived_Quarter1')"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        4213,
+        4392,
+        4548
+      ],
+      "context_growth_delta_tokens_measured": 406,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:instance_state_mismatch",
+      "wall_s": 16.021786600002088,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:instance_state_mismatch",
+        "official_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+        "official_fail_turn": 0
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "cp"
+          ],
+          "gold_names": [
+            "mkdir",
+            "cp",
+            "cp",
+            "cp",
+            "cp"
+          ],
+          "model_calls": [
+            "cp(source='Quarter1_Reports/*.txt',destination='Archived_Quarter1')"
+          ],
+          "gold_calls": [
+            "mkdir(dir_name='Archived_Quarter1')",
+            "cp(source='report1.txt',destination='Archived_Quarter1')",
+            "cp(source='report2.txt',destination='Archived_Quarter1')",
+            "cp(source='History101.txt',destination='Archived_Quarter1')",
+            "cp(source='History202.txt',destination='Archived_Quarter1')"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": false,
+          "label": "missing_required_call",
+          "model_names": [
+            "cat"
+          ],
+          "gold_names": [
+            "cat",
+            "sort"
+          ],
+          "model_calls": [
+            "cat(file_name='MonthlySummary.docx')"
+          ],
+          "gold_calls": [
+            "cat(file_name='MonthlySummary.docx')",
+            "sort(file_name='MonthlySummary.docx')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": false,
+          "label": "missing_required_call",
+          "model_names": [
+            "diff"
+          ],
+          "gold_names": [
+            "diff",
+            "post_tweet"
+          ],
+          "model_calls": [
+            "diff(file_name1='History101.txt',file_name2='History202.txt')"
+          ],
+          "gold_calls": [
+            "diff(file_name1='History101.txt',file_name2='History202.txt')",
+            "post_tweet(content='- Introduction to History. Ancient civilizations.+ Advanced History. Modern world events.',mentions=['@Jerry'])"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_19",
+      "n_user_turns": 3,
+      "n_correct_turns": 1,
+      "per_turn_correct": [
+        true,
+        false,
+        false
+      ],
+      "per_turn_labels": [
+        "none",
+        "wrong_arguments",
+        "wrong_arguments"
+      ],
+      "first_divergence_turn": 1,
+      "first_divergence_type": "wrong_arguments",
+      "first_divergence_detail": {
+        "missing_required": [
+          "cd",
+          "mv"
+        ],
+        "extra_calls": [],
+        "wrong_args_funcs": [
+          "cp"
+        ],
+        "wrong_function": false,
+        "model_names": [
+          "cp"
+        ],
+        "gold_names": [
+          "cp",
+          "cd",
+          "mv"
+        ],
+        "model_calls": [
+          "cp(source='test_document.txt',destination='archives/final_document.txt')"
+        ],
+        "gold_calls": [
+          "cp(source='test_document.txt',destination='archives')",
+          "cd(folder='archives')",
+          "mv(source='test_document.txt',destination='final_document.txt')"
+        ]
+      },
+      "prompt_tokens_first_step_per_turn_measured": [
+        3561,
+        3668,
+        3843
+      ],
+      "context_growth_delta_tokens_measured": 334,
+      "trajectory_valid": false,
+      "trajectory_error_type": "multi_turn:instance_state_mismatch",
+      "wall_s": 15.482277999995858,
+      "force_quit": false,
+      "official_rescore": {
+        "official_valid": false,
+        "official_error_type": "multi_turn:instance_state_mismatch",
+        "official_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+        "official_fail_turn": 1
+      },
+      "turns": [
+        {
+          "turn": 0,
+          "correct": true,
+          "label": "none",
+          "model_names": [
+            "find"
+          ],
+          "gold_names": [
+            "find"
+          ],
+          "model_calls": [
+            "find(path='.',name='test_document.txt')"
+          ],
+          "gold_calls": [
+            "find(path='.',name='test_document.txt')"
+          ]
+        },
+        {
+          "turn": 1,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "cp"
+          ],
+          "gold_names": [
+            "cp",
+            "cd",
+            "mv"
+          ],
+          "model_calls": [
+            "cp(source='test_document.txt',destination='archives/final_document.txt')"
+          ],
+          "gold_calls": [
+            "cp(source='test_document.txt',destination='archives')",
+            "cd(folder='archives')",
+            "mv(source='test_document.txt',destination='final_document.txt')"
+          ]
+        },
+        {
+          "turn": 2,
+          "correct": false,
+          "label": "wrong_arguments",
+          "model_names": [
+            "cat"
+          ],
+          "gold_names": [
+            "cat"
+          ],
+          "model_calls": [
+            "cat(file_name='archives/final_document.txt')"
+          ],
+          "gold_calls": [
+            "cat(file_name='final_document.txt')"
+          ]
+        }
+      ]
+    }
+  ]
+}

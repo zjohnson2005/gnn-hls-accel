@@ -1,0 +1,43 @@
+Amendment 2026-08-28c - 28b reversed, formula evaluated. PRE-RUN.
+
+Amendment 2026-08-28b withdrew predictions P1/P2 citing an on-disk int8
+size of ~3.16 GB. The authoritative pin value contradicts that:
+
+  W4 = ir_bytes(Qwen3-4B-int4-ov) = 2,290,768,181
+  W8 = ir_bytes(Qwen3-4B-int8-ov) = 4,054,072,455
+  W8/W4 = 1.770
+
+The original bits-per-param derivation was correct; the disk delta was
+the error. Amendment 28b is REVERSED. Both moves remain in the record:
+a prediction withdrawn on bad evidence and restored on good evidence is
+a different object from one never questioned, and the difference is
+auditable.
+
+  KV_nominal  = 73,728 B/token    (u8, run 41e419bd)
+  KV_resident = 171,532 B/token   (u8 total, run 41e419bd)
+
+  ratio_lo(n) = (W8 + 171532n) / (W4 + 171532n)
+  ratio_hi(n) = (W8 +  73728n) / (W4 +  73728n)
+
+P2'. Observed int8:int4 decode ratio falls inside [ratio_lo, ratio_hi]:
+
+       n =  2,000    1.670 - 1.723
+       n =  5,000    1.560 - 1.663
+       n = 12,000    1.405 - 1.555
+
+     The bounds bracket whether the fixed ~95 KB/token workspace
+     participates in per-step bandwidth. Observations at the hi bound
+     mean it does not move per token; at the lo bound, it does. Either
+     answer is a finding about the memory system.
+
+P2''. THE TREND, load-bearing: the ratio DECLINES MONOTONICALLY with
+     n_cached, because shared KV bytes dilute the weight difference.
+     Flat or rising falsifies the additive weights+KV bandwidth model
+     regardless of where the point estimates land. Cannot be fitted
+     post hoc.
+
+P1'. int8 resident base exceeds int4's measured 2.3 GB by
+     (W8 - W4) = 1.763 GB, +/- 15%. Predicted int8 base 3.8 - 4.4 GB.
+
+FALSIFIED IF: any depth falls outside its band by more than 0.15, or
+the trend is non-monotone.

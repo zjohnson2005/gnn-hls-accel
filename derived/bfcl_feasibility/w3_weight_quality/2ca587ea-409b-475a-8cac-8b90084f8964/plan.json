@@ -1,0 +1,69 @@
+{
+  "a621_comparison_baseline": {
+    "arm_id": "gpu_only",
+    "artifact": "derived/bfcl_feasibility/session_residency/a621ff7d-2919-463d-aaf6-673f9e6bafbc/session_residency_gpu_only_RESIDENT_report.json",
+    "artifact_absolute": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\session_residency\\a621ff7d-2919-463d-aaf6-673f9e6bafbc\\session_residency_gpu_only_RESIDENT_report.json",
+    "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+    "note": "Explicit W-3 comparison baseline copied from a621ff7d session_residency_gpu_only_RESIDENT_report.json so the seal is auditable without hunting the other run. Entry ids and generation config are held fixed; model_spec is taken from that report (weight axis may differ from W-3 int8).",
+    "per_turn": {
+      "accuracy": 0.4411764705882353,
+      "correct": 30,
+      "field": "gpu_probe.accuracy_per_turn_f2",
+      "total": 68
+    },
+    "residency_mode": "RESIDENT",
+    "session_id": "a621ff7d-2919-463d-aaf6-673f9e6bafbc",
+    "trajectory": {
+      "accuracy": 0.05,
+      "correct": 1,
+      "field": "gpu_probe.accuracy_trajectory",
+      "n": 20
+    }
+  },
+  "a621_entries_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\session_residency\\a621ff7d-2919-463d-aaf6-673f9e6bafbc\\session_residency_entries_gpu_only_RESIDENT.json",
+  "a621_reference_session": "a621ff7d-2919-463d-aaf6-673f9e6bafbc",
+  "accuracy_trajectory": {
+    "accuracy": 0.05,
+    "correct": 1,
+    "n": 20
+  },
+  "arm": "gpu_only",
+  "dual_weight_in_session": false,
+  "dual_weight_note": "tools/bfcl_feasibility_probe.py binds one --model-spec per process (apply_model_spec + single LLMPipeline). int4 cannot run in the SAME session as int8. Reported rather than worked around with a second process under this run_id (W-2 within-session pairing does not apply).",
+  "ended_utc": "2026-08-30T17:05:53.921671+00:00",
+  "generation_config": {
+    "apply_chat_template": false,
+    "do_sample": false,
+    "identical_note": "a621ff7d used the same generate_turn GenerationConfig construction (do_sample=False, max_new_tokens=512, apply_chat_template=False) via run_session_residency; no alternate sampler knobs in that path.",
+    "identical_to_a621ff7d": true,
+    "max_new_tokens": 512,
+    "mode": "greedy",
+    "pairing_seed": 20260810,
+    "pairing_seed_note": "seed reaches select_multi_turn_entries / entry-order pairing only (no shuffle when n equals the fixed prefix). Not a sampler seed.",
+    "rng_seed": 0,
+    "sampler_active": false,
+    "source": "tools/bfcl_feasibility_probe.py generate_turn GenerationConfig",
+    "temperature": 1.0,
+    "temperature_top_p_top_k_rng_note": "Values above are openvino_genai.GenerationConfig library defaults after setting do_sample=False / max_new_tokens / apply_chat_template. With do_sample=False they do not reach the sampler; decoding is greedy argmax. A one-entry difference at n=20 is NOT sampling noise.",
+    "top_k": 18446744073709551615,
+    "top_p": 1.0
+  },
+  "gold_selftest": {
+    "n": 20,
+    "n_valid": 20,
+    "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\w3_weight_quality\\2ca587ea-409b-475a-8cac-8b90084f8964\\multi_turn_gold_selftest.json"
+  },
+  "ir_sha256": "f7d323d0eb94a6bc9a1bf807416877cbb988cfbd95e7f9ef12403951b90886ae",
+  "kind": "w3_bfcl_quality",
+  "ledger": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\w3_weight_quality\\2ca587ea-409b-475a-8cac-8b90084f8964\\w3_entry_ledger.json",
+  "max_new_tokens": 512,
+  "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int8-ov.yaml",
+  "n_entries": 20,
+  "n_force_terminated": 0,
+  "n_generation_timeout_hit": 0,
+  "residency_mode": "RESIDENT",
+  "seed": 20260810,
+  "session_id": "2ca587ea-409b-475a-8cac-8b90084f8964",
+  "started_utc": "2026-08-30T16:57:40.680455+00:00",
+  "status": "complete"
+}

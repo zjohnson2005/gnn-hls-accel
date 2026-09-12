@@ -1,0 +1,3206 @@
+{
+  "spec_path": "C:/Users/zjohn/Projects/gnn-hls-accel/configs/models/Qwen3-4B-int4-ov.yaml",
+  "platform": "aipc-c1",
+  "config_threads": {
+    "A0a": 8,
+    "A0b": 4,
+    "A1": 4,
+    "A2": 4,
+    "A3": 4,
+    "A4": 4,
+    "A5": 4,
+    "A6": 4
+  },
+  "blocks": 1,
+  "shuffle_seed": 20260803,
+  "schedule": [
+    [
+      "A2",
+      "A4",
+      "A5",
+      "A0a",
+      "A6",
+      "A3",
+      "A0b",
+      "A1"
+    ]
+  ],
+  "cooldown_s": 60.0,
+  "min_phase_samples_declared": 10,
+  "thermal": {
+    "regime": "confound",
+    "cooldown_mode": "time_based_unvalidated",
+    "note": "Cooldown is time-based; without a temperature ceiling it is unvalidated. Throttle detection uses frequency (PDH), within-cell drift, and block-position regression \u2014 not package temperature."
+  },
+  "quiesce": {
+    "pinned_profile": "ac-pinned",
+    "on_battery": false,
+    "battery_pct_start": 100.0,
+    "charging": false,
+    "charging_complete": true,
+    "charging_complete_reason": "charging_false",
+    "power_source": "mains",
+    "power_plan_name": "Best Performance",
+    "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+    "overlay_guid": "00000000-0000-0000-0000-000000000000",
+    "battery_saver": false,
+    "display_brightness": 50.0,
+    "defender_realtime": "enabled",
+    "ambient_c": null,
+    "ambient_method": "unavailable_pending_M2.3_LHM",
+    "package_temp_c": null,
+    "throttle_detection": "frequency_based_authorized",
+    "display_brightness_target": 50,
+    "display_brightness_set": {
+      "target": 50,
+      "actual": 50.0,
+      "ok": true
+    },
+    "battery_status_wmi": {
+      "charging": false,
+      "discharging": false,
+      "charge_rate_mw": 0.0,
+      "discharge_rate_mw": 0.0,
+      "remaining_capacity_mwh": 69043.0,
+      "voltage_mv": 13385.0,
+      "power_online": true
+    },
+    "keep_awake": "SetThreadExecutionState(SYSTEM|AWAYMODE)",
+    "battery_pct_end": 100.0,
+    "charging_end": false,
+    "battery_status_wmi_end": {
+      "charging": false,
+      "charge_rate_mw": 0.0
+    }
+  },
+  "forbidden_process_check": {
+    "patterns": [
+      "seam.tools.fetch_progress",
+      "fetch_progress",
+      "seam.tools.phase_e_cloud",
+      "curl.exe",
+      "wget",
+      "TiWorker.exe",
+      "UsoClient.exe",
+      "OneDrive.exe",
+      "MsMpEng.exe"
+    ],
+    "hits": [
+      {
+        "pid": "708",
+        "pattern": "OneDrive.exe",
+        "cmdline": "C:\\Users\\zjohn\\AppData\\Local\\Microsoft\\OneDrive\\OneDrive.exe /background"
+      }
+    ],
+    "hard_refuse_hits": []
+  },
+  "runs": {
+    "A0a": [
+      {
+        "config_id": "A0a",
+        "ok": true,
+        "description": "unconfined saturation reference: INFERENCE_NUM_THREADS=8",
+        "target": "cpu-p",
+        "expected_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "inference_num_threads": 8,
+        "preflight": "OK",
+        "config": {
+          "properties": {
+            "INFERENCE_NUM_THREADS": 8
+          },
+          "reasoning_mode": "thinking_off",
+          "enable_thinking": false,
+          "affinity_cpus": null,
+          "affinity_mechanism": "openvino_scheduling_core_type",
+          "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov"
+        },
+        "prompt_sha256": "f1f2eddead735a108a9d6b4a083a7696d1d27ff1de303d7635aa9af8e8ac91fa",
+        "prompt_tokens": 2093,
+        "max_new_tokens": 128,
+        "process_affinity_mask": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "generations": [
+          {
+            "gen_index": 1,
+            "scored": true,
+            "ok": true,
+            "n_baseline_samples": 940,
+            "n_util_samples": 617,
+            "n_prefill_util_samples": 18,
+            "n_decode_util_samples": 599,
+            "prefill_duration_s": 0.282003417,
+            "decode_duration_s": 9.528561782999999,
+            "baseline_mean_pct_per_cpu": [
+              4.36,
+              1.33,
+              0.85,
+              7.02,
+              5.21,
+              8.4,
+              5.57,
+              8.3
+            ],
+            "prefill_mean_pct_per_cpu": [
+              72.22,
+              86.11,
+              77.78,
+              77.78,
+              0.0,
+              5.56,
+              0.0,
+              5.56
+            ],
+            "decode_mean_pct_per_cpu": [
+              91.82,
+              91.65,
+              91.82,
+              92.4,
+              7.85,
+              9.43,
+              8.4,
+              8.12
+            ],
+            "prefill_delta_pct_per_cpu": [
+              67.86,
+              84.78,
+              76.93,
+              70.76,
+              -5.21,
+              -2.85,
+              -5.57,
+              -2.74
+            ],
+            "decode_delta_pct_per_cpu": [
+              87.46,
+              90.32,
+              90.97,
+              85.38,
+              2.63,
+              1.03,
+              2.84,
+              -0.17
+            ],
+            "prompt_tokens": 2124,
+            "completion_tokens": 128,
+            "wall_s": 9.8105652,
+            "ttft_s": 0.282003417,
+            "ttft_ns": 282003417,
+            "ttft_split_ns": 283572417,
+            "ttft_source": "perf_metrics",
+            "ttft_ns_perf_metrics": 282003417,
+            "ttft_ns_streamer": 282133200,
+            "r_prefill_tok_s": 7531.823630349842,
+            "r_decode_tok_s": 13.433296956563378,
+            "sampler_overhead": {
+              "util_sampler_method": "psutil.cpu_percent(percpu=True)",
+              "util_sample_interval_s": 0.01,
+              "util_sampler_mode": "continuous_across_generate_posthoc_ttft_split",
+              "util_sampler_wakeups": 617,
+              "util_sampler_expected_wakeups": 981.06,
+              "util_sampler_overhead_wakeup_ratio": 0.6289,
+              "generate_start_offset_ns": 1569000,
+              "ttft_split_ns": 283572417,
+              "frequency": {
+                "interval_s": 1.0,
+                "n_samples": 9,
+                "summary": {
+                  "n": 9,
+                  "methods": [
+                    "win32pdh"
+                  ],
+                  "mean_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ],
+                  "min_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ]
+                },
+                "method": "win32pdh"
+              }
+            }
+          },
+          {
+            "gen_index": 2,
+            "scored": true,
+            "ok": true,
+            "n_baseline_samples": 947,
+            "n_util_samples": 623,
+            "n_prefill_util_samples": 21,
+            "n_decode_util_samples": 602,
+            "prefill_duration_s": 0.334269317,
+            "decode_duration_s": 9.565882183,
+            "baseline_mean_pct_per_cpu": [
+              7.07,
+              4.86,
+              2.94,
+              15.84,
+              7.34,
+              6.02,
+              4.56,
+              8.24
+            ],
+            "prefill_mean_pct_per_cpu": [
+              82.54,
+              85.71,
+              86.9,
+              80.95,
+              2.38,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "decode_mean_pct_per_cpu": [
+              91.94,
+              90.7,
+              90.95,
+              92.77,
+              17.52,
+              12.62,
+              9.19,
+              11.79
+            ],
+            "prefill_delta_pct_per_cpu": [
+              75.46,
+              80.86,
+              83.97,
+              65.11,
+              -4.96,
+              -6.02,
+              -4.56,
+              -8.24
+            ],
+            "decode_delta_pct_per_cpu": [
+              84.87,
+              85.84,
+              88.01,
+              76.93,
+              10.19,
+              6.61,
+              4.63,
+              3.56
+            ],
+            "prompt_tokens": 2124,
+            "completion_tokens": 128,
+            "wall_s": 9.9001515,
+            "ttft_s": 0.334269317,
+            "ttft_ns": 334269317,
+            "ttft_split_ns": 335321617,
+            "ttft_source": "perf_metrics",
+            "ttft_ns_perf_metrics": 334269317,
+            "ttft_ns_streamer": 334480100,
+            "r_prefill_tok_s": 6354.157836149825,
+            "r_decode_tok_s": 13.38088819737662,
+            "sampler_overhead": {
+              "util_sampler_method": "psutil.cpu_percent(percpu=True)",
+              "util_sample_interval_s": 0.01,
+              "util_sampler_mode": "continuous_across_generate_posthoc_ttft_split",
+              "util_sampler_wakeups": 623,
+              "util_sampler_expected_wakeups": 990.02,
+              "util_sampler_overhead_wakeup_ratio": 0.6293,
+              "generate_start_offset_ns": 1052300,
+              "ttft_split_ns": 335321617,
+              "frequency": {
+                "interval_s": 1.0,
+                "n_samples": 9,
+                "summary": {
+                  "n": 9,
+                  "methods": [
+                    "win32pdh"
+                  ],
+                  "mean_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ],
+                  "min_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ]
+                },
+                "method": "win32pdh"
+              }
+            }
+          }
+        ],
+        "runtime": {
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "genai": "2026.2.1.0-3123-7dea0459b2a"
+        },
+        "block": 0,
+        "cell_index": 3
+      }
+    ],
+    "A0b": [
+      {
+        "config_id": "A0b",
+        "ok": true,
+        "description": "unconfined default-placement reference: INFERENCE_NUM_THREADS=4",
+        "target": "cpu-p",
+        "expected_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "inference_num_threads": 4,
+        "preflight": "OK",
+        "config": {
+          "properties": {
+            "INFERENCE_NUM_THREADS": 4
+          },
+          "reasoning_mode": "thinking_off",
+          "enable_thinking": false,
+          "affinity_cpus": null,
+          "affinity_mechanism": "openvino_scheduling_core_type",
+          "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov"
+        },
+        "prompt_sha256": "f1f2eddead735a108a9d6b4a083a7696d1d27ff1de303d7635aa9af8e8ac91fa",
+        "prompt_tokens": 2093,
+        "max_new_tokens": 128,
+        "process_affinity_mask": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "generations": [
+          {
+            "gen_index": 1,
+            "scored": true,
+            "ok": true,
+            "n_baseline_samples": 935,
+            "n_util_samples": 524,
+            "n_prefill_util_samples": 16,
+            "n_decode_util_samples": 508,
+            "prefill_duration_s": 0.238411819,
+            "decode_duration_s": 8.047157581,
+            "baseline_mean_pct_per_cpu": [
+              5.53,
+              5.1,
+              3.65,
+              18.45,
+              15.06,
+              15.42,
+              13.98,
+              16.82
+            ],
+            "prefill_mean_pct_per_cpu": [
+              87.5,
+              62.5,
+              75.0,
+              68.75,
+              6.25,
+              0.0,
+              12.5,
+              0.0
+            ],
+            "decode_mean_pct_per_cpu": [
+              91.34,
+              90.45,
+              91.14,
+              91.24,
+              8.6,
+              9.19,
+              8.17,
+              7.78
+            ],
+            "prefill_delta_pct_per_cpu": [
+              81.97,
+              57.4,
+              71.35,
+              50.3,
+              -8.81,
+              -15.42,
+              -1.48,
+              -16.82
+            ],
+            "decode_delta_pct_per_cpu": [
+              85.81,
+              85.35,
+              87.49,
+              72.79,
+              -6.47,
+              -6.23,
+              -5.81,
+              -9.04
+            ],
+            "prompt_tokens": 2124,
+            "completion_tokens": 128,
+            "wall_s": 8.2855694,
+            "ttft_s": 0.238411819,
+            "ttft_ns": 238411819,
+            "ttft_split_ns": 240233319,
+            "ttft_source": "perf_metrics",
+            "ttft_ns_perf_metrics": 238411819,
+            "ttft_ns_streamer": 238781100,
+            "r_prefill_tok_s": 8908.954299786623,
+            "r_decode_tok_s": 15.906237539354082,
+            "sampler_overhead": {
+              "util_sampler_method": "psutil.cpu_percent(percpu=True)",
+              "util_sample_interval_s": 0.01,
+              "util_sampler_mode": "continuous_across_generate_posthoc_ttft_split",
+              "util_sampler_wakeups": 524,
+              "util_sampler_expected_wakeups": 828.56,
+              "util_sampler_overhead_wakeup_ratio": 0.6324,
+              "generate_start_offset_ns": 1821500,
+              "ttft_split_ns": 240233319,
+              "frequency": {
+                "interval_s": 1.0,
+                "n_samples": 8,
+                "summary": {
+                  "n": 8,
+                  "methods": [
+                    "win32pdh"
+                  ],
+                  "mean_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ],
+                  "min_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ]
+                },
+                "method": "win32pdh"
+              }
+            }
+          },
+          {
+            "gen_index": 2,
+            "scored": true,
+            "ok": true,
+            "n_baseline_samples": 938,
+            "n_util_samples": 576,
+            "n_prefill_util_samples": 19,
+            "n_decode_util_samples": 557,
+            "prefill_duration_s": 0.261306396,
+            "decode_duration_s": 9.027406904,
+            "baseline_mean_pct_per_cpu": [
+              8.76,
+              8.05,
+              5.78,
+              20.26,
+              11.35,
+              11.14,
+              11.3,
+              11.99
+            ],
+            "prefill_mean_pct_per_cpu": [
+              68.42,
+              76.32,
+              65.79,
+              73.68,
+              13.16,
+              28.95,
+              28.95,
+              15.79
+            ],
+            "decode_mean_pct_per_cpu": [
+              88.69,
+              88.69,
+              90.13,
+              90.42,
+              18.19,
+              16.37,
+              16.67,
+              18.34
+            ],
+            "prefill_delta_pct_per_cpu": [
+              59.66,
+              68.27,
+              60.01,
+              53.43,
+              1.8,
+              17.81,
+              17.65,
+              3.8
+            ],
+            "decode_delta_pct_per_cpu": [
+              79.93,
+              80.64,
+              84.34,
+              70.17,
+              6.84,
+              5.23,
+              5.37,
+              6.35
+            ],
+            "prompt_tokens": 2124,
+            "completion_tokens": 128,
+            "wall_s": 9.2887133,
+            "ttft_s": 0.261306396,
+            "ttft_ns": 261306396,
+            "ttft_split_ns": 262404096,
+            "ttft_source": "perf_metrics",
+            "ttft_ns_perf_metrics": 261306396,
+            "ttft_ns_streamer": 261431500,
+            "r_prefill_tok_s": 8128.388866531993,
+            "r_decode_tok_s": 14.179044033484724,
+            "sampler_overhead": {
+              "util_sampler_method": "psutil.cpu_percent(percpu=True)",
+              "util_sample_interval_s": 0.01,
+              "util_sampler_mode": "continuous_across_generate_posthoc_ttft_split",
+              "util_sampler_wakeups": 576,
+              "util_sampler_expected_wakeups": 928.87,
+              "util_sampler_overhead_wakeup_ratio": 0.6201,
+              "generate_start_offset_ns": 1097700,
+              "ttft_split_ns": 262404096,
+              "frequency": {
+                "interval_s": 1.0,
+                "n_samples": 9,
+                "summary": {
+                  "n": 9,
+                  "methods": [
+                    "win32pdh"
+                  ],
+                  "mean_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ],
+                  "min_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ]
+                },
+                "method": "win32pdh"
+              }
+            }
+          }
+        ],
+        "runtime": {
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "genai": "2026.2.1.0-3123-7dea0459b2a"
+        },
+        "block": 0,
+        "cell_index": 6
+      }
+    ],
+    "A1": [
+      {
+        "config_id": "A1",
+        "ok": true,
+        "description": "PCORE_ONLY, pinning default",
+        "target": "cpu-p",
+        "expected_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "inference_num_threads": 4,
+        "preflight": "OK",
+        "config": {
+          "properties": {
+            "SCHEDULING_CORE_TYPE": "PCORE_ONLY",
+            "INFERENCE_NUM_THREADS": 4
+          },
+          "reasoning_mode": "thinking_off",
+          "enable_thinking": false,
+          "affinity_cpus": null,
+          "affinity_mechanism": "openvino_scheduling_core_type",
+          "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov"
+        },
+        "prompt_sha256": "f1f2eddead735a108a9d6b4a083a7696d1d27ff1de303d7635aa9af8e8ac91fa",
+        "prompt_tokens": 2093,
+        "max_new_tokens": 128,
+        "process_affinity_mask": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "generations": [
+          {
+            "gen_index": 1,
+            "scored": true,
+            "ok": true,
+            "n_baseline_samples": 939,
+            "n_util_samples": 577,
+            "n_prefill_util_samples": 15,
+            "n_decode_util_samples": 562,
+            "prefill_duration_s": 0.226971817,
+            "decode_duration_s": 8.887587083,
+            "baseline_mean_pct_per_cpu": [
+              5.56,
+              4.05,
+              2.72,
+              8.36,
+              5.01,
+              5.48,
+              3.35,
+              6.02
+            ],
+            "prefill_mean_pct_per_cpu": [
+              93.33,
+              86.67,
+              83.33,
+              86.67,
+              6.67,
+              13.33,
+              20.0,
+              6.67
+            ],
+            "decode_mean_pct_per_cpu": [
+              95.2,
+              93.33,
+              94.04,
+              96.71,
+              24.29,
+              28.94,
+              27.08,
+              21.35
+            ],
+            "prefill_delta_pct_per_cpu": [
+              87.77,
+              82.62,
+              80.62,
+              78.31,
+              1.66,
+              7.85,
+              16.65,
+              0.65
+            ],
+            "decode_delta_pct_per_cpu": [
+              89.64,
+              89.28,
+              91.32,
+              88.35,
+              19.28,
+              23.46,
+              23.72,
+              15.34
+            ],
+            "prompt_tokens": 2124,
+            "completion_tokens": 128,
+            "wall_s": 9.1145589,
+            "ttft_s": 0.226971817,
+            "ttft_ns": 226971817,
+            "ttft_split_ns": 229048817,
+            "ttft_source": "perf_metrics",
+            "ttft_ns_perf_metrics": 226971817,
+            "ttft_ns_streamer": 227164700,
+            "r_prefill_tok_s": 9357.990027457903,
+            "r_decode_tok_s": 14.402109234444055,
+            "sampler_overhead": {
+              "util_sampler_method": "psutil.cpu_percent(percpu=True)",
+              "util_sample_interval_s": 0.01,
+              "util_sampler_mode": "continuous_across_generate_posthoc_ttft_split",
+              "util_sampler_wakeups": 577,
+              "util_sampler_expected_wakeups": 911.46,
+              "util_sampler_overhead_wakeup_ratio": 0.6331,
+              "generate_start_offset_ns": 2077000,
+              "ttft_split_ns": 229048817,
+              "frequency": {
+                "interval_s": 1.0,
+                "n_samples": 9,
+                "summary": {
+                  "n": 9,
+                  "methods": [
+                    "win32pdh"
+                  ],
+                  "mean_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ],
+                  "min_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ]
+                },
+                "method": "win32pdh"
+              }
+            }
+          },
+          {
+            "gen_index": 2,
+            "scored": true,
+            "ok": true,
+            "n_baseline_samples": 947,
+            "n_util_samples": 487,
+            "n_prefill_util_samples": 14,
+            "n_decode_util_samples": 473,
+            "prefill_duration_s": 0.230567016,
+            "decode_duration_s": 7.702919884,
+            "baseline_mean_pct_per_cpu": [
+              5.46,
+              3.59,
+              2.76,
+              13.04,
+              6.02,
+              11.19,
+              10.68,
+              8.71
+            ],
+            "prefill_mean_pct_per_cpu": [
+              89.29,
+              89.29,
+              92.86,
+              89.29,
+              0.0,
+              3.57,
+              7.14,
+              7.14
+            ],
+            "decode_mean_pct_per_cpu": [
+              94.19,
+              93.34,
+              93.66,
+              94.08,
+              13.99,
+              11.06,
+              12.19,
+              9.23
+            ],
+            "prefill_delta_pct_per_cpu": [
+              83.83,
+              85.7,
+              90.09,
+              76.24,
+              -6.02,
+              -7.62,
+              -3.54,
+              -1.57
+            ],
+            "decode_delta_pct_per_cpu": [
+              88.73,
+              89.75,
+              90.89,
+              81.04,
+              7.97,
+              -0.13,
+              1.51,
+              0.52
+            ],
+            "prompt_tokens": 2124,
+            "completion_tokens": 128,
+            "wall_s": 7.9334869,
+            "ttft_s": 0.230567016,
+            "ttft_ns": 230567016,
+            "ttft_split_ns": 232583616,
+            "ttft_source": "perf_metrics",
+            "ttft_ns_perf_metrics": 230567016,
+            "ttft_ns_streamer": 230711400,
+            "r_prefill_tok_s": 9212.072207240604,
+            "r_decode_tok_s": 16.61707533345546,
+            "sampler_overhead": {
+              "util_sampler_method": "psutil.cpu_percent(percpu=True)",
+              "util_sample_interval_s": 0.01,
+              "util_sampler_mode": "continuous_across_generate_posthoc_ttft_split",
+              "util_sampler_wakeups": 487,
+              "util_sampler_expected_wakeups": 793.35,
+              "util_sampler_overhead_wakeup_ratio": 0.6139,
+              "generate_start_offset_ns": 2016600,
+              "ttft_split_ns": 232583616,
+              "frequency": {
+                "interval_s": 1.0,
+                "n_samples": 8,
+                "summary": {
+                  "n": 8,
+                  "methods": [
+                    "win32pdh"
+                  ],
+                  "mean_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ],
+                  "min_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ]
+                },
+                "method": "win32pdh"
+              }
+            }
+          }
+        ],
+        "runtime": {
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "genai": "2026.2.1.0-3123-7dea0459b2a"
+        },
+        "block": 0,
+        "cell_index": 7
+      }
+    ],
+    "A2": [
+      {
+        "config_id": "A2",
+        "ok": true,
+        "description": "PCORE_ONLY, ENABLE_CPU_PINNING=YES",
+        "target": "cpu-p",
+        "expected_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "inference_num_threads": 4,
+        "preflight": "OK",
+        "config": {
+          "properties": {
+            "SCHEDULING_CORE_TYPE": "PCORE_ONLY",
+            "ENABLE_CPU_PINNING": true,
+            "INFERENCE_NUM_THREADS": 4
+          },
+          "reasoning_mode": "thinking_off",
+          "enable_thinking": false,
+          "affinity_cpus": null,
+          "affinity_mechanism": "openvino_scheduling_core_type",
+          "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov"
+        },
+        "prompt_sha256": "f1f2eddead735a108a9d6b4a083a7696d1d27ff1de303d7635aa9af8e8ac91fa",
+        "prompt_tokens": 2093,
+        "max_new_tokens": 128,
+        "process_affinity_mask": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "generations": [
+          {
+            "gen_index": 1,
+            "scored": true,
+            "ok": true,
+            "n_baseline_samples": 939,
+            "n_util_samples": 533,
+            "n_prefill_util_samples": 21,
+            "n_decode_util_samples": 512,
+            "prefill_duration_s": 0.333683715,
+            "decode_duration_s": 8.248144085,
+            "baseline_mean_pct_per_cpu": [
+              7.61,
+              8.52,
+              3.85,
+              15.12,
+              6.39,
+              7.88,
+              6.89,
+              10.44
+            ],
+            "prefill_mean_pct_per_cpu": [
+              80.95,
+              50.0,
+              59.52,
+              73.81,
+              11.9,
+              19.05,
+              4.76,
+              7.14
+            ],
+            "decode_mean_pct_per_cpu": [
+              96.78,
+              89.94,
+              89.94,
+              91.7,
+              10.48,
+              9.6,
+              8.24,
+              12.34
+            ],
+            "prefill_delta_pct_per_cpu": [
+              73.34,
+              41.48,
+              55.67,
+              58.69,
+              5.51,
+              11.17,
+              -2.12,
+              -3.29
+            ],
+            "decode_delta_pct_per_cpu": [
+              89.16,
+              81.42,
+              86.09,
+              76.58,
+              4.09,
+              1.72,
+              1.35,
+              1.9
+            ],
+            "prompt_tokens": 2124,
+            "completion_tokens": 128,
+            "wall_s": 8.5818278,
+            "ttft_s": 0.333683715,
+            "ttft_ns": 333683715,
+            "ttft_split_ns": 334951515,
+            "ttft_source": "perf_metrics",
+            "ttft_ns_perf_metrics": 333683715,
+            "ttft_ns_streamer": 333840800,
+            "r_prefill_tok_s": 6365.309137127055,
+            "r_decode_tok_s": 15.51864257958098,
+            "sampler_overhead": {
+              "util_sampler_method": "psutil.cpu_percent(percpu=True)",
+              "util_sample_interval_s": 0.01,
+              "util_sampler_mode": "continuous_across_generate_posthoc_ttft_split",
+              "util_sampler_wakeups": 533,
+              "util_sampler_expected_wakeups": 858.18,
+              "util_sampler_overhead_wakeup_ratio": 0.6211,
+              "generate_start_offset_ns": 1267800,
+              "ttft_split_ns": 334951515,
+              "frequency": {
+                "interval_s": 1.0,
+                "n_samples": 8,
+                "summary": {
+                  "n": 8,
+                  "methods": [
+                    "win32pdh"
+                  ],
+                  "mean_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ],
+                  "min_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ]
+                },
+                "method": "win32pdh"
+              }
+            }
+          },
+          {
+            "gen_index": 2,
+            "scored": true,
+            "ok": true,
+            "n_baseline_samples": 932,
+            "n_util_samples": 602,
+            "n_prefill_util_samples": 17,
+            "n_decode_util_samples": 585,
+            "prefill_duration_s": 0.278419708,
+            "decode_duration_s": 9.395893992000001,
+            "baseline_mean_pct_per_cpu": [
+              10.84,
+              10.1,
+              6.97,
+              19.53,
+              8.91,
+              6.81,
+              6.72,
+              8.26
+            ],
+            "prefill_mean_pct_per_cpu": [
+              79.41,
+              64.71,
+              64.71,
+              67.65,
+              14.71,
+              24.51,
+              5.88,
+              8.82
+            ],
+            "decode_mean_pct_per_cpu": [
+              93.33,
+              82.99,
+              85.3,
+              88.03,
+              5.1,
+              7.81,
+              7.44,
+              7.21
+            ],
+            "prefill_delta_pct_per_cpu": [
+              68.57,
+              54.6,
+              57.73,
+              48.12,
+              5.8,
+              17.7,
+              -0.84,
+              0.56
+            ],
+            "decode_delta_pct_per_cpu": [
+              82.5,
+              72.89,
+              78.32,
+              68.51,
+              -3.81,
+              0.99,
+              0.71,
+              -1.05
+            ],
+            "prompt_tokens": 2124,
+            "completion_tokens": 128,
+            "wall_s": 9.6743137,
+            "ttft_s": 0.278419708,
+            "ttft_ns": 278419708,
+            "ttft_split_ns": 279890808,
+            "ttft_source": "perf_metrics",
+            "ttft_ns_perf_metrics": 278419708,
+            "ttft_ns_streamer": 278555500,
+            "r_prefill_tok_s": 7628.770302424137,
+            "r_decode_tok_s": 13.622971918263845,
+            "sampler_overhead": {
+              "util_sampler_method": "psutil.cpu_percent(percpu=True)",
+              "util_sample_interval_s": 0.01,
+              "util_sampler_mode": "continuous_across_generate_posthoc_ttft_split",
+              "util_sampler_wakeups": 602,
+              "util_sampler_expected_wakeups": 967.43,
+              "util_sampler_overhead_wakeup_ratio": 0.6223,
+              "generate_start_offset_ns": 1471100,
+              "ttft_split_ns": 279890808,
+              "frequency": {
+                "interval_s": 1.0,
+                "n_samples": 9,
+                "summary": {
+                  "n": 9,
+                  "methods": [
+                    "win32pdh"
+                  ],
+                  "mean_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    99.66666666666667,
+                    100.0
+                  ],
+                  "min_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    98.0,
+                    100.0
+                  ]
+                },
+                "method": "win32pdh"
+              }
+            }
+          }
+        ],
+        "runtime": {
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "genai": "2026.2.1.0-3123-7dea0459b2a"
+        },
+        "block": 0,
+        "cell_index": 0
+      }
+    ],
+    "A3": [
+      {
+        "config_id": "A3",
+        "ok": true,
+        "description": "ECORE_ONLY, pinning default",
+        "target": "cpu-lpe",
+        "expected_cpus": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "inference_num_threads": 4,
+        "preflight": "OK",
+        "config": {
+          "properties": {
+            "SCHEDULING_CORE_TYPE": "ECORE_ONLY",
+            "INFERENCE_NUM_THREADS": 4
+          },
+          "reasoning_mode": "thinking_off",
+          "enable_thinking": false,
+          "affinity_cpus": null,
+          "affinity_mechanism": "openvino_scheduling_core_type",
+          "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov"
+        },
+        "prompt_sha256": "f1f2eddead735a108a9d6b4a083a7696d1d27ff1de303d7635aa9af8e8ac91fa",
+        "prompt_tokens": 2093,
+        "max_new_tokens": 128,
+        "process_affinity_mask": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "generations": [
+          {
+            "gen_index": 1,
+            "scored": true,
+            "ok": true,
+            "n_baseline_samples": 933,
+            "n_util_samples": 928,
+            "n_prefill_util_samples": 29,
+            "n_decode_util_samples": 899,
+            "prefill_duration_s": 0.462160003,
+            "decode_duration_s": 14.610757997,
+            "baseline_mean_pct_per_cpu": [
+              3.22,
+              1.93,
+              1.13,
+              8.63,
+              6.16,
+              7.02,
+              6.47,
+              12.4
+            ],
+            "prefill_mean_pct_per_cpu": [
+              6.9,
+              0.0,
+              0.0,
+              3.45,
+              91.38,
+              82.76,
+              84.48,
+              84.48
+            ],
+            "decode_mean_pct_per_cpu": [
+              7.19,
+              7.75,
+              3.74,
+              14.57,
+              96.11,
+              95.61,
+              95.66,
+              95.33
+            ],
+            "prefill_delta_pct_per_cpu": [
+              3.68,
+              -1.93,
+              -1.13,
+              -5.18,
+              85.22,
+              75.74,
+              78.02,
+              72.09
+            ],
+            "decode_delta_pct_per_cpu": [
+              3.98,
+              5.82,
+              2.62,
+              5.94,
+              89.94,
+              88.59,
+              89.2,
+              82.93
+            ],
+            "prompt_tokens": 2124,
+            "completion_tokens": 128,
+            "wall_s": 15.072918,
+            "ttft_s": 0.462160003,
+            "ttft_ns": 462160003,
+            "ttft_split_ns": 465003703,
+            "ttft_source": "perf_metrics",
+            "ttft_ns_perf_metrics": 462160003,
+            "ttft_ns_streamer": 462466400,
+            "r_prefill_tok_s": 4595.81094472167,
+            "r_decode_tok_s": 8.760667997258048,
+            "sampler_overhead": {
+              "util_sampler_method": "psutil.cpu_percent(percpu=True)",
+              "util_sample_interval_s": 0.01,
+              "util_sampler_mode": "continuous_across_generate_posthoc_ttft_split",
+              "util_sampler_wakeups": 928,
+              "util_sampler_expected_wakeups": 1507.29,
+              "util_sampler_overhead_wakeup_ratio": 0.6157,
+              "generate_start_offset_ns": 2843700,
+              "ttft_split_ns": 465003703,
+              "frequency": {
+                "interval_s": 1.0,
+                "n_samples": 14,
+                "summary": {
+                  "n": 14,
+                  "methods": [
+                    "win32pdh"
+                  ],
+                  "mean_pct_of_max_per_cpu": [
+                    97.92857142857143,
+                    98.0,
+                    96.85714285714286,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ],
+                  "min_pct_of_max_per_cpu": [
+                    71.0,
+                    72.0,
+                    68.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ]
+                },
+                "method": "win32pdh"
+              }
+            }
+          },
+          {
+            "gen_index": 2,
+            "scored": true,
+            "ok": true,
+            "n_baseline_samples": 943,
+            "n_util_samples": 1169,
+            "n_prefill_util_samples": 38,
+            "n_decode_util_samples": 1131,
+            "prefill_duration_s": 0.617065612,
+            "decode_duration_s": 18.386573788,
+            "baseline_mean_pct_per_cpu": [
+              10.75,
+              11.35,
+              7.9,
+              16.65,
+              10.71,
+              6.12,
+              7.32,
+              9.56
+            ],
+            "prefill_mean_pct_per_cpu": [
+              21.05,
+              19.74,
+              15.79,
+              38.16,
+              93.42,
+              94.74,
+              94.74,
+              88.16
+            ],
+            "decode_mean_pct_per_cpu": [
+              7.39,
+              6.17,
+              3.87,
+              12.35,
+              97.39,
+              96.46,
+              96.91,
+              96.99
+            ],
+            "prefill_delta_pct_per_cpu": [
+              10.31,
+              8.39,
+              7.89,
+              21.51,
+              82.71,
+              88.62,
+              87.42,
+              78.6
+            ],
+            "decode_delta_pct_per_cpu": [
+              -3.36,
+              -5.17,
+              -4.03,
+              -4.3,
+              86.68,
+              90.35,
+              89.59,
+              87.43
+            ],
+            "prompt_tokens": 2124,
+            "completion_tokens": 128,
+            "wall_s": 19.0036394,
+            "ttft_s": 0.617065612,
+            "ttft_ns": 617065612,
+            "ttft_split_ns": 618703212,
+            "ttft_source": "perf_metrics",
+            "ttft_ns_perf_metrics": 617065612,
+            "ttft_ns_streamer": 617192500,
+            "r_prefill_tok_s": 3442.097499349875,
+            "r_decode_tok_s": 6.961601518361143,
+            "sampler_overhead": {
+              "util_sampler_method": "psutil.cpu_percent(percpu=True)",
+              "util_sample_interval_s": 0.01,
+              "util_sampler_mode": "continuous_across_generate_posthoc_ttft_split",
+              "util_sampler_wakeups": 1169,
+              "util_sampler_expected_wakeups": 1900.36,
+              "util_sampler_overhead_wakeup_ratio": 0.6151,
+              "generate_start_offset_ns": 1637600,
+              "ttft_split_ns": 618703212,
+              "frequency": {
+                "interval_s": 1.0,
+                "n_samples": 18,
+                "summary": {
+                  "n": 18,
+                  "methods": [
+                    "win32pdh"
+                  ],
+                  "mean_pct_of_max_per_cpu": [
+                    98.22222222222223,
+                    100.0,
+                    89.0,
+                    97.11111111111111,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ],
+                  "min_pct_of_max_per_cpu": [
+                    68.0,
+                    100.0,
+                    44.0,
+                    63.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ]
+                },
+                "method": "win32pdh"
+              }
+            }
+          }
+        ],
+        "runtime": {
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "genai": "2026.2.1.0-3123-7dea0459b2a"
+        },
+        "block": 0,
+        "cell_index": 5
+      }
+    ],
+    "A4": [
+      {
+        "config_id": "A4",
+        "ok": true,
+        "description": "ECORE_ONLY, ENABLE_CPU_PINNING=YES",
+        "target": "cpu-lpe",
+        "expected_cpus": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "inference_num_threads": 4,
+        "preflight": "OK",
+        "config": {
+          "properties": {
+            "SCHEDULING_CORE_TYPE": "ECORE_ONLY",
+            "ENABLE_CPU_PINNING": true,
+            "INFERENCE_NUM_THREADS": 4
+          },
+          "reasoning_mode": "thinking_off",
+          "enable_thinking": false,
+          "affinity_cpus": null,
+          "affinity_mechanism": "openvino_scheduling_core_type",
+          "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov"
+        },
+        "prompt_sha256": "f1f2eddead735a108a9d6b4a083a7696d1d27ff1de303d7635aa9af8e8ac91fa",
+        "prompt_tokens": 2093,
+        "max_new_tokens": 128,
+        "process_affinity_mask": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "generations": [
+          {
+            "gen_index": 1,
+            "scored": true,
+            "ok": true,
+            "n_baseline_samples": 937,
+            "n_util_samples": 901,
+            "n_prefill_util_samples": 30,
+            "n_decode_util_samples": 871,
+            "prefill_duration_s": 0.474692199,
+            "decode_duration_s": 14.003027201,
+            "baseline_mean_pct_per_cpu": [
+              8.32,
+              7.74,
+              6.79,
+              13.5,
+              6.79,
+              6.4,
+              6.47,
+              6.26
+            ],
+            "prefill_mean_pct_per_cpu": [
+              11.67,
+              10.0,
+              5.0,
+              15.0,
+              90.0,
+              83.33,
+              73.33,
+              80.0
+            ],
+            "decode_mean_pct_per_cpu": [
+              5.72,
+              1.22,
+              2.12,
+              7.92,
+              98.97,
+              93.8,
+              93.53,
+              93.69
+            ],
+            "prefill_delta_pct_per_cpu": [
+              3.34,
+              2.26,
+              -1.79,
+              1.5,
+              83.21,
+              76.93,
+              66.86,
+              73.74
+            ],
+            "decode_delta_pct_per_cpu": [
+              -2.6,
+              -6.51,
+              -4.67,
+              -5.58,
+              92.17,
+              87.4,
+              87.06,
+              87.42
+            ],
+            "prompt_tokens": 2124,
+            "completion_tokens": 128,
+            "wall_s": 14.4777194,
+            "ttft_s": 0.474692199,
+            "ttft_ns": 474692199,
+            "ttft_split_ns": 476692899,
+            "ttft_source": "perf_metrics",
+            "ttft_ns_perf_metrics": 474692199,
+            "ttft_ns_streamer": 474836100,
+            "r_prefill_tok_s": 4474.47841880376,
+            "r_decode_tok_s": 9.14088062264559,
+            "sampler_overhead": {
+              "util_sampler_method": "psutil.cpu_percent(percpu=True)",
+              "util_sample_interval_s": 0.01,
+              "util_sampler_mode": "continuous_across_generate_posthoc_ttft_split",
+              "util_sampler_wakeups": 901,
+              "util_sampler_expected_wakeups": 1447.77,
+              "util_sampler_overhead_wakeup_ratio": 0.6223,
+              "generate_start_offset_ns": 2000700,
+              "ttft_split_ns": 476692899,
+              "frequency": {
+                "interval_s": 1.0,
+                "n_samples": 14,
+                "summary": {
+                  "n": 14,
+                  "methods": [
+                    "win32pdh"
+                  ],
+                  "mean_pct_of_max_per_cpu": [
+                    100.0,
+                    98.14285714285714,
+                    94.85714285714286,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ],
+                  "min_pct_of_max_per_cpu": [
+                    100.0,
+                    88.0,
+                    28.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ]
+                },
+                "method": "win32pdh"
+              }
+            }
+          },
+          {
+            "gen_index": 2,
+            "scored": true,
+            "ok": true,
+            "n_baseline_samples": 890,
+            "n_util_samples": 972,
+            "n_prefill_util_samples": 33,
+            "n_decode_util_samples": 939,
+            "prefill_duration_s": 0.527891479,
+            "decode_duration_s": 15.166653521,
+            "baseline_mean_pct_per_cpu": [
+              29.78,
+              28.48,
+              27.87,
+              38.31,
+              21.69,
+              20.96,
+              21.91,
+              21.24
+            ],
+            "prefill_mean_pct_per_cpu": [
+              27.27,
+              46.97,
+              30.3,
+              71.72,
+              90.91,
+              81.82,
+              80.3,
+              77.27
+            ],
+            "decode_mean_pct_per_cpu": [
+              5.48,
+              2.88,
+              2.25,
+              10.45,
+              99.25,
+              89.4,
+              89.99,
+              88.6
+            ],
+            "prefill_delta_pct_per_cpu": [
+              -2.5,
+              18.49,
+              2.44,
+              33.4,
+              69.22,
+              60.86,
+              58.39,
+              56.04
+            ],
+            "decode_delta_pct_per_cpu": [
+              -24.29,
+              -25.61,
+              -25.61,
+              -27.86,
+              77.57,
+              68.45,
+              68.08,
+              67.37
+            ],
+            "prompt_tokens": 2124,
+            "completion_tokens": 128,
+            "wall_s": 15.694545,
+            "ttft_s": 0.527891479,
+            "ttft_ns": 527891479,
+            "ttft_split_ns": 529087979,
+            "ttft_source": "perf_metrics",
+            "ttft_ns_perf_metrics": 527891479,
+            "ttft_ns_streamer": 528022200,
+            "r_prefill_tok_s": 4023.5542426703955,
+            "r_decode_tok_s": 8.439567754532606,
+            "sampler_overhead": {
+              "util_sampler_method": "psutil.cpu_percent(percpu=True)",
+              "util_sample_interval_s": 0.01,
+              "util_sampler_mode": "continuous_across_generate_posthoc_ttft_split",
+              "util_sampler_wakeups": 972,
+              "util_sampler_expected_wakeups": 1569.45,
+              "util_sampler_overhead_wakeup_ratio": 0.6193,
+              "generate_start_offset_ns": 1196500,
+              "ttft_split_ns": 529087979,
+              "frequency": {
+                "interval_s": 1.0,
+                "n_samples": 15,
+                "summary": {
+                  "n": 15,
+                  "methods": [
+                    "win32pdh"
+                  ],
+                  "mean_pct_of_max_per_cpu": [
+                    100.0,
+                    92.0,
+                    98.0,
+                    99.6,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ],
+                  "min_pct_of_max_per_cpu": [
+                    100.0,
+                    25.0,
+                    81.0,
+                    94.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ]
+                },
+                "method": "win32pdh"
+              }
+            }
+          }
+        ],
+        "runtime": {
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "genai": "2026.2.1.0-3123-7dea0459b2a"
+        },
+        "block": 0,
+        "cell_index": 1
+      }
+    ],
+    "A5": [
+      {
+        "config_id": "A5",
+        "ok": true,
+        "description": "process affinity 0-3, no core-type property",
+        "target": "cpu-p",
+        "expected_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "inference_num_threads": 4,
+        "preflight": "OK",
+        "config": {
+          "properties": {
+            "INFERENCE_NUM_THREADS": 4
+          },
+          "reasoning_mode": "thinking_off",
+          "enable_thinking": false,
+          "affinity_cpus": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "affinity_mechanism": "process_affinity",
+          "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov"
+        },
+        "prompt_sha256": "f1f2eddead735a108a9d6b4a083a7696d1d27ff1de303d7635aa9af8e8ac91fa",
+        "prompt_tokens": 2093,
+        "max_new_tokens": 128,
+        "process_affinity_mask": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "generations": [
+          {
+            "gen_index": 1,
+            "scored": true,
+            "ok": true,
+            "n_baseline_samples": 948,
+            "n_util_samples": 487,
+            "n_prefill_util_samples": 14,
+            "n_decode_util_samples": 473,
+            "prefill_duration_s": 0.222863296,
+            "decode_duration_s": 7.480465204,
+            "baseline_mean_pct_per_cpu": [
+              4.64,
+              1.86,
+              1.58,
+              7.28,
+              7.59,
+              7.28,
+              5.8,
+              8.76
+            ],
+            "prefill_mean_pct_per_cpu": [
+              85.71,
+              85.71,
+              85.71,
+              92.86,
+              0.0,
+              7.14,
+              0.0,
+              0.0
+            ],
+            "decode_mean_pct_per_cpu": [
+              96.09,
+              95.45,
+              96.09,
+              97.04,
+              8.03,
+              9.51,
+              12.05,
+              16.91
+            ],
+            "prefill_delta_pct_per_cpu": [
+              81.07,
+              83.85,
+              84.13,
+              85.58,
+              -7.59,
+              -0.14,
+              -5.8,
+              -8.76
+            ],
+            "decode_delta_pct_per_cpu": [
+              91.45,
+              93.59,
+              94.51,
+              89.76,
+              0.44,
+              2.24,
+              6.25,
+              8.16
+            ],
+            "prompt_tokens": 2124,
+            "completion_tokens": 128,
+            "wall_s": 7.7033285,
+            "ttft_s": 0.222863296,
+            "ttft_ns": 222863296,
+            "ttft_split_ns": 224886296,
+            "ttft_source": "perf_metrics",
+            "ttft_ns_perf_metrics": 222863296,
+            "ttft_ns_streamer": 223017500,
+            "r_prefill_tok_s": 9530.506091052337,
+            "r_decode_tok_s": 17.111235265362247,
+            "sampler_overhead": {
+              "util_sampler_method": "psutil.cpu_percent(percpu=True)",
+              "util_sample_interval_s": 0.01,
+              "util_sampler_mode": "continuous_across_generate_posthoc_ttft_split",
+              "util_sampler_wakeups": 487,
+              "util_sampler_expected_wakeups": 770.33,
+              "util_sampler_overhead_wakeup_ratio": 0.6322,
+              "generate_start_offset_ns": 2023000,
+              "ttft_split_ns": 224886296,
+              "frequency": {
+                "interval_s": 1.0,
+                "n_samples": 7,
+                "summary": {
+                  "n": 7,
+                  "methods": [
+                    "win32pdh"
+                  ],
+                  "mean_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ],
+                  "min_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ]
+                },
+                "method": "win32pdh"
+              }
+            }
+          },
+          {
+            "gen_index": 2,
+            "scored": true,
+            "ok": true,
+            "n_baseline_samples": 930,
+            "n_util_samples": 470,
+            "n_prefill_util_samples": 14,
+            "n_decode_util_samples": 456,
+            "prefill_duration_s": 0.210086303,
+            "decode_duration_s": 7.179292597,
+            "baseline_mean_pct_per_cpu": [
+              6.02,
+              0.97,
+              1.67,
+              7.26,
+              3.28,
+              4.52,
+              2.2,
+              5.75
+            ],
+            "prefill_mean_pct_per_cpu": [
+              85.71,
+              85.71,
+              85.71,
+              92.86,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "decode_mean_pct_per_cpu": [
+              96.49,
+              95.94,
+              96.49,
+              96.6,
+              1.97,
+              3.33,
+              4.06,
+              3.62
+            ],
+            "prefill_delta_pct_per_cpu": [
+              79.69,
+              84.75,
+              84.05,
+              85.6,
+              -3.28,
+              -4.52,
+              -2.2,
+              -5.75
+            ],
+            "decode_delta_pct_per_cpu": [
+              90.47,
+              94.98,
+              94.82,
+              89.34,
+              -1.31,
+              -1.19,
+              1.85,
+              -2.13
+            ],
+            "prompt_tokens": 2124,
+            "completion_tokens": 128,
+            "wall_s": 7.3893789,
+            "ttft_s": 0.210086303,
+            "ttft_ns": 210086303,
+            "ttft_split_ns": 211615003,
+            "ttft_source": "perf_metrics",
+            "ttft_ns_perf_metrics": 210086303,
+            "ttft_ns_streamer": 210185200,
+            "r_prefill_tok_s": 10110.130787536396,
+            "r_decode_tok_s": 17.829054641607332,
+            "sampler_overhead": {
+              "util_sampler_method": "psutil.cpu_percent(percpu=True)",
+              "util_sample_interval_s": 0.01,
+              "util_sampler_mode": "continuous_across_generate_posthoc_ttft_split",
+              "util_sampler_wakeups": 470,
+              "util_sampler_expected_wakeups": 738.94,
+              "util_sampler_overhead_wakeup_ratio": 0.636,
+              "generate_start_offset_ns": 1528700,
+              "ttft_split_ns": 211615003,
+              "frequency": {
+                "interval_s": 1.0,
+                "n_samples": 7,
+                "summary": {
+                  "n": 7,
+                  "methods": [
+                    "win32pdh"
+                  ],
+                  "mean_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ],
+                  "min_pct_of_max_per_cpu": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ]
+                },
+                "method": "win32pdh"
+              }
+            }
+          }
+        ],
+        "runtime": {
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "genai": "2026.2.1.0-3123-7dea0459b2a"
+        },
+        "block": 0,
+        "cell_index": 2
+      }
+    ],
+    "A6": [
+      {
+        "config_id": "A6",
+        "ok": true,
+        "description": "process affinity 4-7, no core-type property",
+        "target": "cpu-lpe",
+        "expected_cpus": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "inference_num_threads": 4,
+        "preflight": "OK",
+        "config": {
+          "properties": {
+            "INFERENCE_NUM_THREADS": 4
+          },
+          "reasoning_mode": "thinking_off",
+          "enable_thinking": false,
+          "affinity_cpus": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "affinity_mechanism": "process_affinity",
+          "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov"
+        },
+        "prompt_sha256": "f1f2eddead735a108a9d6b4a083a7696d1d27ff1de303d7635aa9af8e8ac91fa",
+        "prompt_tokens": 2093,
+        "max_new_tokens": 128,
+        "process_affinity_mask": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "generations": [
+          {
+            "gen_index": 1,
+            "scored": true,
+            "ok": true,
+            "n_baseline_samples": 934,
+            "n_util_samples": 865,
+            "n_prefill_util_samples": 28,
+            "n_decode_util_samples": 837,
+            "prefill_duration_s": 0.507728363,
+            "decode_duration_s": 13.902911237,
+            "baseline_mean_pct_per_cpu": [
+              10.28,
+              8.51,
+              10.81,
+              22.38,
+              12.21,
+              8.24,
+              9.48,
+              10.71
+            ],
+            "prefill_mean_pct_per_cpu": [
+              9.53,
+              1.79,
+              7.14,
+              10.71,
+              80.36,
+              80.36,
+              76.79,
+              87.5
+            ],
+            "decode_mean_pct_per_cpu": [
+              6.25,
+              5.54,
+              3.23,
+              13.94,
+              92.41,
+              92.17,
+              92.05,
+              93.25
+            ],
+            "prefill_delta_pct_per_cpu": [
+              -0.75,
+              -6.73,
+              -3.67,
+              -11.66,
+              68.15,
+              72.11,
+              67.31,
+              76.79
+            ],
+            "decode_delta_pct_per_cpu": [
+              -4.03,
+              -2.98,
+              -7.59,
+              -8.44,
+              80.21,
+              83.93,
+              82.58,
+              82.54
+            ],
+            "prompt_tokens": 2124,
+            "completion_tokens": 128,
+            "wall_s": 14.4106396,
+            "ttft_s": 0.507728363,
+            "ttft_ns": 507728363,
+            "ttft_split_ns": 511012163,
+            "ttft_source": "perf_metrics",
+            "ttft_ns_perf_metrics": 507728363,
+            "ttft_ns_streamer": 507870200,
+            "r_prefill_tok_s": 4183.339271121239,
+            "r_decode_tok_s": 9.20670482735673,
+            "sampler_overhead": {
+              "util_sampler_method": "psutil.cpu_percent(percpu=True)",
+              "util_sample_interval_s": 0.01,
+              "util_sampler_mode": "continuous_across_generate_posthoc_ttft_split",
+              "util_sampler_wakeups": 865,
+              "util_sampler_expected_wakeups": 1441.06,
+              "util_sampler_overhead_wakeup_ratio": 0.6003,
+              "generate_start_offset_ns": 3283800,
+              "ttft_split_ns": 511012163,
+              "frequency": {
+                "interval_s": 1.0,
+                "n_samples": 13,
+                "summary": {
+                  "n": 13,
+                  "methods": [
+                    "win32pdh"
+                  ],
+                  "mean_pct_of_max_per_cpu": [
+                    97.07692307692308,
+                    91.3076923076923,
+                    96.07692307692308,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ],
+                  "min_pct_of_max_per_cpu": [
+                    62.0,
+                    66.0,
+                    58.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ]
+                },
+                "method": "win32pdh"
+              }
+            }
+          },
+          {
+            "gen_index": 2,
+            "scored": true,
+            "ok": true,
+            "n_baseline_samples": 938,
+            "n_util_samples": 955,
+            "n_prefill_util_samples": 26,
+            "n_decode_util_samples": 929,
+            "prefill_duration_s": 0.449103271,
+            "decode_duration_s": 15.245197829,
+            "baseline_mean_pct_per_cpu": [
+              4.85,
+              2.97,
+              2.35,
+              11.78,
+              6.56,
+              4.12,
+              6.66,
+              7.94
+            ],
+            "prefill_mean_pct_per_cpu": [
+              17.31,
+              7.69,
+              6.41,
+              32.69,
+              88.46,
+              92.31,
+              88.46,
+              88.46
+            ],
+            "decode_mean_pct_per_cpu": [
+              8.23,
+              7.45,
+              5.9,
+              23.32,
+              91.51,
+              90.9,
+              92.25,
+              92.09
+            ],
+            "prefill_delta_pct_per_cpu": [
+              12.46,
+              4.73,
+              4.07,
+              20.91,
+              81.91,
+              88.19,
+              81.8,
+              80.52
+            ],
+            "decode_delta_pct_per_cpu": [
+              3.38,
+              4.48,
+              3.56,
+              11.54,
+              84.96,
+              86.78,
+              85.59,
+              84.15
+            ],
+            "prompt_tokens": 2124,
+            "completion_tokens": 128,
+            "wall_s": 15.6943011,
+            "ttft_s": 0.449103271,
+            "ttft_ns": 449103271,
+            "ttft_split_ns": 452482871,
+            "ttft_source": "perf_metrics",
+            "ttft_ns_perf_metrics": 449103271,
+            "ttft_ns_streamer": 449246300,
+            "r_prefill_tok_s": 4729.424471281573,
+            "r_decode_tok_s": 8.396086520865836,
+            "sampler_overhead": {
+              "util_sampler_method": "psutil.cpu_percent(percpu=True)",
+              "util_sample_interval_s": 0.01,
+              "util_sampler_mode": "continuous_across_generate_posthoc_ttft_split",
+              "util_sampler_wakeups": 955,
+              "util_sampler_expected_wakeups": 1569.43,
+              "util_sampler_overhead_wakeup_ratio": 0.6085,
+              "generate_start_offset_ns": 3379600,
+              "ttft_split_ns": 452482871,
+              "frequency": {
+                "interval_s": 1.0,
+                "n_samples": 15,
+                "summary": {
+                  "n": 15,
+                  "methods": [
+                    "win32pdh"
+                  ],
+                  "mean_pct_of_max_per_cpu": [
+                    95.86666666666666,
+                    95.0,
+                    95.33333333333333,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ],
+                  "min_pct_of_max_per_cpu": [
+                    76.0,
+                    41.0,
+                    70.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0
+                  ]
+                },
+                "method": "win32pdh"
+              }
+            }
+          }
+        ],
+        "runtime": {
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "genai": "2026.2.1.0-3123-7dea0459b2a"
+        },
+        "block": 0,
+        "cell_index": 4
+      }
+    ]
+  },
+  "summary": {
+    "A0a": {
+      "n_runs": 1,
+      "n_ok": 1,
+      "inference_num_threads": 8,
+      "classification_prefill": {
+        "requested_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "loaded_threshold": 21.89125,
+        "noise_band": 1.3581214800820174,
+        "core_states": {
+          "0": "LOADED",
+          "1": "LOADED",
+          "2": "LOADED",
+          "3": "LOADED",
+          "4": "QUIET",
+          "5": "QUIET",
+          "6": "QUIET",
+          "7": "QUIET"
+        },
+        "verdict": "N/A"
+      },
+      "classification_decode": {
+        "requested_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "loaded_threshold": 21.89125,
+        "noise_band": 1.3581214800820174,
+        "core_states": {
+          "0": "LOADED",
+          "1": "LOADED",
+          "2": "LOADED",
+          "3": "LOADED",
+          "4": "AMBIGUOUS",
+          "5": "AMBIGUOUS",
+          "6": "AMBIGUOUS",
+          "7": "AMBIGUOUS"
+        },
+        "verdict": "N/A"
+      },
+      "classification": {
+        "verdict": "N/A",
+        "prefill": "N/A",
+        "decode": "N/A"
+      },
+      "mean_prefill_delta_pct_per_cpu": [
+        71.66,
+        82.82,
+        80.45,
+        67.94,
+        -5.08,
+        -4.43,
+        -5.06,
+        -5.49
+      ],
+      "mean_decode_delta_pct_per_cpu": [
+        86.16,
+        88.08,
+        89.49,
+        81.16,
+        6.41,
+        3.82,
+        3.73,
+        1.7
+      ],
+      "r_prefill_tok_s_all": [
+        7531.823630349842,
+        6354.157836149825
+      ],
+      "r_decode_tok_s_all": [
+        13.433296956563378,
+        13.38088819737662
+      ],
+      "r_prefill_tok_s_mean": 6942.990733249833,
+      "r_decode_tok_s_mean": 13.40709257697,
+      "r_prefill_tok_s_ci": null,
+      "r_decode_tok_s_ci": null,
+      "reference_diagnostics": {
+        "config_id": "A0a",
+        "threads": 8,
+        "n_logical_cpus": 8,
+        "loaded_core_count": 4,
+        "loaded_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "exempt_from_loaded_cores_sanity": true,
+        "note": "A0a is the saturation reference (threads=8); A0b is the default-placement reference (threads=4). Neither gates adoption via loaded-core count. GLOBAL LOADED_THRESHOLD is derived from A0a decode deltas."
+      }
+    },
+    "A0b": {
+      "n_runs": 1,
+      "n_ok": 1,
+      "inference_num_threads": 4,
+      "classification_prefill": {
+        "requested_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "loaded_threshold": 21.89125,
+        "noise_band": 1.3581214800820174,
+        "core_states": {
+          "0": "LOADED",
+          "1": "LOADED",
+          "2": "LOADED",
+          "3": "LOADED",
+          "4": "QUIET",
+          "5": "QUIET",
+          "6": "AMBIGUOUS",
+          "7": "QUIET"
+        },
+        "verdict": "N/A"
+      },
+      "classification_decode": {
+        "requested_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "loaded_threshold": 21.89125,
+        "noise_band": 1.3581214800820174,
+        "core_states": {
+          "0": "LOADED",
+          "1": "LOADED",
+          "2": "LOADED",
+          "3": "LOADED",
+          "4": "QUIET",
+          "5": "QUIET",
+          "6": "QUIET",
+          "7": "QUIET"
+        },
+        "verdict": "N/A"
+      },
+      "classification": {
+        "verdict": "N/A",
+        "prefill": "N/A",
+        "decode": "N/A"
+      },
+      "mean_prefill_delta_pct_per_cpu": [
+        70.81,
+        62.83,
+        65.68,
+        51.86,
+        -3.51,
+        1.19,
+        8.08,
+        -6.51
+      ],
+      "mean_decode_delta_pct_per_cpu": [
+        82.87,
+        83.0,
+        85.91,
+        71.48,
+        0.19,
+        -0.5,
+        -0.22,
+        -1.34
+      ],
+      "r_prefill_tok_s_all": [
+        8908.954299786623,
+        8128.388866531993
+      ],
+      "r_decode_tok_s_all": [
+        15.906237539354082,
+        14.179044033484724
+      ],
+      "r_prefill_tok_s_mean": 8518.671583159308,
+      "r_decode_tok_s_mean": 15.042640786419403,
+      "r_prefill_tok_s_ci": null,
+      "r_decode_tok_s_ci": null,
+      "reference_diagnostics": {
+        "config_id": "A0b",
+        "threads": 4,
+        "n_logical_cpus": 8,
+        "loaded_core_count": 4,
+        "loaded_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "exempt_from_loaded_cores_sanity": true,
+        "note": "A0a is the saturation reference (threads=8); A0b is the default-placement reference (threads=4). Neither gates adoption via loaded-core count. GLOBAL LOADED_THRESHOLD is derived from A0a decode deltas."
+      }
+    },
+    "A1": {
+      "n_runs": 1,
+      "n_ok": 1,
+      "inference_num_threads": 4,
+      "classification_prefill": {
+        "requested_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "loaded_threshold": 21.89125,
+        "noise_band": 1.3581214800820174,
+        "core_states": {
+          "0": "LOADED",
+          "1": "LOADED",
+          "2": "LOADED",
+          "3": "LOADED",
+          "4": "QUIET",
+          "5": "QUIET",
+          "6": "AMBIGUOUS",
+          "7": "QUIET"
+        },
+        "verdict": "UNCLEAR"
+      },
+      "classification_decode": {
+        "requested_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "loaded_threshold": 21.89125,
+        "noise_band": 1.3581214800820174,
+        "core_states": {
+          "0": "LOADED",
+          "1": "LOADED",
+          "2": "LOADED",
+          "3": "LOADED",
+          "4": "AMBIGUOUS",
+          "5": "AMBIGUOUS",
+          "6": "AMBIGUOUS",
+          "7": "AMBIGUOUS"
+        },
+        "verdict": "UNCLEAR"
+      },
+      "classification": {
+        "verdict": "UNCLEAR",
+        "prefill": "UNCLEAR",
+        "decode": "UNCLEAR"
+      },
+      "mean_prefill_delta_pct_per_cpu": [
+        85.8,
+        84.16,
+        85.36,
+        77.28,
+        -2.18,
+        0.11,
+        6.55,
+        -0.46
+      ],
+      "mean_decode_delta_pct_per_cpu": [
+        89.19,
+        89.52,
+        91.1,
+        84.69,
+        13.62,
+        11.67,
+        12.62,
+        7.93
+      ],
+      "r_prefill_tok_s_all": [
+        9357.990027457903,
+        9212.072207240604
+      ],
+      "r_decode_tok_s_all": [
+        14.402109234444055,
+        16.61707533345546
+      ],
+      "r_prefill_tok_s_mean": 9285.031117349254,
+      "r_decode_tok_s_mean": 15.509592283949758,
+      "r_prefill_tok_s_ci": null,
+      "r_decode_tok_s_ci": null
+    },
+    "A2": {
+      "n_runs": 1,
+      "n_ok": 1,
+      "inference_num_threads": 4,
+      "classification_prefill": {
+        "requested_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "loaded_threshold": 21.89125,
+        "noise_band": 1.3581214800820174,
+        "core_states": {
+          "0": "LOADED",
+          "1": "LOADED",
+          "2": "LOADED",
+          "3": "LOADED",
+          "4": "AMBIGUOUS",
+          "5": "AMBIGUOUS",
+          "6": "QUIET",
+          "7": "QUIET"
+        },
+        "verdict": "UNCLEAR"
+      },
+      "classification_decode": {
+        "requested_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "loaded_threshold": 21.89125,
+        "noise_band": 1.3581214800820174,
+        "core_states": {
+          "0": "LOADED",
+          "1": "LOADED",
+          "2": "LOADED",
+          "3": "LOADED",
+          "4": "QUIET",
+          "5": "QUIET",
+          "6": "QUIET",
+          "7": "QUIET"
+        },
+        "verdict": "CONFINED"
+      },
+      "classification": {
+        "verdict": "UNCLEAR",
+        "prefill": "UNCLEAR",
+        "decode": "CONFINED"
+      },
+      "mean_prefill_delta_pct_per_cpu": [
+        70.95,
+        48.04,
+        56.7,
+        53.41,
+        5.65,
+        14.43,
+        -1.48,
+        -1.36
+      ],
+      "mean_decode_delta_pct_per_cpu": [
+        85.83,
+        77.16,
+        82.2,
+        72.55,
+        0.14,
+        1.35,
+        1.03,
+        0.42
+      ],
+      "r_prefill_tok_s_all": [
+        6365.309137127055,
+        7628.770302424137
+      ],
+      "r_decode_tok_s_all": [
+        15.51864257958098,
+        13.622971918263845
+      ],
+      "r_prefill_tok_s_mean": 6997.039719775596,
+      "r_decode_tok_s_mean": 14.570807248922414,
+      "r_prefill_tok_s_ci": null,
+      "r_decode_tok_s_ci": null
+    },
+    "A3": {
+      "n_runs": 1,
+      "n_ok": 1,
+      "inference_num_threads": 4,
+      "classification_prefill": {
+        "requested_cpus": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "loaded_threshold": 21.89125,
+        "noise_band": 1.3581214800820174,
+        "core_states": {
+          "0": "AMBIGUOUS",
+          "1": "AMBIGUOUS",
+          "2": "AMBIGUOUS",
+          "3": "AMBIGUOUS",
+          "4": "LOADED",
+          "5": "LOADED",
+          "6": "LOADED",
+          "7": "LOADED"
+        },
+        "verdict": "UNCLEAR"
+      },
+      "classification_decode": {
+        "requested_cpus": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "loaded_threshold": 21.89125,
+        "noise_band": 1.3581214800820174,
+        "core_states": {
+          "0": "QUIET",
+          "1": "QUIET",
+          "2": "QUIET",
+          "3": "QUIET",
+          "4": "LOADED",
+          "5": "LOADED",
+          "6": "LOADED",
+          "7": "LOADED"
+        },
+        "verdict": "CONFINED"
+      },
+      "classification": {
+        "verdict": "UNCLEAR",
+        "prefill": "UNCLEAR",
+        "decode": "CONFINED"
+      },
+      "mean_prefill_delta_pct_per_cpu": [
+        7.0,
+        3.23,
+        3.38,
+        8.17,
+        83.97,
+        82.18,
+        82.72,
+        75.34
+      ],
+      "mean_decode_delta_pct_per_cpu": [
+        0.31,
+        0.33,
+        -0.71,
+        0.82,
+        88.31,
+        89.47,
+        89.4,
+        85.18
+      ],
+      "r_prefill_tok_s_all": [
+        4595.81094472167,
+        3442.097499349875
+      ],
+      "r_decode_tok_s_all": [
+        8.760667997258048,
+        6.961601518361143
+      ],
+      "r_prefill_tok_s_mean": 4018.9542220357725,
+      "r_decode_tok_s_mean": 7.861134757809596,
+      "r_prefill_tok_s_ci": null,
+      "r_decode_tok_s_ci": null
+    },
+    "A4": {
+      "n_runs": 1,
+      "n_ok": 1,
+      "inference_num_threads": 4,
+      "classification_prefill": {
+        "requested_cpus": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "loaded_threshold": 21.89125,
+        "noise_band": 1.3581214800820174,
+        "core_states": {
+          "0": "QUIET",
+          "1": "AMBIGUOUS",
+          "2": "QUIET",
+          "3": "AMBIGUOUS",
+          "4": "LOADED",
+          "5": "LOADED",
+          "6": "LOADED",
+          "7": "LOADED"
+        },
+        "verdict": "UNCLEAR"
+      },
+      "classification_decode": {
+        "requested_cpus": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "loaded_threshold": 21.89125,
+        "noise_band": 1.3581214800820174,
+        "core_states": {
+          "0": "QUIET",
+          "1": "QUIET",
+          "2": "QUIET",
+          "3": "QUIET",
+          "4": "LOADED",
+          "5": "LOADED",
+          "6": "LOADED",
+          "7": "LOADED"
+        },
+        "verdict": "CONFINED"
+      },
+      "classification": {
+        "verdict": "UNCLEAR",
+        "prefill": "UNCLEAR",
+        "decode": "CONFINED"
+      },
+      "mean_prefill_delta_pct_per_cpu": [
+        0.42,
+        10.38,
+        0.32,
+        17.45,
+        76.22,
+        68.9,
+        62.62,
+        64.89
+      ],
+      "mean_decode_delta_pct_per_cpu": [
+        -13.45,
+        -16.06,
+        -15.14,
+        -16.72,
+        84.87,
+        77.93,
+        77.57,
+        77.4
+      ],
+      "r_prefill_tok_s_all": [
+        4474.47841880376,
+        4023.5542426703955
+      ],
+      "r_decode_tok_s_all": [
+        9.14088062264559,
+        8.439567754532606
+      ],
+      "r_prefill_tok_s_mean": 4249.016330737078,
+      "r_decode_tok_s_mean": 8.790224188589097,
+      "r_prefill_tok_s_ci": null,
+      "r_decode_tok_s_ci": null
+    },
+    "A5": {
+      "n_runs": 1,
+      "n_ok": 1,
+      "inference_num_threads": 4,
+      "classification_prefill": {
+        "requested_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "loaded_threshold": 21.89125,
+        "noise_band": 1.3581214800820174,
+        "core_states": {
+          "0": "LOADED",
+          "1": "LOADED",
+          "2": "LOADED",
+          "3": "LOADED",
+          "4": "QUIET",
+          "5": "QUIET",
+          "6": "QUIET",
+          "7": "QUIET"
+        },
+        "verdict": "CONFINED"
+      },
+      "classification_decode": {
+        "requested_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "loaded_threshold": 21.89125,
+        "noise_band": 1.3581214800820174,
+        "core_states": {
+          "0": "LOADED",
+          "1": "LOADED",
+          "2": "LOADED",
+          "3": "LOADED",
+          "4": "QUIET",
+          "5": "QUIET",
+          "6": "AMBIGUOUS",
+          "7": "AMBIGUOUS"
+        },
+        "verdict": "UNCLEAR"
+      },
+      "classification": {
+        "verdict": "UNCLEAR",
+        "prefill": "CONFINED",
+        "decode": "UNCLEAR"
+      },
+      "mean_prefill_delta_pct_per_cpu": [
+        80.38,
+        84.3,
+        84.09,
+        85.59,
+        -5.43,
+        -2.33,
+        -4.0,
+        -7.25
+      ],
+      "mean_decode_delta_pct_per_cpu": [
+        90.96,
+        94.28,
+        94.66,
+        89.55,
+        -0.44,
+        0.53,
+        4.05,
+        3.02
+      ],
+      "r_prefill_tok_s_all": [
+        9530.506091052337,
+        10110.130787536396
+      ],
+      "r_decode_tok_s_all": [
+        17.111235265362247,
+        17.829054641607332
+      ],
+      "r_prefill_tok_s_mean": 9820.318439294366,
+      "r_decode_tok_s_mean": 17.47014495348479,
+      "r_prefill_tok_s_ci": null,
+      "r_decode_tok_s_ci": null
+    },
+    "A6": {
+      "n_runs": 1,
+      "n_ok": 1,
+      "inference_num_threads": 4,
+      "classification_prefill": {
+        "requested_cpus": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "loaded_threshold": 21.89125,
+        "noise_band": 1.3581214800820174,
+        "core_states": {
+          "0": "AMBIGUOUS",
+          "1": "QUIET",
+          "2": "QUIET",
+          "3": "AMBIGUOUS",
+          "4": "LOADED",
+          "5": "LOADED",
+          "6": "LOADED",
+          "7": "LOADED"
+        },
+        "verdict": "UNCLEAR"
+      },
+      "classification_decode": {
+        "requested_cpus": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "loaded_threshold": 21.89125,
+        "noise_band": 1.3581214800820174,
+        "core_states": {
+          "0": "QUIET",
+          "1": "QUIET",
+          "2": "QUIET",
+          "3": "AMBIGUOUS",
+          "4": "LOADED",
+          "5": "LOADED",
+          "6": "LOADED",
+          "7": "LOADED"
+        },
+        "verdict": "UNCLEAR"
+      },
+      "classification": {
+        "verdict": "UNCLEAR",
+        "prefill": "UNCLEAR",
+        "decode": "UNCLEAR"
+      },
+      "mean_prefill_delta_pct_per_cpu": [
+        5.86,
+        -1.0,
+        0.2,
+        4.62,
+        75.03,
+        80.15,
+        74.56,
+        78.66
+      ],
+      "mean_decode_delta_pct_per_cpu": [
+        -0.33,
+        0.75,
+        -2.01,
+        1.55,
+        82.58,
+        85.36,
+        84.09,
+        83.34
+      ],
+      "r_prefill_tok_s_all": [
+        4183.339271121239,
+        4729.424471281573
+      ],
+      "r_decode_tok_s_all": [
+        9.20670482735673,
+        8.396086520865836
+      ],
+      "r_prefill_tok_s_mean": 4456.381871201405,
+      "r_decode_tok_s_mean": 8.801395674111284,
+      "r_prefill_tok_s_ci": null,
+      "r_decode_tok_s_ci": null
+    }
+  },
+  "noise_band": {
+    "value": 1.3581,
+    "formula": "2 * mean(per-core CV of pooled idle baseline means)",
+    "pooled_baseline_n_per_core": {
+      "0": 16,
+      "1": 16,
+      "2": 16,
+      "3": 16,
+      "4": 16,
+      "5": 16,
+      "6": 16,
+      "7": 16
+    }
+  },
+  "loaded_threshold": {
+    "value": 21.8912,
+    "formula": "0.5 * median(A0a per-core decode delta)",
+    "a0a_decode_delta_pct_per_cpu": {
+      "0": 86.165,
+      "1": 88.08,
+      "2": 89.49,
+      "3": 81.155,
+      "4": 6.41,
+      "5": 3.82,
+      "6": 3.735,
+      "7": 1.695
+    },
+    "applied_to": "every cell, both prefill and decode"
+  },
+  "decision": {
+    "adopted_mechanism": "none",
+    "reason": "Zero mechanisms confined BOTH clusters in BOTH prefill and decode. STOP.",
+    "mechanism_effect": {
+      "a1": {
+        "prefill": "UNCLEAR",
+        "decode": "UNCLEAR",
+        "overall": "UNCLEAR"
+      },
+      "a2": {
+        "prefill": "UNCLEAR",
+        "decode": "CONFINED",
+        "overall": "UNCLEAR"
+      },
+      "a3": {
+        "prefill": "UNCLEAR",
+        "decode": "CONFINED",
+        "overall": "UNCLEAR"
+      },
+      "a4": {
+        "prefill": "UNCLEAR",
+        "decode": "CONFINED",
+        "overall": "UNCLEAR"
+      },
+      "a2_label": "inconclusive",
+      "a2_note": "A1={'prefill': 'UNCLEAR', 'decode': 'UNCLEAR', 'overall': 'UNCLEAR'}; A2={'prefill': 'UNCLEAR', 'decode': 'CONFINED', 'overall': 'UNCLEAR'}. Increase replicates if UNCLEAR.",
+      "a3_ecore_only_decode_tok_s": 7.861134757809596,
+      "a6_process_affinity_decode_tok_s": 8.801395674111284,
+      "a3_ecore_only_prefill_tok_s": 4018.9542220357725,
+      "a6_process_affinity_prefill_tok_s": 4456.381871201405,
+      "a3_within_cv": 0.1618,
+      "a6_within_cv": 0.0651,
+      "candidates": [],
+      "ratio_a3_over_a6_decode": 0.8932,
+      "relative_delta_decode": 0.1068,
+      "material_threshold_2x_cv": 0.3237,
+      "material": false,
+      "interpretation": "No material throughput difference on identical cores at >2x within-cell CV; symmetry remains a design requirement on isolation-invariant grounds."
+    },
+    "a2_verdict": {
+      "label": "inconclusive",
+      "note": "A1={'prefill': 'UNCLEAR', 'decode': 'UNCLEAR', 'overall': 'UNCLEAR'}; A2={'prefill': 'UNCLEAR', 'decode': 'CONFINED', 'overall': 'UNCLEAR'}. Increase replicates if UNCLEAR.",
+      "a1": {
+        "prefill": "UNCLEAR",
+        "decode": "UNCLEAR",
+        "overall": "UNCLEAR"
+      },
+      "a2": {
+        "prefill": "UNCLEAR",
+        "decode": "CONFINED",
+        "overall": "UNCLEAR"
+      }
+    },
+    "a0a_diagnostics": {
+      "config_id": "A0a",
+      "threads": 8,
+      "n_logical_cpus": 8,
+      "loaded_core_count": 4,
+      "loaded_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "exempt_from_loaded_cores_sanity": true,
+      "note": "A0a is the saturation reference (threads=8); A0b is the default-placement reference (threads=4). Neither gates adoption via loaded-core count. GLOBAL LOADED_THRESHOLD is derived from A0a decode deltas."
+    },
+    "a0b_diagnostics": {
+      "config_id": "A0b",
+      "threads": 4,
+      "n_logical_cpus": 8,
+      "loaded_core_count": 4,
+      "loaded_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "exempt_from_loaded_cores_sanity": true,
+      "note": "A0a is the saturation reference (threads=8); A0b is the default-placement reference (threads=4). Neither gates adoption via loaded-core count. GLOBAL LOADED_THRESHOLD is derived from A0a decode deltas."
+    }
+  },
+  "throttle_detectors": {
+    "a_pdh_frequency": {
+      "methods_seen": [
+        "win32pdh"
+      ],
+      "n_min_pct_observations": 128,
+      "global_min_pct_of_max": 25.0
+    },
+    "b_within_cell_drift": {
+      "n_pairs": 8,
+      "pairs": [
+        {
+          "config_id": "A0a",
+          "block": 0,
+          "decode_rel_drift_g2_vs_g1": -0.0039
+        },
+        {
+          "config_id": "A0b",
+          "block": 0,
+          "decode_rel_drift_g2_vs_g1": -0.1086
+        },
+        {
+          "config_id": "A1",
+          "block": 0,
+          "decode_rel_drift_g2_vs_g1": 0.1538
+        },
+        {
+          "config_id": "A2",
+          "block": 0,
+          "decode_rel_drift_g2_vs_g1": -0.1222
+        },
+        {
+          "config_id": "A3",
+          "block": 0,
+          "decode_rel_drift_g2_vs_g1": -0.2054
+        },
+        {
+          "config_id": "A4",
+          "block": 0,
+          "decode_rel_drift_g2_vs_g1": -0.0767
+        },
+        {
+          "config_id": "A5",
+          "block": 0,
+          "decode_rel_drift_g2_vs_g1": 0.042
+        },
+        {
+          "config_id": "A6",
+          "block": 0,
+          "decode_rel_drift_g2_vs_g1": -0.088
+        }
+      ],
+      "n_flagged_gt_15pct": 2
+    },
+    "c_block_position": {
+      "n_rows": 8,
+      "slope_decode_tok_s_per_block": null
+    },
+    "flagged": [
+      "frequency_dip_below_80pct_of_max",
+      "within_cell_decode_drift_gt_15pct"
+    ],
+    "excluded_cells": [],
+    "note": "Cooldown is time-based and unvalidated without a temperature ceiling. Flagged cells are recorded; exclusion requires operator confirmation."
+  },
+  "verification_gates": {
+    "pass": false,
+    "failures": [
+      "A0a loaded_core_count=4 (need substantially >4)"
+    ],
+    "prefill_windows_ok": true,
+    "a0a_loaded_core_count": 4,
+    "loaded_threshold": 21.8912,
+    "noise_band": 1.3581,
+    "charging_complete": true,
+    "min_phase_samples": 10,
+    "run_id_present_at_gate": false
+  }
+}

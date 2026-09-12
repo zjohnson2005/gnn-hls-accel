@@ -1,0 +1,629 @@
+{
+  "arm": {
+    "deadline_sentinel": "DEADLINE_DISABLED_S",
+    "escalation": "disabled",
+    "id": "arm_l",
+    "min_sentinel_headroom": "1.0e6"
+  },
+  "backend_config": {
+    "affinity_cpus": null,
+    "affinity_mechanism": "openvino_scheduling_core_type",
+    "enable_thinking": false,
+    "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "properties": {
+      "INFERENCE_NUM_THREADS": 4
+    },
+    "reasoning_mode": "thinking_off"
+  },
+  "cache_instrumented": false,
+  "cache_probe": {
+    "cache_instrumentation_note": "openvino_genai LLMPipeline exposes no cache_read/cache_creation counters; cached_prompt_tokens is a structural zero, not a measurement",
+    "cache_instrumented": false,
+    "cached_prompt_tokens_reported": [
+      0,
+      0,
+      0
+    ],
+    "call_labels": [
+      "first(P1)",
+      "repeat(P1)",
+      "control(P2, length-matched, distinct)"
+    ],
+    "probe_position": "after warmup",
+    "prompt_tokens": [
+      655,
+      655,
+      654
+    ],
+    "reuse_criterion": "ttft(repeat)/ttft(first) < 0.5 AND ttft(repeat)/ttft(distinct control) < 0.5; the control is what separates prefix reuse from first-call warmup",
+    "reuse_observed": false,
+    "ttft_ratio_second_over_control": 0.3884135097232417,
+    "ttft_ratio_second_over_first": 0.9936012637276258,
+    "ttft_s": [
+      0.204274398,
+      0.2029673,
+      0.522554687
+    ],
+    "verdict": "no cross-call prefix reuse; full re-prefill"
+  },
+  "config_sha256": {
+    "efilter_yaml": "1e68a27aec766431d598d5bdd6d4bb01f76f7403dbd1e8e6bba9e70a66e27c06",
+    "model_spec": "c774de4d71ffa48cb063553fd492fd928093e196726e4460ccb93e1f9be2f654",
+    "task_list": "bb8e4c5bc914e05aa04815c96006be9db2ae3dbc19ec911386c705c05c985142"
+  },
+  "confinement": {
+    "default_placement_citing_run_id": "5eb09eba-b321-4b7e-b7df-e9b01194d388",
+    "mechanism": null,
+    "reason": "mslice-a1a6 found zero mechanisms CONFINED in both prefill and decode (run 5eb09eba-b321-4b7e-b7df-e9b01194d388); none adopted, so none applied",
+    "target_label_basis": "OpenVINO default placement measured to load p_cpus=[0,1,2,3] regardless of thread count; the manifest target names where work ran, not a confinement claim"
+  },
+  "context_growth": {
+    "curve": [
+      {
+        "max_context_tokens": 656,
+        "mean_context_tokens": 651.3333333333334,
+        "min_context_tokens": 649,
+        "n": 3,
+        "step_idx": 0
+      },
+      {
+        "max_context_tokens": 842,
+        "mean_context_tokens": 838.0,
+        "min_context_tokens": 836,
+        "n": 3,
+        "step_idx": 1
+      },
+      {
+        "max_context_tokens": 1006,
+        "mean_context_tokens": 1006.0,
+        "min_context_tokens": 1006,
+        "n": 1,
+        "step_idx": 2
+      },
+      {
+        "max_context_tokens": 1170,
+        "mean_context_tokens": 1170.0,
+        "min_context_tokens": 1170,
+        "n": 1,
+        "step_idx": 3
+      },
+      {
+        "max_context_tokens": 1334,
+        "mean_context_tokens": 1334.0,
+        "min_context_tokens": 1334,
+        "n": 1,
+        "step_idx": 4
+      },
+      {
+        "max_context_tokens": 1498,
+        "mean_context_tokens": 1498.0,
+        "min_context_tokens": 1498,
+        "n": 1,
+        "step_idx": 5
+      },
+      {
+        "max_context_tokens": 1662,
+        "mean_context_tokens": 1662.0,
+        "min_context_tokens": 1662,
+        "n": 1,
+        "step_idx": 6
+      },
+      {
+        "max_context_tokens": 1826,
+        "mean_context_tokens": 1826.0,
+        "min_context_tokens": 1826,
+        "n": 1,
+        "step_idx": 7
+      }
+    ],
+    "growth_ratio_last_over_first": 2.803480040941658,
+    "max_context_tokens_observed": 1826,
+    "max_realized_steps": 8,
+    "mean_growth_tokens_per_step": 167.8095238095238
+  },
+  "escalation": {
+    "cloud_call_attempts": 0,
+    "deadline_s": 1000000000.0,
+    "escalated_steps": 0,
+    "headroom_factor": 293886830.33550644,
+    "max_observed_t_pred_s": 3.4026703369401825,
+    "sentinel": "DEADLINE_DISABLED_S",
+    "sentinel_is_finite": true,
+    "verified_by": "policy.assert_escalation_disabled per step, on the logged deadline"
+  },
+  "experiment_id": "efilter-stage1",
+  "kv_geometry": {
+    "config_path": "C:/Users/zjohn/Projects/gnn-hls-accel/models/Qwen3-4B-int4-ov/config.json",
+    "config_sha256": "8de935ea1cdb814c2795b8ca82764009cc2f0cfbe28af8e46559d371ece31cfe",
+    "excludes": [
+      "weights",
+      "activations",
+      "allocator_slack",
+      "runtime_internal_copies"
+    ],
+    "formula": "2 * n_layers * n_kv_heads * head_dim * dtype_bytes",
+    "head_dim": 128,
+    "kv_bytes_per_token": 73728,
+    "kv_dtype": "u8",
+    "kv_dtype_bytes": 1,
+    "kv_dtype_source": "device_readback",
+    "model_name": "qwen3",
+    "n_attention_heads": 32,
+    "n_kv_heads": 8,
+    "n_layers": 36
+  },
+  "mode": "pilot",
+  "n_steps": 12,
+  "n_tasks": 3,
+  "openvino": {
+    "genai": "2026.2.1.0-3123-7dea0459b2a",
+    "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2"
+  },
+  "per_task": [
+    {
+      "completion_tokens_by_step": [
+        141,
+        70
+      ],
+      "context_tokens_by_step": [
+        656,
+        836
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          99.66666666666667
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          96.0
+        ],
+        "n": 12
+      },
+      "jct_s": 12.8427119,
+      "kv_bytes_resident_by_step": [
+        58761216,
+        66797568
+      ],
+      "order_index": 0,
+      "peak_rss_bytes": 3773841408,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        656,
+        836
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T09",
+      "terminated_reason": "submitted",
+      "wall_s": 12.843332699965686
+    },
+    {
+      "completion_tokens_by_step": [
+        164,
+        95
+      ],
+      "context_tokens_by_step": [
+        649,
+        836
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 14
+      },
+      "jct_s": 15.5070877,
+      "kv_bytes_resident_by_step": [
+        59940864,
+        68640768
+      ],
+      "order_index": 1,
+      "peak_rss_bytes": 3778207744,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        649,
+        836
+      ],
+      "realized_steps": 2,
+      "success": true,
+      "task_id": "T07",
+      "terminated_reason": "submitted",
+      "wall_s": 15.507142100017518
+    },
+    {
+      "completion_tokens_by_step": [
+        171,
+        142,
+        142,
+        142,
+        142,
+        142,
+        142,
+        142
+      ],
+      "context_tokens_by_step": [
+        649,
+        842,
+        1006,
+        1170,
+        1334,
+        1498,
+        1662,
+        1826
+      ],
+      "frequency": {
+        "mean_pct_of_max_per_cpu": [
+          100.0,
+          99.95,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "methods": [
+          "win32pdh"
+        ],
+        "min_pct_of_max_per_cpu": [
+          100.0,
+          96.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0,
+          100.0
+        ],
+        "n": 80
+      },
+      "jct_s": 87.8423306,
+      "kv_bytes_resident_by_step": [
+        60456960,
+        72548352,
+        84639744,
+        96731136,
+        108822528,
+        120913920,
+        133005312,
+        145096704
+      ],
+      "order_index": 2,
+      "peak_rss_bytes": 3855052800,
+      "power_after": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "power_before": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false
+      },
+      "prompt_tokens_new_by_step": [
+        649,
+        842,
+        1006,
+        1170,
+        1334,
+        1498,
+        1662,
+        1826
+      ],
+      "realized_steps": 8,
+      "success": false,
+      "task_id": "T04",
+      "terminated_reason": "max_steps",
+      "wall_s": 87.84243449999485
+    }
+  ],
+  "policy": {
+    "escalation_semantics": "predictive",
+    "kind": "predictive_local_first",
+    "kv_residency": "discard",
+    "n_out_observed_medians": {
+      "answer_synthesis": 82,
+      "tool_call_synthesis": 142
+    },
+    "n_out_pred_source": "config seed (pilot); frozen from pilot medians for the full run",
+    "n_out_pred_tokens": null,
+    "n_out_pred_tokens_used": {
+      "answer_synthesis": 16,
+      "tool_call_synthesis": 64
+    },
+    "prompt_token_source": "chars_div_4_proxy"
+  },
+  "pre_registration": "docs/EXPERIMENT_escalation_filter.md",
+  "quiesce": {
+    "battery_pct": 100.0,
+    "battery_saver": false,
+    "captured_utc": "2026-08-03T22:57:50.456485+00:00",
+    "charge_rate_mw": 0.0,
+    "charging": false,
+    "charging_complete": true,
+    "charging_complete_definition": "powerstate.is_charging_complete() AND on_battery is False; the helper alone returns True for a discharging machine because its callers gate AC separately",
+    "charging_complete_reason": "charging_false",
+    "cloud_credential_check_method": "os.environ direct read; load_dotenv deliberately NOT called",
+    "cloud_credential_present": false,
+    "defender_realtime": "enabled",
+    "deviations": [],
+    "display_brightness": 50.0,
+    "forbidden_process_hits": [],
+    "on_battery": false,
+    "overlay_guid": "00000000-0000-0000-0000-000000000000",
+    "package_temp_c": null,
+    "package_temp_evidence": "Get-CimInstance : Not supported \nAt line:1 char:1\n+ Get-CimInstance -Namespace root/WMI -ClassName MSAcpi_ThermalZoneTemp ...\n+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n  ",
+    "package_temp_source": "unavailable_pending_M2.2_M2.3",
+    "power_online_wmi": true,
+    "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+    "power_plan_name": "Best Performance"
+  },
+  "run_wall_s": 236.91646639996907,
+  "step_type_limitation": "step_type is hardcoded to tool_call_synthesis except on the terminal step; the taxonomy is NOT expanded here (that is its own amendment). Stratify by step_idx.",
+  "steps_file": "steps.ndjson",
+  "success_rate": 0.6666666666666666,
+  "thermal": {
+    "cooldown_between_tasks_s": 60,
+    "frequency_sample_interval_s": 1.0,
+    "package_temp_source": "unavailable_pending_M2.2_M2.3",
+    "regime": "confound",
+    "throttle_detection": "frequency_pdh",
+    "warmup_s": 120
+  },
+  "throughput": {
+    "measured_by_run_id": "inline_warmup",
+    "r_decode_tok_s": 21.210178621484868,
+    "r_prefill_tok_s": 3174.55252331561,
+    "target": "cpu-p",
+    "warmup": {
+      "discarded_first": true,
+      "measured_by": "inline warmup of this run; recorded in this run's sealed summary",
+      "n_generations": 16,
+      "n_scored": 15,
+      "r_decode_cv": 0.14084526069244102,
+      "r_decode_tok_s": 21.210178621484868,
+      "r_prefill_cv": 0.1937884400753941,
+      "r_prefill_tok_s": 3174.55252331561,
+      "samples": [
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 34.684,
+          "i": 0,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 7.833750210267646,
+          "r_prefill_tok_s": 31.985585122863164,
+          "ttft_s": 20.477974609,
+          "ttft_source": "perf_metrics",
+          "wall_s": 34.6474333
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 45.089,
+          "i": 1,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 11.20225824269158,
+          "r_prefill_tok_s": 1414.3126370300254,
+          "ttft_s": 0.463122497,
+          "ttft_source": "perf_metrics",
+          "wall_s": 10.3718389
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 52.292,
+          "i": 2,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 16.238689927287577,
+          "r_prefill_tok_s": 1792.027361647745,
+          "ttft_s": 0.365507812,
+          "ttft_source": "perf_metrics",
+          "wall_s": 7.2010346
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 58.134,
+          "i": 3,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 19.798677776447487,
+          "r_prefill_tok_s": 2812.7619277187864,
+          "ttft_s": 0.232867202,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.8393022
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 63.657,
+          "i": 4,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 20.948944902304007,
+          "r_prefill_tok_s": 2956.7889936017027,
+          "ttft_s": 0.221524093,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.5201203
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 69.046,
+          "i": 5,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 21.43726513763233,
+          "r_prefill_tok_s": 3149.9697167682366,
+          "ttft_s": 0.207938507,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.3858378
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 74.5,
+          "i": 6,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 21.149202693235345,
+          "r_prefill_tok_s": 3233.474172607768,
+          "ttft_s": 0.202568496,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.4509933
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 79.939,
+          "i": 7,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 21.199488025717855,
+          "r_prefill_tok_s": 3288.751982188561,
+          "ttft_s": 0.199163696,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.4351392
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 85.321,
+          "i": 8,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 21.407693992414035,
+          "r_prefill_tok_s": 3332.6972206516143,
+          "ttft_s": 0.196537506,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.3815892
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 90.71,
+          "i": 9,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 21.39607744120094,
+          "r_prefill_tok_s": 3266.860763416682,
+          "ttft_s": 0.200498291,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.3883651
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 95.993,
+          "i": 10,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 21.84647936644789,
+          "r_prefill_tok_s": 3274.040820630984,
+          "ttft_s": 0.200058593,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.2809688
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 101.314,
+          "i": 11,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 21.68200224430405,
+          "r_prefill_tok_s": 3257.8554542257507,
+          "ttft_s": 0.201052505,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.3205059
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 106.647,
+          "i": 12,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 21.624380195415505,
+          "r_prefill_tok_s": 3304.129186386538,
+          "ttft_s": 0.198236801,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.3313319
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 112.03,
+          "i": 13,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 21.49817906695015,
+          "r_prefill_tok_s": 3012.318243098267,
+          "ttft_s": 0.217440505,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.3806685
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 117.47,
+          "i": 14,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 21.210178621484868,
+          "r_prefill_tok_s": 3174.55252331561,
+          "ttft_s": 0.206328292,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.4396647
+        },
+        {
+          "completion_tokens": 111,
+          "elapsed_s": 123.046,
+          "i": 15,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 20.69510260945656,
+          "r_prefill_tok_s": 3088.6611645995445,
+          "ttft_s": 0.212065994,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.5756538
+        }
+      ],
+      "warmup_s_actual": 123.046,
+      "warmup_s_requested": 120.0
+    }
+  }
+}

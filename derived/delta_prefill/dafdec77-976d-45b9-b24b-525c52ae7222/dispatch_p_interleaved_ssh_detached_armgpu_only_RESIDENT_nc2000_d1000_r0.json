@@ -1,0 +1,384 @@
+{
+  "arm_id": "gpu_only",
+  "cache_retention": {
+    "cache_retained": false,
+    "confidence": "ttft_no",
+    "falsification_rule": "RESIDENT turn2_prefill not materially cheaper than turn1 (ratio < 0.5) and/or WS growth nearer full context than delta",
+    "kv_bytes_expected_delta": 73728000,
+    "kv_bytes_expected_full_turn2": 221184000,
+    "ttft_ratio_threshold": 0.5,
+    "ttft_ratio_turn2_over_turn1": 0.6720714718327943,
+    "ttft_suggests_retention": false,
+    "ws_growth_bytes": 393707520,
+    "ws_note": "ws_growth=393707520 kv_delta=73728000 kv_full=221184000 dist_delta=319979520 dist_full=172523520",
+    "ws_suggests_retention": false
+  },
+  "classification": "OK",
+  "compile_error": null,
+  "compile_ok": true,
+  "delta": 1000,
+  "device_config": {
+    "arm_id": "gpu_only",
+    "arm_properties": {},
+    "cpu_properties": {
+      "ENABLE_CPU_PINNING": true,
+      "INFERENCE_NUM_THREADS": 4,
+      "SCHEDULING_CORE_TYPE": "PCORE_ONLY"
+    },
+    "generate_device": "GPU",
+    "label": "gpu only (single pipeline)",
+    "load_sequence": [
+      {
+        "device": "GPU",
+        "properties": {}
+      }
+    ]
+  },
+  "diagnostics": {
+    "chat_api": {
+      "apply_chat_template_default": true,
+      "deprecation_warnings_on_inspect": [],
+      "finish_chat_doc": "finish_chat(self: openvino_genai.py_openvino_genai.LLMPipeline) -> None",
+      "genai_version": "2026.2.1.0-3123-7dea0459b2a",
+      "has_ChatHistory": true,
+      "has_finish_chat": true,
+      "has_start_chat": true,
+      "note": "openvino_genai 2026.2.1 deprecates start_chat/finish_chat in favour of generate(ChatHistory); this diagnostic still uses start_chat/finish_chat.",
+      "ok": true,
+      "ov_version": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+      "start_chat_doc": "start_chat(self: openvino_genai.py_openvino_genai.LLMPipeline, system_message: str = '') -> None"
+    },
+    "config_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\delta_n.yaml",
+    "context_field_errors": {
+      "is_interactive": "GetUserObjectInformationW(UOI_FLAGS) size query returned 0, GetLastError=0"
+    },
+    "loads": [
+      {
+        "device": "GPU",
+        "kv_cache_precision": {
+          "enforced": false,
+          "failure_mode": null,
+          "match": true,
+          "readback": {
+            "device": "GPU",
+            "error": null,
+            "normalized": "dynamic",
+            "ok": true,
+            "property": "KV_CACHE_PRECISION",
+            "raw": "<Type: 'dynamic'>",
+            "to_string": "dynamic"
+          },
+          "requested": null
+        },
+        "ok": true,
+        "properties": {}
+      }
+    ],
+    "prompt_meta_turn1": {
+      "chars": 8995,
+      "n_tokens_realized": 2000,
+      "n_tokens_requested": 2000,
+      "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n2000.txt",
+      "sha256": "716d1bd22e4b09bd739737eb64581fd410bd2e2be18e67d663f981cf8e8afb21"
+    },
+    "prompt_meta_turn2": {
+      "chars": 4495,
+      "n_tokens_realized": 1000,
+      "n_tokens_requested": 1000,
+      "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n1000.txt",
+      "sha256": "61d6f45713363479980d7e94c8c0ac3aeb0e6504c85fb1701d5b4d108427b89d"
+    },
+    "prompt_mode": "ladder_exact",
+    "traceback": null,
+    "working_set_lock": {
+      "after": {
+        "flags": 9,
+        "hard_min_enabled": true,
+        "maximum_bytes": 12884901888,
+        "minimum_bytes": 4294967296,
+        "read": true
+      },
+      "before": {
+        "flags": 10,
+        "hard_min_enabled": false,
+        "maximum_bytes": 1413120,
+        "minimum_bytes": 204800,
+        "read": true
+      },
+      "call": "SetProcessWorkingSetSizeEx",
+      "flags": 1,
+      "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+      "granted": true,
+      "last_error": 0,
+      "privilege": {
+        "attempted": true,
+        "granted": true,
+        "last_error": 0,
+        "last_error_meaning": "ERROR_SUCCESS",
+        "privilege": "SeIncreaseWorkingSetPrivilege",
+        "step": "AdjustTokenPrivileges"
+      },
+      "requested": true,
+      "requested_maximum_bytes": 12884901888,
+      "requested_minimum_bytes": 4294967296,
+      "returned": true
+    }
+  },
+  "environment_peak": {
+    "available_mb": 4792.0,
+    "available_mb_method": "win32pdh:Memory/Available MBytes",
+    "available_mb_source": "at_rss_peak_hotter_turn",
+    "committed_mb": 14058.3984375,
+    "pool_nonpaged_mb": 855.375,
+    "pool_paged_mb": 603.5078125,
+    "probe_error": null,
+    "process_count": 254,
+    "sum_private_mb": 10311.6640625,
+    "tier2_private_mb": 380.1796875,
+    "tier2_processes": [
+      {
+        "name": "ICPS.exe",
+        "pid": 28244,
+        "private_working_set_bytes": 116224000
+      },
+      {
+        "name": "SearchHost.exe",
+        "pid": 3248,
+        "private_working_set_bytes": 76722176
+      },
+      {
+        "name": "msedgewebview2.exe",
+        "pid": 3508,
+        "private_working_set_bytes": 70434816
+      },
+      {
+        "name": "msedgewebview2.exe",
+        "pid": 4516,
+        "private_working_set_bytes": 10493952
+      },
+      {
+        "name": "msedgewebview2.exe",
+        "pid": 5316,
+        "private_working_set_bytes": 47161344
+      },
+      {
+        "name": "msedgewebview2.exe",
+        "pid": 7692,
+        "private_working_set_bytes": 59994112
+      },
+      {
+        "name": "msedgewebview2.exe",
+        "pid": 18232,
+        "private_working_set_bytes": 14561280
+      },
+      {
+        "name": "msedgewebview2.exe",
+        "pid": 21516,
+        "private_working_set_bytes": 3055616
+      }
+    ],
+    "uptime_s": 42433.70876431465
+  },
+  "environment_start": {
+    "available_mb": 5509.0,
+    "available_mb_method": "win32pdh:Memory/Available MBytes",
+    "committed_mb": 13345.66015625,
+    "pool_nonpaged_mb": 852.03515625,
+    "pool_paged_mb": 601.51953125,
+    "probe_error": null,
+    "process_count": 258,
+    "sum_private_mb": 9597.13671875,
+    "tier2_private_mb": 380.1796875,
+    "tier2_processes": [
+      {
+        "name": "ICPS.exe",
+        "pid": 28244,
+        "private_working_set_bytes": 116224000
+      },
+      {
+        "name": "SearchHost.exe",
+        "pid": 3248,
+        "private_working_set_bytes": 76722176
+      },
+      {
+        "name": "msedgewebview2.exe",
+        "pid": 3508,
+        "private_working_set_bytes": 70434816
+      },
+      {
+        "name": "msedgewebview2.exe",
+        "pid": 4516,
+        "private_working_set_bytes": 10493952
+      },
+      {
+        "name": "msedgewebview2.exe",
+        "pid": 5316,
+        "private_working_set_bytes": 47161344
+      },
+      {
+        "name": "msedgewebview2.exe",
+        "pid": 7692,
+        "private_working_set_bytes": 59994112
+      },
+      {
+        "name": "msedgewebview2.exe",
+        "pid": 18232,
+        "private_working_set_bytes": 14561280
+      },
+      {
+        "name": "msedgewebview2.exe",
+        "pid": 21516,
+        "private_working_set_bytes": 3055616
+      }
+    ],
+    "uptime_s": 42419.673911094666
+  },
+  "execute_error": null,
+  "execute_ok": true,
+  "hostname": "computadora",
+  "is_interactive": null,
+  "kind": "delta_prefill_cell",
+  "kv_bytes_expected_turn1": 147456000,
+  "kv_bytes_expected_turn2": 73728000,
+  "kv_bytes_per_token": 73728,
+  "kv_cache_precision_readback": [
+    {
+      "enforced": false,
+      "failure_mode": null,
+      "match": true,
+      "readback": {
+        "device": "GPU",
+        "error": null,
+        "normalized": "dynamic",
+        "ok": true,
+        "property": "KV_CACHE_PRECISION",
+        "raw": "<Type: 'dynamic'>",
+        "to_string": "dynamic"
+      },
+      "requested": null
+    }
+  ],
+  "launch_context": "ssh_detached",
+  "max_new_tokens": 64,
+  "mode": "RESIDENT",
+  "model_id": "Qwen3-4B-int4-ov",
+  "n_cached": 2000,
+  "ov_version": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+  "path_head": [
+    "C:\\windows\\system32",
+    "C:\\windows",
+    "C:\\windows\\System32\\Wbem",
+    "C:\\windows\\System32\\WindowsPowerShell\\v1.0\\",
+    "C:\\windows\\System32\\OpenSSH\\",
+    "C:\\Program Files\\dotnet\\"
+  ],
+  "power_request": {
+    "clear_last_error": 0,
+    "cleared": true,
+    "close_last_error": 0,
+    "closed": true,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x804",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM delta_prefill; PowerRequestSystemRequired for compile+generate",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "delta_prefill",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "process_id": 9368,
+  "python_exe": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\.venv-seam\\Scripts\\python.exe",
+  "python_version": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "session_id": 0,
+  "timestamp_utc": "2026-08-12T19:36:48.517598+00:00",
+  "turn1": {
+    "decode_tok_s": 15.845863680180743,
+    "end_ws_bytes": 3422982144,
+    "error": null,
+    "kv_bytes_expected": 147456000,
+    "ok": true,
+    "peak_ws_bytes": 3422998528,
+    "prefill_s": 3.396831542,
+    "prompt_tokens_reported": 2008,
+    "prompt_tokens_requested": 2000,
+    "role": "turn1_n_cached",
+    "rss_window": {
+      "available_mb_at_peak": 5159.0,
+      "available_mb_min": 5124.0,
+      "available_mb_start": 5509.0,
+      "commit_bytes_end": 3836248064,
+      "commit_bytes_start": 3430825984,
+      "free_memory_mb_end": 5159.3359375,
+      "free_memory_mb_min": 5124.47265625,
+      "free_memory_mb_start": 5509.03515625,
+      "free_physical_mb_at_peak": 5159.31640625,
+      "free_physical_mb_min": 5124.47265625,
+      "free_physical_mb_start": 5509.03515625,
+      "n_rss_samples": 146,
+      "peak_commit_bytes": 3839406080,
+      "peak_rss_bytes": 3422998528,
+      "rss_bytes_end": 3422998528,
+      "rss_bytes_start": 3019505664,
+      "rss_interval_s": 0.05,
+      "rss_sampler_overhead_s": 0.0638128
+    },
+    "text_head": "<think>\nOkay, the user provided a long text that's mostly repetitions of the sentence \"the quick brown fox jumps over the lazy dog.\" followed by some random words like \"a a a a a a a a.\" Let me break ",
+    "tokens_generated": 64,
+    "traceback": null,
+    "ttft_ns": 3396831542,
+    "ttft_ns_perf_metrics": 3396831542,
+    "ttft_ns_streamer": 3397057400,
+    "ttft_source": "perf_metrics",
+    "wall_ns": 7372632500,
+    "wall_s": 7.3726325
+  },
+  "turn2": {
+    "decode_tok_s": 14.48116494019146,
+    "end_ws_bytes": 3816665088,
+    "error": null,
+    "kv_bytes_expected": 73728000,
+    "ok": true,
+    "peak_ws_bytes": 3816706048,
+    "prefill_s": 2.282913574,
+    "prompt_tokens_reported": 3082,
+    "prompt_tokens_requested": 1000,
+    "role": "turn2_delta_resident",
+    "rss_window": {
+      "available_mb_at_peak": 4792.0,
+      "available_mb_min": 4789.0,
+      "available_mb_start": 5159.0,
+      "commit_bytes_end": 4230684672,
+      "commit_bytes_start": 3836215296,
+      "free_memory_mb_end": 4792.546875,
+      "free_memory_mb_min": 4789.4296875,
+      "free_memory_mb_start": 5159.30859375,
+      "free_physical_mb_at_peak": 4792.51953125,
+      "free_physical_mb_min": 4789.4296875,
+      "free_physical_mb_start": 5159.30859375,
+      "n_rss_samples": 133,
+      "peak_commit_bytes": 4230733824,
+      "peak_rss_bytes": 3816706048,
+      "rss_bytes_end": 3816685568,
+      "rss_bytes_start": 3423010816,
+      "rss_interval_s": 0.05,
+      "rss_sampler_overhead_s": 0.0605522
+    },
+    "text_head": "<think>\nOkay, the user has provided a text that's mostly repetitions of the sentence \"the quick brown fox jumps over the lazy dog,\" followed by some random words like \"a a a a a a a a.\" Let me break t",
+    "tokens_generated": 64,
+    "traceback": null,
+    "ttft_ns": 2282913574,
+    "ttft_ns_perf_metrics": 2282913574,
+    "ttft_ns_streamer": 2283115600,
+    "ttft_source": "perf_metrics",
+    "wall_ns": 6633392300,
+    "wall_s": 6.6333923
+  },
+  "turn2_prompt_tokens": 1000,
+  "window_station": "Service-0x0-380dbb6$",
+  "wslock_granted": true
+}

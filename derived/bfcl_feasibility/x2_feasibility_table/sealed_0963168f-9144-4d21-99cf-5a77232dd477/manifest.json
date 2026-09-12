@@ -1,0 +1,142 @@
+{
+  "accuracy_trajectory": {
+    "accuracy": 0.05,
+    "correct": 1,
+    "n": 20
+  },
+  "arm_cli": "gpu_only",
+  "arm_id": "gpu_only",
+  "artifacts": [
+    {
+      "artifact": "artifacts/plan.json",
+      "bytes": 4078,
+      "name": "plan.json",
+      "sha256": "01dfb3af7e7e3bba076d1b993562d416dde700b34886d50cdb0c59e4c2fb3839"
+    },
+    {
+      "artifact": "artifacts/summary.json",
+      "bytes": 45894,
+      "name": "summary.json",
+      "sha256": "58c7ad1277df100c248b379266e2732dba15a69cc141da63af5b5676e1de2a12"
+    },
+    {
+      "artifact": "artifacts/x2_entry_ledger.json",
+      "bytes": 45894,
+      "name": "x2_entry_ledger.json",
+      "sha256": "58c7ad1277df100c248b379266e2732dba15a69cc141da63af5b5676e1de2a12"
+    },
+    {
+      "artifact": "artifacts/multi_turn_probe_entries.json",
+      "bytes": 76545,
+      "name": "multi_turn_probe_entries.json",
+      "sha256": "5ee1b310b38425930ec40810d64d56d52d4a18cf63f38df2f8954f25bb148ccf"
+    },
+    {
+      "artifact": "artifacts/multi_turn_gold_selftest.json",
+      "bytes": 3135,
+      "name": "multi_turn_gold_selftest.json",
+      "sha256": "3a21318b9f9d458f2d3b906635d87a833556e7e24ce9c34808f63ef466538b36"
+    },
+    {
+      "artifact": "artifacts/watchdog_kills.jsonl",
+      "bytes": 877,
+      "name": "watchdog_kills.jsonl",
+      "sha256": "b2df83ac6d88363959280010e52ea57380ee716985db1e7810f9cac5758c3485"
+    },
+    {
+      "artifact": "artifacts/session_residency_entries_gpu_only_RESIDENT.json",
+      "bytes": 76545,
+      "name": "session_residency_entries_gpu_only_RESIDENT.json",
+      "sha256": "5ee1b310b38425930ec40810d64d56d52d4a18cf63f38df2f8954f25bb148ccf"
+    },
+    {
+      "artifact": "artifacts/session_residency_gold_gpu_only_RESIDENT.json",
+      "bytes": 3135,
+      "name": "session_residency_gold_gpu_only_RESIDENT.json",
+      "sha256": "3a21318b9f9d458f2d3b906635d87a833556e7e24ce9c34808f63ef466538b36"
+    },
+    {
+      "artifact": "artifacts/session_residency_gpu_only_RESIDENT_report.json",
+      "bytes": 367692,
+      "name": "session_residency_gpu_only_RESIDENT_report.json",
+      "sha256": "4c1ab55345ad630129ee093fc627196ebe344ce8bd100eb54d35dd237b549f07"
+    }
+  ],
+  "durable_removal_attempt": {
+    "attempts": [
+      {
+        "action": "Remove-AppxPackage",
+        "hresult": "0x80073D02",
+        "meaning": "resources in use",
+        "result": "failed"
+      },
+      {
+        "action": "Remove-AppxPackage",
+        "hresult": "0x80073D02",
+        "meaning": "resources in use",
+        "result": "failed"
+      },
+      {
+        "action": "Remove-AppxPackage",
+        "hresult": "0x80073D02",
+        "meaning": "resources in use",
+        "note": "WorkloadsSessionHost killed 2 s prior; package still cannot be removed while the subsystem is live.",
+        "result": "failed"
+      }
+    ],
+    "conclusion": "The package cannot be removed while the subsystem is live. 60 s watchdog is the best available control on this machine.",
+    "packages": [
+      "WindowsWorkload.Manager.1",
+      "WindowsWorkload.SessionManager.1"
+    ]
+  },
+  "fraction_turns_slo_ok": 1.0,
+  "immateriality_evidence": {
+    "aborted_arm": "cpu-p NON_RESIDENT",
+    "aborted_available_mb_approx_operator": 2750.0,
+    "aborted_available_mb_median_after_entry0": 2784.15,
+    "aborted_session_id": "91905556-3e51-4018-99f9-aaf421a31728",
+    "applies_most_directly_to": "cb781dbf-3486-4fbc-a69a-34026f801abe",
+    "claim": "Aborted run 91905556 ran the same arm (cpu-p NON_RESIDENT) at ~2,750 MB available (median after entry 0) against these runs' ~4,950 MB median on cb781dbf, and produced per-entry timings within normal variance of the clean-protocol re-run. The WSH contamination windows bounded above are therefore treated as immaterial to the feasibility-table claim for sealing purposes.",
+    "this_cell_available_mb_median": 6670.200000000001,
+    "this_cell_available_mb_min": 6471.4
+  },
+  "integrity": {
+    "entry_ids_exact_a621": true,
+    "gold_selftest_20_20": true,
+    "ir_sha256_pin_ok": true,
+    "note": "Asserts what is true: identity/gold/IR/onset held; WSH presence during timed work is recorded and upper-bounded in wsh_contamination, not denied. Not 'integrity_pass overridden'.",
+    "onset_fields_per_entry": true,
+    "status": "environment_deviation_recorded_and_bounded",
+    "wsh_clean": true
+  },
+  "ir_sha256": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+  "kind": "x2_feasibility_table",
+  "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+  "raw_emit_blocked": {
+    "reason": "derived_diagnostic seal only; raw/ promote not requested for X-2."
+  },
+  "residency_mode": "RESIDENT",
+  "run_id": "0963168f-9144-4d21-99cf-5a77232dd477",
+  "seal_style": "derived_diagnostic",
+  "sealed_utc": "2026-09-07T23:00:03.277285+00:00",
+  "session_id": "0963168f-9144-4d21-99cf-5a77232dd477",
+  "session_total_latency_s": {
+    "max": 130.51581480000004,
+    "mean": 24.474369770000113,
+    "min": 5.555803899999773,
+    "n": 20,
+    "sum": 489.48739540000224
+  },
+  "status": "COMPLETE",
+  "wsh_contamination": {
+    "available_mb_max": 7560.7,
+    "available_mb_median": 6670.200000000001,
+    "bound_pct": 0.0,
+    "bound_pct_computed": 0.0,
+    "kill_events": [],
+    "method": "upper bound; each kill assumed WSH resident for the full interval since the prior clean poll",
+    "min_available_mb_during_run": 6471.4,
+    "watchdog_interval_s": 60
+  }
+}

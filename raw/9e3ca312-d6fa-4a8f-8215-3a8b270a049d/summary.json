@@ -1,0 +1,386 @@
+{
+  "acceptance_criterion": {
+    "band_multiple": 2.0,
+    "basis": "r_decode_tok_s",
+    "gap_s": 1200,
+    "gate_mode": "derived_from_within_run_spread",
+    "max_within_run_spread": 0.1,
+    "prior_unexplained_ratio": 1.98,
+    "rule": "s = max over the two runs of the within-run relative spread on `basis`; band = band_multiple * s; PASS iff |ratio - 1| <= band AND s <= max_within_run_spread",
+    "spread_estimator": "cv"
+  },
+  "benchmark": "fixed_throughput_acceptance_verdict_v1",
+  "compared_isolation_mode": "remote",
+  "compared_launch_context": "ssh_detached",
+  "confinement_classifications": {
+    "run_a": {
+      "core_states": {
+        "0": "LOADED",
+        "1": "LOADED",
+        "2": "LOADED",
+        "3": "LOADED",
+        "4": "AMBIGUOUS",
+        "5": "QUIET",
+        "6": "QUIET",
+        "7": "QUIET"
+      },
+      "verdict": "UNCLEAR"
+    },
+    "run_b": {
+      "core_states": {
+        "0": "LOADED",
+        "1": "LOADED",
+        "2": "LOADED",
+        "3": "LOADED",
+        "4": "QUIET",
+        "5": "QUIET",
+        "6": "QUIET",
+        "7": "QUIET"
+      },
+      "verdict": "CONFINED"
+    }
+  },
+  "experiment_id": "fixed_throughput_acceptance",
+  "fixed_config": {
+    "affinity_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "arm_id": "A",
+    "context_tokens": 2048,
+    "cpu_properties": {
+      "ENABLE_CPU_PINNING": true,
+      "INFERENCE_NUM_THREADS": 4,
+      "SCHEDULING_CORE_TYPE": "PCORE_ONLY"
+    },
+    "max_new_tokens": 64,
+    "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "prompt": {
+      "chars": 9216,
+      "n_tokens_realized": 2048,
+      "n_tokens_requested": 2048,
+      "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n2048.txt",
+      "sha256": "500c48655c5adc7b47a9bee80756adfaf855f0384af2fb10f05816548c922290"
+    },
+    "repeats": 3,
+    "target": "cpu-p",
+    "working_set_lock": {
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "mode": "request"
+    }
+  },
+  "instrument_gate": {
+    "abs_ratio_minus_one": 0.04413072563537557,
+    "band": 0.2893980067758037,
+    "band_multiple": 2.0,
+    "basis": "r_decode_tok_s",
+    "derivation": "s = max(cv_a, cv_b) on `basis`; band = band_multiple * s; PASS iff |ratio - 1| <= band and s <= max_within_run_spread. Every input is present in this record, so the bound can be recomputed without the source runs.",
+    "gate_mode": "derived_from_within_run_spread",
+    "max_within_run_spread": 0.1,
+    "medians": {
+      "run_a": 16.641574962173326,
+      "run_b": 17.375979740969534
+    },
+    "prior_unexplained_ratio": 1.98,
+    "ratio": 1.0441307256353756,
+    "ratio_convention": "max(median)/min(median), so >= 1 regardless of run order",
+    "reasons": [
+      "within-run spread s = 0.1447 exceeds 0.10; a band derived from a run this noisy describes a machine that cannot support a claim, so the ratio is not evidence of reproducibility whatever its value"
+    ],
+    "s": 0.14469900338790184,
+    "s_source": "run_a",
+    "signed_ratio_b_over_a": 1.0441307256353756,
+    "spread_acceptable": false,
+    "spread_estimator": "cv",
+    "verdict": "FAIL",
+    "within_band": true,
+    "within_run_spread": {
+      "run_a": 0.14469900338790184,
+      "run_b": 0.018422416614057052
+    }
+  },
+  "isolation_mode_note": "This run's own isolation_mode describes the process that computed the verdict, which measures nothing. The mode that bears on validity is compared_isolation_mode, the single mode both source runs were measured under.",
+  "memory_dispersion": {
+    "free_physical_bytes_at_peak": {
+      "arm_1": 4223365120,
+      "arm_2": 3673247744,
+      "ratio_max_over_min": 1.1497632107441105,
+      "signed_delta_arm2_minus_arm1": -550117376
+    },
+    "free_physical_bytes_at_start": {
+      "arm_1": 9602142208,
+      "arm_2": 8917360640,
+      "ratio_max_over_min": 1.076791956235158,
+      "signed_delta_arm2_minus_arm1": -684781568
+    },
+    "peak_commit_bytes": {
+      "arm_1": 3829755904,
+      "arm_2": 3833225216,
+      "ratio_max_over_min": 1.0009058833218003,
+      "signed_delta_arm2_minus_arm1": 3469312
+    },
+    "peak_working_set_bytes": {
+      "arm_1": 5827391488,
+      "arm_2": 5829701632,
+      "ratio_max_over_min": 1.0003964284885882,
+      "signed_delta_arm2_minus_arm1": 2310144
+    }
+  },
+  "purpose": "Derive the acceptance band from two sealed fixed-config runs and apply it. Holds the numbers that exist in neither source run alone: s, the band, and the verdict.",
+  "run_id": "9e3ca312-d6fa-4a8f-8215-3a8b270a049d",
+  "secondary_not_gating": {
+    "abs_ratio_minus_one": 0.05528151454750363,
+    "band": 0.04393054809480167,
+    "band_multiple": 2.0,
+    "basis": "r_prefill_tok_s",
+    "derivation": "s = max(cv_a, cv_b) on `basis`; band = band_multiple * s; PASS iff |ratio - 1| <= band and s <= max_within_run_spread. Every input is present in this record, so the bound can be recomputed without the source runs.",
+    "gate_mode": "derived_from_within_run_spread",
+    "max_within_run_spread": 0.1,
+    "medians": {
+      "run_a": 82.3583846749116,
+      "run_b": 86.91128091542663
+    },
+    "prior_unexplained_ratio": 1.98,
+    "ratio": 1.0552815145475036,
+    "ratio_convention": "max(median)/min(median), so >= 1 regardless of run order",
+    "reasons": [
+      "|ratio - 1| = 0.0553 exceeds the derived band 2 x s = 0.0439"
+    ],
+    "s": 0.021965274047400837,
+    "s_source": "run_a",
+    "signed_ratio_b_over_a": 1.0552815145475036,
+    "spread_acceptable": true,
+    "spread_estimator": "cv",
+    "verdict": "FAIL",
+    "within_band": false,
+    "within_run_spread": {
+      "run_a": 0.021965274047400837,
+      "run_b": 0.005279939770200658
+    }
+  },
+  "source_runs": {
+    "run_a": {
+      "config_hash": "49d7d43bd32b74d0429b1095f14e8efbf2abc0ea52ed92f439c89de7ca24c41e",
+      "confinement_classification": {
+        "baseline_mean": [
+          5.4799999999999995,
+          0.0,
+          5.365,
+          4.529999999999999,
+          3.9299999999999997,
+          18.34,
+          27.055,
+          52.614999999999995
+        ],
+        "config_claim": "SCHEDULING_CORE_TYPE=PCORE_ONLY (control, not an adoption claim)",
+        "core_states": {
+          "0": "LOADED",
+          "1": "LOADED",
+          "2": "LOADED",
+          "3": "LOADED",
+          "4": "AMBIGUOUS",
+          "5": "QUIET",
+          "6": "QUIET",
+          "7": "QUIET"
+        },
+        "deltas": {
+          "0": 39.38013272077591,
+          "1": 36.716743236345074,
+          "2": 33.48078866768759,
+          "3": 40.56295558958652,
+          "4": 5.519974476773864,
+          "5": -6.949341500765698,
+          "6": -1.568782542113322,
+          "7": -7.599430832057166
+        },
+        "loaded_threshold": 19.024218989280246,
+        "n_baseline_samples": 20,
+        "n_util_samples": 1959,
+        "noise_band": 2.802732206054216,
+        "note": "Verdict records what happened under the configured properties. UNCLEAR/LEAKED/INVALID here do not rewrite the config; they travel with the sealed arm.",
+        "requested_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "util_mean": [
+          44.86013272077591,
+          36.716743236345074,
+          38.84578866768759,
+          45.09295558958652,
+          9.449974476773864,
+          11.390658499234302,
+          25.486217457886678,
+          45.01556916794283
+        ],
+        "verdict": "UNCLEAR"
+      },
+      "isolation_mode": "remote",
+      "launch_context": "ssh_detached",
+      "memory_metrics": {
+        "free_physical_bytes_at_peak": 4223365120,
+        "free_physical_bytes_at_start": 9602142208,
+        "host_at_arm_start": {
+          "available_bytes": 10655334400,
+          "commit_total_bytes": 24696061952,
+          "commit_used_bytes": 3940020224,
+          "free_physical_bytes": 10655334400,
+          "observed_utc": "2026-08-06T19:38:49.793671+00:00",
+          "total_physical_bytes": 16752234496
+        },
+        "peak_commit_bytes": 3829755904,
+        "peak_working_set_bytes": 5827391488,
+        "per_repeat_peak_commit_bytes": [
+          3829755904,
+          3829538816,
+          3829628928
+        ],
+        "per_repeat_peak_working_set_bytes": [
+          5827391488,
+          5825286144,
+          5826629632
+        ]
+      },
+      "r_decode_tok_s": {
+        "cv": 0.14469900338790184,
+        "max": 17.02577283959134,
+        "mean": 15.540163484755325,
+        "median": 16.641574962173326,
+        "min": 12.953142652501308,
+        "n": 3,
+        "n_missing": 0,
+        "sd": 2.2486461687291595,
+        "spread_ratio": 1.314412517205127
+      },
+      "r_prefill_tok_s": {
+        "cv": 0.021965274047400837,
+        "max": 84.63974615872927,
+        "mean": 82.6831251572878,
+        "median": 82.3583846749116,
+        "min": 81.05124463822256,
+        "n": 3,
+        "n_missing": 0,
+        "sd": 1.8161575031753692,
+        "spread_ratio": 1.0442744776656325
+      },
+      "run_id": "b11553d7-3bbb-4162-ad3e-ba9a8b18987b",
+      "session_id": 0,
+      "timestamp_utc": "2026-08-06T19:42:38.491779+00:00",
+      "window_station": "Service-0x0-f16227f$"
+    },
+    "run_b": {
+      "config_hash": "49d7d43bd32b74d0429b1095f14e8efbf2abc0ea52ed92f439c89de7ca24c41e",
+      "confinement_classification": {
+        "baseline_mean": [
+          8.58,
+          0.0,
+          8.790000000000001,
+          7.865,
+          1.55,
+          1.7149999999999999,
+          0.0,
+          0.7150000000000001
+        ],
+        "config_claim": "SCHEDULING_CORE_TYPE=PCORE_ONLY (control, not an adoption claim)",
+        "core_states": {
+          "0": "LOADED",
+          "1": "LOADED",
+          "2": "LOADED",
+          "3": "LOADED",
+          "4": "QUIET",
+          "5": "QUIET",
+          "6": "QUIET",
+          "7": "QUIET"
+        },
+        "deltas": {
+          "0": 42.20062538320049,
+          "1": 43.799386879215206,
+          "2": 35.97186388718578,
+          "3": 44.204589209074186,
+          "4": 0.9528816676885346,
+          "5": 0.04692519926425498,
+          "6": 1.5404046597179646,
+          "7": 1.2666063764561617
+        },
+        "loaded_threshold": 21.500003065603924,
+        "n_baseline_samples": 20,
+        "n_util_samples": 1631,
+        "noise_band": 3.762907266652223,
+        "note": "Verdict records what happened under the configured properties. UNCLEAR/LEAKED/INVALID here do not rewrite the config; they travel with the sealed arm.",
+        "requested_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "util_mean": [
+          50.78062538320049,
+          43.799386879215206,
+          44.76186388718578,
+          52.06958920907419,
+          2.5028816676885346,
+          1.7619251992642548,
+          1.5404046597179646,
+          1.9816063764561618
+        ],
+        "verdict": "CONFINED"
+      },
+      "isolation_mode": "remote",
+      "launch_context": "ssh_detached",
+      "memory_metrics": {
+        "free_physical_bytes_at_peak": 3673247744,
+        "free_physical_bytes_at_start": 8917360640,
+        "host_at_arm_start": {
+          "available_bytes": 9481605120,
+          "commit_total_bytes": 24696061952,
+          "commit_used_bytes": 3467489280,
+          "free_physical_bytes": 9481605120,
+          "observed_utc": "2026-08-06T20:02:39.229543+00:00",
+          "total_physical_bytes": 16752234496
+        },
+        "peak_commit_bytes": 3833225216,
+        "peak_working_set_bytes": 5829701632,
+        "per_repeat_peak_commit_bytes": [
+          3827896320,
+          3833225216,
+          3829186560
+        ],
+        "per_repeat_peak_working_set_bytes": [
+          5823270912,
+          5829701632,
+          5825249280
+        ]
+      },
+      "r_decode_tok_s": {
+        "cv": 0.018422416614057052,
+        "max": 17.834906424302265,
+        "mean": 17.47507500940662,
+        "median": 17.375979740969534,
+        "min": 17.21433886294806,
+        "n": 3,
+        "n_missing": 0,
+        "sd": 0.3219331121851857,
+        "spread_ratio": 1.0360494565777316
+      },
+      "r_prefill_tok_s": {
+        "cv": 0.005279939770200658,
+        "max": 87.46257878280666,
+        "mean": 86.97487435265289,
+        "median": 86.91128091542663,
+        "min": 86.55076335972537,
+        "n": 3,
+        "n_missing": 0,
+        "sd": 0.4592220981027772,
+        "spread_ratio": 1.0105350361763024
+      },
+      "run_id": "21c1a2ab-af60-4196-84df-3a99f7ef0419",
+      "session_id": 0,
+      "timestamp_utc": "2026-08-06T20:05:44.416353+00:00",
+      "window_station": "Service-0x0-f16227f$"
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "status": "PRE-DATA",
+  "frozen_local_date": "2026-08-24",
+  "frozen_before": "any Qwen3-8B-int4 transfer, load, or generate",
+  "do_not_edit_after": "8B measurement starts",
+  "arm": "gpu_only",
+  "model": "Qwen3-8B-int4",
+  "blueprint_filter": "additive",
+  "blueprint_coordinate": "workload.model_capability_rung",
+  "citing_4b_session": "41e419bd-f3e9-43b1-8364-0ebd89fa086b",
+  "citing_4b_analysis": "derived/delta_prefill/sealed_41e419bd-f3e9-43b1-8364-0ebd89fa086b/analysis.json",
+  "derivation_constants_operator_stated": {
+    "intercept_gb": 3.08,
+    "f16_slope_bytes_per_token": 234827,
+    "decode_tok_s_gpu_only_warm": 19.85
+  },
+  "derivation_constants_sealed_41e419bd_gpu_only_f16": {
+    "peak_ws_intercept_bytes": 3077246657.8079095,
+    "peak_ws_slope_bytes_per_token": 235817.20587570622,
+    "source": "d_peak_ws_slope.arms.gpu_only_f16.fit"
+  },
+  "decode_19_85_nearest_sealed": {
+    "decode_tok_s": 19.85652075206476,
+    "session": "37f78cb1-542c-4f83-9762-3dcbe6b6eda5",
+    "cell": "gpu_only_u8 n=10000 ladder",
+    "note": "operator attributed 19.85 tok/s to session 41e419bd gpu_only warm; this is the nearest sealed 19.85 figure found. Does not change M4 bands."
+  },
+  "predictions": {
+    "M1": {
+      "claim": "8B-int4 loads on gpu_only without CL_OUT_OF_RESOURCES at n=2000",
+      "n": 2000,
+      "falsifier": "load or first generate fails"
+    },
+    "M2": {
+      "claim": "base footprint (peak_ws intercept, n->0) lands 4.8-6.0 GB",
+      "band_gb": [4.8, 6.0],
+      "falsifier": "outside that band"
+    },
+    "M3": {
+      "claim": "TTFT at n=5000 f16 lands 4-7 s, clearing the 10 s USER_FACING bound",
+      "n": 5000,
+      "kv_precision": "f16",
+      "expected_s": [4.0, 7.0],
+      "user_facing_ttft_s": 10.0,
+      "falsifier": ">10 s, or <3 s"
+    },
+    "M4": {
+      "claim": "decode lands 8-12 tok/s, clearing the 6 tok/s floor",
+      "expected_tok_s": [8.0, 12.0],
+      "user_facing_decode_floor_tok_s": 6.0,
+      "falsifier": "<6 tok/s"
+    },
+    "M5": {
+      "claim": "resident slope B/token is within 10% of 4B's 234827 at f16",
+      "kv_precision": "f16",
+      "referent_bytes_per_token": 234827,
+      "tolerance": 0.10,
+      "band_bytes_per_token": [211344.3, 258309.7],
+      "geometry_assumption": "same layers x kv_heads x head_dim as 4B",
+      "falsifier": "outside 10%; if falsified, KV geometry differs and every capacity extrapolation in this thread is void"
+    },
+    "M6": {
+      "claim": "cpu-p arm does NOT fit at n=12000",
+      "n": 12000,
+      "tested_by_this_gate": false,
+      "4b_note": "4B already peaked 9.46-10.70 GB with 154-388 MB free"
+    }
+  },
+  "user_facing_slo": {
+    "TTFT_s_max": 10.0,
+    "decode_tok_s_min": 6.0,
+    "source": "tools/seal_session_residency.py USER_FACING_SLO"
+  },
+  "markdown": "derived/qwen3_8b/PREDICTION_BEFORE_RUN.md",
+  "markdown_sha256": "af593d4f7aac0a7c4e2a19c3b389df5b309400a0b9a5d1740df9a3de2a9e2891",
+  "markdown_bytes": 3060
+}

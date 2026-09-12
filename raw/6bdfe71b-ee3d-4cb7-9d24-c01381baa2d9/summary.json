@@ -1,0 +1,60 @@
+{
+  "classification": "PROMPT_A2_PREFLIGHT",
+  "experiment_id": "prompt-a-throughput-integrity",
+  "governing_amendment_source": {
+    "followed": "pinned docs/SEAM_research_blueprint.md AM-027 dated 2026-08-04 and human Prompt A2 dispatch",
+    "issue": "stale amendment ledger/parser source; not used for this run",
+    "stale_source": "MCP seam_amendments/AMENDMENTS.md exposes the superseded v1 AM-027 while the pinned blueprint says only v1 AM-001..AM-024 remain in force"
+  },
+  "lock_reclamation_policy": {
+    "cross_boot": "automatic only on the same hostname; both boot times logged",
+    "legacy_record": "refusal because boot identity is absent",
+    "live_owner": "refusal",
+    "record_fields": [
+      "pid",
+      "boot_time",
+      "hostname"
+    ],
+    "same_boot_dead_pid": "default refusal; explicit recovery flag and log required"
+  },
+  "machine_lock_at_inspection": {
+    "exists": false,
+    "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\.locks\\machine.lock",
+    "record": null
+  },
+  "process_check": {
+    "boot_time": "2026-08-04T01:20:59.248764+00:00",
+    "captured_utc": "2026-08-04T13:24:10.958339+00:00",
+    "filter": "python/openvino/ovms/benchmark_app/optimum in process name or command",
+    "hostname": "computadora",
+    "orphan_openvino_verdict": "NONE",
+    "processes": [
+      {
+        "name": "python.exe",
+        "pid": 9644,
+        "role": "prompt_a2_preflight_recorder",
+        "rss_bytes": 28704768
+      },
+      {
+        "name": "python.exe",
+        "pid": 27688,
+        "role": "cursor_project_state_service",
+        "rss_bytes": 23695360
+      },
+      {
+        "name": "python.exe",
+        "pid": 26964,
+        "role": "prompt_a2_preflight_recorder",
+        "rss_bytes": 4300800
+      },
+      {
+        "name": "python.exe",
+        "pid": 18172,
+        "role": "cursor_project_state_service",
+        "rss_bytes": 4288512
+      }
+    ],
+    "unclassified_candidates": [],
+    "verdict_basis": "all matched Python processes were identified as this recorder or Cursor's project-state service; no OpenVINO workload process remained"
+  }
+}

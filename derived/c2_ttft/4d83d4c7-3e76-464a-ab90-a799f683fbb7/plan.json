@@ -1,0 +1,89 @@
+{
+  "arms": [
+    "gpu_only_f16",
+    "gpu_only_u8",
+    "gpu_only_u4"
+  ],
+  "criterion": "ttft_slo",
+  "gpu_only_f16_pin_note": "gpu_only_f16 requests KV_CACHE_PRECISION=f16 and has matched readback=f16 on prior cells (not the old bare gpu_only that read back dynamic).",
+  "ir_bytes": 2290768181,
+  "ir_sha256": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+  "kind": "c2_ttft_bound_limit",
+  "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+  "pre_registered_predictions": {
+    "amended_utc_note": "PRE-DATA amendment before any C-2 probe: ordering claim withdrawn; replaced by turn-1 agreement within resolution. (AM-038)",
+    "coarse_bracket": {
+      "n_fail_side": 12000,
+      "n_ok_side": 8000,
+      "note": "All three arms under SLO at 8000 (~7.1-7.2 s) and over at 12000 (~13.5 s) on sealed turn-1 medians."
+    },
+    "primary_prediction": {
+      "claim": "The three turn-1 TTFT limits AGREE within the 250-token resolution. KV precision does not move the cold-start context limit.",
+      "consequence_if_holds": "KV precision affects neither capability (memory does not bind, C-1) nor the cold-start SLO limit. Its only remaining value on this hardware is the headroom it frees, which nothing needs. That makes it the weakest of the six axes on this machine, and it should be reported that way rather than on its nominal purpose.",
+      "falsified_if": [
+        "any pair of TTFT limits differs by more than 250 tokens"
+      ],
+      "order": "f16 ~= u8 ~= u4 (within +/- 250 tokens)",
+      "status": "ACTIVE"
+    },
+    "record_note": "Both withdrawn and replacement predictions stay in the record.",
+    "sealed_41e419bd_turn1_prefill_median_s": {
+      "gpu_only_f16": {
+        "8000": 7.1832,
+        "12000": 13.5377
+      },
+      "gpu_only_u4": {
+        "8000": 7.1324,
+        "12000": 13.5001
+      },
+      "gpu_only_u8": {
+        "8000": 7.1326,
+        "12000": 13.5273
+      }
+    },
+    "separate_experiment_not_c2": {
+      "displacing": true,
+      "name": "turn2_delta_prefill_ttft_limit",
+      "note": "The turn-2 delta-prefill limit binds under RESIDENT and is where the 15-27% f16 advantage lives. At n=12,000 turn-2 was roughly 0.16 of turn-1, so its 10 s crossing sits well above 12,000 and needs a wider search. There the ordering f16 > u8 >= u4 is still the prediction, and it matters more, because residency is the configuration the workload actually runs in. Recorded here so it is not silently folded into C-2.",
+      "prediction_if_run": "f16 > u8 >= u4",
+      "status": "NOT_STARTED"
+    },
+    "slo": {
+      "decode_tok_s_min": 6.0,
+      "pass_uses_median_of_repeats": true,
+      "prefill_s_max": 10.0,
+      "repeats": 3
+    },
+    "source": "docs/README_characterizations.md Finding 2 / sealed 41e419bd",
+    "withdrawn_prediction": {
+      "claim": "TTFT-bound limit orders f16 > u8 >= u4. Prefill is compute-bound; quantized arms pay dequantization, so f16 reaches a higher n before crossing the 10 s SLO.",
+      "falsified_if_when_active": [
+        "the three TTFT limits agree within the 250-token resolution",
+        "u4 exceeds f16"
+      ],
+      "order": "f16 > u8 >= u4",
+      "status": "WITHDRAWN",
+      "withdrawal_reason": "That ordering was inferred from the 15-27% f16 advantage in 41e419bd Finding 2, which is a TURN-2 DELTA PREFILL measurement. C-2 bisects on TURN-1 bulk prefill. Finding 2's direct statement about turn-1 is that arms agree within 1%.",
+      "withdrawn_before_any_probe": true
+    }
+  },
+  "search": {
+    "criterion": "ttft_slo",
+    "high": 12000,
+    "low": 8000,
+    "pass_requires_all_repeats": true,
+    "repeats_per_probe": 3,
+    "resolution_tokens": 250,
+    "slo_s": 10.0
+  },
+  "session_id": "4d83d4c7-3e76-464a-ab90-a799f683fbb7",
+  "slo_s": 10.0,
+  "started_utc": "2026-09-08T17:31:38.541589+00:00",
+  "status": "running",
+  "watchdog": {
+    "interval_s": 60,
+    "kill_log": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\c2_ttft\\4d83d4c7-3e76-464a-ab90-a799f683fbb7\\watchdog_kills.jsonl",
+    "mechanism": "Popen_CREATE_NEW_PROCESS_GROUP",
+    "pid": 2528
+  }
+}

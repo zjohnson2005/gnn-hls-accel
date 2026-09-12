@@ -1,0 +1,143 @@
+{
+  "adopted_mechanism": "none",
+  "cooldown_s": 60.0,
+  "decision": {
+    "a0a_diagnostics": {
+      "config_id": "A0a",
+      "exempt_from_loaded_cores_sanity": true,
+      "loaded_core_count": 4,
+      "loaded_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "n_logical_cpus": 8,
+      "note": "A0a is the saturation reference (threads=8); A0b is the default-placement reference (threads=4). Neither gates adoption via loaded-core count. GLOBAL LOADED_THRESHOLD is derived from A0a decode deltas.",
+      "threads": 8
+    },
+    "a0b_diagnostics": {
+      "config_id": "A0b",
+      "exempt_from_loaded_cores_sanity": true,
+      "loaded_core_count": 4,
+      "loaded_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "n_logical_cpus": 8,
+      "note": "A0a is the saturation reference (threads=8); A0b is the default-placement reference (threads=4). Neither gates adoption via loaded-core count. GLOBAL LOADED_THRESHOLD is derived from A0a decode deltas.",
+      "threads": 4
+    },
+    "a2_verdict": {
+      "a1": {
+        "decode": "UNCLEAR",
+        "overall": "UNCLEAR",
+        "prefill": "UNCLEAR"
+      },
+      "a2": {
+        "decode": "CONFINED",
+        "overall": "UNCLEAR",
+        "prefill": "UNCLEAR"
+      },
+      "label": "inconclusive",
+      "note": "A1={'prefill': 'UNCLEAR', 'decode': 'UNCLEAR', 'overall': 'UNCLEAR'}; A2={'prefill': 'UNCLEAR', 'decode': 'CONFINED', 'overall': 'UNCLEAR'}. Increase replicates if UNCLEAR."
+    },
+    "adopted_mechanism": "none",
+    "mechanism_effect": {
+      "a1": {
+        "decode": "UNCLEAR",
+        "overall": "UNCLEAR",
+        "prefill": "UNCLEAR"
+      },
+      "a2": {
+        "decode": "CONFINED",
+        "overall": "UNCLEAR",
+        "prefill": "UNCLEAR"
+      },
+      "a2_label": "inconclusive",
+      "a2_note": "A1={'prefill': 'UNCLEAR', 'decode': 'UNCLEAR', 'overall': 'UNCLEAR'}; A2={'prefill': 'UNCLEAR', 'decode': 'CONFINED', 'overall': 'UNCLEAR'}. Increase replicates if UNCLEAR.",
+      "a3": {
+        "decode": "CONFINED",
+        "overall": "UNCLEAR",
+        "prefill": "UNCLEAR"
+      },
+      "a3_ecore_only_decode_tok_s": 7.861134757809596,
+      "a3_ecore_only_prefill_tok_s": 4018.9542220357725,
+      "a3_within_cv": 0.1618,
+      "a4": {
+        "decode": "CONFINED",
+        "overall": "UNCLEAR",
+        "prefill": "UNCLEAR"
+      },
+      "a6_process_affinity_decode_tok_s": 8.801395674111284,
+      "a6_process_affinity_prefill_tok_s": 4456.381871201405,
+      "a6_within_cv": 0.0651,
+      "candidates": [],
+      "interpretation": "No material throughput difference on identical cores at >2x within-cell CV; symmetry remains a design requirement on isolation-invariant grounds.",
+      "material": false,
+      "material_threshold_2x_cv": 0.3237,
+      "ratio_a3_over_a6_decode": 0.8932,
+      "relative_delta_decode": 0.1068
+    },
+    "reason": "Zero mechanisms confined BOTH clusters in BOTH prefill and decode. STOP."
+  },
+  "derived_path": "derived/mslice/affinity_matrix_verify.json",
+  "loaded_threshold": {
+    "a0a_decode_delta_pct_per_cpu": {
+      "0": 86.165,
+      "1": 88.08,
+      "2": 89.49,
+      "3": 81.155,
+      "4": 6.41,
+      "5": 3.82,
+      "6": 3.735,
+      "7": 1.695
+    },
+    "applied_to": "every cell, both prefill and decode",
+    "formula": "0.5 * median(A0a per-core decode delta)",
+    "value": 21.8912
+  },
+  "matrix_cells": [
+    "A0a",
+    "A0b",
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6"
+  ],
+  "n_blocks": 1,
+  "n_configs": 8,
+  "noise_band": {
+    "formula": "2 * mean(per-core CV of pooled idle baseline means)",
+    "pooled_baseline_n_per_core": {
+      "0": 16,
+      "1": 16,
+      "2": 16,
+      "3": 16,
+      "4": 16,
+      "5": 16,
+      "6": 16,
+      "7": 16
+    },
+    "value": 1.3581
+  },
+  "shuffle_seed": 20260803,
+  "thermal_regime": "confound",
+  "verification_gates": {
+    "a0a_loaded_core_count": 4,
+    "charging_complete": true,
+    "failures": [
+      "A0a loaded_core_count=4 (need substantially >4)"
+    ],
+    "loaded_threshold": 21.8912,
+    "min_phase_samples": 10,
+    "noise_band": 1.3581,
+    "pass": false,
+    "prefill_windows_ok": true,
+    "run_id_present_at_gate": false
+  }
+}

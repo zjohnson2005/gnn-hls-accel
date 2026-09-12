@@ -1,0 +1,271 @@
+{
+    "kind":  "n1_cb_equivalence",
+    "tag":  "n1_cb_equivalence",
+    "session_id":  "462bb861-4774-44ad-ade0-1f9cdd230ec0",
+    "launch_context":  "ssh_detached",
+    "started_utc":  "2026-08-30T23:51:48.2538245Z",
+    "status":  "aborted",
+    "arm":  "gpu_only_u8",
+    "model_spec":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+    "ir_sha256":  "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+    "n_cached":  [
+                     2000,
+                     4000,
+                     12000
+                 ],
+    "delta":  400,
+    "mode":  "RESIDENT",
+    "repeats":  2,
+    "pipeline_types":  [
+                           "llm",
+                           "cb_no_eviction"
+                       ],
+    "cells_total":  12,
+    "randomization_seed":  20260830,
+    "corpus_match_session":  "41e419bd-f3e9-43b1-8364-0ebd89fa086b",
+    "cell_timeout_s":  1500,
+    "orchestrator_ws_guard":  {
+                                  "ceiling_bytes":  536870912,
+                                  "ceiling_mb":  512,
+                                  "ws_at_start_bytes":  87572480,
+                                  "ws_at_start_mb":  83.5,
+                                  "abort_status":  "aborted_orchestrator_ws_ceiling",
+                                  "note":  "Checked each iteration. An orchestrator that consumes the memory its cells are gated on defeats the Available floor.",
+                                  "leak_fix_aa9e601a":  "pre_registration.text held Get-Content -Raw ETS-decorated string; Write-JsonFile piped plan to ConvertTo-Json -Depth 12; Windows PowerShell serialized PSDrive/PSProvider graph until ~9.4 GB. Fixed: [string] cast + ConvertTo-Json -InputObject -Depth 6; watchdog is sibling process not Start-Job."
+                              },
+    "pre_registration":  {
+                             "path":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_prefill\\N1_CB_EQUIVALENCE_PREDICTION.md",
+                             "claim":  "No significant difference between CB-with-eviction-off and plain LLMPipeline; significant means exceeding the session\u0027s own canary early_max. Report per-depth ratios with spread. If they diverge, axis 5 needs its own within-CB baseline (runtime finding, not a failure) - known before any window cell runs.",
+                             "text":  "# N-1 - CB equivalence probe (PRE-RUN registration)\n\n**Session kind:** \n1_cb_equivalence\n**Corpus match:** 41e419bd-f3e9-43b1-8364-0ebd89fa086b (n_cached in {2000,4000,12000}, delta=400, arm=gpu_only_u8, int4)\n**Question:** Does ContinuousBatchingPipeline with use_cache_eviction=False match plain LLMPipeline on delta-prefill timing closely enough that attention-window (axis 5) cells on the CB path can be compared to the existing corpus?\n\n## Prediction (directional claim)\n\n**No significant difference** between CB-with-eviction-off and plain LLMPipeline.\n\n**Significant** means: for a depth, the absolute relative difference between the two pipeline types (median turn-1 or turn-2 prefill) exceeds the session\u0027s own canary early_max on that turn (i.e. the instrument noise floor measured in-session before the matrix). Thresholds follow docs/CANARY_PROTOCOL.md: after calibration, \threshold = max(2 * early_max, rel_drift_floor); the equivalence gate uses early_max itself as the same-instrument bound for CB-vs-llm, and reports both.\n\nReport **per-depth ratios** (cb / llm) with **spread** across the two repeats.\n\n## If they diverge\n\nNo window result can be compared to the existing corpus. Axis 5 needs its own within-CB baseline. That is a **finding about the runtime**, not a protocol failure, and it must be known **before any window cell runs**.\n\n## Design notes (not predictions)\n\n- Pipeline type participates in Fisher-Yates interleave (not blocked by type).\n- Canary is pinned to plain LLMPipeline so the reference does not follow the per-cell CB path.\n- WorkloadsSessionHost is re-killed every 5 minutes for the life of the run (respawn interval ~10-15 min).\n"
+                         },
+    "canary":  {
+                   "armed":  true,
+                   "pipeline_type":  "llm",
+                   "pinned_note":  "Canary always plain LLMPipeline; does not follow per-cell pipeline_type",
+                   "arm":  "gpu_only_u8",
+                   "n_cached":  4000,
+                   "delta":  400,
+                   "mode":  "RESIDENT",
+                   "every_n":  6,
+                   "calibration_count":  3,
+                   "rel_drift_floor":  0.05
+               },
+    "watchdog":  {
+                     "process":  "WorkloadsSessionHost",
+                     "interval_s":  300,
+                     "kill_log":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_prefill\\462bb861-4774-44ad-ade0-1f9cdd230ec0\\watchdog_kills.jsonl",
+                     "mechanism":  "sibling_powershell_process",
+                     "note":  "Re-kill every 5 min for life of run; measured respawn ~10-15 min. Not Start-Job."
+                 },
+    "cells":  [
+                  {
+                      "cell_index":  0,
+                      "repeat":  0,
+                      "arm":  "gpu_only_u8",
+                      "pipeline_type":  "cb_no_eviction",
+                      "n_cached":  4000,
+                      "delta":  400,
+                      "mode":  "RESIDENT",
+                      "model_spec":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml"
+                  },
+                  {
+                      "cell_index":  1,
+                      "repeat":  0,
+                      "arm":  "gpu_only_u8",
+                      "pipeline_type":  "llm",
+                      "n_cached":  2000,
+                      "delta":  400,
+                      "mode":  "RESIDENT",
+                      "model_spec":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml"
+                  },
+                  {
+                      "cell_index":  2,
+                      "repeat":  0,
+                      "arm":  "gpu_only_u8",
+                      "pipeline_type":  "cb_no_eviction",
+                      "n_cached":  12000,
+                      "delta":  400,
+                      "mode":  "RESIDENT",
+                      "model_spec":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml"
+                  },
+                  {
+                      "cell_index":  3,
+                      "repeat":  0,
+                      "arm":  "gpu_only_u8",
+                      "pipeline_type":  "llm",
+                      "n_cached":  12000,
+                      "delta":  400,
+                      "mode":  "RESIDENT",
+                      "model_spec":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml"
+                  },
+                  {
+                      "cell_index":  4,
+                      "repeat":  0,
+                      "arm":  "gpu_only_u8",
+                      "pipeline_type":  "llm",
+                      "n_cached":  4000,
+                      "delta":  400,
+                      "mode":  "RESIDENT",
+                      "model_spec":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml"
+                  },
+                  {
+                      "cell_index":  5,
+                      "repeat":  0,
+                      "arm":  "gpu_only_u8",
+                      "pipeline_type":  "cb_no_eviction",
+                      "n_cached":  2000,
+                      "delta":  400,
+                      "mode":  "RESIDENT",
+                      "model_spec":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml"
+                  },
+                  {
+                      "cell_index":  6,
+                      "repeat":  1,
+                      "arm":  "gpu_only_u8",
+                      "pipeline_type":  "llm",
+                      "n_cached":  4000,
+                      "delta":  400,
+                      "mode":  "RESIDENT",
+                      "model_spec":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml"
+                  },
+                  {
+                      "cell_index":  7,
+                      "repeat":  1,
+                      "arm":  "gpu_only_u8",
+                      "pipeline_type":  "llm",
+                      "n_cached":  2000,
+                      "delta":  400,
+                      "mode":  "RESIDENT",
+                      "model_spec":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml"
+                  },
+                  {
+                      "cell_index":  8,
+                      "repeat":  1,
+                      "arm":  "gpu_only_u8",
+                      "pipeline_type":  "cb_no_eviction",
+                      "n_cached":  4000,
+                      "delta":  400,
+                      "mode":  "RESIDENT",
+                      "model_spec":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml"
+                  },
+                  {
+                      "cell_index":  9,
+                      "repeat":  1,
+                      "arm":  "gpu_only_u8",
+                      "pipeline_type":  "llm",
+                      "n_cached":  12000,
+                      "delta":  400,
+                      "mode":  "RESIDENT",
+                      "model_spec":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml"
+                  },
+                  {
+                      "cell_index":  10,
+                      "repeat":  1,
+                      "arm":  "gpu_only_u8",
+                      "pipeline_type":  "cb_no_eviction",
+                      "n_cached":  2000,
+                      "delta":  400,
+                      "mode":  "RESIDENT",
+                      "model_spec":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml"
+                  },
+                  {
+                      "cell_index":  11,
+                      "repeat":  1,
+                      "arm":  "gpu_only_u8",
+                      "pipeline_type":  "cb_no_eviction",
+                      "n_cached":  12000,
+                      "delta":  400,
+                      "mode":  "RESIDENT",
+                      "model_spec":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml"
+                  }
+              ],
+    "cell_results":  [
+
+                     ],
+    "ended_utc":  "2026-08-30T23:52:18.2709988Z",
+    "abort_reason":  "CANARY_CELL_FAILED exit= timed_out=False",
+    "canary_gate":  {
+                        "armed":  true,
+                        "calibration_complete":  false,
+                        "ref_turn1_prefill_s":  null,
+                        "ref_turn2_prefill_s":  null,
+                        "early_max_rel_t1":  null,
+                        "early_max_rel_t2":  null,
+                        "threshold_t1":  null,
+                        "threshold_t2":  null,
+                        "canaries":  [
+                                         {
+                                             "reason":  "calibration_0",
+                                             "ok":  false,
+                                             "path":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_prefill\\462bb861-4774-44ad-ade0-1f9cdd230ec0\\cells\\canary_20260830_195148_0.json",
+                                             "turn1_prefill_s":  2.922926513,
+                                             "turn2_prefill_s":  1.011484924,
+                                             "utc":  "2026-08-30T23:52:18.1619361Z",
+                                             "phase":  "failed"
+                                         }
+                                     ]
+                    },
+    "watchdog_kills":  [
+                           {
+                               "utc":  "2026-08-30T23:51:48.3488870Z",
+                               "event":  "watchdog_start_kill",
+                               "interval_s":  300,
+                               "pids_found":  [
+
+                                              ],
+                               "n_killed":  0
+                           }
+                       ],
+    "equivalence":  {
+                        "criterion":  "abs(ratio-1) must not exceed session canary early_max (threshold/2) on turn1/turn2; report ratios with spread",
+                        "early_max_rel_t1":  null,
+                        "early_max_rel_t2":  null,
+                        "threshold_t1":  null,
+                        "threshold_t2":  null,
+                        "per_depth":  [
+                                          {
+                                              "n_cached":  2000,
+                                              "delta":  400,
+                                              "llm_n":  0,
+                                              "cb_n":  0,
+                                              "llm_turn1_median_s":  null,
+                                              "cb_turn1_median_s":  null,
+                                              "ratio_turn1_cb_over_llm":  null,
+                                              "llm_turn1_spread":  null,
+                                              "cb_turn1_spread":  null,
+                                              "llm_turn2_median_s":  null,
+                                              "cb_turn2_median_s":  null,
+                                              "ratio_turn2_cb_over_llm":  null
+                                          },
+                                          {
+                                              "n_cached":  4000,
+                                              "delta":  400,
+                                              "llm_n":  0,
+                                              "cb_n":  0,
+                                              "llm_turn1_median_s":  null,
+                                              "cb_turn1_median_s":  null,
+                                              "ratio_turn1_cb_over_llm":  null,
+                                              "llm_turn1_spread":  null,
+                                              "cb_turn1_spread":  null,
+                                              "llm_turn2_median_s":  null,
+                                              "cb_turn2_median_s":  null,
+                                              "ratio_turn2_cb_over_llm":  null
+                                          },
+                                          {
+                                              "n_cached":  12000,
+                                              "delta":  400,
+                                              "llm_n":  0,
+                                              "cb_n":  0,
+                                              "llm_turn1_median_s":  null,
+                                              "cb_turn1_median_s":  null,
+                                              "ratio_turn1_cb_over_llm":  null,
+                                              "llm_turn1_spread":  null,
+                                              "cb_turn1_spread":  null,
+                                              "llm_turn2_median_s":  null,
+                                              "cb_turn2_median_s":  null,
+                                              "ratio_turn2_cb_over_llm":  null
+                                          }
+                                      ],
+                        "divergence_consequence":  "If CB-with-eviction-off diverges from plain LLMPipeline beyond early_max, no window result can be compared to the existing corpus; axis 5 needs its own within-CB baseline - a finding about the runtime, not a failure."
+                    }
+}

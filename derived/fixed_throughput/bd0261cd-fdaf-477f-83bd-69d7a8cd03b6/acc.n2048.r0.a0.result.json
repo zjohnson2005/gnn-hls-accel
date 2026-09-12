@@ -1,0 +1,56 @@
+{
+  "affinity_readback": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "completed": false,
+  "exception": {
+    "message": "argument 1: OverflowError: int too long to convert",
+    "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 77, in main\n    return _run(spec, writer)\n           ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 106, in _run\n    lock_record = lock_working_set(\n                  ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\_winmem.py\", line 150, in lock_working_set\n    before = read_working_set_limits()\n             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\_winmem.py\", line 127, in read_working_set_limits\n    ok = kernel32.GetProcessWorkingSetSizeEx(\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nctypes.ArgumentError: argument 1: OverflowError: int too long to convert\n",
+    "type": "ArgumentError"
+  },
+  "failure_mode": "exception:ArgumentError",
+  "memory_at_failure": {
+    "available_mb": 8269.68359375,
+    "percent": 48.2,
+    "rss_mb": 22.2421875,
+    "used_mb": 7706.4921875
+  },
+  "memory_baseline": {
+    "available_mb": 8275.40625,
+    "percent": 48.2,
+    "rss_mb": 19.73046875,
+    "used_mb": 7700.76953125
+  },
+  "phase": "failed",
+  "spec": {
+    "affinity_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "generate_device": "CPU",
+    "load_sequence": [
+      {
+        "device": "CPU",
+        "properties": {
+          "ENABLE_CPU_PINNING": true,
+          "INFERENCE_NUM_THREADS": 4,
+          "SCHEDULING_CORE_TYPE": "PCORE_ONLY"
+        }
+      }
+    ],
+    "max_new_tokens": 64,
+    "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "prompt_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n2048.txt",
+    "rss_interval_s": 0.05,
+    "wslock": {
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "mode": "request"
+    }
+  }
+}

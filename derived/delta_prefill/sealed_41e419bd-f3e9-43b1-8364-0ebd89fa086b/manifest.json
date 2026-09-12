@@ -1,0 +1,125 @@
+{
+  "admissibility": {
+    "canaries_ok": 25,
+    "cells_ok": 288,
+    "kv_readback_failures": 0,
+    "matrix_status": "COMPLETE",
+    "note": "All cells OK; KV readback matched arm on every cell+canary."
+  },
+  "dispatch": "DISPATCH_P_interleaved_precision",
+  "environment_end_from_plan": {
+    "available_mb": 10182,
+    "available_method": "Get-Counter:\\\\Memory\\\\Available MBytes",
+    "package_temp_c": null,
+    "package_temp_source": "unreachable",
+    "processor_frequency_mhz": 1850,
+    "processor_performance_pct": 123.28150246563844,
+    "snapshot_utc": "2026-08-23T23:32:56.6443754Z"
+  },
+  "environment_launch_from_plan": {
+    "available_mb": 10028,
+    "available_method": "Get-Counter:\\\\Memory\\\\Available MBytes",
+    "package_temp_c": null,
+    "package_temp_source": "unreachable",
+    "processor_frequency_mhz": 1850,
+    "processor_performance_pct": 140.7970598780925,
+    "snapshot_utc": "2026-08-23T19:07:32.9347314Z"
+  },
+  "kind": "delta_prefill_matrix",
+  "launch_environment_as_reported": {
+    "available_mb": 10047,
+    "boot_local": "2026-08-23T14:33:21",
+    "dell_mcafee_services": "Manual",
+    "power": "AC",
+    "processor_frequency_mhz": 1850,
+    "remove_appxpackage_workloads": {
+      "attempted": true,
+      "refused_hr": "0x80073D02"
+    },
+    "source": "operator_dispatch_seal_request",
+    "workloads_session_host": "killed"
+  },
+  "matrix": {
+    "arms": [
+      "gpu_only_f16",
+      "gpu_only_u8",
+      "gpu_only_u4"
+    ],
+    "canaries_completed": 25,
+    "canaries_ok": 25,
+    "canary_every_n": null,
+    "canary_gate": {
+      "armed": true,
+      "calibration_complete": true,
+      "derivation_applied": "calib_n=3; ref_t1=3.067913 ref_t2=1.065321; early_max_rel_t1=0.115754 early_max_rel_t2=0.300945; threshold_t1=max(2*early_max_t1,floor=0.05)=0.231509; threshold_t2=0.601891",
+      "early_max_rel_t1": 0.1157542738027218,
+      "early_max_rel_t2": 0.30094526159422313,
+      "ref_turn1_prefill_s": 3.067912841,
+      "ref_turn2_prefill_s": 1.065321289,
+      "threshold_t1": 0.2315085476054436,
+      "threshold_t2": 0.6018905231884463
+    },
+    "cell_timeout_s": 1500,
+    "cells_completed": 288,
+    "cells_ok": 288,
+    "deltas": [
+      50,
+      150,
+      400,
+      1000
+    ],
+    "kv_readback_gate": "all_cells_match_arm_enforced",
+    "modes": [
+      "RESIDENT",
+      "NON_RESIDENT"
+    ],
+    "n_cached": [
+      2000,
+      4000,
+      8000,
+      12000
+    ],
+    "plan_ended_utc": "2026-08-23T23:32:56.6443754Z",
+    "plan_started_utc": "2026-08-23T19:07:29.5036302Z",
+    "repeats": 3,
+    "tag": "dispatch_p_interleaved"
+  },
+  "measurement_isolation_mode": "remote",
+  "measurement_launch_context": "ssh_detached",
+  "run_id": "41e419bd-f3e9-43b1-8364-0ebd89fa086b",
+  "seal_style": "derived_diagnostic",
+  "sealed_utc": "2026-08-24T16:13:53.604983Z",
+  "session_id": "41e419bd-f3e9-43b1-8364-0ebd89fa086b",
+  "status": "COMPLETE",
+  "step0": {
+    "analysis_in_plan": false,
+    "analysis_location": "Write-ThreeNumbers stdout in launch log only (derived/delta_prefill/_launches/delta_prefill_20260823_150728.log); never persisted into plan/summary",
+    "cell_files_on_disk": {
+      "canary": 25,
+      "cartesian_complete": true,
+      "matrix": 288
+    },
+    "plan_cells_ps_list_serialization": "plan.cells was {value:[...], Count:288} from ConvertTo-Json on List[object]; seal_delta_prefill_session.py expected a JSON array and globbed delta_prefill_*.json (0 hits). This sealer unwraps value.",
+    "plan_sha256": "b586697e620369f35b8f72d3d85fd0feb50944791dac8fd02f4b11b02bce1b7f",
+    "result_json": {
+      "last_result_json_exists": true,
+      "registered_result_path": "derived/delta_prefill/_launches/delta_prefill_20260823_150728.result.json",
+      "registered_result_path_exists": false,
+      "session_result_json_exists": false,
+      "why": "Orchestrate registers result_path=$tagLaunch.result.json, but DetachedWorker writes only derived/delta_prefill/_launches/last_result.json (run_delta_prefill_matrix.ps1 ~1509). Session-dir result.json is written only on the HeartbeatOnly verify_detach path (~1068), not on the matrix worker path. Fix deferred per dispatch."
+    },
+    "summary_is_byte_identical_copy_of_plan": true,
+    "summary_sha256": "b586697e620369f35b8f72d3d85fd0feb50944791dac8fd02f4b11b02bce1b7f"
+  },
+  "uptime": {
+    "boot_local_as_reported": "2026-08-23T14:33:21",
+    "boot_utc_assumed_from_operator_local": "2026-08-23T18:33:21Z",
+    "first_matrix_cell_started_utc": "2026-08-23T19:13:24.2992672Z",
+    "last_matrix_cell_ended_utc": "2026-08-23T23:31:48.9528136Z",
+    "timezone_assumption": "America/New_York UTC-4 (operator dispatch date)",
+    "uptime_s_at_first_canary": 2353.182917,
+    "uptime_s_at_first_matrix_cell": 2403.299267,
+    "uptime_s_at_last_canary": 17951.369252,
+    "uptime_s_at_last_matrix_cell": 17907.952813
+  }
+}

@@ -1,0 +1,170 @@
+{
+  "analysis": {
+    "free_drop_vs_context": {
+      "context_tokens_max": 4794,
+      "context_tokens_min": 804,
+      "linear": {
+        "a": 54.33705072003008,
+        "b": 0.06459757864172919,
+        "form": "a + b*context",
+        "r_squared": 0.1438461885068818
+      },
+      "n_points": 14,
+      "quadratic": {
+        "a": -439.95019487487366,
+        "b": 0.6482311265861093,
+        "c": -0.00011480092139696759,
+        "form": "a + b*context + c*context^2",
+        "r_squared": 0.6434593514395397
+      },
+      "verdict": "inconclusive"
+    },
+    "interpretation": {
+      "linear": "KV plus a constant (activation overhead roughly independent of context).",
+      "superlinear": "Attention activations scaling with context^2 \u2014 capping alone may be insufficient; chunked prefill (if available) would be the real fix."
+    },
+    "n_points": 14,
+    "note": "Timed tasks only; discarded warmup excluded.",
+    "overall_verdict": "linear",
+    "points": [
+      {
+        "context_tokens": 816,
+        "free_drop_mb": 21.68359375,
+        "free_memory_mb_min": 1516.55859375,
+        "rss_peak_bytes": 5746253824,
+        "step_idx": 0,
+        "task_id": "C2T19"
+      },
+      {
+        "context_tokens": 3115,
+        "free_drop_mb": 727.02734375,
+        "free_memory_mb_min": 791.4921875,
+        "rss_peak_bytes": 6526595072,
+        "step_idx": 1,
+        "task_id": "C2T19"
+      },
+      {
+        "context_tokens": 4794,
+        "free_drop_mb": 156.79296875,
+        "free_memory_mb_min": 634.14453125,
+        "rss_peak_bytes": 6681485312,
+        "step_idx": 2,
+        "task_id": "C2T19"
+      },
+      {
+        "context_tokens": 804,
+        "free_drop_mb": 21.05078125,
+        "free_memory_mb_min": 2024.74609375,
+        "rss_peak_bytes": 5739450368,
+        "step_idx": 0,
+        "task_id": "C2T10"
+      },
+      {
+        "context_tokens": 2890,
+        "free_drop_mb": 408.5390625,
+        "free_memory_mb_min": 1616.12109375,
+        "rss_peak_bytes": 6431260672,
+        "step_idx": 1,
+        "task_id": "C2T10"
+      },
+      {
+        "context_tokens": 4653,
+        "free_drop_mb": 126.41796875,
+        "free_memory_mb_min": 1488.75,
+        "rss_peak_bytes": 6607224832,
+        "step_idx": 2,
+        "task_id": "C2T10"
+      },
+      {
+        "context_tokens": 829,
+        "free_drop_mb": 17.75390625,
+        "free_memory_mb_min": 2347.37109375,
+        "rss_peak_bytes": 5746532352,
+        "step_idx": 0,
+        "task_id": "C2T20"
+      },
+      {
+        "context_tokens": 1203,
+        "free_drop_mb": 38.86328125,
+        "free_memory_mb_min": 2311.234375,
+        "rss_peak_bytes": 5786857472,
+        "step_idx": 1,
+        "task_id": "C2T20"
+      },
+      {
+        "context_tokens": 814,
+        "free_drop_mb": 24.2265625,
+        "free_memory_mb_min": 2226.03515625,
+        "rss_peak_bytes": 5754585088,
+        "step_idx": 0,
+        "task_id": "C2T14"
+      },
+      {
+        "context_tokens": 2864,
+        "free_drop_mb": 618.3515625,
+        "free_memory_mb_min": 1609.02734375,
+        "rss_peak_bytes": 6419292160,
+        "step_idx": 1,
+        "task_id": "C2T14"
+      },
+      {
+        "context_tokens": 3675,
+        "free_drop_mb": 95.28515625,
+        "free_memory_mb_min": 1511.95703125,
+        "rss_peak_bytes": 6500716544,
+        "step_idx": 2,
+        "task_id": "C2T14"
+      },
+      {
+        "context_tokens": 832,
+        "free_drop_mb": 42.05859375,
+        "free_memory_mb_min": 2270.9765625,
+        "rss_peak_bytes": 5771186176,
+        "step_idx": 0,
+        "task_id": "C2T09"
+      },
+      {
+        "context_tokens": 3131,
+        "free_drop_mb": 606.21875,
+        "free_memory_mb_min": 1664.78515625,
+        "rss_peak_bytes": 6549942272,
+        "step_idx": 1,
+        "task_id": "C2T09"
+      },
+      {
+        "context_tokens": 3896,
+        "free_drop_mb": 73.1796875,
+        "free_memory_mb_min": 1635.14453125,
+        "rss_peak_bytes": 6630469632,
+        "step_idx": 2,
+        "task_id": "C2T09"
+      }
+    ],
+    "rss_peak_vs_context": {
+      "context_tokens_max": 4794,
+      "context_tokens_min": 804,
+      "linear": {
+        "a": 5567674685.263298,
+        "b": 260648.27434181783,
+        "form": "a + b*context",
+        "r_squared": 0.9369574709730215
+      },
+      "n_points": 14,
+      "quadratic": {
+        "a": 5322336043.478141,
+        "b": 550333.802805317,
+        "c": -56.98124396739835,
+        "form": "a + b*context + c*context^2",
+        "r_squared": 0.9862012378915507
+      },
+      "verdict": "linear"
+    }
+  },
+  "decides": "Linear -> cap may be sufficient. Superlinear -> prefill activation is the driver; chunked prefill (if available) is required to bound memory independent of context.",
+  "governing": "docs/CURSOR_PROMPT_C2g.md \u00a72",
+  "note_id": "c2g_memory_vs_context",
+  "overall_verdict": "linear",
+  "question": "Does peak memory (RSS_peak or free_drop) track context linearly or superlinearly?",
+  "run_id": "6f388dd3-d8fd-4cd8-9768-bb29c1ee976e",
+  "status": "FILLED"
+}

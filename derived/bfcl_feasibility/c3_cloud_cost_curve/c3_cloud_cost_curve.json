@@ -1,0 +1,3677 @@
+{
+  "call_pattern_observed": {
+    "calls_per_turn_distribution": {
+      "2": 37,
+      "3": 14,
+      "4": 7,
+      "5": 9,
+      "6": 1,
+      "7": 2
+    },
+    "calls_per_turn_summary": {
+      "max": 7.0,
+      "mean": 2.9857142857142858,
+      "median": 2.0,
+      "min": 2.0,
+      "n": 70,
+      "p25": 2.0,
+      "p75": 4.0,
+      "p90": 5.0
+    },
+    "note": "Billing uses sealed cloud per-call usd for turns >= T on the same entry ids (reproduces cloud-only when T=0). Forced-T curve varies T to test compounding independent of local SLO."
+  },
+  "cloud_only_sanity": {
+    "T_policy": "T=0 every entry",
+    "label": "cloud_only",
+    "n_completed_tasks": 13,
+    "n_entries": 20,
+    "sanity_observed": {
+      "n_completed": 13,
+      "note": "Amortized $/completed = sealed_spend/13. Mean among completed entries only is lower because failed entries still spend.",
+      "sealed_spend_usd": 5.407044000000001,
+      "usd_mean_among_completed_entries_only": 0.25266784615384613,
+      "usd_per_completed_task_amortized": 0.4159264615384616,
+      "usd_per_entry": 0.27035220000000004
+    },
+    "sanity_targets": {
+      "completed_count": 13,
+      "usd_per_completed_approx": 0.42,
+      "usd_per_entry_approx": 0.27
+    },
+    "usd_per_completed_task": 0.4159264615384616,
+    "usd_per_session_mean": 0.27035220000000004,
+    "usd_total": 5.407044000000001
+  },
+  "configurations": [
+    {
+      "T_distribution": {
+        "max": 0.0,
+        "mean": 0.0,
+        "median": 0.0,
+        "min": 0.0,
+        "n": 20,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0
+      },
+      "T_mean": 0,
+      "T_mean_including_never_as_n_turns": 0.0,
+      "arm": "cpu-p",
+      "fraction_turns_slo_ok_sealed": 0.0,
+      "label": "cpu-p_NON_RESIDENT",
+      "n_completed_tasks_cloud_traj": 13,
+      "n_entries": 20,
+      "n_escalated": 20,
+      "n_never_escalated": 0,
+      "per_entry": [
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 12.57337550675163,
+            "prompt_tokens": 4193,
+            "reasons": [
+              "ttft_s=59.929898437>10.0"
+            ],
+            "ttft_s": 59.929898437
+          },
+          "cloud_completion_tokens_billed": 1984,
+          "cloud_prompt_tokens_billed": 166296,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_0",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4193,
+            4359,
+            4498,
+            4645
+          ],
+          "local_turn_decode_tok_s": [
+            12.57337550675163,
+            13.162316210300993,
+            12.021786224475596,
+            12.35313838051838
+          ],
+          "local_turn_ttft_s": [
+            59.929898437,
+            55.590628906,
+            59.388625,
+            62.667558593
+          ],
+          "local_turn_wall_s": [
+            59.4318097,
+            64.342617,
+            65.0420867,
+            75.4892847
+          ],
+          "n_cloud_calls_billed": 16,
+          "n_local_turns": 4,
+          "never_escalated": false,
+          "usd": 0.5286479999999999
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 16.16881915823334,
+            "prompt_tokens": 2609,
+            "reasons": [
+              "ttft_s=30.404158203>10.0"
+            ],
+            "ttft_s": 30.404158203
+          },
+          "cloud_completion_tokens_billed": 1043,
+          "cloud_prompt_tokens_billed": 61849,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_1",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2609,
+            2786,
+            2946,
+            3101
+          ],
+          "local_turn_decode_tok_s": [
+            16.16881915823334,
+            16.019099037812815,
+            15.709873735219173,
+            15.341259385903928
+          ],
+          "local_turn_ttft_s": [
+            30.404158203,
+            34.0411875,
+            33.505300781,
+            36.711179687
+          ],
+          "local_turn_wall_s": [
+            32.9495448,
+            36.1314411,
+            40.6363778,
+            40.7537261
+          ],
+          "n_cloud_calls_billed": 11,
+          "n_local_turns": 4,
+          "never_escalated": false,
+          "usd": 0.201192
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 13.93884967330769,
+            "prompt_tokens": 3819,
+            "reasons": [
+              "ttft_s=47.651457031>10.0"
+            ],
+            "ttft_s": 47.651457031
+          },
+          "cloud_completion_tokens_billed": 1420,
+          "cloud_prompt_tokens_billed": 128736,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_2",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            3819,
+            3997,
+            4182,
+            4379,
+            4569
+          ],
+          "local_turn_decode_tok_s": [
+            13.93884967330769,
+            13.418050741147521,
+            13.213544962692911,
+            12.994359694219881,
+            12.700282457739162
+          ],
+          "local_turn_ttft_s": [
+            47.651457031,
+            53.268675781,
+            56.946609375,
+            55.962382812,
+            61.570054687
+          ],
+          "local_turn_wall_s": [
+            54.5279212,
+            59.5919382,
+            59.3467366,
+            68.5554446,
+            68.9927394
+          ],
+          "n_cloud_calls_billed": 15,
+          "n_local_turns": 5,
+          "never_escalated": false,
+          "usd": 0.4075080000000001
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 16.408358774767102,
+            "prompt_tokens": 2629,
+            "reasons": [
+              "ttft_s=30.099285156>10.0"
+            ],
+            "ttft_s": 30.099285156
+          },
+          "cloud_completion_tokens_billed": 771,
+          "cloud_prompt_tokens_billed": 32272,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_3",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2629,
+            2810
+          ],
+          "local_turn_decode_tok_s": [
+            16.408358774767102,
+            16.00002178136299
+          ],
+          "local_turn_ttft_s": [
+            30.099285156,
+            32.330605468
+          ],
+          "local_turn_wall_s": [
+            34.8064099,
+            39.5671616
+          ],
+          "n_cloud_calls_billed": 6,
+          "n_local_turns": 2,
+          "never_escalated": false,
+          "usd": 0.10838099999999999
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 12.91976758061633,
+            "prompt_tokens": 4394,
+            "reasons": [
+              "ttft_s=55.965472656>10.0"
+            ],
+            "ttft_s": 55.965472656
+          },
+          "cloud_completion_tokens_billed": 1136,
+          "cloud_prompt_tokens_billed": 82487,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_4",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4394,
+            4493,
+            4619
+          ],
+          "local_turn_decode_tok_s": [
+            12.91976758061633,
+            12.874428558752118,
+            12.65163443072697
+          ],
+          "local_turn_ttft_s": [
+            55.965472656,
+            58.496496093,
+            60.222167968
+          ],
+          "local_turn_wall_s": [
+            58.1748609,
+            64.7400143,
+            67.6441906
+          ],
+          "n_cloud_calls_billed": 8,
+          "n_local_turns": 3,
+          "never_escalated": false,
+          "usd": 0.26450100000000004
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 13.235169273993355,
+            "prompt_tokens": 4200,
+            "reasons": [
+              "ttft_s=53.482351562>10.0"
+            ],
+            "ttft_s": 53.482351562
+          },
+          "cloud_completion_tokens_billed": 1284,
+          "cloud_prompt_tokens_billed": 121686,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_5",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4200,
+            4390,
+            4538,
+            4760
+          ],
+          "local_turn_decode_tok_s": [
+            13.235169273993355,
+            12.863198386292915,
+            12.754392268122842,
+            12.468703428701382
+          ],
+          "local_turn_ttft_s": [
+            53.482351562,
+            59.032488281,
+            58.38521875,
+            62.699671875
+          ],
+          "local_turn_wall_s": [
+            57.8621212,
+            59.9517082,
+            64.4482323,
+            66.8571866
+          ],
+          "n_cloud_calls_billed": 12,
+          "n_local_turns": 4,
+          "never_escalated": false,
+          "usd": 0.384318
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 15.746983616735003,
+            "prompt_tokens": 2824,
+            "reasons": [
+              "ttft_s=32.437349609>10.0"
+            ],
+            "ttft_s": 32.437349609
+          },
+          "cloud_completion_tokens_billed": 1125,
+          "cloud_prompt_tokens_billed": 90592,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_6",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2824,
+            2968,
+            3143,
+            3313,
+            3435
+          ],
+          "local_turn_decode_tok_s": [
+            15.746983616735003,
+            15.538329036979716,
+            15.16601211440935,
+            14.835394927545774,
+            14.589666506541414
+          ],
+          "local_turn_ttft_s": [
+            32.437349609,
+            34.372910156,
+            37.256867187,
+            39.291847656,
+            41.219777343
+          ],
+          "local_turn_wall_s": [
+            35.8672339,
+            40.2564237,
+            42.4161948,
+            44.0704042,
+            46.6888086
+          ],
+          "n_cloud_calls_billed": 15,
+          "n_local_turns": 5,
+          "never_escalated": false,
+          "usd": 0.28865100000000005
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 12.765061266640105,
+            "prompt_tokens": 4413,
+            "reasons": [
+              "ttft_s=56.902660156>10.0"
+            ],
+            "ttft_s": 56.902660156
+          },
+          "cloud_completion_tokens_billed": 616,
+          "cloud_prompt_tokens_billed": 70206,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_7",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4413,
+            4551,
+            4676
+          ],
+          "local_turn_decode_tok_s": [
+            12.765061266640105,
+            12.459463565872852,
+            12.581624610732739
+          ],
+          "local_turn_ttft_s": [
+            56.902660156,
+            59.189617187,
+            62.878167968
+          ],
+          "local_turn_wall_s": [
+            61.5735331,
+            64.2294026,
+            65.1049637
+          ],
+          "n_cloud_calls_billed": 7,
+          "n_local_turns": 3,
+          "never_escalated": false,
+          "usd": 0.219858
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 12.675036310018056,
+            "prompt_tokens": 4427,
+            "reasons": [
+              "ttft_s=57.84921875>10.0"
+            ],
+            "ttft_s": 57.84921875
+          },
+          "cloud_completion_tokens_billed": 1599,
+          "cloud_prompt_tokens_billed": 96935,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_8",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4427,
+            4620,
+            4987,
+            5705
+          ],
+          "local_turn_decode_tok_s": [
+            12.675036310018056,
+            12.490503342564864,
+            11.977322370558282,
+            11.525722044598595
+          ],
+          "local_turn_ttft_s": [
+            57.84921875,
+            60.317363281,
+            66.881265625,
+            81.510859375
+          ],
+          "local_turn_wall_s": [
+            64.0815446,
+            80.6489748,
+            98.2870156,
+            83.8686331
+          ],
+          "n_cloud_calls_billed": 9,
+          "n_local_turns": 4,
+          "never_escalated": false,
+          "usd": 0.31478999999999996
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 16.74408941200628,
+            "prompt_tokens": 2687,
+            "reasons": [
+              "ttft_s=30.371929687>10.0"
+            ],
+            "ttft_s": 30.371929687
+          },
+          "cloud_completion_tokens_billed": 1606,
+          "cloud_prompt_tokens_billed": 75438,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_9",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2687,
+            2845,
+            2988
+          ],
+          "local_turn_decode_tok_s": [
+            16.74408941200628,
+            16.210778231458196,
+            16.107356925584686
+          ],
+          "local_turn_ttft_s": [
+            30.371929687,
+            34.261769531,
+            34.921710937
+          ],
+          "local_turn_wall_s": [
+            33.4603401,
+            36.4211221,
+            38.221931
+          ],
+          "n_cloud_calls_billed": 13,
+          "n_local_turns": 3,
+          "never_escalated": false,
+          "usd": 0.250404
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 16.711818026251958,
+            "prompt_tokens": 2598,
+            "reasons": [
+              "ttft_s=30.424037109>10.0"
+            ],
+            "ttft_s": 30.424037109
+          },
+          "cloud_completion_tokens_billed": 1658,
+          "cloud_prompt_tokens_billed": 107054,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_10",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2598,
+            2702,
+            2849,
+            2984,
+            3134
+          ],
+          "local_turn_decode_tok_s": [
+            16.711818026251958,
+            16.59135657166263,
+            16.121130953760336,
+            16.127130347165725,
+            15.776080076450553
+          ],
+          "local_turn_ttft_s": [
+            30.424037109,
+            31.793720703,
+            32.24490625,
+            35.758308593,
+            38.959964843
+          ],
+          "local_turn_wall_s": [
+            34.280233,
+            34.4303084,
+            38.7254063,
+            42.1058497,
+            42.8899237
+          ],
+          "n_cloud_calls_billed": 18,
+          "n_local_turns": 5,
+          "never_escalated": false,
+          "usd": 0.346032
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 13.48189896232276,
+            "prompt_tokens": 4393,
+            "reasons": [
+              "ttft_s=58.980347656>10.0"
+            ],
+            "ttft_s": 58.980347656
+          },
+          "cloud_completion_tokens_billed": 682,
+          "cloud_prompt_tokens_billed": 50233,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_11",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4393,
+            4546
+          ],
+          "local_turn_decode_tok_s": [
+            13.48189896232276,
+            13.303783597440939
+          ],
+          "local_turn_ttft_s": [
+            58.980347656,
+            62.026609375
+          ],
+          "local_turn_wall_s": [
+            61.7942065,
+            67.4386036
+          ],
+          "n_cloud_calls_billed": 5,
+          "n_local_turns": 2,
+          "never_escalated": false,
+          "usd": 0.160929
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 16.367926861978656,
+            "prompt_tokens": 2813,
+            "reasons": [
+              "ttft_s=35.222753906>10.0"
+            ],
+            "ttft_s": 35.222753906
+          },
+          "cloud_completion_tokens_billed": 491,
+          "cloud_prompt_tokens_billed": 50034,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_12",
+          "local_score_valid": true,
+          "local_turn_contexts": [
+            2813,
+            2955,
+            3072
+          ],
+          "local_turn_decode_tok_s": [
+            16.367926861978656,
+            16.16702476626524,
+            15.723531386593965
+          ],
+          "local_turn_ttft_s": [
+            35.222753906,
+            35.9831875,
+            37.213714843
+          ],
+          "local_turn_wall_s": [
+            36.718676,
+            37.2078519,
+            40.37102
+          ],
+          "n_cloud_calls_billed": 9,
+          "n_local_turns": 3,
+          "never_escalated": false,
+          "usd": 0.15746699999999997
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 13.253505746900242,
+            "prompt_tokens": 4412,
+            "reasons": [
+              "ttft_s=57.961789062>10.0"
+            ],
+            "ttft_s": 57.961789062
+          },
+          "cloud_completion_tokens_billed": 848,
+          "cloud_prompt_tokens_billed": 70353,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_13",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4412,
+            4555
+          ],
+          "local_turn_decode_tok_s": [
+            13.253505746900242,
+            13.307732923284041
+          ],
+          "local_turn_ttft_s": [
+            57.961789062,
+            62.876523437
+          ],
+          "local_turn_wall_s": [
+            61.328408,
+            67.0094588
+          ],
+          "n_cloud_calls_billed": 7,
+          "n_local_turns": 2,
+          "never_escalated": false,
+          "usd": 0.223779
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 14.733814207977538,
+            "prompt_tokens": 3680,
+            "reasons": [
+              "ttft_s=47.330199218>10.0"
+            ],
+            "ttft_s": 47.330199218
+          },
+          "cloud_completion_tokens_billed": 1272,
+          "cloud_prompt_tokens_billed": 84707,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_14",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            3680,
+            3825,
+            4041,
+            4264
+          ],
+          "local_turn_decode_tok_s": [
+            14.733814207977538,
+            14.150023264265549,
+            13.596915772268904,
+            13.262348501146436
+          ],
+          "local_turn_ttft_s": [
+            47.330199218,
+            50.543164062,
+            52.325214843,
+            55.651058593
+          ],
+          "local_turn_wall_s": [
+            51.0654468,
+            56.4540136,
+            59.0101842,
+            60.3714164
+          ],
+          "n_cloud_calls_billed": 10,
+          "n_local_turns": 4,
+          "never_escalated": false,
+          "usd": 0.27320099999999997
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 12.962301896802243,
+            "prompt_tokens": 4687,
+            "reasons": [
+              "ttft_s=61.085816406>10.0"
+            ],
+            "ttft_s": 61.085816406
+          },
+          "cloud_completion_tokens_billed": 1160,
+          "cloud_prompt_tokens_billed": 99128,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_15",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4687,
+            4869,
+            5060,
+            5239,
+            5380
+          ],
+          "local_turn_decode_tok_s": [
+            12.962301896802243,
+            12.732861666421911,
+            12.49470803994723,
+            12.006528547229477,
+            12.080231765286538
+          ],
+          "local_turn_ttft_s": [
+            61.085816406,
+            67.218007812,
+            71.369851562,
+            74.052523437,
+            77.73021875
+          ],
+          "local_turn_wall_s": [
+            66.8210456,
+            74.9194948,
+            77.6788566,
+            80.6456362,
+            97.0667743
+          ],
+          "n_cloud_calls_billed": 10,
+          "n_local_turns": 5,
+          "never_escalated": false,
+          "usd": 0.314784
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 16.259740951228732,
+            "prompt_tokens": 2717,
+            "reasons": [
+              "ttft_s=31.893925781>10.0"
+            ],
+            "ttft_s": 31.893925781
+          },
+          "cloud_completion_tokens_billed": 943,
+          "cloud_prompt_tokens_billed": 62122,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_16",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2717,
+            2872,
+            3023
+          ],
+          "local_turn_decode_tok_s": [
+            16.259740951228732,
+            16.08589912699577,
+            16.056284301099783
+          ],
+          "local_turn_ttft_s": [
+            31.893925781,
+            34.109464843,
+            36.082046875
+          ],
+          "local_turn_wall_s": [
+            35.3526732,
+            38.8177263,
+            41.0478171
+          ],
+          "n_cloud_calls_billed": 11,
+          "n_local_turns": 3,
+          "never_escalated": false,
+          "usd": 0.20051099999999997
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 14.634695191298654,
+            "prompt_tokens": 3687,
+            "reasons": [
+              "ttft_s=47.368117187>10.0"
+            ],
+            "ttft_s": 47.368117187
+          },
+          "cloud_completion_tokens_billed": 965,
+          "cloud_prompt_tokens_billed": 90884,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_17",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            3687,
+            3863,
+            4321
+          ],
+          "local_turn_decode_tok_s": [
+            14.634695191298654,
+            14.373631751206128,
+            13.535085843916427
+          ],
+          "local_turn_ttft_s": [
+            47.368117187,
+            48.907980468,
+            56.314273437
+          ],
+          "local_turn_wall_s": [
+            52.2439114,
+            61.7021328,
+            67.2743812
+          ],
+          "n_cloud_calls_billed": 11,
+          "n_local_turns": 3,
+          "never_escalated": false,
+          "usd": 0.287127
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 13.682014140147663,
+            "prompt_tokens": 4213,
+            "reasons": [
+              "ttft_s=55.707132812>10.0"
+            ],
+            "ttft_s": 55.707132812
+          },
+          "cloud_completion_tokens_billed": 1707,
+          "cloud_prompt_tokens_billed": 82687,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_18",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4213,
+            4386,
+            4528
+          ],
+          "local_turn_decode_tok_s": [
+            13.682014140147663,
+            13.39174166621289,
+            13.291258098423082
+          ],
+          "local_turn_ttft_s": [
+            55.707132812,
+            58.536316406,
+            60.859683593
+          ],
+          "local_turn_wall_s": [
+            59.5570213,
+            60.5268193,
+            67.0080377
+          ],
+          "n_cloud_calls_billed": 8,
+          "n_local_turns": 3,
+          "never_escalated": false,
+          "usd": 0.27366599999999996
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 14.941205766996871,
+            "prompt_tokens": 3561,
+            "reasons": [
+              "ttft_s=44.951523437>10.0"
+            ],
+            "ttft_s": 44.951523437
+          },
+          "cloud_completion_tokens_billed": 728,
+          "cloud_prompt_tokens_billed": 63459,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_19",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            3561,
+            3666,
+            3806
+          ],
+          "local_turn_decode_tok_s": [
+            14.941205766996871,
+            14.871679431463678,
+            14.452742485145924
+          ],
+          "local_turn_ttft_s": [
+            44.951523437,
+            46.965789062,
+            47.091894531
+          ],
+          "local_turn_wall_s": [
+            46.1977119,
+            52.1366904,
+            49.969088
+          ],
+          "n_cloud_calls_billed": 8,
+          "n_local_turns": 3,
+          "never_escalated": false,
+          "usd": 0.201297
+        }
+      ],
+      "residency": "NON_RESIDENT",
+      "session_id": "cb781dbf-3486-4fbc-a69a-34026f801abe",
+      "tree_sha256": "fcb17e421ff5e7c3a21af4a8506ffa22ecd4fc08c4c59a4dd3cd7ded24b1e5f2",
+      "usd_per_completed_task": 0.4159264615384616,
+      "usd_per_session_mean": 0.2703522,
+      "usd_total": 5.407044000000001
+    },
+    {
+      "T_distribution": {
+        "max": 0.0,
+        "mean": 0.0,
+        "median": 0.0,
+        "min": 0.0,
+        "n": 19,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0
+      },
+      "T_mean": 0,
+      "T_mean_including_never_as_n_turns": 0.2,
+      "arm": "cpu-p",
+      "fraction_turns_slo_ok_sealed": 0.7285714285714285,
+      "label": "cpu-p_RESIDENT",
+      "n_completed_tasks_cloud_traj": 13,
+      "n_entries": 20,
+      "n_escalated": 19,
+      "n_never_escalated": 1,
+      "per_entry": [
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 12.995832978685723,
+            "prompt_tokens": 4193,
+            "reasons": [
+              "ttft_s=53.927132812>10.0"
+            ],
+            "ttft_s": 53.927132812
+          },
+          "cloud_completion_tokens_billed": 1984,
+          "cloud_prompt_tokens_billed": 166296,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_0",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4193,
+            4359,
+            4498,
+            4645
+          ],
+          "local_turn_decode_tok_s": [
+            12.995832978685723,
+            12.9067823790492,
+            12.332679874740517,
+            12.086270825966352
+          ],
+          "local_turn_ttft_s": [
+            53.927132812,
+            1.904119506,
+            2.084830078,
+            1.960459594
+          ],
+          "local_turn_wall_s": [
+            6.0767409,
+            5.0579278,
+            5.5340416,
+            15.562398
+          ],
+          "n_cloud_calls_billed": 16,
+          "n_local_turns": 4,
+          "never_escalated": false,
+          "usd": 0.5286479999999999
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 14.558869306962393,
+            "prompt_tokens": 2609,
+            "reasons": [
+              "ttft_s=29.558101562>10.0"
+            ],
+            "ttft_s": 29.558101562
+          },
+          "cloud_completion_tokens_billed": 1043,
+          "cloud_prompt_tokens_billed": 61849,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_1",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2609,
+            2786,
+            2946,
+            3101
+          ],
+          "local_turn_decode_tok_s": [
+            14.558869306962393,
+            15.371723960576091,
+            14.931517196510338,
+            14.864630739490964
+          ],
+          "local_turn_ttft_s": [
+            29.558101562,
+            1.524422485,
+            1.485381103,
+            1.498009155
+          ],
+          "local_turn_wall_s": [
+            4.3655283,
+            3.9797287,
+            5.4622861,
+            5.3990242
+          ],
+          "n_cloud_calls_billed": 11,
+          "n_local_turns": 4,
+          "never_escalated": false,
+          "usd": 0.201192
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 13.120589352615251,
+            "prompt_tokens": 3819,
+            "reasons": [
+              "ttft_s=47.076628906>10.0"
+            ],
+            "ttft_s": 47.076628906
+          },
+          "cloud_completion_tokens_billed": 1420,
+          "cloud_prompt_tokens_billed": 128736,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_2",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            3819,
+            3997,
+            4182,
+            4379,
+            4569
+          ],
+          "local_turn_decode_tok_s": [
+            13.120589352615251,
+            13.191898272189146,
+            12.5907087997576,
+            12.534183625982312,
+            12.456177334311784
+          ],
+          "local_turn_ttft_s": [
+            47.076628906,
+            2.670249267,
+            2.64246997,
+            2.667497314,
+            2.725355468
+          ],
+          "local_turn_wall_s": [
+            7.5409225,
+            8.0845794,
+            8.513835,
+            9.2191369,
+            9.250642
+          ],
+          "n_cloud_calls_billed": 15,
+          "n_local_turns": 5,
+          "never_escalated": false,
+          "usd": 0.4075080000000001
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 15.547102611569759,
+            "prompt_tokens": 2629,
+            "reasons": [
+              "ttft_s=28.48480664>10.0"
+            ],
+            "ttft_s": 28.48480664
+          },
+          "cloud_completion_tokens_billed": 771,
+          "cloud_prompt_tokens_billed": 32272,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_3",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2629,
+            2810
+          ],
+          "local_turn_decode_tok_s": [
+            15.547102611569759,
+            15.5359606130514
+          ],
+          "local_turn_ttft_s": [
+            28.48480664,
+            1.92286853
+          ],
+          "local_turn_wall_s": [
+            6.3815658,
+            8.2015482
+          ],
+          "n_cloud_calls_billed": 6,
+          "n_local_turns": 2,
+          "never_escalated": false,
+          "usd": 0.10838099999999999
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 12.499567570107239,
+            "prompt_tokens": 4394,
+            "reasons": [
+              "ttft_s=53.72103125>10.0"
+            ],
+            "ttft_s": 53.72103125
+          },
+          "cloud_completion_tokens_billed": 1136,
+          "cloud_prompt_tokens_billed": 82487,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_4",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4394,
+            4493,
+            4619
+          ],
+          "local_turn_decode_tok_s": [
+            12.499567570107239,
+            12.585146769029334,
+            12.389207709038212
+          ],
+          "local_turn_ttft_s": [
+            53.72103125,
+            1.577478149,
+            1.989102172
+          ],
+          "local_turn_wall_s": [
+            2.7127905,
+            3.6309829,
+            8.8008677
+          ],
+          "n_cloud_calls_billed": 8,
+          "n_local_turns": 3,
+          "never_escalated": false,
+          "usd": 0.26450100000000004
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 12.678489043202473,
+            "prompt_tokens": 4200,
+            "reasons": [
+              "ttft_s=31.847876953>10.0"
+            ],
+            "ttft_s": 31.847876953
+          },
+          "cloud_completion_tokens_billed": 1284,
+          "cloud_prompt_tokens_billed": 121686,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_5",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4200,
+            4390,
+            4538,
+            4760
+          ],
+          "local_turn_decode_tok_s": [
+            12.678489043202473,
+            12.502531383063939,
+            12.463076687986803,
+            11.91782860472134
+          ],
+          "local_turn_ttft_s": [
+            31.847876953,
+            1.899272949,
+            2.181855712,
+            1.779739624
+          ],
+          "local_turn_wall_s": [
+            4.7882816,
+            4.2159822,
+            5.1936634,
+            5.0837052
+          ],
+          "n_cloud_calls_billed": 12,
+          "n_local_turns": 4,
+          "never_escalated": false,
+          "usd": 0.384318
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 15.073818103501136,
+            "prompt_tokens": 2824,
+            "reasons": [
+              "ttft_s=30.931246093>10.0"
+            ],
+            "ttft_s": 30.931246093
+          },
+          "cloud_completion_tokens_billed": 1125,
+          "cloud_prompt_tokens_billed": 90592,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_6",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2824,
+            2968,
+            3143,
+            3313,
+            3435
+          ],
+          "local_turn_decode_tok_s": [
+            15.073818103501136,
+            14.953247289852596,
+            14.422375303794581,
+            14.251649444123421,
+            14.21727919076157
+          ],
+          "local_turn_ttft_s": [
+            30.931246093,
+            1.798915161,
+            2.197804931,
+            1.783772949,
+            1.437896972
+          ],
+          "local_turn_wall_s": [
+            3.9214197,
+            6.6375433,
+            6.1438474,
+            3.7041035,
+            5.9235344
+          ],
+          "n_cloud_calls_billed": 15,
+          "n_local_turns": 5,
+          "never_escalated": false,
+          "usd": 0.28865100000000005
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 13.112707391911385,
+            "prompt_tokens": 4413,
+            "reasons": [
+              "ttft_s=56.095398437>10.0"
+            ],
+            "ttft_s": 56.095398437
+          },
+          "cloud_completion_tokens_billed": 616,
+          "cloud_prompt_tokens_billed": 70206,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_7",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4413,
+            4551,
+            4676
+          ],
+          "local_turn_decode_tok_s": [
+            13.112707391911385,
+            13.225549647074962,
+            12.954504465610064
+          ],
+          "local_turn_ttft_s": [
+            56.095398437,
+            1.944607788,
+            1.966545166
+          ],
+          "local_turn_wall_s": [
+            4.6147164,
+            5.1984901,
+            4.0025002
+          ],
+          "n_cloud_calls_billed": 7,
+          "n_local_turns": 3,
+          "never_escalated": false,
+          "usd": 0.219858
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_8",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4427,
+            4620,
+            4987,
+            5705
+          ],
+          "local_turn_decode_tok_s": [
+            13.417397783746726,
+            13.149543528857837,
+            12.424670750036436,
+            11.50705122265829
+          ],
+          "local_turn_ttft_s": [
+            1.600894897,
+            2.714469482,
+            5.195648437,
+            6.0033125
+          ],
+          "local_turn_wall_s": [
+            7.216569,
+            18.6484718,
+            30.7502619,
+            4.8326493
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 4,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 16.72502534160435,
+            "prompt_tokens": 2687,
+            "reasons": [
+              "ttft_s=28.238603515>10.0"
+            ],
+            "ttft_s": 28.238603515
+          },
+          "cloud_completion_tokens_billed": 1606,
+          "cloud_prompt_tokens_billed": 75438,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_9",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2687,
+            2845,
+            2988
+          ],
+          "local_turn_decode_tok_s": [
+            16.72502534160435,
+            14.379813843863358,
+            16.215625310064713
+          ],
+          "local_turn_ttft_s": [
+            28.238603515,
+            1.496440551,
+            1.320279785
+          ],
+          "local_turn_wall_s": [
+            3.3079026,
+            4.2284322,
+            3.7439483
+          ],
+          "n_cloud_calls_billed": 13,
+          "n_local_turns": 3,
+          "never_escalated": false,
+          "usd": 0.250404
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 16.41078380899735,
+            "prompt_tokens": 2598,
+            "reasons": [
+              "ttft_s=25.208224609>10.0"
+            ],
+            "ttft_s": 25.208224609
+          },
+          "cloud_completion_tokens_billed": 1658,
+          "cloud_prompt_tokens_billed": 107054,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_10",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2598,
+            2702,
+            2849,
+            2984,
+            3134
+          ],
+          "local_turn_decode_tok_s": [
+            16.41078380899735,
+            16.628473475851532,
+            16.206175233585416,
+            15.711786545720654,
+            15.650717533691356
+          ],
+          "local_turn_ttft_s": [
+            25.208224609,
+            1.331344116,
+            1.616857421,
+            1.572792968,
+            1.834211914
+          ],
+          "local_turn_wall_s": [
+            2.1766999,
+            4.7200546,
+            4.2639703,
+            5.4435081,
+            4.53008
+          ],
+          "n_cloud_calls_billed": 18,
+          "n_local_turns": 5,
+          "never_escalated": false,
+          "usd": 0.346032
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 13.427001232269125,
+            "prompt_tokens": 4393,
+            "reasons": [
+              "ttft_s=52.476648437>10.0"
+            ],
+            "ttft_s": 52.476648437
+          },
+          "cloud_completion_tokens_billed": 682,
+          "cloud_prompt_tokens_billed": 50233,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_11",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4393,
+            4546
+          ],
+          "local_turn_decode_tok_s": [
+            13.427001232269125,
+            13.235871770993406
+          ],
+          "local_turn_ttft_s": [
+            52.476648437,
+            1.866404418
+          ],
+          "local_turn_wall_s": [
+            3.406051,
+            7.306167
+          ],
+          "n_cloud_calls_billed": 5,
+          "n_local_turns": 2,
+          "never_escalated": false,
+          "usd": 0.160929
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 16.287521230120944,
+            "prompt_tokens": 2813,
+            "reasons": [
+              "ttft_s=29.891519531>10.0"
+            ],
+            "ttft_s": 29.891519531
+          },
+          "cloud_completion_tokens_billed": 491,
+          "cloud_prompt_tokens_billed": 50034,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_12",
+          "local_score_valid": true,
+          "local_turn_contexts": [
+            2813,
+            2955,
+            3072
+          ],
+          "local_turn_decode_tok_s": [
+            16.287521230120944,
+            15.766817108849164,
+            15.570442749977172
+          ],
+          "local_turn_ttft_s": [
+            29.891519531,
+            1.681523925,
+            1.552739013
+          ],
+          "local_turn_wall_s": [
+            3.1947865,
+            3.0238549,
+            3.5853964
+          ],
+          "n_cloud_calls_billed": 9,
+          "n_local_turns": 3,
+          "never_escalated": false,
+          "usd": 0.15746699999999997
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 13.302094058459682,
+            "prompt_tokens": 4412,
+            "reasons": [
+              "ttft_s=52.952621093>10.0"
+            ],
+            "ttft_s": 52.952621093
+          },
+          "cloud_completion_tokens_billed": 848,
+          "cloud_prompt_tokens_billed": 70353,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_13",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4412,
+            4555
+          ],
+          "local_turn_decode_tok_s": [
+            13.302094058459682,
+            13.250691555158257
+          ],
+          "local_turn_ttft_s": [
+            52.952621093,
+            2.002706542
+          ],
+          "local_turn_wall_s": [
+            5.4933929,
+            6.1534333
+          ],
+          "n_cloud_calls_billed": 7,
+          "n_local_turns": 2,
+          "never_escalated": false,
+          "usd": 0.223779
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 14.604342648903591,
+            "prompt_tokens": 3680,
+            "reasons": [
+              "ttft_s=42.892242187>10.0"
+            ],
+            "ttft_s": 42.892242187
+          },
+          "cloud_completion_tokens_billed": 1272,
+          "cloud_prompt_tokens_billed": 84707,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_14",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            3680,
+            3825,
+            4041,
+            4264
+          ],
+          "local_turn_decode_tok_s": [
+            14.604342648903591,
+            14.2286626233631,
+            13.80770885447477,
+            13.539694729228524
+          ],
+          "local_turn_ttft_s": [
+            42.892242187,
+            1.518172119,
+            2.5466604,
+            2.4714729
+          ],
+          "local_turn_wall_s": [
+            3.7777914,
+            6.9888383,
+            6.4960309,
+            5.1938217
+          ],
+          "n_cloud_calls_billed": 10,
+          "n_local_turns": 4,
+          "never_escalated": false,
+          "usd": 0.27320099999999997
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 12.894133935793805,
+            "prompt_tokens": 4687,
+            "reasons": [
+              "ttft_s=56.495070312>10.0"
+            ],
+            "ttft_s": 56.495070312
+          },
+          "cloud_completion_tokens_billed": 1160,
+          "cloud_prompt_tokens_billed": 99128,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_15",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4687,
+            4869,
+            5060,
+            5239,
+            5380
+          ],
+          "local_turn_decode_tok_s": [
+            12.894133935793805,
+            12.71180322545554,
+            12.523464269944874,
+            12.235346542721615,
+            11.987834540516314
+          ],
+          "local_turn_ttft_s": [
+            56.495070312,
+            2.623425781,
+            2.615030029,
+            3.013358886,
+            2.013357543
+          ],
+          "local_turn_wall_s": [
+            5.9676085,
+            8.4834031,
+            7.5828933,
+            6.809405,
+            17.9190766
+          ],
+          "n_cloud_calls_billed": 10,
+          "n_local_turns": 5,
+          "never_escalated": false,
+          "usd": 0.314784
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 16.425820885643294,
+            "prompt_tokens": 2717,
+            "reasons": [
+              "ttft_s=10.550013671>10.0"
+            ],
+            "ttft_s": 10.550013671
+          },
+          "cloud_completion_tokens_billed": 943,
+          "cloud_prompt_tokens_billed": 62122,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_16",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2717,
+            2872,
+            3023
+          ],
+          "local_turn_decode_tok_s": [
+            16.425820885643294,
+            15.998139755999189,
+            15.918524684702765
+          ],
+          "local_turn_ttft_s": [
+            10.550013671,
+            1.823738647,
+            1.711443359
+          ],
+          "local_turn_wall_s": [
+            4.7095078,
+            4.8384844,
+            4.8323489
+          ],
+          "n_cloud_calls_billed": 11,
+          "n_local_turns": 3,
+          "never_escalated": false,
+          "usd": 0.20051099999999997
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 14.54241130624616,
+            "prompt_tokens": 3687,
+            "reasons": [
+              "ttft_s=41.801574218>10.0"
+            ],
+            "ttft_s": 41.801574218
+          },
+          "cloud_completion_tokens_billed": 965,
+          "cloud_prompt_tokens_billed": 90884,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_17",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            3687,
+            3863,
+            4321
+          ],
+          "local_turn_decode_tok_s": [
+            14.54241130624616,
+            14.077780351400136,
+            13.548455795432487
+          ],
+          "local_turn_ttft_s": [
+            41.801574218,
+            1.950301513,
+            3.796669189
+          ],
+          "local_turn_wall_s": [
+            5.359003,
+            10.1016685,
+            6.6442705
+          ],
+          "n_cloud_calls_billed": 11,
+          "n_local_turns": 3,
+          "never_escalated": false,
+          "usd": 0.287127
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 13.697164574491817,
+            "prompt_tokens": 4213,
+            "reasons": [
+              "ttft_s=49.073339843>10.0"
+            ],
+            "ttft_s": 49.073339843
+          },
+          "cloud_completion_tokens_billed": 1707,
+          "cloud_prompt_tokens_billed": 82687,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_18",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4213,
+            4386,
+            4528
+          ],
+          "local_turn_decode_tok_s": [
+            13.697164574491817,
+            13.237751528358134,
+            13.237575891257
+          ],
+          "local_turn_ttft_s": [
+            49.073339843,
+            2.558006347,
+            1.997210449
+          ],
+          "local_turn_wall_s": [
+            6.884702,
+            5.1181929,
+            6.7379576
+          ],
+          "n_cloud_calls_billed": 8,
+          "n_local_turns": 3,
+          "never_escalated": false,
+          "usd": 0.27366599999999996
+        },
+        {
+          "T": 0,
+          "breach": {
+            "decode_tok_s": 14.74600127998367,
+            "prompt_tokens": 3561,
+            "reasons": [
+              "ttft_s=39.966390625>10.0"
+            ],
+            "ttft_s": 39.966390625
+          },
+          "cloud_completion_tokens_billed": 728,
+          "cloud_prompt_tokens_billed": 63459,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_19",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            3561,
+            3666,
+            3806
+          ],
+          "local_turn_decode_tok_s": [
+            14.74600127998367,
+            14.732043002171565,
+            14.31249628213463
+          ],
+          "local_turn_ttft_s": [
+            39.966390625,
+            1.483682861,
+            1.698460083
+          ],
+          "local_turn_wall_s": [
+            2.8332903,
+            5.0647211,
+            4.0799092
+          ],
+          "n_cloud_calls_billed": 8,
+          "n_local_turns": 3,
+          "never_escalated": false,
+          "usd": 0.201297
+        }
+      ],
+      "residency": "RESIDENT",
+      "session_id": "9fdedb46-3318-4abc-a56f-50b7d23d25ca",
+      "tree_sha256": "dea164343b39834bd9fcfc2a243c24737e71b46db3ca05b0accf33f6cb3093c9",
+      "usd_per_completed_task": 0.3917118461538462,
+      "usd_per_session_mean": 0.2546127,
+      "usd_total": 5.0922540000000005
+    },
+    {
+      "T_distribution": {
+        "n": 0
+      },
+      "T_mean": null,
+      "T_mean_including_never_as_n_turns": 3.5,
+      "arm": "gpu_only",
+      "fraction_turns_slo_ok_sealed": 1.0,
+      "label": "gpu_only_NON_RESIDENT",
+      "n_completed_tasks_cloud_traj": 13,
+      "n_entries": 20,
+      "n_escalated": 0,
+      "n_never_escalated": 20,
+      "per_entry": [
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_0",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4193,
+            4364,
+            4508,
+            4649
+          ],
+          "local_turn_decode_tok_s": [
+            27.472890024105826,
+            27.635746813938717,
+            27.812643523596353,
+            27.64385233821539
+          ],
+          "local_turn_ttft_s": [
+            4.033324218,
+            4.41717871,
+            4.54483496,
+            4.932777832
+          ],
+          "local_turn_wall_s": [
+            6.4245944,
+            6.4946368,
+            7.9245928,
+            7.1905838
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 4,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_1",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2609,
+            2779,
+            2939,
+            3093
+          ],
+          "local_turn_decode_tok_s": [
+            26.677036208487806,
+            25.718085304208557,
+            26.455775308519858,
+            25.96089787638336
+          ],
+          "local_turn_ttft_s": [
+            2.512013671,
+            2.072351318,
+            2.204047119,
+            2.679031738
+          ],
+          "local_turn_wall_s": [
+            3.390117,
+            4.0964675,
+            4.7455121,
+            4.7022876
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 4,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_2",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            3819,
+            3929,
+            4046,
+            4155,
+            4268
+          ],
+          "local_turn_decode_tok_s": [
+            24.632166994980373,
+            24.311430330156018,
+            23.88246975542473,
+            27.11958539830959,
+            27.92011641729109
+          ],
+          "local_turn_ttft_s": [
+            3.266880615,
+            3.420932128,
+            3.830207763,
+            4.102173339,
+            4.006790039
+          ],
+          "local_turn_wall_s": [
+            4.5598298,
+            4.6853889,
+            5.714435,
+            4.5670636,
+            5.5827147
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 5,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_3",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2629,
+            2812
+          ],
+          "local_turn_decode_tok_s": [
+            26.54263130973905,
+            26.31568373484315
+          ],
+          "local_turn_ttft_s": [
+            1.933247924,
+            2.091073242
+          ],
+          "local_turn_wall_s": [
+            4.6945532,
+            6.1007837
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 2,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_4",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4394,
+            4493,
+            4623
+          ],
+          "local_turn_decode_tok_s": [
+            27.752881674349904,
+            27.542455497051893,
+            27.777700664261964
+          ],
+          "local_turn_ttft_s": [
+            4.175037597,
+            4.547223632,
+            4.490424804
+          ],
+          "local_turn_wall_s": [
+            5.1215927,
+            5.9303109,
+            8.5560469
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 3,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_5",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4200,
+            4341,
+            4538,
+            4809
+          ],
+          "local_turn_decode_tok_s": [
+            27.414486961749933,
+            27.830861512639558,
+            27.77428055783821,
+            26.629626448327826
+          ],
+          "local_turn_ttft_s": [
+            4.11932666,
+            4.038068359,
+            4.506213378,
+            5.199777832
+          ],
+          "local_turn_wall_s": [
+            6.0434237,
+            7.2921531,
+            7.7163983,
+            6.3726343
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 4,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_6",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2824,
+            2956,
+            3018,
+            3130,
+            3257
+          ],
+          "local_turn_decode_tok_s": [
+            26.244409514301804,
+            25.87447596494579,
+            25.955007582668944,
+            25.805591507240955,
+            25.539948645014245
+          ],
+          "local_turn_ttft_s": [
+            2.140086669,
+            2.288857177,
+            2.510195312,
+            2.457596679,
+            2.790341552
+          ],
+          "local_turn_wall_s": [
+            3.4691268,
+            3.5255972,
+            3.7332445,
+            3.9758981,
+            4.1988434
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 5,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_7",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4413,
+            4558,
+            4753
+          ],
+          "local_turn_decode_tok_s": [
+            27.968342237771363,
+            27.589183258514506,
+            27.426344076699618
+          ],
+          "local_turn_ttft_s": [
+            4.46899414,
+            4.639892089,
+            4.672485351
+          ],
+          "local_turn_wall_s": [
+            6.2283034,
+            8.9735347,
+            5.620479
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 3,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_8",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4427,
+            4627,
+            4927,
+            5425
+          ],
+          "local_turn_decode_tok_s": [
+            27.598834763791125,
+            27.4263137001266,
+            27.61098999536495,
+            26.631067570652668
+          ],
+          "local_turn_ttft_s": [
+            4.335470214,
+            4.518568359,
+            4.971700683,
+            5.99549414
+          ],
+          "local_turn_wall_s": [
+            7.4906765,
+            10.0400023,
+            11.5059047,
+            12.5570225
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 4,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_9",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2687,
+            2848,
+            3000
+          ],
+          "local_turn_decode_tok_s": [
+            27.208612053084536,
+            26.687867636453873,
+            26.219750483625056
+          ],
+          "local_turn_ttft_s": [
+            1.929291259,
+            2.109655517,
+            2.463904052
+          ],
+          "local_turn_wall_s": [
+            3.4045833,
+            3.6798672,
+            4.3025848
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 3,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_10",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2598,
+            2702,
+            2848,
+            2973,
+            3157
+          ],
+          "local_turn_decode_tok_s": [
+            26.958057808030564,
+            26.90609825284547,
+            26.381120061235855,
+            26.45090682388666,
+            25.722613941961676
+          ],
+          "local_turn_ttft_s": [
+            1.868716552,
+            1.969208251,
+            2.122769775,
+            2.258655029,
+            2.666578857
+          ],
+          "local_turn_wall_s": [
+            2.8736766,
+            3.7371921,
+            3.7291021,
+            4.6579387,
+            4.5503286
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 5,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_11",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4393,
+            4520
+          ],
+          "local_turn_decode_tok_s": [
+            27.699912298384355,
+            28.109386408538512
+          ],
+          "local_turn_ttft_s": [
+            4.384813964,
+            4.505517089
+          ],
+          "local_turn_wall_s": [
+            5.3130006,
+            6.6400354
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 2,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_12",
+          "local_score_valid": true,
+          "local_turn_contexts": [
+            2813,
+            2971,
+            3088
+          ],
+          "local_turn_decode_tok_s": [
+            26.6176372155169,
+            26.322705071739044,
+            25.934703988291044
+          ],
+          "local_turn_ttft_s": [
+            2.036678588,
+            2.246031738,
+            2.579300292
+          ],
+          "local_turn_wall_s": [
+            3.7954348,
+            3.7590678,
+            3.6926622
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 3,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_13",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4412,
+            4547
+          ],
+          "local_turn_decode_tok_s": [
+            28.28036940468965,
+            27.868568442407685
+          ],
+          "local_turn_ttft_s": [
+            4.105561523,
+            4.652014648
+          ],
+          "local_turn_wall_s": [
+            5.9890955,
+            5.9079098
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 2,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_14",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            3680,
+            3846,
+            4184,
+            4423
+          ],
+          "local_turn_decode_tok_s": [
+            24.567486752054872,
+            24.460782553239216,
+            28.267432003184275,
+            28.43596634338749
+          ],
+          "local_turn_ttft_s": [
+            3.367372802,
+            3.606804443,
+            4.041423583,
+            4.412246093
+          ],
+          "local_turn_wall_s": [
+            5.030934,
+            9.4130322,
+            7.0290682,
+            6.1899928
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 4,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_15",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4687,
+            4870,
+            5056,
+            5224,
+            5402
+          ],
+          "local_turn_decode_tok_s": [
+            27.862458854654832,
+            27.993448557265957,
+            27.553585422038836,
+            24.890796883397897,
+            26.700306401115423
+          ],
+          "local_turn_ttft_s": [
+            4.840190917,
+            4.851727539,
+            5.08019873,
+            7.151869628,
+            6.308769042
+          ],
+          "local_turn_wall_s": [
+            6.3324986,
+            8.4438112,
+            7.7697336,
+            9.3340381,
+            12.2336228
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 5,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_16",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2717,
+            2883,
+            3045
+          ],
+          "local_turn_decode_tok_s": [
+            26.90763467293448,
+            26.520037758699353,
+            26.179990739924555
+          ],
+          "local_turn_ttft_s": [
+            1.973545532,
+            2.168048339,
+            2.311145263
+          ],
+          "local_turn_wall_s": [
+            4.3753711,
+            4.7297547,
+            5.1731626
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 3,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_17",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            3687,
+            3758,
+            4010
+          ],
+          "local_turn_decode_tok_s": [
+            24.97187923082862,
+            24.305008130670377,
+            23.755917298037147
+          ],
+          "local_turn_ttft_s": [
+            3.358937988,
+            3.497989501,
+            3.846478515
+          ],
+          "local_turn_wall_s": [
+            4.9206947,
+            6.2052861,
+            5.9230514
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 3,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_18",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4213,
+            4387,
+            4561
+          ],
+          "local_turn_decode_tok_s": [
+            28.17606394495213,
+            27.945908975774234,
+            27.556925941750524
+          ],
+          "local_turn_ttft_s": [
+            3.870538818,
+            4.426674316,
+            4.681035156
+          ],
+          "local_turn_wall_s": [
+            6.7214731,
+            7.3138612,
+            6.9411826
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 3,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_19",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            3561,
+            3666,
+            3935
+          ],
+          "local_turn_decode_tok_s": [
+            24.943838531814976,
+            24.558862033875464,
+            24.188824280878116
+          ],
+          "local_turn_ttft_s": [
+            3.159008544,
+            3.348293457,
+            3.677526367
+          ],
+          "local_turn_wall_s": [
+            4.4172969,
+            8.765403,
+            6.3627618
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 3,
+          "never_escalated": true,
+          "usd": 0.0
+        }
+      ],
+      "residency": "NON_RESIDENT",
+      "session_id": "afd1aa21-d4b2-4491-81b4-b1b6f4fa681a",
+      "tree_sha256": "d9f942bb0e3309a6c26af5637754f38d0e0601b558bdd3f84698b409aaf01519",
+      "usd_per_completed_task": 0.0,
+      "usd_per_session_mean": 0.0,
+      "usd_total": 0.0
+    },
+    {
+      "T_distribution": {
+        "n": 0
+      },
+      "T_mean": null,
+      "T_mean_including_never_as_n_turns": 3.4,
+      "arm": "gpu_only",
+      "fraction_turns_slo_ok_sealed": 1.0,
+      "label": "gpu_only_RESIDENT",
+      "n_completed_tasks_cloud_traj": 13,
+      "n_entries": 20,
+      "n_escalated": 0,
+      "n_never_escalated": 20,
+      "per_entry": [
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_0",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4193,
+            4345,
+            4471,
+            4604
+          ],
+          "local_turn_decode_tok_s": [
+            27.941834455589643,
+            28.35798447410853,
+            28.007079891054275,
+            28.461828575146498
+          ],
+          "local_turn_ttft_s": [
+            3.161964355,
+            0.2178367,
+            0.225428192,
+            0.223695022
+          ],
+          "local_turn_wall_s": [
+            1.6430424,
+            2.5886801,
+            1.4623959,
+            2.4485954
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 4,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_1",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2609,
+            2781,
+            2941,
+            3096
+          ],
+          "local_turn_decode_tok_s": [
+            27.127418060054534,
+            27.079295352806284,
+            26.616474710903216,
+            26.32533443441612
+          ],
+          "local_turn_ttft_s": [
+            1.588323974,
+            0.16366571,
+            0.169471496,
+            0.173832504
+          ],
+          "local_turn_wall_s": [
+            1.6362192,
+            1.9124191,
+            2.4926791,
+            2.2065794
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 4,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_2",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            3819,
+            4510,
+            4736,
+            5211
+          ],
+          "local_turn_decode_tok_s": [
+            25.32523779173548,
+            28.999814002772485,
+            28.671229649641358,
+            27.034501739034383
+          ],
+          "local_turn_ttft_s": [
+            2.811655517,
+            0.282300079,
+            0.276541107,
+            0.375380187
+          ],
+          "local_turn_wall_s": [
+            2.7227337,
+            2.7323423,
+            3.1461398,
+            4.3210038
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 4,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_3",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2629,
+            2812
+          ],
+          "local_turn_decode_tok_s": [
+            26.98019441444904,
+            26.83894589015663
+          ],
+          "local_turn_ttft_s": [
+            1.689908447,
+            0.212582504
+          ],
+          "local_turn_wall_s": [
+            2.7410366,
+            5.7813963
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 2,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_4",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4394,
+            4493,
+            4621
+          ],
+          "local_turn_decode_tok_s": [
+            28.234536736457326,
+            28.321138767840687,
+            28.461391492021253
+          ],
+          "local_turn_ttft_s": [
+            3.266647216,
+            0.216206207,
+            0.228531906
+          ],
+          "local_turn_wall_s": [
+            0.9618617,
+            1.3476289,
+            3.4641559
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 3,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_5",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4200,
+            4330,
+            4509,
+            4753
+          ],
+          "local_turn_decode_tok_s": [
+            28.630476509271993,
+            28.472523079905507,
+            28.583166979993035,
+            28.125920012452923
+          ],
+          "local_turn_ttft_s": [
+            2.176440429,
+            0.215212097,
+            0.280540283,
+            0.288763732
+          ],
+          "local_turn_wall_s": [
+            1.5991709,
+            2.2313606,
+            2.4424743,
+            1.9041386
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 4,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_6",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2824,
+            2956,
+            3130,
+            3301,
+            3420
+          ],
+          "local_turn_decode_tok_s": [
+            26.64328796433013,
+            26.791871884245957,
+            26.30240995558452,
+            25.904478433661755,
+            25.63179601366689
+          ],
+          "local_turn_ttft_s": [
+            1.626655761,
+            0.213279586,
+            0.221844894,
+            0.234067901,
+            0.186630294
+          ],
+          "local_turn_wall_s": [
+            1.4014727,
+            2.9737394,
+            2.8435915,
+            1.3033728,
+            2.2152344
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 5,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_7",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4413,
+            4558,
+            4682
+          ],
+          "local_turn_decode_tok_s": [
+            28.46181723409141,
+            28.109804635369617,
+            27.96104686724284
+          ],
+          "local_turn_ttft_s": [
+            3.247988769,
+            0.21983641,
+            0.223701599
+          ],
+          "local_turn_wall_s": [
+            1.7516955,
+            2.1275366,
+            2.2563331
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 3,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_8",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4427,
+            4621,
+            4995,
+            5775
+          ],
+          "local_turn_decode_tok_s": [
+            28.287442936259126,
+            28.015617565793235,
+            28.04768016680524,
+            26.91526984233243
+          ],
+          "local_turn_ttft_s": [
+            0.218604003,
+            0.297709777,
+            0.556921203,
+            0.644044067
+          ],
+          "local_turn_wall_s": [
+            2.816502,
+            8.1416144,
+            10.7696097,
+            1.2259022
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 4,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_9",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2687,
+            2873,
+            3021
+          ],
+          "local_turn_decode_tok_s": [
+            27.126287315842134,
+            26.47222016381855,
+            26.41468933764435
+          ],
+          "local_turn_ttft_s": [
+            1.448187988,
+            0.171346893,
+            0.171845901
+          ],
+          "local_turn_wall_s": [
+            1.3250581,
+            1.427034,
+            1.7029191
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 3,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_10",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2598,
+            2702,
+            2856,
+            2991,
+            3125
+          ],
+          "local_turn_decode_tok_s": [
+            26.650719399841062,
+            27.00540996915654,
+            26.376232206240974,
+            26.30898583147984,
+            25.832409607763854
+          ],
+          "local_turn_ttft_s": [
+            1.378795654,
+            0.160711807,
+            0.207720886,
+            0.213926498,
+            0.179079498
+          ],
+          "local_turn_wall_s": [
+            1.1546026,
+            2.1343414,
+            2.0177553,
+            2.2833418,
+            1.9527596
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 5,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_11",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4393,
+            4546
+          ],
+          "local_turn_decode_tok_s": [
+            28.573369419471817,
+            28.60019708442505
+          ],
+          "local_turn_ttft_s": [
+            3.384427001,
+            0.217285293
+          ],
+          "local_turn_wall_s": [
+            0.9941867,
+            1.9305602
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 2,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_12",
+          "local_score_valid": true,
+          "local_turn_contexts": [
+            2813,
+            2945,
+            3059
+          ],
+          "local_turn_decode_tok_s": [
+            26.7839319585278,
+            26.31080674101662,
+            25.880303570107948
+          ],
+          "local_turn_ttft_s": [
+            1.482089111,
+            0.1711622,
+            0.177349899
+          ],
+          "local_turn_wall_s": [
+            0.8087156,
+            1.3248528,
+            1.3974426
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 3,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_13",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4412,
+            4559
+          ],
+          "local_turn_decode_tok_s": [
+            28.455874404949427,
+            28.54863548915863
+          ],
+          "local_turn_ttft_s": [
+            0.189728897,
+            0.22428099
+          ],
+          "local_turn_wall_s": [
+            2.0788873,
+            2.1508179
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 2,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_14",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            3680,
+            3825,
+            4076,
+            4293
+          ],
+          "local_turn_decode_tok_s": [
+            24.81964103655622,
+            24.413227919630476,
+            25.171403047432257,
+            28.512816557613583
+          ],
+          "local_turn_ttft_s": [
+            2.354938232,
+            0.197817993,
+            0.298625213,
+            0.269553771
+          ],
+          "local_turn_wall_s": [
+            1.3350354,
+            4.2581461,
+            2.2257587,
+            1.6718949
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 4,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_15",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4687,
+            4869,
+            5055,
+            5228
+          ],
+          "local_turn_decode_tok_s": [
+            28.158674475764467,
+            28.04234859339379,
+            27.5462924524738,
+            27.431326519042404
+          ],
+          "local_turn_ttft_s": [
+            3.824171142,
+            0.33415509,
+            0.316125396,
+            0.310119995
+          ],
+          "local_turn_wall_s": [
+            1.7517059,
+            3.2153564,
+            2.8887727,
+            3.305631
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 4,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_16",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            2717,
+            2879,
+            3037
+          ],
+          "local_turn_decode_tok_s": [
+            26.692256049538635,
+            26.479177819980677,
+            26.089036016413175
+          ],
+          "local_turn_ttft_s": [
+            0.73924237,
+            0.210096801,
+            0.220898208
+          ],
+          "local_turn_wall_s": [
+            2.3170928,
+            2.4471558,
+            2.4796091
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 3,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_17",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            3687,
+            3758,
+            4007
+          ],
+          "local_turn_decode_tok_s": [
+            24.768123998526306,
+            24.77808936289931,
+            24.359031697231472
+          ],
+          "local_turn_ttft_s": [
+            2.39232788,
+            0.196218292,
+            0.293251007
+          ],
+          "local_turn_wall_s": [
+            3.9669324,
+            3.054709,
+            2.5085658
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 3,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": false,
+          "id": "multi_turn_base_18",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            4213,
+            4392,
+            4548
+          ],
+          "local_turn_decode_tok_s": [
+            28.658857789099248,
+            28.136753009494313,
+            28.30651746721714
+          ],
+          "local_turn_ttft_s": [
+            3.015723144,
+            0.28581842,
+            0.292674987
+          ],
+          "local_turn_wall_s": [
+            2.825721,
+            2.2779589,
+            2.3817126
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 3,
+          "never_escalated": true,
+          "usd": 0.0
+        },
+        {
+          "T": null,
+          "breach": null,
+          "cloud_completion_tokens_billed": 0,
+          "cloud_prompt_tokens_billed": 0,
+          "cloud_trajectory_valid": true,
+          "id": "multi_turn_base_19",
+          "local_score_valid": false,
+          "local_turn_contexts": [
+            3561,
+            3668,
+            3843
+          ],
+          "local_turn_decode_tok_s": [
+            25.17175704568728,
+            24.9616298354726,
+            24.475349416127294
+          ],
+          "local_turn_ttft_s": [
+            2.233659667,
+            0.189090301,
+            0.252518493
+          ],
+          "local_turn_wall_s": [
+            1.3302357,
+            3.6357741,
+            2.5392917
+          ],
+          "n_cloud_calls_billed": 0,
+          "n_local_turns": 3,
+          "never_escalated": true,
+          "usd": 0.0
+        }
+      ],
+      "residency": "RESIDENT",
+      "session_id": "0963168f-9144-4d21-99cf-5a77232dd477",
+      "tree_sha256": "bb420a31ea053615d0342a3fa61d4342e474c9bea23631931861a74c8445a943",
+      "usd_per_completed_task": 0.0,
+      "usd_per_session_mean": 0.0,
+      "usd_total": 0.0
+    }
+  ],
+  "escalation_rule": {
+    "after_escalation": "remaining turns of the entry billed on cloud",
+    "cold_start_context_limit_tokens": 10000,
+    "cold_start_limit_source": {
+      "kind": "c2_ttft_bound_limit",
+      "run_id": "62395fdb-1899-415f-b708-6adc81a24dda",
+      "ttft_limits_all_arms": 10000
+    },
+    "escalate_at_first_turn_where": [
+      "ttft_s > 10",
+      "decode_tok_s < 6",
+      "prompt_tokens (turn context) > 10000"
+    ],
+    "name": "first_local_slo_or_context_breach_then_stay_cloud",
+    "note": "One policy among many; curve is conditional on this rule. Local energy estimated 30-45 W, not measured. Pricing is Sonnet 3.0/15.0 per Mtok in/out \u2014 one model, one price point.",
+    "slo": {
+      "decode_tok_s_min": 6.0,
+      "ttft_s_max": 10.0
+    }
+  },
+  "forced_T_cost_curve": [
+    {
+      "T": 0,
+      "label": "forced_T=0",
+      "remaining_turns_mean": 3.5,
+      "usd_per_session_mean": 0.2703522,
+      "usd_total": 5.407044000000001
+    },
+    {
+      "T": 1,
+      "label": "forced_T=1",
+      "remaining_turns_mean": 2.5,
+      "usd_per_session_mean": 0.1834137,
+      "usd_total": 3.6682739999999994
+    },
+    {
+      "T": 2,
+      "label": "forced_T=2",
+      "remaining_turns_mean": 1.5,
+      "usd_per_session_mean": 0.1112307,
+      "usd_total": 2.2246140000000008
+    },
+    {
+      "T": 3,
+      "label": "forced_T=3",
+      "remaining_turns_mean": 0.65,
+      "usd_per_session_mean": 0.05284245,
+      "usd_total": 1.0568489999999997
+    },
+    {
+      "T": 4,
+      "label": "forced_T=4",
+      "remaining_turns_mean": 0.2,
+      "usd_per_session_mean": 0.01355745,
+      "usd_total": 0.271149
+    }
+  ],
+  "generated_utc": "2026-09-08T21:54:41.574649+00:00",
+  "growth": {
+    "cloud_report_generation_span": {
+      "max_cited": 7743,
+      "min_cited": 2598,
+      "note": "7743 max appears on per-generation full_prompt in the GPU multi-turn probe (incl. mid-turn tool steps), not as X-2 turn-start context."
+    },
+    "estimate_1300_check": {
+      "claimed_approx_tokens_per_turn": 1300,
+      "measured_delta_tokens_vs_prev_turn": {
+        "max": 780.0,
+        "mean": 180.13636363636363,
+        "median": 155.5,
+        "min": 62.0,
+        "n": 198,
+        "p25": 138.25,
+        "p75": 183.0,
+        "p90": 229.90000000000015
+      },
+      "measured_per_turn_growth_first_step_deltas": {
+        "max": 780.0,
+        "mean": 180.13636363636363,
+        "median": 155.5,
+        "min": 62.0,
+        "n": 198,
+        "p25": 138.25,
+        "p75": 183.0,
+        "p90": 229.90000000000015
+      },
+      "source_span_interpretation": "7743 - 2598 = 5145 over a multi-turn/multi-step span",
+      "span_tokens_if_2598_to_7743": 5145,
+      "verdict": "median first-step-per-turn growth is 155.5 tokens, not ~1300; 1300 overstated per-turn growth by treating the 2598->7743 session span as if it were a single turn delta."
+    },
+    "per_configuration": [
+      {
+        "arm": "cpu-p",
+        "context_span": {
+          "max_turn_context": 5705.0,
+          "min_turn_context": 2598.0,
+          "span": 3107.0
+        },
+        "per_turn_growth_tokens_first_step_series": {
+          "max": 718.0,
+          "mean": 179.62,
+          "median": 155.0,
+          "min": 99.0,
+          "n": 50,
+          "p25": 142.0,
+          "p75": 181.75,
+          "p90": 216.60000000000002
+        },
+        "residency": "NON_RESIDENT",
+        "session_id": "cb781dbf-3486-4fbc-a69a-34026f801abe",
+        "turn_context_tokens": {
+          "max": 5705.0,
+          "mean": 3874.2714285714287,
+          "median": 4111.5,
+          "min": 2598.0,
+          "n": 70,
+          "p25": 2996.75,
+          "p75": 4520.5,
+          "p90": 4694.299999999999
+        },
+        "turn_ttft_s": {
+          "max": 81.510859375,
+          "mean": 49.90792650631428,
+          "median": 53.3755136715,
+          "min": 30.099285156,
+          "n": 70,
+          "p25": 36.007902343750004,
+          "p75": 59.33887304675,
+          "p90": 62.8766878901
+        },
+        "turn_wall_s": {
+          "max": 98.2870156,
+          "mean": 55.64581292,
+          "median": 59.1784604,
+          "min": 32.9495448,
+          "n": 70,
+          "p25": 40.665714875,
+          "p75": 65.08924445,
+          "p90": 74.97647379
+        }
+      },
+      {
+        "arm": "cpu-p",
+        "context_span": {
+          "max_turn_context": 5705.0,
+          "min_turn_context": 2598.0,
+          "span": 3107.0
+        },
+        "per_turn_growth_tokens_first_step_series": {
+          "max": 718.0,
+          "mean": 179.62,
+          "median": 155.0,
+          "min": 99.0,
+          "n": 50,
+          "p25": 142.0,
+          "p75": 181.75,
+          "p90": 216.60000000000002
+        },
+        "residency": "RESIDENT",
+        "session_id": "9fdedb46-3318-4abc-a56f-50b7d23d25ca",
+        "turn_context_tokens": {
+          "max": 5705.0,
+          "mean": 3874.2714285714287,
+          "median": 4111.5,
+          "min": 2598.0,
+          "n": 70,
+          "p25": 2996.75,
+          "p75": 4520.5,
+          "p90": 4694.299999999999
+        },
+        "turn_ttft_s": {
+          "max": 56.495070312,
+          "mean": 12.434882011600001,
+          "median": 2.133342895,
+          "min": 1.320279785,
+          "n": 70,
+          "p25": 1.78074795525,
+          "p75": 21.5436718745,
+          "p90": 47.2762999997
+        },
+        "turn_wall_s": {
+          "max": 30.7502619,
+          "mean": 6.36644127,
+          "median": 5.27874655,
+          "min": 2.1766999,
+          "n": 70,
+          "p25": 4.237316725,
+          "p75": 6.865877749999999,
+          "p90": 8.84269462
+        }
+      },
+      {
+        "arm": "gpu_only",
+        "context_span": {
+          "max_turn_context": 5425.0,
+          "min_turn_context": 2598.0,
+          "span": 2827.0
+        },
+        "per_turn_growth_tokens_first_step_series": {
+          "max": 498.0,
+          "mean": 168.42,
+          "median": 159.0,
+          "min": 62.0,
+          "n": 50,
+          "p25": 127.0,
+          "p75": 183.0,
+          "p90": 253.70000000000002
+        },
+        "residency": "NON_RESIDENT",
+        "session_id": "afd1aa21-d4b2-4491-81b4-b1b6f4fa681a",
+        "turn_context_tokens": {
+          "max": 5425.0,
+          "mean": 3855.1,
+          "median": 4028.0,
+          "min": 2598.0,
+          "n": 70,
+          "p25": 3004.5,
+          "p75": 4504.25,
+          "p90": 4758.6
+        },
+        "turn_ttft_s": {
+          "max": 7.151869628,
+          "mean": 3.6113020135714287,
+          "median": 3.838343139,
+          "min": 1.868716552,
+          "n": 70,
+          "p25": 2.45917352225,
+          "p75": 4.501744017749999,
+          "p90": 4.8598325683
+        },
+        "turn_wall_s": {
+          "max": 12.5570225,
+          "mean": 5.98404663,
+          "median": 5.8111724,
+          "min": 2.8736766,
+          "n": 70,
+          "p25": 4.450554825,
+          "p75": 7.0070968,
+          "p90": 8.78621617
+        }
+      },
+      {
+        "arm": "gpu_only",
+        "context_span": {
+          "max_turn_context": 5775.0,
+          "min_turn_context": 2598.0,
+          "span": 3177.0
+        },
+        "per_turn_growth_tokens_first_step_series": {
+          "max": 780.0,
+          "mean": 193.41666666666666,
+          "median": 157.0,
+          "min": 71.0,
+          "n": 48,
+          "p25": 132.75,
+          "p75": 183.75,
+          "p90": 249.6
+        },
+        "residency": "RESIDENT",
+        "session_id": "0963168f-9144-4d21-99cf-5a77232dd477",
+        "turn_context_tokens": {
+          "max": 5775.0,
+          "mean": 3864.1470588235293,
+          "median": 4041.5,
+          "min": 2598.0,
+          "n": 68,
+          "p25": 3013.5,
+          "p75": 4519.0,
+          "p90": 4741.1
+        },
+        "turn_ttft_s": {
+          "max": 3.824171142,
+          "mean": 0.7961937771470589,
+          "median": 0.261036132,
+          "min": 0.160711807,
+          "n": 68,
+          "p25": 0.2131053155,
+          "p75": 0.8991306910000001,
+          "p90": 2.518126171100002
+        },
+        "turn_wall_s": {
+          "max": 10.7696097,
+          "mean": 2.4810734308823528,
+          "median": 2.2285596500000002,
+          "min": 0.8087156,
+          "n": 68,
+          "p25": 1.6413366,
+          "p75": 2.75990295,
+          "p90": 3.515641360000001
+        }
+      }
+    ],
+    "pooled_per_turn_growth_first_step": {
+      "max": 780.0,
+      "mean": 180.13636363636363,
+      "median": 155.5,
+      "min": 62.0,
+      "n": 198,
+      "p25": 138.25,
+      "p75": 183.0,
+      "p90": 229.90000000000015
+    },
+    "pooled_turn_context_tokens": {
+      "max": 5775.0,
+      "mean": 3866.9676258992804,
+      "median": 4043.5,
+      "min": 2598.0,
+      "n": 278,
+      "p25": 2993.25,
+      "p75": 4517.5,
+      "p90": 4753.0
+    },
+    "pooled_turn_wall_s": {
+      "max": 98.2870156,
+      "mean": 17.72825198093525,
+      "median": 5.60159685,
+      "min": 0.8087156,
+      "n": 278,
+      "p25": 3.420577225,
+      "p75": 32.399724075,
+      "p90": 60.767295910000016
+    }
+  },
+  "kind": "c3_cloud_cost_curve",
+  "limits": {
+    "curve_conditional_on_escalation_rule": true,
+    "curve_is_sonnet_shaped": true,
+    "escalation_rule_is_one_policy_among_many": true,
+    "local_energy_measured": false,
+    "local_energy_w_estimate": [
+      30,
+      45
+    ],
+    "one_cloud_model_one_price": true
+  },
+  "plot": "derived/bfcl_feasibility/c3_cloud_cost_curve/cost_vs_T.png",
+  "pricing": {
+    "model": {
+      "id": "claude-sonnet-5",
+      "max_tokens": 512,
+      "max_tokens_matches_run_gpu_multi_turn_default": true,
+      "temperature": 0,
+      "temperature_omit_reason": "claude-sonnet-5 rejects temperature (400 deprecated); omitted rather than sent. Recorded 2026-08-02.",
+      "temperature_sent": false
+    },
+    "usd_per_mtok_in": 3.0,
+    "usd_per_mtok_out": 15.0
+  },
+  "quadratic_claim_test": {
+    "fitted_exponent_cost_vs_remaining_turns": 1.026974487407871,
+    "fitted_loglog_exponent_cost_vs_Tplus1": -1.6551345650804128,
+    "linear_fit": {
+      "intercept": 0.25511145,
+      "n": 5,
+      "ok": true,
+      "r2": 0.9798644526439462,
+      "slope": -0.06441607499999999
+    },
+    "linear_r2": 0.9798644526439462,
+    "linear_slope_usd_per_unit_T": -0.06441607499999999,
+    "log_fit": {
+      "intercept": -0.9035012082619729,
+      "n": 5,
+      "ok": true,
+      "r2": 0.7908805384824762,
+      "slope": -1.6551345650804128
+    },
+    "loglog_Tplus1_r2": 0.7908805384824762,
+    "points_used": [
+      {
+        "T": 0,
+        "label": "forced_T=0",
+        "remaining_turns_mean": 3.5,
+        "usd_per_session_mean": 0.2703522,
+        "usd_total": 5.407044000000001
+      },
+      {
+        "T": 1,
+        "label": "forced_T=1",
+        "remaining_turns_mean": 2.5,
+        "usd_per_session_mean": 0.1834137,
+        "usd_total": 3.6682739999999994
+      },
+      {
+        "T": 2,
+        "label": "forced_T=2",
+        "remaining_turns_mean": 1.5,
+        "usd_per_session_mean": 0.1112307,
+        "usd_total": 2.2246140000000008
+      },
+      {
+        "T": 3,
+        "label": "forced_T=3",
+        "remaining_turns_mean": 0.65,
+        "usd_per_session_mean": 0.05284245,
+        "usd_total": 1.0568489999999997
+      },
+      {
+        "T": 4,
+        "label": "forced_T=4",
+        "remaining_turns_mean": 0.2,
+        "usd_per_session_mean": 0.01355745,
+        "usd_total": 0.271149
+      }
+    ],
+    "predicted": "quadratic (exponent 2) because cloud context compounds per step",
+    "remain_fit": {
+      "intercept": -2.5980318997817737,
+      "n": 5,
+      "ok": true,
+      "r2": 0.9974560988888902,
+      "slope": 1.026974487407871
+    },
+    "remaining_turns_r2": 0.9974560988888902,
+    "verdict": "closer to linear in remaining cloud turns (fitted exponent 1.027); quadratic claim not supported"
+  },
+  "sources": {
+    "c2_ttft_limit": {
+      "limit_tokens": 10000,
+      "session_id": "62395fdb-1899-415f-b708-6adc81a24dda"
+    },
+    "cloud_report": "derived/bfcl_feasibility/cloud_multi_turn_report.json",
+    "cloud_spend_usd": 5.407044000000001,
+    "x2_cells": [
+      {
+        "arm": "cpu-p",
+        "residency": "NON_RESIDENT",
+        "seal": "derived/bfcl_feasibility/x2_feasibility_table/sealed_cb781dbf-3486-4fbc-a69a-34026f801abe",
+        "session_id": "cb781dbf-3486-4fbc-a69a-34026f801abe"
+      },
+      {
+        "arm": "cpu-p",
+        "residency": "RESIDENT",
+        "seal": "derived/bfcl_feasibility/x2_feasibility_table/sealed_9fdedb46-3318-4abc-a56f-50b7d23d25ca",
+        "session_id": "9fdedb46-3318-4abc-a56f-50b7d23d25ca"
+      },
+      {
+        "arm": "gpu_only",
+        "residency": "NON_RESIDENT",
+        "seal": "derived/bfcl_feasibility/x2_feasibility_table/sealed_afd1aa21-d4b2-4491-81b4-b1b6f4fa681a",
+        "session_id": "afd1aa21-d4b2-4491-81b4-b1b6f4fa681a"
+      },
+      {
+        "arm": "gpu_only",
+        "residency": "RESIDENT",
+        "seal": "derived/bfcl_feasibility/x2_feasibility_table/sealed_0963168f-9144-4d21-99cf-5a77232dd477",
+        "session_id": "0963168f-9144-4d21-99cf-5a77232dd477"
+      }
+    ]
+  },
+  "spread": {
+    "cheapest": {
+      "label": "gpu_only_NON_RESIDENT",
+      "usd_per_completed_task": 0.0
+    },
+    "hardware_model_note": "Identical Platform A hardware and Qwen3-4B-int4-ov local model; cloud bill is Sonnet at 3/15. Spread is configuration-only.",
+    "most_expensive": {
+      "label": "cpu-p_NON_RESIDENT",
+      "usd_per_completed_task": 0.4159264615384616
+    },
+    "ratio_expensive_over_cheap": null,
+    "spread_usd_per_completed_task": 0.4159264615384616
+  }
+}

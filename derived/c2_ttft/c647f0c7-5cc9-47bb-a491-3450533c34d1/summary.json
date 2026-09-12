@@ -1,0 +1,688 @@
+{
+  "abort_reason": null,
+  "arm_results": [
+    {
+      "arm_id": "gpu_only_f16",
+      "high": 12000,
+      "low": 8000,
+      "low_probe": {
+        "decode_slo_ok": true,
+        "decode_tok_s_median": 20.867593269354185,
+        "failure_classification": {
+          "base": {
+            "class": "exception_at_generate",
+            "detail": "exception:RuntimeError",
+            "exception_message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of syst",
+            "exception_type": "RuntimeError",
+            "failure_mode_raw": "exception:RuntimeError",
+            "phase": "failed"
+          },
+          "class": "exception_at_generate",
+          "exception_message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.\n\n\n",
+          "exception_type": "RuntimeError",
+          "failure_kind": "memory_wall",
+          "failure_mode_raw": "exception:RuntimeError",
+          "verbatim": "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version."
+        },
+        "failure_kind": "memory_wall",
+        "generate_ok": false,
+        "n_tokens": 8000,
+        "pass": false,
+        "prefill_s_median": null,
+        "repeats": [
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_f16",
+            "completed": true,
+            "decode_tok_s": 21.090814643501638,
+            "ended_utc": "2026-09-08T23:26:41.068527+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 8000,
+            "outcome": "pass",
+            "prefill_s": 7.383976562,
+            "r_prefill_tok_s": 1083.427057606091,
+            "repeat_index": 0,
+            "started_utc": "2026-09-08T23:26:18.237680+00:00",
+            "verbatim_error": null,
+            "wall_s": 7.7158746000000065
+          },
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_f16",
+            "completed": true,
+            "decode_tok_s": 20.64437189520673,
+            "ended_utc": "2026-09-08T23:27:25.038416+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 8000,
+            "outcome": "pass",
+            "prefill_s": 6.885373535,
+            "r_prefill_tok_s": 1161.8832238126352,
+            "repeat_index": 1,
+            "started_utc": "2026-09-08T23:27:02.919502+00:00",
+            "verbatim_error": null,
+            "wall_s": 7.224448999999993
+          },
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_f16",
+            "completed": false,
+            "decode_tok_s": null,
+            "ended_utc": "2026-09-08T23:28:06.849370+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "exception_at_generate",
+                "detail": "exception:RuntimeError",
+                "exception_message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of syst",
+                "exception_type": "RuntimeError",
+                "failure_mode_raw": "exception:RuntimeError",
+                "phase": "failed"
+              },
+              "class": "exception_at_generate",
+              "exception_message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.\n\n\n",
+              "exception_type": "RuntimeError",
+              "failure_kind": "memory_wall",
+              "failure_mode_raw": "exception:RuntimeError",
+              "verbatim": "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version."
+            },
+            "failure_kind": "memory_wall",
+            "n_tokens": 8000,
+            "outcome": "fail",
+            "prefill_s": null,
+            "r_prefill_tok_s": null,
+            "repeat_index": 2,
+            "started_utc": "2026-09-08T23:27:46.892161+00:00",
+            "verbatim_error": "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.",
+            "wall_s": null
+          }
+        ],
+        "verbatim_error": "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version."
+      },
+      "note": "low=8000 median prefill not under 10.0s SLO",
+      "status": "REFUSED_LOW_OVER_SLO"
+    },
+    {
+      "arm_id": "gpu_only_u8",
+      "ceiling_n_cached": 9750,
+      "failure_kind_at_wall": null,
+      "first_fail": {
+        "decode_slo_ok": true,
+        "decode_tok_s_median": 20.424712165040336,
+        "failure_classification": null,
+        "failure_kind": null,
+        "generate_ok": true,
+        "n_tokens": 10000,
+        "pass": false,
+        "prefill_s_median": 10.078882812,
+        "repeats": [
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_u8",
+            "completed": true,
+            "decode_tok_s": 20.445386445827236,
+            "ended_utc": "2026-09-08T23:33:41.302534+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 10000,
+            "outcome": "pass",
+            "prefill_s": 10.103576171,
+            "r_prefill_tok_s": 989.7485633554887,
+            "repeat_index": 0,
+            "started_utc": "2026-09-08T23:33:15.666319+00:00",
+            "verbatim_error": null,
+            "wall_s": 10.445951700000023
+          },
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_u8",
+            "completed": true,
+            "decode_tok_s": 20.424712165040336,
+            "ended_utc": "2026-09-08T23:34:28.906697+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 10000,
+            "outcome": "pass",
+            "prefill_s": 10.078882812,
+            "r_prefill_tok_s": 992.1734567737923,
+            "repeat_index": 1,
+            "started_utc": "2026-09-08T23:34:03.119170+00:00",
+            "verbatim_error": null,
+            "wall_s": 10.42160489999992
+          },
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_u8",
+            "completed": true,
+            "decode_tok_s": 20.06712021703007,
+            "ended_utc": "2026-09-08T23:35:16.676849+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 10000,
+            "outcome": "pass",
+            "prefill_s": 9.868484375,
+            "r_prefill_tok_s": 1013.3268311528335,
+            "repeat_index": 2,
+            "started_utc": "2026-09-08T23:34:50.738165+00:00",
+            "verbatim_error": null,
+            "wall_s": 10.217313699999977
+          }
+        ],
+        "verbatim_error": null
+      },
+      "first_slo_fail": {
+        "decode_slo_ok": true,
+        "decode_tok_s_median": 20.424712165040336,
+        "failure_classification": null,
+        "failure_kind": null,
+        "generate_ok": true,
+        "n_tokens": 10000,
+        "pass": false,
+        "prefill_s_median": 10.078882812,
+        "repeats": [
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_u8",
+            "completed": true,
+            "decode_tok_s": 20.445386445827236,
+            "ended_utc": "2026-09-08T23:33:41.302534+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 10000,
+            "outcome": "pass",
+            "prefill_s": 10.103576171,
+            "r_prefill_tok_s": 989.7485633554887,
+            "repeat_index": 0,
+            "started_utc": "2026-09-08T23:33:15.666319+00:00",
+            "verbatim_error": null,
+            "wall_s": 10.445951700000023
+          },
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_u8",
+            "completed": true,
+            "decode_tok_s": 20.424712165040336,
+            "ended_utc": "2026-09-08T23:34:28.906697+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 10000,
+            "outcome": "pass",
+            "prefill_s": 10.078882812,
+            "r_prefill_tok_s": 992.1734567737923,
+            "repeat_index": 1,
+            "started_utc": "2026-09-08T23:34:03.119170+00:00",
+            "verbatim_error": null,
+            "wall_s": 10.42160489999992
+          },
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_u8",
+            "completed": true,
+            "decode_tok_s": 20.06712021703007,
+            "ended_utc": "2026-09-08T23:35:16.676849+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 10000,
+            "outcome": "pass",
+            "prefill_s": 9.868484375,
+            "r_prefill_tok_s": 1013.3268311528335,
+            "repeat_index": 2,
+            "started_utc": "2026-09-08T23:34:50.738165+00:00",
+            "verbatim_error": null,
+            "wall_s": 10.217313699999977
+          }
+        ],
+        "verbatim_error": null
+      },
+      "first_slo_fail_n": 10000,
+      "highest_slo_ok_n": 9750,
+      "search": {
+        "high_init": 12000,
+        "low_init": 8000,
+        "resolution": 250
+      },
+      "status": "complete",
+      "ttft_limit_n": 9750,
+      "verbatim_at_wall": null
+    },
+    {
+      "arm_id": "gpu_only_u4",
+      "ceiling_n_cached": 9750,
+      "failure_kind_at_wall": null,
+      "first_fail": {
+        "decode_slo_ok": true,
+        "decode_tok_s_median": 19.82913225405428,
+        "failure_classification": null,
+        "failure_kind": null,
+        "generate_ok": true,
+        "n_tokens": 10000,
+        "pass": false,
+        "prefill_s_median": 10.072608398,
+        "repeats": [
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_u4",
+            "completed": true,
+            "decode_tok_s": 19.851854683635022,
+            "ended_utc": "2026-09-08T23:48:33.031032+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 10000,
+            "outcome": "pass",
+            "prefill_s": 10.34042871,
+            "r_prefill_tok_s": 967.0778920732001,
+            "repeat_index": 0,
+            "started_utc": "2026-09-08T23:48:06.767657+00:00",
+            "verbatim_error": null,
+            "wall_s": 10.693040599999904
+          },
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_u4",
+            "completed": true,
+            "decode_tok_s": 19.82913225405428,
+            "ended_utc": "2026-09-08T23:49:20.636028+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 10000,
+            "outcome": "pass",
+            "prefill_s": 9.887514648,
+            "r_prefill_tok_s": 1011.3765042080371,
+            "repeat_index": 1,
+            "started_utc": "2026-09-08T23:48:54.777898+00:00",
+            "verbatim_error": null,
+            "wall_s": 10.240530600000056
+          },
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_u4",
+            "completed": true,
+            "decode_tok_s": 19.823469062795358,
+            "ended_utc": "2026-09-08T23:50:08.444303+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 10000,
+            "outcome": "pass",
+            "prefill_s": 10.072608398,
+            "r_prefill_tok_s": 992.79149996396,
+            "repeat_index": 2,
+            "started_utc": "2026-09-08T23:49:42.465125+00:00",
+            "verbatim_error": null,
+            "wall_s": 10.425725199999988
+          }
+        ],
+        "verbatim_error": null
+      },
+      "first_slo_fail": {
+        "decode_slo_ok": true,
+        "decode_tok_s_median": 19.82913225405428,
+        "failure_classification": null,
+        "failure_kind": null,
+        "generate_ok": true,
+        "n_tokens": 10000,
+        "pass": false,
+        "prefill_s_median": 10.072608398,
+        "repeats": [
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_u4",
+            "completed": true,
+            "decode_tok_s": 19.851854683635022,
+            "ended_utc": "2026-09-08T23:48:33.031032+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 10000,
+            "outcome": "pass",
+            "prefill_s": 10.34042871,
+            "r_prefill_tok_s": 967.0778920732001,
+            "repeat_index": 0,
+            "started_utc": "2026-09-08T23:48:06.767657+00:00",
+            "verbatim_error": null,
+            "wall_s": 10.693040599999904
+          },
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_u4",
+            "completed": true,
+            "decode_tok_s": 19.82913225405428,
+            "ended_utc": "2026-09-08T23:49:20.636028+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 10000,
+            "outcome": "pass",
+            "prefill_s": 9.887514648,
+            "r_prefill_tok_s": 1011.3765042080371,
+            "repeat_index": 1,
+            "started_utc": "2026-09-08T23:48:54.777898+00:00",
+            "verbatim_error": null,
+            "wall_s": 10.240530600000056
+          },
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_u4",
+            "completed": true,
+            "decode_tok_s": 19.823469062795358,
+            "ended_utc": "2026-09-08T23:50:08.444303+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 10000,
+            "outcome": "pass",
+            "prefill_s": 10.072608398,
+            "r_prefill_tok_s": 992.79149996396,
+            "repeat_index": 2,
+            "started_utc": "2026-09-08T23:49:42.465125+00:00",
+            "verbatim_error": null,
+            "wall_s": 10.425725199999988
+          }
+        ],
+        "verbatim_error": null
+      },
+      "first_slo_fail_n": 10000,
+      "highest_slo_ok_n": 9750,
+      "search": {
+        "high_init": 12000,
+        "low_init": 8000,
+        "resolution": 250
+      },
+      "status": "complete",
+      "ttft_limit_n": 9750,
+      "verbatim_at_wall": null
+    }
+  ],
+  "canaries": [
+    {
+      "after_probe_count": -1,
+      "arm_id": "gpu_only_f16",
+      "available_mb_start": 6866.0,
+      "canary_index": 0,
+      "classification": "OK",
+      "delta": 400,
+      "drift_tripped": false,
+      "execute_error": null,
+      "execute_ok": true,
+      "gate_armed": false,
+      "is_canary": true,
+      "mode": "RESIDENT",
+      "n_cached": 4000,
+      "raw_classification": "OK",
+      "rel_drift_t1": null,
+      "rel_drift_t2": null,
+      "threshold_t1": null,
+      "threshold_t2": null,
+      "trip_detail": null,
+      "turn1_prefill_s": 2.579661865,
+      "turn2_prefill_s": 1.059651123,
+      "utc": "2026-09-08T23:25:57.250648+00:00"
+    }
+  ],
+  "canary": {
+    "abort_on_trip": "FAIL_CANARY_DRIFT",
+    "calibration_c": 3,
+    "canary_every_n": 66,
+    "canary_gate": {
+      "armed": false,
+      "calibration_c": 3,
+      "calibration_complete": false,
+      "derivation_applied": null,
+      "early_max_rel_t1": null,
+      "early_max_rel_t2": null,
+      "fixed_cell": {
+        "arm": "gpu_only_f16",
+        "delta": 400,
+        "mode": "RESIDENT",
+        "n_cached": 4000
+      },
+      "onset_s": 657.0,
+      "protocol": "docs/CANARY_PROTOCOL.md",
+      "ref_turn1_prefill_s": null,
+      "ref_turn2_prefill_s": null,
+      "rel_drift_floor": 0.05,
+      "threshold_t1": null,
+      "threshold_t2": null
+    },
+    "criterion_path": "ttft_slo",
+    "enabled": true,
+    "enforcement": "CanaryDriftAbort exception; session status FAIL_CANARY_DRIFT. Does not return a soft bool that a caller can ignore (Invoke-DriftCanary Write-Output bug class).",
+    "fixed_cell": {
+      "arm": "gpu_only_f16",
+      "delta": 400,
+      "mode": "RESIDENT",
+      "n_cached": 4000
+    },
+    "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+    "n_canaries": 1,
+    "n_derivation": {
+      "derivable": true,
+      "derivation": "N=floor(onset_s/mean_probe_wall_s)=floor(657.0/9.9335)=66; onset_s=657.0 from protocol session 7f569929; mean_probe_wall_s from THIS run (38 probes).",
+      "mean_probe_wall_s": 9.933526036842103,
+      "n": 66,
+      "n_probes_in_mean": 38,
+      "onset_s": 657.0
+    },
+    "onset_s": 657.0,
+    "rel_drift_floor": 0.05
+  },
+  "criterion": "ttft_slo",
+  "ended_utc": "2026-09-08T23:57:11.553402+00:00",
+  "kind": "c2_ttft_bound_limit",
+  "n_probes": 39,
+  "per_probe_medians": {
+    "gpu_only_f16": [],
+    "gpu_only_u4": [],
+    "gpu_only_u8": []
+  },
+  "pre_registered_predictions": {
+    "amended_utc_note": "PRE-DATA amendment before any C-2 probe: ordering claim withdrawn; replaced by turn-1 agreement within resolution. (AM-038)",
+    "coarse_bracket": {
+      "n_fail_side": 12000,
+      "n_ok_side": 8000,
+      "note": "All three arms under SLO at 8000 (~7.1-7.2 s) and over at 12000 (~13.5 s) on sealed turn-1 medians."
+    },
+    "primary_prediction": {
+      "claim": "The three turn-1 TTFT limits AGREE within the 250-token resolution. KV precision does not move the cold-start context limit.",
+      "consequence_if_holds": "KV precision affects neither capability (memory does not bind, C-1) nor the cold-start SLO limit. Its only remaining value on this hardware is the headroom it frees, which nothing needs. That makes it the weakest of the six axes on this machine, and it should be reported that way rather than on its nominal purpose.",
+      "falsified_if": [
+        "any pair of TTFT limits differs by more than 250 tokens"
+      ],
+      "order": "f16 ~= u8 ~= u4 (within +/- 250 tokens)",
+      "status": "ACTIVE"
+    },
+    "record_note": "Both withdrawn and replacement predictions stay in the record.",
+    "sealed_41e419bd_turn1_prefill_median_s": {
+      "gpu_only_f16": {
+        "8000": 7.1832,
+        "12000": 13.5377
+      },
+      "gpu_only_u4": {
+        "8000": 7.1324,
+        "12000": 13.5001
+      },
+      "gpu_only_u8": {
+        "8000": 7.1326,
+        "12000": 13.5273
+      }
+    },
+    "separate_experiment_not_c2": {
+      "displacing": true,
+      "name": "turn2_delta_prefill_ttft_limit",
+      "note": "The turn-2 delta-prefill limit binds under RESIDENT and is where the 15-27% f16 advantage lives. At n=12,000 turn-2 was roughly 0.16 of turn-1, so its 10 s crossing sits well above 12,000 and needs a wider search. There the ordering f16 > u8 >= u4 is still the prediction, and it matters more, because residency is the configuration the workload actually runs in. Recorded here so it is not silently folded into C-2.",
+      "prediction_if_run": "f16 > u8 >= u4",
+      "status": "NOT_STARTED"
+    },
+    "slo": {
+      "decode_tok_s_min": 6.0,
+      "pass_uses_median_of_repeats": true,
+      "prefill_s_max": 10.0,
+      "repeats": 3
+    },
+    "source": "docs/README_characterizations.md Finding 2 / sealed 41e419bd",
+    "withdrawn_prediction": {
+      "claim": "TTFT-bound limit orders f16 > u8 >= u4. Prefill is compute-bound; quantized arms pay dequantization, so f16 reaches a higher n before crossing the 10 s SLO.",
+      "falsified_if_when_active": [
+        "the three TTFT limits agree within the 250-token resolution",
+        "u4 exceeds f16"
+      ],
+      "order": "f16 > u8 >= u4",
+      "status": "WITHDRAWN",
+      "withdrawal_reason": "That ordering was inferred from the 15-27% f16 advantage in 41e419bd Finding 2, which is a TURN-2 DELTA PREFILL measurement. C-2 bisects on TURN-1 bulk prefill. Finding 2's direct statement about turn-1 is that arms agree within 1%.",
+      "withdrawn_before_any_probe": true
+    }
+  },
+  "primary_claim_eval": {
+    "active_claim": "turn1_limits_agree_within_resolution",
+    "evaluable": false,
+    "limits": {
+      "gpu_only_f16": null,
+      "gpu_only_u4": 9750,
+      "gpu_only_u8": 9750
+    },
+    "reason": "one or more arms did not complete with a TTFT limit"
+  },
+  "session_id": "c647f0c7-5cc9-47bb-a491-3450533c34d1",
+  "status": "complete",
+  "ttft_limits": {
+    "gpu_only_f16": null,
+    "gpu_only_u4": 9750,
+    "gpu_only_u8": 9750
+  }
+}

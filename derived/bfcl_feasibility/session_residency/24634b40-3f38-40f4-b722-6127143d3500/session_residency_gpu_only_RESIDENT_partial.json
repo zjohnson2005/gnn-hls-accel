@@ -1,0 +1,5733 @@
+[
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      307,
+      512,
+      512,
+      508,
+      430,
+      512
+    ],
+    "completion_tokens_sum": 2781,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 4193,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 4193,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 30,
+        "input_kind": "delta_continuation",
+        "n_messages": 4,
+        "prompt_tokens": 4539,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 633,
+        "generate_input_tokens": 18,
+        "input_kind": "delta_continuation",
+        "n_messages": 6,
+        "prompt_tokens": 4826,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 547,
+        "generate_input_tokens": 25,
+        "input_kind": "delta_continuation",
+        "n_messages": 8,
+        "prompt_tokens": 5373,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 19,
+        "input_kind": "delta_continuation",
+        "n_messages": 10,
+        "prompt_tokens": 5909,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": 131,
+        "generate_input_tokens": 37,
+        "input_kind": "delta_continuation",
+        "n_messages": 12,
+        "prompt_tokens": 5504,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 3
+      }
+    ],
+    "context_growth_delta_tokens": 1311,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      633,
+      547,
+      131
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_0",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [
+        [
+          "mkdir(dir_name='temp')",
+          "mv(source='document/final_report.pdf',destination='document/temp/final_report.pdf')"
+        ]
+      ],
+      [],
+      [
+        [
+          "sort(file_name='final_report.pdf')"
+        ]
+      ],
+      []
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, the user wants to move 'final_report.pdf' from the 'document' directory to a 'temp' directory within the 'document' directory. They also mentioned creating the 'temp' directory if it doesn't exist.\n\nFirst, I need to check if the 'temp' directory exists in the 'document' directory. If i",
+        "<think>\nOkay, the user tried to move 'final_report.pdf' to the 'temp' directory but got an error saying the source file wasn't found. Let me figure out why.\n\nFirst, the user mentioned moving 'final_report.pdf' within the 'document' directory to 'temp'. The initial attempt used 'mv' with source as 'd"
+      ],
+      [
+        "<think>\nOkay, the user wants to perform a detailed search using grep to find sections in a file related to 'budget analysis'. Let me recall the available functions.\n\nThe 'grep' function allows searching for patterns in files. The parameters required are 'file_name' and 'pattern'. The user mentioned "
+      ],
+      [
+        "<think>\nOkay, the user wants to sort the 'final_report.pdf' by line after identifying the 'budget analysis' content. Let me break down the steps needed here.\n\nFirst, they used the 'grep' function to search for 'budget analysis' in the file. That part is done. Now, they need to sort the 'final_report",
+        "<think>\nOkay, the user tried to sort 'final_report.pdf' but got an error saying the file isn't found. Let me think about why that happened.\n\nFirst, the user previously tried to move 'final_report.pdf' to the 'temp' directory. The error message from the 'mv' command was \"mv: cannot move 'document/fin"
+      ],
+      [
+        "<think>\nOkay, the user wants to move 'previous_report.pdf' from the 'document' directory to the 'temp' directory. They also mentioned having the 'final report' there, so maybe they want to compare 'final_report.pdf' with 'previous_report.pdf'.\n\nFirst, I need to check if the 'temp' directory exists. "
+      ]
+    ],
+    "n_completed_turns": 4,
+    "n_user_turns": 4,
+    "prompt_tokens_all_steps": [
+      4193,
+      4539,
+      4826,
+      5373,
+      5909,
+      5504
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      4193,
+      4826,
+      5373,
+      5504
+    ],
+    "prompt_tokens_sum": 30344,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "error_type": "multi_turn:instance_state_mismatch",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 1311,
+      "n_turns_slo_ok": 4,
+      "n_turns_slo_scored": 4,
+      "per_turn_accuracy": 0.0,
+      "per_turn_accuracy_correct": 0,
+      "per_turn_accuracy_n": 4,
+      "total_latency_s": 111.12667759999749,
+      "turn_count": 4
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 28.760649106033586,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 307,
+        "last_wall_s": 18.5032447,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 3,
+          "model_n": 2
+        },
+        "prompt_tokens": 4193,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 28.760649106033586,
+            "error": null,
+            "generate_input_tokens": 4193,
+            "generated_tokens": 307,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 4193,
+            "step": 0,
+            "ttft_s": 2.899582763,
+            "turn": 0,
+            "wall_s": 13.5391201
+          },
+          {
+            "decode_tok_s": 28.02772409861163,
+            "error": null,
+            "generate_input_tokens": 30,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4539,
+            "step": 1,
+            "ttft_s": 0.271296997,
+            "turn": 0,
+            "wall_s": 18.5032447
+          }
+        ],
+        "ttft_s": 2.899582763,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 26.475756453664836,
+        "delta_tokens_vs_prev_turn": 633,
+        "generated_tokens": 512,
+        "last_wall_s": 20.234842,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 2,
+          "model_n": 0
+        },
+        "prompt_tokens": 4826,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.475756453664836,
+            "error": null,
+            "generate_input_tokens": 18,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4826,
+            "step": 0,
+            "ttft_s": 0.934165893,
+            "turn": 1,
+            "wall_s": 20.234842
+          }
+        ],
+        "ttft_s": 0.934165893,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 25.273761822567348,
+        "delta_tokens_vs_prev_turn": 547,
+        "generated_tokens": 508,
+        "last_wall_s": 17.6424692,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 1
+        },
+        "prompt_tokens": 5373,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.273761822567348,
+            "error": null,
+            "generate_input_tokens": 25,
+            "generated_tokens": 508,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5373,
+            "step": 0,
+            "ttft_s": 0.213105499,
+            "turn": 2,
+            "wall_s": 20.2734354
+          },
+          {
+            "decode_tok_s": 24.652429350730504,
+            "error": null,
+            "generate_input_tokens": 19,
+            "generated_tokens": 430,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5909,
+            "step": 1,
+            "ttft_s": 0.240533111,
+            "turn": 2,
+            "wall_s": 17.6424692
+          }
+        ],
+        "ttft_s": 0.213105499,
+        "turn": 2
+      },
+      {
+        "decode_tok_s": 25.231380952295353,
+        "delta_tokens_vs_prev_turn": 131,
+        "generated_tokens": 512,
+        "last_wall_s": 20.7769283,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 4,
+          "model_n": 0
+        },
+        "prompt_tokens": 5504,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.231380952295353,
+            "error": null,
+            "generate_input_tokens": 37,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5504,
+            "step": 0,
+            "ttft_s": 0.524370544,
+            "turn": 3,
+            "wall_s": 20.7769283
+          }
+        ],
+        "ttft_s": 0.524370544,
+        "turn": 3
+      }
+    ],
+    "wall_s": 111.12667759999749
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      512,
+      453,
+      455,
+      358,
+      325,
+      512
+    ],
+    "completion_tokens_sum": 2615,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 2609,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 2609,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 543,
+        "generate_input_tokens": 21,
+        "input_kind": "delta_continuation",
+        "n_messages": 3,
+        "prompt_tokens": 3152,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 49,
+        "input_kind": "delta_continuation",
+        "n_messages": 7,
+        "prompt_tokens": 3663,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 223,
+        "generate_input_tokens": 16,
+        "input_kind": "delta_continuation",
+        "n_messages": 9,
+        "prompt_tokens": 3375,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 18,
+        "input_kind": "delta_continuation",
+        "n_messages": 11,
+        "prompt_tokens": 3760,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": 163,
+        "generate_input_tokens": 12,
+        "input_kind": "delta_continuation",
+        "n_messages": 13,
+        "prompt_tokens": 3538,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 3
+      }
+    ],
+    "context_growth_delta_tokens": 929,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      543,
+      223,
+      163
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_1",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [],
+      [
+        [
+          "cd(folder='workspace')",
+          "mkdir(dir_name='archive')",
+          "mv(source='log.txt',destination='archive')"
+        ]
+      ],
+      [
+        [
+          "grep(file_name='log.txt',pattern='Error')"
+        ]
+      ],
+      []
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, let's tackle this step by step. The user is asking two things: first, to check if the current directory is under their name \"Alex\", and second, to list all visible and hidden contents in the current directory.\n\nFirst, I need to figure out how to check if the current directory is named "
+      ],
+      [
+        "<think>\nOkay, the user wants me to go to the workspace directory and move a 'log.txt' file into a new directory called 'archive'. Let me think about how to approach this.\n\nFirst, I need to check if the current directory is the workspace. If not, I should use the `cd` command to navigate to the works",
+        "<think>\nOkay, let's see. The user tried to move 'log.txt' into a new directory called 'archive'. First, they navigated to the 'workspace' directory. Then, they tried to create the 'archive' directory, but got an error saying \"File exists\". Hmm, maybe the 'archive' directory already exists? But the u"
+      ],
+      [
+        "<think>\nOkay, the user wants to check the 'log.txt' file for the keyword 'Error'. Let me think about how to approach this.\n\nFirst, I need to use the available functions. The user mentioned investigating 'log.txt' for 'Error', so the relevant function here is 'grep'. The 'grep' function searches for ",
+        "<think>\nOkay, the user asked to investigate 'log.txt' for the keyword 'Error', so I used the 'grep' function. But the response says 'log.txt: No such file or directory'. That means the file isn't found in the current directory.\n\nWait, maybe the user moved the file earlier? Let me check the previous "
+      ],
+      [
+        "<think>\nOkay, the user wants to see the last 20 lines of the 'log.txt' file. Let me recall the functions available. There's a 'tail' function that displays the end of a file. The parameters require the file name and the number of lines to show, which defaults to 10. The user specified 20 lines, so I"
+      ]
+    ],
+    "n_completed_turns": 4,
+    "n_user_turns": 4,
+    "prompt_tokens_all_steps": [
+      2609,
+      3152,
+      3663,
+      3375,
+      3760,
+      3538
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      2609,
+      3152,
+      3375,
+      3538
+    ],
+    "prompt_tokens_sum": 20097,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model response list is empty for turn 0",
+      "error_type": "multi_turn:empty_turn_model_response",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 929,
+      "n_turns_slo_ok": 4,
+      "n_turns_slo_scored": 4,
+      "per_turn_accuracy": 0.0,
+      "per_turn_accuracy_correct": 0,
+      "per_turn_accuracy_n": 4,
+      "total_latency_s": 114.49729460000526,
+      "turn_count": 4
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 24.945210707765728,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 512,
+        "last_wall_s": 22.2828249,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 2609,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 24.945210707765728,
+            "error": null,
+            "generate_input_tokens": 2609,
+            "generated_tokens": 512,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 2609,
+            "step": 0,
+            "ttft_s": 1.797930786,
+            "turn": 0,
+            "wall_s": 22.2828249
+          }
+        ],
+        "ttft_s": 1.797930786,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 23.939674607169636,
+        "delta_tokens_vs_prev_turn": 543,
+        "generated_tokens": 453,
+        "last_wall_s": 20.2912662,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 2,
+          "model_n": 3
+        },
+        "prompt_tokens": 3152,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 23.939674607169636,
+            "error": null,
+            "generate_input_tokens": 21,
+            "generated_tokens": 453,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3152,
+            "step": 0,
+            "ttft_s": 0.121214202,
+            "turn": 1,
+            "wall_s": 19.0020055
+          },
+          {
+            "decode_tok_s": 23.250521050143,
+            "error": null,
+            "generate_input_tokens": 49,
+            "generated_tokens": 455,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3663,
+            "step": 1,
+            "ttft_s": 0.764822082,
+            "turn": 1,
+            "wall_s": 20.2912662
+          }
+        ],
+        "ttft_s": 0.121214202,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 23.282752533460446,
+        "delta_tokens_vs_prev_turn": 223,
+        "generated_tokens": 358,
+        "last_wall_s": 14.34528,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 2,
+          "model_n": 1
+        },
+        "prompt_tokens": 3375,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 23.282752533460446,
+            "error": null,
+            "generate_input_tokens": 16,
+            "generated_tokens": 358,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3375,
+            "step": 0,
+            "ttft_s": 0.408731994,
+            "turn": 2,
+            "wall_s": 15.7419706
+          },
+          {
+            "decode_tok_s": 22.788650871633067,
+            "error": null,
+            "generate_input_tokens": 18,
+            "generated_tokens": 325,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3760,
+            "step": 1,
+            "ttft_s": 0.127676605,
+            "turn": 2,
+            "wall_s": 14.34528
+          }
+        ],
+        "ttft_s": 0.408731994,
+        "turn": 2
+      },
+      {
+        "decode_tok_s": 22.816915804571824,
+        "delta_tokens_vs_prev_turn": 163,
+        "generated_tokens": 512,
+        "last_wall_s": 22.7502998,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 3538,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 22.816915804571824,
+            "error": null,
+            "generate_input_tokens": 12,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3538,
+            "step": 0,
+            "ttft_s": 0.354634918,
+            "turn": 3,
+            "wall_s": 22.7502998
+          }
+        ],
+        "ttft_s": 0.354634918,
+        "turn": 3
+      }
+    ],
+    "wall_s": 114.49729460000526
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      354,
+      275,
+      187,
+      339,
+      188,
+      233,
+      512,
+      512,
+      281,
+      512
+    ],
+    "completion_tokens_sum": 3393,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 3819,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 3819,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 24,
+        "input_kind": "delta_continuation",
+        "n_messages": 4,
+        "prompt_tokens": 4206,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 23,
+        "input_kind": "delta_continuation",
+        "n_messages": 8,
+        "prompt_tokens": 4513,
+        "residency_mode": "RESIDENT",
+        "step": 2,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 260,
+        "generate_input_tokens": 35,
+        "input_kind": "delta_continuation",
+        "n_messages": 10,
+        "prompt_tokens": 4079,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 5,
+        "input_kind": "delta_continuation",
+        "n_messages": 12,
+        "prompt_tokens": 4432,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 141,
+        "generate_input_tokens": 42,
+        "input_kind": "delta_continuation",
+        "n_messages": 14,
+        "prompt_tokens": 4220,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 22,
+        "input_kind": "delta_continuation",
+        "n_messages": 16,
+        "prompt_tokens": 4484,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": 195,
+        "generate_input_tokens": 54,
+        "input_kind": "delta_continuation",
+        "n_messages": 18,
+        "prompt_tokens": 4415,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 3
+      },
+      {
+        "delta_tokens_vs_prev_turn": 560,
+        "generate_input_tokens": 38,
+        "input_kind": "delta_continuation",
+        "n_messages": 20,
+        "prompt_tokens": 4975,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 4
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 20,
+        "input_kind": "delta_continuation",
+        "n_messages": 22,
+        "prompt_tokens": 5285,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 4
+      }
+    ],
+    "context_growth_delta_tokens": 1466,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      260,
+      141,
+      195,
+      560
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_2",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [
+        [
+          "cd(folder='document')",
+          "touch(file_name='TeamNotes.txt')"
+        ],
+        [
+          "mkdir(dir_name='document')",
+          "cd(folder='document')",
+          "touch(file_name='TeamNotes.txt')"
+        ]
+      ],
+      [
+        [
+          "echo(content='Collaboration leads to success. Innovation ignites growth.',file_name='TeamNotes.txt')"
+        ]
+      ],
+      [
+        [
+          "diff(file_name1='ideas.txt',file_name2='TeamNotes.txt')"
+        ]
+      ],
+      [],
+      [
+        [
+          "cat(file_name='Archive/IdeasArchive.txt')"
+        ]
+      ]
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, the user wants to go into a document folder and create a file called 'TeamNotes.txt' to track fresh ideas. Let me break down what I need to do.\n\nFirst, I need to check if there's a 'document' folder. The user mentioned \"go into document folder,\" so I should use the 'cd' command to chan",
+        "<think>\nOkay, the user tried to navigate into a folder called 'document' but got an error saying it doesn't exist. Hmm, maybe the 'document' folder isn't present. Let me check the available functions again. There's a 'mkdir' function to create directories. So perhaps I need to create the 'document' ",
+        "<think>\nOkay, the user wanted to create a file called 'TeamNotes.txt' in a folder named 'document'. First, I tried to navigate into the 'document' folder using the 'cd' command, but got an error because the folder didn't exist. So, I needed to create the folder first. I used the 'mkdir' command to m"
+      ],
+      [
+        "<think>\nOkay, the user wants to add the phrase \"Collaboration leads to success. Innovation ignites growth.\" into the 'TeamNotes.txt' file in the 'document' directory.\n\nFirst, I need to check if the user is in the correct directory. Previously, they were in the 'document' folder, so I should confirm ",
+        "<think>\nOkay, the user wants to add some text to the 'TeamNotes.txt' file. Let me check the tools available.\n\nThere's the 'echo' function which writes content to a file. The parameters needed are 'content' and 'file_name'. The content is \"Collaboration leads to success. Innovation ignites growth.\" a"
+      ],
+      [
+        "<think>\nOkay, the user is asking to compare the 'ideas.txt' and 'TeamNotes.txt' files line by line to identify differences. Let me check the available tools.\n\nThe 'diff' function can compare two files line by line. The parameters require both file names. The user mentioned both files are in the curr",
+        "<think>\nOkay, the user is trying to compare 'ideas.txt' and 'TeamNotes.txt' using the diff tool, but there's an error saying the files aren't found. Let me figure out why.\n\nFirst, the user mentioned that 'ideas.txt' and 'TeamNotes.txt' are in the current directory. But maybe 'ideas.txt' doesn't exis"
+      ],
+      [
+        "<think>\nOkay, the user wants to copy 'TeamNotes.txt' to an 'Archive' directory inside the 'document' folder, naming it 'IdeasArchive.txt', while keeping the original file intact. Let me break down the steps needed.\n\nFirst, I need to check if the 'Archive' directory exists within the 'document' folde"
+      ],
+      [
+        "<think>\nOkay, the user wants Simona to view the contents of 'IdeasArchive.txt'. Let me think about the steps needed.\n\nFirst, I need to make sure that 'IdeasArchive.txt' exists in the 'Archive' directory within the 'document' folder. Since the previous steps involved copying 'TeamNotes.txt' to 'Archi",
+        "<think>\nOkay, let's see. The user tried to view the file 'IdeasArchive.txt' using the 'cat' command, but got an error about an invalid character. Hmm, maybe the file has some unusual characters or is not a regular text file. Wait, the error message says \"Invalid character\", which might mean the file"
+      ]
+    ],
+    "n_completed_turns": 5,
+    "n_user_turns": 5,
+    "prompt_tokens_all_steps": [
+      3819,
+      4206,
+      4513,
+      4079,
+      4432,
+      4220,
+      4484,
+      4415,
+      4975,
+      5285
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      3819,
+      4079,
+      4220,
+      4415,
+      4975
+    ],
+    "prompt_tokens_sum": 44428,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "error_type": "multi_turn:instance_state_mismatch",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 1156,
+      "n_turns_slo_ok": 5,
+      "n_turns_slo_scored": 5,
+      "per_turn_accuracy": 0.4,
+      "per_turn_accuracy_correct": 2,
+      "per_turn_accuracy_n": 5,
+      "total_latency_s": 135.0343900000007,
+      "turn_count": 5
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 23.22550285602357,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 354,
+        "last_wall_s": 7.1536749,
+        "n_decoded_steps": 2,
+        "n_generations": 3,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 2,
+          "model_n": 5
+        },
+        "prompt_tokens": 3819,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 23.22550285602357,
+            "error": null,
+            "generate_input_tokens": 3819,
+            "generated_tokens": 354,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 3819,
+            "step": 0,
+            "ttft_s": 2.993136718,
+            "turn": 0,
+            "wall_s": 18.1919465
+          },
+          {
+            "decode_tok_s": 26.91484749575073,
+            "error": null,
+            "generate_input_tokens": 24,
+            "generated_tokens": 275,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4206,
+            "step": 1,
+            "ttft_s": 0.186566101,
+            "turn": 0,
+            "wall_s": 10.3668207
+          },
+          {
+            "decode_tok_s": 26.73067620834767,
+            "error": null,
+            "generate_input_tokens": 23,
+            "generated_tokens": 187,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4513,
+            "step": 2,
+            "ttft_s": 0.195377304,
+            "turn": 0,
+            "wall_s": 7.1536749
+          }
+        ],
+        "ttft_s": 2.993136718,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 26.924923023315937,
+        "delta_tokens_vs_prev_turn": 260,
+        "generated_tokens": 339,
+        "last_wall_s": 7.1501629,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": true,
+          "gold_n": 1,
+          "model_n": 1
+        },
+        "prompt_tokens": 4079,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.924923023315937,
+            "error": null,
+            "generate_input_tokens": 35,
+            "generated_tokens": 339,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4079,
+            "step": 0,
+            "ttft_s": 0.482443267,
+            "turn": 1,
+            "wall_s": 13.0358682
+          },
+          {
+            "decode_tok_s": 26.924940254097514,
+            "error": null,
+            "generate_input_tokens": 5,
+            "generated_tokens": 188,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4432,
+            "step": 1,
+            "ttft_s": 0.20492929,
+            "turn": 1,
+            "wall_s": 7.1501629
+          }
+        ],
+        "ttft_s": 0.482443267,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 27.082786464848606,
+        "delta_tokens_vs_prev_turn": 141,
+        "generated_tokens": 233,
+        "last_wall_s": 19.4568664,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": true,
+          "gold_n": 1,
+          "model_n": 1
+        },
+        "prompt_tokens": 4220,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 27.082786464848606,
+            "error": null,
+            "generate_input_tokens": 42,
+            "generated_tokens": 233,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4220,
+            "step": 0,
+            "ttft_s": 0.336078582,
+            "turn": 2,
+            "wall_s": 8.9024054
+          },
+          {
+            "decode_tok_s": 26.4552936746121,
+            "error": null,
+            "generate_input_tokens": 22,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4484,
+            "step": 1,
+            "ttft_s": 0.141261505,
+            "turn": 2,
+            "wall_s": 19.4568664
+          }
+        ],
+        "ttft_s": 0.336078582,
+        "turn": 2
+      },
+      {
+        "decode_tok_s": 26.667000088708953,
+        "delta_tokens_vs_prev_turn": 195,
+        "generated_tokens": 512,
+        "last_wall_s": 19.5739581,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 3,
+          "model_n": 0
+        },
+        "prompt_tokens": 4415,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.667000088708953,
+            "error": null,
+            "generate_input_tokens": 54,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4415,
+            "step": 0,
+            "ttft_s": 0.411697692,
+            "turn": 3,
+            "wall_s": 19.5739581
+          }
+        ],
+        "ttft_s": 0.411697692,
+        "turn": 3
+      },
+      {
+        "decode_tok_s": 26.132819423425303,
+        "delta_tokens_vs_prev_turn": 560,
+        "generated_tokens": 281,
+        "last_wall_s": 20.1062731,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 1
+        },
+        "prompt_tokens": 4975,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.132819423425303,
+            "error": null,
+            "generate_input_tokens": 38,
+            "generated_tokens": 281,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4975,
+            "step": 0,
+            "ttft_s": 0.219648086,
+            "turn": 4,
+            "wall_s": 10.9341445
+          },
+          {
+            "decode_tok_s": 25.598922728399856,
+            "error": null,
+            "generate_input_tokens": 20,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5285,
+            "step": 1,
+            "ttft_s": 0.14449559,
+            "turn": 4,
+            "wall_s": 20.1062731
+          }
+        ],
+        "ttft_s": 0.219648086,
+        "turn": 4
+      }
+    ],
+    "wall_s": 135.0343900000007
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      332,
+      276,
+      512
+    ],
+    "completion_tokens_sum": 1120,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 2629,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 2629,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 35,
+        "input_kind": "delta_continuation",
+        "n_messages": 3,
+        "prompt_tokens": 3005,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 172,
+        "generate_input_tokens": 36,
+        "input_kind": "delta_continuation",
+        "n_messages": 5,
+        "prompt_tokens": 2801,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      }
+    ],
+    "context_growth_delta_tokens": 172,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      172
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_3",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [
+        [
+          "find(path='.',name='test')"
+        ]
+      ],
+      []
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, the user is asking for help finding files with 'test' in their names within any folder in the current directory. Let me check the available tools.\n\nLooking at the functions provided, there's a 'find' function that searches for files or directories under a specific path. The description",
+        "<think>\nOkay, the user asked for files named with 'test' in their names from any folder in the current directory. I used the 'find' function with 'name' set to 'test' and path as default ('.'). The response from the tool gave three matches: test_image1.jpg, test_document.txt, and backup_tests.\n\nNow,"
+      ],
+      [
+        "<think>\nOkay, the user wants to copy the identified files into a 'backup_tests' folder in the same directory. Let me check the available functions.\n\nFirst, I need to confirm the files to copy. The previous step found three files: test_image1.jpg, test_document.txt, and backup_tests. Wait, the third "
+      ]
+    ],
+    "n_completed_turns": 2,
+    "n_user_turns": 2,
+    "prompt_tokens_all_steps": [
+      2629,
+      3005,
+      2801
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      2629,
+      2801
+    ],
+    "prompt_tokens_sum": 8435,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model response list is empty for turn 1",
+      "error_type": "multi_turn:empty_turn_model_response",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 172,
+      "n_turns_slo_ok": 2,
+      "n_turns_slo_scored": 2,
+      "per_turn_accuracy": 0.5,
+      "per_turn_accuracy_correct": 1,
+      "per_turn_accuracy_n": 2,
+      "total_latency_s": 47.66596739999659,
+      "turn_count": 2
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 24.880239775762583,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 332,
+        "last_wall_s": 11.4159447,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": true,
+          "gold_n": 1,
+          "model_n": 1
+        },
+        "prompt_tokens": 2629,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 24.880239775762583,
+            "error": null,
+            "generate_input_tokens": 2629,
+            "generated_tokens": 332,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 2629,
+            "step": 0,
+            "ttft_s": 1.725256591,
+            "turn": 0,
+            "wall_s": 15.0289869
+          },
+          {
+            "decode_tok_s": 24.44466214534622,
+            "error": null,
+            "generate_input_tokens": 35,
+            "generated_tokens": 276,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3005,
+            "step": 1,
+            "ttft_s": 0.166044891,
+            "turn": 0,
+            "wall_s": 11.4159447
+          }
+        ],
+        "ttft_s": 1.725256591,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 24.48287579729613,
+        "delta_tokens_vs_prev_turn": 172,
+        "generated_tokens": 512,
+        "last_wall_s": 21.1809987,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 4,
+          "model_n": 0
+        },
+        "prompt_tokens": 2801,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 24.48287579729613,
+            "error": null,
+            "generate_input_tokens": 36,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 2801,
+            "step": 0,
+            "ttft_s": 0.309267608,
+            "turn": 1,
+            "wall_s": 21.1809987
+          }
+        ],
+        "ttft_s": 0.309267608,
+        "turn": 1
+      }
+    ],
+    "wall_s": 47.66596739999659
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      512,
+      512,
+      512
+    ],
+    "completion_tokens_sum": 1536,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 4394,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 4394,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 550,
+        "generate_input_tokens": 28,
+        "input_kind": "delta_continuation",
+        "n_messages": 3,
+        "prompt_tokens": 4944,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 558,
+        "generate_input_tokens": 36,
+        "input_kind": "delta_continuation",
+        "n_messages": 5,
+        "prompt_tokens": 5502,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      }
+    ],
+    "context_growth_delta_tokens": 1108,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      550,
+      558
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_4",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [],
+      [],
+      []
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, the user is asking to see the list of files in the tmp directory, including hidden ones. Let me check the available functions.\n\nLooking at the tools provided, there's a function called 'ls' which lists the contents of the current directory. The parameters include an option 'a' to show "
+      ],
+      [
+        "<think>\nOkay, the user mentioned that there's a report in their current directory that's cluttered and needs its lines sorted. Let me think about how to approach this.\n\nFirst, I need to figure out which tool to use. The user wants to sort the lines of a file. Looking at the available functions, ther"
+      ],
+      [
+        "<think>\nOkay, the user wants to share the sorted report on social media, tagging 'currenttechtrend' and mentioning Julia from the team. Let me break this down.\n\nFirst, they mentioned sorting the report's lines. Earlier, I suggested using the 'sort' function. But now, they want to post this sorted co"
+      ]
+    ],
+    "n_completed_turns": 3,
+    "n_user_turns": 3,
+    "prompt_tokens_all_steps": [
+      4394,
+      4944,
+      5502
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      4394,
+      4944,
+      5502
+    ],
+    "prompt_tokens_sum": 14840,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model response list is empty for turn 0",
+      "error_type": "multi_turn:empty_turn_model_response",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 1108,
+      "n_turns_slo_ok": 3,
+      "n_turns_slo_scored": 3,
+      "per_turn_accuracy": 0.0,
+      "per_turn_accuracy_correct": 0,
+      "per_turn_accuracy_n": 3,
+      "total_latency_s": 63.63790309999604,
+      "turn_count": 3
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 26.528581281810112,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 512,
+        "last_wall_s": 23.1924391,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 4394,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.528581281810112,
+            "error": null,
+            "generate_input_tokens": 4394,
+            "generated_tokens": 512,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 4394,
+            "step": 0,
+            "ttft_s": 3.930195312,
+            "turn": 0,
+            "wall_s": 23.1924391
+          }
+        ],
+        "ttft_s": 3.930195312,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 26.060892935571147,
+        "delta_tokens_vs_prev_turn": 550,
+        "generated_tokens": 512,
+        "last_wall_s": 19.8185354,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 4944,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.060892935571147,
+            "error": null,
+            "generate_input_tokens": 28,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4944,
+            "step": 0,
+            "ttft_s": 0.210611709,
+            "turn": 1,
+            "wall_s": 19.8185354
+          }
+        ],
+        "ttft_s": 0.210611709,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 25.134153919128902,
+        "delta_tokens_vs_prev_turn": 558,
+        "generated_tokens": 512,
+        "last_wall_s": 20.5582599,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 5502,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.134153919128902,
+            "error": null,
+            "generate_input_tokens": 36,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5502,
+            "step": 0,
+            "ttft_s": 0.227358703,
+            "turn": 2,
+            "wall_s": 20.5582599
+          }
+        ],
+        "ttft_s": 0.227358703,
+        "turn": 2
+      }
+    ],
+    "wall_s": 63.63790309999604
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      512,
+      512,
+      438,
+      198,
+      295,
+      202
+    ],
+    "completion_tokens_sum": 2157,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 4200,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 4200,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 553,
+        "generate_input_tokens": 31,
+        "input_kind": "delta_continuation",
+        "n_messages": 3,
+        "prompt_tokens": 4753,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 571,
+        "generate_input_tokens": 49,
+        "input_kind": "delta_continuation",
+        "n_messages": 5,
+        "prompt_tokens": 5324,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 55,
+        "input_kind": "delta_continuation",
+        "n_messages": 8,
+        "prompt_tokens": 5826,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": 225,
+        "generate_input_tokens": 31,
+        "input_kind": "delta_continuation",
+        "n_messages": 10,
+        "prompt_tokens": 5549,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 3
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 12,
+        "input_kind": "delta_continuation",
+        "n_messages": 12,
+        "prompt_tokens": 5865,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 3
+      }
+    ],
+    "context_growth_delta_tokens": 1665,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      553,
+      571,
+      225
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_5",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [],
+      [],
+      [
+        [
+          "authenticate_twitter(username='dr_smith',password='securePass123')",
+          "post_tweet(content='Managed to archive important data files!',tags=['#DataManagement', '#Efficiency'])"
+        ]
+      ],
+      [
+        [
+          "comment(tweet_id=0,comment_content='Another successful task completed today!')"
+        ]
+      ]
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, let's tackle this problem step by step. The user wants to find a file called `analysis_report.csv` and then move it to an 'archive' directory. If the 'archive' directory doesn't exist, I need to create it first.\n\nFirst, I should check if the `analysis_report.csv` file exists in the cur"
+      ],
+      [
+        "<think>\nOkay, let's see. The user wants to first find and move the 'analysis_report.csv' to the 'archive' directory. Then, after that, display the contents of 'archive_summary.txt' in the current directory, sorted alphabetically.\n\nFirst, I need to make sure that the 'archive' directory exists. If it"
+      ],
+      [
+        "<think>\nOkay, the user wants to craft a tweet saying \"Managed to archive important data files!\" with the hashtags #DataManagement and #Efficiency. Their username is dr_smith and password is securePass123.\n\nFirst, I need to use the TwitterAPI functions. The user mentioned authenticating with their us",
+        "<think>\nOkay, the user wanted to post a tweet with specific content and hashtags. First, I needed to authenticate using their username and password. The authenticate_twitter function was called with \"dr_smith\" and \"securePass123\", which returned a success status. Then, the post_tweet function was us"
+      ],
+      [
+        "<think>\nOkay, the user wants to comment under the tweet they just posted. Let me check the tools available.\n\nThe user already authenticated with Twitter, so the next step is to comment on the tweet. The 'comment' function requires the tweet ID and the comment content. \n\nBut wait, the user hasn't pro",
+        "<think>\nOkay, the user wants to comment under their own tweet. Let me check the tools available. There's a 'comment' function that requires the tweet ID and comment content. \n\nIn the previous step, the tweet was posted with ID 0. So I'll use that ID for the comment. The comment content is \"Another s"
+      ]
+    ],
+    "n_completed_turns": 4,
+    "n_user_turns": 4,
+    "prompt_tokens_all_steps": [
+      4200,
+      4753,
+      5324,
+      5826,
+      5549,
+      5865
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      4200,
+      4753,
+      5324,
+      5549
+    ],
+    "prompt_tokens_sum": 31517,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model response list is empty for turn 0",
+      "error_type": "multi_turn:empty_turn_model_response",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 1349,
+      "n_turns_slo_ok": 4,
+      "n_turns_slo_scored": 4,
+      "per_turn_accuracy": 0.5,
+      "per_turn_accuracy_correct": 2,
+      "per_turn_accuracy_n": 4,
+      "total_latency_s": 86.94563989999006,
+      "turn_count": 4
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 26.59766049426734,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 512,
+        "last_wall_s": 21.6883413,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 2,
+          "model_n": 0
+        },
+        "prompt_tokens": 4200,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.59766049426734,
+            "error": null,
+            "generate_input_tokens": 4200,
+            "generated_tokens": 512,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 4200,
+            "step": 0,
+            "ttft_s": 2.476125244,
+            "turn": 0,
+            "wall_s": 21.6883413
+          }
+        ],
+        "ttft_s": 2.476125244,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 26.334466904790204,
+        "delta_tokens_vs_prev_turn": 553,
+        "generated_tokens": 512,
+        "last_wall_s": 19.6102014,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 2,
+          "model_n": 0
+        },
+        "prompt_tokens": 4753,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.334466904790204,
+            "error": null,
+            "generate_input_tokens": 31,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4753,
+            "step": 0,
+            "ttft_s": 0.205973403,
+            "turn": 1,
+            "wall_s": 19.6102014
+          }
+        ],
+        "ttft_s": 0.205973403,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 25.75689919924162,
+        "delta_tokens_vs_prev_turn": 571,
+        "generated_tokens": 438,
+        "last_wall_s": 8.0512453,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": true,
+          "gold_n": 2,
+          "model_n": 2
+        },
+        "prompt_tokens": 5324,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.75689919924162,
+            "error": null,
+            "generate_input_tokens": 49,
+            "generated_tokens": 438,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5324,
+            "step": 0,
+            "ttft_s": 0.225614303,
+            "turn": 2,
+            "wall_s": 17.1919423
+          },
+          {
+            "decode_tok_s": 25.346929663319187,
+            "error": null,
+            "generate_input_tokens": 55,
+            "generated_tokens": 198,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5826,
+            "step": 1,
+            "ttft_s": 0.279100799,
+            "turn": 2,
+            "wall_s": 8.0512453
+          }
+        ],
+        "ttft_s": 0.225614303,
+        "turn": 2
+      },
+      {
+        "decode_tok_s": 25.508110496735128,
+        "delta_tokens_vs_prev_turn": 225,
+        "generated_tokens": 295,
+        "last_wall_s": 8.1724136,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": true,
+          "gold_n": 1,
+          "model_n": 1
+        },
+        "prompt_tokens": 5549,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.508110496735128,
+            "error": null,
+            "generate_input_tokens": 31,
+            "generated_tokens": 295,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5549,
+            "step": 0,
+            "ttft_s": 0.585732299,
+            "turn": 3,
+            "wall_s": 12.1114782
+          },
+          {
+            "decode_tok_s": 25.367935075784693,
+            "error": null,
+            "generate_input_tokens": 12,
+            "generated_tokens": 202,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5865,
+            "step": 1,
+            "ttft_s": 0.249025299,
+            "turn": 3,
+            "wall_s": 8.1724136
+          }
+        ],
+        "ttft_s": 0.585732299,
+        "turn": 3
+      }
+    ],
+    "wall_s": 86.94563989999006
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      326,
+      224,
+      512,
+      207,
+      512,
+      512,
+      512
+    ],
+    "completion_tokens_sum": 2805,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 2824,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 2824,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 5,
+        "input_kind": "delta_continuation",
+        "n_messages": 3,
+        "prompt_tokens": 3164,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 142,
+        "generate_input_tokens": 46,
+        "input_kind": "delta_continuation",
+        "n_messages": 5,
+        "prompt_tokens": 2966,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 61,
+        "generate_input_tokens": 20,
+        "input_kind": "delta_continuation",
+        "n_messages": 7,
+        "prompt_tokens": 3027,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 8,
+        "input_kind": "delta_continuation",
+        "n_messages": 9,
+        "prompt_tokens": 3251,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": 589,
+        "generate_input_tokens": 22,
+        "input_kind": "delta_continuation",
+        "n_messages": 11,
+        "prompt_tokens": 3616,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 3
+      },
+      {
+        "delta_tokens_vs_prev_turn": 544,
+        "generate_input_tokens": 22,
+        "input_kind": "delta_continuation",
+        "n_messages": 13,
+        "prompt_tokens": 4160,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 4
+      }
+    ],
+    "context_growth_delta_tokens": 1336,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      142,
+      61,
+      589,
+      544
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_6",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [
+        [
+          "touch(file_name='Annual_Report_2023.docx')"
+        ]
+      ],
+      [],
+      [
+        [
+          "cat(file_name='Annual_Report_2023.docx')"
+        ]
+      ],
+      [],
+      []
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, the user wants to create a file named 'Annual_Report_2023.docx' in the communal folder. Let me check the available functions.\n\nLooking at the tools provided, there's a 'touch' function that creates a new file in the current directory. The description says it creates a new file of any e",
+        "<think>\nOkay, the user wanted to create a file called 'Annual_Report_2023.docx' in the communal folder. I used the 'touch' function to create the file, but the response was 'None'. That probably means the file was created successfully, but the system didn't return a confirmation. Let me check the to"
+      ],
+      [
+        "<think>\nOkay, the user wants to add some statistics to the 'Annual_Report_2023.docx' file. Let me see... They mentioned \"Company Earning: 2000 Company Expenditure: 500 Company Name: Gorilla\". \n\nFirst, I need to make sure the file is created. Wait, the user already said they want to put stats in the "
+      ],
+      [
+        "<think>\nOkay, the user wants to see what's inside the 'Annual_Report_2023.docx' file. Let me check the available tools. The 'cat' function can display the contents of a file. Since the user mentioned the file is in the communal folder, I need to make sure the current directory is set to that folder.",
+        "<think>\nOkay, the user asked to look inside 'Annual_Report_2023.docx', so I used the 'cat' function to display its contents. The response came back as empty. Hmm, that's odd. The user mentioned they want to put some statistics in the report, like company earnings and expenditures.\n\nWait, the 'echo' "
+      ],
+      [
+        "<think>\nOkay, the user is asking about the number of words in 'Annual_Report_2023.docx'. Earlier, they tried to write some statistics into the file, but when they checked, the file was empty. Now, they want to know the word count.\n\nFirst, I need to use the 'wc' function. The 'wc' tool counts lines, "
+      ],
+      [
+        "<think>\nOkay, the user wants to store the number of words from 'Annual_Report_2023.docx' into a new file called 'report_word_count.txt'. \n\nFirst, I need to check if the 'wc' function can be used here. The 'wc' tool counts lines, words, and characters. The user is asking for the number of words, so t"
+      ]
+    ],
+    "n_completed_turns": 5,
+    "n_user_turns": 5,
+    "prompt_tokens_all_steps": [
+      2824,
+      3164,
+      2966,
+      3027,
+      3251,
+      3616,
+      4160
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      2824,
+      2966,
+      3027,
+      3616,
+      4160
+    ],
+    "prompt_tokens_sum": 23008,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "error_type": "multi_turn:instance_state_mismatch",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 1336,
+      "n_turns_slo_ok": 5,
+      "n_turns_slo_scored": 5,
+      "per_turn_accuracy": 0.2,
+      "per_turn_accuracy_correct": 1,
+      "per_turn_accuracy_n": 5,
+      "total_latency_s": 118.77782620000653,
+      "turn_count": 5
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 24.452558308393243,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 326,
+        "last_wall_s": 9.3493028,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 2,
+          "model_n": 1
+        },
+        "prompt_tokens": 2824,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 24.452558308393243,
+            "error": null,
+            "generate_input_tokens": 2824,
+            "generated_tokens": 326,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 2824,
+            "step": 0,
+            "ttft_s": 1.865548461,
+            "turn": 0,
+            "wall_s": 15.1565913
+          },
+          {
+            "decode_tok_s": 24.109310182675344,
+            "error": null,
+            "generate_input_tokens": 5,
+            "generated_tokens": 224,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3164,
+            "step": 1,
+            "ttft_s": 0.099763999,
+            "turn": 0,
+            "wall_s": 9.3493028
+          }
+        ],
+        "ttft_s": 1.865548461,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 24.10449898251443,
+        "delta_tokens_vs_prev_turn": 142,
+        "generated_tokens": 512,
+        "last_wall_s": 21.4896486,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 2966,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 24.10449898251443,
+            "error": null,
+            "generate_input_tokens": 46,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 2966,
+            "step": 0,
+            "ttft_s": 0.29028659,
+            "turn": 1,
+            "wall_s": 21.4896486
+          }
+        ],
+        "ttft_s": 0.29028659,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 24.120171125977578,
+        "delta_tokens_vs_prev_turn": 61,
+        "generated_tokens": 207,
+        "last_wall_s": 21.7872893,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": true,
+          "gold_n": 1,
+          "model_n": 1
+        },
+        "prompt_tokens": 3027,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 24.120171125977578,
+            "error": null,
+            "generate_input_tokens": 20,
+            "generated_tokens": 207,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3027,
+            "step": 0,
+            "ttft_s": 0.197645111,
+            "turn": 2,
+            "wall_s": 8.7382147
+          },
+          {
+            "decode_tok_s": 23.578742605792318,
+            "error": null,
+            "generate_input_tokens": 8,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3251,
+            "step": 1,
+            "ttft_s": 0.115226097,
+            "turn": 2,
+            "wall_s": 21.7872893
+          }
+        ],
+        "ttft_s": 0.197645111,
+        "turn": 2
+      },
+      {
+        "decode_tok_s": 23.076534482741874,
+        "delta_tokens_vs_prev_turn": 589,
+        "generated_tokens": 512,
+        "last_wall_s": 22.9670911,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 3616,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 23.076534482741874,
+            "error": null,
+            "generate_input_tokens": 22,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3616,
+            "step": 0,
+            "ttft_s": 0.823384887,
+            "turn": 3,
+            "wall_s": 22.9670911
+          }
+        ],
+        "ttft_s": 0.823384887,
+        "turn": 3
+      },
+      {
+        "decode_tok_s": 26.87232743403881,
+        "delta_tokens_vs_prev_turn": 544,
+        "generated_tokens": 512,
+        "last_wall_s": 19.2031679,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 4,
+          "model_n": 0
+        },
+        "prompt_tokens": 4160,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.87232743403881,
+            "error": null,
+            "generate_input_tokens": 22,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4160,
+            "step": 0,
+            "ttft_s": 0.187323394,
+            "turn": 4,
+            "wall_s": 19.2031679
+          }
+        ],
+        "ttft_s": 0.187323394,
+        "turn": 4
+      }
+    ],
+    "wall_s": 118.77782620000653
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      407,
+      366,
+      512,
+      512
+    ],
+    "completion_tokens_sum": 1797,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 4413,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 4413,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 19,
+        "input_kind": "delta_continuation",
+        "n_messages": 4,
+        "prompt_tokens": 4848,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 144,
+        "generate_input_tokens": 21,
+        "input_kind": "delta_continuation",
+        "n_messages": 6,
+        "prompt_tokens": 4557,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 539,
+        "generate_input_tokens": 17,
+        "input_kind": "delta_continuation",
+        "n_messages": 8,
+        "prompt_tokens": 5096,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      }
+    ],
+    "context_growth_delta_tokens": 683,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      144,
+      539
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_7",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [
+        [
+          "cd(folder='academic_venture')",
+          "mkdir(dir_name='academic_hub')"
+        ]
+      ],
+      [],
+      []
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, let's break down the user's request. They want to directly open the \"academic_venture\" folder and create a new directory called \"academic_hub\" within their current work directory.\n\nFirst, I need to figure out how to navigate to the \"academic_venture\" folder. Since the user mentioned us",
+        "<think>\nOkay, the user wants to create a new directory called \"academic_hub\" inside the \"academic_venture\" folder. Let me check the available functions.\n\nThere's the `cd` function to change directories and `mkdir` to create a new directory. First, I need to navigate into \"academic_venture\" using `cd"
+      ],
+      [
+        "<think>\nOkay, the user wants me to list every project in the `academic_venture` directory that has \"goal\" in its filename. Let me think about how to approach this.\n\nFirst, I need to use the `find` function from the Gorilla file system tools. The `find` function allows searching for files and directo"
+      ],
+      [
+        "<think>\nOkay, the user wants me to list every project in the `academic_venture` directory that has \"goal\" in its filename. Let me think about how to do this using the available tools.\n\nFirst, I need to use the `find` function. The `find` function allows searching for files and directories by name. T"
+      ]
+    ],
+    "n_completed_turns": 3,
+    "n_user_turns": 3,
+    "prompt_tokens_all_steps": [
+      4413,
+      4848,
+      4557,
+      5096
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      4413,
+      4557,
+      5096
+    ],
+    "prompt_tokens_sum": 18914,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model response list is empty for turn 1",
+      "error_type": "multi_turn:empty_turn_model_response",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 683,
+      "n_turns_slo_ok": 3,
+      "n_turns_slo_scored": 3,
+      "per_turn_accuracy": 0.3333333333333333,
+      "per_turn_accuracy_correct": 1,
+      "per_turn_accuracy_n": 3,
+      "total_latency_s": 73.15072180000425,
+      "turn_count": 3
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 26.14800388334207,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 407,
+        "last_wall_s": 14.0873926,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": true,
+          "gold_n": 2,
+          "model_n": 2
+        },
+        "prompt_tokens": 4413,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.14800388334207,
+            "error": null,
+            "generate_input_tokens": 4413,
+            "generated_tokens": 407,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 4413,
+            "step": 0,
+            "ttft_s": 3.827010253,
+            "turn": 0,
+            "wall_s": 19.3540081
+          },
+          {
+            "decode_tok_s": 26.163464523158694,
+            "error": null,
+            "generate_input_tokens": 19,
+            "generated_tokens": 366,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4848,
+            "step": 1,
+            "ttft_s": 0.136640792,
+            "turn": 0,
+            "wall_s": 14.0873926
+          }
+        ],
+        "ttft_s": 3.827010253,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 26.464783711875867,
+        "delta_tokens_vs_prev_turn": 144,
+        "generated_tokens": 512,
+        "last_wall_s": 19.6642593,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 4557,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.464783711875867,
+            "error": null,
+            "generate_input_tokens": 21,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4557,
+            "step": 0,
+            "ttft_s": 0.35558081,
+            "turn": 1,
+            "wall_s": 19.6642593
+          }
+        ],
+        "ttft_s": 0.35558081,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 25.783990251708854,
+        "delta_tokens_vs_prev_turn": 539,
+        "generated_tokens": 512,
+        "last_wall_s": 19.9663274,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 5096,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.783990251708854,
+            "error": null,
+            "generate_input_tokens": 17,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5096,
+            "step": 0,
+            "ttft_s": 0.147827819,
+            "turn": 2,
+            "wall_s": 19.9663274
+          }
+        ],
+        "ttft_s": 0.147827819,
+        "turn": 2
+      }
+    ],
+    "wall_s": 73.15072180000425
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      239,
+      238,
+      378,
+      512,
+      512,
+      492,
+      320,
+      327,
+      162,
+      163
+    ],
+    "completion_tokens_sum": 3343,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 4427,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 4427,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 35,
+        "input_kind": "delta_continuation",
+        "n_messages": 3,
+        "prompt_tokens": 4710,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 197,
+        "generate_input_tokens": 37,
+        "input_kind": "delta_continuation",
+        "n_messages": 5,
+        "prompt_tokens": 4624,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 50,
+        "input_kind": "delta_continuation",
+        "n_messages": 7,
+        "prompt_tokens": 5061,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 414,
+        "generate_input_tokens": 49,
+        "input_kind": "delta_continuation",
+        "n_messages": 9,
+        "prompt_tokens": 5038,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 9,
+        "input_kind": "delta_continuation",
+        "n_messages": 11,
+        "prompt_tokens": 5569,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 236,
+        "input_kind": "delta_continuation",
+        "n_messages": 13,
+        "prompt_tokens": 6306,
+        "residency_mode": "RESIDENT",
+        "step": 2,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": 753,
+        "generate_input_tokens": 13,
+        "input_kind": "delta_continuation",
+        "n_messages": 15,
+        "prompt_tokens": 5791,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 3
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 12,
+        "input_kind": "delta_continuation",
+        "n_messages": 17,
+        "prompt_tokens": 6139,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 3
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 12,
+        "input_kind": "delta_continuation",
+        "n_messages": 19,
+        "prompt_tokens": 6322,
+        "residency_mode": "RESIDENT",
+        "step": 2,
+        "turn": 3
+      }
+    ],
+    "context_growth_delta_tokens": 1895,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      197,
+      414,
+      753
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_8",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [
+        [
+          "grep(file_name='experiment_log.txt',pattern='Anomaly')"
+        ]
+      ],
+      [
+        [
+          "diff(file_name1='experiment_log.txt',file_name2='previous_study_log.txt')"
+        ]
+      ],
+      [
+        [
+          "authenticate_twitter(username='dr_smith',password='securePass123')"
+        ],
+        [
+          "post_tweet(content=\"The comparison between 'experiment_log.txt' and 'previous_study_log.txt' reveals key differences in observational outcomes:\\n\\n**Previous Study Log (previous_study_log.txt):**\\n- Observation A: Normal\\n- Observation B: Normal\\n- Observation C: Anomaly detected\\n\\n**Experiment Log (experiment_log.txt):**\\n- Observation 1: Normal\\n- Observation 2: Anomaly detected\\n- Observation 3: Normal\\n- Observation 4: Anomaly detected\\n\\nKey Findings:\\n1. Deviation in Anomaly Detection: The previous study detected an anomaly in Observation C, while the experiment detected anomalies in Observations 2 and 4. This suggests potential differences in experimental conditions, methodology, or variables.\\n2. New Observations in Experiment: The experiment includes Observations 1 and 3, which are normal, but also identifies anomalies in Observations 2 and 4. This could indicate novel findings or unexpected behavior in the system under the current experimental setup.\")"
+        ]
+      ],
+      [
+        [
+          "comment(tweet_id=1,comment_content='Cheers!')"
+        ],
+        [
+          "comment(tweet_id=1,comment_content='Cheers!')"
+        ]
+      ]
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, the user has a file called 'experiment_log.txt' and they want to extract any line that contains the term 'Anomaly'. Let me check which tool I can use for this.\n\nLooking at the available functions, there's one called 'grep' that searches for patterns in files. The description says it ca",
+        "<think>\nOkay, the user asked to extract lines with the term 'Anomaly' from 'experiment_log.txt'. I used the 'grep' function with the pattern 'Anomaly' and got the matching lines. Now I need to present these lines to the user.\n\nFirst, I'll check the response from the tool. The 'matching_lines' array "
+      ],
+      [
+        "<think>\nOkay, the user wants to compare 'experiment_log.txt' and 'previous_study_log.txt' to find deviations or new discoveries that might affect their hypothesis. Let me think about how to approach this.\n\nFirst, I need to use the tools available. The user mentioned the 'diff' function for comparing",
+        "<think>\nOkay, let's see. The user wants to compare their experiment log with a previous study log to find deviations or new discoveries. The 'diff' tool output shows that the previous study's log has different entries. Specifically, the previous study's log has \"Observation A: Normal\", \"Observation "
+      ],
+      [
+        "<think>\nOkay, the user wants to post a summary of the diff results on their Twitter account. Let me check the available functions.\n\nThe user mentioned using the TwitterAPI tools. The relevant function here is \"post_tweet\". \n\nThe content to be posted is the summary of the diff results. The user provi",
+        "<think>\nOkay, the user wants to post a summary of the diff results on their Twitter account. Let me check the available functions.\n\nFirst, I need to authenticate using the provided username and password. The \"authenticate_twitter\" function is the right tool here. The user gave \"dr_smith\" and \"secure",
+        "<think>\nOkay, the user wants to post a summary of the diff results on their Twitter account. Let me check the available functions.\n\nFirst, I need to authenticate using the provided username and password. The \"authenticate_twitter\" function is the right tool here. The user gave \"dr_smith\" and \"secure"
+      ],
+      [
+        "<think>\nOkay, the user wants me to post a tweet with the comparison between the experiment logs and the previous study, and then add a supportive comment \"Cheers!\" to that tweet.\n\nFirst, I need to check if the tweet was already posted. The previous response shows that the tweet was successfully post",
+        "<think>\nOkay, the user wants to add a comment \"Cheers!\" to their Twitter post. Let me check the tools available.\n\nThere's a function called \"comment\" that requires the tweet ID and the comment content. The previous tweet was posted with ID 1, so I'll use that. The comment content is \"Cheers!\".\n\nI ne",
+        "<think>\nOkay, the user wants to add a comment \"Cheers!\" to their Twitter post. Let me check the tools available.\n\nThere's a function called \"comment\" that requires the tweet ID and the comment content. The previous tweet was posted with ID 1, so I'll use that. The comment content is \"Cheers!\".\n\nI ne"
+      ]
+    ],
+    "n_completed_turns": 4,
+    "n_user_turns": 4,
+    "prompt_tokens_all_steps": [
+      4427,
+      4710,
+      4624,
+      5061,
+      5038,
+      5569,
+      6306,
+      5791,
+      6139,
+      6322
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      4427,
+      4624,
+      5038,
+      5791
+    ],
+    "prompt_tokens_sum": 53987,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model instance for TwitterAPI does not match the state with ground truth instance.",
+      "error_type": "multi_turn:instance_state_mismatch",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 1364,
+      "n_turns_slo_ok": 4,
+      "n_turns_slo_scored": 4,
+      "per_turn_accuracy": 0.5,
+      "per_turn_accuracy_correct": 2,
+      "per_turn_accuracy_n": 4,
+      "total_latency_s": 135.49234360000992,
+      "turn_count": 4
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 26.645070880007335,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 239,
+        "last_wall_s": 9.222574,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": true,
+          "gold_n": 1,
+          "model_n": 1
+        },
+        "prompt_tokens": 4427,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.645070880007335,
+            "error": null,
+            "generate_input_tokens": 4427,
+            "generated_tokens": 239,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 4427,
+            "step": 0,
+            "ttft_s": 0.233638702,
+            "turn": 0,
+            "wall_s": 9.1658724
+          },
+          {
+            "decode_tok_s": 26.27582842007771,
+            "error": null,
+            "generate_input_tokens": 35,
+            "generated_tokens": 238,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4710,
+            "step": 1,
+            "ttft_s": 0.20287741,
+            "turn": 0,
+            "wall_s": 9.222574
+          }
+        ],
+        "ttft_s": 0.233638702,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 26.156007619284704,
+        "delta_tokens_vs_prev_turn": 197,
+        "generated_tokens": 378,
+        "last_wall_s": 20.0624271,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": true,
+          "gold_n": 1,
+          "model_n": 1
+        },
+        "prompt_tokens": 4624,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.156007619284704,
+            "error": null,
+            "generate_input_tokens": 37,
+            "generated_tokens": 378,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4624,
+            "step": 0,
+            "ttft_s": 0.428007812,
+            "turn": 1,
+            "wall_s": 14.8415225
+          },
+          {
+            "decode_tok_s": 25.765465385482717,
+            "error": null,
+            "generate_input_tokens": 50,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5061,
+            "step": 1,
+            "ttft_s": 0.229678405,
+            "turn": 1,
+            "wall_s": 20.0624271
+          }
+        ],
+        "ttft_s": 0.428007812,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 25.839212243344484,
+        "delta_tokens_vs_prev_turn": 414,
+        "generated_tokens": 512,
+        "last_wall_s": 13.830201,
+        "n_decoded_steps": 2,
+        "n_generations": 3,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 2,
+          "model_n": 2
+        },
+        "prompt_tokens": 5038,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.839212243344484,
+            "error": null,
+            "generate_input_tokens": 49,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5038,
+            "step": 0,
+            "ttft_s": 0.81808551,
+            "turn": 2,
+            "wall_s": 20.5942302
+          },
+          {
+            "decode_tok_s": 25.190635905149573,
+            "error": null,
+            "generate_input_tokens": 9,
+            "generated_tokens": 492,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5569,
+            "step": 1,
+            "ttft_s": 0.140219497,
+            "turn": 2,
+            "wall_s": 19.6315893
+          },
+          {
+            "decode_tok_s": 24.1977795428272,
+            "error": null,
+            "generate_input_tokens": 236,
+            "generated_tokens": 320,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 6306,
+            "step": 2,
+            "ttft_s": 0.647173217,
+            "turn": 2,
+            "wall_s": 13.830201
+          }
+        ],
+        "ttft_s": 0.81808551,
+        "turn": 2
+      },
+      {
+        "decode_tok_s": 24.98482109273361,
+        "delta_tokens_vs_prev_turn": 753,
+        "generated_tokens": 327,
+        "last_wall_s": 6.7525385,
+        "n_decoded_steps": 2,
+        "n_generations": 3,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 2
+        },
+        "prompt_tokens": 5791,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 24.98482109273361,
+            "error": null,
+            "generate_input_tokens": 13,
+            "generated_tokens": 327,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5791,
+            "step": 0,
+            "ttft_s": 1.483566772,
+            "turn": 3,
+            "wall_s": 14.5314889
+          },
+          {
+            "decode_tok_s": 24.659849132684954,
+            "error": null,
+            "generate_input_tokens": 12,
+            "generated_tokens": 162,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 6139,
+            "step": 1,
+            "ttft_s": 0.143270492,
+            "turn": 3,
+            "wall_s": 6.672102
+          },
+          {
+            "decode_tok_s": 24.521399743363933,
+            "error": null,
+            "generate_input_tokens": 12,
+            "generated_tokens": 163,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 6322,
+            "step": 2,
+            "ttft_s": 0.146064086,
+            "turn": 3,
+            "wall_s": 6.7525385
+          }
+        ],
+        "ttft_s": 1.483566772,
+        "turn": 3
+      }
+    ],
+    "wall_s": 135.49234360000992
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      363,
+      191,
+      342,
+      512,
+      512
+    ],
+    "completion_tokens_sum": 1920,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 2687,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 2687,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 13,
+        "input_kind": "delta_continuation",
+        "n_messages": 3,
+        "prompt_tokens": 3072,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 116,
+        "generate_input_tokens": 41,
+        "input_kind": "delta_continuation",
+        "n_messages": 5,
+        "prompt_tokens": 2803,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 22,
+        "input_kind": "delta_continuation",
+        "n_messages": 7,
+        "prompt_tokens": 3176,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 623,
+        "generate_input_tokens": 32,
+        "input_kind": "delta_continuation",
+        "n_messages": 9,
+        "prompt_tokens": 3426,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      }
+    ],
+    "context_growth_delta_tokens": 739,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      116,
+      623
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_9",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [
+        [
+          "find(path='Documentation',name='FinalReport.txt')"
+        ]
+      ],
+      [
+        [
+          "cp(source='FinalReport.txt',destination='Archives/ArchivedFinalReport2024.txt')"
+        ]
+      ],
+      []
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, the user is trying to remember if they have a document called 'FinalReport.txt' in the 'Documentation' folder. Let me think about how to approach this.\n\nFirst, I need to check if the 'Documentation' folder exists in the current directory. If it does, I should list its contents to see i",
+        "<think>\nOkay, the user asked if they have a document called 'FinalReport.txt' in the 'Documentation' folder. I used the 'find' tool to search for it. The response came back with a match: \"Documentation/FinalReport.txt\". That means the file exists in the Documentation folder.\n\nNow, I need to inform t"
+      ],
+      [
+        "<think>\nOkay, the user wants to copy 'FinalReport.txt' to the 'Archives' directory inside the 'Documentation' folder, and name the copy 'ArchivedFinalReport2024.txt'. \n\nFirst, I need to check if the 'Archives' directory exists in the 'Documentation' folder. If it doesn't, I might need to create it. ",
+        "<think>\nOkay, the user tried to copy 'FinalReport.txt' to 'Archives/ArchivedFinalReport2024.txt' but got an error saying 'FinalReport.txt' doesn't exist. Let me think about why that happened.\n\nFirst, the user mentioned they have 'FinalReport.txt' in the 'Documentation' folder. But the error suggests"
+      ],
+      [
+        "<think>\nOkay, the user wants to sort the first line of 'ArchivedFinalReport2024.txt' in alphabetical order. Let me think about how to approach this.\n\nFirst, I need to check if the file 'ArchivedFinalReport2024.txt' exists. The user mentioned making a copy earlier, but there was an error. Wait, the p"
+      ]
+    ],
+    "n_completed_turns": 3,
+    "n_user_turns": 3,
+    "prompt_tokens_all_steps": [
+      2687,
+      3072,
+      2803,
+      3176,
+      3426
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      2687,
+      2803,
+      3426
+    ],
+    "prompt_tokens_sum": 15164,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "error_type": "multi_turn:execution_response_mismatch",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 739,
+      "n_turns_slo_ok": 3,
+      "n_turns_slo_scored": 3,
+      "per_turn_accuracy": 0.0,
+      "per_turn_accuracy_correct": 0,
+      "per_turn_accuracy_n": 3,
+      "total_latency_s": 84.31602310000744,
+      "turn_count": 3
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 24.497482574875338,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 363,
+        "last_wall_s": 8.0651399,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 1
+        },
+        "prompt_tokens": 2687,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 24.497482574875338,
+            "error": null,
+            "generate_input_tokens": 2687,
+            "generated_tokens": 363,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 2687,
+            "step": 0,
+            "ttft_s": 1.757827026,
+            "turn": 0,
+            "wall_s": 16.5348556
+          },
+          {
+            "decode_tok_s": 23.89906412703854,
+            "error": null,
+            "generate_input_tokens": 13,
+            "generated_tokens": 191,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3072,
+            "step": 1,
+            "ttft_s": 0.115037796,
+            "turn": 0,
+            "wall_s": 8.0651399
+          }
+        ],
+        "ttft_s": 1.757827026,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 24.244696483042535,
+        "delta_tokens_vs_prev_turn": 116,
+        "generated_tokens": 342,
+        "last_wall_s": 22.1731847,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 3,
+          "model_n": 1
+        },
+        "prompt_tokens": 2803,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 24.244696483042535,
+            "error": null,
+            "generate_input_tokens": 41,
+            "generated_tokens": 342,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 2803,
+            "step": 0,
+            "ttft_s": 0.236914505,
+            "turn": 1,
+            "wall_s": 14.3018462
+          },
+          {
+            "decode_tok_s": 23.47017751078102,
+            "error": null,
+            "generate_input_tokens": 22,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3176,
+            "step": 1,
+            "ttft_s": 0.40087387,
+            "turn": 1,
+            "wall_s": 22.1731847
+          }
+        ],
+        "ttft_s": 0.236914505,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 22.834405526374997,
+        "delta_tokens_vs_prev_turn": 623,
+        "generated_tokens": 512,
+        "last_wall_s": 23.1788563,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 3426,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 22.834405526374997,
+            "error": null,
+            "generate_input_tokens": 32,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3426,
+            "step": 0,
+            "ttft_s": 0.800345092,
+            "turn": 2,
+            "wall_s": 23.1788563
+          }
+        ],
+        "ttft_s": 0.800345092,
+        "turn": 2
+      }
+    ],
+    "wall_s": 84.31602310000744
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      198,
+      156,
+      512,
+      241,
+      309,
+      512,
+      241,
+      512
+    ],
+    "completion_tokens_sum": 2681,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 2598,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 2598,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 5,
+        "input_kind": "delta_continuation",
+        "n_messages": 3,
+        "prompt_tokens": 2810,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 102,
+        "generate_input_tokens": 35,
+        "input_kind": "delta_continuation",
+        "n_messages": 5,
+        "prompt_tokens": 2700,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 548,
+        "generate_input_tokens": 26,
+        "input_kind": "delta_continuation",
+        "n_messages": 7,
+        "prompt_tokens": 3248,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 17,
+        "input_kind": "delta_continuation",
+        "n_messages": 10,
+        "prompt_tokens": 3515,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": 159,
+        "generate_input_tokens": 40,
+        "input_kind": "delta_continuation",
+        "n_messages": 12,
+        "prompt_tokens": 3407,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 3
+      },
+      {
+        "delta_tokens_vs_prev_turn": 535,
+        "generate_input_tokens": 13,
+        "input_kind": "delta_continuation",
+        "n_messages": 14,
+        "prompt_tokens": 3942,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 4
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 18,
+        "input_kind": "delta_continuation",
+        "n_messages": 16,
+        "prompt_tokens": 4210,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 4
+      }
+    ],
+    "context_growth_delta_tokens": 1612,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      102,
+      548,
+      159,
+      535
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_10",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [
+        [
+          "mkdir(dir_name='Projects')"
+        ]
+      ],
+      [],
+      [
+        [
+          "cd(folder='Projects')",
+          "touch(file_name='notes.md')"
+        ]
+      ],
+      [],
+      [
+        [
+          "wc(file_name='summary.txt',mode='c')"
+        ]
+      ]
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, the user is asking to set up a new directory named 'Projects' in the workspace folder. Let me check the available functions.\n\nLooking at the tools provided, there's a function called 'mkdir' which is used to create a new directory in the current directory. The parameters require a 'dir",
+        "<think>\nOkay, the user asked to create a new directory named 'Projects' in the workspace folder. I used the 'mkdir' function with 'Projects' as the directory name. The response from the tool was 'None', which probably means the operation was successful. Now I need to confirm to the user that the dir"
+      ],
+      [
+        "<think>\nOkay, the user wants to move a project's proposal document into the 'Projects' folder and rename it to 'final_proposal_2024'. Let me break down the steps needed here.\n\nFirst, I need to confirm the current directory. The user mentioned moving the document into the 'Projects' folder, which was"
+      ],
+      [
+        "<think>\nOkay, the user wants to create a new file called 'notes.md' in the 'Projects' directory to capture meeting highlights. Let me check the available functions.\n\nThe 'touch' function creates a new file in the current directory. But the user wants it in the 'Projects' folder. So first, I need to ",
+        "<think>\nOkay, the user wants to create a new file called 'notes.md' in the 'Projects' directory. Let me check the functions available.\n\nFirst, I need to navigate to the 'Projects' folder. The 'cd' function allows changing the current directory. So I'll use 'cd Projects' to move there.\n\nNext, create "
+      ],
+      [
+        "<think>\nOkay, the user wants me to create a file called 'summary.txt' with the content 'Hello', then compare it with 'notes.md' to check for discrepancies. Let me break this down.\n\nFirst, I need to create 'summary.txt'. The 'touch' function creates a new file, so I'll use that. Then, the 'echo' func"
+      ],
+      [
+        "<think>\nOkay, the user wants me to count the number of characters in 'summary.txt'. Let me recall the available functions. There's the 'wc' function which counts lines, words, and characters. The parameters for 'wc' include 'file_name' and 'mode', which defaults to 'l' for lines. But the user wants ",
+        "<think>\nOkay, the user asked to tally the number of characters in 'summary.txt', but the system returned an error saying the file doesn't exist. Let me figure out why.\n\nFirst, I need to check if 'summary.txt' was actually created. The user previously told me to create 'summary.txt' with the content "
+      ]
+    ],
+    "n_completed_turns": 5,
+    "n_user_turns": 5,
+    "prompt_tokens_all_steps": [
+      2598,
+      2810,
+      2700,
+      3248,
+      3515,
+      3407,
+      3942,
+      4210
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      2598,
+      2700,
+      3248,
+      3407,
+      3942
+    ],
+    "prompt_tokens_sum": 26430,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "error_type": "multi_turn:instance_state_mismatch",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 1344,
+      "n_turns_slo_ok": 5,
+      "n_turns_slo_scored": 5,
+      "per_turn_accuracy": 0.2,
+      "per_turn_accuracy_correct": 1,
+      "per_turn_accuracy_n": 5,
+      "total_latency_s": 113.54074070000206,
+      "turn_count": 5
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 24.551944688088845,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 198,
+        "last_wall_s": 6.3886863,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 2,
+          "model_n": 1
+        },
+        "prompt_tokens": 2598,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 24.551944688088845,
+            "error": null,
+            "generate_input_tokens": 2598,
+            "generated_tokens": 198,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 2598,
+            "step": 0,
+            "ttft_s": 1.648948974,
+            "turn": 0,
+            "wall_s": 9.6727533
+          },
+          {
+            "decode_tok_s": 24.6366546240818,
+            "error": null,
+            "generate_input_tokens": 5,
+            "generated_tokens": 156,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 2810,
+            "step": 1,
+            "ttft_s": 0.097247695,
+            "turn": 0,
+            "wall_s": 6.3886863
+          }
+        ],
+        "ttft_s": 1.648948974,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 24.18522153028805,
+        "delta_tokens_vs_prev_turn": 102,
+        "generated_tokens": 512,
+        "last_wall_s": 21.3628021,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 3,
+          "model_n": 0
+        },
+        "prompt_tokens": 2700,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 24.18522153028805,
+            "error": null,
+            "generate_input_tokens": 35,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 2700,
+            "step": 0,
+            "ttft_s": 0.234196792,
+            "turn": 1,
+            "wall_s": 21.3628021
+          }
+        ],
+        "ttft_s": 0.234196792,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 23.254045348141705,
+        "delta_tokens_vs_prev_turn": 548,
+        "generated_tokens": 241,
+        "last_wall_s": 13.4508394,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 2
+        },
+        "prompt_tokens": 3248,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 23.254045348141705,
+            "error": null,
+            "generate_input_tokens": 26,
+            "generated_tokens": 241,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3248,
+            "step": 0,
+            "ttft_s": 0.170322204,
+            "turn": 2,
+            "wall_s": 10.4911071
+          },
+          {
+            "decode_tok_s": 23.11424323822724,
+            "error": null,
+            "generate_input_tokens": 17,
+            "generated_tokens": 309,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3515,
+            "step": 1,
+            "ttft_s": 0.125722206,
+            "turn": 2,
+            "wall_s": 13.4508394
+          }
+        ],
+        "ttft_s": 0.170322204,
+        "turn": 2
+      },
+      {
+        "decode_tok_s": 22.978455956574173,
+        "delta_tokens_vs_prev_turn": 159,
+        "generated_tokens": 512,
+        "last_wall_s": 22.5665985,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 3,
+          "model_n": 0
+        },
+        "prompt_tokens": 3407,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 22.978455956574173,
+            "error": null,
+            "generate_input_tokens": 40,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3407,
+            "step": 0,
+            "ttft_s": 0.328376708,
+            "turn": 3,
+            "wall_s": 22.5665985
+          }
+        ],
+        "ttft_s": 0.328376708,
+        "turn": 3
+      },
+      {
+        "decode_tok_s": 23.909620203444728,
+        "delta_tokens_vs_prev_turn": 535,
+        "generated_tokens": 241,
+        "last_wall_s": 19.3473848,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": true,
+          "gold_n": 1,
+          "model_n": 1
+        },
+        "prompt_tokens": 3942,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 23.909620203444728,
+            "error": null,
+            "generate_input_tokens": 13,
+            "generated_tokens": 241,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3942,
+            "step": 0,
+            "ttft_s": 0.126294601,
+            "turn": 4,
+            "wall_s": 10.1640952
+          },
+          {
+            "decode_tok_s": 26.59511999396085,
+            "error": null,
+            "generate_input_tokens": 18,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4210,
+            "step": 1,
+            "ttft_s": 0.133333496,
+            "turn": 4,
+            "wall_s": 19.3473848
+          }
+        ],
+        "ttft_s": 0.126294601,
+        "turn": 4
+      }
+    ],
+    "wall_s": 113.54074070000206
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      512,
+      512
+    ],
+    "completion_tokens_sum": 1024,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 4393,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 4393,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 562,
+        "generate_input_tokens": 40,
+        "input_kind": "delta_continuation",
+        "n_messages": 3,
+        "prompt_tokens": 4955,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      }
+    ],
+    "context_growth_delta_tokens": 562,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      562
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_11",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [],
+      []
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, the user wants to display all available files in the '/temp' directory, including hidden ones. Let me check the tools provided.\n\nLooking at the functions, there's one called 'ls' which lists directory contents. The parameters include an 'a' flag to show hidden files. The default is Fal"
+      ],
+      [
+        "<think>\nOkay, the user wants to post a Twitter message that mentions file names separated by commas and spaces, along with the hashtag #fileshowcase. Let me think about the tools available.\n\nFirst, I need to check if there's a function to post a tweet. Looking at the tools, there's the 'post_tweet' "
+      ]
+    ],
+    "n_completed_turns": 2,
+    "n_user_turns": 2,
+    "prompt_tokens_all_steps": [
+      4393,
+      4955
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      4393,
+      4955
+    ],
+    "prompt_tokens_sum": 9348,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model response list is empty for turn 0",
+      "error_type": "multi_turn:empty_turn_model_response",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 562,
+      "n_turns_slo_ok": 2,
+      "n_turns_slo_scored": 2,
+      "per_turn_accuracy": 0.0,
+      "per_turn_accuracy_correct": 0,
+      "per_turn_accuracy_n": 2,
+      "total_latency_s": 43.47916129999794,
+      "turn_count": 2
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 26.02325351196441,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 512,
+        "last_wall_s": 23.4213896,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 4393,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.02325351196441,
+            "error": null,
+            "generate_input_tokens": 4393,
+            "generated_tokens": 512,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 4393,
+            "step": 0,
+            "ttft_s": 3.785105468,
+            "turn": 0,
+            "wall_s": 23.4213896
+          }
+        ],
+        "ttft_s": 3.785105468,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 25.826232207993698,
+        "delta_tokens_vs_prev_turn": 562,
+        "generated_tokens": 512,
+        "last_wall_s": 20.0076816,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 4955,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.826232207993698,
+            "error": null,
+            "generate_input_tokens": 40,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4955,
+            "step": 0,
+            "ttft_s": 0.221597595,
+            "turn": 1,
+            "wall_s": 20.0076816
+          }
+        ],
+        "ttft_s": 0.221597595,
+        "turn": 1
+      }
+    ],
+    "wall_s": 43.47916129999794
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      512,
+      506,
+      425,
+      512,
+      512,
+      314,
+      512
+    ],
+    "completion_tokens_sum": 3293,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 2813,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 2813,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 561,
+        "generate_input_tokens": 39,
+        "input_kind": "delta_continuation",
+        "n_messages": 3,
+        "prompt_tokens": 3374,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 32,
+        "input_kind": "delta_continuation",
+        "n_messages": 6,
+        "prompt_tokens": 3921,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 11,
+        "input_kind": "delta_continuation",
+        "n_messages": 9,
+        "prompt_tokens": 4366,
+        "residency_mode": "RESIDENT",
+        "step": 2,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 18,
+        "input_kind": "delta_continuation",
+        "n_messages": 11,
+        "prompt_tokens": 4906,
+        "residency_mode": "RESIDENT",
+        "step": 3,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 781,
+        "generate_input_tokens": 30,
+        "input_kind": "delta_continuation",
+        "n_messages": 13,
+        "prompt_tokens": 4155,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 34,
+        "input_kind": "delta_continuation",
+        "n_messages": 16,
+        "prompt_tokens": 4512,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 2
+      }
+    ],
+    "context_growth_delta_tokens": 1699,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      561,
+      781
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_12",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [],
+      [
+        [
+          "cd(folder='Documents')",
+          "echo(content='quantum computing',file_name='summary.txt')"
+        ],
+        [
+          "touch(file_name='summary.txt')",
+          "echo(content='quantum computing',file_name='summary.txt')"
+        ],
+        [
+          "touch(file_name='summary.txt')"
+        ]
+      ],
+      [
+        [
+          "cd(folder='Documents')",
+          "wc(file_name='summary.txt',mode='w')"
+        ]
+      ]
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, the user wants me to go to the 'Documents' directory and create a new file called 'summary.txt'. If it already exists, I should return an error. Let me check the available functions.\n\nFirst, I need to navigate to the 'Documents' directory. The 'cd' function allows changing the current "
+      ],
+      [
+        "<think>\nOkay, the user wants me to create a file named 'summary.txt' in the 'Documents' directory with the content 'quantum computing'. Let me check the available functions again.\n\nFirst, I need to navigate to the 'Documents' directory using the 'cd' function. Then, I can use the 'echo' function to ",
+        "<think>\nOkay, the user tried to create 'summary.txt' in the 'Documents' directory using the 'echo' function, but got an error saying the file doesn't exist. Wait, but the 'echo' function is supposed to write content to a file, creating it if it doesn't exist. Maybe the system's implementation of 'ec",
+        "<think>\nOkay, the user wants to create a file named 'summary.txt' in the 'Documents' directory with the exact content 'quantum computing'. They also specified that if the file already exists, an error should be returned.\n\nFirst, I need to navigate to the 'Documents' directory using the 'cd' function",
+        "<think>\nOkay, the user is trying to create a file named 'summary.txt' in the 'Documents' directory. They want the file to contain exactly 'quantum computing' and return an error if the file already exists.\n\nFirst, I need to navigate to the 'Documents' directory using the 'cd' function. Then, check i"
+      ],
+      [
+        "<think>\nOkay, the user wants to know the word count of 'summary.txt' in the 'Documents' directory. Let me recall the available functions.\n\nThe 'wc' function counts lines, words, and characters in a file. The parameters require the 'file_name' and a 'mode' which defaults to 'l' (lines). The user want",
+        "<think>\nOkay, the user asked to count the words in 'summary.txt' located in the 'Documents' directory. I first tried to navigate to 'Documents' using the 'cd' command, but got an error saying 'Documents' doesn't exist. Then, I tried using the 'wc' command with mode 'w' to count words, but the 'cd' e"
+      ]
+    ],
+    "n_completed_turns": 3,
+    "n_user_turns": 3,
+    "prompt_tokens_all_steps": [
+      2813,
+      3374,
+      3921,
+      4366,
+      4906,
+      4155,
+      4512
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      2813,
+      3374,
+      4155
+    ],
+    "prompt_tokens_sum": 28047,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model response list is empty for turn 0",
+      "error_type": "multi_turn:empty_turn_model_response",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 1342,
+      "n_turns_slo_ok": 3,
+      "n_turns_slo_scored": 3,
+      "per_turn_accuracy": 0.0,
+      "per_turn_accuracy_correct": 0,
+      "per_turn_accuracy_n": 3,
+      "total_latency_s": 135.17277220000688,
+      "turn_count": 3
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 23.87965630837818,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 512,
+        "last_wall_s": 23.3162752,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 2,
+          "model_n": 0
+        },
+        "prompt_tokens": 2813,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 23.87965630837818,
+            "error": null,
+            "generate_input_tokens": 2813,
+            "generated_tokens": 512,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 2813,
+            "step": 0,
+            "ttft_s": 1.91730725,
+            "turn": 0,
+            "wall_s": 23.3162752
+          }
+        ],
+        "ttft_s": 1.91730725,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 23.09804012533561,
+        "delta_tokens_vs_prev_turn": 561,
+        "generated_tokens": 506,
+        "last_wall_s": 20.0736423,
+        "n_decoded_steps": 3,
+        "n_generations": 4,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 5
+        },
+        "prompt_tokens": 3374,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 23.09804012533561,
+            "error": null,
+            "generate_input_tokens": 39,
+            "generated_tokens": 506,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3374,
+            "step": 0,
+            "ttft_s": 0.183945587,
+            "turn": 1,
+            "wall_s": 22.0472724
+          },
+          {
+            "decode_tok_s": 24.672096912879283,
+            "error": null,
+            "generate_input_tokens": 32,
+            "generated_tokens": 425,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3921,
+            "step": 1,
+            "ttft_s": 0.188186294,
+            "turn": 1,
+            "wall_s": 17.3735922
+          },
+          {
+            "decode_tok_s": 26.229445323467726,
+            "error": null,
+            "generate_input_tokens": 11,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4366,
+            "step": 2,
+            "ttft_s": 0.125787101,
+            "turn": 1,
+            "wall_s": 19.6077088
+          },
+          {
+            "decode_tok_s": 25.63668468999801,
+            "error": null,
+            "generate_input_tokens": 18,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4906,
+            "step": 3,
+            "ttft_s": 0.141267807,
+            "turn": 1,
+            "wall_s": 20.0736423
+          }
+        ],
+        "ttft_s": 0.183945587,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 26.60469637403565,
+        "delta_tokens_vs_prev_turn": 781,
+        "generated_tokens": 314,
+        "last_wall_s": 19.7691203,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 2
+        },
+        "prompt_tokens": 4155,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.60469637403565,
+            "error": null,
+            "generate_input_tokens": 30,
+            "generated_tokens": 314,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4155,
+            "step": 0,
+            "ttft_s": 1.118876953,
+            "turn": 2,
+            "wall_s": 12.8837171
+          },
+          {
+            "decode_tok_s": 26.114919776568346,
+            "error": null,
+            "generate_input_tokens": 34,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4512,
+            "step": 1,
+            "ttft_s": 0.201761703,
+            "turn": 2,
+            "wall_s": 19.7691203
+          }
+        ],
+        "ttft_s": 1.118876953,
+        "turn": 2
+      }
+    ],
+    "wall_s": 135.17277220000688
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      261,
+      512,
+      512
+    ],
+    "completion_tokens_sum": 1285,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 4412,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 4412,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 28,
+        "input_kind": "delta_continuation",
+        "n_messages": 4,
+        "prompt_tokens": 4710,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 637,
+        "generate_input_tokens": 26,
+        "input_kind": "delta_continuation",
+        "n_messages": 6,
+        "prompt_tokens": 5049,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      }
+    ],
+    "context_growth_delta_tokens": 637,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      637
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_13",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [
+        [
+          "find(path='documents',name='.*')",
+          "tail(file_name='<file_name>',lines=1)"
+        ]
+      ],
+      []
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, let's break down the user's request. They want to see the last line of the first alphabetically file in the \"documents\" directory.\n\nFirst, I need to find the first file in the \"documents\" directory when sorted alphabetically. The user mentioned it's the \"alphabetically first file,\" so ",
+        "<think>\nOkay, the user asked to display the last line of the first file in the \"documents\" directory. I tried using the `find` command with a regex pattern to locate the first file, but it didn't return any matches. Then I tried using `tail` on the file name from the previous step, but it gave an er"
+      ],
+      [
+        "<think>\nOkay, the user wants me to review two files in the \"documents\" directory and point out the differences between them. Let me think about how to approach this.\n\nFirst, I need to find the two files. The user mentioned that the first file is the alphabetically first one in the directory. Earlier"
+      ]
+    ],
+    "n_completed_turns": 2,
+    "n_user_turns": 2,
+    "prompt_tokens_all_steps": [
+      4412,
+      4710,
+      5049
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      4412,
+      5049
+    ],
+    "prompt_tokens_sum": 14171,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "error_type": "multi_turn:execution_response_mismatch",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 637,
+      "n_turns_slo_ok": 2,
+      "n_turns_slo_scored": 2,
+      "per_turn_accuracy": 0.0,
+      "per_turn_accuracy_correct": 0,
+      "per_turn_accuracy_n": 2,
+      "total_latency_s": 54.96774700000242,
+      "turn_count": 2
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 25.80754341927857,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 261,
+        "last_wall_s": 19.9374325,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 2,
+          "model_n": 2
+        },
+        "prompt_tokens": 4412,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.80754341927857,
+            "error": null,
+            "generate_input_tokens": 4412,
+            "generated_tokens": 261,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 4412,
+            "step": 0,
+            "ttft_s": 3.73816333,
+            "turn": 0,
+            "wall_s": 13.8127371
+          },
+          {
+            "decode_tok_s": 25.897907573626345,
+            "error": null,
+            "generate_input_tokens": 28,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4710,
+            "step": 1,
+            "ttft_s": 0.206108703,
+            "turn": 0,
+            "wall_s": 19.9374325
+          }
+        ],
+        "ttft_s": 3.73816333,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 25.536803850226192,
+        "delta_tokens_vs_prev_turn": 637,
+        "generated_tokens": 512,
+        "last_wall_s": 21.1544102,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 5049,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.536803850226192,
+            "error": null,
+            "generate_input_tokens": 26,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5049,
+            "step": 0,
+            "ttft_s": 1.144075195,
+            "turn": 1,
+            "wall_s": 21.1544102
+          }
+        ],
+        "ttft_s": 1.144075195,
+        "turn": 1
+      }
+    ],
+    "wall_s": 54.96774700000242
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      334,
+      512,
+      512,
+      512,
+      512
+    ],
+    "completion_tokens_sum": 2382,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 3680,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 3680,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 32,
+        "input_kind": "delta_continuation",
+        "n_messages": 4,
+        "prompt_tokens": 4055,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 640,
+        "generate_input_tokens": 30,
+        "input_kind": "delta_continuation",
+        "n_messages": 6,
+        "prompt_tokens": 4320,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 554,
+        "generate_input_tokens": 32,
+        "input_kind": "delta_continuation",
+        "n_messages": 8,
+        "prompt_tokens": 4874,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": 563,
+        "generate_input_tokens": 41,
+        "input_kind": "delta_continuation",
+        "n_messages": 10,
+        "prompt_tokens": 5437,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 3
+      }
+    ],
+    "context_growth_delta_tokens": 1757,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      640,
+      554,
+      563
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_14",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [
+        [
+          "cd(folder='ResearchDocs')",
+          "find(path='ResearchDocs',name='report.csv')"
+        ]
+      ],
+      [],
+      [],
+      []
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, the user wants to first change the directory to 'ResearchDocs' and then find any files named 'report.csv'. Let me see which functions I have available.\n\nLooking at the tools, there's a 'cd' function that changes the current working directory. The parameters require a 'folder' argument.",
+        "<think>\nOkay, the user tried to find 'report.csv' in the 'ResearchDocs' directory, but got an error saying 'ResearchDocs' is not found. Hmm, maybe the 'cd' command didn't work, or the directory doesn't exist. Let me check the functions again.\n\nWait, the 'cd' function changes the current working dire"
+      ],
+      [
+        "<think>\nOkay, the user wants to find 'report.csv' in the 'ResearchDocs' directory and then look for lines that reference 'Quarterly Financial Overview'. Let me think about the steps needed.\n\nFirst, the user already tried to cd into 'ResearchDocs' and use find, but got an error. Maybe the 'ResearchDo"
+      ],
+      [
+        "<think>\nOkay, the user wants the last five lines of 'report.csv' from the 'ResearchDocs' directory. Let me recall the functions available.\n\nFirst, I need to make sure I'm in the 'ResearchDocs' directory. The user previously tried 'cd ResearchDocs' but got an error. Wait, in the previous interaction,"
+      ],
+      [
+        "<think>\nOkay, let's break down the user's request step by step. First, they mentioned \"Logging in as USR001.\" So I need to use the 'message_login' function with the user_id parameter set to 'USR001'.\n\nNext, the user wants to \"message my colleague, John Levy, add him as new contact, that 'Latest Quar"
+      ]
+    ],
+    "n_completed_turns": 4,
+    "n_user_turns": 4,
+    "prompt_tokens_all_steps": [
+      3680,
+      4055,
+      4320,
+      4874,
+      5437
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      3680,
+      4320,
+      4874,
+      5437
+    ],
+    "prompt_tokens_sum": 22366,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "error_type": "multi_turn:execution_response_mismatch",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 1757,
+      "n_turns_slo_ok": 4,
+      "n_turns_slo_scored": 4,
+      "per_turn_accuracy": 0.0,
+      "per_turn_accuracy_correct": 0,
+      "per_turn_accuracy_n": 4,
+      "total_latency_s": 98.32539420000103,
+      "turn_count": 4
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 22.257787510880554,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 334,
+        "last_wall_s": 19.5505416,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 2,
+          "model_n": 2
+        },
+        "prompt_tokens": 3680,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 22.257787510880554,
+            "error": null,
+            "generate_input_tokens": 3680,
+            "generated_tokens": 334,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 3680,
+            "step": 0,
+            "ttft_s": 2.707831542,
+            "turn": 0,
+            "wall_s": 17.6688873
+          },
+          {
+            "decode_tok_s": 26.392680390250185,
+            "error": null,
+            "generate_input_tokens": 32,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4055,
+            "step": 1,
+            "ttft_s": 0.189112884,
+            "turn": 0,
+            "wall_s": 19.5505416
+          }
+        ],
+        "ttft_s": 2.707831542,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 26.233161659883642,
+        "delta_tokens_vs_prev_turn": 640,
+        "generated_tokens": 512,
+        "last_wall_s": 20.4746594,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 4320,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.233161659883642,
+            "error": null,
+            "generate_input_tokens": 30,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4320,
+            "step": 0,
+            "ttft_s": 0.995497619,
+            "turn": 1,
+            "wall_s": 20.4746594
+          }
+        ],
+        "ttft_s": 0.995497619,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 25.775327550010072,
+        "delta_tokens_vs_prev_turn": 554,
+        "generated_tokens": 512,
+        "last_wall_s": 20.0363913,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 4874,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.775327550010072,
+            "error": null,
+            "generate_input_tokens": 32,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4874,
+            "step": 0,
+            "ttft_s": 0.211231018,
+            "turn": 2,
+            "wall_s": 20.0363913
+          }
+        ],
+        "ttft_s": 0.211231018,
+        "turn": 2
+      },
+      {
+        "decode_tok_s": 25.202284697997925,
+        "delta_tokens_vs_prev_turn": 563,
+        "generated_tokens": 512,
+        "last_wall_s": 20.5081578,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 3,
+          "model_n": 0
+        },
+        "prompt_tokens": 5437,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.202284697997925,
+            "error": null,
+            "generate_input_tokens": 41,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5437,
+            "step": 0,
+            "ttft_s": 0.232218292,
+            "turn": 3,
+            "wall_s": 20.5081578
+          }
+        ],
+        "ttft_s": 0.232218292,
+        "turn": 3
+      }
+    ],
+    "wall_s": 98.32539420000103
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      221,
+      207,
+      512,
+      512,
+      512,
+      512
+    ],
+    "completion_tokens_sum": 2476,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 4687,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 4687,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 5,
+        "input_kind": "delta_continuation",
+        "n_messages": 3,
+        "prompt_tokens": 4922,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 156,
+        "generate_input_tokens": 67,
+        "input_kind": "delta_continuation",
+        "n_messages": 5,
+        "prompt_tokens": 4843,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 551,
+        "generate_input_tokens": 29,
+        "input_kind": "delta_continuation",
+        "n_messages": 7,
+        "prompt_tokens": 5394,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": 558,
+        "generate_input_tokens": 36,
+        "input_kind": "delta_continuation",
+        "n_messages": 9,
+        "prompt_tokens": 5952,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 3
+      },
+      {
+        "delta_tokens_vs_prev_turn": 540,
+        "generate_input_tokens": 18,
+        "input_kind": "delta_continuation",
+        "n_messages": 11,
+        "prompt_tokens": 6492,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 4
+      }
+    ],
+    "context_growth_delta_tokens": 1805,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      156,
+      551,
+      558,
+      540
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_15",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [
+        [
+          "touch(file_name='DataSet1.csv')"
+        ]
+      ],
+      [],
+      [],
+      [],
+      []
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, the user wants to create a file named 'DataSet1.csv' for their data analysis project. Let me check the available tools to see which one can help with creating a new file.\n\nLooking at the list of functions, there's one called 'touch' which is described as creating a new file of any exte",
+        "<think>\nOkay, the user wanted to create a file named 'DataSet1.csv' for their data analysis project. I used the 'touch' function to create the file, which is the correct tool for this task. The function call was straightforward since the user only needed to create the file, not write any content int"
+      ],
+      [
+        "<think>\nOkay, the user wants me to add some preliminary data to 'DataSet1.csv'. The data given is \"Student | Math | Computer Science Alice | 5 | 9 Bob | 10 | 7\". They mentioned splitting by line each row, so each entry should be on a new line.\n\nFirst, I need to parse the data. The entries are \"Stude"
+      ],
+      [
+        "<think>\nOkay, the user wants to see the last entry of 'DataSet1.csv' to check the data's health. Let me recall the previous steps.\n\nFirst, the user asked to create 'DataSet1.csv', which I did using the 'touch' command. Then, they provided some data and wanted it added to the CSV. The data given was "
+      ],
+      [
+        "<think>\nOkay, the user wants a summary of the lines, words, and characters in 'DataSet1.csv'. Let me think about how to approach this.\n\nFirst, I need to check the content of the CSV file. From the previous interaction, the data added was:\n\nStudent | Math | Computer Science\nAlice | 5 | 9\nBob | 10 | 7"
+      ],
+      [
+        "<think>\nOkay, the user wants the average of the three numerical values from the CSV file. Let me check the data again.\n\nThe CSV has three rows:\n\n1. Student | Math | Computer Science\n2. Alice | 5 | 9\n3. Bob | 10 | 7\n\nThe numerical values are 5, 9, and 10, 7. Wait, the second row has 5 and 9, the thir"
+      ]
+    ],
+    "n_completed_turns": 5,
+    "n_user_turns": 5,
+    "prompt_tokens_all_steps": [
+      4687,
+      4922,
+      4843,
+      5394,
+      5952,
+      6492
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      4687,
+      4843,
+      5394,
+      5952,
+      6492
+    ],
+    "prompt_tokens_sum": 32290,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model response list is empty for turn 1",
+      "error_type": "multi_turn:empty_turn_model_response",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 1805,
+      "n_turns_slo_ok": 5,
+      "n_turns_slo_scored": 5,
+      "per_turn_accuracy": 0.2,
+      "per_turn_accuracy_correct": 1,
+      "per_turn_accuracy_n": 5,
+      "total_latency_s": 104.5669299000001,
+      "turn_count": 5
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 25.140989299521962,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 221,
+        "last_wall_s": 8.1368794,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": true,
+          "gold_n": 1,
+          "model_n": 1
+        },
+        "prompt_tokens": 4687,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.140989299521962,
+            "error": null,
+            "generate_input_tokens": 4687,
+            "generated_tokens": 221,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 4687,
+            "step": 0,
+            "ttft_s": 4.312849121,
+            "turn": 0,
+            "wall_s": 13.0634992
+          },
+          {
+            "decode_tok_s": 25.73242118917091,
+            "error": null,
+            "generate_input_tokens": 5,
+            "generated_tokens": 207,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4922,
+            "step": 1,
+            "ttft_s": 0.131414291,
+            "turn": 0,
+            "wall_s": 8.1368794
+          }
+        ],
+        "ttft_s": 4.312849121,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 25.966643901408453,
+        "delta_tokens_vs_prev_turn": 156,
+        "generated_tokens": 512,
+        "last_wall_s": 20.1089585,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 4843,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.966643901408453,
+            "error": null,
+            "generate_input_tokens": 67,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4843,
+            "step": 0,
+            "ttft_s": 0.429865509,
+            "turn": 1,
+            "wall_s": 20.1089585
+          }
+        ],
+        "ttft_s": 0.429865509,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 25.334393043924738,
+        "delta_tokens_vs_prev_turn": 551,
+        "generated_tokens": 512,
+        "last_wall_s": 20.3943187,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 5394,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.334393043924738,
+            "error": null,
+            "generate_input_tokens": 29,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5394,
+            "step": 0,
+            "ttft_s": 0.224109802,
+            "turn": 2,
+            "wall_s": 20.3943187
+          }
+        ],
+        "ttft_s": 0.224109802,
+        "turn": 2
+      },
+      {
+        "decode_tok_s": 24.68204513622229,
+        "delta_tokens_vs_prev_turn": 558,
+        "generated_tokens": 512,
+        "last_wall_s": 20.9393843,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 3,
+          "model_n": 0
+        },
+        "prompt_tokens": 5952,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 24.68204513622229,
+            "error": null,
+            "generate_input_tokens": 36,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5952,
+            "step": 0,
+            "ttft_s": 0.236075592,
+            "turn": 3,
+            "wall_s": 20.9393843
+          }
+        ],
+        "ttft_s": 0.236075592,
+        "turn": 3
+      },
+      {
+        "decode_tok_s": 23.605753751677316,
+        "delta_tokens_vs_prev_turn": 540,
+        "generated_tokens": 512,
+        "last_wall_s": 21.805419,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 6492,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 23.605753751677316,
+            "error": null,
+            "generate_input_tokens": 18,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 6492,
+            "step": 0,
+            "ttft_s": 0.158154296,
+            "turn": 4,
+            "wall_s": 21.805419
+          }
+        ],
+        "ttft_s": 0.158154296,
+        "turn": 4
+      }
+    ],
+    "wall_s": 104.5669299000001
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      512,
+      512,
+      512
+    ],
+    "completion_tokens_sum": 1536,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 2717,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 2717,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 549,
+        "generate_input_tokens": 27,
+        "input_kind": "delta_continuation",
+        "n_messages": 3,
+        "prompt_tokens": 3266,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 549,
+        "generate_input_tokens": 27,
+        "input_kind": "delta_continuation",
+        "n_messages": 5,
+        "prompt_tokens": 3815,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      }
+    ],
+    "context_growth_delta_tokens": 1098,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      549,
+      549
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_16",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [],
+      [],
+      []
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, let's break down the user's request. They want to move a copy of 'research_notes.txt' to the 'archives' folder within the 'research' directory, and name the new file '2024_research_backup.txt'.\n\nFirst, I need to check if the 'archives' folder exists in the 'research' directory. If it d"
+      ],
+      [
+        "<think>\nOkay, the user wants to sort the lines of the '2024_research_backup.txt' file alphabetically. Let me check the available functions.\n\nThere's a 'sort' function that takes a file name as a parameter. The description says it sorts the contents of a file line by line. So I can use that. The para"
+      ],
+      [
+        "<think>\nOkay, the user wants to know the number of lines in the sorted '2024_research_backup.txt' file. Let me think about the steps needed.\n\nFirst, the user already sorted the file using the 'sort' function. Now, they need to count the lines. The available functions include 'wc' (word count), which"
+      ]
+    ],
+    "n_completed_turns": 3,
+    "n_user_turns": 3,
+    "prompt_tokens_all_steps": [
+      2717,
+      3266,
+      3815
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      2717,
+      3266,
+      3815
+    ],
+    "prompt_tokens_sum": 9798,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model response list is empty for turn 0",
+      "error_type": "multi_turn:empty_turn_model_response",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 1098,
+      "n_turns_slo_ok": 3,
+      "n_turns_slo_scored": 3,
+      "per_turn_accuracy": 0.0,
+      "per_turn_accuracy_correct": 0,
+      "per_turn_accuracy_n": 3,
+      "total_latency_s": 65.72562310000649,
+      "turn_count": 3
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 24.16594630325606,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 512,
+        "last_wall_s": 22.0410102,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 4,
+          "model_n": 0
+        },
+        "prompt_tokens": 2717,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 24.16594630325606,
+            "error": null,
+            "generate_input_tokens": 2717,
+            "generated_tokens": 512,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 2717,
+            "step": 0,
+            "ttft_s": 0.895552307,
+            "turn": 0,
+            "wall_s": 22.0410102
+          }
+        ],
+        "ttft_s": 0.895552307,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 23.13487329576735,
+        "delta_tokens_vs_prev_turn": 549,
+        "generated_tokens": 512,
+        "last_wall_s": 22.2631001,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 3266,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 23.13487329576735,
+            "error": null,
+            "generate_input_tokens": 27,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3266,
+            "step": 0,
+            "ttft_s": 0.175233291,
+            "turn": 1,
+            "wall_s": 22.2631001
+          }
+        ],
+        "ttft_s": 0.175233291,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 24.120394363856004,
+        "delta_tokens_vs_prev_turn": 549,
+        "generated_tokens": 512,
+        "last_wall_s": 21.378208,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 0
+        },
+        "prompt_tokens": 3815,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 24.120394363856004,
+            "error": null,
+            "generate_input_tokens": 27,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3815,
+            "step": 0,
+            "ttft_s": 0.192816406,
+            "turn": 2,
+            "wall_s": 21.378208
+          }
+        ],
+        "ttft_s": 0.192816406,
+        "turn": 2
+      }
+    ],
+    "wall_s": 65.72562310000649
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      276,
+      280,
+      512,
+      512
+    ],
+    "completion_tokens_sum": 1580,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 3687,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 3687,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 11,
+        "input_kind": "delta_continuation",
+        "n_messages": 3,
+        "prompt_tokens": 3983,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 157,
+        "generate_input_tokens": 22,
+        "input_kind": "delta_continuation",
+        "n_messages": 5,
+        "prompt_tokens": 3844,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 566,
+        "generate_input_tokens": 44,
+        "input_kind": "delta_continuation",
+        "n_messages": 7,
+        "prompt_tokens": 4410,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      }
+    ],
+    "context_growth_delta_tokens": 723,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      157,
+      566
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_17",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [
+        [
+          "ls(a=True)"
+        ]
+      ],
+      [],
+      []
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, the user is asking for an inventory of both visible and hidden files in the current directory. Let me think about the tools available.\n\nFirst, I need to list all files and directories in the current directory, including hidden ones. The user mentioned both visible and hidden files, so ",
+        "<think>\nOkay, the user asked for an inventory of both visible and hidden files in the current directory. I used the `ls` command with the `a` parameter set to `True` to list all files, including hidden ones. The response from the tool showed that the current directory contains a single entry: \"proje"
+      ],
+      [
+        "<think>\nOkay, the user wants me to navigate into the \"project\" folder, find Kelly's test report, and read its content. Let me break down the steps.\n\nFirst, I need to check if the \"project\" folder exists in the current directory. The previous response mentioned that \"project\" is the only item in the "
+      ],
+      [
+        "<think>\nOkay, let's tackle this user query step by step. The user has a few requests here. First, they want to \"dispatch of the report to Kelly\", which I think means they want to send the test report to Kelly. Then, they need to add Kelly's contact information in the format \"Kelly Total Score: total"
+      ]
+    ],
+    "n_completed_turns": 3,
+    "n_user_turns": 3,
+    "prompt_tokens_all_steps": [
+      3687,
+      3983,
+      3844,
+      4410
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      3687,
+      3844,
+      4410
+    ],
+    "prompt_tokens_sum": 15924,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model response list is empty for turn 1",
+      "error_type": "multi_turn:empty_turn_model_response",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 723,
+      "n_turns_slo_ok": 3,
+      "n_turns_slo_scored": 3,
+      "per_turn_accuracy": 0.3333333333333333,
+      "per_turn_accuracy_correct": 1,
+      "per_turn_accuracy_n": 3,
+      "total_latency_s": 67.70490499999141,
+      "turn_count": 3
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 22.031610957163867,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 276,
+        "last_wall_s": 11.3958715,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": true,
+          "gold_n": 1,
+          "model_n": 1
+        },
+        "prompt_tokens": 3687,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 22.031610957163867,
+            "error": null,
+            "generate_input_tokens": 3687,
+            "generated_tokens": 276,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 3687,
+            "step": 0,
+            "ttft_s": 2.724704101,
+            "turn": 0,
+            "wall_s": 15.2067691
+          },
+          {
+            "decode_tok_s": 24.754460809335747,
+            "error": null,
+            "generate_input_tokens": 11,
+            "generated_tokens": 280,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3983,
+            "step": 1,
+            "ttft_s": 0.125175598,
+            "turn": 0,
+            "wall_s": 11.3958715
+          }
+        ],
+        "ttft_s": 2.724704101,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 24.378227324863065,
+        "delta_tokens_vs_prev_turn": 157,
+        "generated_tokens": 512,
+        "last_wall_s": 21.3184434,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 2,
+          "model_n": 0
+        },
+        "prompt_tokens": 3844,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 24.378227324863065,
+            "error": null,
+            "generate_input_tokens": 22,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3844,
+            "step": 0,
+            "ttft_s": 0.35711618,
+            "turn": 1,
+            "wall_s": 21.3184434
+          }
+        ],
+        "ttft_s": 0.35711618,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 26.20643464158836,
+        "delta_tokens_vs_prev_turn": 566,
+        "generated_tokens": 512,
+        "last_wall_s": 19.7152086,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 3,
+          "model_n": 0
+        },
+        "prompt_tokens": 4410,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.20643464158836,
+            "error": null,
+            "generate_input_tokens": 44,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4410,
+            "step": 0,
+            "ttft_s": 0.216180709,
+            "turn": 2,
+            "wall_s": 19.7152086
+          }
+        ],
+        "ttft_s": 0.216180709,
+        "turn": 2
+      }
+    ],
+    "wall_s": 67.70490499999141
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      512,
+      512,
+      512
+    ],
+    "completion_tokens_sum": 1536,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 4213,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 4213,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 548,
+        "generate_input_tokens": 26,
+        "input_kind": "delta_continuation",
+        "n_messages": 3,
+        "prompt_tokens": 4761,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 560,
+        "generate_input_tokens": 38,
+        "input_kind": "delta_continuation",
+        "n_messages": 5,
+        "prompt_tokens": 5321,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      }
+    ],
+    "context_growth_delta_tokens": 1108,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      548,
+      560
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_18",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [],
+      [],
+      []
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, the user wants to copy all text files from the 'Quarter1_Reports' directory into a new directory called 'Archived_Quarter1'. Let me think about how to approach this.\n\nFirst, I need to check if the 'Quarter1_Reports' directory exists. If it does, I can proceed. The goal is to copy all t"
+      ],
+      [
+        "<think>\nOkay, the user wants to display the content of the 'MonthlySummary.docx' file and sort it alphabetically by line. Let me think about how to approach this.\n\nFirst, I need to check if the 'MonthlySummary.docx' file exists in the current directory. Since the user mentioned it, I'll assume it's "
+      ],
+      [
+        "<think>\nOkay, let's break down the user's request. They want to compare the differences between 'History101.txt' and 'History202.txt', then post those differences on their Twitter account, mentioning Jerry.\n\nFirst, I need to figure out how to compare the two text files. The available tools include '"
+      ]
+    ],
+    "n_completed_turns": 3,
+    "n_user_turns": 3,
+    "prompt_tokens_all_steps": [
+      4213,
+      4761,
+      5321
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      4213,
+      4761,
+      5321
+    ],
+    "prompt_tokens_sum": 14295,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model response list is empty for turn 0",
+      "error_type": "multi_turn:empty_turn_model_response",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 1108,
+      "n_turns_slo_ok": 3,
+      "n_turns_slo_scored": 3,
+      "per_turn_accuracy": 0.0,
+      "per_turn_accuracy_correct": 0,
+      "per_turn_accuracy_n": 3,
+      "total_latency_s": 63.55723229999421,
+      "turn_count": 3
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 26.082073714317204,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 512,
+        "last_wall_s": 23.0302297,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 5,
+          "model_n": 0
+        },
+        "prompt_tokens": 4213,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.082073714317204,
+            "error": null,
+            "generate_input_tokens": 4213,
+            "generated_tokens": 512,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 4213,
+            "step": 0,
+            "ttft_s": 3.438229248,
+            "turn": 0,
+            "wall_s": 23.0302297
+          }
+        ],
+        "ttft_s": 3.438229248,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 25.84496497079331,
+        "delta_tokens_vs_prev_turn": 548,
+        "generated_tokens": 512,
+        "last_wall_s": 19.981776,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 2,
+          "model_n": 0
+        },
+        "prompt_tokens": 4761,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.84496497079331,
+            "error": null,
+            "generate_input_tokens": 26,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4761,
+            "step": 0,
+            "ttft_s": 0.210033203,
+            "turn": 1,
+            "wall_s": 19.981776
+          }
+        ],
+        "ttft_s": 0.210033203,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 25.239722414680774,
+        "delta_tokens_vs_prev_turn": 560,
+        "generated_tokens": 512,
+        "last_wall_s": 20.4830099,
+        "n_decoded_steps": 0,
+        "n_generations": 1,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 2,
+          "model_n": 0
+        },
+        "prompt_tokens": 5321,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 25.239722414680774,
+            "error": null,
+            "generate_input_tokens": 38,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 5321,
+            "step": 0,
+            "ttft_s": 0.237145401,
+            "turn": 2,
+            "wall_s": 20.4830099
+          }
+        ],
+        "ttft_s": 0.237145401,
+        "turn": 2
+      }
+    ],
+    "wall_s": 63.55723229999421
+  },
+  {
+    "category": "multi_turn_base",
+    "completion_tokens_all_steps": [
+      206,
+      180,
+      505,
+      512,
+      341,
+      443
+    ],
+    "completion_tokens_sum": 2187,
+    "context_growth": [
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 3561,
+        "input_kind": "full_prompt",
+        "n_messages": 1,
+        "prompt_tokens": 3561,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 12,
+        "input_kind": "delta_continuation",
+        "n_messages": 3,
+        "prompt_tokens": 3788,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 0
+      },
+      {
+        "delta_tokens_vs_prev_turn": 115,
+        "generate_input_tokens": 22,
+        "input_kind": "delta_continuation",
+        "n_messages": 5,
+        "prompt_tokens": 3676,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 48,
+        "input_kind": "delta_continuation",
+        "n_messages": 8,
+        "prompt_tokens": 4238,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 1
+      },
+      {
+        "delta_tokens_vs_prev_turn": 656,
+        "generate_input_tokens": 15,
+        "input_kind": "delta_continuation",
+        "n_messages": 10,
+        "prompt_tokens": 4332,
+        "residency_mode": "RESIDENT",
+        "step": 0,
+        "turn": 2
+      },
+      {
+        "delta_tokens_vs_prev_turn": null,
+        "generate_input_tokens": 32,
+        "input_kind": "delta_continuation",
+        "n_messages": 13,
+        "prompt_tokens": 4714,
+        "residency_mode": "RESIDENT",
+        "step": 1,
+        "turn": 2
+      }
+    ],
+    "context_growth_delta_tokens": 1153,
+    "delta_tokens_vs_prev_turn": [
+      null,
+      115,
+      656
+    ],
+    "force_quit": false,
+    "id": "multi_turn_base_19",
+    "kind": "multi_turn",
+    "model_result_decoded": [
+      [
+        [
+          "find(path='.',name='test_document.txt')"
+        ]
+      ],
+      [
+        [
+          "cp(source='test_document.txt',destination='archives/test_document.txt')",
+          "mv(source='archives/test_document.txt',destination='archives/final_document.txt')"
+        ]
+      ],
+      [
+        [
+          "cd(folder='archives')",
+          "cat(file_name='final_document.txt')"
+        ]
+      ]
+    ],
+    "model_result_raw_heads": [
+      [
+        "<think>\nOkay, the user wants to find every file named 'test_document.txt' within the current directory. Let me check the available tools.\n\nLooking at the tools provided, there's a function called 'find' that searches for files or directories under a specific path. The description says it can search ",
+        "<think>\nOkay, the user asked to find every file named 'test_document.txt' in the current directory. I used the 'find' function with the path set to the current directory (.) and the name parameter as 'test_document.txt'. The response from the tool shows that there's a match at './test_document.txt'."
+      ],
+      [
+        "<think>\nOkay, the user wants to transfer a duplicate of 'test_document.txt' to the archives folder and rename it 'final_document.txt'. Let me break this down.\n\nFirst, I need to check if 'test_document.txt' exists in the current directory. The previous step found it, so that's good. Now, the user wan",
+        "<think>\nOkay, the user tried to copy 'test_document.txt' to 'archives/test_document.txt' but got an error saying the path is not allowed. Then, when moving, it said the file wasn't found.\n\nHmm, maybe the 'cp' function doesn't allow specifying the full path in the destination. The user might need to "
+      ],
+      [
+        "<think>\nOkay, the user wants to see the contents of 'final_document.txt' in the archives. Let me check the available functions.\n\nThere's the 'cat' function which displays the contents of a file. The parameters require the file name, which must be in the current directory. But the user is asking abou",
+        "<think>\nOkay, the user tried to view 'final_document.txt' in the archives directory but got an error saying the file isn't found. Let me think about why that might happen.\n\nFirst, the user probably tried to use the 'cat' command on a file that doesn't exist in the current directory. The 'cd archives"
+      ]
+    ],
+    "n_completed_turns": 3,
+    "n_user_turns": 3,
+    "prompt_tokens_all_steps": [
+      3561,
+      3788,
+      3676,
+      4238,
+      4332,
+      4714
+    ],
+    "prompt_tokens_first_step_per_turn": [
+      3561,
+      3676,
+      4332
+    ],
+    "prompt_tokens_sum": 24309,
+    "residency_mode": "RESIDENT",
+    "score": {
+      "error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "error_type": "multi_turn:instance_state_mismatch",
+      "valid": false
+    },
+    "session_summary": {
+      "fraction_turns_slo_ok": 1.0,
+      "measured_context_growth_tokens": 771,
+      "n_turns_slo_ok": 3,
+      "n_turns_slo_scored": 3,
+      "per_turn_accuracy": 0.3333333333333333,
+      "per_turn_accuracy_correct": 1,
+      "per_turn_accuracy_n": 3,
+      "total_latency_s": 92.67874689999735,
+      "turn_count": 3
+    },
+    "turn_metrics": [
+      {
+        "decode_tok_s": 22.115088911543374,
+        "delta_tokens_vs_prev_turn": null,
+        "generated_tokens": 206,
+        "last_wall_s": 8.1012772,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": true,
+          "gold_n": 1,
+          "model_n": 1
+        },
+        "prompt_tokens": 3561,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 22.115088911543374,
+            "error": null,
+            "generate_input_tokens": 3561,
+            "generated_tokens": 206,
+            "input_kind": "full_prompt",
+            "ok": true,
+            "prompt_tokens": 3561,
+            "step": 0,
+            "ttft_s": 2.555817138,
+            "turn": 0,
+            "wall_s": 11.8255063
+          },
+          {
+            "decode_tok_s": 22.42473357131136,
+            "error": null,
+            "generate_input_tokens": 12,
+            "generated_tokens": 180,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3788,
+            "step": 1,
+            "ttft_s": 0.119019599,
+            "turn": 0,
+            "wall_s": 8.1012772
+          }
+        ],
+        "ttft_s": 2.555817138,
+        "turn": 0
+      },
+      {
+        "decode_tok_s": 23.126637509502075,
+        "delta_tokens_vs_prev_turn": 115,
+        "generated_tokens": 505,
+        "last_wall_s": 19.4614193,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 3,
+          "model_n": 2
+        },
+        "prompt_tokens": 3676,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 23.126637509502075,
+            "error": null,
+            "generate_input_tokens": 22,
+            "generated_tokens": 505,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 3676,
+            "step": 0,
+            "ttft_s": 0.286369598,
+            "turn": 1,
+            "wall_s": 22.079421
+          },
+          {
+            "decode_tok_s": 26.545522104842544,
+            "error": null,
+            "generate_input_tokens": 48,
+            "generated_tokens": 512,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4238,
+            "step": 1,
+            "ttft_s": 0.211468292,
+            "turn": 1,
+            "wall_s": 19.4614193
+          }
+        ],
+        "ttft_s": 0.286369598,
+        "turn": 1
+      },
+      {
+        "decode_tok_s": 26.530120901485304,
+        "delta_tokens_vs_prev_turn": 656,
+        "generated_tokens": 341,
+        "last_wall_s": 17.2903467,
+        "n_decoded_steps": 1,
+        "n_generations": 2,
+        "per_turn_accuracy": {
+          "compare_mode": "parsed_sig_multiset",
+          "correct": false,
+          "gold_n": 1,
+          "model_n": 2
+        },
+        "prompt_tokens": 4332,
+        "slo_decode_tok_s": 6.0,
+        "slo_ok": true,
+        "slo_ttft_s": 10.0,
+        "steps": [
+          {
+            "decode_tok_s": 26.530120901485304,
+            "error": null,
+            "generate_input_tokens": 15,
+            "generated_tokens": 341,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4332,
+            "step": 0,
+            "ttft_s": 1.012667541,
+            "turn": 2,
+            "wall_s": 13.8282895
+          },
+          {
+            "decode_tok_s": 25.88268566451297,
+            "error": null,
+            "generate_input_tokens": 32,
+            "generated_tokens": 443,
+            "input_kind": "delta_continuation",
+            "ok": true,
+            "prompt_tokens": 4714,
+            "step": 1,
+            "ttft_s": 0.213293502,
+            "turn": 2,
+            "wall_s": 17.2903467
+          }
+        ],
+        "ttft_s": 1.012667541,
+        "turn": 2
+      }
+    ],
+    "wall_s": 92.67874689999735
+  }
+]

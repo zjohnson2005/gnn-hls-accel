@@ -1,0 +1,60 @@
+{
+  "purpose": "M2.1 closeout Item 3 — M2.5 / §3.2 sweep battery-budget feasibility (no decision)",
+  "citing_s1_run_id": "911965cf-257c-4276-954b-17611a5e75eb",
+  "capacities_mwh": {
+    "design_capacity_mwh": 68607,
+    "full_charge_capacity_mwh": 69043,
+    "design_source": "root\\WMI BatteryStaticData.DesignedCapacity",
+    "full_charge_source": "root\\WMI BatteryFullChargedCapacity.FullChargedCapacity",
+    "win32_design_capacity_mwh": null,
+    "win32_full_charge_capacity_mwh": null,
+    "vendor_stated_wh": 70
+  },
+  "soc_window_pct": [40, 85],
+  "usable_fraction": 0.45,
+  "usable_energy_mwh": 31069.35,
+  "assumptions": {
+    "n_load_levels": 8,
+    "power_levels_w": [15.0, 20.714285714285715, 26.42857142857143, 32.14285714285714, 37.85714285714286, 43.57142857142857, 49.285714285714285, 55.0],
+    "power_model": "linspace(min_w=15, turbo_w=55, n=8) — high levels dominate; not the 18.1 W mean",
+    "adopted_duration_s": 480,
+    "settle_s": 360,
+    "settle_power_w": 15,
+    "cooldown_s_per_gap": 120,
+    "cooldown_note": "ILLUSTRATIVE / NON-BINDING — thermal.cooldown not measured (AM-006 / M2.3); 120 s is a schema-example placeholder for sensitivity only",
+    "n_cooldown_gaps": 7,
+    "cooldown_power_w": 15,
+    "idle_bracket_s_each_side": 180,
+    "idle_bracket_power_w": 15
+  },
+  "costs_mwh": {
+    "load_only": 37333.333333333336,
+    "settle": 1500.0,
+    "cooldown_illustrative": 3500.0,
+    "scenario_A_load_settle_cool": 42333.333333333336,
+    "idle_brackets_Tidle180": 12000.0,
+    "scenario_B_plus_idle_brackets": 54333.333333333336,
+    "turbo_level_alone_55W_x480s": 7333.333333333333
+  },
+  "shortfall_vs_usable_mwh": {
+    "load_only": 6263.983333333334,
+    "scenario_A": 11263.983333333334,
+    "scenario_B": 23263.983333333334
+  },
+  "verdict": "does_not_fit",
+  "verdict_text": "A complete >=8-level §3.2 sweep at adopted 480 s does NOT fit inside one discharge within soc_window_pct [40,85].",
+  "options_not_chosen": [
+    {
+      "id": "split_cycles",
+      "summary": "Split sweep across multiple discharge cycles; declare cross-cycle comparability an open question"
+    },
+    {
+      "id": "widen_soc_window",
+      "summary": "Widen soc_window_pct; blocked pending stronger SoC-independence evidence (Item 4a does not support widening)"
+    },
+    {
+      "id": "fewer_levels",
+      "summary": "Reduce load levels below 8; requires amendment (spec §3.2 / AM-004 require >=8)"
+    }
+  ]
+}

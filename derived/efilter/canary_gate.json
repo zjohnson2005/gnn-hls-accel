@@ -1,0 +1,32 @@
+{
+  "canary_gate": {
+    "baseline_run_id": "f632701a-0306-4226-900c-223b343593f8",
+    "distribution": {
+      "fraction_above_placeholder": 0.06666666666666667,
+      "max": 0.42827892783051474,
+      "median": 0.018711800150854878,
+      "p95": 0.2198229801301715,
+      "placeholder_threshold": 0.15
+    },
+    "gate_mode": "baseline_relative",
+    "idle_p95": 0.2198229801301715,
+    "justification": "Idle compute-canary consecutive-pair relative drift (n_pairs=30, spacing_s=10.0: median=0.018711800150854878, p95=0.2198229801301715, max=0.42827892783051474, fraction_above_0.15=0.06666666666666667). Gate is baseline-relative: threshold = idle_p95 + margin = 0.2198229801301715 + 0.05 = 0.26982298013017153. Threshold derived from sealed baseline run_id=f632701a-0306-4226-900c-223b343593f8; not chosen to make a pilot pass (C2f).",
+    "margin": 0.05,
+    "margin_above_idle_p95": 0.05,
+    "max_relative_drift": 0.26982298013017153,
+    "n_pairs": 30,
+    "n_samples": 31,
+    "spacing_s": 10.0,
+    "threshold": 0.26982298013017153,
+    "threshold_justification": "Idle compute-canary consecutive-pair relative drift (n_pairs=30, spacing_s=10.0: median=0.018711800150854878, p95=0.2198229801301715, max=0.42827892783051474, fraction_above_0.15=0.06666666666666667). Gate is baseline-relative: threshold = idle_p95 + margin = 0.2198229801301715 + 0.05 = 0.26982298013017153. Threshold derived from sealed baseline run_id=f632701a-0306-4226-900c-223b343593f8; not chosen to make a pilot pass (C2f)."
+  },
+  "consumers": [
+    "configs/measurement.yaml canary.* (apply after seal)",
+    "seam.measurement._apply_post_canaries via max_relative_drift",
+    "seam.tools.efilter_run summary.canary_gate"
+  ],
+  "note": "Copy threshold fields into configs/measurement.yaml canary block before the next E-FILTER pilot. Do not edit sealed raw/.",
+  "run_id": "f632701a-0306-4226-900c-223b343593f8",
+  "status": "READY_FOR_MEASUREMENT_YAML_UPDATE",
+  "written_utc": "2026-08-05T02:05:41.875879+00:00"
+}

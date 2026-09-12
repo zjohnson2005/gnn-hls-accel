@@ -1,0 +1,87 @@
+{
+
+  "ledger": "C9",
+
+  "title": "Usable agent context bounded by prefill activation memory, not KV cache size",
+
+  "status": "RECORDED",
+
+  "date": "2026-08-05",
+
+  "governing": "docs/CURSOR_PROMPT_C2g.md §4",
+
+  "citing_run_ids": [
+
+    "0fe5e4c7-bb38-4666-826b-2c512b17a969",
+
+    "bf458efb-9a5a-4c0e-841f-ef3929af3af8"
+
+  ],
+
+  "related_notes": [
+
+    "derived/efilter/c9_practical_ceiling_note.json",
+
+    "derived/efilter/c2g_chunked_prefill_cpu_audit.json"
+
+  ],
+
+  "observed": {
+
+    "0fe5e4c7": {
+
+      "context_cap_tokens": null,
+
+      "peak_context_tokens": 9114,
+
+      "free_memory_mb_near_crash": 70,
+
+      "outcome": "crashed / partial"
+
+    },
+
+    "bf458efb": {
+
+      "context_cap_tokens": 7000,
+
+      "memory_floor_trip_mb": 27,
+
+      "outcome": "sealed; canary cleared; blocked on memory floor at C2T14"
+
+    }
+
+  },
+
+  "arithmetic_tension": {
+
+    "statement": "A tighter context cap reached lower free memory (7000 cap -> 27 MB free vs uncapped 9114 -> 70 MB crash). KV at 7000 tokens is ~516 MB against a ~2.6 GB model — that alone does not explain 27 MB free from a ~2.3 GB starting point.",
+
+    "implication": "Prefill activation memory is the likely consumer; C2g instruments RSS/free during generate to test linear vs superlinear scaling with context."
+
+  },
+
+  "chunked_prefill_cpu": {
+
+    "available": false,
+
+    "audit": "derived/efilter/c2g_chunked_prefill_cpu_audit.json",
+
+    "note": "No CPU equivalent of NPUW_LLM_PREFILL_CHUNK_SIZE on the stateful LLMPipeline path used by LocalOpenVinoBackend."
+
+  },
+
+  "finding": "On this stack, usable agent context is bounded by prefill activation memory, not by KV cache size. Cap-lowering (C2g: 5000) treats the symptom; without chunked prefill on CPU, activation pressure remains the practical ceiling.",
+
+  "c2g_response": {
+
+    "context_cap_tokens": 5000,
+
+    "instrumentation": "per-task free_memory_mb_min / process_rss_peak; per-step rss_before/peak/after_generate",
+
+    "memory_vs_context_note": "derived/efilter/c2g_memory_vs_context_note.json"
+
+  }
+
+}
+
+

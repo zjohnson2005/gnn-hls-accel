@@ -1,0 +1,100 @@
+{
+  "attempted_utc": "2026-08-10T12:47:34.496204+00:00",
+  "dry_validate": {
+    "allow_dirty": true,
+    "condition_label": "delta_prefill_matrix|nc=12000|arms=A,gpu_only|promote_from_derived",
+    "config_hash": "bae89ec7ace055fb9c5808c38fe50e16fce0fed6927634987c87073158ad2c87",
+    "emit_will_need_allow_dirty": false,
+    "git_dirty": true,
+    "launch_context": "ssh_detached",
+    "measurement_session_id": 0,
+    "measurement_window_station": "Service-0x0-234821d$",
+    "model_ir_sha256": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+    "model_name": "Qwen3-4B-int4-ov",
+    "note": "Dry construction validated against run_manifest.schema.json with synthetic empty tier-1 isolation_evidence. Live emit() re-resolves isolation_mode=remote and will refuse while Cursor/Chrome are resident.",
+    "ok": true,
+    "staging_plan": {
+      "cells_glob": "cells/delta_prefill_*.json",
+      "cells_n": 18,
+      "copy_if_present": [
+        "session_summary_as_found.json",
+        "session_plan_as_found.json",
+        "launch_log_failed_cell_excerpt.txt",
+        "robustness_finding.json"
+      ],
+      "robustness_finding_included": true,
+      "write_json": [
+        "derived_seal_manifest.json",
+        "derived_seal_summary.json",
+        "summary.json"
+      ]
+    },
+    "summary_keys": [
+      "admissibility",
+      "cell_durations",
+      "cells_completed",
+      "cells_failed",
+      "cells_ok",
+      "derived_seal_path",
+      "derived_seal_style",
+      "derived_tree_sha256",
+      "kind",
+      "matrix",
+      "measurement_isolation_mode",
+      "measurement_launch_context",
+      "measurement_placement",
+      "notes",
+      "promotion",
+      "robustness_finding",
+      "run_id",
+      "session_id"
+    ],
+    "target": "cpu-placement",
+    "workload": {
+      "benchmark": "delta_prefill_resident_vs_nonresident_matrix",
+      "concurrency": 1,
+      "kind": "delta_prefill_matrix",
+      "n_repeats": 3,
+      "seed": 20260805,
+      "task_ids": [
+        "A:NON_RESIDENT:nc12000:d2000:r0",
+        "A:NON_RESIDENT:nc12000:d2000:r1",
+        "A:NON_RESIDENT:nc12000:d2000:r2",
+        "A:RESIDENT:nc12000:d2000:r0",
+        "A:RESIDENT:nc12000:d2000:r1",
+        "A:RESIDENT:nc12000:d2000:r2",
+        "A:RESIDENT:nc12000:d500:r0",
+        "A:RESIDENT:nc12000:d500:r1",
+        "A:RESIDENT:nc12000:d500:r2",
+        "gpu_only:NON_RESIDENT:nc12000:d2000:r0",
+        "gpu_only:NON_RESIDENT:nc12000:d2000:r1",
+        "gpu_only:NON_RESIDENT:nc12000:d2000:r2",
+        "gpu_only:RESIDENT:nc12000:d2000:r0",
+        "gpu_only:RESIDENT:nc12000:d2000:r1",
+        "gpu_only:RESIDENT:nc12000:d2000:r2",
+        "gpu_only:RESIDENT:nc12000:d500:r0",
+        "gpu_only:RESIDENT:nc12000:d500:r1",
+        "gpu_only:RESIDENT:nc12000:d500:r2"
+      ]
+    }
+  },
+  "emit": {
+    "manifest_path": "raw/d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba/manifest.json",
+    "raw_path": "raw/d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba",
+    "raw_sha256": "a3ab61b86d2963f195ed7705abe5433b0fbdd568062902db836d44e81fa58560",
+    "robustness_finding_in_summary": true,
+    "run_id": "d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba"
+  },
+  "emit_wired": true,
+  "gate": "resolve_isolation_mode(remote) \u2192 schema kind \u2192 dry_validate \u2192 seam.manifest.emit",
+  "isolation_evidence_consistent": true,
+  "isolation_mode_resolved": "remote",
+  "note": "seam.manifest.emit wrote sealed raw/d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba/ from derived seal derived/delta_prefill/sealed_d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba (sealed_* tree not mutated).",
+  "raw_emit": true,
+  "schema_gate": "workload.kind delta_prefill_matrix accepted",
+  "seal_path": "derived/delta_prefill/sealed_d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba",
+  "session_id": "d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba",
+  "status": "raw_emitted",
+  "tier1_count": 0,
+  "tier1_resident_names": []
+}

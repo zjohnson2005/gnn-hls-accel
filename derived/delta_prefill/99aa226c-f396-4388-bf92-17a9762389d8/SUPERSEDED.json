@@ -1,0 +1,18 @@
+{
+  "superseded_for": "cross_precision_comparison",
+  "superseding_dispatch": "DISPATCH_P",
+  "written_utc": "2026-08-12T17:55:00Z",
+  "session_id": "99aa226c-f396-4388-bf92-17a9762389d8",
+  "matrix_tag": "dispatch_o_u4",
+  "reason": "DISPATCH P supersession: sequential one-arm u4 delta matrix ran on a machine under continuous GPU load (u4 22:54Z–00:16Z, then u8). Thermal drift within the following u8 matrix reached 5.12× on turn1 cold prefill (session 7f569929). With one arm per matrix, drift is confounded with the arm variable; u4-vs-u8 timing comparisons from sequential O stages are unsafe. Do not delete. Ceiling results (if any) and within-session artifacts remain on disk; they are not authorized for cross-precision ranking.",
+  "what_still_stands": [
+    "f16 ceiling 36500 CL_OUT_OF_RESOURCES",
+    "u8 ceiling >=40000 early_exit_position_limit",
+    "u4 ceiling if sealed under ceiling_a (ceiling claim only)"
+  ],
+  "see": [
+    "derived/kv_precision/DISPATCH_P_PREDICTION.md",
+    "derived/kv_precision/OPERATOR_CMD_DISPATCH_P.md",
+    "derived/delta_prefill/7f569929-4484-4af7-8231-5b535526f653/SUPERSEDED.json"
+  ]
+}

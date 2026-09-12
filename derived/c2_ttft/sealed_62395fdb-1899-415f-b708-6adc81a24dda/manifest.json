@@ -1,0 +1,115 @@
+{
+  "artifacts": [
+    {
+      "artifact": "artifacts/plan.json",
+      "bytes": 25614,
+      "name": "plan.json",
+      "sha256": "75f7786d1e573584528bbac62a16b6657c63722ddd8c3a4594303f7a152a56da"
+    },
+    {
+      "artifact": "artifacts/summary.json",
+      "bytes": 24845,
+      "name": "summary.json",
+      "sha256": "344c9b17b9d6d9e5bc45354d9dfdb91a922f0c596e6f836573616b99a6da72c2"
+    },
+    {
+      "artifact": "artifacts/arm_results.json",
+      "bytes": 19359,
+      "name": "arm_results.json",
+      "sha256": "edce8b7ab3914a60872c5dd18ec231b4b26daf1cfb1271d762b639369175b281"
+    },
+    {
+      "artifact": "artifacts/probes.ndjson",
+      "bytes": 30795,
+      "name": "probes.ndjson",
+      "sha256": "fbffe1054441abe63b2d2a2047e3e4ec89272a912600539c00ad45a514f69865"
+    },
+    {
+      "artifact": "artifacts/watchdog_kills.jsonl",
+      "bytes": 4173,
+      "name": "watchdog_kills.jsonl",
+      "sha256": "2485063667b19e07c55a9dff2d8679a4cf31f106be140372423f2cf024e48819"
+    },
+    {
+      "artifact": "artifacts/work/",
+      "n_files": 110,
+      "name": "work/",
+      "note": "Per-probe spec/result JSON; hashed via seal tree_sha256."
+    }
+  ],
+  "criterion": "ttft_slo",
+  "integrity": {
+    "arms_converged": true,
+    "canary": {
+      "criterion_path_runs_canary": false,
+      "note": "ttft_slo criterion path does not emit canaries; N/A."
+    },
+    "ir_sha256": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+    "ir_sha256_pin_ok": true,
+    "kv_readback_match_every_cell": true,
+    "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "n_arms": 3,
+    "n_kv_ok": 55,
+    "n_probes_ndjson": 54,
+    "n_work_results": 55,
+    "openvino_model_bin_pin_ok": true,
+    "openvino_model_bin_sha256": "074214fa29ab1b479536fc7184ef3036e7b355a5835e8590b61b70a8de1df2f9",
+    "orchestrator_ws_peak": {
+      "field": "generation.peak_rss_bytes",
+      "n_cells_with_peak": 55,
+      "note": "C-2 runs via tools/run_c1_ceiling.py (Python worker), not the PowerShell delta_prefill orchestrator_ws_guard. Per-probe peak_rss_bytes is the recorded working-set peak."
+    },
+    "prefill_s_non_null_every_probe": true,
+    "primary_prediction_held": true,
+    "status": "integrity_pass",
+    "ttft_limits": {
+      "gpu_only_f16": 10000,
+      "gpu_only_u4": 10000,
+      "gpu_only_u8": 10000
+    },
+    "watchdog_log_lines": 45,
+    "watchdog_log_present": true
+  },
+  "ir_sha256": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+  "kind": "c2_ttft_bound_limit",
+  "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+  "primary_claim_eval": {
+    "active_claim": "turn1_limits_agree_within_resolution",
+    "agree_within_resolution": true,
+    "evaluable": true,
+    "falsification_notes": [],
+    "falsified": false,
+    "limits": {
+      "gpu_only_f16": 10000,
+      "gpu_only_u4": 10000,
+      "gpu_only_u8": 10000
+    },
+    "pair_abs_diffs_tokens": {
+      "f16_u4": 0,
+      "f16_u8": 0,
+      "u8_u4": 0
+    },
+    "primary_prediction_held": true,
+    "span_tokens": 0,
+    "withdrawn_ordering_forensic": {
+      "held_on_this_data": false,
+      "note": "Not the active claim; retained because both versions stay in the record.",
+      "order": "f16 > u8 >= u4"
+    }
+  },
+  "raw_emit_blocked": {
+    "reason": "derived_diagnostic seal only; raw/ promote not requested for C-2."
+  },
+  "run_id": "62395fdb-1899-415f-b708-6adc81a24dda",
+  "seal_style": "derived_diagnostic",
+  "sealed_utc": "2026-09-08T21:14:51.356219+00:00",
+  "session_id": "62395fdb-1899-415f-b708-6adc81a24dda",
+  "slo_s": 10.0,
+  "source_session": "derived/c2_ttft/62395fdb-1899-415f-b708-6adc81a24dda",
+  "status": "COMPLETE",
+  "ttft_limits": {
+    "gpu_only_f16": 10000,
+    "gpu_only_u4": 10000,
+    "gpu_only_u8": 10000
+  }
+}

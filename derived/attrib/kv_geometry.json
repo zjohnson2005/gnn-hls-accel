@@ -1,0 +1,35 @@
+{
+  "experiment_id": "attrib",
+  "f16_counterfactual_bytes_per_token": 147456,
+  "f16_counterfactual_kib_per_token": 144.0,
+  "formula": "2 * n_layers * n_kv_heads * head_dim * dtype_bytes",
+  "geometry": {
+    "config_path": "C:/Users/zjohn/Projects/gnn-hls-accel/models/Qwen3-4B-int4-ov/config.json",
+    "config_sha256": "8de935ea1cdb814c2795b8ca82764009cc2f0cfbe28af8e46559d371ece31cfe",
+    "excludes": [
+      "weights",
+      "activations",
+      "allocator_slack",
+      "runtime_internal_copies"
+    ],
+    "formula": "2 * n_layers * n_kv_heads * head_dim * dtype_bytes",
+    "head_dim": 128,
+    "kv_bytes_per_token": 73728,
+    "kv_dtype": "u8",
+    "kv_dtype_bytes": 1,
+    "kv_dtype_source": "device_readback",
+    "model_name": "qwen3",
+    "n_attention_heads": 32,
+    "n_kv_heads": 8,
+    "n_layers": 36
+  },
+  "k_and_v_counted": true,
+  "leading_factor_two_meaning": "K and V",
+  "live_bytes_per_token": 73728,
+  "live_kib_per_token": 72.0,
+  "ratio_f16_counterfactual_over_live": 2.0,
+  "raw_sha256": "a6af1e0bf52914e28a0d23f2fe83be6f27d0dfa530c11718c686b272d7a45622",
+  "resolution": "The exact 2x difference is explained by dtype: live CPU KV_CACHE_PRECISION is u8 (1 byte/element), while 144 KiB/token assumes f16/bf16 (2 bytes/element). The model config fixes num_key_value_heads at 8, so head count is not the source.",
+  "run_id": "1fd81d2a-3bae-40b1-b2a6-b9c5a50586b1",
+  "stage": "kv_geometry_resolution"
+}

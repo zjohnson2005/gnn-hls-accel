@@ -1,0 +1,64 @@
+{
+  "spec_path": "configs/models/Qwen3-4B-int4-ov.yaml",
+  "model": "Qwen3-4B-int4-ov",
+  "d1_prompt_echo": {
+    "nonce_in_rendered_prompt": true,
+    "nonce_in_output": false,
+    "returns_prompt_plus_completion": false,
+    "output_text": "<think>\nOkay, the user sent a message that says \"Reply with the single word OK. Marker: NONCEBC",
+    "output_chars": 95,
+    "rendered_prompt_chars": 183,
+    "interpretation": "Runtime returns the COMPLETION ONLY. completion_chars/bytes are safe as-is."
+  },
+  "thinking_off": {
+    "enable_thinking": false,
+    "prompt_contains_empty_think_pair": true,
+    "rendered_prompt_tail": "t|>user\nA user asks you to add 47 and 58, then tell them whether the result is prime. Give the final answer.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+    "raw_output": "<think>\nOkay, let's see. The user wants me to add 47 and 58, then check if the result is a prime number.\n\nFirst, I'll add the two numbers: 47 + 58. Let me do that calculation.\n\n47 + 58 = 105.\n\nNow, I need to determine if 105 is a prime number. A prime number is a number greater than 1 that has no positive divisors other than 1 and itself.\n\nLet me check the factors of 105. \n\nStarting with small primes:\n\n- 105 \u00f7 2 = 52.5 \u2192 Not an integer, so 2 is not a factor.\n- 105 \u00f7 3 = 35 \u2192 3 \u00d7 35 = 105. So, 3 is a factor. That means 105 is not prime.\n\nTherefore, the result of adding 47 and 58 is 105, which is not a prime number.\n\nFinal answer: 105 is not a prime number.",
+    "split": {
+      "thinking_chars": 655,
+      "thinking_has_content": true,
+      "n_think_blocks": 1,
+      "thinking_truncated": true,
+      "answer_chars": 0
+    },
+    "completion_tokens": 235,
+    "wall_s": 16.0156143
+  },
+  "thinking_on": {
+    "enable_thinking": true,
+    "prompt_contains_empty_think_pair": false,
+    "rendered_prompt_tail": "|im_end|>\n<|im_start|>user\nA user asks you to add 47 and 58, then tell them whether the result is prime. Give the final answer.<|im_end|>\n<|im_start|>assistant\n",
+    "raw_output": "<think>\nOkay, let's see. The user wants me to add 47 and 58, then check if the result is a prime number. Alright, first step is to do the addition.\n\nSo, 47 plus 58. Let me calculate that. 40 plus 50 is 90, and 7 plus 8 is 15. So 90 plus 15 is 105. Wait, is that right? Let me double-check. 47 + 58. 47 + 50 is 97, then add 8 more, which makes 105. Yep, that's correct.\n\nNow, I need to determine if 105 is a prime number. Hmm, prime numbers are numbers greater than 1 that have no divisors other than 1 and themselves. So, I need to check if 105 can be divided by any number other than 1 and 105.\n\nLet me start testing small primes. First, 2: 105 is odd, so it's not divisible by 2. Next, 3. The rule for 3 is if the sum of the digits is divisible by 3. 1 + 0 + 5 = 6, and 6 is divisible by 3. So 105 \u00f7 3 is 35. That means 3 is a factor, so 105 isn't prime. Wait, but let me confirm that division. 3 times 35 is 105, yes. So that's a factor other than 1 and itself. Therefore, 105 is not a prime number.\n\nAlternatively, I could check divisibility by other numbers. Let's see, 5: the last digit is 5,",
+    "split": {
+      "thinking_chars": 1090,
+      "thinking_has_content": true,
+      "n_think_blocks": 1,
+      "thinking_truncated": true,
+      "answer_chars": 0
+    },
+    "completion_tokens": 384,
+    "wall_s": 22.1949817
+  },
+  "verdict": {
+    "verdict": "refused",
+    "note": "The off-arm produced reasoning content despite the empty pre-filled block. Arm 1 is NOT a non-reasoning condition, so both arms would be reasoning arms.",
+    "thinking_occurred_min_non_ws": 10,
+    "thinking_off_occurred": true,
+    "thinking_on_occurred": true,
+    "thinking_off": {
+      "thinking_chars": 655,
+      "thinking_has_content": true,
+      "n_think_blocks": 1,
+      "thinking_truncated": true,
+      "answer_chars": 0
+    },
+    "thinking_on": {
+      "thinking_chars": 1090,
+      "thinking_has_content": true,
+      "n_think_blocks": 1,
+      "thinking_truncated": true,
+      "answer_chars": 0
+    }
+  }
+}

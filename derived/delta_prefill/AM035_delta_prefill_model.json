@@ -1,0 +1,55 @@
+{
+  "amendment_id": "AM-035",
+  "status": "RESOLVED",
+  "pre_post_data": "POST-DATA",
+  "date": "2026-08-10",
+  "citing_run_ids": {
+    "n_cached_4000": "9f38eb15-6fe6-40b4-871b-a02ec5629bb1",
+    "n_cached_12000": "d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba"
+  },
+  "seal_paths": {
+    "9f38eb15-6fe6-40b4-871b-a02ec5629bb1": "derived/delta_prefill/sealed_9f38eb15-6fe6-40b4-871b-a02ec5629bb1",
+    "d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba": "derived/delta_prefill/sealed_d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba"
+  },
+  "retracted": {
+    "form": "constant_plus_linear_or_constant_plus_delta at single n_cached",
+    "arm_A_constant_s_at_n_cached_12000": 19.45,
+    "reason": "artifact of fitting two points at a single cached length",
+    "dependents_withdrawn_or_recomputed": [
+      "feasibility bounds treating turn2 as independent of n_cached",
+      "cost interaction reported as 6x under the bad intercept model",
+      "max-feasible-delta tables not conditioned on n_cached"
+    ]
+  },
+  "measured_form": {
+    "gpu_only": {
+      "expression": "turn2_prefill_s ~ C * d * n_cached",
+      "C": 4.34e-7,
+      "delta_only_term": "fits_to_approx_0"
+    },
+    "arm_A": {
+      "k_n": "0.0166 * (n/4000)^0.70",
+      "expression": "turn2_prefill_s = k(n) * d",
+      "per_delta_token_s_at_n_4000": [0.0166, 0.0159, 0.0175],
+      "note": "flat in delta at fixed n; scales with n"
+    }
+  },
+  "consequence": {
+    "local_feasibility_depends_on": "session_position_n_cached_not_delta_alone",
+    "max_feasible_delta_at_10s_bound_gpu_only_plus_residency": {
+      "4000": 5760,
+      "12000": 1920,
+      "27600": 834
+    }
+  },
+  "corrected_cost_figures": {
+    "writeup": "derived/delta_prefill/OPTIMAL_CONFIG_COST.md",
+    "default": {"pct_local": 0, "cost_usd": 154.42},
+    "gpu_only_alone": {"pct_local": 25, "saving_pct": 7},
+    "gpu_only_plus_residency": {"pct_local": 42, "cost_usd": 130.33, "saving_pct": 16},
+    "cost_interaction_superadditive": 2.3,
+    "cost_interaction_was_on_bad_model": 6.0,
+    "latency_interaction": 2.4,
+    "latency_interaction_note": "UNCHANGED; from measured medians, not fits"
+  }
+}

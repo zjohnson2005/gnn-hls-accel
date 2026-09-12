@@ -1,0 +1,89 @@
+{
+  "audit_id": "c2f_wallclock_timeout_audit",
+  "governing": "docs/CURSOR_PROMPT_C2f.md §3",
+  "audited_utc": "2026-08-05T01:49:00+00:00",
+  "question": "Does any wall-clock timeout on the generation path truncate token production?",
+  "verdict": "NONE",
+  "section_3_stands": true,
+  "per_endpoint_canary_scoping": "implemented",
+  "note": "No wall-clock timeout truncates generation. Machine speed cannot change which tokens are produced under greedy + max_new_tokens. Canary drift contaminates timing endpoints only; envelope (peak KV / context) remains over all blocks.",
+  "paths_audited": [
+    {
+      "path": "seam/agent/harness.py",
+      "findings": [],
+      "would_truncate_tokens": false,
+      "notes": [
+        "run_task calls backend.generate with no wall-clock deadline or timeout wrapper.",
+        "context_cap_tokens terminates BEFORE generate based on projected context (token arithmetic), not wall clock.",
+        "max_tokens is a token budget, not a wall-clock timeout."
+      ]
+    },
+    {
+      "path": "seam/backends/local_openvino.py",
+      "findings": [],
+      "would_truncate_tokens": false,
+      "notes": [
+        "GenerationConfig sets max_new_tokens and do_sample=False only.",
+        "Runtime inspection of openvino_genai.GenerationConfig: no attributes matching time/timeout/duration/deadline.",
+        "Streamer records first-token wall as TTFT fallback; does not cancel generation."
+      ]
+    },
+    {
+      "path": "OpenVINO GenAI GenerationConfig (runtime)",
+      "findings": [],
+      "would_truncate_tokens": false,
+      "notes": [
+        "dir(GenerationConfig) timeout/duration/deadline attrs: []",
+        "max_new_tokens present and used."
+      ]
+    },
+    {
+      "path": "seam/tools/efilter_run.py",
+      "findings": [
+        {
+          "symbol": "teardown.recovery_timeout_s",
+          "location": "wait_free_memory_recovery / _teardown_between_tasks",
+          "truncates_generation": false,
+          "note": "Bounds free-memory recovery wait between tasks after pipeline teardown; does not interrupt generate()."
+        },
+        {
+          "symbol": "thermal.warmup_s",
+          "location": "_warm_and_measure",
+          "truncates_generation": false,
+          "note": "Ends the throughput warmup sampling loop by elapsed time; not applied to timed-task generation."
+        },
+        {
+          "symbol": "subprocess timeout=20/30",
+          "location": "helper process joins",
+          "truncates_generation": false,
+          "note": "Process-management joins only; not on the LLM generate path."
+        }
+      ],
+      "would_truncate_tokens": false
+    },
+    {
+      "path": "seam/measurement.py",
+      "findings": [
+        {
+          "symbol": "locking.wait_timeout_s",
+          "truncates_generation": false,
+          "note": "Refuse to start a block if the machine lock is not acquired; never truncates an in-flight generate."
+        }
+      ],
+      "would_truncate_tokens": false
+    }
+  ],
+  "non_truncating_token_limits": [
+    {
+      "name": "max_new_tokens / workload.max_tokens",
+      "kind": "token_budget",
+      "truncates_by_wall_clock": false
+    },
+    {
+      "name": "context_cap_tokens",
+      "kind": "pre_generate_projection",
+      "truncates_by_wall_clock": false
+    }
+  ],
+  "implication": "C2f §3 stands. Per-endpoint canary scoping is required: envelope over all blocks; timing over canary_admissible ∩ paging_admissible. Canary alone is not clearance-fatal for the primary (peak KV / envelope) endpoint."
+}

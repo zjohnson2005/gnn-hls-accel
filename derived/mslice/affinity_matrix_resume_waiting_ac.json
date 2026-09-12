@@ -1,0 +1,38 @@
+{
+  "status": "STOP_waiting_for_charging_complete",
+  "checked_at_local": "2026-08-03T15:04:10",
+  "reason": "ac_online_but_still_charging",
+  "power": {
+    "on_battery": false,
+    "charging": true,
+    "battery_pct": 94.0,
+    "BatteryStatusWmi": {
+      "Charging": true,
+      "Discharging": false,
+      "ChargeRate_mW": 28211.0,
+      "DischargeRate_mW": 0.0,
+      "PowerOnline": true,
+      "RemainingCapacity_mWh": 64987.0,
+      "Voltage_mV": 13383.0
+    },
+    "charging_complete_flag": false,
+    "charging_complete_reason": "charging=true (soc=94.0, ChargeRate=28211.0)",
+    "settled_for_ac_pinned_resume": false,
+    "note": "AC restored but charging not settled; resume requires charging==false (or SoC>=95 and ChargeRate<=500 mW)."
+  },
+  "stray_affinity_matrix_pids": [],
+  "checkpoint": {
+    "path": "derived/mslice/affinity_matrix.partial.json",
+    "progress": "37/80 cells (prior abort ac_lost_mid_matrix at block 4 A1)",
+    "untouched": true,
+    "incomplete_block_discard_on_resume": true
+  },
+  "actions_taken": [
+    "power check only",
+    "stray PID check (none)",
+    "no resume",
+    "no analysis",
+    "no measurement while charging"
+  ],
+  "resume_when": "charging-complete settled on AC (charging==false / ChargeRate~0 with PowerOnline=true). Then: affinity_matrix --resume with same seed/blocks/cooldown."
+}

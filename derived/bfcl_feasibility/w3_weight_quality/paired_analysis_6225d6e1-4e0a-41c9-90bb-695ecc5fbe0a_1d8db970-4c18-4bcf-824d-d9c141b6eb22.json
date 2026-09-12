@@ -1,0 +1,234 @@
+{
+  "analyzed_utc": "2026-08-30T21:19:52.955406+00:00",
+  "arms": {
+    "int4": {
+      "ir_sha256": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+      "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+      "n_force_terminated": 3,
+      "per_turn_f2": {
+        "accuracy": 0.34289617486338797,
+        "correct": 251,
+        "n": 732
+      },
+      "session_id": "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+      "trajectory": {
+        "accuracy": 0.1,
+        "correct": 20,
+        "n": 200
+      }
+    },
+    "int8": {
+      "ir_sha256": "f7d323d0eb94a6bc9a1bf807416877cbb988cfbd95e7f9ef12403951b90886ae",
+      "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int8-ov.yaml",
+      "n_force_terminated": 0,
+      "per_turn_f2": {
+        "accuracy": 0.3923705722070845,
+        "correct": 288,
+        "n": 734
+      },
+      "session_id": "1d8db970-4c18-4bcf-824d-d9c141b6eb22",
+      "trajectory": {
+        "accuracy": 0.115,
+        "correct": 23,
+        "n": 200
+      }
+    }
+  },
+  "entry_trajectory_diffs": {
+    "int4_pass_int8_fail": [
+      "multi_turn_base_77",
+      "multi_turn_base_88",
+      "multi_turn_base_114",
+      "multi_turn_base_179"
+    ],
+    "int8_pass_int4_fail": [
+      "multi_turn_base_50",
+      "multi_turn_base_102",
+      "multi_turn_base_120",
+      "multi_turn_base_130",
+      "multi_turn_base_133",
+      "multi_turn_base_142",
+      "multi_turn_base_162"
+    ],
+    "n_both_fail": 173,
+    "n_both_pass": 16,
+    "n_int4_only": 4,
+    "n_int8_only": 7
+  },
+  "failure_buckets": {
+    "int4_session": "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+    "int8_session": "1d8db970-4c18-4bcf-824d-d9c141b6eb22",
+    "n_entries": 200,
+    "table": [
+      {
+        "bucket": "(trajectory_pass)",
+        "int4": 20,
+        "int8": 23
+      },
+      {
+        "bucket": "multi_turn:empty_turn_model_response",
+        "int4": 45,
+        "int8": 20
+      },
+      {
+        "bucket": "multi_turn:execution_response_mismatch",
+        "int4": 37,
+        "int8": 51
+      },
+      {
+        "bucket": "multi_turn:force_terminated",
+        "int4": 3,
+        "int8": 0
+      },
+      {
+        "bucket": "multi_turn:instance_state_mismatch",
+        "int4": 95,
+        "int8": 106
+      }
+    ]
+  },
+  "force_terminated_cross": {
+    "int4_force_terminated_ids": [
+      "multi_turn_base_2",
+      "multi_turn_base_15",
+      "multi_turn_base_34"
+    ],
+    "n": 3,
+    "n_in_first_20": 2,
+    "note": "2 of 3 int4 force_terminated fell in the first 20 entries; pilot overrepresented that failure mode ~18x vs the remaining 180",
+    "overrepresentation_first20_vs_rest": 18.0,
+    "rate_entries_20_199": 0.005555555555555556,
+    "rate_first_20": 0.1,
+    "rows": [
+      {
+        "id": "multi_turn_base_2",
+        "in_first_20": true,
+        "int4": {
+          "failure_bucket": "multi_turn:force_terminated",
+          "force_terminated": true,
+          "n_completed_turns": 4,
+          "n_user_turns": 5,
+          "trajectory_pass": false
+        },
+        "int8": {
+          "failure_bucket": "multi_turn:instance_state_mismatch",
+          "force_terminated": false,
+          "n_completed_turns": 5,
+          "n_user_turns": 5,
+          "trajectory_pass": false
+        }
+      },
+      {
+        "id": "multi_turn_base_15",
+        "in_first_20": true,
+        "int4": {
+          "failure_bucket": "multi_turn:force_terminated",
+          "force_terminated": true,
+          "n_completed_turns": 4,
+          "n_user_turns": 5,
+          "trajectory_pass": false
+        },
+        "int8": {
+          "failure_bucket": "multi_turn:execution_response_mismatch",
+          "force_terminated": false,
+          "n_completed_turns": 5,
+          "n_user_turns": 5,
+          "trajectory_pass": false
+        }
+      },
+      {
+        "id": "multi_turn_base_34",
+        "in_first_20": false,
+        "int4": {
+          "failure_bucket": "multi_turn:force_terminated",
+          "force_terminated": true,
+          "n_completed_turns": 2,
+          "n_user_turns": 2,
+          "trajectory_pass": false
+        },
+        "int8": {
+          "failure_bucket": "multi_turn:instance_state_mismatch",
+          "force_terminated": false,
+          "n_completed_turns": 2,
+          "n_user_turns": 2,
+          "trajectory_pass": false
+        }
+      }
+    ]
+  },
+  "generation_note": "greedy do_sample=False; one-entry diffs are not sampling noise",
+  "independence_model_n200": {
+    "int4": {
+      "mean_turns_per_entry": 3.66,
+      "model": "p_turn ** mean_turns_per_entry (README_feasibility independence claim)",
+      "n_entries": 200,
+      "observed_trajectory": 0.1,
+      "observed_trajectory_fraction": "20/200",
+      "per_turn_accuracy": 0.34289617486338797,
+      "per_turn_correct": 251,
+      "per_turn_n": 732,
+      "predicted_trajectory": 0.019892770118839276,
+      "residual_obs_minus_pred": 0.08010722988116073,
+      "residual_ratio_obs_over_pred": 5.026951973133992
+    },
+    "int8": {
+      "mean_turns_per_entry": 3.67,
+      "model": "p_turn ** mean_turns_per_entry (README_feasibility independence claim)",
+      "n_entries": 200,
+      "observed_trajectory": 0.115,
+      "observed_trajectory_fraction": "23/200",
+      "per_turn_accuracy": 0.3923705722070845,
+      "per_turn_correct": 288,
+      "per_turn_n": 734,
+      "predicted_trajectory": 0.03227497319023631,
+      "residual_obs_minus_pred": 0.0827250268097637,
+      "residual_ratio_obs_over_pred": 3.563132316862445
+    },
+    "readme_claim": "docs/README_feasibility.md: independence model reproduces trajectory exactly (product of per-turn competences). At n=20 it held; recompute at n=200 as p_turn ** mean_turns_per_entry."
+  },
+  "kind": "w3_paired_quality_analysis",
+  "mcnemar_per_turn": {
+    "b": 17,
+    "c": 53,
+    "chi2_p_approx": 2.873076843491046e-05,
+    "contingency": {
+      "a_both_pass": 234,
+      "b_int4_pass_int8_fail": 17,
+      "c_int4_fail_int8_pass": 53,
+      "d_both_fail": 428,
+      "n_paired_turns": 732
+    },
+    "n_discordant": 70,
+    "odds_ratio": 0.32075471698113206,
+    "odds_ratio_ci95": [
+      0.17410721786589395,
+      0.5627814031925112
+    ],
+    "odds_ratio_definition": "b/c = (int4-pass&int8-fail)/(int4-fail&int8-pass)",
+    "p_exact": 1.919969240032143e-05,
+    "statistic_chi2_cc": 17.5,
+    "statistic_chi2_cc_note": "(|b-c|-1)^2/(b+c); reference only \u2014 p from exact binomial"
+  },
+  "mcnemar_trajectory": {
+    "b": 4,
+    "c": 7,
+    "chi2_p_approx": 0.5464935954065822,
+    "contingency": {
+      "a_both_pass": 16,
+      "b_int4_pass_int8_fail": 4,
+      "c_int4_fail_int8_pass": 7,
+      "d_both_fail": 173,
+      "n": 200
+    },
+    "n_discordant": 11,
+    "odds_ratio": 0.5714285714285714,
+    "odds_ratio_ci95": [
+      0.12266639677099664,
+      2.247757995396766
+    ],
+    "odds_ratio_definition": "b/c = (int4-pass&int8-fail)/(int4-fail&int8-pass)",
+    "p_exact": 0.548828125,
+    "statistic_chi2_cc": 0.36363636363636365,
+    "statistic_chi2_cc_note": "(|b-c|-1)^2/(b+c); reference only \u2014 p from exact binomial"
+  }
+}

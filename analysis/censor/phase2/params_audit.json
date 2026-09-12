@@ -1,0 +1,129 @@
+{
+  "ROUTER_COST_CITATION": "Router latency defaults (rule\u22481 ms, embedding\u22485 ms, classifier\u224875 ms, LLM\u2248430 ms) are order-of-magnitude figures from published hybrid-routing practitioner measurements and open router benchmarks (e.g. RouteLLM-style classifier/embedding routers vs generative LLM routers). Exact host calibration is Phase 5; these values are labeled as practitioner-sourced priors, not this corpus's measurements.",
+  "f1": {
+    "enabled": true,
+    "orch_floor_ms": {
+      "value": 5.45,
+      "source": "midpoint of CAP-01 langgraph floor band [3.9, 7.0] ms"
+    },
+    "orch_floor_ms_lo": {
+      "value": 3.9,
+      "source": "CAP-01 protocol_cap01_v2.json floor_anchor.promoted_reference_bands_ms.langgraph[0]; TurnTrace/CAP-01 measured orchestration floor"
+    },
+    "orch_floor_ms_hi": {
+      "value": 7.0,
+      "source": "CAP-01 protocol_cap01_v2.json floor_anchor.promoted_reference_bands_ms.langgraph[1]; TurnTrace/CAP-01 measured orchestration floor"
+    },
+    "router_type": "embedding",
+    "router_cost_ms": {
+      "rule": {
+        "value": 1.0,
+        "source": "practitioner router latency survey (rule-based): ~1 ms; see params.ROUTER_COST_CITATION"
+      },
+      "embedding": {
+        "value": 5.0,
+        "source": "practitioner router latency survey (embedding similarity): ~5 ms; see params.ROUTER_COST_CITATION"
+      },
+      "classifier": {
+        "value": 75.0,
+        "source": "practitioner router latency survey (small classifier): ~75 ms; see params.ROUTER_COST_CITATION"
+      },
+      "llm": {
+        "value": 430.0,
+        "source": "practitioner router latency survey (LLM-as-router): ~430 ms; see params.ROUTER_COST_CITATION"
+      }
+    },
+    "decision_power_w": {
+      "value": 15.0,
+      "source": "conservative host package draw during light CPU orchestration (order-of-magnitude; Phase 5 RAPL calibration replaces)"
+    },
+    "local_model_latency_ms_lo": {
+      "value": 5.4,
+      "source": "user-stated TurnTrace crossover band lower edge (5.4\u20138.4 ms) where orchestration floor meets short local model calls"
+    },
+    "local_model_latency_ms_hi": {
+      "value": 8.4,
+      "source": "user-stated TurnTrace crossover band upper edge (5.4\u20138.4 ms)"
+    }
+  },
+  "f2": {
+    "enabled": true,
+    "cloud_prefill_ms_per_token": {
+      "value": 0.05,
+      "source": "OA-01 nonstreaming corpus lacks prefill isolate; 0.05 ms/token is a conservative cloud prefill prior consistent with TurnTrace C1 openai-processing-ms / token ratios on short contexts (order 0.03\u20130.1 ms/tok)"
+    },
+    "local_prefill_ms_per_token": {
+      "value": 0.4,
+      "source": "local GPU/NPU prefill prior ~0.4 ms/token for mid-size local models under common llama.cpp/vLLM deployments; Phase 5 replaces with box-calibrated f(n)"
+    },
+    "cloud_usd_per_1m_input": {
+      "value": 2.0,
+      "source": "OA-01 protocol_oa01_v1.json pricing_usd_per_1m_tokens.gpt-4.1.input"
+    },
+    "cloud_usd_per_1m_cached_input": {
+      "value": 0.5,
+      "source": "OA-01 protocol_oa01_v1.json pricing_usd_per_1m_tokens.gpt-4.1.cached_input"
+    },
+    "cloud_usd_per_1m_output": {
+      "value": 8.0,
+      "source": "OA-01 protocol_oa01_v1.json pricing_usd_per_1m_tokens.gpt-4.1.output"
+    }
+  },
+  "f3": {
+    "enabled": true,
+    "max_speedup": {
+      "value": 1.19,
+      "source": "TLP-01 Tier-C rate-limit floor speedup on MT-RS-01 (apu_characterization/out/tlp01/t2/t2_ladder_report.md: 1.19x)"
+    },
+    "assumed_concurrency": {
+      "value": 8.0,
+      "source": "illustrative naive 'unlimited cloud parallelism' assumption used only when F3 is OFF; not a measurement"
+    }
+  },
+  "f4": {
+    "enabled": true,
+    "capacity_factor": {
+      "value": 1.0,
+      "source": "UNMEASURED Phase-2 stub: no degradation; Phase 5 replaces with measured discharge/recharge curves"
+    },
+    "measurement_status": "UNMEASURED"
+  },
+  "inference": {
+    "local_decode_ms_per_token": {
+      "value": 8.0,
+      "source": "local decode prior ~8 ms/token (small/mid local model); Phase 5 box calibration replaces"
+    },
+    "local_prefill_ms_per_token": {
+      "value": 0.4,
+      "source": "same source as F2Params.local_prefill_ms_per_token"
+    },
+    "local_usd_per_kwh": {
+      "value": 0.12,
+      "source": "US average retail electricity order-of-magnitude (EIA-style); used only for local USD proxy"
+    },
+    "local_power_w": {
+      "value": 100.0,
+      "source": "illustrative GPU/NPU package draw during generation; Phase 5 RAPL/NVML replaces"
+    },
+    "cloud_usd_per_1m_input": {
+      "value": 2.0,
+      "source": "OA-01 protocol_oa01_v1.json pricing_usd_per_1m_tokens.gpt-4.1.input"
+    },
+    "cloud_usd_per_1m_cached_input": {
+      "value": 0.5,
+      "source": "OA-01 protocol_oa01_v1.json pricing_usd_per_1m_tokens.gpt-4.1.cached_input"
+    },
+    "cloud_usd_per_1m_output": {
+      "value": 8.0,
+      "source": "OA-01 protocol_oa01_v1.json pricing_usd_per_1m_tokens.gpt-4.1.output"
+    },
+    "cloud_prefill_ms_per_token": {
+      "value": 0.05,
+      "source": "same prior as F2Params.cloud_prefill_ms_per_token (TurnTrace C1 processing-ms/token order)"
+    },
+    "cloud_decode_ms_per_token": {
+      "value": 25.0,
+      "source": "practitioner cloud decode prior ~25 ms/output-token when streaming isolate absent (OA-01 nonstreaming); used only as fallback when logged_latency_ms is missing"
+    }
+  }
+}

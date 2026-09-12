@@ -1,0 +1,114 @@
+{
+  "a621_comparison_baseline": {
+    "arm_id": "gpu_only",
+    "artifact": "derived/bfcl_feasibility/session_residency/a621ff7d-2919-463d-aaf6-673f9e6bafbc/session_residency_gpu_only_RESIDENT_report.json",
+    "artifact_absolute": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\session_residency\\a621ff7d-2919-463d-aaf6-673f9e6bafbc\\session_residency_gpu_only_RESIDENT_report.json",
+    "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+    "note": "Explicit W-3 comparison baseline copied from a621ff7d session_residency_gpu_only_RESIDENT_report.json so the seal is auditable without hunting the other run. Entry ids and generation config are held fixed; model_spec is taken from that report (weight axis may differ from W-3 int8).",
+    "per_turn": {
+      "accuracy": 0.4411764705882353,
+      "correct": 30,
+      "field": "gpu_probe.accuracy_per_turn_f2",
+      "total": 68
+    },
+    "residency_mode": "RESIDENT",
+    "session_id": "a621ff7d-2919-463d-aaf6-673f9e6bafbc",
+    "trajectory": {
+      "accuracy": 0.05,
+      "correct": 1,
+      "field": "gpu_probe.accuracy_trajectory",
+      "n": 20
+    }
+  },
+  "a621_entries_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\session_residency\\a621ff7d-2919-463d-aaf6-673f9e6bafbc\\session_residency_entries_gpu_only_RESIDENT.json",
+  "a621_reference_session": "a621ff7d-2919-463d-aaf6-673f9e6bafbc",
+  "accuracy_trajectory": {
+    "accuracy": 0.1,
+    "correct": 20,
+    "n": 200
+  },
+  "arm": "gpu_only",
+  "dual_weight_in_session": false,
+  "dual_weight_note": "tools/bfcl_feasibility_probe.py binds one --model-spec per process (apply_model_spec + single LLMPipeline). int4 cannot run in the SAME session as int8. Reported rather than worked around with a second process under this run_id (W-2 within-session pairing does not apply).",
+  "ended_utc": "2026-08-30T19:40:55.718459+00:00",
+  "entry_assert": {
+    "mode": "prefix",
+    "n_reference": 20,
+    "n_run": 200
+  },
+  "entry_population": {
+    "api_filter": false,
+    "difficulty_filter": false,
+    "note": "select_multi_turn_entries applies no difficulty or API filter \u2014 the original 20 were simply the file's first 20 \u2014 so the entry population was never biased relative to the benchmark. That eliminates biased subsampling as an explanation for the gap to published numbers.",
+    "selection": "select_multi_turn_entries / _select_from_spec questions[:n]"
+  },
+  "generation_config": {
+    "apply_chat_template": false,
+    "do_sample": false,
+    "identical_note": "a621ff7d used the same generate_turn GenerationConfig construction (do_sample=False, max_new_tokens=512, apply_chat_template=False) via run_session_residency; no alternate sampler knobs in that path.",
+    "identical_to_a621ff7d": true,
+    "max_new_tokens": 512,
+    "mode": "greedy",
+    "pairing_seed": 20260810,
+    "pairing_seed_note": "seed reaches select_multi_turn_entries / entry-order pairing only (no shuffle when n equals the fixed prefix). Not a sampler seed.",
+    "rng_seed": 0,
+    "sampler_active": false,
+    "source": "tools/bfcl_feasibility_probe.py generate_turn GenerationConfig",
+    "temperature": 1.0,
+    "temperature_top_p_top_k_rng_note": "Values above are openvino_genai.GenerationConfig library defaults after setting do_sample=False / max_new_tokens / apply_chat_template. With do_sample=False they do not reach the sampler; decoding is greedy argmax. A one-entry difference at n=20 is NOT sampling noise.",
+    "top_k": 18446744073709551615,
+    "top_p": 1.0
+  },
+  "gold_selftest": {
+    "n": 200,
+    "n_valid": 200,
+    "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\w3_weight_quality\\6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a\\multi_turn_gold_selftest.json"
+  },
+  "ir_sha256": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+  "kind": "w3_bfcl_quality",
+  "ledger": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\w3_weight_quality\\6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a\\w3_entry_ledger.json",
+  "max_new_tokens": 512,
+  "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+  "n_entries": 200,
+  "n_force_terminated": 3,
+  "n_generation_timeout_hit": 0,
+  "power_analysis": {
+    "alpha": 0.05,
+    "design_effect": 2.0,
+    "design_effect_note": "DE=2 for intra-entry clustering of turns; neff = n_turns / DE.",
+    "endpoint": "per_turn_f2 two-proportion (int4 vs int8)",
+    "mde_absolute_accuracy": {
+      "design_effect_2": 0.10625053061953821,
+      "design_effect_2_pp": 10.6,
+      "formula": "delta=(z_a/2+z_b)*sqrt(2*p*(1-p)/n); DE=2 uses n/2",
+      "unadjusted": 0.07513047070574437,
+      "unadjusted_pp": 7.5
+    },
+    "n_turns_planning": {
+      "int4_pilot_turns": 68,
+      "int8_pilot_turns": 70,
+      "n_entries_pilot": 20,
+      "n_entries_run": 200,
+      "projected_n_turns_per_arm": 690,
+      "source": "scaled from 20-entry pilot turn density; restate at sealed"
+    },
+    "pilot_20_entry_superseded": {
+      "int4_per_turn": "30/68",
+      "int8_per_turn": "33/70",
+      "mde_pp_approx": 23.8,
+      "note": "Underpowered at MDE ~24 percentage points; superseded by the n=200 design, not contradicted.",
+      "p": 0.72,
+      "z": 0.36
+    },
+    "planning_p_pooled": 0.45652173913043476,
+    "power": 0.8,
+    "predicted_direction": null,
+    "predicted_direction_note": "No predicted direction for the quality effect. Same reason as amendment 2026-08-28c: register a directional prediction only where a derivation exists (ir_bytes+KV bands for size/bandwidth). BFCL per-turn quality has no analogous derivation from weight bit-width.",
+    "two_sided": true
+  },
+  "residency_mode": "RESIDENT",
+  "seed": 20260810,
+  "session_id": "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+  "started_utc": "2026-08-30T18:34:52.881167+00:00",
+  "status": "complete"
+}

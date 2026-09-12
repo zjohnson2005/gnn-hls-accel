@@ -1,0 +1,558 @@
+{
+  "acceptance_criterion": {
+    "band_multiple": 2.0,
+    "basis": "r_decode_tok_s",
+    "gap_s": 1200,
+    "gate_mode": "derived_from_within_run_spread",
+    "max_within_run_spread": 0.1,
+    "prior_unexplained_ratio": 1.98,
+    "rule": "s = max over the two runs of the within-run relative spread on `basis`; band = band_multiple * s; PASS iff |ratio - 1| <= band AND s <= max_within_run_spread",
+    "spread_estimator": "cv"
+  },
+  "admissibility": {
+    "max_block_retries": 3,
+    "modern_standby_inadmissible": true,
+    "n_discarded": 0,
+    "reject_kernel_power_ids": [
+      506,
+      507
+    ],
+    "rule": "Any repeat whose [started_utc, ended_utc] window contains a Kernel-Power event whose Id is in reject_kernel_power_ids is INADMISSIBLE (reason=modern_standby_in_window), retried under max_block_retries, recorded verbatim with its events, and excluded from CV/median/spread.",
+    "stats_basis": "admissible_repeats_only"
+  },
+  "arm_label": "arm_1",
+  "benchmark": "fixed_throughput_acceptance_v1",
+  "confinement_classification": {
+    "baseline_mean": [
+      11.675,
+      7.51,
+      0.7150000000000001,
+      9.175,
+      2.505,
+      1.46,
+      1.55,
+      3.9299999999999997
+    ],
+    "config_claim": "SCHEDULING_CORE_TYPE=PCORE_ONLY (control, not an adoption claim)",
+    "core_states": {
+      "0": "LOADED",
+      "1": "LOADED",
+      "2": "LOADED",
+      "3": "LOADED",
+      "4": "QUIET",
+      "5": "QUIET",
+      "6": "QUIET",
+      "7": "QUIET"
+    },
+    "deltas": {
+      "0": 47.97640650854936,
+      "1": 35.50136238279096,
+      "2": 42.86166850523993,
+      "3": 43.00100661886377,
+      "4": 1.5339961389961392,
+      "5": 3.424225041367899,
+      "6": 2.379288472145615,
+      "7": 1.0353061224489801
+    },
+    "loaded_threshold": 21.465668781025926,
+    "n_baseline_samples": 20,
+    "n_util_samples": 1813,
+    "noise_band": 4.8944894494118,
+    "note": "Verdict records what happened under the configured properties. UNCLEAR/LEAKED/INVALID here do not rewrite the config; they travel with the sealed arm.",
+    "requested_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "util_mean": [
+      59.651406508549364,
+      43.011362382790956,
+      43.57666850523994,
+      52.17600661886377,
+      4.038996138996139,
+      4.884225041367899,
+      3.929288472145615,
+      4.96530612244898
+    ],
+    "verdict": "CONFINED"
+  },
+  "discarded_repeats": [],
+  "experiment_id": "fixed_throughput_acceptance",
+  "fixed_config": {
+    "affinity_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "arm_id": "A",
+    "context_tokens": 2048,
+    "cpu_properties": {
+      "ENABLE_CPU_PINNING": true,
+      "INFERENCE_NUM_THREADS": 4,
+      "SCHEDULING_CORE_TYPE": "PCORE_ONLY"
+    },
+    "max_new_tokens": 64,
+    "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "prompt": {
+      "chars": 9216,
+      "n_tokens_realized": 2048,
+      "n_tokens_requested": 2048,
+      "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n2048.txt",
+      "sha256": "500c48655c5adc7b47a9bee80756adfaf855f0384af2fb10f05816548c922290"
+    },
+    "repeats": 3,
+    "target": "cpu-p",
+    "working_set_lock": {
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "mode": "request"
+    }
+  },
+  "isolation_discipline": {
+    "interactive_process_termination": {
+      "harness_did_not_terminate": true,
+      "note": "resolve_isolation_mode / acceptance.ps1 refuse remote mode while interactive software is resident; the harness does not terminate those processes. If the operator killed processes outside the harness, that kill time is unobservable here \u2014 do not infer it.",
+      "operator_kill_unobservable": true,
+      "seconds_since_harness_interactive_termination": null
+    },
+    "power_request": {
+      "clear_last_error": null,
+      "cleared": false,
+      "close_last_error": null,
+      "closed": false,
+      "create_last_error": null,
+      "created": true,
+      "error": null,
+      "handle_repr": "0x79c",
+      "mechanism": "PowerCreateRequest/PowerSetRequest",
+      "platform": "Windows",
+      "reason": "SEAM fixed_throughput orchestrator; PowerRequestSystemRequired across pre_run_settle, arms, and gap",
+      "request_type": "PowerRequestSystemRequired",
+      "request_type_id": 1,
+      "role": "acceptance_orchestrator",
+      "set": true,
+      "set_last_error": 0,
+      "succeeded": true
+    },
+    "pre_run_settle": {
+      "actual_wait_s": 300.0,
+      "applied_on_this_path": true,
+      "configured_s": 300.0,
+      "distinct_from": "recovery.settle_s",
+      "ended_utc": "2026-08-06T22:16:48.594915+00:00",
+      "note": "Wait for memory reclaim/writeback after the operator closed interactive software. The harness refuses while contending processes are resident; it does not kill them.",
+      "started_utc": "2026-08-06T22:11:48.591490+00:00"
+    }
+  },
+  "memory_metrics": {
+    "free_physical_bytes_at_peak": 1949184000,
+    "free_physical_bytes_at_start": 7133368320,
+    "host_at_arm_start": {
+      "available_bytes": 8176914432,
+      "commit_total_bytes": 24696061952,
+      "commit_used_bytes": 3202076672,
+      "free_physical_bytes": 8176914432,
+      "observed_utc": "2026-08-06T22:16:49.246445+00:00",
+      "total_physical_bytes": 16752234496
+    },
+    "peak_commit_bytes": 3831578624,
+    "peak_working_set_bytes": 5830524928,
+    "per_repeat_peak_commit_bytes": [
+      3831025664,
+      3831578624,
+      3826864128
+    ],
+    "per_repeat_peak_working_set_bytes": [
+      5830524928,
+      5830012928,
+      5828972544
+    ]
+  },
+  "not_exercised": {
+    "working_set_lock_conditions": "configs/delta_n.yaml lists [off, request]. Only the mode \u0394N will use is measured here (request); sweeping both would make this two configurations rather than one, which is not what an acceptance test is."
+  },
+  "per_repeat": [
+    {
+      "admissible": true,
+      "attempt_used": 0,
+      "completion_tokens_reported": 64,
+      "discarded_attempts": [],
+      "ended_utc": "2026-08-06T22:18:08.683402+00:00",
+      "envelope": {
+        "available_memory_mb_after": 7444.34765625,
+        "available_memory_mb_before": 7236.6953125,
+        "available_memory_mb_min": 1903.63671875,
+        "canary_gate_verdict": "pass",
+        "canary_relative_drift": 0.10475270666104261,
+        "hard_page_reads_max_per_s": 20314.769927798334,
+        "invalid_reasons": [],
+        "label": "fixed-throughput/2048/0",
+        "lock_acquired_utc": "2026-08-06T22:17:21.676838+00:00",
+        "lock_released_utc": "2026-08-06T22:18:08.683402+00:00",
+        "lock_wait_s": 0.0,
+        "paging_gate_reasons": [
+          "sustained hard page reads: 2 consecutive samples > 1.0 (gate_mode=baseline_relative) >= 2"
+        ],
+        "paging_gate_verdict": "fail",
+        "quiescence_aggregate": {
+          "max_mean_p_core_cpu_pct": 17.825000000000003,
+          "max_sample_total_cpu_pct": 11.137500000000001,
+          "mean_p_core_cpu_pct": {
+            "0": 17.825000000000003,
+            "1": 7.374999999999998,
+            "2": 1.42,
+            "3": 12.134999999999998
+          },
+          "mean_total_cpu_pct": 6.055,
+          "min_available_memory_mb": 7235.78515625
+        },
+        "quiescence_passed": true,
+        "valid": true
+      },
+      "inadmissible_attempts": [],
+      "peak_commit_bytes": 3831025664,
+      "peak_rss_bytes": 5830524928,
+      "power_request": {
+        "clear_last_error": 0,
+        "cleared": true,
+        "close_last_error": 0,
+        "closed": true,
+        "create_last_error": null,
+        "created": true,
+        "error": null,
+        "handle_repr": "0x2c8",
+        "mechanism": "PowerCreateRequest/PowerSetRequest",
+        "platform": "Windows",
+        "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
+        "request_type": "PowerRequestSystemRequired",
+        "request_type_id": 1,
+        "role": "measurement_child",
+        "set": true,
+        "set_last_error": 0,
+        "succeeded": true
+      },
+      "power_state_end": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "power_state_start": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "prompt_tokens_reported": 2048,
+      "r_decode_tok_s": 14.335976469468378,
+      "r_prefill_tok_s": 71.42104014315892,
+      "repeat": 0,
+      "started_utc": "2026-08-06T22:17:21.676838+00:00",
+      "ttft_source": "perf_metrics",
+      "wall_s": 33.069561900018016,
+      "window_utc": {
+        "end": "2026-08-06T22:18:08.683402+00:00",
+        "source": "envelope.lock_acquired/released_utc",
+        "start": "2026-08-06T22:17:21.676838+00:00"
+      }
+    },
+    {
+      "admissible": true,
+      "attempt_used": 0,
+      "completion_tokens_reported": 64,
+      "discarded_attempts": [],
+      "ended_utc": "2026-08-06T22:19:15.444386+00:00",
+      "envelope": {
+        "available_memory_mb_after": 7397.2265625,
+        "available_memory_mb_before": 7460.53125,
+        "available_memory_mb_min": 1636.3515625,
+        "canary_gate_verdict": "pass",
+        "canary_relative_drift": 0.07613851238247357,
+        "hard_page_reads_max_per_s": 3133.8323813578363,
+        "invalid_reasons": [],
+        "label": "fixed-throughput/2048/1",
+        "lock_acquired_utc": "2026-08-06T22:18:30.168723+00:00",
+        "lock_released_utc": "2026-08-06T22:19:15.444386+00:00",
+        "lock_wait_s": 0.0,
+        "paging_gate_reasons": [
+          "sustained hard page reads: 2 consecutive samples > 1.0 (gate_mode=baseline_relative) >= 2"
+        ],
+        "paging_gate_verdict": "fail",
+        "quiescence_aggregate": {
+          "max_mean_p_core_cpu_pct": 23.21,
+          "max_sample_total_cpu_pct": 11.712499999999999,
+          "mean_p_core_cpu_pct": {
+            "0": 23.21,
+            "1": 1.535,
+            "2": 7.790000000000001,
+            "3": 13.040000000000001
+          },
+          "mean_total_cpu_pct": 6.651875000000001,
+          "min_available_memory_mb": 7457.609375
+        },
+        "quiescence_passed": true,
+        "valid": true
+      },
+      "inadmissible_attempts": [],
+      "peak_commit_bytes": 3831578624,
+      "peak_rss_bytes": 5830012928,
+      "power_request": {
+        "clear_last_error": 0,
+        "cleared": true,
+        "close_last_error": 0,
+        "closed": true,
+        "create_last_error": null,
+        "created": true,
+        "error": null,
+        "handle_repr": "0x2a8",
+        "mechanism": "PowerCreateRequest/PowerSetRequest",
+        "platform": "Windows",
+        "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
+        "request_type": "PowerRequestSystemRequired",
+        "request_type_id": 1,
+        "role": "measurement_child",
+        "set": true,
+        "set_last_error": 0,
+        "succeeded": true
+      },
+      "power_state_end": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "power_state_start": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "prompt_tokens_reported": 2048,
+      "r_decode_tok_s": 14.523362864939589,
+      "r_prefill_tok_s": 74.63824075254215,
+      "repeat": 1,
+      "started_utc": "2026-08-06T22:18:30.168723+00:00",
+      "ttft_source": "perf_metrics",
+      "wall_s": 31.77685590001056,
+      "window_utc": {
+        "end": "2026-08-06T22:19:15.444386+00:00",
+        "source": "envelope.lock_acquired/released_utc",
+        "start": "2026-08-06T22:18:30.168723+00:00"
+      }
+    },
+    {
+      "admissible": true,
+      "attempt_used": 0,
+      "completion_tokens_reported": 64,
+      "discarded_attempts": [],
+      "ended_utc": "2026-08-06T22:20:21.662193+00:00",
+      "envelope": {
+        "available_memory_mb_after": 8021.8359375,
+        "available_memory_mb_before": 7426.0625,
+        "available_memory_mb_min": 2485.9296875,
+        "canary_gate_verdict": "pass",
+        "canary_relative_drift": 0.07909326296198767,
+        "hard_page_reads_max_per_s": 39.48106093506945,
+        "invalid_reasons": [],
+        "label": "fixed-throughput/2048/2",
+        "lock_acquired_utc": "2026-08-06T22:19:36.903061+00:00",
+        "lock_released_utc": "2026-08-06T22:20:21.662193+00:00",
+        "lock_wait_s": 0.0,
+        "paging_gate_reasons": [
+          "sustained hard page reads: 2 consecutive samples > 1.0 (gate_mode=baseline_relative) >= 2"
+        ],
+        "paging_gate_verdict": "fail",
+        "quiescence_aggregate": {
+          "max_mean_p_core_cpu_pct": 28.175000000000004,
+          "max_sample_total_cpu_pct": 9.3125,
+          "mean_p_core_cpu_pct": {
+            "0": 28.175000000000004,
+            "1": 0.9199999999999999,
+            "2": 0.775,
+            "3": 10.675
+          },
+          "mean_total_cpu_pct": 6.074375,
+          "min_available_memory_mb": 7421.3203125
+        },
+        "quiescence_passed": true,
+        "valid": true
+      },
+      "inadmissible_attempts": [],
+      "peak_commit_bytes": 3826864128,
+      "peak_rss_bytes": 5828972544,
+      "power_request": {
+        "clear_last_error": 0,
+        "cleared": true,
+        "close_last_error": 0,
+        "closed": true,
+        "create_last_error": null,
+        "created": true,
+        "error": null,
+        "handle_repr": "0x2a8",
+        "mechanism": "PowerCreateRequest/PowerSetRequest",
+        "platform": "Windows",
+        "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
+        "request_type": "PowerRequestSystemRequired",
+        "request_type_id": 1,
+        "role": "measurement_child",
+        "set": true,
+        "set_last_error": 0,
+        "succeeded": true
+      },
+      "power_state_end": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "power_state_start": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "prompt_tokens_reported": 2048,
+      "r_decode_tok_s": 14.225082349487113,
+      "r_prefill_tok_s": 76.53581317399295,
+      "repeat": 2,
+      "started_utc": "2026-08-06T22:19:36.903061+00:00",
+      "ttft_source": "perf_metrics",
+      "wall_s": 31.187511700001778,
+      "window_utc": {
+        "end": "2026-08-06T22:20:21.662193+00:00",
+        "source": "envelope.lock_acquired/released_utc",
+        "start": "2026-08-06T22:19:36.903061+00:00"
+      }
+    }
+  ],
+  "power_request": {
+    "child_role": "measurement_child",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "note": "Held in the measurement child for the life of each generate. Not a power-policy change; idle timeout is untouched.",
+    "per_repeat": [
+      {
+        "clear_last_error": 0,
+        "cleared": true,
+        "close_last_error": 0,
+        "closed": true,
+        "create_last_error": null,
+        "created": true,
+        "error": null,
+        "handle_repr": "0x2c8",
+        "mechanism": "PowerCreateRequest/PowerSetRequest",
+        "platform": "Windows",
+        "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
+        "request_type": "PowerRequestSystemRequired",
+        "request_type_id": 1,
+        "role": "measurement_child",
+        "set": true,
+        "set_last_error": 0,
+        "succeeded": true
+      },
+      {
+        "clear_last_error": 0,
+        "cleared": true,
+        "close_last_error": 0,
+        "closed": true,
+        "create_last_error": null,
+        "created": true,
+        "error": null,
+        "handle_repr": "0x2a8",
+        "mechanism": "PowerCreateRequest/PowerSetRequest",
+        "platform": "Windows",
+        "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
+        "request_type": "PowerRequestSystemRequired",
+        "request_type_id": 1,
+        "role": "measurement_child",
+        "set": true,
+        "set_last_error": 0,
+        "succeeded": true
+      },
+      {
+        "clear_last_error": 0,
+        "cleared": true,
+        "close_last_error": 0,
+        "closed": true,
+        "create_last_error": null,
+        "created": true,
+        "error": null,
+        "handle_repr": "0x2a8",
+        "mechanism": "PowerCreateRequest/PowerSetRequest",
+        "platform": "Windows",
+        "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
+        "request_type": "PowerRequestSystemRequired",
+        "request_type_id": 1,
+        "role": "measurement_child",
+        "set": true,
+        "set_last_error": 0,
+        "succeeded": true
+      }
+    ],
+    "request_type": "PowerRequestSystemRequired"
+  },
+  "power_start": {
+    "battery_pct": 100.0,
+    "battery_saver": false,
+    "charging": false,
+    "on_battery": false,
+    "overlay_guid": "00000000-0000-0000-0000-000000000000",
+    "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+    "power_plan_name": "Best Performance"
+  },
+  "purpose": "Measure one fixed configuration so that two invocations, separated in time, bound the instrument's between-run reproducibility. 1.98x is the prior unexplained ratio.",
+  "r_decode_tok_s": {
+    "cv": 0.010497951898430105,
+    "max": 14.523362864939589,
+    "mean": 14.361473894631693,
+    "median": 14.335976469468378,
+    "min": 14.225082349487113,
+    "n": 3,
+    "n_missing": 0,
+    "sd": 0.15076606213640317,
+    "spread_ratio": 1.0209686318942983
+  },
+  "r_prefill_tok_s": {
+    "cv": 0.034847172562798255,
+    "max": 76.53581317399295,
+    "mean": 74.19836468989801,
+    "median": 74.63824075254215,
+    "min": 71.42104014315892,
+    "n": 3,
+    "n_missing": 0,
+    "sd": 2.585603218226313,
+    "spread_ratio": 1.0716143733076666
+  },
+  "run_id": "2bc2304e-ff03-4a9d-ae50-112cb08077a2",
+  "this_run_within_run_spread": {
+    "basis": "r_decode_tok_s",
+    "cv": 0.010497951898430105
+  },
+  "uptime_wake": {
+    "boot_time_utc": "2026-08-04T17:56:15.980561+00:00",
+    "last_wake_error": null,
+    "last_wake_source": "Kernel-Power/507",
+    "last_wake_utc": "2026-08-06T21:15:16.9747498Z",
+    "observed_utc": "2026-08-06T22:16:48.650505+00:00",
+    "uptime_s": 188432.66994476318
+  }
+}

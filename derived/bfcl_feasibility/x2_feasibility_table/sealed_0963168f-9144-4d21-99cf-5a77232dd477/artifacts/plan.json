@@ -1,0 +1,90 @@
+{
+  "a621_entries_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\session_residency\\a621ff7d-2919-463d-aaf6-673f9e6bafbc\\session_residency_entries_gpu_only_RESIDENT.json",
+  "a621_reference_session": "a621ff7d-2919-463d-aaf6-673f9e6bafbc",
+  "accuracy_trajectory": {
+    "accuracy": 0.05,
+    "correct": 1,
+    "n": 20
+  },
+  "arm_cli": "gpu_only",
+  "arm_id": "gpu_only",
+  "arm_map_note": "cpu-p \u2192 delta_n.yaml id A; gpu_only \u2192 gpu_only",
+  "ended_utc": "2026-09-02T00:14:29.095333+00:00",
+  "entry_assert": {
+    "mode": "exact",
+    "n_reference": 20,
+    "n_run": 20
+  },
+  "feasibility_table": {
+    "cells": [
+      "cpu-p \u00d7 NON_RESIDENT",
+      "cpu-p \u00d7 RESIDENT",
+      "gpu_only \u00d7 NON_RESIDENT",
+      "gpu_only \u00d7 RESIDENT"
+    ],
+    "n_entries_rationale": "20 not 200: original table is n=20; comparability > power; cpu-p at 200 \u2248 27 h.",
+    "one_arm_per_invocation": true,
+    "source": "docs/README_characterizations.md Axis 1\u00d72",
+    "this_cell": "gpu_only \u00d7 RESIDENT"
+  },
+  "fraction_turns_slo_ok": 1.0,
+  "generation_config": {
+    "apply_chat_template": false,
+    "do_sample": false,
+    "identical_note": "Same generate_turn GenerationConfig as a621ff7d run_session_residency (do_sample=False, max_new_tokens=512, apply_chat_template=False).",
+    "identical_to_a621ff7d": true,
+    "max_new_tokens": 512,
+    "mode": "greedy",
+    "pairing_seed": 20260810,
+    "sampler_active": false,
+    "source": "tools/bfcl_feasibility_probe.py generate_turn GenerationConfig"
+  },
+  "gold_selftest": {
+    "n": 20,
+    "n_valid": 20,
+    "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\x2_feasibility_table\\0963168f-9144-4d21-99cf-5a77232dd477\\multi_turn_gold_selftest.json"
+  },
+  "ir_sha256": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+  "kind": "x2_feasibility_table",
+  "ledger": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\x2_feasibility_table\\0963168f-9144-4d21-99cf-5a77232dd477\\x2_entry_ledger.json",
+  "max_new_tokens": 512,
+  "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+  "n_entries": 20,
+  "onset": {
+    "chosen_2h_gate": "PROVISIONAL \u2014 this arm is the derivation source",
+    "per_entry_fields": [
+      "uptime_s",
+      "available_mb",
+      "available_method"
+    ],
+    "purpose": "Within-arm TTFT vs uptime_s. If upward trend inside one long arm (esp. cpu-p NON_RESIDENT ~9630 s), replace chosen 2 h gate with measured knee."
+  },
+  "onset_fields_present_per_entry": true,
+  "residency_mode": "RESIDENT",
+  "seed": 20260810,
+  "session_id": "0963168f-9144-4d21-99cf-5a77232dd477",
+  "session_total_latency_s": {
+    "max": 130.51581480000004,
+    "mean": 24.474369770000113,
+    "min": 5.555803899999773,
+    "n": 20,
+    "sum": 489.48739540000224
+  },
+  "started_utc": "2026-09-02T00:06:06.637888+00:00",
+  "status": "complete",
+  "watchdog": {
+    "enabled": true,
+    "handle": {
+      "interval_s": 60,
+      "kill_log": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\x2_feasibility_table\\0963168f-9144-4d21-99cf-5a77232dd477\\watchdog_kills.jsonl",
+      "kind": "process",
+      "mechanism": "Popen_CREATE_NEW_PROCESS_GROUP",
+      "pid": 21288,
+      "script": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\x2_feasibility_table\\0963168f-9144-4d21-99cf-5a77232dd477\\_wsh_watchdog.ps1",
+      "spawn_fix": "subprocess.Popen without DETACHED_PROCESS; handle kept alive for worker lifetime (matrix Start-Process is equivalent only when the parent stays alive). Broken 91905556 used DETACHED_PROCESS."
+    },
+    "interval_s": 60,
+    "note": "Sibling powershell via Start-Process -WindowStyle Hidden (matrix Start-WshWatchdog). Not Start-Job. Not DETACHED_PROCESS. Measured WSH respawn ~4 min (X-2 cell 1); interval must be << that.",
+    "process": "WorkloadsSessionHost"
+  }
+}

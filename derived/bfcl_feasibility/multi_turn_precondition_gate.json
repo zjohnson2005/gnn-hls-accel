@@ -1,0 +1,29 @@
+{
+  "probe": "bfcl_feasibility_multi_turn",
+  "gate": "run_gpu_only_matrix.ps1 -DryRunGate",
+  "timestamp_local": "2026-08-10",
+  "ac_power": {
+    "BatteryStatus": 2,
+    "meaning": "Online / on AC",
+    "pass": true
+  },
+  "available_mb": {
+    "value": 6045.0,
+    "method": "Get-Counter:\\\\Memory\\Available MBytes",
+    "floor": 7000,
+    "pass": false
+  },
+  "tier1_resident": {
+    "pass": false,
+    "chrome_private_mib": 1543,
+    "cursor_private_mib": 2003,
+    "note": "DryRunGate REFUSED; do not invent multi-turn accuracy"
+  },
+  "gpu_probe_status": "BLOCKED_ON_OPERATOR",
+  "gold_selftest_status": "complete",
+  "gold_selftest": {
+    "n_valid": 20,
+    "n": 20,
+    "artifact": "derived/bfcl_feasibility/multi_turn_gold_selftest.json"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "assertion_effective": true,
+  "configured_standbyidle_s": 1800,
+  "diagnostic": true,
+  "ended_utc": "2026-08-06T22:07:57.267965+00:00",
+  "hold_error": null,
+  "hold_s": 1920.0,
+  "idle_timeout": {
+    "ac_standbyidle_s": 1800,
+    "dc_standbyidle_s": 1800,
+    "modern_standby_available": true,
+    "powercfg_a_stdout": "The following sleep states are available on this system:\n    Standby (S0 Low Power Idle) Network Connected\n    Hibernate\n    Fast Startup\n\nThe following sleep states are not available on this system:\n    Standby (S1)\n\tThe system firmware does not support this standby state.\n\tThis standby state is disabled when S0 low power idle is supported.\n\n    Standby (S2)\n\tThe system firmware does not support this standby state.\n\tThis standby state is disabled when S0 low power idle is supported.\n\n    Standby (S3)\n\tThe system firmware does not support this standby state.\n\tThis standby state is disabled when S0 low power idle is supported.\n\n    Hybrid Sleep\n\tStandby (S3) is not available.\n\tThe hypervisor does not support this standby state.\n\n",
+    "powercfg_query_returncode": 0,
+    "powercfg_query_stdout": "Power Scheme GUID: ec87a53a-19a6-4f4a-980f-ab27cc929b25  (Best Performance)\n  Subgroup GUID: 238c9fa8-0aad-41ed-83f4-97be242c8f20  (Sleep)\n    GUID Alias: SUB_SLEEP\n    Power Setting GUID: 29f6c1db-86da-48c5-9fdb-f2b67b1f44da  (Sleep after)\n      GUID Alias: STANDBYIDLE\n      Minimum Possible Setting: 0x00000000\n      Maximum Possible Setting: 0xffffffff\n      Possible Settings increment: 0x00000001\n      Possible Settings units: Seconds\n    Current AC Power Setting Index: 0x00000708\n    Current DC Power Setting Index: 0x00000708\n\n"
+  },
+  "kernel_power": {
+    "end_utc": "2026-08-06T22:07:57.267965+00:00",
+    "error": null,
+    "events": [],
+    "start_utc": "2026-08-06T21:35:57.252987+00:00",
+    "transition_event_ids_watched": [
+      42,
+      107,
+      506,
+      507,
+      566
+    ],
+    "transition_occurred": false
+  },
+  "kernel_power_506_count": 0,
+  "kernel_power_506_events": [],
+  "kernel_power_507_count": 0,
+  "kernel_power_507_events": [],
+  "margin_s": 120.0,
+  "mode": "full",
+  "mode_requested": "full",
+  "modern_standby_fired": false,
+  "note": "Not a power-policy change. Idle timeout untouched. A 506 during the hold means PowerRequestSystemRequired does not prevent Modern Standby on this platform; that is an operator/platform question, not a harness descope.",
+  "power_request": {
+    "clear_last_error": 0,
+    "cleared": true,
+    "close_last_error": 0,
+    "closed": true,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x16c",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM power_request probe; verify no Kernel-Power 506 under hold",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "power_request_probe",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "probe": "power_request",
+  "sealed": false,
+  "started_utc": "2026-08-06T21:35:57.252987+00:00",
+  "verdict": "EFFECTIVE"
+}

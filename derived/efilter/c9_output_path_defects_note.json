@@ -1,0 +1,50 @@
+{
+  "ledger": "C9",
+  "title": "Output-path defects destroyed three completed efilter runs after measurement",
+  "status": "RECORDED",
+  "date": "2026-08-04",
+  "citing_run_ids": [
+    "cb0ed2e3-ed70-4627-b231-51016d2b255b",
+    "a161f89e-fcc2-4cb8-9b04-c215358a2f88",
+    "e66701aa-37b9-4b00-b86b-7ffb477f4e66"
+  ],
+  "defects": [
+    {
+      "run_id": "cb0ed2e3-ed70-4627-b231-51016d2b255b",
+      "class": "write_path",
+      "failure": "circular JSON reference at manifest / summary emit",
+      "stage": "post-measurement seal",
+      "countermeasure": "assert_acyclic + startup emit/seal dry-run (C2.4)"
+    },
+    {
+      "run_id": "a161f89e-fcc2-4cb8-9b04-c215358a2f88",
+      "class": "write_path",
+      "failure": "UnicodeEncodeError printing U+2192 under cp1252 stdout after all tasks completed",
+      "stage": "post-measurement console report (before seal)",
+      "countermeasure": "configure_utf8_stdio at process start; PYTHONIOENCODING=utf-8 in launchers; dry-run non-ASCII log+print probe; seal before fancy report prints (C2d)"
+    },
+    {
+      "run_id": "e66701aa-37b9-4b00-b86b-7ffb477f4e66",
+      "class": "write_path",
+      "failure": "ManifestValidationError: outputs rejects property tasks",
+      "stage": "post-measurement seal (median context ratio 7.12 already measured)",
+      "countermeasure": "schema allows outputs.tasks (emitter was correct); dry-run rebuilt on build_efilter_summary + efilter_output_paths so shape parity is structural (C2e)"
+    }
+  ],
+  "finding": "Three completed runs were lost to write-path defects discovered only after the measurement finished. The startup dry-run existed but validated a hand-constructed synthetic that omitted fields the real emitter adds (notably outputs.tasks), so it was structurally incapable of catching schema drift. C2e requires the dry-run to call the same summary builder and the same outputs catalog as the real emit path, with a nested key-set parity test.",
+  "dry_run_coverage_required": [
+    "JSON serialization (acyclic)",
+    "manifest emit via real outputs catalog (steps + tasks)",
+    "summary built by build_efilter_summary (not a hand fixture)",
+    "nested key-set parity vs a second builder call",
+    "seal",
+    "verify_sealed",
+    "non-ASCII log_event",
+    "non-ASCII print"
+  ],
+  "outputs_tasks_decision": {
+    "wrong_side": "schema",
+    "correct_side": "emitter",
+    "why": "E-FILTER legitimately writes tasks.jsonl (per-task machine measurement + context ratios) and indexes it under outputs, parallel to steps.ndjson. additionalProperties:false on outputs requires every real artifact path to be enumerated; omitting the pointer would hide a sealed artifact from the manifest catalog. Older stage-1 sealed runs predate the file and correctly omit the optional key."
+  }
+}

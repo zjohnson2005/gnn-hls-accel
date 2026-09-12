@@ -1,0 +1,93 @@
+{
+    "kind":  "n1_cb_equivalence",
+    "session_id":  "462bb861-4774-44ad-ade0-1f9cdd230ec0",
+    "status":  "aborted",
+    "cells_ok":  0,
+    "cells_total":  12,
+    "canary_gate":  {
+                        "armed":  true,
+                        "calibration_complete":  false,
+                        "ref_turn1_prefill_s":  null,
+                        "ref_turn2_prefill_s":  null,
+                        "early_max_rel_t1":  null,
+                        "early_max_rel_t2":  null,
+                        "threshold_t1":  null,
+                        "threshold_t2":  null,
+                        "canaries":  [
+                                         {
+                                             "reason":  "calibration_0",
+                                             "ok":  false,
+                                             "path":  "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_prefill\\462bb861-4774-44ad-ade0-1f9cdd230ec0\\cells\\canary_20260830_195148_0.json",
+                                             "turn1_prefill_s":  2.922926513,
+                                             "turn2_prefill_s":  1.011484924,
+                                             "utc":  "2026-08-30T23:52:18.1619361Z",
+                                             "phase":  "failed"
+                                         }
+                                     ]
+                    },
+    "equivalence":  {
+                        "criterion":  "abs(ratio-1) must not exceed session canary early_max (threshold/2) on turn1/turn2; report ratios with spread",
+                        "early_max_rel_t1":  null,
+                        "early_max_rel_t2":  null,
+                        "threshold_t1":  null,
+                        "threshold_t2":  null,
+                        "per_depth":  [
+                                          {
+                                              "n_cached":  2000,
+                                              "delta":  400,
+                                              "llm_n":  0,
+                                              "cb_n":  0,
+                                              "llm_turn1_median_s":  null,
+                                              "cb_turn1_median_s":  null,
+                                              "ratio_turn1_cb_over_llm":  null,
+                                              "llm_turn1_spread":  null,
+                                              "cb_turn1_spread":  null,
+                                              "llm_turn2_median_s":  null,
+                                              "cb_turn2_median_s":  null,
+                                              "ratio_turn2_cb_over_llm":  null
+                                          },
+                                          {
+                                              "n_cached":  4000,
+                                              "delta":  400,
+                                              "llm_n":  0,
+                                              "cb_n":  0,
+                                              "llm_turn1_median_s":  null,
+                                              "cb_turn1_median_s":  null,
+                                              "ratio_turn1_cb_over_llm":  null,
+                                              "llm_turn1_spread":  null,
+                                              "cb_turn1_spread":  null,
+                                              "llm_turn2_median_s":  null,
+                                              "cb_turn2_median_s":  null,
+                                              "ratio_turn2_cb_over_llm":  null
+                                          },
+                                          {
+                                              "n_cached":  12000,
+                                              "delta":  400,
+                                              "llm_n":  0,
+                                              "cb_n":  0,
+                                              "llm_turn1_median_s":  null,
+                                              "cb_turn1_median_s":  null,
+                                              "ratio_turn1_cb_over_llm":  null,
+                                              "llm_turn1_spread":  null,
+                                              "cb_turn1_spread":  null,
+                                              "llm_turn2_median_s":  null,
+                                              "cb_turn2_median_s":  null,
+                                              "ratio_turn2_cb_over_llm":  null
+                                          }
+                                      ],
+                        "divergence_consequence":  "If CB-with-eviction-off diverges from plain LLMPipeline beyond early_max, no window result can be compared to the existing corpus; axis 5 needs its own within-CB baseline - a finding about the runtime, not a failure."
+                    },
+    "watchdog_kills":  [
+                           {
+                               "utc":  "2026-08-30T23:51:48.3488870Z",
+                               "event":  "watchdog_start_kill",
+                               "interval_s":  300,
+                               "pids_found":  [
+
+                                              ],
+                               "n_killed":  0
+                           }
+                       ],
+    "abort_reason":  "CANARY_CELL_FAILED exit= timed_out=False",
+    "ended_utc":  "2026-08-30T23:52:18.2709988Z"
+}

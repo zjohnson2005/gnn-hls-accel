@@ -1,0 +1,166 @@
+{
+  "affinity_readback": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "completed": true,
+  "exception": null,
+  "failure_mode": null,
+  "generation": {
+    "commit_bytes_end": 3829673984,
+    "commit_bytes_start": 637947904,
+    "completion_chars": 309,
+    "completion_tokens_reported": 64,
+    "free_memory_mb_end": 4154.1484375,
+    "free_memory_mb_min": 4153.39453125,
+    "free_memory_mb_start": 9208.66015625,
+    "free_physical_mb_at_peak": 4153.78125,
+    "free_physical_mb_min": 4153.45703125,
+    "free_physical_mb_start": 9208.66015625,
+    "n_rss_samples": 471,
+    "peak_commit_bytes": 3829755904,
+    "peak_rss_bytes": 5827391488,
+    "prompt_tokens_reported": 2048,
+    "r_decode_tok_s": 12.953142652501308,
+    "r_prefill_tok_s": 82.3583846749116,
+    "rss_bytes_end": 5827383296,
+    "rss_bytes_start": 471056384,
+    "rss_interval_s": 0.05,
+    "rss_sampler_overhead_s": 0.1872213,
+    "text_head": "It seems you've provided a repetitive passage that is commonly known as the \" pangram,\" a sentence that uses every letter of the English alphabet at least once. The original version is:\n\n**\"The quick ",
+    "ttft_ns": 24866927734,
+    "ttft_source": "perf_metrics",
+    "wall_s": 29.730612299987115
+  },
+  "loads": [
+    {
+      "available_delta_mb": 393.6015625,
+      "compile_s": 2.124398799991468,
+      "device": "CPU",
+      "memory_after": {
+        "available_mb": 9209.80078125,
+        "percent": 42.4,
+        "rss_mb": 448.7109375,
+        "used_mb": 6766.375
+      },
+      "memory_before": {
+        "available_mb": 9603.40234375,
+        "percent": 39.9,
+        "rss_mb": 51.5078125,
+        "used_mb": 6372.7734375
+      },
+      "properties": {
+        "ENABLE_CPU_PINNING": true,
+        "INFERENCE_NUM_THREADS": 4,
+        "SCHEDULING_CORE_TYPE": "PCORE_ONLY"
+      },
+      "rss_delta_mb": 397.203125
+    }
+  ],
+  "memory_after_generate": {
+    "available_mb": 4154.7578125,
+    "percent": 74.0,
+    "rss_mb": 5557.4453125,
+    "used_mb": 11821.41796875
+  },
+  "memory_after_import": {
+    "available_mb": 9603.3828125,
+    "percent": 39.9,
+    "rss_mb": 51.48046875,
+    "used_mb": 6372.79296875
+  },
+  "memory_baseline": {
+    "available_mb": 9630.59375,
+    "percent": 39.7,
+    "rss_mb": 19.828125,
+    "used_mb": 6345.58203125
+  },
+  "memory_before_generate": {
+    "available_mb": 9208.66015625,
+    "percent": 42.4,
+    "rss_mb": 449.21875,
+    "used_mb": 6767.515625
+  },
+  "memory_resident_before_inference": {
+    "available_mb": 9209.73046875,
+    "percent": 42.4,
+    "rss_mb": 448.71875,
+    "used_mb": 6766.4453125
+  },
+  "phase": "done",
+  "spec": {
+    "affinity_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "generate_device": "CPU",
+    "load_sequence": [
+      {
+        "device": "CPU",
+        "properties": {
+          "ENABLE_CPU_PINNING": true,
+          "INFERENCE_NUM_THREADS": 4,
+          "SCHEDULING_CORE_TYPE": "PCORE_ONLY"
+        }
+      }
+    ],
+    "max_new_tokens": 64,
+    "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "prompt_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n2048.txt",
+    "rss_interval_s": 0.05,
+    "wslock": {
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "mode": "request"
+    }
+  },
+  "standing_reservation": {
+    "available_delta_mb": 420.86328125,
+    "basis": "delta from process baseline (pre-import) to all backends compiled and resident, before any measured generation; rss and system-available disagree when weights are file-backed or shared, and both are reported without attribution",
+    "rss_delta_mb": 428.890625
+  },
+  "working_set_limits_after": {
+    "flags": 9,
+    "hard_min_enabled": true,
+    "maximum_bytes": 12884901888,
+    "minimum_bytes": 4294967296,
+    "read": true
+  },
+  "working_set_lock": {
+    "after": {
+      "flags": 9,
+      "hard_min_enabled": true,
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "read": true
+    },
+    "before": {
+      "flags": 10,
+      "hard_min_enabled": false,
+      "maximum_bytes": 1413120,
+      "minimum_bytes": 204800,
+      "read": true
+    },
+    "call": "SetProcessWorkingSetSizeEx",
+    "flags": 1,
+    "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+    "granted": true,
+    "last_error": 0,
+    "privilege": {
+      "attempted": true,
+      "granted": true,
+      "last_error": 0,
+      "last_error_meaning": "ERROR_SUCCESS",
+      "privilege": "SeIncreaseWorkingSetPrivilege",
+      "step": "AdjustTokenPrivileges"
+    },
+    "requested": true,
+    "requested_maximum_bytes": 12884901888,
+    "requested_minimum_bytes": 4294967296,
+    "returned": true
+  }
+}

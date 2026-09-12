@@ -1,0 +1,276 @@
+{
+  "spec_path": "C:/Users/zjohn/Projects/gnn-hls-accel/configs/models/Qwen3-0.6B-int4-ov.yaml",
+  "model": "Qwen3-0.6B-int4-ov",
+  "m1_mapping": {
+    "p_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "lpe_cpus": [
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  "openvino_native": {
+    "cpu-p": {
+      "target": "cpu-p",
+      "preflight": "OK",
+      "config": {
+        "properties": {
+          "SCHEDULING_CORE_TYPE": "PCORE_ONLY",
+          "ENABLE_CPU_PINNING": true,
+          "INFERENCE_NUM_THREADS": 4
+        },
+        "reasoning_mode": "thinking_off",
+        "enable_thinking": false,
+        "affinity_cpus": null,
+        "affinity_mechanism": "openvino_scheduling_core_type",
+        "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-0.6B-int4-ov"
+      },
+      "evidence": {
+        "target": "cpu-p",
+        "requested_scheduling_core_type": "PCORE_ONLY",
+        "expected_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "observed_loaded_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "mean_pct_per_cpu": [
+          90.95,
+          78.51,
+          76.32,
+          81.86,
+          90.22,
+          90.61,
+          92.75,
+          92.39
+        ],
+        "n_samples": 22,
+        "matched": false,
+        "leaked_cpus": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "missing_cpus": [],
+        "verdict": "refused",
+        "note": "OpenVINO PCORE_ONLY did not confine work to the M1-committed cpu-p cpus. Leaked onto [4, 5, 6, 7]; expected-but-idle []. This is a FINDING: fall back to process affinity via topology.affinity_for() and record the disagreement."
+      },
+      "completion_tokens": 195,
+      "wall_s": 5.4520144
+    },
+    "cpu-lpe": {
+      "target": "cpu-lpe",
+      "preflight": "OK",
+      "config": {
+        "properties": {
+          "SCHEDULING_CORE_TYPE": "ECORE_ONLY",
+          "ENABLE_CPU_PINNING": true,
+          "INFERENCE_NUM_THREADS": 4
+        },
+        "reasoning_mode": "thinking_off",
+        "enable_thinking": false,
+        "affinity_cpus": null,
+        "affinity_mechanism": "openvino_scheduling_core_type",
+        "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-0.6B-int4-ov"
+      },
+      "evidence": {
+        "target": "cpu-lpe",
+        "requested_scheduling_core_type": "ECORE_ONLY",
+        "expected_cpus": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "observed_loaded_cpus": [
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "mean_pct_per_cpu": [
+          13.22,
+          8.21,
+          7.31,
+          27.66,
+          98.43,
+          86.15,
+          88.24,
+          90.44
+        ],
+        "n_samples": 55,
+        "matched": false,
+        "leaked_cpus": [
+          3
+        ],
+        "missing_cpus": [],
+        "verdict": "refused",
+        "note": "OpenVINO ECORE_ONLY did not confine work to the M1-committed cpu-lpe cpus. Leaked onto [3]; expected-but-idle []. This is a FINDING: fall back to process affinity via topology.affinity_for() and record the disagreement."
+      },
+      "completion_tokens": 195,
+      "wall_s": 13.737486
+    }
+  },
+  "process_affinity_fallback": {
+    "cpu-p": {
+      "target": "cpu-p",
+      "preflight": "OK",
+      "config": {
+        "properties": {
+          "SCHEDULING_CORE_TYPE": "PCORE_ONLY",
+          "ENABLE_CPU_PINNING": true,
+          "INFERENCE_NUM_THREADS": 4
+        },
+        "reasoning_mode": "thinking_off",
+        "enable_thinking": false,
+        "affinity_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "affinity_mechanism": "process_affinity",
+        "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-0.6B-int4-ov"
+      },
+      "evidence": {
+        "target": "cpu-p",
+        "requested_scheduling_core_type": "PCORE_ONLY",
+        "expected_cpus": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "observed_loaded_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "mean_pct_per_cpu": [
+          98.01,
+          87.56,
+          83.59,
+          86.64,
+          63.74,
+          59.12,
+          62.78,
+          63.18
+        ],
+        "n_samples": 18,
+        "matched": false,
+        "leaked_cpus": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "missing_cpus": [],
+        "verdict": "refused",
+        "note": "OpenVINO PCORE_ONLY did not confine work to the M1-committed cpu-p cpus. Leaked onto [4, 5, 6, 7]; expected-but-idle []. This is a FINDING: fall back to process affinity via topology.affinity_for() and record the disagreement."
+      },
+      "completion_tokens": 195,
+      "wall_s": 4.4688281
+    },
+    "cpu-lpe": {
+      "target": "cpu-lpe",
+      "preflight": "OK",
+      "config": {
+        "properties": {
+          "SCHEDULING_CORE_TYPE": "ECORE_ONLY",
+          "ENABLE_CPU_PINNING": true,
+          "INFERENCE_NUM_THREADS": 4
+        },
+        "reasoning_mode": "thinking_off",
+        "enable_thinking": false,
+        "affinity_cpus": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "affinity_mechanism": "process_affinity",
+        "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-0.6B-int4-ov"
+      },
+      "evidence": {
+        "target": "cpu-lpe",
+        "requested_scheduling_core_type": "ECORE_ONLY",
+        "expected_cpus": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "observed_loaded_cpus": [
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "mean_pct_per_cpu": [
+          12.48,
+          8.79,
+          8.07,
+          26.5,
+          98.38,
+          88.5,
+          85.79,
+          87.91
+        ],
+        "n_samples": 53,
+        "matched": false,
+        "leaked_cpus": [
+          3
+        ],
+        "missing_cpus": [],
+        "verdict": "refused",
+        "note": "OpenVINO ECORE_ONLY did not confine work to the M1-committed cpu-lpe cpus. Leaked onto [3]; expected-but-idle []. This is a FINDING: fall back to process affinity via topology.affinity_for() and record the disagreement."
+      },
+      "completion_tokens": 195,
+      "wall_s": 13.1824582
+    }
+  },
+  "thinking": {
+    "thinking_off": {
+      "enable_thinking": false,
+      "prompt_contains_think_tag": true,
+      "output_contains_think_block": true,
+      "completion_tokens": 96,
+      "completion_chars": 454
+    },
+    "thinking_on": {
+      "enable_thinking": true,
+      "prompt_contains_think_tag": false,
+      "output_contains_think_block": true,
+      "completion_tokens": 96,
+      "completion_chars": 466
+    },
+    "verdict": "inconclusive",
+    "note": "enable_thinking did not produce the expected presence/absence contrast. Arm 1 and Arm 2 would not be distinct experiments. Investigate before running Arm 2."
+  },
+  "mechanism": "none",
+  "verdict": "refused"
+}

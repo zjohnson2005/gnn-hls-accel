@@ -1,0 +1,185 @@
+{
+  "affinity_readback": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "completed": true,
+  "exception": null,
+  "failure_mode": null,
+  "generation": {
+    "commit_bytes_end": 10184228864,
+    "commit_bytes_start": 637874176,
+    "completion_chars": 43,
+    "completion_tokens_reported": 8,
+    "free_memory_mb_end": 498.40625,
+    "free_memory_mb_min": 193.265625,
+    "free_memory_mb_start": 9803.859375,
+    "free_physical_mb_at_peak": 262.46484375,
+    "free_physical_mb_min": 193.265625,
+    "free_physical_mb_start": 9803.859375,
+    "n_rss_samples": 7111,
+    "peak_commit_bytes": 10184310784,
+    "peak_rss_bytes": 10662891520,
+    "prompt_tokens_reported": 16000,
+    "r_decode_tok_s": 4.342198893802971,
+    "r_prefill_tok_s": 36.29049606485565,
+    "rss_bytes_end": 10576883712,
+    "rss_bytes_start": 470982656,
+    "rss_interval_s": 0.05,
+    "rss_sampler_overhead_s": 2.0681459,
+    "text_head": "It seems you've shared a repetitive passage",
+    "ttft_ns": 440886781250,
+    "ttft_source": "perf_metrics",
+    "wall_s": 442.49886770002195
+  },
+  "loads": [
+    {
+      "available_delta_mb": 381.59765625,
+      "compile_s": 1.9153722999908496,
+      "device": "CPU",
+      "memory_after": {
+        "available_mb": 9805.32421875,
+        "percent": 38.6,
+        "rss_mb": 448.62890625,
+        "used_mb": 6170.8515625
+      },
+      "memory_before": {
+        "available_mb": 10186.921875,
+        "percent": 36.2,
+        "rss_mb": 52.44921875,
+        "used_mb": 5789.25390625
+      },
+      "properties": {
+        "ENABLE_CPU_PINNING": true,
+        "INFERENCE_NUM_THREADS": 4,
+        "SCHEDULING_CORE_TYPE": "PCORE_ONLY"
+      },
+      "rss_delta_mb": 396.1796875
+    }
+  ],
+  "memory_after_generate": {
+    "available_mb": 498.48828125,
+    "percent": 96.9,
+    "rss_mb": 10087.26171875,
+    "used_mb": 15477.6875
+  },
+  "memory_after_import": {
+    "available_mb": 10187.0546875,
+    "percent": 36.2,
+    "rss_mb": 52.37890625,
+    "used_mb": 5789.12109375
+  },
+  "memory_baseline": {
+    "available_mb": 10221.37109375,
+    "percent": 36.0,
+    "rss_mb": 18.69140625,
+    "used_mb": 5754.8046875
+  },
+  "memory_before_generate": {
+    "available_mb": 9803.92578125,
+    "percent": 38.6,
+    "rss_mb": 449.15234375,
+    "used_mb": 6172.25
+  },
+  "memory_resident_before_inference": {
+    "available_mb": 9805.3203125,
+    "percent": 38.6,
+    "rss_mb": 448.62890625,
+    "used_mb": 6170.85546875
+  },
+  "phase": "done",
+  "power_request": {
+    "clear_last_error": 0,
+    "cleared": true,
+    "close_last_error": 0,
+    "closed": true,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x204",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "measurement_child",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "spec": {
+    "affinity_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "generate_device": "CPU",
+    "load_sequence": [
+      {
+        "device": "CPU",
+        "properties": {
+          "ENABLE_CPU_PINNING": true,
+          "INFERENCE_NUM_THREADS": 4,
+          "SCHEDULING_CORE_TYPE": "PCORE_ONLY"
+        }
+      }
+    ],
+    "max_new_tokens": 8,
+    "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "prompt_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n16000.txt",
+    "rss_interval_s": 0.05,
+    "wslock": {
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "mode": "request"
+    }
+  },
+  "standing_reservation": {
+    "available_delta_mb": 416.05078125,
+    "basis": "delta from process baseline (pre-import) to all backends compiled and resident, before any measured generation; rss and system-available disagree when weights are file-backed or shared, and both are reported without attribution",
+    "rss_delta_mb": 429.9375
+  },
+  "working_set_limits_after": {
+    "flags": 9,
+    "hard_min_enabled": true,
+    "maximum_bytes": 12884901888,
+    "minimum_bytes": 4294967296,
+    "read": true
+  },
+  "working_set_lock": {
+    "after": {
+      "flags": 9,
+      "hard_min_enabled": true,
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "read": true
+    },
+    "before": {
+      "flags": 10,
+      "hard_min_enabled": false,
+      "maximum_bytes": 1413120,
+      "minimum_bytes": 204800,
+      "read": true
+    },
+    "call": "SetProcessWorkingSetSizeEx",
+    "flags": 1,
+    "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+    "granted": true,
+    "last_error": 0,
+    "privilege": {
+      "attempted": true,
+      "granted": true,
+      "last_error": 0,
+      "last_error_meaning": "ERROR_SUCCESS",
+      "privilege": "SeIncreaseWorkingSetPrivilege",
+      "step": "AdjustTokenPrivileges"
+    },
+    "requested": true,
+    "requested_maximum_bytes": 12884901888,
+    "requested_minimum_bytes": 4294967296,
+    "returned": true
+  }
+}

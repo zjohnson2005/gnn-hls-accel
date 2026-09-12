@@ -1,0 +1,82 @@
+{
+  "abort_note": "Operator salvage: all completed probes in [12000,44742] passed; incomplete probe at n=44871 mid-generate; no hard memory or position wall observed. Bisection must not treat high as ceiling.",
+  "abort_reason": "no_ceiling_found_in_range",
+  "aborted_utc": "2026-09-08T01:51:53.352206+00:00",
+  "arms": [
+    "gpu_only_f16",
+    "gpu_only_u8",
+    "gpu_only_u4"
+  ],
+  "gpu_only_f16_pin_note": "gpu_only_f16 requests KV_CACHE_PRECISION=f16 and has matched readback=f16 on prior cells (not the old bare gpu_only that read back dynamic).",
+  "ir_bytes": 2290768181,
+  "ir_sha256": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+  "kind": "c1_kv_precision_ceiling",
+  "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+  "pre_registered_predictions": {
+    "M_available_mb": 10089.53515625,
+    "W_ir_bytes": 2290768181,
+    "arms": {
+      "gpu_only_f16": {
+        "binding": "MEMORY",
+        "k_plus_w_B_per_token": 234827,
+        "n_max": 35297.798954123675,
+        "n_max_memory": 35297.798954123675,
+        "n_max_position": 40960.0,
+        "predicted_ceiling": 35298
+      },
+      "gpu_only_u4": {
+        "binding": "POSITION",
+        "k_plus_w_B_per_token": 135000,
+        "n_max": 40960.0,
+        "n_max_memory": 61399.08322222222,
+        "n_max_position": 40960.0,
+        "predicted_ceiling": 40960
+      },
+      "gpu_only_u8": {
+        "binding": "POSITION",
+        "k_plus_w_B_per_token": 171532,
+        "n_max": 40960.0,
+        "n_max_memory": 48322.62338805587,
+        "n_max_position": 40960.0,
+        "predicted_ceiling": 40960
+      }
+    },
+    "declared_risk": {
+      "extrapolation": "Model fitted on n<=12000; predictions extrapolate to ~40000 (~3.4x beyond measured range).",
+      "workspace_not_constant": "Workspace residual ~87,371 B/token (f16) vs ~98,000 (u8/u4), a 12% spread. A miss on the secondary is as likely extrapolation error as model error \u2014 do not conflate them in the artifact."
+    },
+    "example_at_M_10200_mb": {
+      "f16": 35788,
+      "note": "operator-stated reference at M=10200 MB; this run uses measured M",
+      "u4": 62257,
+      "u8": 48994
+    },
+    "formula": "n_max_memory=(M-W)/(k+w); n_max=min(n_max_memory, n_max_position)",
+    "k_plus_w_source": "41e419bd measured B/token (f16 234827, u8 171532, u4 ~135000)",
+    "primary_prediction": {
+      "claim": "u8 and u4 give the SAME ceiling, 40960, because both are position-limited. u4 buys zero context over u8 on this machine while still costing prefill latency.",
+      "falsified_if": "u4 exceeds u8 beyond the bisection resolution (+/- 250 tokens)"
+    },
+    "secondary_prediction": {
+      "claim": "f16 walls by memory below 40960, near 35800 +/- 10% at M~10200 MB (recomputed from this run's M).",
+      "falsified_if": "f16 reaches the position limit",
+      "predicted_ceiling_at_this_M": 35298
+    }
+  },
+  "search": {
+    "high": 45000,
+    "low": 12000,
+    "pass_requires_all_repeats": true,
+    "repeats_per_probe": 2,
+    "resolution_tokens": 250
+  },
+  "session_id": "83127e1b-9d6e-4103-bee6-2a63c00f479f",
+  "started_utc": "2026-09-07T23:19:40.393523+00:00",
+  "status": "aborted",
+  "watchdog": {
+    "interval_s": 60,
+    "kill_log": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\c1_ceiling\\83127e1b-9d6e-4103-bee6-2a63c00f479f\\watchdog_kills.jsonl",
+    "mechanism": "Popen_CREATE_NEW_PROCESS_GROUP",
+    "pid": 3736
+  }
+}

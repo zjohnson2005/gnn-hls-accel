@@ -1,0 +1,25 @@
+{
+  "probe": "dispatch_e_precondition_gate",
+  "captured_local": "2026-08-10",
+  "ac": {
+    "BatteryStatus": 2,
+    "EstimatedChargeRemaining": 100,
+    "ok": true
+  },
+  "dry_run_gate": {
+    "script": "tools/run_gpu_only_matrix.ps1 -DryRunGate",
+    "result": "REFUSED",
+    "tier1_resident": ["Cursor", "chrome"],
+    "available_mb": 6188.0,
+    "available_mb_method": "Get-Counter:\\\\Memory\\Available MBytes",
+    "pre_run_available_mb_min": 7000,
+    "ok": false
+  },
+  "actions": {
+    "attention_window_inventory": "complete",
+    "kv_precision_property_smoke": "complete",
+    "run_gpu_kv_precision": "BLOCKED_ON_OPERATOR",
+    "run_npu_load": "BLOCKED_ON_OPERATOR"
+  },
+  "operator_cmd": "derived/bfcl_feasibility/OPERATOR_CMD_DISPATCH_E.md"
+}

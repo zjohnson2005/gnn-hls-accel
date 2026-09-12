@@ -1,0 +1,1566 @@
+# Preliminary tier-placement study — parameter set
+#
+# SCOPE: three-tier per-turn cost model (T0 deterministic / T1 local / T2 cloud).
+# Every value carries `source` and `confidence` in {measured, published, estimated, guess}.
+#
+# confidence semantics:
+#   measured  - we measured it on our own instrumented runs
+#   published - taken from a paper, vendor rate card, or named community benchmark
+#   estimated - derived/interpolated by us from published values; not directly published
+#   guess     - no source exists; a modeling choice. MUST be reported as a range and
+#               sits at the top of the "must measure / must decide" list.
+#
+# NOTE ON RANGES: where confidence != measured, `lo`/`hi` are authoritative and
+# `value` is only a convenience midpoint for smoke runs. Report ranges, not points.
+
+meta:
+  schema_version: prelim_tiers_v1
+  created: 2026-07-27
+  primary_workload_source: >-
+    TraceLab: Characterizing Coding Agent Workloads for LLM Serving,
+    arXiv:2606.30560 (v2, 2026-06-29), Zhu/Jacob/Ma/Pan/Wang/Krishnamurthy/Kasikci,
+    UW SyFI. ~4,300 sessions, ~357k LLM steps, ~433k tool calls, Claude Code + Codex,
+    Sep 2025 - Jun 2026.
+  known_bias_of_workload_source: >-
+    TraceLab is self-collected from the authors' own day-to-day use (37 Claude / 22
+    Codex distinct users, their own projects). The paper states this bias explicitly.
+    It is coding-agent traffic, not general agent traffic.
+  out_of_scope_this_phase:
+    - policy search
+    - discrete-event simulation
+    - quality / accuracy model
+    - thermal modeling
+
+# -----------------------------------------------------------------------------
+# RESOLVED MODELING DECISIONS
+# Choices that no source can settle, decided explicitly at the Phase 0 gate so
+# that later phases cannot re-litigate them silently.
+# -----------------------------------------------------------------------------
+decisions:
+  trajectory_unit:
+    value: request
+    decided: 2026-07-27
+    rationale: >-
+      A "trajectory" is one user request and the agent loop that answers it:
+      ~8.7 steps average, median 2, p90 21 (workload.turns_per_trajectory.per_request_steps).
+      TraceLab's per-SESSION figures (~82.5 steps) span human idle gaps of hours to
+      days, during which the provider prefix cache has expired and the local box
+      would be idle. Those gaps are a separate phenomenon from execution placement.
+    consequence: >-
+      Phase 3 simulates a median-to-p90 request, not a session. Cross-request cache
+      expiry is therefore NOT in scope, which means the study uses the FAVORABLE
+      cache assumption for cloud (tool-result hit rate ~97.5%, not the 84.4%
+      user-initiated rate). State this whenever a cloud cost is quoted.
+
+  long_context_pricing:
+    value: carry_both_bounds
+    decided: 2026-07-27
+    rationale: >-
+      cloud.long_context_threshold_tokens could not be sourced and our median
+      context (~119K) sits in the ambiguous region. Collapsing to a midpoint would
+      invent a fact.
+    consequence: >-
+      Every OpenAI T2 cost is reported as a [short-context, long-context] interval,
+      never a point. If the interval does not change the T1-vs-T2 verdict, say so
+      and the unknown stops mattering. If it does, the threshold becomes a
+      must-confirm item ahead of any hardware work.
+
+  local_kv_persistence_handling:
+    value: sweep_both_never_collapse
+    decided: 2026-07-27
+    rationale: >-
+      Whether the local runtime holds KV across turns swings T1 prefill work by
+      ~65x (see local_runtime.local_kv_persistence.swing_magnitude). It is a
+      software design decision, not a hardware property, so no benchmark or trace
+      can settle it and no default is defensible.
+    consequence: >-
+      Every phase from 1 onward emits results for BOTH persists and recomputes.
+      Any headline claim that holds under only one setting must name that setting
+      in the claim itself.
+
+  switching_cost_shape:
+    value: step_function_at_context_floor
+    decided: 2026-07-27
+    rationale: >-
+      Median context is ~119K after a median of 2 steps, so context starts near
+      its final size rather than accumulating into it. The prior ramp-with-turn-index
+      model was wrong at production context lengths.
+    consequence: >-
+      workload.context_floor is promoted to a primary parameter;
+      workload.context_growth_by_turn_index is demoted to a ~3% correction that is
+      still retained for the p90 tail. See switching.cost_shape.
+
+  trajectory_sampling:
+    value: empirical_distribution_sampling
+    n_samples: 1000
+    decided: 2026-07-27
+    rationale: >-
+      Steps per request are mean 8.7, median 2, p90 21, p99 87 (TraceLab Table 2).
+      That is a heavy tail, and it means there is NO representative trajectory. A
+      single "typical" 8.7-step run would be actively misleading in both
+      directions: 8.7 is above the median, so it over-states the cost of the
+      majority of requests, while simultaneously under-stating the tail that
+      carries most of the aggregate cost. Reporting one number from a heavy-tailed
+      distribution is the specific failure this study is supposed to avoid.
+    method: >-
+      Sample >=1000 trajectories from the empirical steps-per-request distribution
+      and report the resulting COST DISTRIBUTION (median, p90, p99, mean), not a
+      point. Deterministic seed; the seed is recorded with every emitted artifact.
+    distribution_source: >-
+      TraceLab Table 2, per request: user-initiated 0.9 avg (p50 1, p90 1, p99 1)
+      plus tool-initiated 7.8 avg (p50 1, p90 20, p99 86). Only these five
+      quantiles are published; the full distribution is not. The sampler must
+      therefore fit to published quantiles and DECLARE the interpolation family it
+      uses, which is an added assumption, not a measurement.
+    fallback_if_fit_is_unstable: >-
+      Report median / mean / p90 trajectories as SEPARATE rows, never averaged
+      together. This is the minimum acceptable output.
+    hard_constraint: >-
+      No single-number trajectory cost may be emitted without an accompanying
+      distribution or the three-row breakdown.
+
+  capex_amortization:
+    value: sweep_utilization_as_first_class_parameter
+    decided: 2026-07-27
+    rationale: >-
+      Utilization is the free parameter in a single amortization formula, not a
+      choice between rival accounting philosophies. See
+      local_hardware.common.capex_utilization.
+    consequence: >-
+      Phase 4 reports the utilization value at which the winning tier flips, using
+      TraceLab's 3.3% / 14.5% generation-share anchors as reference points on that
+      axis rather than as the answer.
+
+# =============================================================================
+# WORKLOAD  (TraceLab arXiv:2606.30560)
+# =============================================================================
+workload:
+
+  prefix_cache_hit_rate_overall:
+    value: 0.957
+    lo: 0.957
+    hi: 0.958
+    unit: fraction_of_input_tokens
+    token_weighted: true
+    source: "TraceLab Table 11: total 95.7% (Claude 95.8%, Codex 95.7%)"
+    confidence: published
+
+  prefix_cache_hit_rate_tool_result:
+    value: 0.975
+    lo: 0.972
+    hi: 0.979
+    unit: fraction_of_input_tokens
+    source: "TraceLab Table 11: total 97.5% (Claude 97.9%, Codex 97.2%)"
+    confidence: published
+    note: >-
+      The 97.9% figure in the task brief is the Claude-only column. The
+      cross-provider total is 97.5%. Both are recorded; sweeps use lo..hi.
+
+  prefix_cache_hit_rate_user_initiated:
+    value: 0.844
+    lo: 0.782
+    hi: 0.869
+    unit: fraction_of_input_tokens
+    source: "TraceLab Table 11: total 84.4% (Claude 86.9%, Codex 78.2%)"
+    confidence: published
+
+  cache_hit_rate_vs_idle_gap:
+    description: >-
+      Hit rate degrades with the idle gap preceding a step. Only qualitative
+      thresholds are stated in text; the curve itself is Figure 11 and cannot be
+      read off numerically.
+    gap_where_misses_appear_min:
+      value: 5
+      unit: minutes
+      source: "TraceLab 7.2: 'when the gap is larger than 5 minutes, low-hit-rate steps begin to appear'"
+      confidence: published
+    gap_where_almost_all_miss_min:
+      value: 60
+      unit: minutes
+      source: "TraceLab 7.2: 'after 1 hour, almost all steps miss the cache'"
+      confidence: published
+
+  # ---- per-step token shape ----
+  tokens_per_step:
+    prefix_tokens_median:
+      value: 119000
+      lo: 115584
+      hi: 126180
+      unit: tokens
+      source: "TraceLab abstract/5.1 + Table 8: median ~119K overall; Claude 126,180 / Codex 115,584"
+      confidence: published
+    prefix_tokens_p90:
+      lo: 201600
+      hi: 467082
+      unit: tokens
+      source: "TraceLab Table 8 P90 (Codex 201,600 / Claude 467,082)"
+      confidence: published
+    append_tokens_median:
+      value: 875
+      lo: 857
+      hi: 886
+      unit: tokens
+      source: "TraceLab abstract + Table 8 P50 (Claude 857 / Codex 886)"
+      confidence: published
+    append_tokens_p90:
+      lo: 5342
+      hi: 8310
+      unit: tokens
+      source: "TraceLab Table 8 P90"
+      confidence: published
+    output_tokens_median:
+      value: 214
+      lo: 184
+      hi: 252
+      unit: tokens
+      source: "TraceLab abstract (214 overall) + Table 8 P50 (Claude 252 / Codex 184)"
+      confidence: published
+    output_tokens_p90:
+      lo: 939
+      hi: 1671
+      unit: tokens
+      source: "TraceLab Table 8 P90"
+      confidence: published
+
+  input_output_token_ratio_per_turn:
+    append_to_output_median:
+      value: 4.09
+      unit: ratio
+      source: "derived from TraceLab medians: 875 append / 214 output"
+      confidence: published
+      note: arithmetic on two published medians; no new assumption
+    total_input_to_output_median:
+      value: 559.7
+      unit: ratio
+      source: "derived from TraceLab medians: (119000 prefix + 875 append) / 214 output"
+      confidence: published
+      note: >-
+        This ~560:1 input:output ratio is the single most important shape fact
+        for the study. Long context, short output.
+
+  # ---- trajectory length ----
+  turns_per_trajectory:
+    trajectory_definition_warning: >-
+      TraceLab reports per-SESSION and per-REQUEST separately, and they differ by
+      an order of magnitude. "Turns per trajectory" is therefore a definitional
+      choice, not a measured constant. Both are recorded; the trajectory sim must
+      state which it uses.
+    per_request_steps:
+      avg: 8.7
+      p50: 2
+      p90: 21
+      p99: 87
+      unit: steps
+      source: >-
+        TraceLab Table 2 per request: user-initiated 0.9 avg (p50 1) +
+        tool-initiated 7.8 avg (p50 1, p90 20, p99 86)
+      confidence: published
+    per_session_steps:
+      avg: 82.5
+      p50: 16
+      p90: 152
+      p99: 1236
+      unit: steps
+      source: >-
+        TraceLab Table 2 per session: user-initiated 8.9 avg (p50 1, p90 17, p99 129) +
+        tool-initiated 73.6 avg (p50 15, p90 135, p99 1107)
+      confidence: published
+    tool_calls_per_step:
+      avg: 1.2
+      p50: 1
+      p90: 2
+      p99: 4
+      unit: calls
+      source: "TraceLab Table 2 per step"
+      confidence: published
+
+  # ---- context floor (PRIMARY) ----
+  # Context does not GROW into 119K across turns. It STARTS there: system prompt,
+  # codebase context, and tool definitions are resident from turn one. With a
+  # median of 2 steps per request and ~1.8K growth per step, accumulation accounts
+  # for ~3.6K of a ~119K median context, i.e. ~3%.
+  #
+  # CONSEQUENCE FOR SWITCHING: switching cost is a STEP FUNCTION at context_floor,
+  # incurred on any tier change landing on a tier that holds no KV for this
+  # context. It is expensive from turn one. It does NOT ramp with turn index.
+  context_floor:
+    value: 115440
+    lo: 111908
+    hi: 122742
+    unit: tokens
+    source: >-
+      DERIVED from two published TraceLab figures: median per-step prefix tokens
+      (Table 8: overall ~119,000; Claude 126,180 / Codex 115,584) minus median
+      steps-per-request (Table 2: p50 = 2) times avg positive per-step growth
+      (Table 3: Claude 1,719 / Codex 1,838).
+      Overall: 119,000 - 2*1,780 = 115,440.
+      Claude:  126,180 - 2*1,719 = 122,742 (hi).
+      Codex:   115,584 - 2*1,838 = 111,908 (lo).
+    confidence: estimated
+    PRIMARY: true
+    caveat: >-
+      Mixes a median (prefix tokens, steps per request) with a mean (per-step
+      growth) because TraceLab publishes no median for per-step growth. The
+      correction term is ~3% of the total, so the impurity is small relative to
+      the quantity, but the derivation is not distributionally clean and must not
+      be described as measured.
+    why_it_matters: >-
+      context_floor is the token count that a tier switch must re-prefill, and the
+      residency that a cloud provider charges cache rent on every single turn. It
+      is the dominant scale parameter in the study. The growth curve below is a
+      ~3% correction to it at the median.
+    tail_qualification: >-
+      Growth is secondary at the median but NOT negligible in the tail: at p90 of
+      21 steps per request, accumulation contributes ~21*1,780 = ~37K tokens on
+      top of context_floor, roughly a third again. Phase 3 must therefore still
+      carry the growth term; "secondary" means subordinate to context_floor, not
+      droppable.
+
+  # ---- context growth (SECONDARY) ----
+  # Demoted: a ~3% correction to context_floor at the median trajectory. Retained
+  # because it still matters in the p90 tail (see context_floor.tail_qualification).
+  context_growth_by_turn_index:
+    PRIORITY: secondary
+    superseded_note: >-
+      This block previously carried `initial_context_tokens` (4K-80K, estimated),
+      which implied context ramps up from a small base. That framing was wrong:
+      the median step already sits at ~119K prefix after a median of 2 steps.
+      `initial_context_tokens` has been replaced by the primary `context_floor`
+      parameter above.
+    EXTRACTION_STATUS: PARTIAL
+    extraction_note: >-
+      TraceLab does NOT publish a context-length-vs-turn-index curve. It publishes
+      (a) mean positive per-step context growth, and (b) append tokens conditioned on
+      prefix bucket (Table 9), and (c) one example session as Figure 10. The curve
+      used by the trajectory sim is therefore CONSTRUCTED by us from (a) and is
+      marked `estimated`.
+    avg_positive_growth_per_step:
+      value: 1780
+      lo: 1719
+      hi: 1838
+      unit: tokens_per_step
+      source: "TraceLab Table 3, all steps: Claude 1,719 / Codex 1,838 avg positive growth"
+      confidence: published
+    avg_positive_growth_tool_initiated:
+      lo: 1746
+      hi: 1783
+      unit: tokens_per_step
+      source: "TraceLab Table 3, tool-initiated steps"
+      confidence: published
+    avg_positive_growth_user_initiated:
+      lo: 1527
+      hi: 2742
+      unit: tokens_per_step
+      source: "TraceLab Table 3, user-initiated steps (Claude 1,527 / Codex 2,742)"
+      confidence: published
+    fraction_of_steps_that_grow:
+      lo: 0.9656
+      hi: 0.9960
+      unit: fraction
+      source: "TraceLab Table 3 'Positive (growth) %' (Codex 96.56% / Claude 99.60%)"
+      confidence: published
+    growth_model_shape:
+      value: linear
+      source: "our modeling choice; TraceLab publishes only the mean per-step delta"
+      confidence: estimated
+      note: >-
+        Linear accumulation at avg_positive_growth_per_step. Real sessions show
+        compaction drops (see context_compaction) and are not strictly linear.
+    context_compaction:
+      sessions_with_at_least_one:
+        lo: 0.045
+        hi: 0.184
+        unit: fraction_of_sessions
+        source: "TraceLab Table 4 (Claude 4.5%, Codex 18.4%); 9.7% overall in text"
+        confidence: published
+      note: >-
+        Compaction is a >=64k total-input drop. Not modeled in this phase
+        (out of scope), but it caps context growth in reality.
+
+  # ---- tool latency ----
+  tool_latency_distribution:
+    EXTRACTION_STATUS: PARTIAL
+    extraction_note: >-
+      Per-tool median and p5/p95 for the top tools exist ONLY as Figure 9 (box plot)
+      and cannot be read off numerically from the text. What IS extractable is the
+      aggregate distribution and the Codex per-tool overhead table (Table 10, which
+      reports RESIDUAL/overhead percentiles, not full tool latency). Per-tool p5/p95
+      is therefore NOT sourced and is not used.
+    aggregate_mean_s:
+      value: 16.8
+      unit: seconds
+      source: "TraceLab 6.2: 'average tool-call latency is 16.8s'"
+      confidence: published
+    aggregate_median_s:
+      value: 0.3
+      unit: seconds
+      source: "TraceLab Table 7, individual positive tool latencies: median 0.3s"
+      confidence: published
+    aggregate_p90_s:
+      value: 13.6
+      unit: seconds
+      source: "TraceLab Table 7, individual positive tool latencies: p90 13.6s"
+      confidence: published
+    aggregate_p5_s:
+      value: null
+      unit: seconds
+      source: "NOT PUBLISHED - Table 7 reports median and p90 only; Figure 9 whiskers are not numeric"
+      confidence: guess
+      MUST_MEASURE: true
+    tail_share:
+      calls_over_1min_fraction:
+        lo: 0.031
+        hi: 0.049
+        unit: fraction_of_calls
+        source: "TraceLab 6.2 (Claude 4.9%, Codex 3.1%)"
+        confidence: published
+      time_share_of_calls_over_1min:
+        lo: 0.61
+        hi: 0.92
+        unit: fraction_of_tool_time
+        source: "TraceLab 6.2 (Claude 92%, Codex 61%)"
+        confidence: published
+    top_tools:
+      claude: [Bash, Read, Edit]
+      codex: [exec_command, write_stdin, apply_patch]
+      concentration:
+        claude_top3_share: 0.80
+        codex_top3_share: 0.95
+        source: "TraceLab 6.1: top three account for >80% (Claude) and 95% (Codex) of calls"
+        confidence: published
+      per_tool_median_s_codex:
+        note: >-
+          Table 10 'P50/90/99' columns are the POSITIVE RESIDUAL (overhead) stats,
+          not total tool latency. Recorded here only to avoid misuse.
+        all_timed_residual_p50_s: 0.13
+        all_timed_residual_p90_s: 0.24
+        all_timed_residual_p99_s: 10.0
+        source: "TraceLab Table 10, 253k Codex calls with valid e2e + internal timing"
+        confidence: published
+
+  # ---- redundant prefill (context for the cache argument) ----
+  redundant_prefill:
+    fresh_pct_of_append:
+      value: 0.190
+      lo: 0.123
+      hi: 0.258
+      unit: fraction
+      source: "TraceLab Table 12: total 19.0% (Claude 12.3%, Codex 25.8%)"
+      confidence: published
+    prefill_amplification:
+      value: 5.3
+      lo: 3.9
+      hi: 8.1
+      unit: multiplier
+      source: "TraceLab Table 12: 5.3x total (Claude 8.1x, Codex 3.9x)"
+      confidence: published
+    cost_share_prefix_tokens:
+      value: 0.595
+      unit: fraction_of_api_spend
+      source: "TraceLab 4.3 / Table 5: prefix tokens are 59.5% of cost, append 29.2%, output 11.2%"
+      confidence: published
+      note: >-
+        This is the anchor for Phase 2: under a real cache, cloud spend is
+        dominated by CACHE READS of accumulated context, not by fresh input or output.
+
+# =============================================================================
+# CLOUD PRICING + SERVING  (published rate cards, verified July 2026)
+# =============================================================================
+cloud:
+
+  providers:
+
+    anthropic:
+      frontier:
+        model: claude-opus-4.8
+        price_input_uncached_per_mtok:
+          value: 5.00
+          source: "Anthropic list prices 2026-05-27 PDF + platform.claude.com/docs pricing (July 2026)"
+          confidence: published
+        price_input_cached_per_mtok:
+          value: 0.50
+          source: "same; cache read = 0.1x base input"
+          confidence: published
+        price_cache_write_5m_per_mtok:
+          value: 6.25
+          source: "same; 5-minute cache write = 1.25x base input"
+          confidence: published
+        price_cache_write_1h_per_mtok:
+          value: 10.00
+          source: "same; 1-hour cache write = 2.0x base input"
+          confidence: published
+        price_output_per_mtok:
+          value: 25.00
+          source: "same"
+          confidence: published
+        long_context_surcharge:
+          value: none
+          source: >-
+            finout.io OpenAI-vs-Anthropic 2026 comparison: Anthropic offers
+            1M-token context at flat rate with no surcharge for Opus/Sonnet class
+          confidence: published
+      mid:
+        model: claude-sonnet-5
+        price_input_uncached_per_mtok:
+          value: 2.00
+          lo: 2.00
+          hi: 3.00
+          source: >-
+            platform.claude.com pricing: introductory $2/MTok through 2026-08-31,
+            standard $3/MTok thereafter
+          confidence: published
+          note: >-
+            The lo/hi is a real scheduled price change, not uncertainty. Sweeps
+            must cover both because the study horizon crosses 2026-08-31.
+        price_input_cached_per_mtok:
+          value: 0.20
+          lo: 0.20
+          hi: 0.30
+          source: "0.1x base input at both introductory and standard rates"
+          confidence: published
+        price_output_per_mtok:
+          value: 10.00
+          lo: 10.00
+          hi: 15.00
+          source: "introductory $10/MTok, standard $15/MTok after 2026-08-31"
+          confidence: published
+
+    openai:
+      frontier:
+        model: gpt-5.6-sol
+        price_input_uncached_per_mtok:
+          value: 5.00
+          source: "developers.openai.com/api/docs/pricing (July 2026), short-context column"
+          confidence: published
+        price_input_cached_per_mtok:
+          value: 0.50
+          source: "same"
+          confidence: published
+        price_cache_write_per_mtok:
+          value: 6.25
+          source: "same"
+          confidence: published
+        price_output_per_mtok:
+          value: 30.00
+          source: "same"
+          confidence: published
+        long_context_price_input_uncached_per_mtok:
+          value: 10.00
+          source: "same, long-context column"
+          confidence: published
+        long_context_price_input_cached_per_mtok:
+          value: 1.00
+          source: "same, long-context column"
+          confidence: published
+        long_context_price_output_per_mtok:
+          value: 45.00
+          source: "same, long-context column"
+          confidence: published
+      mid:
+        model: gpt-5.6-terra
+        price_input_uncached_per_mtok:
+          value: 2.50
+          source: "developers.openai.com/api/docs/pricing (July 2026), short-context"
+          confidence: published
+        price_input_cached_per_mtok:
+          value: 0.25
+          source: "same"
+          confidence: published
+        price_output_per_mtok:
+          value: 15.00
+          source: "same"
+          confidence: published
+        long_context_price_input_uncached_per_mtok:
+          value: 5.00
+          source: "same, long-context column"
+          confidence: published
+        long_context_price_input_cached_per_mtok:
+          value: 0.50
+          source: "same, long-context column"
+          confidence: published
+        long_context_price_output_per_mtok:
+          value: 22.50
+          source: "same, long-context column"
+          confidence: published
+
+    google:
+      mid:
+        model: gemini-2.5-flash
+        price_input_uncached_per_mtok:
+          value: 0.30
+          source: "ai.google.dev pricing (Gemini 2.5 Flash, July 2026 secondary confirmations)"
+          confidence: published
+        price_input_cached_per_mtok:
+          value: 0.03
+          source: "same; cache read = 0.1x base input (Gemini 2.5+)"
+          confidence: published
+        price_cache_storage_per_mtok_per_hour:
+          value: 1.00
+          unit: usd_per_mtok_per_hour
+          source: >-
+            Gemini 2.5+ context-cache storage billed per hour. Secondary
+            rate-card summaries cite ~$1.00/MTok/hour; this is the EXPLICIT
+            residency-rent meter that supports the Phase-1 cache-rent framing.
+            Promote against the live ai.google.dev card before quoting as a
+            headline number.
+          confidence: estimated
+        price_output_per_mtok:
+          value: 2.50
+          source: "ai.google.dev pricing (Gemini 2.5 Flash)"
+          confidence: published
+
+  long_context_threshold_tokens:
+    value: 272000
+    lo: 128000
+    hi: 400000
+    unit: tokens
+    source: >-
+      RESOLVED 2026-07-27 (prelim Phase 2, Arm A3) from PUBLISHED rate-card
+      reporting, NOT from our cost model. Three independent secondary sources
+      agree on 272K for the GPT-5.4/5.5 families: alatirok.com "LLM Long-Context
+      Pricing Surcharge 2026" (>272K, input 2x, applied to the whole session);
+      tokencost.app "anthropic-long-context-flat-pricing" comparison table
+      (GPT-5.4, 272K, $2.50 -> $5.00); developersdigest "Frontier Model API
+      Pricing July 2026" (verified 2026-07-24 against
+      developers.openai.com/api/docs/pricing). The previous entry read NOT FOUND
+      with a guessed 200K.
+    confidence: published
+    MUST_MEASURE: false
+    CONFLICTING_SOURCE: >-
+      morphllm.com "LLM Context Window Comparison (2026)" lists OpenAI as having
+      no long-context tier at all. Three sources against one, and the OpenAI
+      pricing page itself carries a distinct long-context column (which is where
+      cloud.providers.openai.*.long_context_price_* came from), so the dissent is
+      treated as an error. It is recorded rather than dropped.
+    A3_NEGATIVE: >-
+      This value is PUBLISHED, not DERIVED. Arm A3 tried and failed to predict
+      threshold placement from serving cost structure: the predicted knee band
+      for an 8B GQA model spans 61K-1.34M tokens across accelerator classes and
+      the unobservable minimum-batch parameter, so every published threshold
+      falls inside it and the test does not discriminate. See
+      analysis/prelim/phase2/PHASE2.md section 3. The threshold entry is upgraded
+      because a rate card was found, not because the cost model explained it.
+    why_it_matters: >-
+      RESOLVED CONSEQUENCE: context_floor is 115,440 tokens, which is BELOW the
+      272K threshold. At the median turn, OpenAI bills at the short-context
+      column, so the above_threshold branch of every Phase-1 table is
+      INAPPLICABLE at context_floor. It becomes live only in the tail --
+      TraceLab's p90 step prefix reaches ~467K, which does cross 272K. The
+      ~2x T2 swing is therefore a p90 phenomenon, not a median one, and Phase 3
+      must apply the threshold per sampled trajectory rather than globally.
+
+  ttft_ms:
+    value: 3100
+    lo: 1500
+    hi: 2900
+    unit: milliseconds
+    source: >-
+      TraceLab abstract/5.4: Codex median estimated residual TTFT 3.1 s per step;
+      binned median residual TTFT rises 1.5 s (~12K input) -> 2.9 s (~185K input)
+    confidence: published
+    note: >-
+      value is the reported per-step median; lo/hi is the context-binned range.
+      Trace-derived, so it includes client and scheduling effects, not just server
+      prefill. Claude TTFT is not separately isolated in the paper.
+
+  output_tok_per_sec:
+    normalized_end_to_end:
+      value: 40
+      lo: 33.9
+      hi: 46.8
+      unit: tokens_per_second
+      source: "TraceLab 5.4: median normalized decode 46.8 (Claude) / 33.9 (Codex)"
+      confidence: published
+      note: normalized speed includes TTFT and reasoning; it is an end-to-end trace rate
+    pure_decode:
+      value: 61.3
+      lo: 55
+      hi: 74
+      unit: tokens_per_second
+      source: >-
+        TraceLab 5.4: Codex median pure decode 61.3 tok/s; binned median falls
+        74 tok/s (~12K input) -> 55 tok/s (~185K input)
+      confidence: published
+
+  rtt_ms:
+    value: 30
+    lo: 10
+    hi: 80
+    unit: milliseconds
+    source: >-
+      NOT PUBLISHED in TraceLab and not separately measured by us. Bracketed at
+      typical client-to-major-provider-edge RTT.
+    confidence: estimated
+    note: >-
+      Negligible next to a 1.5-3.1 s TTFT; recorded for completeness and expected
+      to rank near the bottom of the tornado.
+
+# =============================================================================
+# LOCAL HARDWARE  (published specs + named community benchmarks)
+# =============================================================================
+# ALL prefill/decode rates below are `published` community benchmarks, NOT measured
+# by us. Two systematic caveats apply to every row:
+#
+#  CAVEAT-PP512: every published prefill number is pp512 (512-token prompt). Our
+#    workload's median context is ~119K tokens. Prefill rate at 119K is materially
+#    lower than pp512 and is NOT published for any of these configs.
+#  CAVEAT-MOE: at the "30B class" a sparse MoE (e.g. Qwen3-30B-A3B, ~3B active) and
+#    a dense 32B differ by ~7x in decode on the same box. They are recorded
+#    separately; collapsing them would be a modeling error.
+local_hardware:
+
+  common:
+    electricity_usd_per_kwh:
+      value: 0.1844
+      lo: 0.0871
+      hi: 0.1883
+      unit: usd_per_kwh
+      source: >-
+        EIA Electric Power Monthly Table 5.3 / 5.6.A, May 2026: US residential
+        18.44 c/kWh; industrial 8.71 c/kWh; 2026 monthly residential peak
+        18.83 c/kWh (April). 2026 YTD residential 18.11 c/kWh.
+      confidence: published
+      note: lo is industrial rate (colo-like), hi is residential peak month
+    assumed_lifetime_months:
+      value: 36
+      lo: 24
+      hi: 60
+      unit: months
+      source: "NO SOURCE. Pure modeling choice for capex amortization."
+      confidence: guess
+      MUST_MEASURE: false
+      MUST_DECIDE: true
+      why_it_matters: >-
+        Amortized capex is one of the two components of T1 usd. A 24-vs-60 month
+        assumption moves the amortization term by 2.5x with zero empirical content.
+    capex_utilization:
+      description: >-
+        Fraction of the machine's service life actually spent doing inference for
+        this workload. There is ONE amortization formula:
+
+          amortized_capex_usd_per_inference_second
+            = capex_usd / (assumed_lifetime_months * 2.628e6 s/month * capex_utilization)
+
+        Utilization is the free parameter in that formula, not a choice between
+        competing amortization philosophies. Total capex must be recovered over the
+        life of the box; if the box is only inferring for fraction U of its life,
+        each inference second must carry 1/U of the capex burden. LOW utilization
+        therefore makes local MORE expensive per inference second, not less.
+      value: 0.145
+      lo: 0.033
+      hi: 1.00
+      unit: fraction_of_service_life_spent_inferring_this_workload
+      source: >-
+        The parameter itself is unsourced (a deployment property, not a measurable
+        constant), but the anchor points come from TraceLab Table 7 wall-clock
+        decomposition. See anchors below.
+      confidence: guess
+      MUST_DECIDE: false
+      SWEEP_AS_FIRST_CLASS_PARAMETER: true
+      anchors:
+        dedicated_box_uncapped:
+          value: 0.033
+          source: >-
+            TraceLab Table 7, per session: LLM generation is 3.3% of session
+            wall-clock (human thinking 92.3%, tool execution 4.8%). A box dedicated
+            to one TraceLab-shaped agent stream is generating ~3% of the time.
+          confidence: published
+          note: worst case for local; each inference second carries ~30x the capex burden
+        dedicated_box_human_capped_1h:
+          value: 0.145
+          source: >-
+            TraceLab Table 7, per session with each idle gap capped at 1 hour:
+            LLM generation rises to 14.5% of the now cache-relevant budget
+            (human 64.3%, tool 21.2%).
+          confidence: published
+          note: >-
+            The 1h cap is TraceLab's own device for excluding sessions left open
+            for days; it is the more realistic denominator for a box that sleeps
+            or serves other work during long gaps.
+        fully_time_shared:
+          value: 1.00
+          source: >-
+            Modeling limit: the box is saturated by this or other paying work for
+            its entire life, so capex amortizes at the lowest possible per-second
+            rate. Not achievable for a single interactive agent stream.
+          confidence: estimated
+          note: best case for local; a lower bound on per-second capex
+      why_it_matters: >-
+        The anchors span ~30x (0.033 to 1.00). Phase 4 must report where in that
+        span the T1-vs-T2 comparison flips, rather than picking a value. Combined
+        with assumed_lifetime_months (24-60), the amortization term is uncertain by
+        roughly 75x on pure modeling choices with no empirical content.
+
+  strix_halo:
+    label: "Strix Halo class (AMD Ryzen AI Max+ 395, 128GB unified)"
+    memory_bandwidth_gb_s:
+      value: 212
+      lo: 212
+      hi: 256
+      unit: gb_per_second
+      source: >-
+        Task brief states ~212 GB/s; community sources quote ~215 GB/s effective
+        (hardware-corner) and ~256 GB/s theoretical (computingforgeeks) for
+        LPDDR5X-8000
+      confidence: published
+    memory_gb:
+      value: 128
+      source: "product spec, Framework Desktop / GMKtec EVO-X2 / Beelink GTR9 Pro 128GB SKUs"
+      confidence: published
+    model_7_8b:
+      decode_tok_per_sec:
+        value: 46
+        lo: 42
+        hi: 48
+        unit: tokens_per_second
+        source: >-
+          Framework community thread (Llama 2 7B Q4_0 Vulkan tg128 46.5-47.9;
+          Shisa V2 8B Q4_K_M 37.2 HIP); theaibench Framework Desktop page
+          (Llama 3.1 8B Q4 ~42 tok/s Vulkan)
+        confidence: published
+      prefill_tok_per_sec_pp512:
+        value: 1000
+        lo: 878
+        hi: 1380
+        unit: tokens_per_second
+        source: >-
+          Framework community thread (Llama 2 7B Q4_0 Vulkan pp512 998-1014);
+          hardware-corner kyuz0 toolboxes table (llama-2-7b Q4_0: rocm 1117 /
+          vulkan_amdvlk 1380); visorcraft (Llama 2 7B Q4_K_M pp512 1074)
+        confidence: published
+        CAVEAT: PP512
+      prefill_tok_per_sec_at_119k:
+        value: null
+        lo: 34.5
+        hi: 1000
+        unit: tokens_per_second
+        source: >-
+          STILL NOT PUBLISHED for any config, so `value` deliberately stays null
+          -- no midpoint. lo/hi added 2026-07-27 (prelim Phase 2, Arm B) as a
+          BRACKET, from censor/prefill_bounds.py applied to this row's own
+          pp512 = 1000 tok/s at context_floor = 115,440:
+          hi  = optimistic_flat (ratio 1.000) -- the assumption Phase 1 made
+                implicitly by using pp512 at 115K;
+          mid = linear_attention_theoretic (ratio 0.213, => 213 tok/s), from
+                transformer prefill FLOP accounting with
+                c = 2*n_layers*d_model/P_active computed off the sourced
+                Llama-3.1-8B config;
+          lo  = quadratic_pessimistic (ratio 0.035), fitted to the llama.cpp
+                llama-bench published depth anchor (qwen2-7B CUDA: pp512 7340.20
+                t/s vs pp512 @ d512 6425.91 t/s).
+        confidence: estimated
+        MUST_MEASURE: true
+        NEVER_COLLAPSE: >-
+          The three scaling models are carried as a bracket, never averaged. The
+          span is 29x. Any result quoted from a single one of them must name it.
+        anchor_caveat: >-
+          The pessimistic edge rests on a single weak anchor: llama-bench's
+          pp512-at-depth measures throughput on 512 fresh tokens with N resident,
+          not cold prefill of an N-token prompt, on one hardware/backend pair.
+          It is used only as the pessimistic EDGE, never as an estimate.
+        phase2_finding: >-
+          Inverting the Phase-1 verdicts on this parameter (Arm B2): the
+          usd_marginal verdict is ROBUST -- the marginal flip rate is 0.09-86
+          tok/s depending on the cell, below even the pessimistic model on every
+          row, so local wins on energy across the whole plausible band. The
+          AMORTIZED verdict under `recomputes` is FRAGILE: the Apple u* >= 17.8%
+          conditional from Phase 1 holds only at the optimistic edge, rises to
+          86.7% under the attention-theoretic model, and becomes impossible
+          (>100%) under the pessimistic model.
+    model_30b_moe:
+      decode_tok_per_sec:
+        value: 75
+        lo: 61
+        hi: 101
+        unit: tokens_per_second
+        source: >-
+          visorcraft (Qwen3 30B-A3B Q4_K_M tg128 86.1); Framework community
+          (Qwen3 30B-A3B UD-Q4_K_XL 66.3-72.0); hogeheer strix-halo-guide
+          (Qwen3-Coder 30B-A3B Q4_K_S 100.99 direct llama.cpp Vulkan b9851);
+          fromthematrix (Qwen3-Coder-30B-A3B Q4_K_M 66, Nemotron-3-Nano-30B 61)
+        confidence: published
+      prefill_tok_per_sec_pp512:
+        value: 780
+        lo: 484
+        hi: 1142
+        unit: tokens_per_second
+        source: >-
+          visorcraft (Qwen3 30B-A3B Q4_K_M pp512 1142); Framework community
+          (591-604); fromthematrix prefill on 7,624-token prompt
+          (Qwen3-Coder-30B-A3B 779, GLM-4.7-Flash 484)
+        confidence: published
+        CAVEAT: PP512
+    model_30b_dense:
+      decode_tok_per_sec:
+        value: 11.3
+        lo: 11.3
+        hi: 14.0
+        unit: tokens_per_second
+        source: >-
+          visorcraft (Qwen2.5 32B Q4_K_M tg128 11.3); fromthematrix
+          (Devstral-Small-2 24B dense Q4_K_M 14)
+        confidence: published
+        note: CAVEAT-MOE - ~7x slower than the 30B MoE on the same box
+      prefill_tok_per_sec_pp512:
+        value: 242
+        lo: 242
+        hi: 281
+        unit: tokens_per_second
+        source: "visorcraft (Qwen2.5 32B Q4_K_M pp512 242); fromthematrix (Devstral-Small-2 281)"
+        confidence: published
+        CAVEAT: PP512
+    sustained_power_w:
+      value: 120
+      lo: 85
+      hi: 140
+      unit: watts
+      source: >-
+        Task brief states ~120W; visorcraft tested 85W/120W profiles ("120W usually
+        wins for 7B+ models"); computingforgeeks comparison lists ~120W class
+        sustained, 140W peak for EVO-X2 / GTR9 Pro
+      confidence: published
+      note: >-
+        This is a platform power profile setting, not a measured
+        wall-power-under-this-workload figure.
+    capex_usd:
+      value: 2200
+      lo: 1800
+      hi: 2500
+      unit: usd
+      source: >-
+        notebookcheck 2026-01: Framework Desktop 128GB raised to $2,459;
+        computingforgeeks: Framework base ~$1,999 / GMKtec EVO-X2 ~$1,800-2,000 /
+        Beelink GTR9 Pro $1,985 MSRP; ServeTheHome: realistic kitted ~$2,500
+      confidence: published
+      note: DRAM market is volatile; theaibench flags the $1,999 -> $2,459 hike as memory-driven
+
+  apple_m_series:
+    label: "Apple M-series class (M4 Max 40-core reference; M3 Ultra noted)"
+    memory_bandwidth_gb_s:
+      value: 546
+      lo: 410
+      hi: 819
+      unit: gb_per_second
+      source: >-
+        Apple specs via llama.cpp discussion #4167 and markaicode: M4 Max
+        410 GB/s (32-core GPU) and 546 GB/s (40-core GPU); insiderllm: M3 Ultra
+        819 GB/s (localaimaster quotes ~800 GB/s)
+      confidence: published
+    model_7_8b:
+      decode_tok_per_sec:
+        value: 83
+        lo: 55
+        hi: 83
+        unit: tokens_per_second
+        source: >-
+          PRIMARY: llama.cpp discussion #4167 (Llama 2 7B Q4_0 Metal, M4 Max
+          40-core/546GB/s tg 83.06; 32-core/410GB/s tg 69.95). SECONDARY
+          (approximate, different model): mljourney Llama 3.1 8B Q4 M4 Max ~75,
+          M3 Max ~55; localaimaster Llama 3.2 7B Ollama 58 / MLX 68
+        confidence: published
+        note: >-
+          The 83 figure is Llama 2 7B Q4_0 from the primary llama.cpp table. The
+          Llama 3.1 8B figures are third-party approximations; markaicode
+          explicitly declines to claim a verified Ollama+Llama-3.1-8B number.
+      prefill_tok_per_sec_pp512:
+        value: 886
+        lo: 714
+        hi: 923
+        unit: tokens_per_second
+        source: >-
+          llama.cpp discussion #4167: M4 Max 40-core pp512 885.68 (Q4_0),
+          891.94 (Q8_0), 922.83 (F16); 32-core 713.93 (Q4_0)
+        confidence: published
+        CAVEAT: PP512
+    model_30b_moe:
+      decode_tok_per_sec:
+        value: 130
+        lo: 43
+        hi: 130
+        unit: tokens_per_second
+        source: >-
+          insiderllm: "one Qwen3-Coder-30B-A3B test hit ~130 tok/s under MLX
+          versus ~43 under the llama.cpp backend"
+        confidence: published
+        note: >-
+          3x spread is framework choice (MLX vs llama.cpp), not hardware. Single
+          cited test; weakest row in this table.
+      prefill_tok_per_sec_pp512:
+        value: null
+        source: "NOT FOUND for Apple + 30B MoE"
+        confidence: guess
+        MUST_MEASURE: true
+    model_30b_dense:
+      decode_tok_per_sec:
+        value: 35
+        lo: 28
+        hi: 40
+        unit: tokens_per_second
+        source: >-
+          mljourney (Gemma 3 27B Q4: M3 Max 28 / M4 Max 38 / M4 Ultra 58);
+          insiderllm (Qwen3 32B ~30-40 tok/s on 64GB config)
+        confidence: published
+        note: both sources label these as approximate community figures
+      prefill_tok_per_sec_pp512:
+        value: null
+        source: "NOT FOUND for Apple + 30B dense"
+        confidence: guess
+        MUST_MEASURE: true
+    sustained_power_w:
+      value: 80
+      lo: 60
+      hi: 110
+      unit: watts
+      source: >-
+        insiderllm M4 Max vs M3 Ultra table lists ~80W AI-load power. No
+        vendor-published sustained inference power figure was located.
+      confidence: estimated
+      MUST_MEASURE: true
+    capex_usd:
+      value: 5000
+      lo: 4000
+      hi: 5299
+      unit: usd
+      source: >-
+        insiderllm (July 2026): M3 Ultra Mac Studio starts $5,299 (96GB) after
+        June 2026 hikes. No clean current M4 Max 128GB price located; lo bound is
+        our bracket, not a quoted price.
+      confidence: estimated
+      MUST_DECIDE: true
+
+  discrete_gpu:
+    label: "Discrete GPU class (RTX 5090 32GB primary; RTX 4090 24GB secondary)"
+    DATA_QUALITY_WARNING: >-
+      Published 8B decode figures for these cards CONFLICT badly across sources
+      (4090: 54, 56, 89, 126 tok/s; 5090: 113, 168, 178, 185, 197 tok/s). One
+      source claims 3.2x 5090-vs-4090 while another claims ~47% on the same model
+      and quant. The lo/hi below spans the full conflicting range on purpose. Do
+      not treat any midpoint as a fact.
+    rtx_5090:
+      memory_gb:
+        value: 32
+        unit: gigabytes
+        source: >-
+          NVIDIA RTX 5090 published spec (GDDR7), corroborated by coderacoon
+          ("RTX 5090 (32 GB VRAM)") and craftrigs ("The 5090's 32 GB VRAM fits
+          70B Q4_K_M cleanly with 2 GB headroom")
+        confidence: published
+      memory_bandwidth_gb_s:
+        value: 1792
+        source: "markaicode (1,792 GB/s GDDR7); kunalganglani (~1.8 TB/s)"
+        confidence: published
+      model_7_8b:
+        decode_tok_per_sec:
+          value: 178
+          lo: 113
+          hi: 197
+          unit: tokens_per_second
+          source: >-
+            markaicode RTX-5090 AI benchmark (Llama 3.1 8B Q4_K_M: Ollama 178,
+            vLLM 197, llama.cpp 168); markaicode Llama benchmark (~185 median);
+            craftrigs (113)
+          confidence: published
+        prefill_tok_per_sec_pp512:
+          value: null
+          source: >-
+            NOT PUBLISHED in the sources located. Only TTFT was reported
+            (120-140 ms for 8B, markaicode), which is not a prefill rate.
+          confidence: guess
+          MUST_MEASURE: true
+      model_30b_dense:
+        decode_tok_per_sec:
+          value: 40
+          lo: 30
+          hi: 50
+          unit: tokens_per_second
+          source: >-
+            Search synthesis across craftrigs / coderacoon: 32B-class ~30-50 tok/s
+            on 5090. craftrigs reports a ~35% gain over 4090 at 32B.
+          confidence: published
+          note: synthesized range, not a single quoted benchmark row
+      sustained_power_w:
+        value: 580
+        lo: 550
+        hi: 610
+        unit: watts
+        source: "markaicode measured power column (llama.cpp 550 / Ollama 580 / vLLM 610)"
+        confidence: published
+      capex_usd:
+        value: 2400
+        lo: 1999
+        hi: 2400
+        unit: usd
+        source: "craftrigs: $1,999 MSRP, $2,400+ street"
+        confidence: published
+        note: GPU only; excludes host platform (see host_platform_capex_usd)
+    rtx_4090:
+      memory_gb:
+        value: 24
+        unit: gigabytes
+        source: >-
+          NVIDIA RTX 4090 published spec (GDDR6X), corroborated by coderacoon
+          ("RTX 4090 (24 GB VRAM)") and kunalganglani ("the 4090's 24 GB in
+          4-bit quantization")
+        confidence: published
+      memory_bandwidth_gb_s:
+        value: 1008
+        source: "markaicode (1,008 GB/s); craftrigs/kunalganglani (~1.0 TB/s)"
+        confidence: published
+      model_7_8b:
+        decode_tok_per_sec:
+          value: 89
+          lo: 54
+          hi: 126
+          unit: tokens_per_second
+          source: >-
+            markaicode RTX-5090 benchmark (4090: Ollama 56, vLLM 63, llama.cpp 54);
+            markaicode Llama benchmark (~126 median); craftrigs (89)
+          confidence: published
+          note: see DATA_QUALITY_WARNING - this range spans 2.3x
+        prefill_tok_per_sec_pp512:
+          value: null
+          source: "NOT PUBLISHED in the sources located"
+          confidence: guess
+          MUST_MEASURE: true
+      model_30b_dense:
+        decode_tok_per_sec:
+          value: 25
+          lo: 20
+          hi: 30
+          unit: tokens_per_second
+          source: "search synthesis across craftrigs / coderacoon for 32B-class on 4090"
+          confidence: published
+          note: synthesized range, not a single quoted benchmark row
+      sustained_power_w:
+        value: 440
+        lo: 420
+        hi: 460
+        unit: watts
+        source: "markaicode measured power column (llama.cpp 420 / Ollama 440 / vLLM 460)"
+        confidence: published
+      capex_usd:
+        value: 1200
+        lo: 1200
+        hi: 1600
+        unit: usd
+        source: "craftrigs: used 4090 ~$1,200"
+        confidence: published
+    host_platform_capex_usd:
+      value: 800
+      lo: 500
+      hi: 1500
+      unit: usd
+      source: >-
+        NOT SOURCED. A discrete GPU needs a host (CPU, board, PSU sized for
+        550-610W GPU, RAM, case). The Strix Halo and Apple capex figures are whole
+        systems, so omitting a host cost would bias the comparison toward the GPU.
+      confidence: guess
+      MUST_DECIDE: true
+    kv_cache_capacity_flag:
+      value: false
+      unit: boolean_feasibility_at_context_floor_30b_class
+      source: >-
+        RESOLVED 2026-07-27 (prelim Phase 2, Arm C1) by arithmetic, not by
+        benchmark: censor/kv_math.py over sourced model configs, evaluated at
+        context_floor = 115,440 tokens. See analysis/prelim/phase2/
+        kv_feasibility.csv for the full hw x model x quant x kv_dtype grid.
+        Prior entry was NOT ESTABLISHED / confidence guess.
+      confidence: estimated
+      MUST_MEASURE: false
+      resolution: >-
+        A 30B-class model plus a context_floor KV cache does NOT fit a 24GB 4090
+        under ANY quantization x kv_dtype combination tested (best case: dense
+        Qwen2.5-32B at q4_k_m weights reaches 8.4K context; the Qwen3-30B-A3B MoE
+        reaches 36.5K). On the 32GB 5090 it fits in exactly one configuration:
+        the MoE at q4_k_m weights with q8_0 KV (222.8K max context). The dense
+        32B never fits at 115K on 32GB (72.9K best case). The 8B agent class,
+        which is what Phase 1 actually ran, does fit on both cards, but NOT at
+        fp16 weights with fp16 KV on either (5090: 102.1K; 4090: 45.9K).
+      confidence_caveat: >-
+        Marked `estimated` rather than `published` because it is derived from
+        published model configs and published memory capacities via our own
+        arithmetic, and because usable_fraction (0.92 for discrete GPUs, covering
+        CUDA context, activations, and fragmentation) is itself estimated. The
+        arithmetic passed its A1 sanity gate against RetroInfer and HERALD to
+        within 1.18x, so the derivation is trustworthy; the input assumption is
+        the soft part.
+      note: >-
+        The cliff the earlier entry worried about is real and now located. It is
+        not a gradual slowdown: below the feasibility boundary the KV cache
+        spills to host memory over PCIe, which is the mechanism behind
+        coderacoon's measured 4.25x collapse (Llama 3.3 70B Q4_K_M: 8 tok/s on
+        the 24GB 4090 vs 34 tok/s on the 32GB 5090) and craftrigs' 10-30x figure.
+        Discrete-GPU rows at production context length remain CONDITIONAL on
+        naming a feasible quant x kv_dtype pair.
+
+# =============================================================================
+# LOCAL RUNTIME  (software design decisions, NOT hardware properties)
+# =============================================================================
+# Kept in its own section deliberately. Filing these under local_hardware would
+# imply they are properties of the box, which is exactly the error that lets a
+# 65x cost swing get assumed away.
+local_runtime:
+
+  local_kv_persistence:
+    values: [persists, recomputes]
+    swept: true
+    default_value: persists
+    source: >-
+      MEASURED 2026-07-27 (characterization Item A):
+      analysis/characterization/kv_persistence.md. Source read of llama.cpp at
+      commit 91f8c9c5fb038c086e13e9cd823c29b33b07ba54 plus an empirical probe on
+      release b10155 (censor/tools/kv_persistence_probe.py; raw timings in
+      analysis/characterization/kv_persistence_raw.json). Prior entry read NOT
+      SOURCED / confidence guess.
+    confidence: measured
+    SCOPE: >-
+      llama.cpp ONLY. This is NOT a general claim about local runtimes. vLLM,
+      SGLang, Ollama, and MLX have their own slot and cache semantics and none of
+      them were tested. The parameter remains swept precisely because the
+      measurement covers one runtime.
+    MUST_DECIDE: false
+    NEVER_COLLAPSE: true
+    still_swept: true
+    measurement_summary: >-
+      Default configuration is in the `persists` regime, via two INDEPENDENT
+      mechanisms: (1) slot-resident KV with automatic longest-common-prefix reuse
+      (cache_prompt defaults true, tools/server/server-task.h:53; LCP at
+      server-context.cpp:3154), and (2) an 8 GiB RAM-backed prompt cache
+      (cache_ram_mib default 8192, common/common.h:626) that restores state after
+      slot eviction. Observed: 5,199 of 5,211 tokens reused on an append-only
+      follow-up, 152.91 ms against 22,265.27 ms cold (146x less prefill work).
+    reachable_recomputes_conditions:
+      runtime_misconfiguration: >-
+        `--parallel 1 --cache-ram 0` measured at full recompute (0 tokens reused,
+        5,211 prefilled, 20,828.97 ms) against 29.71 ms for the same request with
+        the RAM cache enabled -- a 701x gap turning on one flag. Plausible when
+        minimising memory on a small box, which is exactly this study's scenario.
+        Belongs on a deployment checklist.
+      prompt_head_mutation: >-
+        See local_runtime.prompt_head_stability. Reuse is PREFIX-ONLY
+        (n_cache_reuse defaults 0, common/common.h:621), so any per-turn mutation
+        of the prompt head voids the whole cache and silently yields `recomputes`
+        on a `persists` configuration. This is the more likely real-world route,
+        and it is a SCAFFOLD property, not a runtime property.
+    note: >
+      Not a hardware property. Determines whether prefill is delta-sized or
+      full-context. Dominates T1 cost at production context lengths.
+    scale_caveat: >-
+      Measured at 5.2K context on a 0.5B model, not at context_floor (115,440) on
+      a 7-8B model. The mechanism is size-independent, but the RAM cache's 8 GiB
+      budget is not -- see local_runtime.prompt_cache_hit_rate_local. At
+      production scale the binary is really a hit rate.
+    semantics:
+      persists: >-
+        The runtime retains KV state for this conversation between turns. Turn
+        N+1 prefills only the delta appended since turn N
+        (delta_tokens_per_turn, ~1.8K tokens).
+      recomputes: >-
+        The runtime discards KV between turns. Turn N+1 re-prefills the entire
+        resident context (context_floor, ~115K tokens) before generating a
+        single output token.
+    swing_magnitude:
+      value: 64.9
+      unit: multiplier_on_t1_prefill_work_per_turn
+      source: >-
+        Arithmetic on two other parameters in this file:
+        workload.context_floor.value (115,440 tokens) divided by
+        local_runtime.local_kv_persistence.delta_tokens_per_turn.value
+        (1,780 tokens). Not an independent measurement.
+      confidence: estimated
+      note: >-
+        Prefill work per turn, not end-to-end cost; the realised cost swing also
+        depends on prefill_tok_per_sec_at_119k, which is unsourced for every
+        hardware config. The ~65x is therefore the optimistic framing: it assumes
+        local prefill throughput does not itself degrade at 115K context.
+    delta_tokens_per_turn:
+      value: 1780
+      lo: 1719
+      hi: 1838
+      unit: tokens
+      source: >-
+        EXTRACTABLE from TraceLab Table 3, avg positive per-step context change
+        (Claude 1,719 / Codex 1,838). Table 3 measures the per-step change in
+        total input length (prefix + append) versus the previous step, which is
+        exactly the token delta a KV-persisting runtime would need to prefill.
+      confidence: published
+      caveat: >-
+        This is a MEAN of positive changes. TraceLab publishes no median for
+        per-step context growth, so the delta cannot be matched to the median
+        trajectory on a like-for-like basis. See median_construction below.
+        VALIDITY (cloud-served agents): Measured on CLOUD-served agents with
+        provider prefix caching. Those agents are DESIGNED around that cache:
+        append-only context, stable prefixes, no mid-conversation editing,
+        because editing invalidates the cache and costs money. A local
+        KV-persisting runtime faces no such constraint -- context editing is
+        nearly free locally. Direction of bias is unclear (local agents might
+        append less via compaction, or more via cheap re-injection), so this
+        is not a clean over- or under-estimate. Confidence stays published;
+        the transfer to a local runtime is an untested assumption.
+      median_construction:
+        value: 1089
+        unit: tokens
+        source: >-
+          Constructed by us as median append (875) + median output (214) from
+          TraceLab Table 8 / abstract, on the assumption that a turn's delta is
+          the freshly appended tokens plus the prior step's output. Both Claude
+          (output-resend) and Codex gpt-5.5 (output-resend) re-send prior output
+          per TraceLab 5.3, which supports including the output term.
+        confidence: estimated
+        note: >-
+          Recorded so that the mean/median mismatch is visible rather than
+          papered over. Sweeps should span 1,089 to 1,838.
+    downstream_requirement: >-
+      Every downstream phase runs BOTH values and reports BOTH. Never collapse to
+      one. If a headline claim holds under only one setting, the claim must name
+      the setting it depends on.
+
+  # ---------------------------------------------------------------------------
+  # A DISTINCT AXIS. Deliberately NOT filed as a note under local_kv_persistence:
+  # this is a scaffold property, it is invisible in every parameter swept before
+  # 2026-07-27, and burying it guarantees it gets lost.
+  # ---------------------------------------------------------------------------
+  prompt_head_stability:
+    values: [stable, mutating]
+    swept: true
+    confidence: measured
+    measured_value_mini_swe_agent: stable
+    SCOPE: >-
+      Measured for mini_swe_agent ONLY (characterization cell 4e). Stays swept
+      because it is a per-scaffold property and 15 trajectories of one scaffold
+      settle nothing about any other. Scaffolds that inject a memory block,
+      re-rank tools by recent usage, stamp the system prompt with a date, or
+      compact history in place would land on `mutating` and are untested.
+    source: >-
+      MEASURED 2026-07-27: analysis/characterization/prompt_head_stability.md
+      (cell 4e), from analysis/index_probe/phase1/oa01_verb_turns.jsonl and
+      apu_characterization/out/oa01/runs/**/*.traj.json. The MECHANISM was
+      measured earlier in Item A (analysis/characterization/kv_persistence.md):
+      llama.cpp reuse is prefix-only because n_cache_reuse defaults to 0
+      (common/common.h:621) and the reuse point is a longest-common-prefix
+      computation (tools/server/server-context.cpp:3154).
+    measurement_summary: >-
+      252 of 252 consecutive prompt pairs are strictly append-only: the previous
+      turn's assembled prompt is an exact byte-prefix of the next. Zero head
+      mutations. Corroborated by two independent capture-time measurements that
+      a post-hoc log could not fake: per-turn local LCP covers a median 0.9998 of
+      the previous prompt (min 0.9984, 314/314 pairs above 0.99), and the
+      provider prefix cache recovered 94.17% of structurally redundant tokens
+      with 0 reconciliation violations -- arithmetically impossible under head
+      mutation. The scaffold config bounds it further: system_template is a
+      constant string with no variables and instance_template interpolates only
+      {{task}}, fixed per run. There is no step, observation, or history-rewriting
+      template in the config at all.
+    note: >
+      Prefix-only reuse means any per-turn mutation of the prompt head voids the
+      entire cache. Silent failure -- no error, no warning, no log line at default
+      verbosity. Measured cliff on the Item A probe: 152.91 ms -> 22,265.27 ms,
+      146x. Scaffold property, not runtime property. Measured in D4.
+    semantics:
+      stable: >-
+        The prompt head (system prompt, tool definitions, task statement) is
+        byte-identical across turns; context grows append-only. The LCP spans the
+        whole prior context and delta prefill applies.
+      mutating: >-
+        Something near the head changes per turn -- rotating timestamp, reordered
+        tool list, injected memory block, turn counter, environment state dump.
+        LCP collapses to the position of the first differing token, and every
+        token after it is re-prefilled.
+    why_it_matters: >-
+      If our scaffold mutates the head, then for that scaffold `recomputes` is the
+      realistic case REGARDLESS of runtime configuration, and every
+      persists-based conclusion in Phases 1-2 becomes scaffold-conditional.
+    RESOLVED_FOR_THIS_SCAFFOLD: >-
+      It does not mutate. Every Phase-1/Phase-2 persists-based conclusion stands
+      for mini_swe_agent, and `recomputes` remains a swept alternative rather
+      than the operative default. A stable head does NOT imply a hit: it makes
+      the prefix REUSABLE, while prompt_cache_hit_rate_local governs whether the
+      prefix is still RESIDENT. The two are independent and both must hold.
+    cross_tier_note: >-
+      TraceLab measured CLOUD-served agents, which are designed around provider
+      prefix caching because head mutation costs money there. Local agents face no
+      such economic pressure, so nobody has been enforcing the discipline. The
+      discipline required is identical; the incentive to follow it has been absent
+      locally until this measurement supplied one.
+
+  prompt_cache_hit_rate_local:
+    value: null
+    lo: 0.5
+    hi: 1.0
+    unit: fraction_of_turns_hitting_retained_kv
+    confidence: guess
+    MUST_MEASURE: true
+    source: >-
+      NOT MEASURED and deliberately left null -- no midpoint. lo/hi is the sweep
+      range used in characterization cell 2c (analysis/characterization/
+      latency_ratio.csv), not an estimate of the true value. Derived from the
+      llama.cpp cache-capacity arithmetic in Item A.
+    note: >
+      cache_ram_mib default 8192 (common/common.h:626). At context_floor on a 7-8B
+      model each cache entry is roughly 1 GiB of sequence state, so the default
+      budget holds only a handful of prefixes and the FIFO eviction in
+      tools/server/server-task.cpp:1816-1838 fires under realistic session counts.
+      persists/recomputes is therefore a HIT RATE at production scale, not a
+      binary.
+    consequence: >-
+      T_local is a MIXTURE, not a point:
+      T_local_expected = h*T_local(delta) + (1-h)*T_local(context_floor).
+      Because the miss path is ~700x the hit path, the expected value sits far
+      closer to the miss end than the hit latency suggests: at h = 0.95 against a
+      20.8 s miss, expected cost is ~1.04 s per turn versus a 29.71 ms hit.
+      Any claim quoting hit-path latency alone is quoting the best case of a
+      heavy-tailed mixture.
+    eviction_policy_note: >-
+      FIFO (states.pop_front() on the oldest entry), NOT LRU. A long-running
+      session's prefix can be evicted by unrelated recent traffic even while it is
+      still the most valuable entry to keep.
+
+  prefill_scaling_exponent:
+    value: 0.344
+    lo: 0.270
+    hi: 0.454
+    unit: power_law_alpha_in_R_L_eq_R512_times_512_over_L_to_alpha
+    confidence: measured
+    SCOPE: >-
+      SHAPE only. Measured 2026-07-28 on Lunar Lake CPU (Intel Core Ultra 5 325)
+      with Qwen2.5-0.5B Q4_K_M via llama-bench cold prefill at depths
+      512/2048/8192/32768/65536. Absolute rates do NOT transfer to 7-8B or to
+      Strix Halo / Apple / RTX 5090. Only the exponent is claimed when applied
+      at context_floor on target hardware.
+    source: >-
+      analysis/characterization/v2/prefill_scaling.csv and prefill_fit.json
+      (Item H). R^2=0.888. Discrimination excludes optimistic_flat and
+      quadratic_pessimistic; primary verdict linear_attention_theoretic.
+    regime: EXTRAPOLATED
+    extrapolation_distance: >-
+      Deepest measured depth 65,536 tokens; applied at context_floor 115,440
+      (1.8x beyond deepest) on a different model class and memory hierarchy.
+      Allocation succeeded at every requested depth on the 0.5B probe.
+    rates_tok_per_sec_measured:
+      512: 280.38
+      2048: 255.23
+      8192: 185.37
+      32768: 89.40
+      65536: 52.17
+    note: >
+      Replaces the Phase-2 three-model bracket for Item B re-runs. Still swept
+      as a band via lo/hi (leave-one-out), never collapsed to the point alone.
+      Under the fitted alpha, only discrete_gpu_rtx5090 at h=1.0 survives the
+      latency comparison (1/15 combinations).
+
+# =============================================================================
+# ORCHESTRATION  (our own measurement)
+# =============================================================================
+orchestration:
+  orchestration_floor_ms:
+    value: 5.45
+    lo: 3.9
+    hi: 7.0
+    unit: milliseconds
+    source: >-
+      Our TurnTrace / CAP-01 measurement, promoted reference band for the
+      langgraph harness: apu_characterization/cap01/protocol_cap01_v2.json
+      floor_anchor.promoted_reference_bands_ms.langgraph = [3.9, 7.0]
+    confidence: measured
+    note: value is the band midpoint; lo/hi is the measured band
+  orchestration_floor_ms_other_harnesses:
+    rust:
+      lo: 0.5
+      hi: 1.0
+      source: "same protocol file, promoted_reference_bands_ms.rust"
+      confidence: measured
+    raw_python:
+      lo: 0.21
+      hi: 0.24
+      source: "same protocol file, promoted_reference_bands_ms.raw_python"
+      confidence: measured
+
+# =============================================================================
+# T0 DETERMINISTIC TIER
+# =============================================================================
+t0:
+  applicability_sweep:
+    values: [0.0, 0.15, 0.45]
+    unit: fraction_of_turns
+    source: >-
+      Sweep specified by the study design. The 0.45 endpoint is the production
+      figure from Progressive Crystallization (arXiv:2607.07052, Malik 2026):
+      share of executions served by deterministic Type-1 workflows rose from 0 to
+      ~45% over eight months (with ~30% hybrid, ~25% agent-orchestrated).
+    confidence: published
+    EXTERNAL_VALIDITY_FLAG: >-
+      The 45% figure is from a cloud-network IT-operations incident platform,
+      NOT from coding agents. Its own limitations section states results come from
+      a single organization and domain and that thresholds should be re-derived
+      elsewhere. Applying it to TraceLab's coding-agent workload is a transfer
+      assumption, not a measurement. The paper also notes the benefit shrinks in
+      environments dominated by genuinely novel one-off work.
+  cost_usd:
+    value: 0.0
+    source: >-
+      Progressive Crystallization Table I: Type-1 deterministic playbooks are
+      "zero token cost" with no LLM at runtime
+    confidence: published
+  latency_ms:
+    value: 5.45
+    lo: 3.9
+    hi: 7.0
+    unit: milliseconds
+    source: >-
+      Modeled as the orchestration floor only (no model call). Progressive
+      Crystallization says a Type-1 run "completes in milliseconds" but publishes
+      no distribution; we substitute our own measured orchestration floor.
+    confidence: estimated
+  joules:
+    value: null
+    source: >-
+      NOT SOURCED. A T0 hit still runs orchestration + tool code on the host.
+      Treated as ~0 for this phase; that biases T0 to look free.
+    confidence: guess
+    MUST_MEASURE: false
+
+# =============================================================================
+# SWITCHING (Phase 3)
+# =============================================================================
+switching:
+  kv_crosses_tier_boundary:
+    value: false
+    source: >-
+      Modeling premise: KV state cannot be moved into or out of a metered
+      provider's cache. Supported indirectly by TraceLab's finding that provider
+      cache misses force full re-prefill (Table 12, prefill amplification 5.3x),
+      but the impossibility itself is an architectural assumption we are making.
+    confidence: estimated
+  cost_shape:
+    value: step_function
+    source: >-
+      Implied by workload.context_floor: the median step already carries ~115K
+      resident context after a median of 2 steps, so a tier change re-prefills
+      approximately context_floor whether it happens at turn 1 or turn 20.
+    confidence: estimated
+    supersedes: >-
+      An earlier ramp model in which switching cost grew with turn index. That
+      model is WRONG at production context lengths: it assumed context accumulates
+      into its final size across a trajectory, whereas TraceLab shows context
+      starts near its final size (system prompt, codebase context, tool
+      definitions) and accumulation adds only ~3% at the median.
+    definition: >-
+      switch_cost(turn) = re-prefill of (context_floor + accumulated_growth) on the
+      arriving tier, incurred on ANY tier change landing on a tier that holds no KV
+      for this context. Flat and expensive from turn one; the turn index modulates
+      it by only a few percent at the median.
+
+  asymmetry_note: >-
+    Staying on T2 hits the provider prefix cache at 0.1x input price (published
+    multiplier). Arriving at T2 without a warm cache pays 1.0x (or the 1.25x 5m
+    cache-write rate). Arriving at T1 pays local prefill compute at
+    prefill_tok_per_sec_at_119k, which is unsourced for every config. This
+    asymmetry is the object of Phase 3.
+
+  interaction_with_local_kv_persistence: >-
+    If local_runtime.local_kv_persistence == recomputes, the local tier pays
+    approximately the switch cost on EVERY turn, not only on tier changes, because
+    it rebuilds full context each time. In that setting the distinction between
+    "switching cost" and "steady-state local cost" collapses. Phase 3 must not
+    report a switch count as a meaningful cost driver without stating which
+    persistence setting is in force.

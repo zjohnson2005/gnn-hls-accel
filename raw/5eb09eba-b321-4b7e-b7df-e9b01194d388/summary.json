@@ -1,0 +1,183 @@
+{
+  "adopted_mechanism": "none",
+  "cooldown_s": 120.0,
+  "decision": {
+    "a0a_diagnostics": {
+      "config_id": "A0a",
+      "exempt_from_loaded_cores_sanity": true,
+      "loaded_core_count": 4,
+      "loaded_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "n_logical_cpus": 8,
+      "note": "A0a (threads=8) vs A0b (threads=4) measures oversubscription cost on the P-cores OpenVINO selects by default. Neither gates adoption via loaded-core count. Per-core LOADED thresholds come from A5/A6 decode deltas (two-pass).",
+      "threads": 8
+    },
+    "a0b_diagnostics": {
+      "config_id": "A0b",
+      "exempt_from_loaded_cores_sanity": true,
+      "loaded_core_count": 4,
+      "loaded_cpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "n_logical_cpus": 8,
+      "note": "A0a (threads=8) vs A0b (threads=4) measures oversubscription cost on the P-cores OpenVINO selects by default. Neither gates adoption via loaded-core count. Per-core LOADED thresholds come from A5/A6 decode deltas (two-pass).",
+      "threads": 4
+    },
+    "a2_verdict": {
+      "a1": {
+        "decode": "UNCLEAR",
+        "overall": "UNCLEAR",
+        "prefill": "UNCLEAR"
+      },
+      "a2": {
+        "decode": "UNCLEAR",
+        "overall": "UNCLEAR",
+        "prefill": "UNCLEAR"
+      },
+      "label": "inconclusive",
+      "note": "A1={'prefill': 'UNCLEAR', 'decode': 'UNCLEAR', 'overall': 'UNCLEAR'}; A2={'prefill': 'UNCLEAR', 'decode': 'UNCLEAR', 'overall': 'UNCLEAR'}. Increase replicates if UNCLEAR."
+    },
+    "adopted_mechanism": "none",
+    "mechanism_effect": {
+      "a1": {
+        "decode": "UNCLEAR",
+        "overall": "UNCLEAR",
+        "prefill": "UNCLEAR"
+      },
+      "a2": {
+        "decode": "UNCLEAR",
+        "overall": "UNCLEAR",
+        "prefill": "UNCLEAR"
+      },
+      "a2_label": "inconclusive",
+      "a2_note": "A1={'prefill': 'UNCLEAR', 'decode': 'UNCLEAR', 'overall': 'UNCLEAR'}; A2={'prefill': 'UNCLEAR', 'decode': 'UNCLEAR', 'overall': 'UNCLEAR'}. Increase replicates if UNCLEAR.",
+      "a3": {
+        "decode": "UNCLEAR",
+        "overall": "UNCLEAR",
+        "prefill": "UNCLEAR"
+      },
+      "a3_ecore_only_decode_tok_s": 8.610669285254176,
+      "a3_ecore_only_prefill_tok_s": 4189.826332591117,
+      "a3_within_cv": 0.1028,
+      "a4": {
+        "decode": "UNCLEAR",
+        "overall": "UNCLEAR",
+        "prefill": "UNCLEAR"
+      },
+      "a6_process_affinity_decode_tok_s": 8.400714150746118,
+      "a6_process_affinity_prefill_tok_s": 4410.251161193402,
+      "a6_within_cv": 0.0879,
+      "candidates": [],
+      "interpretation": "No material throughput difference on identical cores at >2x within-cell CV; symmetry remains a design requirement on isolation-invariant grounds.",
+      "material": false,
+      "material_threshold_2x_cv": 0.2056,
+      "ratio_a3_over_a6_decode": 1.025,
+      "relative_delta_decode": 0.025
+    },
+    "reason": "Zero mechanisms confined BOTH clusters in BOTH prefill and decode. STOP."
+  },
+  "derived_path": "derived/mslice/affinity_matrix.json",
+  "loaded_threshold": {
+    "a5_decode_delta_pct_per_cpu": {
+      "0": 85.412,
+      "1": 88.0185,
+      "2": 89.234,
+      "3": 81.286,
+      "4": 3.993,
+      "5": 3.195,
+      "6": 3.3405,
+      "7": 3.8925
+    },
+    "a6_decode_delta_pct_per_cpu": {
+      "0": 3.272,
+      "1": 2.5225,
+      "2": 2.56,
+      "3": 6.566,
+      "4": 87.006,
+      "5": 87.4405,
+      "6": 88.7375,
+      "7": 87.8925
+    },
+    "applied_to": "every cell, both prefill and decode (two-pass; not during collection)",
+    "formula": "threshold(c) = 0.5 * delta(c) in the cell that deliberately targets c; P-cores from A5 decode deltas; LP-E from A6 decode deltas",
+    "lpe_cpus": [
+      4,
+      5,
+      6,
+      7
+    ],
+    "p_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "per_core": {
+      "0": 42.706,
+      "1": 44.0092,
+      "2": 44.617,
+      "3": 40.643,
+      "4": 43.503,
+      "5": 43.7203,
+      "6": 44.3687,
+      "7": 43.9462
+    },
+    "value": 43.4392
+  },
+  "matrix_cells": [
+    "A0a",
+    "A0b",
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6"
+  ],
+  "n_blocks": 10,
+  "n_configs": 8,
+  "noise_band": {
+    "formula": "2 * mean(per-core CV of pooled idle baseline means)",
+    "pooled_baseline_n_per_core": {
+      "0": 160,
+      "1": 160,
+      "2": 160,
+      "3": 160,
+      "4": 160,
+      "5": 160,
+      "6": 160,
+      "7": 160
+    },
+    "value": 1.1792
+  },
+  "shuffle_seed": 20260803,
+  "thermal_regime": "confound",
+  "verification_gates": {
+    "a0a_loaded_core_count": 4,
+    "a0a_saturation_gate": "demoted_diagnostic_only",
+    "charging_complete": true,
+    "failures": [],
+    "loaded_threshold_per_core": {
+      "0": 42.706,
+      "1": 44.0092,
+      "2": 44.617,
+      "3": 40.643,
+      "4": 43.503,
+      "5": 43.7203,
+      "6": 44.3687,
+      "7": 43.9462
+    },
+    "min_phase_samples": 10,
+    "noise_band": 1.1792,
+    "pass": true,
+    "prefill_windows_ok": true,
+    "run_id_present_at_gate": false
+  }
+}

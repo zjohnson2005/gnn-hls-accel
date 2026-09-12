@@ -1,0 +1,23 @@
+{
+  "status": "READY_FOR_BASELINE",
+  "next_after_baseline": "READY_FOR_PILOT",
+  "wallclock_timeout_audit": {
+    "path": "derived/efilter/c2f_wallclock_timeout_audit.json",
+    "verdict": "NONE",
+    "section_3_stands": true
+  },
+  "canary_baseline_launch": ".\\tools\\launch_canary_baseline.ps1 -UpdateMeasurementYaml",
+  "canary_baseline_module": "python -m seam.tools.canary_baseline --allow-dirty --n-samples 31 --margin 0.05 --update-measurement-yaml",
+  "derived_threshold_plan": {
+    "margin_above_idle_p95": 0.05,
+    "formula": "threshold = idle_p95 + margin",
+    "placeholder_until_seal": 0.15,
+    "do_not": "choose threshold to pass pilot"
+  },
+  "pilot_launch_after_baseline": ".\\tools\\launch_efilter_c2f_pilot.ps1",
+  "full_launch_after_pilot_clearance": ".\\tools\\launch_efilter_c2f_full.ps1",
+  "discard_first_task_warmup": true,
+  "timing_admissibility": "canary_admissible AND paging_admissible",
+  "clearance": "seal + median ratio >= 3.0; paging/canary not clearance-fatal; memory floor still fatal",
+  "note": "Long efilter pilot/full not launched from this landing. Baseline needs a bare quiet machine under lock."
+}

@@ -1,0 +1,90 @@
+{
+  "kind": "w3_empty_turn_bucket_followup",
+  "int4_session": "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+  "int8_session": "1d8db970-4c18-4bcf-824d-d9c141b6eb22",
+  "mcnemar_empty_turn_model_response": {
+    "definition": "entry-level failure_bucket == multi_turn:empty_turn_model_response",
+    "a_both": 13,
+    "b_int4_empty_int8_not": 32,
+    "c_int4_not_int8_empty": 7,
+    "d_neither": 148,
+    "n": 200,
+    "statistic_chi2_cc": 14.76923076923077,
+    "p_exact": 7.025478407740593e-05,
+    "odds_ratio": 4.571428571428571,
+    "odds_ratio_ci95": [
+      1.9819630496593852,
+      12.271316063435169
+    ],
+    "odds_ratio_definition": "b/c — OR>1 means int4 more often empty than int8",
+    "unpaired_delta_note": "Unpaired counts were int4=45 int8=20 (delta=25). That delta is not the McNemar discordant count: joint is a=13 both, b=32, c=7, d=148. The load-bearing paired contrast is b=32 vs c=7."
+  },
+  "raw_head_sample_n5": {
+    "selection": "pilot _11,_17 plus next three in id order from b-set",
+    "ids": [
+      "multi_turn_base_11",
+      "multi_turn_base_17",
+      "multi_turn_base_20",
+      "multi_turn_base_39",
+      "multi_turn_base_52"
+    ],
+    "rows": [
+      {
+        "id": "multi_turn_base_11",
+        "empty_turn": 1,
+        "error_message": "Model response list is empty for turn 1",
+        "int8_bucket": "multi_turn:instance_state_mismatch",
+        "raw_head_empty_turn": [
+          "[\"I'll create a Twitter post that mentions the file names from the `/temp` directory and includes the hashtag #fileshowcase.\\n\\nHere's the post:\\n\\n\\\"Check out these files: file1.txt, file2.txt #fileshowcase\\\"\"]"
+        ],
+        "classification": "prose_instead_of_call",
+        "has_tool_call_tag": false
+      },
+      {
+        "id": "multi_turn_base_17",
+        "empty_turn": 0,
+        "error_message": "Model response list is empty for turn 0",
+        "int8_bucket": "multi_turn:execution_response_mismatch",
+        "raw_head_empty_turn": [
+          "[\"I can help you list the files in the current directory, including both visible and hidden files. Let me check the directory contents for you. \\n\\nPlease wait a moment while I retrieve the information.\"]"
+        ],
+        "classification": "prose_instead_of_call",
+        "has_tool_call_tag": false
+      },
+      {
+        "id": "multi_turn_base_20",
+        "empty_turn": 0,
+        "error_message": "Model response list is empty for turn 0",
+        "int8_bucket": "multi_turn:execution_response_mismatch",
+        "raw_head_empty_turn": [
+          "[\"I will first navigate to the \\\"documents\\\" folder in the current working directory (CWD). Then, I will examine the first document in that folder and determine what the last line of that document looks like. Let's start by changing the directory to \\\"documents\\\".\"]"
+        ],
+        "classification": "prose_instead_of_call",
+        "has_tool_call_tag": false
+      },
+      {
+        "id": "multi_turn_base_39",
+        "empty_turn": 1,
+        "error_message": "Model response list is empty for turn 1",
+        "int8_bucket": "multi_turn:instance_state_mismatch",
+        "raw_head_empty_turn": [
+          "[\"I will navigate into the 'WebDevProjects' directory and create the specified files with the given content. Let me do that for you.\"]"
+        ],
+        "classification": "prose_instead_of_call",
+        "has_tool_call_tag": false
+      },
+      {
+        "id": "multi_turn_base_52",
+        "empty_turn": 0,
+        "error_message": "Model response list is empty for turn 0",
+        "int8_bucket": "multi_turn:instance_state_mismatch",
+        "raw_head_empty_turn": [
+          "[\"To start the engine and monitor the fuel level and battery status, you can use the `startEngine` function with the `ignitionMode` set to \\\"START\\\". This will start the engine, allowing you to check the fuel level and battery status. \\n\\nHere is the function call:\\n\\n```\\n{\\\"name\\\": \\\"startEngine\\\", \\\"arguments\\\"\"]"
+        ],
+        "classification": "prose_instead_of_call",
+        "has_tool_call_tag": false
+      }
+    ],
+    "verdict": "All five empty turns are prose (or prose+incomplete non-tool_call text) with no parseable <tool_call> on the failing turn — same emission-reliability failure mode as pilot _11/_17, not an empty generation."
+  }
+}

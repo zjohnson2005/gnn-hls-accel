@@ -1,0 +1,430 @@
+{
+  "admissibility": {
+    "cells_expected": 4,
+    "cells_ok": 4,
+    "cold_control_passed": true,
+    "failed_cells_are_data": false,
+    "matrix_status": "COMPLETE",
+    "note": "All 4/4 cells OK. Numbers cite this run_id / seal dir / cells/*.json. Cold-control TTFT/ratio bind derived/bfcl_feasibility/session_residency/_cold_control/session_residency_cold_control_gpu_only.json (dispatch narrative mismatch recorded, not invented)."
+  },
+  "cells": [
+    {
+      "arm": "gpu_only",
+      "artifact": "cells/session_residency_gpu_only_RESIDENT_report.json",
+      "artifact_sha256": "beffded4248506a8a5c5c02321929529aadd8b34f91ed01008cc170ecd63e037",
+      "cell_index": 0,
+      "ended_utc": "2026-08-11T16:05:24.1881701Z",
+      "exit_code": 0,
+      "n_entries": 20,
+      "reduced_reason": null,
+      "residency_mode": "RESIDENT",
+      "started_utc": "2026-08-11T15:56:07.8919220Z"
+    },
+    {
+      "arm": "gpu_only",
+      "artifact": "cells/session_residency_gpu_only_NON_RESIDENT_report.json",
+      "artifact_sha256": "ed657cb806d55325a23c208715632786f92cfe5f1960fdc088027a606905f742",
+      "cell_index": 1,
+      "ended_utc": "2026-08-11T16:24:58.5122954Z",
+      "exit_code": 0,
+      "n_entries": 20,
+      "reduced_reason": null,
+      "residency_mode": "NON_RESIDENT",
+      "started_utc": "2026-08-11T16:05:24.1881701Z"
+    },
+    {
+      "arm": "A",
+      "artifact": "cells/session_residency_A_RESIDENT_report.json",
+      "artifact_sha256": "998dd7ebbebfa87fae01d8aa2c1bebb19bb4cfff0b3fd7d33206c45dfe76ca27",
+      "cell_index": 2,
+      "ended_utc": "2026-08-11T16:56:37.0139508Z",
+      "exit_code": 0,
+      "n_entries": 20,
+      "reduced_reason": null,
+      "residency_mode": "RESIDENT",
+      "started_utc": "2026-08-11T16:24:58.5140598Z"
+    },
+    {
+      "arm": "A",
+      "artifact": "cells/session_residency_A_NON_RESIDENT_report.json",
+      "artifact_sha256": "150e0061c550a46b0a9496cbbb5c7dd3b8618c799d8d230cf2dc84f4b91b9553",
+      "cell_index": 3,
+      "ended_utc": "2026-08-11T19:37:17.3749683Z",
+      "exit_code": 0,
+      "n_entries": 20,
+      "reduced_reason": "arm A cold prefill ~55s turn-1 fails TTFT<=10s SLO by construction; n=20 paired",
+      "residency_mode": "NON_RESIDENT",
+      "started_utc": "2026-08-11T16:56:37.0139508Z"
+    },
+    {
+      "arm": "A",
+      "artifact": "cells/session_residency_compare_A.json",
+      "artifact_sha256": "40896ff499d5a6f22a89711772a8fb26368c69bbd4adf830dbbb3d8f54ad93c8",
+      "kind": "compare"
+    },
+    {
+      "arm": "gpu_only",
+      "artifact": "cells/session_residency_compare_gpu_only.json",
+      "artifact_sha256": "e382e52df2478073a70758b8283436752aa1d0f392711327cc134de4795659d5",
+      "kind": "compare"
+    }
+  ],
+  "kind": "session_residency",
+  "matrix": {
+    "arms": [
+      "gpu_only",
+      "A"
+    ],
+    "cells_completed": 4,
+    "cells_expected": 4,
+    "cells_failed": 0,
+    "cells_ok": 4,
+    "cold_control_path": "derived/bfcl_feasibility/session_residency/_cold_control/session_residency_cold_control_gpu_only.json",
+    "kind": "bfcl_session_residency",
+    "launch_tag": "bfcl_session_residency_20260811_115607",
+    "max_new_tokens": 512,
+    "n_entries_per_cell": 20,
+    "plan_ended_utc": "2026-08-11T19:37:19.4226724Z",
+    "plan_started_utc": "2026-08-11T15:56:07.7956677Z",
+    "residency_modes": [
+      "RESIDENT",
+      "NON_RESIDENT"
+    ],
+    "seed": 20260810
+  },
+  "measurement_isolation_mode": "remote",
+  "measurement_launch_context": "ssh_detached",
+  "measurement_placement": {
+    "genai": "2026.2.1.0-3123-7dea0459b2a",
+    "launch_context": "ssh_detached",
+    "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+    "session_id": 0,
+    "window_station": null,
+    "window_station_note": "BFCL session_residency cell reports do not record window_station; left null rather than inventing a Service-* name. launch_context from launches.json; Windows session_id=0 per ssh_detached convention."
+  },
+  "raw_emit_blocked": {
+    "existing_pattern": "tools/seal_delta_prefill_session.py \u2192 seal_style=derived_diagnostic",
+    "reason": "seam.manifest.emit refuses isolation_mode=remote while tier-1 software (Cursor/Chrome) is resident at seal time. Measurement itself was ssh_detached/remote. Close Cursor/Chrome and promote with --attempt-raw-promote; do not invent an enforce=False bypass.",
+    "schema_note": "workload.kind session_residency is registered in seam/schemas/run_manifest.schema.json; --attempt-raw-promote calls seam.manifest.emit(..., retro_seal=True) after isolation clears (sealed_* never mutated)."
+  },
+  "results": {
+    "artifact_paths": {
+      "cold_control": "derived/bfcl_feasibility/session_residency/_cold_control/session_residency_cold_control_gpu_only.json",
+      "compare_A": "derived/bfcl_feasibility/session_residency/a621ff7d-2919-463d-aaf6-673f9e6bafbc/session_residency_compare_A.json",
+      "compare_gpu_only": "derived/bfcl_feasibility/session_residency/a621ff7d-2919-463d-aaf6-673f9e6bafbc/session_residency_compare_gpu_only.json",
+      "session_dir": "derived/bfcl_feasibility/session_residency/a621ff7d-2919-463d-aaf6-673f9e6bafbc"
+    },
+    "cells_completed": 4,
+    "cells_expected": 4,
+    "contamination_note": {
+      "A_per_turn_accuracy": {
+        "NON_RESIDENT": 0.4142857142857143,
+        "NON_RESIDENT_pct": 41.4,
+        "RESIDENT": 0.4142857142857143,
+        "RESIDENT_pct": 41.4,
+        "clean_comparison": true,
+        "reason": "Arm A identical=true and accuracy equal in both modes (41.4%)."
+      },
+      "gpu_only_per_turn_accuracy": {
+        "NON_RESIDENT": 0.34285714285714286,
+        "NON_RESIDENT_pct": 34.3,
+        "RESIDENT": 0.4411764705882353,
+        "RESIDENT_pct": 44.1,
+        "clean_comparison": false,
+        "reason": "gpu_only output_identity.identical=false; accuracy shift tracks numerical nonequivalence, not a clean residency effect on quality."
+      },
+      "sources": [
+        "cells/session_residency_compare_A.json",
+        "cells/session_residency_compare_gpu_only.json"
+      ]
+    },
+    "dispatch_table_verification": {
+      "mismatches": [],
+      "note": "Feasibility table rounded figures vs DISPATCH N narrative. Cold-control narrative checked separately under validity_chain.",
+      "ok": true
+    },
+    "feasibility_table": [
+      {
+        "arm": "A",
+        "device_label": "cpu-p",
+        "fraction_turns_slo_ok": 0.0,
+        "fraction_turns_slo_ok_pct": 0.0,
+        "label": "cpu-p, no residency (DEFAULT)",
+        "residency": false,
+        "session_latency_sum_s": 9630.290567399992,
+        "session_latency_sum_s_rounded": 9630.3,
+        "source": "cells/session_residency_compare_A.json"
+      },
+      {
+        "arm": "A",
+        "device_label": "cpu-p",
+        "fraction_turns_slo_ok": 0.7285714285714285,
+        "fraction_turns_slo_ok_pct": 72.9,
+        "label": "cpu-p + residency",
+        "residency": true,
+        "session_latency_sum_s": 1888.486814700038,
+        "session_latency_sum_s_rounded": 1888.5,
+        "source": "cells/session_residency_compare_A.json"
+      },
+      {
+        "arm": "gpu_only",
+        "device_label": "gpu_only",
+        "fraction_turns_slo_ok": 0.9571428571428572,
+        "fraction_turns_slo_ok_pct": 95.7,
+        "label": "gpu_only, no residency",
+        "residency": false,
+        "session_latency_sum_s": 1162.0406847000122,
+        "session_latency_sum_s_rounded": 1162.0,
+        "source": "cells/session_residency_compare_gpu_only.json"
+      },
+      {
+        "arm": "gpu_only",
+        "device_label": "gpu_only",
+        "fraction_turns_slo_ok": 1.0,
+        "fraction_turns_slo_ok_pct": 100.0,
+        "label": "gpu_only + residency (OPTIMAL)",
+        "residency": true,
+        "session_latency_sum_s": 544.4139912999526,
+        "session_latency_sum_s_rounded": 544.4,
+        "source": "cells/session_residency_compare_gpu_only.json"
+      }
+    ],
+    "interaction": {
+      "baseline_cpu_p_no_residency_s": 9630.290567399992,
+      "both_s": 544.4139912999526,
+      "both_x": 17.7,
+      "device_alone_s": 1162.0406847000122,
+      "device_alone_x": 8.3,
+      "naive_product_overestimates_by_x": 2.39,
+      "naive_product_x": 42.3,
+      "note": "Measured on real BFCL multi-turn workload (this run_id). Naive product overestimates combined gain; same sub-additivity class as AM-035 latency interaction 2.4\u00d7 on synthetic prompts at n_cached=12000.",
+      "residency_alone_s": 1888.486814700038,
+      "residency_alone_x": 5.1,
+      "sources": [
+        "cells/session_residency_compare_A.json",
+        "cells/session_residency_compare_gpu_only.json"
+      ],
+      "sub_additivity": true,
+      "synthetic_delta_prefill_am035": {
+        "amendment": "AM-035",
+        "citing_seals": [
+          "d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba",
+          "9f38eb15-6fe6-40b4-871b-a02ec5629bb1"
+        ],
+        "figure": 2.4,
+        "n_cached": 12000,
+        "note": "Latency interaction 2.4\u00d7 UNCHANGED under AM-035; from measured medians at n_cached=12000, not the retracted arm-A intercept fit. Two workloads, different context scales, same sub-additivity class as this session-residency matrix.",
+        "unit": "x_overestimate_of_naive_product",
+        "workload": "synthetic_delta_prefill"
+      }
+    },
+    "measured_workload_profile": {
+      "context_growth_per_session": {
+        "A": {
+          "max": 1327,
+          "mean": 554.25,
+          "mean_rounded": 554,
+          "min": 143,
+          "n": 20,
+          "source": "cells/session_residency_compare_A.json"
+        },
+        "gpu_only": {
+          "max": 3924,
+          "mean": 760.05,
+          "mean_rounded": 760,
+          "min": 147,
+          "n": 20,
+          "source": "cells/session_residency_compare_gpu_only.json"
+        }
+      },
+      "hdr4_assumed_for_contrast": {
+        "context_growth_to": "12000-27600",
+        "per_turn_delta_tokens": "900-3000"
+      },
+      "per_turn_delta_tokens": {
+        "A": {
+          "max": 718,
+          "mean": 179.62,
+          "mean_rounded": 179.6,
+          "min": 99,
+          "n": 50,
+          "source": "cells/session_residency_compare_A.json"
+        },
+        "gpu_only": {
+          "max": 780,
+          "mean": 193.41666666666666,
+          "mean_rounded": 193.4,
+          "min": 71,
+          "n": 48,
+          "note": "RESIDENT stats used (modes diverge under gpu_only nonequivalence).",
+          "source": "cells/session_residency_compare_gpu_only.json"
+        }
+      },
+      "replaces": "HDR4 synthetic generator"
+    },
+    "output_identity": {
+      "A": {
+        "identical": true,
+        "n_generations_compared_paired": 149,
+        "n_generations_text_differing": 0,
+        "n_generations_with_think_NON_RESIDENT": 0,
+        "n_generations_with_think_RESIDENT": 0,
+        "source": "cells/session_residency_compare_A.json"
+      },
+      "cb_backend_switch_not_the_cause": true,
+      "cold_form_by_cell": {
+        "A_NON_RESIDENT": {
+          "chosen": "a_disable_prefix_caching",
+          "enable_prefix_caching": false
+        },
+        "A_RESIDENT": {
+          "chosen": "a_disable_prefix_caching",
+          "enable_prefix_caching": null
+        },
+        "gpu_only_NON_RESIDENT": {
+          "chosen": "a_disable_prefix_caching",
+          "enable_prefix_caching": false
+        },
+        "gpu_only_RESIDENT": {
+          "chosen": "a_disable_prefix_caching",
+          "enable_prefix_caching": null
+        }
+      },
+      "enable_prefix_caching_NON_RESIDENT": false,
+      "enable_prefix_caching_NON_RESIDENT_verified": true,
+      "finding_class": "gpu_kv_cache_numerical_nonequivalence",
+      "gpu_only": {
+        "identical": false,
+        "n_generations_compared_paired": 132,
+        "n_generations_text_differing": 78,
+        "n_generations_with_think_NON_RESIDENT": 0,
+        "n_generations_with_think_RESIDENT": 0,
+        "source": "cells/session_residency_compare_gpu_only.json"
+      },
+      "note": "Both arms ran enable_prefix_caching=False on NON_RESIDENT. Arm A 149/149 paired generations identical; gpu_only 78/132 differing. Recorded as gpu_kv_cache_numerical_nonequivalence (device-specific)."
+    },
+    "residency_effect": {
+      "A": {
+        "session_speedup_x": 5.1,
+        "session_sum_NON_RESIDENT_s": 9630.290567399992,
+        "session_sum_RESIDENT_s": 1888.486814700038,
+        "source": "cells/session_residency_compare_A.json",
+        "ttft_median_NON_RESIDENT_s": 62.4304960935,
+        "ttft_median_NON_RESIDENT_s_rounded": 62.43,
+        "ttft_median_RESIDENT_s": 2.5399432365,
+        "ttft_median_RESIDENT_s_rounded": 2.54,
+        "ttft_speedup_x": 24.6
+      },
+      "gpu_only": {
+        "session_speedup_x": 2.1,
+        "session_sum_NON_RESIDENT_s": 1162.0406847000122,
+        "session_sum_RESIDENT_s": 544.4139912999526,
+        "source": "cells/session_residency_compare_gpu_only.json",
+        "ttft_median_NON_RESIDENT_s": 5.472801757,
+        "ttft_median_NON_RESIDENT_s_rounded": 5.473,
+        "ttft_median_RESIDENT_s": 0.2843190915,
+        "ttft_median_RESIDENT_s_rounded": 0.284,
+        "ttft_speedup_x": 19.2
+      }
+    },
+    "run_id": "a621ff7d-2919-463d-aaf6-673f9e6bafbc",
+    "session_id": "a621ff7d-2919-463d-aaf6-673f9e6bafbc",
+    "slo_definition": {
+      "USER_FACING_SLO": "TTFT<=10s AND decode>=6 tok/s",
+      "metric": "fraction of turns meeting USER_FACING SLO",
+      "n_entries": 20,
+      "session_latency": "sum of per-entry total_latency_s over 20 entries"
+    },
+    "status": "COMPLETE",
+    "validity_chain": {
+      "cold_control": {
+        "arm_id": "gpu_only",
+        "dispatch_narrative_check": {
+          "agrees_with_dispatch_narrative": false,
+          "artifact_turn2_over_turn1_raw": 1.149328875463252,
+          "artifact_turn2_prompt_tokens": 4364,
+          "artifact_turn2_ttft_s": 5.784677734,
+          "dispatch_claimed_turn2_over_turn1": 1.035,
+          "dispatch_claimed_turn2_ttft_s": 6.554,
+          "resolution": "STOP_AND_REPORT: dispatch narrative cold-control figures disagree with derived/bfcl_feasibility/session_residency/_cold_control/session_residency_cold_control_gpu_only.json; seal binds artifact values only."
+        },
+        "failures": [],
+        "passed": true,
+        "source": "derived/bfcl_feasibility/session_residency/_cold_control/session_residency_cold_control_gpu_only.json",
+        "stop_and_report": true,
+        "turn1_ttft_s": 5.033091796,
+        "turn2_generate_input_tokens": 4364,
+        "turn2_over_turn1_raw": 1.149328875463252,
+        "turn2_prompt_tokens": 4364,
+        "turn2_ttft_s": 5.784677734
+      },
+      "first_turn_render_equivalence": {
+        "asserted_per_entry": true,
+        "by_cell": {
+          "A_NON_RESIDENT": {
+            "all_identical": true,
+            "n_entries_with_assertion": 20,
+            "n_identical": 20,
+            "n_not_identical": 0
+          },
+          "A_RESIDENT": {
+            "all_identical": true,
+            "n_entries_with_assertion": 20,
+            "n_identical": 20,
+            "n_not_identical": 0
+          },
+          "gpu_only_NON_RESIDENT": {
+            "all_identical": true,
+            "n_entries_with_assertion": 20,
+            "n_identical": 20,
+            "n_not_identical": 0
+          },
+          "gpu_only_RESIDENT": {
+            "all_identical": true,
+            "n_entries_with_assertion": 20,
+            "n_identical": 20,
+            "n_not_identical": 0
+          }
+        },
+        "render_smoke_path": "derived/bfcl_feasibility/session_residency/session_residency_render_smoke.json",
+        "sha_matched_vs_hf_template": true
+      },
+      "no_think_tokens": {
+        "A": {
+          "NON_RESIDENT": 0,
+          "RESIDENT": 0
+        },
+        "all_zero": true,
+        "gpu_only": {
+          "NON_RESIDENT": 0,
+          "RESIDENT": 0
+        }
+      },
+      "superseded_prior_sessions": [
+        {
+          "reason": "double-templating / non-control control: ChatHistory path not yet fixed (DISPATCH J); NON_RESIDENT not forced cold via enable_prefix_caching=False (DISPATCH L). Superseded by a621ff7d-2919-463d-aaf6-673f9e6bafbc. Do not delete.",
+          "session_id": "24634b40-3f38-40f4-b722-6127143d3500"
+        },
+        {
+          "reason": "ChatHistory fix present but NON_RESIDENT still warm (prefix caching default ON); cold control / DISPATCH L not yet applied. Superseded by a621ff7d-2919-463d-aaf6-673f9e6bafbc. Do not delete.",
+          "session_id": "4f31cbaa-fba8-4ef3-bf59-f4f77dc8272b"
+        }
+      ]
+    }
+  },
+  "run_id": "a621ff7d-2919-463d-aaf6-673f9e6bafbc",
+  "seal_style": "derived_diagnostic",
+  "sealed_utc": "2026-08-11T19:48:14.251100+00:00",
+  "session_id": "a621ff7d-2919-463d-aaf6-673f9e6bafbc",
+  "status": "COMPLETE",
+  "superseded_prior_sessions": [
+    {
+      "reason": "double-templating / non-control control: ChatHistory path not yet fixed (DISPATCH J); NON_RESIDENT not forced cold via enable_prefix_caching=False (DISPATCH L). Superseded by a621ff7d-2919-463d-aaf6-673f9e6bafbc. Do not delete.",
+      "session_id": "24634b40-3f38-40f4-b722-6127143d3500"
+    },
+    {
+      "reason": "ChatHistory fix present but NON_RESIDENT still warm (prefix caching default ON); cold control / DISPATCH L not yet applied. Superseded by a621ff7d-2919-463d-aaf6-673f9e6bafbc. Do not delete.",
+      "session_id": "4f31cbaa-fba8-4ef3-bf59-f4f77dc8272b"
+    }
+  ]
+}

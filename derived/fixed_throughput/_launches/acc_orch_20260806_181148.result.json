@@ -1,0 +1,353 @@
+{
+  "arm_1_run_id": "2bc2304e-ff03-4a9d-ae50-112cb08077a2",
+  "arm_2_run_id": "5f87cb60-0dc3-49cd-b7c8-01d38ec7cf5e",
+  "confinement_classifications": {
+    "run_a": {
+      "core_states": {
+        "0": "LOADED",
+        "1": "LOADED",
+        "2": "LOADED",
+        "3": "LOADED",
+        "4": "QUIET",
+        "5": "QUIET",
+        "6": "QUIET",
+        "7": "QUIET"
+      },
+      "verdict": "CONFINED"
+    },
+    "run_b": {
+      "core_states": {
+        "0": "LOADED",
+        "1": "LOADED",
+        "2": "LOADED",
+        "3": "LOADED",
+        "4": "QUIET",
+        "5": "QUIET",
+        "6": "QUIET",
+        "7": "QUIET"
+      },
+      "verdict": "CONFINED"
+    }
+  },
+  "gap_s": 1200,
+  "instrument_gate": {
+    "abs_ratio_minus_one": 0.062499447812563336,
+    "band": 0.06756241354577766,
+    "band_multiple": 2.0,
+    "basis": "r_decode_tok_s",
+    "derivation": "s = max(cv_a, cv_b) on `basis`; band = band_multiple * s; PASS iff |ratio - 1| <= band and s <= max_within_run_spread. Every input is present in this record, so the bound can be recomputed without the source runs.",
+    "gate_mode": "derived_from_within_run_spread",
+    "max_within_run_spread": 0.1,
+    "medians": {
+      "run_a": 14.335976469468378,
+      "run_b": 15.231967082664053
+    },
+    "prior_unexplained_ratio": 1.98,
+    "ratio": 1.0624994478125633,
+    "ratio_convention": "max(median)/min(median), so >= 1 regardless of run order",
+    "reasons": [],
+    "s": 0.03378120677288883,
+    "s_source": "run_b",
+    "signed_ratio_b_over_a": 1.0624994478125633,
+    "spread_acceptable": true,
+    "spread_estimator": "cv",
+    "verdict": "PASS",
+    "within_band": true,
+    "within_run_spread": {
+      "run_a": 0.010497951898430105,
+      "run_b": 0.03378120677288883
+    }
+  },
+  "isolation_discipline": {
+    "interactive_process_termination": {
+      "harness_did_not_terminate": true,
+      "note": "resolve_isolation_mode / acceptance.ps1 refuse remote mode while interactive software is resident; the harness does not terminate those processes. If the operator killed processes outside the harness, that kill time is unobservable here \u2014 do not infer it.",
+      "operator_kill_unobservable": true,
+      "seconds_since_harness_interactive_termination": null
+    },
+    "pre_run_settle": {
+      "actual_wait_s": 300.0,
+      "applied_on_this_path": true,
+      "configured_s": 300.0,
+      "distinct_from": "recovery.settle_s",
+      "ended_utc": "2026-08-06T22:16:48.594915+00:00",
+      "note": "Wait for memory reclaim/writeback after the operator closed interactive software. The harness refuses while contending processes are resident; it does not kill them.",
+      "started_utc": "2026-08-06T22:11:48.591490+00:00"
+    }
+  },
+  "isolation_mode": "remote",
+  "kernel_power_events": [],
+  "launch_context": "ssh_detached",
+  "memory_dispersion": {
+    "free_physical_bytes_at_peak": {
+      "arm_1": 1949184000,
+      "arm_2": 2452226048,
+      "ratio_max_over_min": 1.2580782768584187,
+      "signed_delta_arm2_minus_arm1": 503042048
+    },
+    "free_physical_bytes_at_start": {
+      "arm_1": 7133368320,
+      "arm_2": 7789944832,
+      "ratio_max_over_min": 1.0920429848209492,
+      "signed_delta_arm2_minus_arm1": 656576512
+    },
+    "peak_commit_bytes": {
+      "arm_1": 3831578624,
+      "arm_2": 3833552896,
+      "ratio_max_over_min": 1.0005152633401893,
+      "signed_delta_arm2_minus_arm1": 1974272
+    },
+    "peak_working_set_bytes": {
+      "arm_1": 5830524928,
+      "arm_2": 5828935680,
+      "ratio_max_over_min": 1.0002726480591393,
+      "signed_delta_arm2_minus_arm1": -1589248
+    }
+  },
+  "orchestrator_run_id": "bc468de3-18ca-4c87-a6a1-186285369f50",
+  "power_gap": {
+    "arm1_uptime": {
+      "boot_time_utc": "2026-08-04T17:56:15.980561+00:00",
+      "last_wake_error": null,
+      "last_wake_source": "Kernel-Power/507",
+      "last_wake_utc": "2026-08-06T21:15:16.9747498Z",
+      "observed_utc": "2026-08-06T22:16:48.650505+00:00",
+      "uptime_s": 188432.66994476318
+    },
+    "arm2_uptime": {
+      "boot_time_utc": "2026-08-04T17:56:15.980561+00:00",
+      "last_wake_error": null,
+      "last_wake_source": "Kernel-Power/507",
+      "last_wake_utc": "2026-08-06T21:15:16.9747498Z",
+      "observed_utc": "2026-08-06T22:40:23.732885+00:00",
+      "uptime_s": 189847.75232458115
+    },
+    "boot_time_changed": false,
+    "kernel_power_event_count": 0,
+    "kernel_power_events": [],
+    "kernel_power_transition_occurred": false,
+    "last_wake_changed": false,
+    "note": "Power policy was not modified. A transition here is a confound for the throughput ratio, not a criterion the harness adjusts away.",
+    "transition_occurred": false
+  },
+  "power_request": {
+    "clear_last_error": null,
+    "cleared": false,
+    "close_last_error": null,
+    "closed": false,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x79c",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM fixed_throughput orchestrator; PowerRequestSystemRequired across pre_run_settle, arms, and gap",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "acceptance_orchestrator",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "ratio_max_over_min": 1.0624994478125633,
+  "reachability_n_unreachable": 0,
+  "repeat_kernel_power": [
+    {
+      "arm": "arm_1",
+      "end_utc": "2026-08-06T22:18:08.683402+00:00",
+      "kernel_power_event_count_in_window": 0,
+      "kernel_power_event_in_window": false,
+      "kernel_power_events_in_window": [],
+      "power_state_end": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "power_state_start": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "r_decode_tok_s": 14.335976469468378,
+      "r_prefill_tok_s": 71.42104014315892,
+      "repeat": 0,
+      "run_id": "2bc2304e-ff03-4a9d-ae50-112cb08077a2",
+      "start_utc": "2026-08-06T22:17:21.676838+00:00",
+      "wall_s": 33.069561900018016,
+      "window_source": "envelope.lock_acquired/released_utc"
+    },
+    {
+      "arm": "arm_1",
+      "end_utc": "2026-08-06T22:19:15.444386+00:00",
+      "kernel_power_event_count_in_window": 0,
+      "kernel_power_event_in_window": false,
+      "kernel_power_events_in_window": [],
+      "power_state_end": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "power_state_start": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "r_decode_tok_s": 14.523362864939589,
+      "r_prefill_tok_s": 74.63824075254215,
+      "repeat": 1,
+      "run_id": "2bc2304e-ff03-4a9d-ae50-112cb08077a2",
+      "start_utc": "2026-08-06T22:18:30.168723+00:00",
+      "wall_s": 31.77685590001056,
+      "window_source": "envelope.lock_acquired/released_utc"
+    },
+    {
+      "arm": "arm_1",
+      "end_utc": "2026-08-06T22:20:21.662193+00:00",
+      "kernel_power_event_count_in_window": 0,
+      "kernel_power_event_in_window": false,
+      "kernel_power_events_in_window": [],
+      "power_state_end": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "power_state_start": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "r_decode_tok_s": 14.225082349487113,
+      "r_prefill_tok_s": 76.53581317399295,
+      "repeat": 2,
+      "run_id": "2bc2304e-ff03-4a9d-ae50-112cb08077a2",
+      "start_utc": "2026-08-06T22:19:36.903061+00:00",
+      "wall_s": 31.187511700001778,
+      "window_source": "envelope.lock_acquired/released_utc"
+    },
+    {
+      "arm": "arm_2",
+      "end_utc": "2026-08-06T22:41:33.015346+00:00",
+      "kernel_power_event_count_in_window": 0,
+      "kernel_power_event_in_window": false,
+      "kernel_power_events_in_window": [],
+      "power_state_end": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "power_state_start": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "r_decode_tok_s": 14.58430917549093,
+      "r_prefill_tok_s": 73.15150612496956,
+      "repeat": 0,
+      "run_id": "5f87cb60-0dc3-49cd-b7c8-01d38ec7cf5e",
+      "start_utc": "2026-08-06T22:40:47.283784+00:00",
+      "wall_s": 32.31640040001366,
+      "window_source": "envelope.lock_acquired/released_utc"
+    },
+    {
+      "arm": "arm_2",
+      "end_utc": "2026-08-06T22:42:38.687590+00:00",
+      "kernel_power_event_count_in_window": 0,
+      "kernel_power_event_in_window": false,
+      "kernel_power_events_in_window": [],
+      "power_state_end": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "power_state_start": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "r_decode_tok_s": 15.231967082664053,
+      "r_prefill_tok_s": 76.60021109005925,
+      "repeat": 1,
+      "run_id": "5f87cb60-0dc3-49cd-b7c8-01d38ec7cf5e",
+      "start_utc": "2026-08-06T22:41:54.448148+00:00",
+      "wall_s": 30.872257100010756,
+      "window_source": "envelope.lock_acquired/released_utc"
+    },
+    {
+      "arm": "arm_2",
+      "end_utc": "2026-08-06T22:43:43.767820+00:00",
+      "kernel_power_event_count_in_window": 0,
+      "kernel_power_event_in_window": false,
+      "kernel_power_events_in_window": [],
+      "power_state_end": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "power_state_start": {
+        "battery_pct": 100.0,
+        "battery_saver": false,
+        "charging": false,
+        "on_battery": false,
+        "overlay_guid": "00000000-0000-0000-0000-000000000000",
+        "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "power_plan_name": "Best Performance"
+      },
+      "r_decode_tok_s": 15.593549273023292,
+      "r_prefill_tok_s": 78.15939141428628,
+      "repeat": 2,
+      "run_id": "5f87cb60-0dc3-49cd-b7c8-01d38ec7cf5e",
+      "start_utc": "2026-08-06T22:43:00.071251+00:00",
+      "wall_s": 30.242997399996966,
+      "window_source": "envelope.lock_acquired/released_utc"
+    }
+  ],
+  "session_id": 0,
+  "signed_ratio_arm2_over_arm1": 1.0624994478125633,
+  "verdict": "PASS",
+  "verdict_run_id": "cb8e8d7c-74dd-4e72-ae69-8db7239a7b0f",
+  "window_station": "Service-0x0-10c72d30$"
+}

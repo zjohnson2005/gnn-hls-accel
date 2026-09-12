@@ -1,0 +1,180 @@
+{
+  "affinity_readback": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "completed": true,
+  "exception": null,
+  "failure_mode": null,
+  "generation": {
+    "commit_bytes_end": 6289035264,
+    "commit_bytes_start": 2851291136,
+    "completion_chars": 40,
+    "completion_tokens_reported": 8,
+    "decode_s": 0.7826428999905488,
+    "decode_tok_s": 8.944053539723585,
+    "free_memory_mb_end": 3286.68359375,
+    "free_memory_mb_min": 272.4140625,
+    "free_memory_mb_start": 6270.98046875,
+    "free_physical_mb_at_peak": 535.66796875,
+    "free_physical_mb_min": 272.4140625,
+    "free_physical_mb_start": 6270.98046875,
+    "n_rss_samples": 4474,
+    "peak_commit_bytes": 9097461760,
+    "peak_rss_bytes": 8883384320,
+    "prefill_s": 226.260875,
+    "prompt_tokens_reported": 36000,
+    "r_decode_tok_s": 8.944053539723585,
+    "r_prefill_tok_s": 159.10837434885727,
+    "rss_bytes_end": 6082035712,
+    "rss_bytes_start": 2653470720,
+    "rss_interval_s": 0.05,
+    "rss_sampler_overhead_s": 0.6962344,
+    "text_head": "The text you've provided is a repetition",
+    "ttft_ns": 226260875000,
+    "ttft_source": "perf_metrics",
+    "wall_s": 227.04351789999055
+  },
+  "loads": [
+    {
+      "available_delta_mb": 2494.9765625,
+      "compile_s": 6.976391600037459,
+      "device": "GPU",
+      "memory_after": {
+        "available_mb": 6272.19140625,
+        "percent": 60.7,
+        "rss_mb": 2529.6328125,
+        "used_mb": 9703.984375
+      },
+      "memory_before": {
+        "available_mb": 8767.16796875,
+        "percent": 45.1,
+        "rss_mb": 52.1953125,
+        "used_mb": 7209.0078125
+      },
+      "properties": {},
+      "rss_delta_mb": 2477.4375
+    }
+  ],
+  "memory_after_generate": {
+    "available_mb": 3286.6875,
+    "percent": 79.4,
+    "rss_mb": 5800.3046875,
+    "used_mb": 12689.48828125
+  },
+  "memory_after_import": {
+    "available_mb": 8767.76953125,
+    "percent": 45.1,
+    "rss_mb": 51.70703125,
+    "used_mb": 7208.40625
+  },
+  "memory_baseline": {
+    "available_mb": 8810.62109375,
+    "percent": 44.9,
+    "rss_mb": 19.29296875,
+    "used_mb": 7165.5546875
+  },
+  "memory_before_generate": {
+    "available_mb": 6270.984375,
+    "percent": 60.7,
+    "rss_mb": 2530.53515625,
+    "used_mb": 9705.19140625
+  },
+  "memory_resident_before_inference": {
+    "available_mb": 6272.18359375,
+    "percent": 60.7,
+    "rss_mb": 2529.6328125,
+    "used_mb": 9703.9921875
+  },
+  "phase": "done",
+  "power_request": {
+    "clear_last_error": 0,
+    "cleared": true,
+    "close_last_error": 0,
+    "closed": true,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x2c8",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "measurement_child",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "spec": {
+    "affinity_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "generate_device": "GPU",
+    "load_sequence": [
+      {
+        "device": "GPU",
+        "properties": {}
+      }
+    ],
+    "max_new_tokens": 8,
+    "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "prompt_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n36000.txt",
+    "rss_interval_s": 0.05,
+    "wslock": {
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "mode": "request"
+    }
+  },
+  "standing_reservation": {
+    "available_delta_mb": 2538.4375,
+    "basis": "delta from process baseline (pre-import) to all backends compiled and resident, before any measured generation; rss and system-available disagree when weights are file-backed or shared, and both are reported without attribution",
+    "rss_delta_mb": 2510.33984375
+  },
+  "working_set_limits_after": {
+    "flags": 9,
+    "hard_min_enabled": true,
+    "maximum_bytes": 12884901888,
+    "minimum_bytes": 4294967296,
+    "read": true
+  },
+  "working_set_lock": {
+    "after": {
+      "flags": 9,
+      "hard_min_enabled": true,
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "read": true
+    },
+    "before": {
+      "flags": 10,
+      "hard_min_enabled": false,
+      "maximum_bytes": 1413120,
+      "minimum_bytes": 204800,
+      "read": true
+    },
+    "call": "SetProcessWorkingSetSizeEx",
+    "flags": 1,
+    "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+    "granted": true,
+    "last_error": 0,
+    "privilege": {
+      "attempted": true,
+      "granted": true,
+      "last_error": 0,
+      "last_error_meaning": "ERROR_SUCCESS",
+      "privilege": "SeIncreaseWorkingSetPrivilege",
+      "step": "AdjustTokenPrivileges"
+    },
+    "requested": true,
+    "requested_maximum_bytes": 12884901888,
+    "requested_minimum_bytes": 4294967296,
+    "returned": true
+  }
+}

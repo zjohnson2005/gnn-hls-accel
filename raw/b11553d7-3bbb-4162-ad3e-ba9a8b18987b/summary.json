@@ -1,0 +1,309 @@
+{
+  "acceptance_criterion": {
+    "band_multiple": 2.0,
+    "basis": "r_decode_tok_s",
+    "gap_s": 1200,
+    "gate_mode": "derived_from_within_run_spread",
+    "max_within_run_spread": 0.1,
+    "prior_unexplained_ratio": 1.98,
+    "rule": "s = max over the two runs of the within-run relative spread on `basis`; band = band_multiple * s; PASS iff |ratio - 1| <= band AND s <= max_within_run_spread",
+    "spread_estimator": "cv",
+    "this_run_within_run_spread": {
+      "basis": "r_decode_tok_s",
+      "cv": 0.14469900338790184
+    }
+  },
+  "arm_label": "arm_1",
+  "benchmark": "fixed_throughput_acceptance_v1",
+  "confinement_classification": {
+    "baseline_mean": [
+      5.4799999999999995,
+      0.0,
+      5.365,
+      4.529999999999999,
+      3.9299999999999997,
+      18.34,
+      27.055,
+      52.614999999999995
+    ],
+    "config_claim": "SCHEDULING_CORE_TYPE=PCORE_ONLY (control, not an adoption claim)",
+    "core_states": {
+      "0": "LOADED",
+      "1": "LOADED",
+      "2": "LOADED",
+      "3": "LOADED",
+      "4": "AMBIGUOUS",
+      "5": "QUIET",
+      "6": "QUIET",
+      "7": "QUIET"
+    },
+    "deltas": {
+      "0": 39.38013272077591,
+      "1": 36.716743236345074,
+      "2": 33.48078866768759,
+      "3": 40.56295558958652,
+      "4": 5.519974476773864,
+      "5": -6.949341500765698,
+      "6": -1.568782542113322,
+      "7": -7.599430832057166
+    },
+    "loaded_threshold": 19.024218989280246,
+    "n_baseline_samples": 20,
+    "n_util_samples": 1959,
+    "noise_band": 2.802732206054216,
+    "note": "Verdict records what happened under the configured properties. UNCLEAR/LEAKED/INVALID here do not rewrite the config; they travel with the sealed arm.",
+    "requested_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "util_mean": [
+      44.86013272077591,
+      36.716743236345074,
+      38.84578866768759,
+      45.09295558958652,
+      9.449974476773864,
+      11.390658499234302,
+      25.486217457886678,
+      45.01556916794283
+    ],
+    "verdict": "UNCLEAR"
+  },
+  "experiment_id": "fixed_throughput_acceptance",
+  "fixed_config": {
+    "affinity_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "arm_id": "A",
+    "context_tokens": 2048,
+    "cpu_properties": {
+      "ENABLE_CPU_PINNING": true,
+      "INFERENCE_NUM_THREADS": 4,
+      "SCHEDULING_CORE_TYPE": "PCORE_ONLY"
+    },
+    "max_new_tokens": 64,
+    "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "prompt": {
+      "chars": 9216,
+      "n_tokens_realized": 2048,
+      "n_tokens_requested": 2048,
+      "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n2048.txt",
+      "sha256": "500c48655c5adc7b47a9bee80756adfaf855f0384af2fb10f05816548c922290"
+    },
+    "repeats": 3,
+    "target": "cpu-p",
+    "working_set_lock": {
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "mode": "request"
+    }
+  },
+  "memory_metrics": {
+    "free_physical_bytes_at_peak": 4223365120,
+    "free_physical_bytes_at_start": 9602142208,
+    "host_at_arm_start": {
+      "available_bytes": 10655334400,
+      "commit_total_bytes": 24696061952,
+      "commit_used_bytes": 3940020224,
+      "free_physical_bytes": 10655334400,
+      "observed_utc": "2026-08-06T19:38:49.793671+00:00",
+      "total_physical_bytes": 16752234496
+    },
+    "peak_commit_bytes": 3829755904,
+    "peak_working_set_bytes": 5827391488,
+    "per_repeat_peak_commit_bytes": [
+      3829755904,
+      3829538816,
+      3829628928
+    ],
+    "per_repeat_peak_working_set_bytes": [
+      5827391488,
+      5825286144,
+      5826629632
+    ]
+  },
+  "not_exercised": {
+    "working_set_lock_conditions": "configs/delta_n.yaml lists [off, request]. Only the mode \u0394N will use is measured here (request); sweeping both would make this two configurations rather than one, which is not what an acceptance test is."
+  },
+  "per_repeat": [
+    {
+      "attempt_used": 1,
+      "completion_tokens_reported": 64,
+      "envelope": {
+        "available_memory_mb_after": 9695.3203125,
+        "available_memory_mb_before": 9641.765625,
+        "available_memory_mb_min": 4153.54296875,
+        "canary_gate_verdict": "pass",
+        "canary_relative_drift": 0.13294121251716065,
+        "hard_page_reads_max_per_s": 14957.518277020352,
+        "invalid_reasons": [],
+        "label": "fixed-throughput/2048/0",
+        "lock_acquired_utc": "2026-08-06T19:39:50.534006+00:00",
+        "lock_released_utc": "2026-08-06T19:40:34.155692+00:00",
+        "lock_wait_s": 0.0,
+        "paging_gate_reasons": [
+          "sustained hard page reads: 4 consecutive samples > 1.0 (gate_mode=baseline_relative) >= 2"
+        ],
+        "paging_gate_verdict": "fail",
+        "quiescence_aggregate": {
+          "max_mean_p_core_cpu_pct": 9.204999999999998,
+          "max_sample_total_cpu_pct": 29.362499999999997,
+          "mean_p_core_cpu_pct": {
+            "0": 5.755,
+            "1": 0.9550000000000001,
+            "2": 5.750000000000001,
+            "3": 9.204999999999998
+          },
+          "mean_total_cpu_pct": 16.39375,
+          "min_available_memory_mb": 9643.921875
+        },
+        "quiescence_passed": true,
+        "valid": true
+      },
+      "inadmissible_attempts": [
+        "quiescence_refusal"
+      ],
+      "peak_commit_bytes": 3829755904,
+      "peak_rss_bytes": 5827391488,
+      "prompt_tokens_reported": 2048,
+      "r_decode_tok_s": 12.953142652501308,
+      "r_prefill_tok_s": 82.3583846749116,
+      "repeat": 0,
+      "ttft_source": "perf_metrics",
+      "wall_s": 29.730612299987115
+    },
+    {
+      "attempt_used": 0,
+      "completion_tokens_reported": 64,
+      "envelope": {
+        "available_memory_mb_after": 9553.9609375,
+        "available_memory_mb_before": 9644.73828125,
+        "available_memory_mb_min": 4027.5546875,
+        "canary_gate_verdict": "pass",
+        "canary_relative_drift": 0.055725669515468784,
+        "hard_page_reads_max_per_s": 8995.437039848797,
+        "invalid_reasons": [],
+        "label": "fixed-throughput/2048/1",
+        "lock_acquired_utc": "2026-08-06T19:40:54.179099+00:00",
+        "lock_released_utc": "2026-08-06T19:41:35.531422+00:00",
+        "lock_wait_s": 0.0,
+        "paging_gate_reasons": [
+          "sustained hard page reads: 8 consecutive samples > 1.0 (gate_mode=baseline_relative) >= 2"
+        ],
+        "paging_gate_verdict": "fail",
+        "quiescence_aggregate": {
+          "max_mean_p_core_cpu_pct": 11.539999999999997,
+          "max_sample_total_cpu_pct": 16.4625,
+          "mean_p_core_cpu_pct": {
+            "0": 11.539999999999997,
+            "1": 0.145,
+            "2": 0.34,
+            "3": 5.930000000000001
+          },
+          "mean_total_cpu_pct": 15.151874999999999,
+          "min_available_memory_mb": 9622.6875
+        },
+        "quiescence_passed": true,
+        "valid": true
+      },
+      "inadmissible_attempts": [],
+      "peak_commit_bytes": 3829538816,
+      "peak_rss_bytes": 5825286144,
+      "prompt_tokens_reported": 2048,
+      "r_decode_tok_s": 16.641574962173326,
+      "r_prefill_tok_s": 84.63974615872927,
+      "repeat": 1,
+      "ttft_source": "perf_metrics",
+      "wall_s": 27.98236930000712
+    },
+    {
+      "attempt_used": 0,
+      "completion_tokens_reported": 64,
+      "envelope": {
+        "available_memory_mb_after": 9940.296875,
+        "available_memory_mb_before": 9597.66015625,
+        "available_memory_mb_min": 4091.234375,
+        "canary_gate_verdict": "pass",
+        "canary_relative_drift": 0.1046147439416288,
+        "hard_page_reads_max_per_s": 2310.5223557848963,
+        "invalid_reasons": [],
+        "label": "fixed-throughput/2048/2",
+        "lock_acquired_utc": "2026-08-06T19:41:55.554327+00:00",
+        "lock_released_utc": "2026-08-06T19:42:37.899656+00:00",
+        "lock_wait_s": 0.0,
+        "paging_gate_reasons": [
+          "sustained hard page reads: 2 consecutive samples > 1.0 (gate_mode=baseline_relative) >= 2"
+        ],
+        "paging_gate_verdict": "fail",
+        "quiescence_aggregate": {
+          "max_mean_p_core_cpu_pct": 12.69,
+          "max_sample_total_cpu_pct": 13.337499999999999,
+          "mean_p_core_cpu_pct": {
+            "0": 12.69,
+            "1": 2.1499999999999995,
+            "2": 0.925,
+            "3": 10.075
+          },
+          "mean_total_cpu_pct": 4.9475,
+          "min_available_memory_mb": 9528.69921875
+        },
+        "quiescence_passed": true,
+        "valid": true
+      },
+      "inadmissible_attempts": [],
+      "peak_commit_bytes": 3829628928,
+      "peak_rss_bytes": 5826629632,
+      "prompt_tokens_reported": 2048,
+      "r_decode_tok_s": 17.02577283959134,
+      "r_prefill_tok_s": 81.05124463822256,
+      "repeat": 2,
+      "ttft_source": "perf_metrics",
+      "wall_s": 28.968237399996724
+    }
+  ],
+  "power_start": {
+    "battery_pct": 93.0,
+    "battery_saver": false,
+    "charging": true,
+    "on_battery": false,
+    "overlay_guid": "00000000-0000-0000-0000-000000000000",
+    "power_plan_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+    "power_plan_name": "Best Performance"
+  },
+  "purpose": "Measure one fixed configuration so that two invocations, separated in time, bound the instrument's between-run reproducibility. 1.98x is the prior unexplained ratio.",
+  "r_decode_tok_s": {
+    "cv": 0.14469900338790184,
+    "max": 17.02577283959134,
+    "mean": 15.540163484755325,
+    "median": 16.641574962173326,
+    "min": 12.953142652501308,
+    "n": 3,
+    "n_missing": 0,
+    "sd": 2.2486461687291595,
+    "spread_ratio": 1.314412517205127
+  },
+  "r_prefill_tok_s": {
+    "cv": 0.021965274047400837,
+    "max": 84.63974615872927,
+    "mean": 82.6831251572878,
+    "median": 82.3583846749116,
+    "min": 81.05124463822256,
+    "n": 3,
+    "n_missing": 0,
+    "sd": 1.8161575031753692,
+    "spread_ratio": 1.0442744776656325
+  },
+  "run_id": "b11553d7-3bbb-4162-ad3e-ba9a8b18987b",
+  "uptime_wake": {
+    "boot_time_utc": "2026-08-04T17:56:15.980561+00:00",
+    "last_wake_error": null,
+    "last_wake_source": "Kernel-Power/507",
+    "last_wake_utc": "2026-08-06T19:22:09.1198341Z",
+    "observed_utc": "2026-08-06T19:38:49.359083+00:00",
+    "uptime_s": 178953.37852215767
+  }
+}

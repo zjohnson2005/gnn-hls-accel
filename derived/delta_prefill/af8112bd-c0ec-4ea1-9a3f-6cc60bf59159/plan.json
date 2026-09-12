@@ -1,0 +1,647 @@
+﻿{
+    "tag":  "dispatch_p_interleaved",
+    "session_id":  "af8112bd-c0ec-4ea1-9a3f-6cc60bf59159",
+    "launch_context":  "ssh_detached",
+    "kind":  "delta_prefill_matrix",
+    "arms":  [
+                 "gpu_only_f16",
+                 "gpu_only_u8",
+                 "gpu_only_u4"
+             ],
+    "n_cached":  [
+                     2000,
+                     4000,
+                     8000,
+                     12000
+                 ],
+    "deltas":  [
+                   50,
+                   150,
+                   400,
+                   1000
+               ],
+    "max_delta":  1000,
+    "non_resident_delta_rule":  "every -Deltas entry (paired with RESIDENT); see DEFECT_non_resident_max_delta_only.md",
+    "cell_timeout_s":  1500,
+    "cell_timeout_derivation":  "session d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba: OK max elapsed_s=616.8; 2x=1234; rounded up to 1500. Hung cell gpu_only RESIDENT d500 r1 elapsed_s=2856.5 (CL_OUT_OF_RESOURCES / oneDNN errcode -5 / post-record spin / operator kill exit=-1). generation.timeout_s=1800 bounds only generate() inside the child.",
+    "repeats":  3,
+    "cell_specs_per_round":  [
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  2000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  2000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  2000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  2000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  2000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  2000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  2000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  2000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  2000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  2000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  2000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  2000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  2000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  2000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  2000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  2000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  2000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  2000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  2000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  2000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  2000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  2000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  2000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  2000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  4000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  4000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  4000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  4000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  4000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  4000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  4000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  4000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  4000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  4000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  4000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  4000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  4000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  4000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  4000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  4000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  4000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  4000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  4000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  4000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  4000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  4000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  4000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  4000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  8000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  8000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  8000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  8000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  8000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  8000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  8000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  8000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  8000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  8000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  8000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  8000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  8000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  8000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  8000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  8000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  8000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  8000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  8000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  8000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  8000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  8000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  8000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  8000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  12000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  12000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  12000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  12000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  12000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  12000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  12000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_f16",
+                                     "n_cached":  12000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  12000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  12000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  12000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  12000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  12000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  12000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  12000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u8",
+                                     "n_cached":  12000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  12000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  12000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  50
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  12000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  12000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  150
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  12000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  12000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  400
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  12000,
+                                     "mode":  "RESIDENT",
+                                     "delta":  1000
+                                 },
+                                 {
+                                     "arm":  "gpu_only_u4",
+                                     "n_cached":  12000,
+                                     "mode":  "NON_RESIDENT",
+                                     "delta":  1000
+                                 }
+                             ],
+    "cells_per_round":  96,
+    "canary":  {
+                   "enabled":  true,
+                   "every_n_matrix_cells":  12,
+                   "arm":  "gpu_only_f16",
+                   "n_cached":  4000,
+                   "delta":  400,
+                   "mode":  "RESIDENT",
+                   "calibration_count":  3,
+                   "rel_drift_floor":  0.05,
+                   "n_derivation":  "N=CanaryEveryN from measured thermal onset in session 7f569929-4484-4af7-8231-5b535526f653 (dispatch_o_u8): last-good nc=8000 RESIDENT turn1_prefill_s=6.993 at 2026-08-12T03:15:35Z -\u003e first-bad turn1=33.958 at 03:26:32Z (delta_t=657s). Mean cell wall from DISPATCH_O_TIME_ESTIMATE 4929s/96cells=51.34s -\u003e cells_in_onset=657/51.34~=12.8. N=floor(cells_in_onset)=12 so \u003e=1 canary falls inside the observed onset window. Not a round number chosen for convenience.",
+                   "threshold_derivation":  "After CanaryCalibrationCount successful canaries: ref_t1=median(turn1_prefill_s), ref_t2=median(turn2_prefill_s). early_max_t1=max_i |t1_i-ref_t1|/ref_t1 (same for t2). threshold_t1=max(2*early_max_t1, CanaryRelDriftFloor); same for t2. 2x early envelope = allow as much additional deviation as already observed in calibration; floor=0.05 matches C2f canary_gate margin_above_idle_p95 spirit when early_max~=0. Gate arms only after calibration. Abort status=FAIL_CANARY_DRIFT if either turn exceeds threshold. Threshold is NOT a pre-chosen round number (e.g. not 2.0x or 5x)."
+               },
+    "pre_run_settle_s":  300,
+    "inter_cell_settle_s":  20,
+    "inter_cell_settle_source":  "recovery.settle_s + poll Available to pre_run floor",
+    "inter_cell_max_wait_s":  420,
+    "pre_run_available_mb_min":  7000,
+    "pre_run_available_mb_min_citation":  "2026-08-09 clean session / 7477 MB Available; arm A lowest free_physical_mb_start 6926; floor 7000",
+    "randomization_seed":  20260805,
+    "started_utc":  "2026-08-23T18:38:13.5981695Z",
+    "environment_launch":  {
+                               "available_mb":  8619,
+                               "available_method":  "Get-Counter:\\\\Memory\\\\Available MBytes",
+                               "processor_frequency_mhz":  1850,
+                               "processor_performance_pct":  109.20901663784365,
+                               "package_temp_c":  null,
+                               "package_temp_source":  "unreachable",
+                               "snapshot_utc":  "2026-08-23T18:38:17.1145748Z"
+                           },
+    "ssh_client":  null,
+    "ssh_connection":  null,
+    "seam_launch_context_env":  "ssh_detached",
+    "detached_worker":  true,
+    "cells":  [
+
+              ],
+    "canaries":  [
+
+                 ],
+    "status":  "running"
+}

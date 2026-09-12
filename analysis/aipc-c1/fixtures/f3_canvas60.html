@@ -1,0 +1,20 @@
+﻿<!DOCTYPE html>
+<html><head><meta charset=utf-8><title>C1-F3-canvas</title>
+<style>html,body{margin:0;background:#000;height:100%;overflow:hidden}canvas{display:block;width:100vw;height:100vh}</style>
+</head><body><canvas id=c></canvas>
+<script>
+const c=document.getElementById("c"),x=c.getContext("2d");
+function resize(){c.width=innerWidth*devicePixelRatio;c.height=innerHeight*devicePixelRatio}
+addEventListener("resize",resize);resize();
+let t0=performance.now();
+function frame(t){
+  const w=c.width,h=c.height;
+  x.fillStyle=`hsl(${(t*0.05)%360} 80% 40%)`;
+  x.fillRect(0,0,w,h);
+  x.fillStyle="#fff"; x.font=`${Math.floor(48*devicePixelRatio)}px monospace`;
+  const dt=t-t0; t0=t;
+  x.fillText(`C1 F3 canvas ${(1000/(dt||16)).toFixed(1)} fps`, 40, 80);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script></body></html>

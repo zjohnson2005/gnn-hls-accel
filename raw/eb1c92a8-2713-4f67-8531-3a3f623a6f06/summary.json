@@ -1,0 +1,4280 @@
+{
+  "classification": "PROMPT_A2_REFUSAL",
+  "experiment_id": "prompt-a-throughput-integrity",
+  "measurement_preflight_record": {
+    "invalid_reasons": [],
+    "label": "prompt-a/clean/-1",
+    "lock_acquired_utc": "2026-08-04T13:37:07.696553+00:00",
+    "lock_mode": "preheld_experiment_reservation",
+    "lock_released_utc": "2026-08-04T13:37:19.891156+00:00",
+    "lock_wait_s": 0.0,
+    "quiescence": {
+      "aggregate": {
+        "max_mean_p_core_cpu_pct": 30.205000000000002,
+        "max_sample_total_cpu_pct": 47.72500000000001,
+        "mean_p_core_cpu_pct": {
+          "0": 30.205000000000002,
+          "1": 21.970000000000002,
+          "2": 15.84,
+          "3": 23.985000000000007
+        },
+        "mean_total_cpu_pct": 27.433750000000003,
+        "min_available_memory_mb": 3271.44921875
+      },
+      "failures": [
+        "mean total CPU 27.434% > 20.000%",
+        "maximum mean P-core CPU 30.205% > 30.000%"
+      ],
+      "passed": false,
+      "refusal_process_tables": {
+        "sample_window_s": 11.461972199998854,
+        "sampled_cpu_pct_basis": "psutil Process.cpu_percent over the measured quiescence window; values are percent of one logical CPU and may exceed 100 for multithreaded processes",
+        "top_cpu": [
+          {
+            "name": "mc-fw-host.exe",
+            "pid": 4776,
+            "rss_bytes": 616017920,
+            "sampled_cpu_pct": 98.2
+          },
+          {
+            "name": "Cursor.exe",
+            "pid": 24604,
+            "rss_bytes": 224104448,
+            "sampled_cpu_pct": 31.3
+          },
+          {
+            "name": "Cursor.exe",
+            "pid": 29912,
+            "rss_bytes": 650694656,
+            "sampled_cpu_pct": 30.4
+          },
+          {
+            "name": "python.exe",
+            "pid": 23280,
+            "rss_bytes": 911831040,
+            "sampled_cpu_pct": 11.6
+          },
+          {
+            "name": "dwm.exe",
+            "pid": 1736,
+            "rss_bytes": 137216000,
+            "sampled_cpu_pct": 10.1
+          },
+          {
+            "name": "WUDFHost.exe",
+            "pid": 20884,
+            "rss_bytes": 19005440,
+            "sampled_cpu_pct": 6.7
+          },
+          {
+            "name": "claude.exe",
+            "pid": 21992,
+            "rss_bytes": 323674112,
+            "sampled_cpu_pct": 4.1
+          },
+          {
+            "name": "System",
+            "pid": 4,
+            "rss_bytes": 6426624,
+            "sampled_cpu_pct": 3.3
+          },
+          {
+            "name": "claude.exe",
+            "pid": 19604,
+            "rss_bytes": 155922432,
+            "sampled_cpu_pct": 2.9
+          },
+          {
+            "name": "PSExpressCore.exe",
+            "pid": 24516,
+            "rss_bytes": 59351040,
+            "sampled_cpu_pct": 2.2
+          }
+        ],
+        "top_rss": [
+          {
+            "name": "python.exe",
+            "pid": 23280,
+            "rss_bytes": 911831040,
+            "sampled_cpu_pct": 11.6
+          },
+          {
+            "name": "Cursor.exe",
+            "pid": 29912,
+            "rss_bytes": 650694656,
+            "sampled_cpu_pct": 30.4
+          },
+          {
+            "name": "vmmem",
+            "pid": 23132,
+            "rss_bytes": 624259072,
+            "sampled_cpu_pct": 0.3
+          },
+          {
+            "name": "mc-fw-host.exe",
+            "pid": 4776,
+            "rss_bytes": 616017920,
+            "sampled_cpu_pct": 98.2
+          },
+          {
+            "name": "MemCompression",
+            "pid": 3544,
+            "rss_bytes": 561922048,
+            "sampled_cpu_pct": 0.0
+          },
+          {
+            "name": "Cursor.exe",
+            "pid": 18416,
+            "rss_bytes": 399921152,
+            "sampled_cpu_pct": 0.7
+          },
+          {
+            "name": "claude.exe",
+            "pid": 21992,
+            "rss_bytes": 323674112,
+            "sampled_cpu_pct": 4.1
+          },
+          {
+            "name": "Cursor.exe",
+            "pid": 27596,
+            "rss_bytes": 314339328,
+            "sampled_cpu_pct": 0.7
+          },
+          {
+            "name": "SupportAssistAgent.exe",
+            "pid": 27440,
+            "rss_bytes": 246374400,
+            "sampled_cpu_pct": 0.0
+          },
+          {
+            "name": "Cursor.exe",
+            "pid": 24604,
+            "rss_bytes": 224104448,
+            "sampled_cpu_pct": 31.3
+          }
+        ]
+      },
+      "sample_interval_s": 0.5,
+      "samples": [
+        {
+          "available_memory_mb": 3288.98828125,
+          "captured_utc": "2026-08-04T13:37:08.931400+00:00",
+          "p_core_cpu_pct": {
+            "0": 40.0,
+            "1": 24.2,
+            "2": 21.2,
+            "3": 25.0
+          },
+          "per_cpu_pct": [
+            40.0,
+            24.2,
+            21.2,
+            25.0,
+            39.4,
+            27.3,
+            34.4,
+            33.3
+          ],
+          "total_cpu_pct": 30.6
+        },
+        {
+          "available_memory_mb": 3288.71875,
+          "captured_utc": "2026-08-04T13:37:09.432084+00:00",
+          "p_core_cpu_pct": {
+            "0": 32.4,
+            "1": 15.6,
+            "2": 15.6,
+            "3": 21.2
+          },
+          "per_cpu_pct": [
+            32.4,
+            15.6,
+            15.6,
+            21.2,
+            18.8,
+            28.1,
+            46.9,
+            36.4
+          ],
+          "total_cpu_pct": 26.875
+        },
+        {
+          "available_memory_mb": 3290.40234375,
+          "captured_utc": "2026-08-04T13:37:09.932774+00:00",
+          "p_core_cpu_pct": {
+            "0": 25.7,
+            "1": 20.6,
+            "2": 12.5,
+            "3": 18.8
+          },
+          "per_cpu_pct": [
+            25.7,
+            20.6,
+            12.5,
+            18.8,
+            24.2,
+            21.2,
+            46.9,
+            25.8
+          ],
+          "total_cpu_pct": 24.462500000000002
+        },
+        {
+          "available_memory_mb": 3274.73828125,
+          "captured_utc": "2026-08-04T13:37:10.433328+00:00",
+          "p_core_cpu_pct": {
+            "0": 37.1,
+            "1": 24.2,
+            "2": 12.1,
+            "3": 42.4
+          },
+          "per_cpu_pct": [
+            37.1,
+            24.2,
+            12.1,
+            42.4,
+            24.2,
+            34.4,
+            46.9,
+            30.3
+          ],
+          "total_cpu_pct": 31.45
+        },
+        {
+          "available_memory_mb": 3271.44921875,
+          "captured_utc": "2026-08-04T13:37:10.933889+00:00",
+          "p_core_cpu_pct": {
+            "0": 16.1,
+            "1": 22.6,
+            "2": 12.9,
+            "3": 21.9
+          },
+          "per_cpu_pct": [
+            16.1,
+            22.6,
+            12.9,
+            21.9,
+            19.4,
+            45.2,
+            30.3,
+            38.7
+          ],
+          "total_cpu_pct": 25.887500000000003
+        },
+        {
+          "available_memory_mb": 3277.57421875,
+          "captured_utc": "2026-08-04T13:37:11.434799+00:00",
+          "p_core_cpu_pct": {
+            "0": 30.6,
+            "1": 20.6,
+            "2": 15.2,
+            "3": 25.0
+          },
+          "per_cpu_pct": [
+            30.6,
+            20.6,
+            15.2,
+            25.0,
+            27.3,
+            27.3,
+            36.4,
+            42.4
+          ],
+          "total_cpu_pct": 28.1
+        },
+        {
+          "available_memory_mb": 3277.30859375,
+          "captured_utc": "2026-08-04T13:37:11.935616+00:00",
+          "p_core_cpu_pct": {
+            "0": 36.4,
+            "1": 51.4,
+            "2": 37.5,
+            "3": 48.5
+          },
+          "per_cpu_pct": [
+            36.4,
+            51.4,
+            37.5,
+            48.5,
+            46.9,
+            45.5,
+            65.6,
+            50.0
+          ],
+          "total_cpu_pct": 47.72500000000001
+        },
+        {
+          "available_memory_mb": 3288.37109375,
+          "captured_utc": "2026-08-04T13:37:12.436271+00:00",
+          "p_core_cpu_pct": {
+            "0": 26.5,
+            "1": 21.9,
+            "2": 18.8,
+            "3": 27.3
+          },
+          "per_cpu_pct": [
+            26.5,
+            21.9,
+            18.8,
+            27.3,
+            28.1,
+            34.4,
+            34.4,
+            45.5
+          ],
+          "total_cpu_pct": 29.6125
+        },
+        {
+          "available_memory_mb": 3289.7421875,
+          "captured_utc": "2026-08-04T13:37:12.937035+00:00",
+          "p_core_cpu_pct": {
+            "0": 29.4,
+            "1": 15.2,
+            "2": 6.2,
+            "3": 9.4
+          },
+          "per_cpu_pct": [
+            29.4,
+            15.2,
+            6.2,
+            9.4,
+            9.4,
+            28.1,
+            15.6,
+            57.6
+          ],
+          "total_cpu_pct": 21.362499999999997
+        },
+        {
+          "available_memory_mb": 3286.84375,
+          "captured_utc": "2026-08-04T13:37:13.437574+00:00",
+          "p_core_cpu_pct": {
+            "0": 29.4,
+            "1": 12.5,
+            "2": 12.5,
+            "3": 21.9
+          },
+          "per_cpu_pct": [
+            29.4,
+            12.5,
+            12.5,
+            21.9,
+            28.1,
+            37.5,
+            18.8,
+            34.4
+          ],
+          "total_cpu_pct": 24.387500000000003
+        },
+        {
+          "available_memory_mb": 3287.140625,
+          "captured_utc": "2026-08-04T13:37:13.938221+00:00",
+          "p_core_cpu_pct": {
+            "0": 29.4,
+            "1": 27.3,
+            "2": 18.8,
+            "3": 33.3
+          },
+          "per_cpu_pct": [
+            29.4,
+            27.3,
+            18.8,
+            33.3,
+            25.0,
+            37.5,
+            31.2,
+            40.6
+          ],
+          "total_cpu_pct": 30.3875
+        },
+        {
+          "available_memory_mb": 3287.328125,
+          "captured_utc": "2026-08-04T13:37:14.439038+00:00",
+          "p_core_cpu_pct": {
+            "0": 15.6,
+            "1": 33.3,
+            "2": 18.8,
+            "3": 28.1
+          },
+          "per_cpu_pct": [
+            15.6,
+            33.3,
+            18.8,
+            28.1,
+            28.1,
+            28.1,
+            34.4,
+            25.0
+          ],
+          "total_cpu_pct": 26.425
+        },
+        {
+          "available_memory_mb": 3289.26953125,
+          "captured_utc": "2026-08-04T13:37:14.939663+00:00",
+          "p_core_cpu_pct": {
+            "0": 36.1,
+            "1": 18.2,
+            "2": 15.6,
+            "3": 20.6
+          },
+          "per_cpu_pct": [
+            36.1,
+            18.2,
+            15.6,
+            20.6,
+            28.1,
+            18.8,
+            28.1,
+            31.2
+          ],
+          "total_cpu_pct": 24.5875
+        },
+        {
+          "available_memory_mb": 3289.31640625,
+          "captured_utc": "2026-08-04T13:37:15.440332+00:00",
+          "p_core_cpu_pct": {
+            "0": 25.7,
+            "1": 15.6,
+            "2": 21.9,
+            "3": 27.3
+          },
+          "per_cpu_pct": [
+            25.7,
+            15.6,
+            21.9,
+            27.3,
+            21.9,
+            34.4,
+            28.1,
+            48.5
+          ],
+          "total_cpu_pct": 27.925
+        },
+        {
+          "available_memory_mb": 3289.33203125,
+          "captured_utc": "2026-08-04T13:37:15.940899+00:00",
+          "p_core_cpu_pct": {
+            "0": 24.2,
+            "1": 18.8,
+            "2": 20.6,
+            "3": 15.6
+          },
+          "per_cpu_pct": [
+            24.2,
+            18.8,
+            20.6,
+            15.6,
+            31.2,
+            31.2,
+            15.6,
+            42.4
+          ],
+          "total_cpu_pct": 24.95
+        },
+        {
+          "available_memory_mb": 3289.94140625,
+          "captured_utc": "2026-08-04T13:37:16.441658+00:00",
+          "p_core_cpu_pct": {
+            "0": 33.3,
+            "1": 12.5,
+            "2": 6.2,
+            "3": 15.6
+          },
+          "per_cpu_pct": [
+            33.3,
+            12.5,
+            6.2,
+            15.6,
+            31.2,
+            21.9,
+            31.2,
+            21.9
+          ],
+          "total_cpu_pct": 21.724999999999998
+        },
+        {
+          "available_memory_mb": 3289.99609375,
+          "captured_utc": "2026-08-04T13:37:16.942325+00:00",
+          "p_core_cpu_pct": {
+            "0": 33.3,
+            "1": 28.6,
+            "2": 15.6,
+            "3": 24.2
+          },
+          "per_cpu_pct": [
+            33.3,
+            28.6,
+            15.6,
+            24.2,
+            31.2,
+            37.5,
+            18.8,
+            28.1
+          ],
+          "total_cpu_pct": 27.1625
+        },
+        {
+          "available_memory_mb": 3289.88671875,
+          "captured_utc": "2026-08-04T13:37:17.442896+00:00",
+          "p_core_cpu_pct": {
+            "0": 34.3,
+            "1": 18.8,
+            "2": 12.5,
+            "3": 15.6
+          },
+          "per_cpu_pct": [
+            34.3,
+            18.8,
+            12.5,
+            15.6,
+            18.8,
+            28.1,
+            34.4,
+            40.6
+          ],
+          "total_cpu_pct": 25.3875
+        },
+        {
+          "available_memory_mb": 3289.9453125,
+          "captured_utc": "2026-08-04T13:37:17.943781+00:00",
+          "p_core_cpu_pct": {
+            "0": 28.6,
+            "1": 21.9,
+            "2": 9.4,
+            "3": 21.9
+          },
+          "per_cpu_pct": [
+            28.6,
+            21.9,
+            9.4,
+            21.9,
+            37.5,
+            12.5,
+            25.0,
+            34.4
+          ],
+          "total_cpu_pct": 23.900000000000002
+        },
+        {
+          "available_memory_mb": 3289.84375,
+          "captured_utc": "2026-08-04T13:37:18.431555+00:00",
+          "p_core_cpu_pct": {
+            "0": 40.0,
+            "1": 15.6,
+            "2": 12.9,
+            "3": 16.1
+          },
+          "per_cpu_pct": [
+            40.0,
+            15.6,
+            12.9,
+            16.1,
+            35.5,
+            31.2,
+            29.0,
+            25.8
+          ],
+          "total_cpu_pct": 25.7625
+        }
+      ],
+      "threshold_basis": "pre-declared before Prompt A reproduction: 20% package mean and 30% per-P-core mean exclude material background compute while tolerating short Windows service bursts; 2048 MiB preserves the Phase -1 unified-memory headroom floor",
+      "thresholds": {
+        "available_memory_min_mb": 2048.0,
+        "p_core_cpu_max_pct": 30.0,
+        "total_cpu_max_pct": 20.0
+      },
+      "window_s": 10.0
+    },
+    "resource": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\.locks\\machine",
+    "secondary_process_name_check": {},
+    "valid": true
+  },
+  "refusal": {
+    "exception_type": "MeasurementRefusalError",
+    "measurement_taken": false,
+    "reason": "measured-load quiescence refusal: mean total CPU 27.434% > 20.000%; maximum mean P-core CPU 30.205% > 30.000%"
+  },
+  "run_id": "eb1c92a8-2713-4f67-8531-3a3f623a6f06",
+  "runtime_environment": {
+    "KMP_DUPLICATE_LIB_OK": "True",
+    "KMP_INIT_AT_FORK": "FALSE"
+  },
+  "source_manifest_audit": {
+    "completeness_proof": {
+      "manifest.json": {
+        "complete": true,
+        "duplicate_paths": false,
+        "expected_differing_leaf_count": 185,
+        "left_leaf_count": 321,
+        "method": "independent iterative walk of both sealed JSON documents; path-set and both-side value equality checked against recursive diff rows",
+        "missing_paths": [],
+        "observed_diff_row_count": 185,
+        "right_leaf_count": 349,
+        "unexpected_paths": [],
+        "value_mismatch_paths": []
+      },
+      "summary.json": {
+        "complete": true,
+        "duplicate_paths": false,
+        "expected_differing_leaf_count": 130,
+        "left_leaf_count": 463,
+        "method": "independent iterative walk of both sealed JSON documents; path-set and both-side value equality checked against recursive diff rows",
+        "missing_paths": [],
+        "observed_diff_row_count": 130,
+        "right_leaf_count": 1135,
+        "unexpected_paths": [],
+        "value_mismatch_paths": []
+      }
+    },
+    "configuration_fully_explains_2x": false,
+    "environment_read_trace": {
+      "installed_openvino_genai_python_shim": {
+        "environment_reads": [],
+        "evidence": "source trace of the installed openvino_genai Python package found no os.environ/os.getenv access"
+      },
+      "installed_openvino_python_inference_import_path": {
+        "environment_reads": [
+          "OPENVINO_LIB_PATHS"
+        ],
+        "evidence": ".venv-seam/Lib/site-packages/openvino/package_utils.py reads it with os.getenv while resolving runtime libraries",
+        "full_capture": "absent",
+        "historical_equality_verified": false,
+        "pilot_capture": "absent"
+      },
+      "openvino_external_runtime": {
+        "consequence": "runtime-environment equality for the historical runs cannot be established; the reproduction captures runtime-affecting prefix families",
+        "environment_reads": "not introspectable from repository or Python-package source",
+        "sealed_run_capture": "absent"
+      },
+      "seam.backends.local_openvino": {
+        "environment_reads": [],
+        "evidence": "source trace: no os.environ/os.getenv access"
+      },
+      "seam.tools.efilter_run": {
+        "environment_reads": [
+          "ANTHROPIC_API_KEY"
+        ],
+        "full_presence": false,
+        "pilot_presence": false,
+        "use": "presence-only refusal check"
+      }
+    },
+    "explicit_confirmations": [
+      {
+        "equal": true,
+        "field": "INFERENCE_NUM_THREADS",
+        "full": 4,
+        "interpretation": null,
+        "pilot": 4,
+        "verified": true
+      },
+      {
+        "equal": true,
+        "field": "thread_count_inference",
+        "full": {
+          "basis": "backend property, not cpu_count()",
+          "declared": 4
+        },
+        "interpretation": null,
+        "pilot": {
+          "basis": "backend property, not cpu_count()",
+          "declared": 4
+        },
+        "verified": true
+      },
+      {
+        "equal": true,
+        "field": "SCHEDULING_CORE_TYPE",
+        "full": null,
+        "interpretation": "null means the property was not set",
+        "pilot": null,
+        "verified": true
+      },
+      {
+        "equal": true,
+        "field": "ENABLE_CPU_PINNING",
+        "full": null,
+        "interpretation": "null means the property was not set",
+        "pilot": null,
+        "verified": true
+      },
+      {
+        "equal": true,
+        "field": "requested_process_affinity",
+        "full": null,
+        "interpretation": "null means no process-affinity mask was requested",
+        "pilot": null,
+        "verified": true
+      },
+      {
+        "equal": true,
+        "field": "process_affinity_readback",
+        "full": null,
+        "interpretation": "not recorded in either sealed run; absence is equal but actual affinity equality cannot be established",
+        "pilot": null,
+        "verified": false
+      },
+      {
+        "equal": true,
+        "field": "model_ir_sha256",
+        "full": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+        "interpretation": null,
+        "pilot": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+        "verified": true
+      },
+      {
+        "equal": true,
+        "field": "openvino_version",
+        "full": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+        "interpretation": null,
+        "pilot": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+        "verified": true
+      },
+      {
+        "equal": true,
+        "field": "openvino_genai_version",
+        "full": "2026.2.1.0-3123-7dea0459b2a",
+        "interpretation": null,
+        "pilot": "2026.2.1.0-3123-7dea0459b2a",
+        "verified": true
+      },
+      {
+        "equal": true,
+        "field": "power_plan",
+        "full": "Best Performance (ec87a53a-19a6-4f4a-980f-ab27cc929b25)",
+        "interpretation": null,
+        "pilot": "Best Performance (ec87a53a-19a6-4f4a-980f-ab27cc929b25)",
+        "verified": true
+      },
+      {
+        "equal": true,
+        "field": "ANTHROPIC_API_KEY_presence",
+        "full": false,
+        "interpretation": "presence only; key material is never read into the artifact",
+        "pilot": false,
+        "verified": true
+      }
+    ],
+    "full_run_id": "1a0166b9-cbaf-43f4-8d76-bcd7c01841e0",
+    "manifest_diff": [
+      {
+        "category": "git_dirty_files",
+        "left": "?? GOVERNING_DOCS.sha256",
+        "path": "/git_dirty_files/31",
+        "right": "?? AUDIT_LOG_attrib.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? _oa01_ready_check.sh",
+        "path": "/git_dirty_files/32",
+        "right": "?? GOVERNING_DOCS.sha256",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? _oa01_ready_check2.sh",
+        "path": "/git_dirty_files/33",
+        "right": "?? _oa01_ready_check.sh",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? _tmp_analysis_run.py",
+        "path": "/git_dirty_files/34",
+        "right": "?? _oa01_ready_check2.sh",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? _tmp_analyze_snip.txt",
+        "path": "/git_dirty_files/35",
+        "right": "?? _tmp_analysis_run.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? _tmp_bundle_check.py",
+        "path": "/git_dirty_files/36",
+        "right": "?? _tmp_analyze_snip.txt",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? _tmp_run_p512_after_readfix.py",
+        "path": "/git_dirty_files/37",
+        "right": "?? _tmp_bundle_check.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? _tmp_seam_manifest_smoke.py",
+        "path": "/git_dirty_files/38",
+        "right": "?? _tmp_run_p512_after_readfix.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? analysis/_c1_counters.txt",
+        "path": "/git_dirty_files/39",
+        "right": "?? _tmp_seam_manifest_smoke.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? analysis/_c1_drvver.txt",
+        "path": "/git_dirty_files/40",
+        "right": "?? analysis/_c1_counters.txt",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? analysis/_c1_getcounter.txt",
+        "path": "/git_dirty_files/41",
+        "right": "?? analysis/_c1_drvver.txt",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? analysis/_c1_mem_ac.txt",
+        "path": "/git_dirty_files/42",
+        "right": "?? analysis/_c1_getcounter.txt",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? analysis/aipc-c1/fixtures/",
+        "path": "/git_dirty_files/43",
+        "right": "?? analysis/_c1_mem_ac.txt",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? analysis/aipc-c1/tooling_validation/",
+        "path": "/git_dirty_files/44",
+        "right": "?? analysis/aipc-c1/fixtures/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? analysis/aipc-c1/tools/",
+        "path": "/git_dirty_files/45",
+        "right": "?? analysis/aipc-c1/tooling_validation/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? analysis/censor/",
+        "path": "/git_dirty_files/46",
+        "right": "?? analysis/aipc-c1/tools/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? analysis/characterization/",
+        "path": "/git_dirty_files/47",
+        "right": "?? analysis/censor/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? analysis/index_probe/",
+        "path": "/git_dirty_files/48",
+        "right": "?? analysis/characterization/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? analysis/prelim/",
+        "path": "/git_dirty_files/49",
+        "right": "?? analysis/index_probe/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/METHODOLOGY_ARC_TLP01.md",
+        "path": "/git_dirty_files/50",
+        "right": "?? analysis/prelim/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/METHODOLOGY_CAP01.md",
+        "path": "/git_dirty_files/51",
+        "right": "?? apu_characterization/METHODOLOGY_ARC_TLP01.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/METHODOLOGY_TLP01.md",
+        "path": "/git_dirty_files/52",
+        "right": "?? apu_characterization/METHODOLOGY_CAP01.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/PREDICTIONS_CAP01.md",
+        "path": "/git_dirty_files/53",
+        "right": "?? apu_characterization/METHODOLOGY_TLP01.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/PREDICTIONS_TLP01.md",
+        "path": "/git_dirty_files/54",
+        "right": "?? apu_characterization/PREDICTIONS_CAP01.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/PROMOTION_SUMMARY.md",
+        "path": "/git_dirty_files/55",
+        "right": "?? apu_characterization/PREDICTIONS_TLP01.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/bootstrap_oa01.sh",
+        "path": "/git_dirty_files/56",
+        "right": "?? apu_characterization/PROMOTION_SUMMARY.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/cap01/",
+        "path": "/git_dirty_files/57",
+        "right": "?? apu_characterization/bootstrap_oa01.sh",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/oa01/",
+        "path": "/git_dirty_files/58",
+        "right": "?? apu_characterization/cap01/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/out/cap01/",
+        "path": "/git_dirty_files/59",
+        "right": "?? apu_characterization/oa01/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/out/mcp_tax/",
+        "path": "/git_dirty_files/60",
+        "right": "?? apu_characterization/out/cap01/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/out/oa01/",
+        "path": "/git_dirty_files/61",
+        "right": "?? apu_characterization/out/mcp_tax/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/out/tlp01/",
+        "path": "/git_dirty_files/62",
+        "right": "?? apu_characterization/out/oa01/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/out/turntrace_v2/",
+        "path": "/git_dirty_files/63",
+        "right": "?? apu_characterization/out/tlp01/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/requirements-cap01.txt",
+        "path": "/git_dirty_files/64",
+        "right": "?? apu_characterization/out/turntrace_v2/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/requirements-oa01.txt",
+        "path": "/git_dirty_files/65",
+        "right": "?? apu_characterization/requirements-cap01.txt",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/run_cap01_gate.ps1",
+        "path": "/git_dirty_files/66",
+        "right": "?? apu_characterization/requirements-oa01.txt",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/run_cap01_gate.sh",
+        "path": "/git_dirty_files/67",
+        "right": "?? apu_characterization/run_cap01_gate.ps1",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/run_cap01_stage1_audit.sh",
+        "path": "/git_dirty_files/68",
+        "right": "?? apu_characterization/run_cap01_gate.sh",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/run_oa01_gate.ps1",
+        "path": "/git_dirty_files/69",
+        "right": "?? apu_characterization/run_cap01_stage1_audit.sh",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/run_oa01_gate.sh",
+        "path": "/git_dirty_files/70",
+        "right": "?? apu_characterization/run_oa01_gate.ps1",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/run_tlp01_gate.ps1",
+        "path": "/git_dirty_files/71",
+        "right": "?? apu_characterization/run_oa01_gate.sh",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/run_tlp01_gate.sh",
+        "path": "/git_dirty_files/72",
+        "right": "?? apu_characterization/run_tlp01_gate.ps1",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/run_tlp01_s2_collect.ps1",
+        "path": "/git_dirty_files/73",
+        "right": "?? apu_characterization/run_tlp01_gate.sh",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tests/cap01/",
+        "path": "/git_dirty_files/74",
+        "right": "?? apu_characterization/run_tlp01_s2_collect.ps1",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tests/oa01/",
+        "path": "/git_dirty_files/75",
+        "right": "?? apu_characterization/tests/cap01/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tests/tlp01/",
+        "path": "/git_dirty_files/76",
+        "right": "?? apu_characterization/tests/oa01/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tests/turntrace_v2/test_rev_c_p2.py",
+        "path": "/git_dirty_files/77",
+        "right": "?? apu_characterization/tests/tlp01/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tlp01/",
+        "path": "/git_dirty_files/78",
+        "right": "?? apu_characterization/tests/turntrace_v2/test_rev_c_p2.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/_ser02_diagnose.py",
+        "path": "/git_dirty_files/79",
+        "right": "?? apu_characterization/tlp01/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/_tmp_fc_gold_audit.py",
+        "path": "/git_dirty_files/80",
+        "right": "?? apu_characterization/tools/_ser02_diagnose.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/_tmp_fc_traceback.py",
+        "path": "/git_dirty_files/81",
+        "right": "?? apu_characterization/tools/_tmp_fc_gold_audit.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/_tmp_pin_treesitter.sh",
+        "path": "/git_dirty_files/82",
+        "right": "?? apu_characterization/tools/_tmp_fc_traceback.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/audit_cap01_perturbed_gold.py",
+        "path": "/git_dirty_files/83",
+        "right": "?? apu_characterization/tools/_tmp_pin_treesitter.sh",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/audit_cap01_prompt_completeness.py",
+        "path": "/git_dirty_files/84",
+        "right": "?? apu_characterization/tools/audit_cap01_perturbed_gold.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/audit_cap01_verifier_ground_truth.py",
+        "path": "/git_dirty_files/85",
+        "right": "?? apu_characterization/tools/audit_cap01_prompt_completeness.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/audit_ext_near_miss.py",
+        "path": "/git_dirty_files/86",
+        "right": "?? apu_characterization/tools/audit_cap01_verifier_ground_truth.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/build_cap01_corpus.py",
+        "path": "/git_dirty_files/87",
+        "right": "?? apu_characterization/tools/audit_ext_near_miss.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/build_cap01_decision_packet.py",
+        "path": "/git_dirty_files/88",
+        "right": "?? apu_characterization/tools/build_cap01_corpus.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/build_cap01_decision_packet_v2.py",
+        "path": "/git_dirty_files/89",
+        "right": "?? apu_characterization/tools/build_cap01_decision_packet.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/build_cap01_licensed_corpus.py",
+        "path": "/git_dirty_files/90",
+        "right": "?? apu_characterization/tools/build_cap01_decision_packet_v2.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/build_cap01_synthetic_corpus.py",
+        "path": "/git_dirty_files/91",
+        "right": "?? apu_characterization/tools/build_cap01_licensed_corpus.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/build_tlp01_closeout.py",
+        "path": "/git_dirty_files/92",
+        "right": "?? apu_characterization/tools/build_cap01_synthetic_corpus.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/check_cap01_bundle.py",
+        "path": "/git_dirty_files/93",
+        "right": "?? apu_characterization/tools/build_tlp01_closeout.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/check_tlp01_bundle.py",
+        "path": "/git_dirty_files/94",
+        "right": "?? apu_characterization/tools/check_cap01_bundle.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/check_tlp01_v1_quarantine.py",
+        "path": "/git_dirty_files/95",
+        "right": "?? apu_characterization/tools/check_tlp01_bundle.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/close_tlp01_t0.py",
+        "path": "/git_dirty_files/96",
+        "right": "?? apu_characterization/tools/check_tlp01_v1_quarantine.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/collect_tlp01_s2.py",
+        "path": "/git_dirty_files/97",
+        "right": "?? apu_characterization/tools/close_tlp01_t0.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/estimate_cap01_matrix.py",
+        "path": "/git_dirty_files/98",
+        "right": "?? apu_characterization/tools/collect_tlp01_s2.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/extract_tlp01_s1.py",
+        "path": "/git_dirty_files/99",
+        "right": "?? apu_characterization/tools/estimate_cap01_matrix.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/freeze_cap01_pregeneration.py",
+        "path": "/git_dirty_files/100",
+        "right": "?? apu_characterization/tools/extract_tlp01_s1.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/freeze_tlp01_schema.py",
+        "path": "/git_dirty_files/101",
+        "right": "?? apu_characterization/tools/freeze_cap01_pregeneration.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/generate_cap01_pools.py",
+        "path": "/git_dirty_files/102",
+        "right": "?? apu_characterization/tools/freeze_tlp01_schema.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/lock_cap01_protocol.py",
+        "path": "/git_dirty_files/103",
+        "right": "?? apu_characterization/tools/generate_cap01_pools.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/lock_tlp01_protocol.py",
+        "path": "/git_dirty_files/104",
+        "right": "?? apu_characterization/tools/lock_cap01_protocol.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/probe_cap01_frontier_sql_ext.py",
+        "path": "/git_dirty_files/105",
+        "right": "?? apu_characterization/tools/lock_tlp01_protocol.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/repair_cap01_sql_ext_prompts.py",
+        "path": "/git_dirty_files/106",
+        "right": "?? apu_characterization/tools/probe_cap01_frontier_sql_ext.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/run_cap01_stage345.py",
+        "path": "/git_dirty_files/107",
+        "right": "?? apu_characterization/tools/repair_cap01_sql_ext_prompts.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/run_cap01_verification_audit.py",
+        "path": "/git_dirty_files/108",
+        "right": "?? apu_characterization/tools/run_cap01_stage345.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/run_t0_s1_and_gate.sh",
+        "path": "/git_dirty_files/109",
+        "right": "?? apu_characterization/tools/run_cap01_verification_audit.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/run_t0_s2_collect.sh",
+        "path": "/git_dirty_files/110",
+        "right": "?? apu_characterization/tools/run_t0_s1_and_gate.sh",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/run_tlp01_t1.py",
+        "path": "/git_dirty_files/111",
+        "right": "?? apu_characterization/tools/run_t0_s2_collect.sh",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/run_tlp01_t2.py",
+        "path": "/git_dirty_files/112",
+        "right": "?? apu_characterization/tools/run_tlp01_t1.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/triage_cap01_corpus.py",
+        "path": "/git_dirty_files/113",
+        "right": "?? apu_characterization/tools/run_tlp01_t2.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/tools/verify_tlp01_t2_verdicts.py",
+        "path": "/git_dirty_files/114",
+        "right": "?? apu_characterization/tools/triage_cap01_corpus.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/turntrace_v2/C-D1_recalibration_wall.md",
+        "path": "/git_dirty_files/115",
+        "right": "?? apu_characterization/tools/verify_tlp01_t2_verdicts.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/turntrace_v2/C-D2_TT-EDIT_class_i.md",
+        "path": "/git_dirty_files/116",
+        "right": "?? apu_characterization/turntrace_v2/C-D1_recalibration_wall.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/turntrace_v2/C-D2_TT-RET_class_i.md",
+        "path": "/git_dirty_files/117",
+        "right": "?? apu_characterization/turntrace_v2/C-D2_TT-EDIT_class_i.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/turntrace_v2/calibrate_rev_c.py",
+        "path": "/git_dirty_files/118",
+        "right": "?? apu_characterization/turntrace_v2/C-D2_TT-RET_class_i.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/turntrace_v2/model_lock.py",
+        "path": "/git_dirty_files/119",
+        "right": "?? apu_characterization/turntrace_v2/calibrate_rev_c.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/turntrace_v2/model_lock_rev_c.json",
+        "path": "/git_dirty_files/120",
+        "right": "?? apu_characterization/turntrace_v2/model_lock.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? apu_characterization/turntrace_v2/run_rev_c_class_i.py",
+        "path": "/git_dirty_files/121",
+        "right": "?? apu_characterization/turntrace_v2/model_lock_rev_c.json",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? censor/",
+        "path": "/git_dirty_files/122",
+        "right": "?? apu_characterization/turntrace_v2/run_rev_c_class_i.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? configs/canary.yaml",
+        "path": "/git_dirty_files/123",
+        "right": "?? censor/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? configs/efilter.yaml",
+        "path": "/git_dirty_files/124",
+        "right": "?? configs/attrib.yaml",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? configs/energy.yaml",
+        "path": "/git_dirty_files/125",
+        "right": "?? configs/canary.yaml",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? configs/models/",
+        "path": "/git_dirty_files/126",
+        "right": "?? configs/efilter.yaml",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? configs/mslice.yaml",
+        "path": "/git_dirty_files/127",
+        "right": "?? configs/energy.yaml",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? configs/pricing/",
+        "path": "/git_dirty_files/128",
+        "right": "?? configs/models/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? configs/project_state.yaml",
+        "path": "/git_dirty_files/129",
+        "right": "?? configs/mslice.yaml",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? configs/tasks/",
+        "path": "/git_dirty_files/130",
+        "right": "?? configs/pricing/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? corpus/",
+        "path": "/git_dirty_files/131",
+        "right": "?? configs/project_state.yaml",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? derived/",
+        "path": "/git_dirty_files/132",
+        "right": "?? configs/tasks/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? docs/CANDIDATE_STUDIES.md",
+        "path": "/git_dirty_files/133",
+        "right": "?? corpus/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? docs/COLLABORATOR_PROJECT_invar.md",
+        "path": "/git_dirty_files/134",
+        "right": "?? derived/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? docs/CURSOR_PROMPT_efilter.md",
+        "path": "/git_dirty_files/135",
+        "right": "?? docs/CANDIDATE_STUDIES.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? docs/EXPERIMENT_attrib_spec.md",
+        "path": "/git_dirty_files/136",
+        "right": "?? docs/COLLABORATOR_PROJECT_invar.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? docs/EXPERIMENT_escalation_filter.md",
+        "path": "/git_dirty_files/137",
+        "right": "?? docs/CURSOR_PROMPT_attrib_resume.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? docs/MEETING_BRIEF_hybrid_execution.md",
+        "path": "/git_dirty_files/138",
+        "right": "?? docs/CURSOR_PROMPT_attrib_sweep.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? docs/SEAM_opening_pitch.md",
+        "path": "/git_dirty_files/139",
+        "right": "?? docs/CURSOR_PROMPT_efilter.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? docs/pdf/",
+        "path": "/git_dirty_files/140",
+        "right": "?? docs/EXPERIMENT_attrib_results.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? docs/upstream/",
+        "path": "/git_dirty_files/141",
+        "right": "?? docs/EXPERIMENT_attrib_spec.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? figures/",
+        "path": "/git_dirty_files/142",
+        "right": "?? docs/EXPERIMENT_escalation_filter.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? models/",
+        "path": "/git_dirty_files/143",
+        "right": "?? docs/MEETING_BRIEF_hybrid_execution.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? raw/0dfd5bfb-0e82-495c-8648-29cd3fe74140/",
+        "path": "/git_dirty_files/144",
+        "right": "?? docs/SEAM_opening_pitch.md",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? raw/472d2200-6deb-4dba-90b7-e50938a7d719/",
+        "path": "/git_dirty_files/145",
+        "right": "?? docs/pdf/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? raw/5eb09eba-b321-4b7e-b7df-e9b01194d388/",
+        "path": "/git_dirty_files/146",
+        "right": "?? docs/upstream/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? raw/911965cf-257c-4276-954b-17611a5e75eb/",
+        "path": "/git_dirty_files/147",
+        "right": "?? figures/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? raw/fc262806-debf-4905-828b-2b8061dc0333/",
+        "path": "/git_dirty_files/148",
+        "right": "?? models/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? seam/agent/",
+        "path": "/git_dirty_files/149",
+        "right": "?? raw/0dfd5bfb-0e82-495c-8648-29cd3fe74140/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? seam/analysis/",
+        "path": "/git_dirty_files/150",
+        "right": "?? raw/1fd81d2a-3bae-40b1-b2a6-b9c5a50586b1/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? seam/audit_append.py",
+        "path": "/git_dirty_files/151",
+        "right": "?? raw/472d2200-6deb-4dba-90b7-e50938a7d719/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? seam/backends/",
+        "path": "/git_dirty_files/152",
+        "right": "?? raw/5eb09eba-b321-4b7e-b7df-e9b01194d388/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? seam/budget.py",
+        "path": "/git_dirty_files/153",
+        "right": "?? raw/6b40e3fe-cbc1-4b6a-8867-46650b4ead61/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? seam/credentials.py",
+        "path": "/git_dirty_files/154",
+        "right": "?? raw/911965cf-257c-4276-954b-17611a5e75eb/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? seam/kvmath.py",
+        "path": "/git_dirty_files/155",
+        "right": "?? raw/d8f0875b-dfc5-473f-8260-8c8827d18295/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? seam/locks.py",
+        "path": "/git_dirty_files/156",
+        "right": "?? raw/fc262806-debf-4905-828b-2b8061dc0333/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? seam/model_provenance.py",
+        "path": "/git_dirty_files/157",
+        "right": "?? seam/agent/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? seam/reasoning.py",
+        "path": "/git_dirty_files/158",
+        "right": "?? seam/analysis/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? seam/telemetry/",
+        "path": "/git_dirty_files/159",
+        "right": "?? seam/audit_append.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? seam/tools/",
+        "path": "/git_dirty_files/160",
+        "right": "?? seam/backends/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_affinity_baseline.py",
+        "path": "/git_dirty_files/161",
+        "right": "?? seam/bench/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_affinity_fail_loud.py",
+        "path": "/git_dirty_files/162",
+        "right": "?? seam/budget.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_affinity_phase_split.py",
+        "path": "/git_dirty_files/163",
+        "right": "?? seam/credentials.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_budget.py",
+        "path": "/git_dirty_files/164",
+        "right": "?? seam/kvmath.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_budget_cache_projection.py",
+        "path": "/git_dirty_files/165",
+        "right": "?? seam/locks.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_charging_complete.py",
+        "path": "/git_dirty_files/166",
+        "right": "?? seam/model_provenance.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_confinement_classify.py",
+        "path": "/git_dirty_files/167",
+        "right": "?? seam/reasoning.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_credentials.py",
+        "path": "/git_dirty_files/168",
+        "right": "?? seam/telemetry/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_efilter_instrumentation.py",
+        "path": "/git_dirty_files/169",
+        "right": "?? seam/tools/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_efilter_replay.py",
+        "path": "/git_dirty_files/170",
+        "right": "?? tests/test_affinity_baseline.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_fetch_progress.py",
+        "path": "/git_dirty_files/171",
+        "right": "?? tests/test_affinity_fail_loud.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_fetch_verification.py",
+        "path": "/git_dirty_files/172",
+        "right": "?? tests/test_affinity_phase_split.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_model_provenance.py",
+        "path": "/git_dirty_files/173",
+        "right": "?? tests/test_attrib_bench.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_powerstate_profiles.py",
+        "path": "/git_dirty_files/174",
+        "right": "?? tests/test_attrib_fit.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_probe_tls.py",
+        "path": "/git_dirty_files/175",
+        "right": "?? tests/test_budget.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_proportions.py",
+        "path": "/git_dirty_files/176",
+        "right": "?? tests/test_budget_cache_projection.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_reasoning.py",
+        "path": "/git_dirty_files/177",
+        "right": "?? tests/test_charging_complete.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_reconciliation_v2.py",
+        "path": "/git_dirty_files/178",
+        "right": "?? tests/test_confinement_classify.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_s1_battery_char.py",
+        "path": "/git_dirty_files/179",
+        "right": "?? tests/test_credentials.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_slice_config.py",
+        "path": "/git_dirty_files/180",
+        "right": "?? tests/test_efilter_instrumentation.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_slice_policy.py",
+        "path": "/git_dirty_files/181",
+        "right": "?? tests/test_efilter_replay.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tests/test_ttft_resolve.py",
+        "path": "/git_dirty_files/182",
+        "right": "?? tests/test_fetch_progress.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": "?? tools/",
+        "path": "/git_dirty_files/183",
+        "right": "?? tests/test_fetch_verification.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/git_dirty_files/184",
+        "right": "?? tests/test_model_provenance.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/git_dirty_files/185",
+        "right": "?? tests/test_powerstate_profiles.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/git_dirty_files/186",
+        "right": "?? tests/test_probe_tls.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/git_dirty_files/187",
+        "right": "?? tests/test_proportions.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/git_dirty_files/188",
+        "right": "?? tests/test_reasoning.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/git_dirty_files/189",
+        "right": "?? tests/test_reconciliation_v2.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/git_dirty_files/190",
+        "right": "?? tests/test_s1_battery_char.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/git_dirty_files/191",
+        "right": "?? tests/test_slice_config.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/git_dirty_files/192",
+        "right": "?? tests/test_slice_policy.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/git_dirty_files/193",
+        "right": "?? tests/test_ttft_resolve.py",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "git_dirty_files",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/git_dirty_files/194",
+        "right": "?? tools/",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "integrity",
+        "left": "35aa8005bbedea5056da73941c46ef798fb8f407917e9cea72238fefc6967fea",
+        "path": "/integrity/raw_sha256",
+        "right": "e58ef392a3b518c0696f41aa340d7ef0e6c241c979b583ea720c0bbe96fdde46",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "run_id",
+        "left": "d8f0875b-dfc5-473f-8260-8c8827d18295",
+        "path": "/run_id",
+        "right": "1a0166b9-cbaf-43f4-8d76-bcd7c01841e0",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "timestamp_utc",
+        "left": "2026-08-03T23:04:26.906076+00:00",
+        "path": "/timestamp_utc",
+        "right": "2026-08-03T23:58:29.493320+00:00",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": "efilter_pilot",
+        "path": "/workload/kind",
+        "right": "efilter_stage1",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/3",
+        "right": "T19",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/4",
+        "right": "T10",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/5",
+        "right": "T02",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/6",
+        "right": "T01",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/7",
+        "right": "T16",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/8",
+        "right": "T14",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/9",
+        "right": "T18",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/10",
+        "right": "T06",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/11",
+        "right": "T11",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/12",
+        "right": "T15",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/13",
+        "right": "T20",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/14",
+        "right": "T13",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/15",
+        "right": "T03",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/16",
+        "right": "T12",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/17",
+        "right": "T17",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/18",
+        "right": "T08",
+        "scope": "manifest.json"
+      },
+      {
+        "category": "workload",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/workload/task_ids/19",
+        "right": "T05",
+        "scope": "manifest.json"
+      }
+    ],
+    "pilot_run_id": "d8f0875b-dfc5-473f-8260-8c8827d18295",
+    "schema_version": 1,
+    "seals": {
+      "full": {
+        "files": [
+          "efilter_run.json",
+          "events.ndjson",
+          "manifest.json",
+          "steps.ndjson",
+          "summary.json"
+        ],
+        "n_files": 5,
+        "raw_sha256": "7861a7c6ad94402b3f0bf11ec47ceb8227c421380f157be98cfe073a0ecea60f",
+        "run_id": "1a0166b9-cbaf-43f4-8d76-bcd7c01841e0",
+        "sealed_at_utc": "2026-08-03T23:58:29.881021+00:00",
+        "self_check": "pass"
+      },
+      "pilot": {
+        "files": [
+          "efilter_run.json",
+          "events.ndjson",
+          "manifest.json",
+          "steps.ndjson",
+          "summary.json"
+        ],
+        "n_files": 5,
+        "raw_sha256": "d0ba2eb391ffaead217f1928ec0ed1c645a905b940a43750cca535139426cd1d",
+        "run_id": "d8f0875b-dfc5-473f-8260-8c8827d18295",
+        "sealed_at_utc": "2026-08-03T23:04:27.347464+00:00",
+        "self_check": "pass"
+      }
+    },
+    "source_integrity_verified": {
+      "full": true,
+      "pilot": true
+    },
+    "source_sha256": {
+      "full_manifest": "6022a7227bbc5171af2457055d8139d639ed62840259659f78f7f8caf5cdc6f8",
+      "full_summary": "3b03348757f6e7f8046cf98625ebe6029b4c2251179b7e82fc11d591967db954",
+      "pilot_manifest": "7b6c75002232b5d90afec85f6ef786c401882fceba0eb27cae3b47915c5098db",
+      "pilot_summary": "3a4439470e5cd61afbc8125ed4a14a1921e5a20f68beb32ec3d78a4fbce15ec1"
+    },
+    "step1_verdict": "UNRESOLVED",
+    "summary_diff": [
+      {
+        "category": "cache_probe",
+        "left": 0.3884135097232417,
+        "path": "/cache_probe/ttft_ratio_second_over_control",
+        "right": 0.32624735370278,
+        "scope": "summary.json"
+      },
+      {
+        "category": "cache_probe",
+        "left": 0.9936012637276258,
+        "path": "/cache_probe/ttft_ratio_second_over_first",
+        "right": 1.7078918708615194,
+        "scope": "summary.json"
+      },
+      {
+        "category": "cache_probe",
+        "left": 0.204274398,
+        "path": "/cache_probe/ttft_s/0",
+        "right": 0.47226419,
+        "scope": "summary.json"
+      },
+      {
+        "category": "cache_probe",
+        "left": 0.2029673,
+        "path": "/cache_probe/ttft_s/1",
+        "right": 0.806576171,
+        "scope": "summary.json"
+      },
+      {
+        "category": "cache_probe",
+        "left": 0.522554687,
+        "path": "/cache_probe/ttft_s/2",
+        "right": 2.472284179,
+        "scope": "summary.json"
+      },
+      {
+        "category": "config_sha256",
+        "left": "1e68a27aec766431d598d5bdd6d4bb01f76f7403dbd1e8e6bba9e70a66e27c06",
+        "path": "/config_sha256/efilter_yaml",
+        "right": "f683224d7cdf1869886f8de7f59c46d123e0fad4d8643f6c4ef957712ac87c2c",
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 656,
+        "path": "/context_growth/curve/0/max_context_tokens",
+        "right": 665,
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 651.3333333333334,
+        "path": "/context_growth/curve/0/mean_context_tokens",
+        "right": 654.8,
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 649,
+        "path": "/context_growth/curve/0/min_context_tokens",
+        "right": 648,
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 3,
+        "path": "/context_growth/curve/0/n",
+        "right": 20,
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 842,
+        "path": "/context_growth/curve/1/max_context_tokens",
+        "right": 946,
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 838.0,
+        "path": "/context_growth/curve/1/mean_context_tokens",
+        "right": 854.2,
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 836,
+        "path": "/context_growth/curve/1/min_context_tokens",
+        "right": 774,
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 3,
+        "path": "/context_growth/curve/1/n",
+        "right": 20,
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 1006,
+        "path": "/context_growth/curve/2/max_context_tokens",
+        "right": 1481,
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 1006.0,
+        "path": "/context_growth/curve/2/mean_context_tokens",
+        "right": 1101.4,
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 1006,
+        "path": "/context_growth/curve/2/min_context_tokens",
+        "right": 986,
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 1,
+        "path": "/context_growth/curve/2/n",
+        "right": 5,
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 1170,
+        "path": "/context_growth/curve/3/max_context_tokens",
+        "right": 1659,
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 1170.0,
+        "path": "/context_growth/curve/3/mean_context_tokens",
+        "right": 1414.5,
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 1,
+        "path": "/context_growth/curve/3/n",
+        "right": 2,
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 2.803480040941658,
+        "path": "/context_growth/growth_ratio_last_over_first",
+        "right": 2.7886377519853394,
+        "scope": "summary.json"
+      },
+      {
+        "category": "context_growth",
+        "left": 167.8095238095238,
+        "path": "/context_growth/mean_growth_tokens_per_step",
+        "right": 167.31428571428572,
+        "scope": "summary.json"
+      },
+      {
+        "category": "escalation",
+        "left": 293886830.33550644,
+        "path": "/escalation/headroom_factor",
+        "right": 70941524.35111399,
+        "scope": "summary.json"
+      },
+      {
+        "category": "escalation",
+        "left": 3.4026703369401825,
+        "path": "/escalation/max_observed_t_pred_s",
+        "right": 14.096116613602158,
+        "scope": "summary.json"
+      },
+      {
+        "category": "mode",
+        "left": "pilot",
+        "path": "/mode",
+        "right": "full",
+        "scope": "summary.json"
+      },
+      {
+        "category": "n_steps",
+        "left": 12,
+        "path": "/n_steps",
+        "right": 51,
+        "scope": "summary.json"
+      },
+      {
+        "category": "n_tasks",
+        "left": 3,
+        "path": "/n_tasks",
+        "right": 20,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": 99.66666666666667,
+        "path": "/per_task/0/frequency/mean_pct_of_max_per_cpu/7",
+        "right": 100.0,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": 96.0,
+        "path": "/per_task/0/frequency/min_pct_of_max_per_cpu/7",
+        "right": 100.0,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": 12,
+        "path": "/per_task/0/frequency/n",
+        "right": 50,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": 12.8427119,
+        "path": "/per_task/0/jct_s",
+        "right": 55.1990615,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": 3773841408,
+        "path": "/per_task/0/peak_rss_bytes",
+        "right": 2595811328,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": 12.843332699965686,
+        "path": "/per_task/0/wall_s",
+        "right": 55.20124329999089,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": 14,
+        "path": "/per_task/1/frequency/n",
+        "right": 34,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": 15.5070877,
+        "path": "/per_task/1/jct_s",
+        "right": 36.9622045,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": 3778207744,
+        "path": "/per_task/1/peak_rss_bytes",
+        "right": 2567782400,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": 15.507142100017518,
+        "path": "/per_task/1/wall_s",
+        "right": 36.96354249998694,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": 99.95,
+        "path": "/per_task/2/frequency/mean_pct_of_max_per_cpu/1",
+        "right": 100.0,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": 96.0,
+        "path": "/per_task/2/frequency/min_pct_of_max_per_cpu/1",
+        "right": 100.0,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": 80,
+        "path": "/per_task/2/frequency/n",
+        "right": 125,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": 87.8423306,
+        "path": "/per_task/2/jct_s",
+        "right": 137.6300199,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": 3855052800,
+        "path": "/per_task/2/peak_rss_bytes",
+        "right": 2690088960,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": 87.84243449999485,
+        "path": "/per_task/2/wall_s",
+        "right": 137.63007479999214,
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/3",
+        "right": {
+          "completion_tokens_by_step": [
+            117,
+            191
+          ],
+          "context_tokens_by_step": [
+            662,
+            819
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 17
+          },
+          "jct_s": 18.3724743,
+          "kv_bytes_resident_by_step": [
+            57434112,
+            74465280
+          ],
+          "order_index": 3,
+          "peak_rss_bytes": 2712801280,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            662,
+            819
+          ],
+          "realized_steps": 2,
+          "success": true,
+          "task_id": "T19",
+          "terminated_reason": "submitted",
+          "wall_s": 18.372534599970095
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/4",
+        "right": {
+          "completion_tokens_by_step": [
+            139,
+            150
+          ],
+          "context_tokens_by_step": [
+            651,
+            831
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 17
+          },
+          "jct_s": 17.8702566,
+          "kv_bytes_resident_by_step": [
+            58245120,
+            72327168
+          ],
+          "order_index": 4,
+          "peak_rss_bytes": 2718474240,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            651,
+            831
+          ],
+          "realized_steps": 2,
+          "success": true,
+          "task_id": "T10",
+          "terminated_reason": "submitted",
+          "wall_s": 17.87031010002829
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/5",
+        "right": {
+          "completion_tokens_by_step": [
+            160,
+            133
+          ],
+          "context_tokens_by_step": [
+            654,
+            855
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 17
+          },
+          "jct_s": 18.4045946,
+          "kv_bytes_resident_by_step": [
+            60014592,
+            72843264
+          ],
+          "order_index": 5,
+          "peak_rss_bytes": 2725343232,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            654,
+            855
+          ],
+          "realized_steps": 2,
+          "success": true,
+          "task_id": "T02",
+          "terminated_reason": "submitted",
+          "wall_s": 18.404629299999215
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/6",
+        "right": {
+          "completion_tokens_by_step": [
+            224,
+            79
+          ],
+          "context_tokens_by_step": [
+            649,
+            900
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 21
+          },
+          "jct_s": 23.0072352,
+          "kv_bytes_resident_by_step": [
+            64364544,
+            72179712
+          ],
+          "order_index": 6,
+          "peak_rss_bytes": 2744713216,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            649,
+            900
+          ],
+          "realized_steps": 2,
+          "success": true,
+          "task_id": "T01",
+          "terminated_reason": "submitted",
+          "wall_s": 23.007278400007635
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/7",
+        "right": {
+          "completion_tokens_by_step": [
+            265,
+            512,
+            160,
+            192
+          ],
+          "context_tokens_by_step": [
+            654,
+            946,
+            1481,
+            1659
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 84
+          },
+          "jct_s": 92.1229734,
+          "kv_bytes_resident_by_step": [
+            67756032,
+            107495424,
+            120987648,
+            136470528
+          ],
+          "order_index": 7,
+          "peak_rss_bytes": 2858692608,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            654,
+            946,
+            1481,
+            1659
+          ],
+          "realized_steps": 4,
+          "success": true,
+          "task_id": "T16",
+          "terminated_reason": "submitted",
+          "wall_s": 92.12301460001618
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/8",
+        "right": {
+          "completion_tokens_by_step": [
+            152,
+            78
+          ],
+          "context_tokens_by_step": [
+            648,
+            838
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 15
+          },
+          "jct_s": 15.8621473,
+          "kv_bytes_resident_by_step": [
+            58982400,
+            67534848
+          ],
+          "order_index": 8,
+          "peak_rss_bytes": 2854707200,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            648,
+            838
+          ],
+          "realized_steps": 2,
+          "success": true,
+          "task_id": "T14",
+          "terminated_reason": "submitted",
+          "wall_s": 15.86276780004846
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/9",
+        "right": {
+          "completion_tokens_by_step": [
+            208,
+            60,
+            102
+          ],
+          "context_tokens_by_step": [
+            654,
+            900,
+            988
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 24
+          },
+          "jct_s": 26.2188212,
+          "kv_bytes_resident_by_step": [
+            63553536,
+            70778880,
+            80363520
+          ],
+          "order_index": 9,
+          "peak_rss_bytes": 2857570304,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            654,
+            900,
+            988
+          ],
+          "realized_steps": 3,
+          "success": true,
+          "task_id": "T18",
+          "terminated_reason": "submitted",
+          "wall_s": 26.218861100031063
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/10",
+        "right": {
+          "completion_tokens_by_step": [
+            147,
+            93
+          ],
+          "context_tokens_by_step": [
+            655,
+            842
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 15
+          },
+          "jct_s": 16.1295878,
+          "kv_bytes_resident_by_step": [
+            59129856,
+            68935680
+          ],
+          "order_index": 10,
+          "peak_rss_bytes": 2857717760,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            655,
+            842
+          ],
+          "realized_steps": 2,
+          "success": true,
+          "task_id": "T06",
+          "terminated_reason": "submitted",
+          "wall_s": 16.129662799998187
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/11",
+        "right": {
+          "completion_tokens_by_step": [
+            245,
+            76,
+            97
+          ],
+          "context_tokens_by_step": [
+            657,
+            941,
+            1046
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 26
+          },
+          "jct_s": 28.17426,
+          "kv_bytes_resident_by_step": [
+            66502656,
+            74981376,
+            84271104
+          ],
+          "order_index": 11,
+          "peak_rss_bytes": 2703020032,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            657,
+            941,
+            1046
+          ],
+          "realized_steps": 3,
+          "success": true,
+          "task_id": "T11",
+          "terminated_reason": "submitted",
+          "wall_s": 28.17494890000671
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/12",
+        "right": {
+          "completion_tokens_by_step": [
+            124,
+            94
+          ],
+          "context_tokens_by_step": [
+            658,
+            821
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 19
+          },
+          "jct_s": 20.3628748,
+          "kv_bytes_resident_by_step": [
+            57655296,
+            67461120
+          ],
+          "order_index": 12,
+          "peak_rss_bytes": 2694991872,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            658,
+            821
+          ],
+          "realized_steps": 2,
+          "success": true,
+          "task_id": "T15",
+          "terminated_reason": "submitted",
+          "wall_s": 20.363145700015593
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/13",
+        "right": {
+          "completion_tokens_by_step": [
+            85,
+            111
+          ],
+          "context_tokens_by_step": [
+            656,
+            782
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 15
+          },
+          "jct_s": 15.697386,
+          "kv_bytes_resident_by_step": [
+            54632448,
+            65839104
+          ],
+          "order_index": 13,
+          "peak_rss_bytes": 2714079232,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            656,
+            782
+          ],
+          "realized_steps": 2,
+          "success": true,
+          "task_id": "T20",
+          "terminated_reason": "submitted",
+          "wall_s": 15.697456100024283
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/14",
+        "right": {
+          "completion_tokens_by_step": [
+            172,
+            165
+          ],
+          "context_tokens_by_step": [
+            660,
+            881
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 24
+          },
+          "jct_s": 26.4259604,
+          "kv_bytes_resident_by_step": [
+            61341696,
+            77119488
+          ],
+          "order_index": 14,
+          "peak_rss_bytes": 2699472896,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            660,
+            881
+          ],
+          "realized_steps": 2,
+          "success": true,
+          "task_id": "T13",
+          "terminated_reason": "submitted",
+          "wall_s": 26.426110800006427
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/15",
+        "right": {
+          "completion_tokens_by_step": [
+            129,
+            197
+          ],
+          "context_tokens_by_step": [
+            665,
+            843
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 24
+          },
+          "jct_s": 26.2314476,
+          "kv_bytes_resident_by_step": [
+            58540032,
+            76677120
+          ],
+          "order_index": 15,
+          "peak_rss_bytes": 2709168128,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            665,
+            843
+          ],
+          "realized_steps": 2,
+          "success": true,
+          "task_id": "T03",
+          "terminated_reason": "submitted",
+          "wall_s": 26.23154519998934
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/16",
+        "right": {
+          "completion_tokens_by_step": [
+            84,
+            124
+          ],
+          "context_tokens_by_step": [
+            657,
+            774
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 14
+          },
+          "jct_s": 15.3325887,
+          "kv_bytes_resident_by_step": [
+            54632448,
+            66207744
+          ],
+          "order_index": 16,
+          "peak_rss_bytes": 2697117696,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            657,
+            774
+          ],
+          "realized_steps": 2,
+          "success": true,
+          "task_id": "T12",
+          "terminated_reason": "submitted",
+          "wall_s": 15.332861399976537
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/17",
+        "right": {
+          "completion_tokens_by_step": [
+            180,
+            77
+          ],
+          "context_tokens_by_step": [
+            657,
+            878
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 24
+          },
+          "jct_s": 25.4984619,
+          "kv_bytes_resident_by_step": [
+            61710336,
+            70410240
+          ],
+          "order_index": 17,
+          "peak_rss_bytes": 2700767232,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            657,
+            878
+          ],
+          "realized_steps": 2,
+          "success": true,
+          "task_id": "T17",
+          "terminated_reason": "submitted",
+          "wall_s": 25.498533200006932
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/18",
+        "right": {
+          "completion_tokens_by_step": [
+            132,
+            116
+          ],
+          "context_tokens_by_step": [
+            651,
+            822
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 21
+          },
+          "jct_s": 22.5095197,
+          "kv_bytes_resident_by_step": [
+            57729024,
+            69156864
+          ],
+          "order_index": 18,
+          "peak_rss_bytes": 2701135872,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            651,
+            822
+          ],
+          "realized_steps": 2,
+          "success": true,
+          "task_id": "T08",
+          "terminated_reason": "submitted",
+          "wall_s": 22.509578299999703
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "per_task",
+        "left": {
+          "__missing__": true
+        },
+        "path": "/per_task/19",
+        "right": {
+          "completion_tokens_by_step": [
+            205,
+            61,
+            105
+          ],
+          "context_tokens_by_step": [
+            654,
+            897,
+            986
+          ],
+          "frequency": {
+            "mean_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "methods": [
+              "win32pdh"
+            ],
+            "min_pct_of_max_per_cpu": [
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0,
+              100.0
+            ],
+            "n": 27
+          },
+          "jct_s": 29.6087659,
+          "kv_bytes_resident_by_step": [
+            63332352,
+            70631424,
+            80437248
+          ],
+          "order_index": 19,
+          "peak_rss_bytes": 2702311424,
+          "power_after": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "power_before": {
+            "battery_pct": 100.0,
+            "battery_saver": false,
+            "charging": false,
+            "on_battery": false
+          },
+          "prompt_tokens_new_by_step": [
+            654,
+            897,
+            986
+          ],
+          "realized_steps": 3,
+          "success": true,
+          "task_id": "T05",
+          "terminated_reason": "submitted",
+          "wall_s": 29.608806399977766
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "policy",
+        "left": 82,
+        "path": "/policy/n_out_observed_medians/answer_synthesis",
+        "right": 105,
+        "scope": "summary.json"
+      },
+      {
+        "category": "policy",
+        "left": "config seed (pilot); frozen from pilot medians for the full run",
+        "path": "/policy/n_out_pred_source",
+        "right": "frozen from the pilot's observed medians (configs/efilter.yaml)",
+        "scope": "summary.json"
+      },
+      {
+        "category": "policy",
+        "left": null,
+        "path": "/policy/n_out_pred_tokens",
+        "right": {
+          "answer_synthesis": 82,
+          "tool_call_synthesis": 142
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "policy",
+        "left": 16,
+        "path": "/policy/n_out_pred_tokens_used/answer_synthesis",
+        "right": 82,
+        "scope": "summary.json"
+      },
+      {
+        "category": "policy",
+        "left": 64,
+        "path": "/policy/n_out_pred_tokens_used/tool_call_synthesis",
+        "right": 142,
+        "scope": "summary.json"
+      },
+      {
+        "category": "quiesce",
+        "left": "2026-08-03T22:57:50.456485+00:00",
+        "path": "/quiesce/captured_utc",
+        "right": "2026-08-03T23:24:08.185388+00:00",
+        "scope": "summary.json"
+      },
+      {
+        "category": "run_wall_s",
+        "left": 236.91646639996907,
+        "path": "/run_wall_s",
+        "right": 1812.442690900003,
+        "scope": "summary.json"
+      },
+      {
+        "category": "success_rate",
+        "left": 0.6666666666666666,
+        "path": "/success_rate",
+        "right": 0.95,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 21.210178621484868,
+        "path": "/throughput/r_decode_tok_s",
+        "right": 10.650699012168726,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 3174.55252331561,
+        "path": "/throughput/r_prefill_tok_s",
+        "right": 1601.501497743809,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 16,
+        "path": "/throughput/warmup/n_generations",
+        "right": 9,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 15,
+        "path": "/throughput/warmup/n_scored",
+        "right": 8,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 0.14084526069244102,
+        "path": "/throughput/warmup/r_decode_cv",
+        "right": 0.17013389013652963,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 21.210178621484868,
+        "path": "/throughput/warmup/r_decode_tok_s",
+        "right": 10.650699012168726,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 0.1937884400753941,
+        "path": "/throughput/warmup/r_prefill_cv",
+        "right": 0.03632092162433752,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 3174.55252331561,
+        "path": "/throughput/warmup/r_prefill_tok_s",
+        "right": 1601.501497743809,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 34.684,
+        "path": "/throughput/warmup/samples/0/elapsed_s",
+        "right": 32.273,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 7.833750210267646,
+        "path": "/throughput/warmup/samples/0/r_decode_tok_s",
+        "right": 8.682628520213578,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 31.985585122863164,
+        "path": "/throughput/warmup/samples/0/r_prefill_tok_s",
+        "right": 33.66167924563149,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 20.477974609,
+        "path": "/throughput/warmup/samples/0/ttft_s",
+        "right": 19.458328125,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 34.6474333,
+        "path": "/throughput/warmup/samples/0/wall_s",
+        "right": 32.2424752,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 45.089,
+        "path": "/throughput/warmup/samples/1/elapsed_s",
+        "right": 42.987,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 11.20225824269158,
+        "path": "/throughput/warmup/samples/1/r_decode_tok_s",
+        "right": 10.814246604651945,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 1414.3126370300254,
+        "path": "/throughput/warmup/samples/1/r_prefill_tok_s",
+        "right": 1509.9124472772287,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 0.463122497,
+        "path": "/throughput/warmup/samples/1/ttft_s",
+        "right": 0.433799987,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 10.3718389,
+        "path": "/throughput/warmup/samples/1/wall_s",
+        "right": 10.6980379,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 52.292,
+        "path": "/throughput/warmup/samples/2/elapsed_s",
+        "right": 53.648,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 16.238689927287577,
+        "path": "/throughput/warmup/samples/2/r_decode_tok_s",
+        "right": 10.810909367767183,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 1792.027361647745,
+        "path": "/throughput/warmup/samples/2/r_prefill_tok_s",
+        "right": 1665.7786625263734,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 0.365507812,
+        "path": "/throughput/warmup/samples/2/ttft_s",
+        "right": 0.393209503,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 7.2010346,
+        "path": "/throughput/warmup/samples/2/wall_s",
+        "right": 10.6606159,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 58.134,
+        "path": "/throughput/warmup/samples/3/elapsed_s",
+        "right": 64.434,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 19.798677776447487,
+        "path": "/throughput/warmup/samples/3/r_decode_tok_s",
+        "right": 10.703057829536034,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 2812.7619277187864,
+        "path": "/throughput/warmup/samples/3/r_prefill_tok_s",
+        "right": 1588.3543507978068,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 0.232867202,
+        "path": "/throughput/warmup/samples/3/ttft_s",
+        "right": 0.412376495,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 5.8393022,
+        "path": "/throughput/warmup/samples/3/wall_s",
+        "right": 10.7832445,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 63.657,
+        "path": "/throughput/warmup/samples/4/elapsed_s",
+        "right": 75.688,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 20.948944902304007,
+        "path": "/throughput/warmup/samples/4/r_decode_tok_s",
+        "right": 10.231653305622102,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 2956.7889936017027,
+        "path": "/throughput/warmup/samples/4/r_prefill_tok_s",
+        "right": 1624.7440894730844,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 0.221524093,
+        "path": "/throughput/warmup/samples/4/ttft_s",
+        "right": 0.403140411,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 5.5201203,
+        "path": "/throughput/warmup/samples/4/wall_s",
+        "right": 11.251827,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 69.046,
+        "path": "/throughput/warmup/samples/5/elapsed_s",
+        "right": 86.587,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 21.43726513763233,
+        "path": "/throughput/warmup/samples/5/r_decode_tok_s",
+        "right": 10.598340194801416,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 3149.9697167682366,
+        "path": "/throughput/warmup/samples/5/r_prefill_tok_s",
+        "right": 1544.2645818921917,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 0.207938507,
+        "path": "/throughput/warmup/samples/5/ttft_s",
+        "right": 0.424150115,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 5.3858378,
+        "path": "/throughput/warmup/samples/5/wall_s",
+        "right": 10.8974882,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 74.5,
+        "path": "/throughput/warmup/samples/6/elapsed_s",
+        "right": 97.487,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 21.149202693235345,
+        "path": "/throughput/warmup/samples/6/r_decode_tok_s",
+        "right": 10.590592167265013,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 3233.474172607768,
+        "path": "/throughput/warmup/samples/6/r_prefill_tok_s",
+        "right": 1576.407243704401,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 0.202568496,
+        "path": "/throughput/warmup/samples/6/ttft_s",
+        "right": 0.41550177,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 5.4509933,
+        "path": "/throughput/warmup/samples/6/wall_s",
+        "right": 10.8965021,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 79.939,
+        "path": "/throughput/warmup/samples/7/elapsed_s",
+        "right": 108.192,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 21.199488025717855,
+        "path": "/throughput/warmup/samples/7/r_decode_tok_s",
+        "right": 10.778806139218386,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 3288.751982188561,
+        "path": "/throughput/warmup/samples/7/r_prefill_tok_s",
+        "right": 1614.6486446898114,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 0.199163696,
+        "path": "/throughput/warmup/samples/7/ttft_s",
+        "right": 0.40566101,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 5.4351392,
+        "path": "/throughput/warmup/samples/7/wall_s",
+        "right": 10.7036475,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 85.321,
+        "path": "/throughput/warmup/samples/8/elapsed_s",
+        "right": 127.582,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 21.407693992414035,
+        "path": "/throughput/warmup/samples/8/r_decode_tok_s",
+        "right": 5.842474232625609,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 3332.6972206516143,
+        "path": "/throughput/warmup/samples/8/r_prefill_tok_s",
+        "right": 1681.2114730819587,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 0.196537506,
+        "path": "/throughput/warmup/samples/8/ttft_s",
+        "right": 0.389600006,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 5.3815892,
+        "path": "/throughput/warmup/samples/8/wall_s",
+        "right": 19.3884001,
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": {
+          "completion_tokens": 111,
+          "elapsed_s": 90.71,
+          "i": 9,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 21.39607744120094,
+          "r_prefill_tok_s": 3266.860763416682,
+          "ttft_s": 0.200498291,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.3883651
+        },
+        "path": "/throughput/warmup/samples/9",
+        "right": {
+          "__missing__": true
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": {
+          "completion_tokens": 111,
+          "elapsed_s": 95.993,
+          "i": 10,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 21.84647936644789,
+          "r_prefill_tok_s": 3274.040820630984,
+          "ttft_s": 0.200058593,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.2809688
+        },
+        "path": "/throughput/warmup/samples/10",
+        "right": {
+          "__missing__": true
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": {
+          "completion_tokens": 111,
+          "elapsed_s": 101.314,
+          "i": 11,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 21.68200224430405,
+          "r_prefill_tok_s": 3257.8554542257507,
+          "ttft_s": 0.201052505,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.3205059
+        },
+        "path": "/throughput/warmup/samples/11",
+        "right": {
+          "__missing__": true
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": {
+          "completion_tokens": 111,
+          "elapsed_s": 106.647,
+          "i": 12,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 21.624380195415505,
+          "r_prefill_tok_s": 3304.129186386538,
+          "ttft_s": 0.198236801,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.3313319
+        },
+        "path": "/throughput/warmup/samples/12",
+        "right": {
+          "__missing__": true
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": {
+          "completion_tokens": 111,
+          "elapsed_s": 112.03,
+          "i": 13,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 21.49817906695015,
+          "r_prefill_tok_s": 3012.318243098267,
+          "ttft_s": 0.217440505,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.3806685
+        },
+        "path": "/throughput/warmup/samples/13",
+        "right": {
+          "__missing__": true
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": {
+          "completion_tokens": 111,
+          "elapsed_s": 117.47,
+          "i": 14,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 21.210178621484868,
+          "r_prefill_tok_s": 3174.55252331561,
+          "ttft_s": 0.206328292,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.4396647
+        },
+        "path": "/throughput/warmup/samples/14",
+        "right": {
+          "__missing__": true
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": {
+          "completion_tokens": 111,
+          "elapsed_s": 123.046,
+          "i": 15,
+          "prompt_tokens": 655,
+          "r_decode_tok_s": 20.69510260945656,
+          "r_prefill_tok_s": 3088.6611645995445,
+          "ttft_s": 0.212065994,
+          "ttft_source": "perf_metrics",
+          "wall_s": 5.5756538
+        },
+        "path": "/throughput/warmup/samples/15",
+        "right": {
+          "__missing__": true
+        },
+        "scope": "summary.json"
+      },
+      {
+        "category": "throughput",
+        "left": 123.046,
+        "path": "/throughput/warmup/warmup_s_actual",
+        "right": 127.582,
+        "scope": "summary.json"
+      }
+    ]
+  }
+}
