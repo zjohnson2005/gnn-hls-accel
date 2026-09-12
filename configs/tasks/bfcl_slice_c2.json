@@ -1,0 +1,198 @@
+{
+  "benchmark": "seam-bfcl-slice-c2",
+  "frozen_utc": "2026-08-04",
+  "note": "C2 multi-document research slice. FROZEN BEFORE COLLECTION. Worlds embed corpus_seed 20260804 so ToolWorld serves 500-2000 token document chunks. Tasks require high min_tool_calls and cannot be answered from one short string. Pilot uses the first 2-3 tasks; full run uses all 20.",
+  "world": {
+    "corpus_seed": 20260804,
+    "corpus_n_chunks": 48,
+    "planted_facts": {
+      "D003": {
+        "budget_q1": "1200",
+        "budget_q2": "1850",
+        "site": "Northgate"
+      },
+      "D007": {
+        "budget_q3": "2300",
+        "budget_q4": "1400",
+        "racks": "27"
+      },
+      "D011": {
+        "employee": "Dana Whitfield",
+        "role": "Engineering Lead",
+        "city": "Portland"
+      },
+      "D015": {
+        "temp_c": "14",
+        "condition": "rain",
+        "sensor_sum": "140"
+      },
+      "D019": {
+        "milestone": "Beta",
+        "month": "September",
+        "workstreams": "3"
+      },
+      "D023": {
+        "build_failed": "882",
+        "builds_passed": "3",
+        "year": "2019"
+      },
+      "D027": {
+        "eastfield_racks": "27",
+        "westbrook_racks": "8",
+        "delta": "19"
+      },
+      "D031": {
+        "avg_sensor": "46",
+        "total_budget": "6750",
+        "files_docs": "3"
+      }
+    },
+    "directories": {
+      "/docs": [
+        "README.txt"
+      ],
+      "/notes": [
+        "protocol.txt"
+      ]
+    },
+    "files": {
+      "/docs/README.txt": "Corpus research workload C2. Large documents live under /corpus. Use retrieve_documents and read_file; do not guess FACTS_JSON values.",
+      "/notes/protocol.txt": "Every research answer must be grounded in corpus FACTS_JSON fields after reading or retrieving the named documents."
+    },
+    "employees": {
+      "Dana Whitfield": {
+        "role": "Engineering Lead",
+        "city": "Portland",
+        "id": "E-4471"
+      }
+    },
+    "weather": {
+      "Portland": {
+        "temp_c": 14,
+        "condition": "rain"
+      }
+    }
+  },
+  "tasks": [
+    {
+      "task_id": "C2T01",
+      "prompt": "Multi-document research required. Read /corpus/catalog.txt, then read /corpus/D003.txt and /corpus/D007.txt. From the FACTS_JSON in each document, sum budget_q1 + budget_q2 + budget_q3 + budget_q4. Also call retrieve_documents at least once with query 'budget Northgate' before answering. Submit just the total.",
+      "expected": "6750",
+      "min_tool_calls": 4
+    },
+    {
+      "task_id": "C2T02",
+      "prompt": "Research across the corpus. Call retrieve_documents with query 'latency envelope', then again with query 'resident KV bytes', then read /corpus/D011.txt. From FACTS_JSON submit the city for employee Dana Whitfield.",
+      "expected": "Portland",
+      "min_tool_calls": 3
+    },
+    {
+      "task_id": "C2T03",
+      "prompt": "Read /corpus/catalog.txt and /corpus/D015.txt and /corpus/D019.txt. From FACTS_JSON submit the product of temp_c and workstreams. Call retrieve_documents once with query 'decode throughput' before submit_answer. Submit just the number.",
+      "expected": "42",
+      "min_tool_calls": 4
+    },
+    {
+      "task_id": "C2T04",
+      "prompt": "Read /corpus/D003.txt and /corpus/D007.txt. Sum their marker fields from FACTS_JSON (marker is an integer). Call retrieve_documents with query 'prefill throughput' before answering. Submit just the sum.",
+      "expected": "10742",
+      "min_tool_calls": 3
+    },
+    {
+      "task_id": "C2T05",
+      "prompt": "Call retrieve_documents three times with queries 'escalation filter', 'deadline grid', and 'arithmetic intensity'. Then read /corpus/D023.txt and submit the build_failed value from FACTS_JSON.",
+      "expected": "882",
+      "min_tool_calls": 4
+    },
+    {
+      "task_id": "C2T06",
+      "prompt": "Read /corpus/D027.txt and /corpus/D031.txt. From FACTS_JSON compute eastfield_racks - westbrook_racks and confirm it equals delta. Also call retrieve_documents with query 'cache residency'. Submit the delta.",
+      "expected": "19",
+      "min_tool_calls": 3
+    },
+    {
+      "task_id": "C2T07",
+      "prompt": "Read /corpus/catalog.txt, then /corpus/D011.txt and /corpus/D015.txt. Extract role from D011 FACTS_JSON and temp_c from D015. Call retrieve_documents with query 'Engineering Lead Portland'. Submit temp_c.",
+      "expected": "14",
+      "min_tool_calls": 4
+    },
+    {
+      "task_id": "C2T08",
+      "prompt": "Read /corpus/D019.txt and /corpus/D023.txt. From FACTS_JSON submit the year field. Call retrieve_documents twice with queries 'context trajectory' and 'silicon partition' first.",
+      "expected": "2019",
+      "min_tool_calls": 4
+    },
+    {
+      "task_id": "C2T09",
+      "prompt": "Read /corpus/D003.txt, /corpus/D007.txt, and /corpus/D031.txt. Confirm total_budget in D031 equals the sum of the four quarterly budgets in D003/D007. Call retrieve_documents with query 'tool payload variance'. Submit total_budget.",
+      "expected": "6750",
+      "min_tool_calls": 4
+    },
+    {
+      "task_id": "C2T10",
+      "prompt": "Call retrieve_documents with query 'bootstrap confidence', then read /corpus/D015.txt and /corpus/D027.txt. Submit sensor_sum from D015 FACTS_JSON.",
+      "expected": "140",
+      "min_tool_calls": 3
+    },
+    {
+      "task_id": "C2T11",
+      "prompt": "Read /corpus/D011.txt. From FACTS_JSON submit the role. You must also call retrieve_documents at least twice (queries 'employee record' and 'site reliability') and read /corpus/catalog.txt before submit_answer.",
+      "expected": "Engineering Lead",
+      "min_tool_calls": 4
+    },
+    {
+      "task_id": "C2T12",
+      "prompt": "Read /corpus/D019.txt and submit the month Milestone Beta ships (month field). Before that, call retrieve_documents with 'milestone Beta' and read /corpus/D023.txt and /corpus/catalog.txt.",
+      "expected": "September",
+      "min_tool_calls": 4
+    },
+    {
+      "task_id": "C2T13",
+      "prompt": "Read /corpus/D003.txt and /corpus/D015.txt. Compute budget_q2 - temp_c using calculator after extracting both FACTS_JSON fields. Call retrieve_documents with query 'measured bandwidth' once. Submit just the difference.",
+      "expected": "1836",
+      "min_tool_calls": 4
+    },
+    {
+      "task_id": "C2T14",
+      "prompt": "Read /corpus/D027.txt. Submit eastfield_racks. Mandatory prior research: retrieve_documents('racks Eastfield'), retrieve_documents('Westbrook'), read /corpus/catalog.txt, read /corpus/D031.txt.",
+      "expected": "27",
+      "min_tool_calls": 5
+    },
+    {
+      "task_id": "C2T15",
+      "prompt": "Read /corpus/D023.txt and /corpus/D019.txt. Submit builds_passed from D023. Also call retrieve_documents three times with distinct queries about build logs, milestones, and workstreams.",
+      "expected": "3",
+      "min_tool_calls": 5
+    },
+    {
+      "task_id": "C2T16",
+      "prompt": "Sum markers from /corpus/D015.txt and /corpus/D019.txt FACTS_JSON. Call retrieve_documents twice with queries 'rain condition' and 'September milestone'. Submit the marker sum.",
+      "expected": "4167",
+      "min_tool_calls": 4
+    },
+    {
+      "task_id": "C2T17",
+      "prompt": "Read /corpus/D031.txt and submit avg_sensor. Required prelude: list_files /corpus, read /corpus/catalog.txt, retrieve_documents('avg sensor'), read /corpus/D015.txt.",
+      "expected": "46",
+      "min_tool_calls": 5
+    },
+    {
+      "task_id": "C2T18",
+      "prompt": "Read /corpus/D007.txt and /corpus/D027.txt. Submit racks from D007 FACTS_JSON (should match eastfield_racks). Call retrieve_documents with 'racks' and 'decode throughput' before answering.",
+      "expected": "27",
+      "min_tool_calls": 4
+    },
+    {
+      "task_id": "C2T19",
+      "prompt": "Read /corpus/D003.txt, /corpus/D011.txt, /corpus/D015.txt. Submit condition from D015. Also retrieve_documents('weather Portland') and retrieve_documents('Northgate site') first.",
+      "expected": "rain",
+      "min_tool_calls": 5
+    },
+    {
+      "task_id": "C2T20",
+      "prompt": "Final synthesis task. Read /corpus/catalog.txt, call retrieve_documents three times with queries 'latency envelope', 'resident KV bytes', and 'escalation filter', then read /corpus/D023.txt and /corpus/D031.txt. Submit files_docs from D031 FACTS_JSON.",
+      "expected": "3",
+      "min_tool_calls": 6
+    }
+  ]
+}

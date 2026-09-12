@@ -1,0 +1,27 @@
+# Daily canary — surfaces network / credential / model-pin drift as incidents, not variance.
+#
+# Connectivity is folded in deliberately. A short unauthenticated TLS probe of api.anthropic.com
+# establishes "not in the badly-degraded class"; it does NOT establish cleanliness. The sustained-
+# burst gate below exercises the traffic shape H1 actually generates.
+
+connectivity:
+  enabled: true
+  tool: seam.tools.probe_tls
+  attempts_per_target: 8
+  # Fail the canary if the cloud host falls out of the healthy class under the plain (no-retry) mode.
+  require_healthy:
+    - api.anthropic.com
+
+model_pin:
+  provider: anthropic
+  model_id: claude-sonnet-5
+
+# Required before any collection spend beyond the single key-validation call.
+# Short probes (HEAD/401) can pass while long POSTs with tens of KB bodies fail — the huggingface
+# pattern on this host. This burst is the duration/volume check the short probe cannot provide.
+sustained_burst:
+  required_before_collection: true
+  n_calls: 10
+  prompt_chars_min: 20000
+  # Recorded as a gate, not an optional nicety. The key-validation call alone is insufficient.
+  phase: "phase4_sustained_burst"

@@ -1,0 +1,163 @@
+# Declared project state — the human-maintained source of truth.
+#
+# The project-state MCP reports this alongside INFERRED state read from
+# artifacts on disk, and flags disagreement. Disagreement is a finding, not
+# something for a tool to reconcile: either this file is stale, or an artifact
+# is not what it should be, and which one matters.
+#
+# Update this in the same commit that changes the state it describes.
+#
+# Blueprint v2.0 structure: tracks + contribution ledger + yield queue govern
+# progress. Milestones remain as status records for artifact agreement with the
+# MCP; they are not a linear forcing schedule.
+
+blueprint_version: "2.0"
+blueprint_pin: d9b3f345aa769507f5875ea9c28a94949689a8f285cf37b69029fa65ab48952f  # AM-027, 2026-08-04
+
+phase: "Phase -1"
+
+# Parallel tracks after M1 (AM-019, affirmed v2.0 §8.2). Assign each agent exactly one
+# track and forbid cross-track writes — concurrent appends to AUDIT_LOG.md are the worst
+# merge conflict available in this repo (§6.6 lockfile required).
+tracks:
+  instrument: "M2.x telemetry — FULL per-target multi-cycle energy (configs/energy.yaml); RAPL coverage is a result, not a reduced gate"
+  agent: "M3 -> M6 H1 pilot. Sequencing from the yield queue, not a calendar."
+  local_execution: "M4 local backends (cpu-p / cpu-lpe / igpu / npu)"
+
+# Blueprint §8.3 — highest-yield available measurement at any moment.
+yield_queue:
+  - id: mslice-p01-hash-verify-4b
+    status: done
+    note: "4B IR verified (openvino_model.bin sha256 074214fa…; FetchedModelSpec on disk)"
+  - id: mslice-a1a6-confinement
+    status: blocked
+    blocker: >-
+      AC 8×10 matrix sealed run_id=5eb09eba-b321-4b7e-b7df-e9b01194d388
+      (affinity_matrix.json sha256 63d525b8…); verification_gates pass; dual-phase
+      prefill+decode sampled; A1–A6 all UNCLEAR (outside cores AMBIGUOUS, not QUIET)
+      — adopted_mechanism=none. Phase D blocked until a mechanism confines both
+      clusters in both phases. Do not adopt from AMBIGUOUS leakage.
+  - id: mslice-phase3-reasoning
+    status: blocked
+    blocker: "A1-A6 adopted confinement mechanism"
+  - id: mslice-phase4-key-validation
+    status: done
+    note: "Phase E E0/E1/E2 complete 2026-08-02; ledger $0.147928 externally verified 11/11"
+
+# Blueprint §9 — contributions recorded as obtained; papers assembled from the ledger.
+contribution_ledger:
+  C1: pending   # H1 behavioral non-invariance
+  C2: pending   # trace-replay structural invalidity
+  C3: pending   # partition shifts with silicon
+  C4: pending   # time-varying within session (H8)
+  C5: pending   # routing amortization bound
+  C6: pending   # silicon sizing rule (S10)
+  C7: pending   # SEAM validated
+  C8: pending   # honest fidelity accounting
+  C9: accruing  # client-platform measurement pathologies; +C2b practical ceiling note (0fe5e4c7)
+  C10: pending  # NPU/iGPU/CPU crossover surfaces
+  C11: pending  # concurrency + power-source (H9, H10)
+  C12: pending  # cross-boundary KV residency (H11)
+
+# Status records (not a forcing schedule). Kept so the MCP can disagree with disk.
+milestones:
+  M0:
+    name: "Provenance repair"
+    status: accepted
+    accepted_commit: c034b41c12f491458d302954ea6650e3386efaf9
+  M1:
+    name: "Manifest, topology, integrity"
+    status: accepted
+    accepted_commit: a3d23236998e00375c533f3e02561fbb6f457804
+    citing_run: fb5cd2d5-e850-4de1-9b90-d368b5aa9994
+  M2.1:
+    name: "Battery counter characterization"
+    status: complete
+    citing_run: 911965cf-257c-4276-954b-17611a5e75eb
+  M2.2:
+    name: "RAPL bridge + elevation"
+    status: not_started
+    note: >-
+      seam/telemetry/ has S1 battery characterization plus frequency.py (PDH
+      Processor Frequency / % of Maximum Frequency for throttle detection).
+      No RAPL, no LHM bridge yet.
+  M2.3:
+    name: "Thermal constants"
+    status: not_started
+  M2.4:
+    name: "Memory bandwidth (STREAM)"
+    status: not_started
+  M2.5:
+    name: "Energy cross-validation (full per-target multi-cycle, >=8 levels x 4 targets)"
+    status: not_started
+    design_config: configs/energy.yaml
+  M3:
+    name: "Agent harness, cloud backend, A/A, noise floor"
+    status: partial
+    note: >-
+      seam/backends/cloud_anthropic.py exists (minimal M3 subset for the slice).
+      No A/A control, no noise floor. Not accepted.
+  M4:
+    name: "Local backends"
+    status: partial
+    note: >-
+      seam/backends/base.py and local_openvino.py exist (minimal M4 subset for
+      the slice). No iGPU or NPU path exercised. Not accepted.
+  M5:
+    name: "Microbenchmark sweeps"
+    status: not_started
+  M6:
+    name: "H1 pilot"
+    status: not_started
+  M_SLICE:
+    name: "Vertical slice — cpu-p vs cpu-lpe partition shift"
+    status: not_started
+    confinement:
+      adopted_mechanism: null
+      citing_run_id: null
+      note: >-
+        DEFERRED-BY-DEPENDENCY: 2026-08-03 AC 8×10 matrix sealed as
+        run_id=5eb09eba-b321-4b7e-b7df-e9b01194d388
+        (derived/mslice/affinity_matrix.json sha256
+        63d525b8e7300be20ff54925bd2409c1b5463971e14731be94fea0966de5af00);
+        verification_gates pass; zero mechanisms CONFINED in both prefill and
+        decode (all A1–A6 UNCLEAR). Mechanism remains unset. Prior invalid
+        TTFT=0 matrix d02a14cb… is not adopted from.
+
+# Purely scientific (blueprint §10). No gate response is ever "reduce scope."
+gates:
+  G-instrument: unmet
+  G-provenance: unmet
+  G-behavior: unmet
+  G0: unmet
+  G1: unmet
+  G2: unmet
+  "Gate -1": unmet
+
+budget_usd:
+  project_total: 50.00
+  slice_authorized: 10.00
+  spent_to_date: 0.147928
+  spent_note: "Phase E E1+E2 2026-08-02; ledger externally verified 11/11 exact"
+
+platforms:
+  A:
+    id: aipc-c1
+    name: "Dell XPS 16 DA16260 / Intel Core Ultra 5 325 (Panther Lake)"
+    status: in_hand
+  B:
+    id: evo-t2
+    name: "GMKtec EVO-T2 / Intel Core Ultra X7 358H"
+    status: awaiting_shipment
+    eta: "2-4 weeks from 2026-07-30"
+
+# Checked by the MCP against artifacts on disk. A mismatch is reported.
+inferred_expectations:
+  m1_accepted: true
+  # M2 IS started: M2.1 (S1 battery characterization) is complete, citing run
+  # 911965cf. M2.2-M2.5 are not. "m2_started" is coarse by design — see the
+  # per-milestone entries above for what actually exists.
+  m2_started: true
+  topology_verified: true
+  p_cpus: [0, 1, 2, 3]
+  lpe_cpus: [4, 5, 6, 7]

@@ -1,0 +1,391 @@
+# E-ATTRIB — per-step latency attribution.
+#
+# Pre-registration: docs/EXPERIMENT_attrib_spec.md. Track `attrib`, concurrent with `agent`.
+#
+# The model (spec §2):
+#
+#     t_step = a + prompt_new / R_prefill + n_out * (d0 + d1 * context)
+#
+# Linear in (a, 1/R_prefill, d0, d1) against predictors [1, prompt_new, n_out, n_out*context],
+# so it is fitted by OLS and R_prefill recovered as the reciprocal. The model FORM is borrowed
+# from prior work and cited (spec §0); it is not a contribution.
+#
+# Everything here is DATA. No magic numbers in code (Phase -1 spec §8).
+
+experiment_id: attrib
+pre_registration: docs/EXPERIMENT_attrib_spec.md
+track: attrib
+
+# ==================================================================================================
+# What is ours, so a reader cannot mistake the machinery for the claim (spec §0)
+# ==================================================================================================
+claim_scope:
+  ours:
+    - rotation: "argmax of the hardware-sensitivity vector changes rank order with the deadline"
+    - agent_step_floor: "the per-step constant decomposed for an AGENT step, not a serving request"
+    - router_critique: "token-proportional predictors carrying no constant term are biased short"
+  not_ours:
+    - "the regression form a + b*prompt + c*output (2605.15051, lm-Meter 2510.06126)"
+    - "roofline bandwidth-vs-compute upgrade guidance (LLM-Viewer, LLMRoofline, 2602.11506)"
+    - "cross-device latency transfer (2607.21602)"
+  prior_work_cited: docs/EXPERIMENT_attrib_spec.md#0
+
+# ==================================================================================================
+# Execution target and model. INT4 is fixed by the amended pre-registration; D3 is deferred.
+# ==================================================================================================
+models:
+  int4:
+    spec: configs/models/Qwen3-4B-int4-ov.yaml
+
+openvino:
+  device: CPU
+  # UNCONFINED, exactly as E-FILTER. mslice-a1a6 found zero mechanisms CONFINED in both prefill
+  # and decode (run 5eb09eba-b321-4b7e-b7df-e9b01194d388); adopting an unvalidated one would add a
+  # confound this study has no use for. The manifest target names where work was MEASURED to land.
+  scheduling_core_type: null
+  enable_cpu_pinning: null
+  # Platform A is 8 logical CPUs, no SMT. Never sized from cpu_count().
+  inference_num_threads: 4
+  confinement_mechanism: null
+  default_placement_citing_run_id: 5eb09eba-b321-4b7e-b7df-e9b01194d388
+  assumed_kv_dtype: f16
+
+execution_target: cpu-p
+
+reasoning_mode: thinking_off
+enable_thinking: false
+
+# ==================================================================================================
+# Superseded seated-route grid, retained only as the historical mechanism design.
+# ==================================================================================================
+grid:
+  status: unavailable_failed_reuse
+
+# Active fallback after mechanism-spike run 6b40e3fe-cbc1-4b6a-8867-46650b4ead61 failed reuse.
+# P is TOTAL rendered prompt tokens. Both P and n_out have >=3 levels; fitting centers both before
+# forming their interaction. This is Route 2 from the 2026-08-03 amendment.
+interaction_grid:
+  total_prompt_tokens: [512, 1024, 2048, 4096, 8192, 16384, 32768]
+  n_out: [8, 32, 64, 128, 256]
+  quantization: [int4]
+  execution_target: [cpu-p]
+  repeats: 7
+  held_out_cells:
+    - {total_prompt_tokens: 768, n_out: 16, quantization: int4}
+    - {total_prompt_tokens: 1536, n_out: 48, quantization: int4}
+    - {total_prompt_tokens: 3072, n_out: 96, quantization: int4}
+    - {total_prompt_tokens: 6144, n_out: 160, quantization: int4}
+    - {total_prompt_tokens: 12288, n_out: 192, quantization: int4}
+    - {total_prompt_tokens: 24576, n_out: 224, quantization: int4}
+
+# Four-corner wall-time pilot. The full sweep command refuses until this produces a sealed report
+# and any required human schedule authorization is recorded below.
+runtime_pilot:
+  corners:
+    - {total_prompt_tokens: 512, n_out: 8}
+    - {total_prompt_tokens: 512, n_out: 256}
+    - {total_prompt_tokens: 32768, n_out: 8}
+    - {total_prompt_tokens: 32768, n_out: 256}
+  repeats: 3
+  warmup_s: 120
+  bootstrap_resamples: 10000
+  bootstrap_seed: 20260803
+  projected_measured_repeats: 7
+  include_held_out_each_repeat: true
+  first_touch_once_per_cell: true
+  full_sweep_authorization:
+    pilot_run_id: null
+    authorized: false
+    authorized_by: null
+    authorized_utc: null
+    note: "Populate only after the sealed pilot estimate is reported."
+
+# --------------------------------------------------------------------------------------------
+# Grid feasibility preflight.
+#
+# The driver checks every cell against MEASURED model capability BEFORE the sweep and refuses if
+# any cell is infeasible, recording which and why. It does not drop cells and run the remainder:
+# a 64-of-72 sweep that reports as a 72-cell sweep is the failure mode this exists to prevent.
+# --------------------------------------------------------------------------------------------
+preflight:
+  # Read from the model's own config.json (max_position_embeddings), never assumed.
+  enforce_position_limit: true
+  # Analytic KV bytes (seam.kvmath) + weights must leave this much headroom in the unified pool.
+  # 16 GB is shared across weights, KV, activations and the OS (Phase -1 spec §1).
+  min_free_memory_headroom_mb: 2048
+  require_all_quantization_levels: false
+
+# ==================================================================================================
+# Context seating — the trick without which nothing is identifiable (spec §3)
+#
+# `context` and `prompt_new` must vary INDEPENDENTLY. That requires seating a resident context and
+# then issuing a short new prompt against the warmed KV, without re-ingesting the context.
+#
+# Two mechanisms are implemented. Both are probed; the primary is the one the claim needs.
+# ==================================================================================================
+seating:
+  # chat_mode  — openvino_genai LLMPipeline.start_chat(). Keeps tokenization, chat templating,
+  #              sampling and detokenization INSIDE the timed region. That is where the `a` term
+  #              actually lives, so this is the primary: a floor measured below the templating
+  #              layer is not the agent-step floor the claim is about.
+  # direct_ir  — raw ov.InferRequest on the stateful IR. Exact token control and no template
+  #              noise, but it bypasses every per-step overhead `a` is meant to capture. Used as
+  #              an identifiability cross-check on R_prefill/d0/d1, never for `a`.
+  enabled: false
+  mechanism_spike_run_id: 6b40e3fe-cbc1-4b6a-8867-46650b4ead61
+  mechanism_spike_verdict: failed_reuse
+  measured_median_ttft_ratio: 1.0273577841737693
+  route_after_fork: interaction_only
+
+  # start_chat()/finish_chat() is deprecated in openvino_genai 2026.2.1 in favour of generate()
+  # with a ChatHistory argument. Recorded so the pin is legible when the API is removed.
+  chat_mode_api_deprecated: true
+  chat_mode_api_note: >-
+    openvino_genai 2026.2.1.0 emits a DeprecationWarning for start_chat()/finish_chat().
+    The runtime version is pinned in every manifest; revisit when upgrading.
+
+  # Filler used to seat a context of a requested token length. Token-counted with the model's own
+  # tokenizer and trimmed to the exact target, never estimated from characters.
+  filler_unit: "The quick brown fox jumps over the lazy dog. "
+  exact_token_targeting: true
+
+  # direct_ir only. The IR emits logits for EVERY input position (vocab 151936 x 4 B), so a
+  # single 49152-token seating pass would materialize ~30 GB of logits. Seating is chunked to
+  # bound that. Seating is untimed, so the chunk size does not enter any reported coefficient.
+  direct_ir_chunk_tokens: 512
+
+# --------------------------------------------------------------------------------------------
+# A5 decoupling probe (spec §3, kill criterion §6).
+#
+# Runs BEFORE the sweep. If a context cannot be seated without re-ingesting it, the model
+# collapses to a + (prompt+context)/R + ... and d1 is unrecoverable: stop and report.
+#
+# Three calls, because two cannot answer it. A repeat being faster than a first call is equally
+# explained by warm-up, so a cold short prompt is the control. Same logic as E-FILTER's cache
+# probe, which is why the thresholds match.
+# --------------------------------------------------------------------------------------------
+a5_probe:
+  context_tokens: 2048
+  prompt_new_tokens: 64
+  n_out_tokens: 8
+  repeats: 3
+  # Seated ingest must cost far less than a cold ingest of context+prompt.
+  max_ratio_seated_over_cold_full: 0.5
+  # And the residual must be attributable to attention over the resident context, not re-ingest.
+  # Generous: a genuine O(prompt*context) attention term is real physics, not a probe failure.
+  max_ratio_seated_over_cold_short: 20.0
+  # Correctness, not just timing: seated logits must agree with one-shot ingest. A fast path that
+  # returns different logits is not a seated context, it is a broken one.
+  require_logit_equivalence: true
+  min_logit_cosine: 0.99
+  require_top1_agreement: true
+
+# --------------------------------------------------------------------------------------------
+# Mechanism spike required before implementation (2026-08-03 dispatch).
+#
+# This supersedes `a5_probe` for the go/no-go fork. It tests the actual chat calling convention:
+# the seated and cold paths first render to identical token IDs, then greedy output bytes and TTFT
+# are compared under the machine lock. No fitter route is implemented until this reports.
+# --------------------------------------------------------------------------------------------
+mechanism_spike:
+  context_tokens_approx: 8000
+  prompt_new_tokens_approx: 64
+  n_out_tokens: 64
+  repeats: 5
+  warmup_s: 120
+  cooldown_after_block_s: 60
+  rng_seed: 20260803
+  max_median_ttft_ratio: 0.5
+  confidence: 0.95
+  bootstrap_resamples: 10000
+  bootstrap_seed: 20260803
+  filler_unit: "The quick brown fox jumps over the lazy dog. "
+  new_prompt_unit: "Using only the context above, repeat its first six words exactly, then stop. "
+
+# ==================================================================================================
+# Thermal and quiescence
+# ==================================================================================================
+thermal:
+  # Blueprint §6.4 / H8: confound, never axis. Regimes are never pooled.
+  regime: confound
+  # LOCAL to this experiment. configs/platforms/aipc-c1.yaml keeps thermal.* null because M2.3 has
+  # not run; these are this run's declared protocol, not a platform constant, and are recorded as
+  # such in the manifest. Same treatment E-FILTER gives them.
+  warmup_s: 120
+  cooldown_between_blocks_s: 60
+  package_temp_source: unavailable_pending_M2.2_M2.3
+  throttle_detection: frequency_pdh
+  frequency_sample_interval_s: 1.0
+  # C6: fraction of samples below this % of max frequency. Reported per block; > threshold means
+  # the confound regime was violated for that block.
+  throttle_pct_of_max_floor: 80.0
+  max_throttle_fraction: 0.05
+
+quiesce:
+  forbidden_processes:
+    - seam.tools.fetch_progress
+    - fetch_progress
+    - seam.tools.affinity_matrix
+    - seam.tools.phase_d_reasoning
+    - seam.tools.efilter_run
+  require_ac_connected: true
+  # Not merely AC: a charging taper previously produced a +0.444 tok/s block-position slope that
+  # looked thermal and was not.
+  require_charging_complete: true
+  require_no_cloud_credential: true
+  # Reuses an existing ac-pinned class from configs/platforms/aipc-c1.yaml. That file is a pinned
+  # shared config this track does not own, so no new class key is added to it.
+  measurement_class: affinity_matrix
+
+# --------------------------------------------------------------------------------------------
+# Machine exclusivity (spec §1). Only MEASUREMENT serializes; code and analysis do not.
+# --------------------------------------------------------------------------------------------
+locking:
+  resource: .locks/machine
+  # seam.locks.exclusive REFUSES a held lock rather than waiting, which is right for a corrupt-IR
+  # race and wrong here: the other track's measurement finishing is the normal case. The driver
+  # polls, and never measures outside the lock.
+  wait_timeout_s: 7200
+  poll_interval_s: 5.0
+  # C5 is checked against these, so they are recorded in the manifest, not just held.
+  record_acquire_release_timestamps: true
+
+# ==================================================================================================
+# Sweep execution
+# ==================================================================================================
+sweep:
+  seed: 20260803
+  # Randomized within thermal blocks; one block = one pass over all cells.
+  randomize_within_block: true
+  # First repeat of each distinct tensor SHAPE is discarded. The OpenVINO CPU plugin JIT-compiles
+  # per shape, and the spike measured that first-touch cost at several hundred ms -- large enough
+  # to swamp `a`. This is a shape warm-up, not a thermal one, and it is separate from warmup_s.
+  discard_first_touch_per_shape: true
+  # Idle baseline measured at the start and end of every block, for C3.
+  idle_baseline_samples: 5
+  idle_baseline_max_drift_frac: 0.05
+
+# ==================================================================================================
+# Fitting
+# ==================================================================================================
+fit:
+  # Predictor order is fixed here so the reported condition number, VIFs and coefficient
+  # correlations always refer to the same columns.
+  route: interaction
+  predictors: [intercept, total_prompt_centered, n_out_centered, centered_interaction]
+  coefficient_names: [a, inv_R_prefill, d0, d1]
+  bootstrap_resamples: 10000
+  bootstrap_seed: 20260803
+  confidence: 0.95
+  # INT4/cpu-p is the only active stratum. The generic grouping remains so the fitter cannot
+  # silently pool a future additive arm.
+  stratify_by: [execution_target, quantization]
+
+synthetic_recovery:
+  truth:
+    a: 0.075
+    R_prefill: 520.0
+    d0: 0.0065
+    d1: 0.0000018
+  noise_sd_s: 0.002
+  repeats: 10
+  seed: 20260803
+  bootstrap_resamples: 2000
+
+# ==================================================================================================
+# THE VALIDITY DASHBOARD (spec §4)
+#
+# Every gate is evaluated and REPORTED on every run, including the ones that pass, so failures are
+# legible in context. A conclusion is reported only if every gate in A, B and C passes.
+# ==================================================================================================
+gates:
+  # -- A: identifiability. Can the parameters be separated at all? --
+  A1_condition_number_max: 30
+  A2_vif_max: 5
+  A3_ci_must_exclude_zero: [a, R_prefill, d0, d1]
+  A4_max_abs_coefficient_correlation: 0.8
+  A5_max_abs_corr_context_prompt_new: 0.2
+  A5_interaction_min_levels_each: 3
+  A5_interaction_vif_max: 5
+  A6_require_all_parameter_ci_overlap: true
+  A6_prime_require_all_parameter_ci_overlap: true
+  A7_require_synthetic_recovery_and_rank_refusal: true
+
+  # -- B: fit quality. Is the model form right? --
+  B1_min_r_squared: 0.95
+  B2_max_held_out_mape: 0.15
+  B3_max_agent_step_mape: 0.25
+  B4_min_residual_context_slope_p: 0.05
+  B5_min_residual_repeat_slope_p: 0.05
+  B6_min_delta_aic_vs_no_constant: 10
+  B7_delta_aic_quadratic_report_threshold: 10
+
+  # -- C: measurement validity --
+  C1_max_coefficient_cv_across_blocks: 0.10
+  C2_require_half_ci_overlap: true
+  C3_max_idle_baseline_drift: 0.05
+  C4_require_measured_stream_bandwidth: true
+  C5_require_zero_lock_contention: true
+  C6_max_throttle_fraction: 0.05
+
+# -- D: materiality. These do NOT gate validity; they ARE the result. --
+materiality:
+  D1_floor_share_strong: 0.20       # >= : "most of an agent step is not inference" supportable
+  D1_floor_share_material: 0.05     # >= : material; the router must be corrected. Below: null.
+  D6_short_step_n_out_max: 32       # router-bias check is on short steps
+
+# ==================================================================================================
+# Out-of-sample validation on real agent steps (spec §3, gate B3)
+#
+# E-FILTER's sealed local-only step logs, READ-ONLY. This is the number that decides whether the
+# model describes agent behaviour or only microbenchmarks.
+# ==================================================================================================
+agent_validation:
+  source: efilter
+  # Sealed E-FILTER runs. Both are PILOTS (3 tasks, 12 steps each): n is small and the B3 verdict
+  # inherits that. Recorded rather than glossed, and the reported MAPE carries the step count.
+  run_ids:
+    - d8f0875b-dfc5-473f-8260-8c8827d18295
+    - 0dfd5bfb-0e82-495c-8648-29cd3fe74140
+  require_sealed: true
+  require_local_only: true
+  # E-FILTER's cache is UNINSTRUMENTED: prompt_tokens_new is an upper bound, not a measurement,
+  # and its cache probe verdict is "no cross-call prefix reuse; full re-prefill". So a real
+  # E-FILTER step re-ingests its whole transcript, whereas a swept cell does not. The predictor
+  # must therefore charge the full transcript as new tokens for those steps. Recorded because it
+  # is the single largest threat to B3's interpretation.
+  accept_uninstrumented_cache: true
+  context_semantics: full_reingest
+
+# ==================================================================================================
+# The rotation (D5) — the actual claim
+# ==================================================================================================
+rotation:
+  # E-FILTER's deadline grid is not a fixed list: it is computed at replay from the observed
+  # t_pred distribution. These mirror configs/efilter.yaml so the two curves share an x-axis.
+  n_deadlines: 40
+  grid_quantile_lo: 0.0
+  grid_quantile_hi: 1.0
+  grid_pad_factor: 1.25
+  # Sensitivities are normalized per unit of resource so the three curves are comparable:
+  #   S_compute   = sum over surviving steps of |d t / d R_prefill|
+  #   S_bandwidth = sum over surviving steps of |d t / d d0| + |d t / d d1|
+  #   S_floor     = N_surviving * a
+  # Reported all three against D. The claim holds iff argmax CHANGES across the grid; if it does
+  # not, the null is reported plainly.
+  normalization: per_unit_resource
+  bootstrap_resamples: 10000
+  bootstrap_seed: 20260803
+
+# ==================================================================================================
+# Outputs
+# ==================================================================================================
+outputs:
+  dir: derived/attrib
+  coefficients: coefficients.json
+  validity: validity.json
+  validity_table: validity_table.md
+  rotation: rotation.json
+  figure: rotation.png
+  results_doc: docs/EXPERIMENT_attrib_results.md
+  audit_log: AUDIT_LOG_attrib.md

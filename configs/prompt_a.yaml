@@ -1,0 +1,73 @@
+experiment_id: prompt-a-throughput-integrity
+measurement_config: configs/measurement.yaml
+source_runs:
+  pilot: d8f0875b-dfc5-473f-8260-8c8827d18295
+  full: 1a0166b9-cbaf-43f4-8d76-bcd7c01841e0
+
+openvino:
+  device: CPU
+  model_spec: configs/models/Qwen3-4B-int4-ov.yaml
+  scheduling_core_type: null
+  enable_cpu_pinning: null
+  inference_num_threads: 4
+  enable_thinking: false
+
+design:
+  experiment: placement
+  cells:
+    - id: C1
+      label: requested_p_cores_clean
+      requested_affinity: [0, 1, 2, 3]
+      burn: false
+    - id: C2
+      label: requested_lp_e_cores_clean
+      requested_affinity: [4, 5, 6, 7]
+      burn: false
+    - id: C3
+      label: unrequested_affinity_clean
+      requested_affinity: null
+      burn: false
+    - id: C4
+      label: unrequested_affinity_p_core_burn
+      requested_affinity: null
+      burn: true
+  endpoints: [r_prefill_tok_s, r_decode_tok_s]
+  repeats_per_cell: 7
+  randomization_seed: 20260804
+  cooldown_s: 60
+  bootstrap_resamples: 10000
+  bootstrap_seed: 20260804
+  confidence: 0.95
+  target_ratio: 1.983
+  target_ratio_source_runs:
+    - d8f0875b-dfc5-473f-8260-8c8827d18295
+    - 1a0166b9-cbaf-43f4-8d76-bcd7c01841e0
+  worker_spinup_timeout_s: 2
+  mid_generation_sample_delay_s: 1
+  heartbeat_interval_s: 15
+
+probe:
+  prompt: >-
+    List the files in /docs, then report how many there are. Use the tools rather than guessing.
+  max_tokens: 512
+  ignore_eos: true
+  discard_first_generation: true
+
+burn:
+  processes: 4
+  cpus: [0, 1, 2, 3]
+  algorithm: sha256_counter_stream
+  startup_timeout_s: 15
+
+quiescence:
+  forbidden_processes:
+    - seam.bench.attrib
+    - seam.tools.fetch_progress
+    - fetch_progress
+    - seam.tools.affinity_matrix
+    - seam.tools.phase_d_reasoning
+    - seam.tools.efilter_run
+
+outputs:
+  manifest_diff: derived/prompt_a/sealed_manifest_recursive_diff.json
+  report: derived/prompt_a/report.json

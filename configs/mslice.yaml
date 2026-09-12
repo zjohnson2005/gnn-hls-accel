@@ -1,0 +1,188 @@
+# M-SLICE — first end-to-end slice (AM-019 milestone, AM-022 policy).
+#
+# Mechanism under test: a deadline-aware LOCAL-FIRST policy. Each agent step is priced against a
+# per-step latency deadline using MEASURED per-target throughput; steps predicted to overrun the
+# deadline are escalated to the cloud model. Slower local silicon therefore escalates more often,
+# so the silicon changes the realized device/cloud partition. That causal chain is the research
+# question in miniature, and this is the first cell of figure S5 — not a warm-up.
+#
+# Everything in this file is DATA. No magic numbers in code (spec §9.9).
+
+slice_id: mslice-01
+
+# ==================================================================================================
+# Budget — authorized by Z. Johnson, 2026-08-02
+# ==================================================================================================
+#
+# The ceiling is enforced structurally by seam/budget.py: a call is refused unless the remaining
+# budget covers its WORST CASE (no cache hit, full-length reply). The guard is never raised to let
+# a run finish — an unaffordable run is a finding.
+budget:
+  slice_ceiling_usd: 10.00
+  project_ceiling_usd: 50.00
+  ledger_dir: derived/budget
+  # Stop-and-report threshold: half the slice ceiling consumed BEFORE the main run begins means
+  # the cost model is wrong and the owner wants to see why before the rest is spent.
+  presetup_stop_usd: 5.00
+
+# ==================================================================================================
+# Execution targets (minimal M4 — CPU only; no iGPU, no NPU in this slice)
+# ==================================================================================================
+targets:
+  - cpu-p
+  - cpu-lpe
+
+openvino:
+  device: CPU
+  # Panther Lake is 8C/8T with 4 P + 4 LP-E. Never size this from cpu_count().
+  inference_num_threads: 4
+  enable_cpu_pinning: true
+  # OpenVINO's own hybrid awareness is tried FIRST, because it is the mechanism that carries
+  # forward to iGPU/NPU in full M4. But this part has NO standard E-cores — only LP-E — so
+  # ECORE_ONLY may map to LP-E or may match nothing at all. Setting the property is not evidence
+  # that it took effect: seam/tools/verify_core_affinity.py confirms per-core utilization against
+  # the M1-committed mapping before any measurement, and the fallback below is used if it leaks.
+  scheduling_core_type:
+    cpu-p: PCORE_ONLY
+    cpu-lpe: ECORE_ONLY
+  affinity_fallback: process_affinity  # topology.affinity_for() + INFERENCE_NUM_THREADS
+  # Adopted mechanism + citing run_id are written ONLY after A1-A6 resolves with a clean
+  # symmetric confinement. Until then null — DEFERRED-BY-DEPENDENCY on the confinement matrix.
+  adopted_mechanism: null
+  adopted_mechanism_citing_run_id: null
+
+# ==================================================================================================
+# Quiesce — recorded in every measurement manifest. Watchers ARE background load.
+# ==================================================================================================
+quiesce:
+  forbidden_processes:
+    # The fetch progress watcher was added to observe the download. Once measurement starts it is
+    # the same class of confound that invalidated the first affinity fallback reading.
+    - seam.tools.fetch_progress
+    - fetch_progress
+  require_no_download_in_flight: true
+  require_ac_connected: true
+  require_brightness_fixed: true
+  record_defender_state: true
+  record_power_plan: true
+
+# ==================================================================================================
+# Models
+# ==================================================================================================
+models:
+  local:
+    # Qwen3 family, ~4B INT4 pre-converted IR (AM-023). Ladder: 1.7B / 4B / 8B.
+    # Spec path is rewritten after fetch; throwaway validator is Qwen3-0.6B-int4-ov.
+    family: Qwen3
+    ladder_position: slice-4b
+    spec: configs/models/Qwen3-4B-int4-ov.yaml
+    throwaway_spec: configs/models/Qwen3-0.6B-int4-ov.yaml
+  cloud:
+    provider: anthropic
+    # Pinned snapshot. Dateless BY PROVIDER CONVENTION (AM-020) — this string IS the pin.
+    model_id: claude-sonnet-5
+    pricing_table: configs/pricing/anthropic.yaml
+    max_tokens: 512
+    # claude-sonnet-5 rejects `temperature` (400 deprecated) — omit; do not send 0.0.
+    temperature: null
+    # A 5m cache pays for itself after one read. Breakpoint sits on the stable tool-definition
+    # prefix, which is byte-identical across every task in the slice.
+    prompt_caching: true
+    cache_ttl: 5m
+    # Spec §9.6: retries are logged as events, never silent. Exactly one retry, then fall back to
+    # local with the step MARKED — a silent retry loop is the fastest way to burn a budget.
+    max_retries: 1
+    # Phase E E2 measured escalation cost (2026-08-02). Input to the deadline grid.
+    # Rate limits (10k req / 10M input tok) are far above H1 — that question is CLOSED.
+    measured_rtt_s:
+      min: 1.226
+      mean: 2.469
+      max: 5.370
+      n: 10
+      citing: derived/mslice/phase_e_e2.json
+      ci_method: wilson_score   # project standard for proportions; RTT itself is a sample mean
+
+# ==================================================================================================
+# Reasoning-mode arms (AM-024) — explicit axis, not a disabled default
+# ==================================================================================================
+#
+# Arm 1 (thinking_off) runs FIRST and validates the mechanism. Arm 2 (thinking_on) is the primary
+# scientific arm: thinking amplifies the absolute time gap between cpu-p and cpu-lpe. Deadlines,
+# n_out_pred, and task counts are PER ARM; within an arm, deadlines are IDENTICAL across targets.
+reasoning_arms:
+  - id: thinking_off
+    enable_thinking: false
+    sequence: 1
+    # Hard wall-clock timeout per local step (safety valve). Hits are a DISTINCT category, not
+    # deadline escalations.
+    local_step_timeout_s: 120
+  - id: thinking_on
+    enable_thinking: true
+    sequence: 2
+    local_step_timeout_s: 600
+    # May reduce n_tasks_per_cell after step-1 wall-clock estimate; never reduce deadline count.
+
+# ==================================================================================================
+# Deadline policy (AM-022, amended by AM-024 for per-arm grids)
+# ==================================================================================================
+policy:
+  kind: predictive_local_first
+  escalation_semantics: predictive   # preemptive is IN SCOPE as a second axis, not deferred
+  kv_residency: discard               # H11 axis; transfer/retain are later cells, not withdrawn
+  # t_pred = prompt_tokens / R_prefill(T) + n_out_pred(step_type) / R_decode(T)
+  # escalate iff t_pred > deadline_s
+  #
+  # DEADLINE SELECTION (AM-024) — per reasoning arm, AFTER step-1 measures n_out per arm:
+  #   a. n_out_pred measured separately per (arm, step_type); frozen; identical across TARGETS
+  #   b. t_pred distribution computed per (arm, target)
+  #   c. >=4 absolute deadlines spanning the UNION of both targets' transition regions
+  #   d. deadlines IDENTICAL across targets within an arm (rescaling test requires overlapping D)
+  #   e. report the grid and its derivation before the main run
+  #
+  # deadline_multipliers remain a fallback for Arm 1 if the union-span method is not yet wired;
+  # Arm 2 MUST use the union-span method because thinking length is heavy-tailed.
+  deadline_multipliers: [2.0, 1.0, 0.5, 0.25]   # generous -> tight (Arm 1 fallback)
+  deadlines_s: null                             # frozen per arm from step 1
+  deadline_anchor_target: cpu-p
+  n_out_pred_tokens: null                       # frozen per arm from step 1
+  # The deadline is ADVISORY: because n_out_pred is a median, roughly half of locally-executed
+  # steps overrun it. That is the predictor's error rate, not a defect. Logged and reported.
+  deadline_enforced: false
+  # Rescaling prediction, tested PER ARM:
+  #   escalation_rate_lpe(D) ~= escalation_rate_p(D * R_p/R_lpe)
+  rescaling_prediction: true
+
+# ==================================================================================================
+# Workload — short-horizon tool-calling, BFCL-style
+# ==================================================================================================
+workload:
+  benchmark: seam-bfcl-slice-v1
+  task_list: configs/tasks/bfcl_slice_v1.json
+  # Frozen and committed BEFORE collection. The hash is asserted at run start; a changed task list
+  # invalidates comparability with everything already collected.
+  task_list_sha256: "bb8e4c5bc914e05aa04815c96006be9db2ae3dbc19ec911386c705c05c985142"
+  max_steps: 8
+  seed: 20260802
+
+# ==================================================================================================
+# Design
+# ==================================================================================================
+design:
+  n_tasks_per_cell: 20
+  noise_floor_repeats: 20
+  aa_repeats: 20
+  randomize_execution_order: true
+  # Any effect smaller than 2x the measured CV is reported as NULL. Non-negotiable.
+  null_threshold_cv_multiple: 2.0
+  bootstrap_resamples: 10000
+  bootstrap_seed: 20260802
+  # Primary behavioral metrics are tokenizer-independent (AM-021). Native tokens = cost only.
+  primary_behavioral_metrics:
+    - completion_chars
+    - completion_bytes
+  cost_metrics:
+    - prompt_tokens
+    - completion_tokens
+    - cache_read_input_tokens
+    - cache_creation_input_tokens
+    - usd_cost

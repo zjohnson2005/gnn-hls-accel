@@ -1,0 +1,60 @@
+# A3 v2 — continuous free-memory residency sweep (diagnostic).
+# Supersedes Phase-1 / 8192 MB headroom-gate design. No Phase 1. No headroom refusal.
+experiment_id: a3-residency-sweep-v2
+measurement_config: configs/measurement.yaml
+prompt_a_config: configs/prompt_a.yaml
+
+# Constants (prompt, n_out, model, threads, power) come from prompt_a.yaml +
+# measurement.yaml, identical to paging_baseline generation.
+
+ladder:
+  n_steps: 6
+  min_free_mb: 1200
+  repeats: 5
+  randomization_seed: 20260804
+  cooldown_s: 30
+  min_crossings: 3
+  target_ratio: 1.983
+  target_ratio_source_runs:
+    - d8f0875b-dfc5-473f-8260-8c8827d18295
+    - 1a0166b9-cbaf-43f4-8d76-bcd7c01841e0
+  bootstrap_resamples: 10000
+  bootstrap_seed: 20260804
+  confidence: 0.95
+
+# Paging gate is REPORTING-ONLY for this experiment. Default elsewhere remains true.
+paging:
+  exclude_on_failure: false
+
+# Launch quiescence: keep measured CPU gates; do not refuse on free-memory headroom.
+# (Deleted 8192 MB Phase-1 gate is not restored here.)
+quiescence:
+  available_memory_min_mb: 0
+
+phase3:
+  # Auto-run only when top-of-ladder blocks still show sustained paging.
+  enabled_auto: true
+  page_read_threshold_per_s: 1.0
+  sustained_consecutive_samples: 2
+  pretouch_weights: true
+  set_working_set_size: true
+
+failure_evidence_policy:
+  policy: retain_both_unsealed
+  note: >-
+    Prepared-commit list inconsistency resolved: raw/9b25332b-cbb7-453d-99ad-1c9ac67e4b89
+    AND raw/cb0ed2e3-ed70-4627-b231-51016d2b255b are retained as unsealed failure evidence.
+    Neither is deleted, staged, or committed by this diagnostic.
+  retained_run_ids:
+    - 9b25332b-cbb7-453d-99ad-1c9ac67e4b89
+    - cb0ed2e3-ed70-4627-b231-51016d2b255b
+
+dirty_tree:
+  allowed: true
+  note: >-
+    Commit remains AWAITING_COMMIT. This diagnostic may proceed under the existing
+    dirty-tree allowance; that fact is recorded prominently in the sealed report and
+    manifest (allow_dirty=true).
+
+outputs:
+  report: derived/prompt_a/a3_residency_report.json

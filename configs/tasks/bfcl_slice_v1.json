@@ -1,0 +1,153 @@
+{
+  "benchmark": "seam-bfcl-slice-v1",
+  "frozen_utc": "2026-08-02",
+  "note": "Short-horizon tool-calling tasks, BFCL-style. FROZEN BEFORE COLLECTION: this file is hashed into configs/mslice.yaml and the hash is asserted at run start, because a task list that changes mid-experiment silently destroys comparability with everything already collected. The world is bundled here rather than fetched, so success is exactly machine-checkable and no network or clock variance leaks into a latency experiment. Every task is solvable in 2-4 tool calls and terminates with submit_answer.",
+  "world": {
+    "directories": {
+      "/docs": ["README.txt", "budget.txt", "roadmap.txt"],
+      "/data": ["sensors.txt", "sites.txt"],
+      "/logs": ["build.txt"]
+    },
+    "files": {
+      "/docs/README.txt": "Project Atlas began in 2019. The engineering lead is Dana Whitfield. The project has 3 active workstreams.",
+      "/docs/budget.txt": "Q1: 1200\nQ2: 1850\nQ3: 2300\nQ4: 1400",
+      "/docs/roadmap.txt": "Milestone Alpha ships in March. Milestone Beta ships in September. Beta depends on Alpha.",
+      "/data/sensors.txt": "sensor-01 reading 44\nsensor-02 reading 67\nsensor-03 reading 29",
+      "/data/sites.txt": "Site Northgate has 12 racks. Site Eastfield has 27 racks. Site Westbrook has 8 racks.",
+      "/logs/build.txt": "build 881 passed\nbuild 882 failed\nbuild 883 passed\nbuild 884 passed"
+    },
+    "employees": {
+      "Dana Whitfield": {"role": "Engineering Lead", "city": "Portland", "id": "E-4471"},
+      "Marcus Reed": {"role": "Data Scientist", "city": "Austin", "id": "E-2280"},
+      "Priya Nadkarni": {"role": "Site Reliability", "city": "Denver", "id": "E-9013"},
+      "Tomas Lindqvist": {"role": "Hardware Engineer", "city": "Portland", "id": "E-5502"}
+    },
+    "weather": {
+      "Portland": {"temp_c": 14, "condition": "rain"},
+      "Austin": {"temp_c": 33, "condition": "clear"},
+      "Denver": {"temp_c": 21, "condition": "cloudy"}
+    }
+  },
+  "tasks": [
+    {
+      "task_id": "T01",
+      "prompt": "How many files are in the /docs directory? Submit just the number.",
+      "expected": "3",
+      "min_tool_calls": 1
+    },
+    {
+      "task_id": "T02",
+      "prompt": "Read /docs/README.txt and tell me what year Project Atlas began. Submit just the year.",
+      "expected": "2019",
+      "min_tool_calls": 1
+    },
+    {
+      "task_id": "T03",
+      "prompt": "Read /docs/budget.txt and compute the sum of the Q1, Q2, Q3, and Q4 figures. Submit just the total.",
+      "expected": "6750",
+      "min_tool_calls": 2
+    },
+    {
+      "task_id": "T04",
+      "prompt": "What city does Dana Whitfield work in? Submit just the city name.",
+      "expected": "Portland",
+      "min_tool_calls": 1
+    },
+    {
+      "task_id": "T05",
+      "prompt": "What is the current temperature in Celsius in the city where Marcus Reed works? Submit just the number.",
+      "expected": "33",
+      "min_tool_calls": 2
+    },
+    {
+      "task_id": "T06",
+      "prompt": "Read /data/sensors.txt and compute the sum of all three sensor readings. Submit just the total.",
+      "expected": "140",
+      "min_tool_calls": 2
+    },
+    {
+      "task_id": "T07",
+      "prompt": "How many files are in the /data directory? Submit just the number.",
+      "expected": "2",
+      "min_tool_calls": 1
+    },
+    {
+      "task_id": "T08",
+      "prompt": "What is Priya Nadkarni's employee id? Submit just the id.",
+      "expected": "E-9013",
+      "min_tool_calls": 1
+    },
+    {
+      "task_id": "T09",
+      "prompt": "Read /data/sites.txt and compute the total number of racks across all three sites. Submit just the total.",
+      "expected": "47",
+      "min_tool_calls": 2
+    },
+    {
+      "task_id": "T10",
+      "prompt": "Read /logs/build.txt and count how many builds passed. Submit just the number.",
+      "expected": "3",
+      "min_tool_calls": 1
+    },
+    {
+      "task_id": "T11",
+      "prompt": "What is the weather condition in the city where Priya Nadkarni works? Submit just the condition word.",
+      "expected": "cloudy",
+      "min_tool_calls": 2
+    },
+    {
+      "task_id": "T12",
+      "prompt": "Read /docs/roadmap.txt and tell me which month Milestone Beta ships in. Submit just the month.",
+      "expected": "September",
+      "min_tool_calls": 1
+    },
+    {
+      "task_id": "T13",
+      "prompt": "Read /docs/budget.txt and compute the difference between the Q3 figure and the Q1 figure. Submit just the difference.",
+      "expected": "1100",
+      "min_tool_calls": 2
+    },
+    {
+      "task_id": "T14",
+      "prompt": "What is Tomas Lindqvist's role? Submit just the role.",
+      "expected": "Hardware Engineer",
+      "min_tool_calls": 1
+    },
+    {
+      "task_id": "T15",
+      "prompt": "Read /data/sites.txt and compute how many more racks Site Eastfield has than Site Westbrook. Submit just the number.",
+      "expected": "19",
+      "min_tool_calls": 2
+    },
+    {
+      "task_id": "T16",
+      "prompt": "How many total files are in the /docs and /logs directories combined? Submit just the number.",
+      "expected": "4",
+      "min_tool_calls": 2
+    },
+    {
+      "task_id": "T17",
+      "prompt": "Read /docs/README.txt and tell me how many active workstreams the project has. Submit just the number.",
+      "expected": "3",
+      "min_tool_calls": 1
+    },
+    {
+      "task_id": "T18",
+      "prompt": "What is the temperature in Celsius in the city where Dana Whitfield works? Submit just the number.",
+      "expected": "14",
+      "min_tool_calls": 2
+    },
+    {
+      "task_id": "T19",
+      "prompt": "Read /data/sensors.txt and compute the average of the three sensor readings, rounded down to a whole number. Submit just the number.",
+      "expected": "46",
+      "min_tool_calls": 2
+    },
+    {
+      "task_id": "T20",
+      "prompt": "Read /logs/build.txt and tell me the build number of the build that failed. Submit just the number.",
+      "expected": "882",
+      "min_tool_calls": 1
+    }
+  ]
+}

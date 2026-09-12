@@ -1,0 +1,244 @@
+# E-FILTER C2 / C2b / C2c / C2d / C2e / C2f / C2g — amended Stage-1 counterfactual escalation filter.
+#
+# Governing: docs/CURSOR_PROMPT_C2g.md (in force). C2b–C2f otherwise stand where not restated.
+# Prior: docs/CURSOR_PROMPT_C2f.md … docs/CURSOR_PROMPT_C2_efilter.md.
+# Pre-registration: docs/EXPERIMENT_escalation_filter.md, amended by AM-032.
+#
+# C2g: context_cap_tokens 5000 (was 7000); per-task/step memory instrumentation (free_min,
+# RSS peak, per-generate RSS); peak-memory-vs-context fit; CPU chunked-prefill audit (unavailable);
+# memory floor remains clearance-fatal (safety gate, not scoped); paging/canary still non-fatal.
+# C2f: wall-clock timeout audit NONE → per-endpoint canary scoping; canary baseline (derive
+# threshold); discard-first task warmup; canary not clearance-fatal for envelope primary;
+# timing = canary_admissible ∩ paging_admissible.
+# C2e: dry-run uses build_efilter_summary + efilter_output_paths; outputs.tasks allowed in schema;
+# paging_admissible per block; envelope over all blocks, timing over admissible; paging not
+# run-fatal for pilot clearance (seal + median ratio >= 3.0).
+# C2d: paging sampler scoped to timed task blocks only (warmup/setup/teardown not sampled);
+# UTF-8 stdio + dry-run non-ASCII probe; seal before fancy report prints.
+# C2c adds: per-task memory series, inter-task pipeline teardown + free-memory recovery,
+# double after-canary (settle_s), projected_next_context_tokens on context_cap, clearance
+# only on full pass+seal.
+#
+# Arm L only: escalation DISABLED via DEADLINE_DISABLED_S + RefusingCloudBackend.
+# No cloud calls, no confinement mechanism, no second platform, no NPU.
+
+experiment_id: efilter-c2
+pre_registration: docs/EXPERIMENT_escalation_filter.md
+c2_amendment: docs/CURSOR_PROMPT_C2_efilter.md
+c2b_amendment: docs/CURSOR_PROMPT_C2b.md
+c2c_amendment: docs/CURSOR_PROMPT_C2c.md
+c2d_amendment: docs/CURSOR_PROMPT_C2d.md
+c2e_amendment: docs/CURSOR_PROMPT_C2e.md
+c2f_amendment: docs/CURSOR_PROMPT_C2f.md
+c2g_amendment: docs/CURSOR_PROMPT_C2g.md
+wallclock_timeout_audit: derived/efilter/c2f_wallclock_timeout_audit.json
+chunked_prefill_cpu_audit: derived/efilter/c2g_chunked_prefill_cpu_audit.json
+measurement_config: configs/measurement.yaml
+
+# ==================================================================================================
+# Canary — E-FILTER overlay on configs/measurement.yaml
+# ==================================================================================================
+
+canary:
+  # Double after-canary when settle_s > 0: immediate + settled; settled is authoritative.
+  settle_s: 10
+  double_after: true
+  # Threshold lives in measurement.yaml (placeholder until canary_baseline seals).
+
+# ==================================================================================================
+# Inter-task teardown (C2c) — lock may be released between timed tasks
+# ==================================================================================================
+
+teardown:
+  # Recover to at least this fraction of launch_free_memory_mb before the next timed task.
+  free_memory_recovery_fraction: 0.90
+  recovery_timeout_s: 180
+  recovery_poll_interval_s: 2.0
+  warmup_max_tokens: 8
+
+# ==================================================================================================
+# Arm
+# ==================================================================================================
+
+arm:
+  id: arm_l
+  escalation: disabled
+  deadline_sentinel: DEADLINE_DISABLED_S
+  min_sentinel_headroom: 1.0e6
+
+# ==================================================================================================
+# Model and execution target
+# ==================================================================================================
+
+models:
+  local:
+    spec: configs/models/Qwen3-4B-int4-ov.yaml
+
+openvino:
+  device: CPU
+  # UNCONFINED on purpose. mslice-a1a6 found zero mechanisms CONFINED in both prefill and decode
+  # (run 5eb09eba-b321-4b7e-b7df-e9b01194d388), so no mechanism is adopted and none is applied here.
+  scheduling_core_type: null
+  enable_cpu_pinning: null
+  # Platform A is 8 logical CPUs, no SMT. Never sized from cpu_count().
+  inference_num_threads: 4
+  confinement_mechanism: null
+  default_placement_citing_run_id: 5eb09eba-b321-4b7e-b7df-e9b01194d388
+  assumed_kv_dtype: f16
+
+reasoning_mode: thinking_off
+enable_thinking: false
+
+# ==================================================================================================
+# Workload — C2 large-payload research slice (C2b memory-safe)
+# ==================================================================================================
+
+workload:
+  benchmark: seam-bfcl-slice-c2
+  task_list: configs/tasks/bfcl_slice_c2.json
+  task_list_sha256: "fd6666c229fddb2fd8190749663de96d5998fbc05d60f68617695e4aeca0bb7f"
+  n_tasks_full: 20
+  n_tasks_pilot: 5
+  max_steps: 16
+  max_tokens: 128
+  # Cap projected next-step context before generate; terminate with terminated_reason=context_cap.
+  # C2g: lowered 7000 -> 5000 (ratio ceiling ~7.7x still well above the 3.0 median-ratio gate;
+  # removes ~2000 tokens of prefill activation pressure at deepest steps). Do not go below 5000
+  # without cause — the ratio ceiling and the gate would start to converge.
+  context_cap_tokens: 5000
+  seed: 20260804
+  # C2f: run one full task first, discard its record (not in ratio/analysis), then >=5 timed.
+  discard_first_task_warmup: true
+  # C2b: median per-task C_max/C_min (min/max of context_tokens_by_step). Peak is reported only.
+  pilot_min_median_context_ratio: 3.0
+  # C2c: full mode refuses to start without a clearance written by a passing sealed pilot.
+  require_pilot_context_clearance: true
+
+# ==================================================================================================
+# Router inputs
+# ==================================================================================================
+
+policy:
+  kind: predictive_local_first
+  escalation_semantics: predictive
+  kv_residency: discard
+  # C2.3 / AM-027: chars // 4 + fixed chat-template scaffold. Bias falls from −77.4% to −1.03%
+  # on Stage-1 measurement. Scaffold is per-model and per-template; re-measure via
+  # seam.analysis.efilter.template_scaffold_analysis when either changes.
+  prompt_token_source: chars_div_4_plus_scaffold
+  prompt_token_scaffold_tokens: 621
+  scaffold_tokens_source: >-
+    stage1_template_scaffold_analysis citing run_id=1a0166b9-cbaf-43f4-8d76-bcd7c01841e0
+    (Qwen3-4B + Stage-1 tool/system template). PROVISIONAL for C2: tool set and SYSTEM_PROMPT
+    grew (retrieve_documents); re-measure before claiming post-correction proxy bias on C2 logs.
+  # C2b: single constant across step types (preserves context-selectivity of t_pred ranking).
+  # After re-pilot, freeze BOTH keys from the measured median completion tokens (same value).
+  n_out_pred_tokens_pilot:
+    tool_call_synthesis: 64
+    answer_synthesis: 64
+  # FROZEN from C2g pilot 6f388dd3-d8fd-4cd8-9768-bb29c1ee976e measured completion-token
+  # median (=24). Both keys identical — constant across step types (C2b/C2f).
+  n_out_pred_tokens:
+    tool_call_synthesis: 24
+    answer_synthesis: 24
+  n_out_pred_constant_across_step_types: true
+  n_out_pred_freeze:
+    source_run_id: 6f388dd3-d8fd-4cd8-9768-bb29c1ee976e
+    measured_median_completion_tokens: 24
+    frozen_utc: "2026-08-05T20:01:00+00:00"
+
+# ==================================================================================================
+# Chunked prefill (C2g audit) — CPU path has no NPUW_LLM_PREFILL_CHUNK_SIZE equivalent
+# ==================================================================================================
+
+chunked_prefill:
+  # Audit: derived/efilter/c2g_chunked_prefill_cpu_audit.json (available=false on stateful CPU
+  # LLMPipeline). Keep disabled; do not enable for pilot. ContinuousBatching SchedulerConfig
+  # max_num_batched_tokens is a different pipeline mode and is not wired here.
+  enabled: false
+  available_on_cpu_stateful_pipeline: false
+  chunk_size: null
+  audit_path: derived/efilter/c2g_chunked_prefill_cpu_audit.json
+
+# ==================================================================================================
+# Constrained decoding (tool-call steps)
+# ==================================================================================================
+
+constrained_decoding:
+  enabled: true
+  mechanism: openvino_genai_structured_output_config_tag_jsonschema
+  mechanism_detail: >-
+    LocalOpenVinoBackend sets GenerationConfig.structured_output_config to a compound
+    StructuredOutputConfig.Tag("<tool_call>", JSONSchema(tool-call object), "</tool_call>")
+    on steps with expect_tool_call=True. Forces a well-formed Qwen tool-call envelope
+    (~20–40 tokens) and nothing else — addresses tool=None waste under max_tokens=512.
+  applies_to: tool_call_expecting_steps
+
+# ==================================================================================================
+# Thermal and quiescence
+# ==================================================================================================
+
+thermal:
+  regime: confound
+  warmup_s: 120
+  cooldown_between_tasks_s: 60
+  package_temp_source: unavailable_pending_M2.2_M2.3
+  throttle_detection: frequency_pdh
+  frequency_sample_interval_s: 1.0
+
+quiesce:
+  forbidden_processes:
+    - seam.tools.fetch_progress
+    - fetch_progress
+    - seam.tools.affinity_matrix
+    - seam.tools.phase_d_reasoning
+  require_ac_connected: true
+  require_charging_complete: true
+  require_no_cloud_credential: true
+  measurement_class: affinity_matrix
+
+# ==================================================================================================
+# Sampling
+# ==================================================================================================
+
+sampling:
+  rss_interval_s: 0.05
+
+# ==================================================================================================
+# Offline replay (Stage 1's actual output)
+# ==================================================================================================
+
+replay:
+  # Data-derived grid spanning observed t_pred; C2 requires >=8 points (keep 40 for resolution).
+  n_deadlines: 40
+  grid_quantile_lo: 0.0
+  grid_quantile_hi: 1.0
+  grid_pad_factor: 1.25
+  bootstrap_resamples: 10000
+  bootstrap_seed: 20260804
+  materiality_ratio: 1.2
+  proxy_bias_interval_threshold: 0.15
+  # AM-032: pre-registered 8 s headline WITHDRAWN (PRE-DATA w.r.t. C2). Null — not a success/fail
+  # criterion. P1–P3 use the material deadline on the derived grid. Seconds in reports carry
+  # caveat: R unverified pending A4.
+  p95_step_target_s: null
+  p95_step_target_status: withdrawn_AM-032
+  outputs_dir: derived/efilter
+  # Stage-1 baseline for P6 / ceiling comparison (sealed).
+  stage1_baseline_run_id: 1a0166b9-cbaf-43f4-8d76-bcd7c01841e0
+  stage1_over_provisioning: 1.243
+  stage1_over_provisioning_ci: [1.115, 1.409]
+  stage1_context_ceiling_mean: 1.456
+
+# ==================================================================================================
+# Optional arm — memory-headroom escalation (stub only; NOT required for pilot)
+# ==================================================================================================
+
+optional_memory_headroom_arm:
+  enabled: false
+  note: >-
+    Feasibility check: memory headroom as its own escalation condition (KV bytes are an exact
+    function of context). Sweep headroom 50–150 MB bracketing observed 48–135 MB KV. Mechanism
+    experiment, not a deployment claim — an 80 MB per-agent budget is not realistic on 16 GB;
+    realistic tightness arrives with concurrency.
+  headroom_sweep_mb: [50, 80, 100, 120, 150]

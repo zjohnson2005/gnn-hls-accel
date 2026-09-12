@@ -1,0 +1,17 @@
+# Energy measurement design — blueprint v2.0 I6.
+#
+# The former Stage-A / Stage-B staging is WITHDRAWN. This file is the enforceable statement of
+# the full per-target multi-cycle design. Do not reintroduce a reduced certification subset.
+
+design: full_per_target_multi_cycle
+load_levels_min: 8
+targets:
+  - cpu-p
+  - cpu-lpe
+  - igpu
+  - npu
+anchored: true
+randomized_order: true
+multi_cycle: true
+repeated_anchor: true
+criterion: AM-004  # R²≥0.95, slope∈[1.0,1.5], slope<1.0 hard failure, intercept vs idle

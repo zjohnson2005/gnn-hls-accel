@@ -202,12 +202,105 @@ power:
     base_w: vendor_stated
     turbo_w: vendor_stated
 
+  # Pack capacity (M2.1 closeout). Win32_Battery.DesignCapacity / FullChargeCapacity are null on
+  # this SKU; values come from root\WMI (same EC as S1). Vendor label is 70 Wh (Dell setup guide).
+  battery:
+    design_capacity_mwh: 68607              # root\WMI BatteryStaticData.DesignedCapacity
+    full_charge_capacity_mwh: 69043         # root\WMI BatteryFullChargedCapacity.FullChargedCapacity
+    design_capacity_source: root_wmi_BatteryStaticData
+    full_charge_capacity_source: root_wmi_BatteryFullChargedCapacity
+    win32_design_capacity_mwh: null         # Win32_Battery.DesignCapacity unavailable
+    win32_full_charge_capacity_mwh: null    # Win32_Battery.FullChargeCapacity unavailable
+    vendor_stated_wh: 70
+    capacity_probed: "2026-07-30"            # M2.1 closeout probe; not a sealed energy run
+
   # Pinned run conditions from analysis/aipc-c1/MACHINE.md § "Pinned run conditions (MANDATORY)".
   # Sessions violating these are INVALID, not noisy.
+  # Kept as the ac-pinned plan source of truth; profiles below reference these fields.
   pinned:
     power_plan_name: Best Performance
     power_plan_guid: ec87a53a-19a6-4f4a-980f-ab27cc929b25
     assert_script: analysis/aipc-c1/scripts/assert_power_pin.ps1
+
+  # --------------------------------------------------------------------------------------------
+  # Pinned profiles by measurement class (spec §3.7 / AM-016).
+  # Numeric bounds that M2.1 has not measured stay null — same discipline as thermal (AM-006).
+  # --------------------------------------------------------------------------------------------
+  profiles:
+    ac-pinned:
+      on_battery: false
+      # Charging COMPLETE required: bulk/top-off charge is a load confound (spec §3.7;
+      # M1 SoC-at-99%-still-charging finding). Affinity matrix and sustained-turbo work
+      # must not start until charging==false (or SoC>=threshold AND ChargeRate<=max).
+      require_charging: false
+      # root\WMI BatteryStatus.ChargeRate is mW on this SKU (empirically 0 when settled).
+      charge_rate_max_mw: 500
+      # Alternate settle path when Win32 charging flag lags: SoC at/above this AND rate low.
+      charging_complete_soc_pct: 95
+      power_plan_name: Best Performance
+      power_plan_guid: ec87a53a-19a6-4f4a-980f-ab27cc929b25
+      # Fixed below 100 — display is a whole-device load; 100% was recorded on the invalid
+      # 2026-08-03 matrix and must not be the pinned condition going forward.
+      display_brightness_pct: 50
+      wifi_state: null
+      defender_realtime: null
+      windows_update_paused: null
+      background_quiesced: null
+
+    battery-pinned:
+      on_battery: true
+      require_charging: false               # must NOT be charging (load, not just unplugged)
+      # settle_s / soc_window: measured by M2.1 (citing run below). AM-006 nulls replaced.
+      settle_s: 360                         # three consecutive 60 s windows within ±5% band
+      settle_s_determined_by: M2.1
+      settle_s_run_id: 911965cf-257c-4276-954b-17611a5e75eb
+      soc_window_pct: [40, 85]              # SoC dependence observed (~6.7% median DischargeRate shift 99→86%); keep narrow until lower-SoC replicate
+      soc_window_determined_by: M2.1
+      soc_window_run_id: 911965cf-257c-4276-954b-17611a5e75eb
+      discharge_rate_stable_band_frac: 0.05 # relative band on rolling 60 s mean DischargeRate
+      discharge_rate_stable_window_s: 60    # rolling window used to declare "stable"
+      power_plan_name: Best Performance
+      power_plan_guid: ec87a53a-19a6-4f4a-980f-ab27cc929b25
+      display_brightness_pct: null
+      wifi_state: null
+      defender_realtime: null
+      windows_update_paused: null
+      background_quiesced: true             # required assert for S1; operator checklist
+
+  class_profile_map:
+    topology_verify: ac-pinned
+    battery_counter_char: battery-pinned
+    thermal_char: ac-pinned
+    energy_calibration: battery-pinned      # also requires elevated (§3.0); checked separately
+    affinity_matrix: ac-pinned
+    mslice_affinity_matrix: ac-pinned
+
+# ----------------------------------------------------------------------------------------------
+# M2.1 S1 battery-counter characterization (spec §7 M2.1). Not the general §3.6 sampler.
+# ----------------------------------------------------------------------------------------------
+s1_characterization:
+  sample_rate_hz: 10
+  # Characterization capture length (the M2.1 measurement itself).
+  proposed_duration_s: 1800                 # >=30 min continuous
+  proposed_soc_window_pct: [40, 85]
+  synthetic_load: "cpu_spin_all_logical"
+  citing_run_id: 911965cf-257c-4276-954b-17611a5e75eb
+
+  # Minimum-duration arithmetic (time-driven EC; see AUDIT_LOG M2.1 closeout Item 1).
+  # Numeric min_viable unchanged: 20 × update_period_median_s.
+  update_period_median_s: 19.7902616
+  min_viable_energy_run_duration_s: 395.805232
+  min_viable_energy_run_duration_ci95_s: [319.402866, 409.846036]
+  # Planning durations for later energy work (not a re-measure of min_viable):
+  floor_duration_s: 410                     # CI95 upper of min_viable
+  adopted_duration_s: 480                   # plan point; margin above floor
+  reserve_p90_duration_s: 713               # single-conclusion points only — not global
+  duration_rationale: >
+    Floor >=410 s (CI95 upper of 20×median update period). Plan at 480 s.
+    Reserve p90-derived 713 s only when one measurement alone carries a conclusion.
+    Do not adopt 713 s globally — it worsens the M2.5 battery budget with little gain.
+    Justification for 20×period: edge-effect uncertainty ~period/duration (two half-period
+    unknown phases), not a fixed energy quantum.
 
 # ----------------------------------------------------------------------------------------------
 # Thermal protocol constants (blueprint §5.4, spec §3.3).
