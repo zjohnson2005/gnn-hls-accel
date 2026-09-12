@@ -44,6 +44,19 @@ def _is_sealed_path(rel: str) -> bool:
     return bool(SEALED_DERIVED.match(rel))
 
 
+def _staged_paths() -> list[str]:
+    """Paths in the index that differ from HEAD (includes deletes)."""
+    proc = subprocess.run(
+        ["git", "diff", "--cached", "--name-only", "-z"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        check=False,
+    )
+    if proc.returncode != 0 or not proc.stdout:
+        return []
+    return [p for p in proc.stdout.decode("utf-8", errors="replace").split("\0") if p]
+
+
 def scan(paths: list[str]) -> int:
     # No HEAD yet (orphan / empty) — nothing previously sealed in git.
     head = subprocess.run(
@@ -55,9 +68,23 @@ def scan(paths: list[str]) -> int:
     if head.returncode != 0:
         return 0
 
+    # Prefer explicit paths (pre-commit pass_filenames), but always fall back to
+    # the full staged set so deletions are caught when argv is empty or when
+    # pre-commit omits a deleted path.
+    candidates = [_norm(p) for p in paths] if paths else []
+    staged = [_norm(p) for p in _staged_paths()]
+    if not candidates:
+        candidates = staged
+    else:
+        # Union so a filename-filtered run still sees sealed deletes in the index.
+        seen = set(candidates)
+        for p in staged:
+            if p not in seen and _is_sealed_path(p):
+                candidates.append(p)
+                seen.add(p)
+
     violations: list[str] = []
-    for raw in paths:
-        rel = _norm(raw)
+    for rel in candidates:
         if not _is_sealed_path(rel):
             continue
         if not _in_head(rel):

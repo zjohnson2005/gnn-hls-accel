@@ -55,7 +55,10 @@ repos:
         name: block edits to sealed raw/ and derived/**/sealed_* trees
         entry: py -3 tools/hooks/check_sealed_immutable.py
         language: system
-        pass_filenames: true
+        # Always run: the hook reads the staged index so sealed deletes are
+        # caught even when pass_filenames would omit them.
+        pass_filenames: false
+        always_run: true
         stages: [pre-commit]
 
       - id: verify-doc-pins
