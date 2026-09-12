@@ -35,12 +35,23 @@ ignore = [
     "TRY003",
     # `raise ... from exc` is used where the cause is informative; TRY200/B904 overlap is noisy.
     "TRY300",
+    # Research prose and sealed-report field names routinely exceed 100 cols; wrapping them
+    # obscures the measured string. Keep the hard cap off for SEAM source.
+    "E501",
+    # UP038 (isinstance X | Y) was later removed upstream; keep ignored for ruff 0.6.9 hooks.
+    "UP038",
 ]
 
 [tool.ruff.lint.per-file-ignores]
 # Tests reach into private helpers deliberately: byte-level buffer parsing and clustering are
 # exactly the logic that needs direct unit tests rather than testing only through the public API.
 "tests/**/*.py" = ["SLF001", "ARG001", "E501"]
+# ctypes structs mirror Win32 type names character for character. Renaming them to CapWords would
+# break the correspondence with the API documentation the field order has to be checked against,
+# which is the only way to know these layouts are right.
+"seam/tools/_winmem.py" = ["N801", "RUF012"]
+"seam/tools/_winpower.py" = ["N801", "RUF012"]
+"tools/_job_teardown_probe.py" = ["N801"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["seam"]
@@ -64,7 +75,23 @@ show_error_codes = true
 [[tool.mypy.overrides]]
 # Third-party packages without bundled stubs. Listed explicitly rather than globally silenced, so
 # adding a dependency requires a deliberate entry here.
-module = ["psutil", "yaml", "jsonschema", "ruamel", "ruamel.*"]
+module = [
+    "psutil",
+    "yaml",
+    "jsonschema",
+    "ruamel",
+    "ruamel.*",
+    "wmi",
+    "pythoncom",
+    "win32pdh",
+    # M-SLICE backends. openvino / openvino_genai ship no py.typed marker; transformers and
+    # anthropic are used only through narrow, locally-typed wrappers in seam/backends/.
+    "openvino",
+    "openvino_genai",
+    "transformers",
+    "anthropic",
+    "huggingface_hub",
+]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

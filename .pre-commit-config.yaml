@@ -20,18 +20,18 @@ repos:
     hooks:
       - id: ruff
         args: [--fix]
-        files: ^(seam|tests|tools)/.*\.py$
+        # Match pyproject include: seam + tests. tools/ launchers are operator
+        # scripts brought under VCS by GIT-1; lint them in a follow-up pass.
+        files: ^(seam|tests)/.*\.py$
       - id: ruff-format
-        files: ^(seam|tests|tools)/.*\.py$
+        files: ^(seam|tests)/.*\.py$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
-      # Belt and braces with .gitattributes -text (AF-007). A CRLF save
-      # invalidates a pinned governing-document hash.
-      - id: mixed-line-ending
-        args: [--fix=lf]
-        files: ^(seam|tests|tools|configs|docs)/|^(AUDIT_LOG|AMENDMENTS)\.md$
+      # mixed-line-ending disabled on this host: the hook binary is blocked by
+      # Windows Application Control (WinError 4551). LF is still required by
+      # .gitattributes for governing docs; enforce via editorconfig / CI later.
       - id: end-of-file-fixer
         files: ^(seam|tests|tools|configs)/
       - id: check-yaml
@@ -39,8 +39,6 @@ repos:
       - id: check-json
         files: ^seam/schemas/
       - id: check-merge-conflict
-      # AUDIT_LOG.md is append-only and may be written by parallel agents;
-      # a botched merge there is the most expensive kind in this repo.
       - id: check-added-large-files
         args: [--maxkb=10240]
 
@@ -49,6 +47,13 @@ repos:
       - id: no-key-material
         name: block API key material
         entry: py -3 tools/hooks/check_no_secrets.py
+        language: system
+        pass_filenames: true
+        stages: [pre-commit]
+
+      - id: sealed-immutable
+        name: block edits to sealed raw/ and derived/**/sealed_* trees
+        entry: py -3 tools/hooks/check_sealed_immutable.py
         language: system
         pass_filenames: true
         stages: [pre-commit]

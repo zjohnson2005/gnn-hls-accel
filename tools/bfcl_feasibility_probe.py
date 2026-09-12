@@ -15,10 +15,11 @@ Modes:
   attention_window_inventory    — offline: CacheEvictionConfig / sink+window surface
   kv_precision_property_smoke   — offline: Core set/get KV_CACHE_PRECISION f16/u8/u4
   run_gpu_kv_precision          — gpu_only AST accuracy at KV_CACHE_PRECISION f16/u8/u4
-  run_npu_load                  — NPU load ladder for Qwen3-4B-int4-ov + MAX_PROMPT_LEN
+  run_npu_load                  — NPU load ladder for the resolved local IR + MAX_PROMPT_LEN
 
 Default mode (acquire_tokenize / multi_turn_gold_selftest) needs no GPU.
 GPU / NPU load modes require a clean host (Cursor/Chrome closed; Available >= 7000 MB).
+Optional --model-spec overrides configs/delta_n.yaml openvino.model_spec (4B default).
 """
 
 from __future__ import annotations
@@ -26,6 +27,7 @@ from __future__ import annotations
 import argparse
 import ast as py_ast
 import contextlib
+import ctypes
 import hashlib
 import json
 import os
@@ -38,9 +40,14 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+from tools.phase_timers import finalize_phase_timers  # noqa: E402
+
 BFCL_UNPACKED = (
     ROOT / "apu_characterization" / "out" / "cap01" / "live_sources" / "bfcl-wheel" / "unpacked"
 )
@@ -50,6 +57,26 @@ MODEL_SPEC = ROOT / "configs" / "models" / "Qwen3-4B-int4-ov.yaml"
 MODEL_DIR = ROOT / "models" / "Qwen3-4B-int4-ov"
 DELTA_N_CFG = ROOT / "configs" / "delta_n.yaml"
 DEFAULT_OUT = ROOT / "derived" / "bfcl_feasibility"
+DEFAULT_OUT_XLAM = ROOT / "derived" / "bfcl_feasibility_xlam"
+# Modes that load a local IR (tokenizer and/or LLMPipeline). --model-spec applies here.
+LOCAL_MODEL_MODES = frozenset(
+    {
+        "acquire_tokenize",
+        "run_gpu",
+        "run_gpu_multi_turn",
+        "run_gpu_multi_turn_xlam",
+        "run_session_residency",
+        "session_residency_cold_control",
+        "session_residency_render_smoke",
+        "run_gpu_kv_precision",
+        "run_npu_load",
+    }
+)
+PROMPT_FORMAT_MULTI_TURN_AGENT = "bfcl_tools_style_multi_turn_agent"
+PROMPT_FORMAT_MULTI_TURN_XLAM = "bfcl_prompting_python_ast_xlam"
+_MODEL_SPEC_OVERRIDE_ACTIVE = False
+_EXPECTED_IR_DIR: Path | None = None
+_RESOLVED_SPEC: dict[str, Any] | None = None
 
 # Probe mix (A2): 10 single-turn (simple+parallel) + 10 multi-turn first-turn.
 SINGLE_TURN_FILES = (
@@ -62,8 +89,8 @@ AST_PRECISION_FILES = (
     ("parallel", "BFCL_v4_parallel.json", 10),
 )
 MULTI_TURN_FILES = (("multi_turn_base", "BFCL_v4_multi_turn_base.json", 10),)
-# A3: 20 multi_turn_base entries, full agent loop + multi_turn_checker.
-MULTI_TURN_PROBE_FILES = (("multi_turn_base", "BFCL_v4_multi_turn_base.json", 20),)
+# A3: multi_turn_base prefix (file holds exactly 200); full agent loop + multi_turn_checker.
+MULTI_TURN_PROBE_FILES = (("multi_turn_base", "BFCL_v4_multi_turn_base.json", 200),)
 MAXIMUM_STEP_LIMIT = 20
 KV_PRECISION_LEVELS = ("f16", "u8", "u4")
 NPU_DEFAULT_MAX_PROMPT_LEN = 2048
@@ -110,6 +137,145 @@ MULTI_TURN_CLASS_TO_FILE = {
     "MemoryAPI_vector": "memory_vector.json",
     "MemoryAPI_rec_sum": "memory_rec_sum.json",
 }
+
+
+def _load_delta_n_cfg() -> dict[str, Any]:
+    cfg = yaml.safe_load(DELTA_N_CFG.read_text(encoding="utf-8"))
+    if not isinstance(cfg, dict):
+        raise TypeError("configs/delta_n.yaml: expected mapping")
+    return cfg
+
+
+def _model_spec_path(cfg: dict[str, Any], override: str | Path | None = None) -> Path:
+    """Resolve FetchedModelSpec path. Default is configs/delta_n.yaml openvino.model_spec (4B)."""
+    if override is not None:
+        path = Path(override)
+        return path if path.is_absolute() else ROOT / path
+    ov = cfg.get("openvino") or {}
+    model_spec = ov.get("model_spec")
+    if not model_spec:
+        raise ValueError("configs/delta_n.yaml: openvino.model_spec missing")
+    return ROOT / str(model_spec)
+
+
+def _resolve_model(cfg: dict[str, Any], spec_path: str | Path | None = None) -> tuple[str, Path]:
+    path = _model_spec_path(cfg, spec_path)
+    if not path.is_file():
+        raise ValueError(f"model spec not found: {path}")
+    model = yaml.safe_load(path.read_text(encoding="utf-8"))
+    model_id = str(model.get("name") or path.stem)
+    ir_dir = model.get("ir_dir")
+    if not ir_dir:
+        raise ValueError(f"{path}: ir_dir missing")
+    model_dir = Path(str(ir_dir))
+    if not model_dir.is_dir():
+        raise ValueError(f"model ir_dir does not exist: {model_dir}")
+    return model_id, model_dir
+
+
+def apply_model_spec(override: str | Path | None) -> dict[str, Any]:
+    """Bind MODEL_SPEC / MODEL_DIR from --model-spec or delta_n.yaml. Same errors as smoke."""
+    global MODEL_SPEC, MODEL_DIR, _MODEL_SPEC_OVERRIDE_ACTIVE, _EXPECTED_IR_DIR, _RESOLVED_SPEC
+    cfg = _load_delta_n_cfg()
+    path = _model_spec_path(cfg, override)
+    model_dir = _resolve_model(cfg, override)[1]
+    spec = yaml.safe_load(path.read_text(encoding="utf-8"))
+    MODEL_SPEC = path
+    MODEL_DIR = model_dir
+    _EXPECTED_IR_DIR = model_dir.resolve()
+    _RESOLVED_SPEC = spec if isinstance(spec, dict) else {}
+    _MODEL_SPEC_OVERRIDE_ACTIVE = override is not None
+    return _RESOLVED_SPEC
+
+
+def model_identity_block() -> dict[str, Any]:
+    """Fields that must appear on every model-loading report (run_id-at-point-of-use)."""
+    spec = _RESOLVED_SPEC
+    if spec is None:
+        spec = yaml.safe_load(MODEL_SPEC.read_text(encoding="utf-8"))
+        if not isinstance(spec, dict):
+            spec = {}
+    block: dict[str, Any] = {
+        "name": spec.get("name"),
+        "ir_sha256": spec.get("ir_sha256"),
+        "ir_dir": str(MODEL_DIR),
+        "revision": spec.get("revision"),
+        "publisher_quantization": spec.get("publisher_quantization"),
+        "spec": str(MODEL_SPEC),
+    }
+    if spec.get("note") is not None:
+        block["note"] = spec["note"]
+    return block
+
+
+def _model_report_fields(**extra: Any) -> dict[str, Any]:
+    spec_text = MODEL_SPEC.read_text(encoding="utf-8") if MODEL_SPEC.is_file() else ""
+    identity = model_identity_block()
+    pin = identity.get("ir_sha256")
+    base = {
+        **identity,
+        "ir_sha256_pin": pin,
+        "ir_sha256_pin_present_in_spec": bool(pin) and str(pin) in spec_text,
+    }
+    base.update(extra)
+    return base
+
+
+def _assert_load_path(path: str | Path, *, what: str) -> str:
+    """When --model-spec is set, refuse any load path other than that spec's ir_dir."""
+    resolved = Path(path).resolve()
+    if not _MODEL_SPEC_OVERRIDE_ACTIVE:
+        return str(path)
+    if _EXPECTED_IR_DIR is None:
+        raise RuntimeError("FATAL: --model-spec set but ir_dir was not resolved")
+    if resolved != _EXPECTED_IR_DIR:
+        raise RuntimeError(
+            f"FATAL: {what} would load {resolved}; --model-spec ir_dir is "
+            f"{_EXPECTED_IR_DIR}. Refusing to run a quality comparison against the wrong IR."
+        )
+    return str(resolved)
+
+
+def _assert_pipeline_matches_ir(pipe: Any) -> None:
+    if not _MODEL_SPEC_OVERRIDE_ACTIVE:
+        return
+    if _EXPECTED_IR_DIR is None:
+        raise RuntimeError("FATAL: --model-spec set but ir_dir was not resolved")
+    expected = _EXPECTED_IR_DIR
+    for attr in ("models_path", "model_path", "model_dir", "_model_path", "_models_path"):
+        val = getattr(pipe, attr, None)
+        if val is None:
+            continue
+        try:
+            got = Path(str(val)).resolve()
+        except OSError:
+            continue
+        if got == expected or expected in got.parents or got.parent == expected:
+            return
+        raise RuntimeError(
+            f"FATAL: LLMPipeline.{attr}={got} is not --model-spec ir_dir {expected}. "
+            "Refusing to run a quality comparison against the wrong IR."
+        )
+    # Constructor-path assertion already ran; some GenAI builds expose no path attr.
+
+
+def _hf_tokenizer() -> Any:
+    from transformers import AutoTokenizer
+
+    path = _assert_load_path(MODEL_DIR, what="AutoTokenizer")
+    return AutoTokenizer.from_pretrained(path)
+
+
+def _genai_tokenizer(ov_genai: Any) -> Any:
+    path = _assert_load_path(MODEL_DIR, what="Tokenizer")
+    return ov_genai.Tokenizer(path)
+
+
+def _make_llm_pipeline(ov_genai: Any, device: str, *args: Any, **kwargs: Any) -> Any:
+    path = _assert_load_path(MODEL_DIR, what="LLMPipeline")
+    pipe = ov_genai.LLMPipeline(path, device, *args, **kwargs)
+    _assert_pipeline_matches_ir(pipe)
+    return pipe
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -281,7 +447,7 @@ def select_ast_precision_entries() -> list[dict[str, Any]]:
 
 
 def select_multi_turn_entries() -> list[dict[str, Any]]:
-    """A3: first 20 multi_turn_base entries."""
+    """A3: multi_turn_base file prefix (MULTI_TURN_PROBE_FILES cap); no difficulty/API filter."""
     return _select_from_spec(MULTI_TURN_PROBE_FILES, kind="multi_turn")
 
 
@@ -379,6 +545,93 @@ def render_bfcl_tools_style(
             enable_thinking=False,
         )
     )
+
+
+def render_bfcl_prompting_xlam_style(tokenizer: Any, messages: list[dict[str, Any]]) -> str:
+    """BFCL non-FC / prompting render: no tools= block; system prompt carries Python-AST format.
+
+    Same enable_thinking=False empty-think control as the tools-style arm; only the
+    response protocol (Python-AST list vs <tool_call> JSON) differs.
+    """
+    return str(
+        tokenizer.apply_chat_template(
+            messages,
+            add_generation_prompt=True,
+            tokenize=False,
+            enable_thinking=False,
+        )
+    )
+
+
+def _bfcl_multi_turn_function_docs(entry: dict[str, Any]) -> list[dict[str, Any]]:
+    """Raw BFCL function docs (not OpenAI tools) for prompting-mode system prompt."""
+    return [row["bfcl_function"] for row in _iter_multi_turn_func_docs(entry["raw_entry"])]
+
+
+def messages_for_xlam_prompting_turn0(entry: dict[str, Any]) -> list[dict[str, Any]]:
+    """First-turn messages with official BFCL prompting system prompt injected."""
+    sys.path.insert(0, str(ROOT))
+    sys.path.insert(0, str(BFCL_UNPACKED))
+    from apu_characterization.cap01.bfcl_shims import install_bfcl_runtime_shims
+
+    install_bfcl_runtime_shims()
+    from bfcl_eval.model_handler.utils import system_prompt_pre_processing_chat_model
+
+    turn0 = [dict(m) for m in entry["question"][0] if isinstance(m, dict)]
+    func_docs = _bfcl_multi_turn_function_docs(entry)
+    return system_prompt_pre_processing_chat_model(turn0, func_docs, str(entry["id"]))
+
+
+def decode_execute_xlam(text: str) -> list[str]:
+    """BFCL official prompting-mode decode: Python-AST list → execute strings."""
+    sys.path.insert(0, str(ROOT))
+    sys.path.insert(0, str(BFCL_UNPACKED))
+    from apu_characterization.cap01.bfcl_shims import install_bfcl_runtime_shims
+
+    install_bfcl_runtime_shims()
+    from bfcl_eval.model_handler.utils import default_decode_execute_prompting
+
+    return default_decode_execute_prompting(text)
+
+
+def encode_execute_calls_as_xlam_text(calls: list[str]) -> str:
+    """Wrap execute-format strings as a single Python-AST list generation."""
+    return "[" + ", ".join(calls) + "]"
+
+
+def _kwargs_normalize_execute_call(call: str, functions: list[dict[str, Any]]) -> str:
+    """Rewrite positional args to kwargs using function schema property order.
+
+    Official ``resolve_ast_call`` ignores positionals; gold has rare positionals.
+    Kwargs-normalized XLAM text is what the prompt asks the model to emit.
+    """
+    import ast as _ast
+
+    try:
+        node = _ast.parse(call, mode="eval").body
+    except SyntaxError:
+        return call
+    if not isinstance(node, _ast.Call) or not node.args:
+        return call
+    func_name = _ast.unparse(node.func) if hasattr(_ast, "unparse") else None
+    if func_name is None:
+        if isinstance(node.func, _ast.Name):
+            func_name = node.func.id
+        else:
+            return call
+    schema = next((f for f in functions if f.get("name") == func_name), None)
+    if schema is None:
+        return call
+    props = list((schema.get("parameters") or {}).get("properties") or {})
+    if len(node.args) > len(props):
+        return call
+    kwargs = {k.arg: k.value for k in node.keywords if k.arg}
+    for i, arg in enumerate(node.args):
+        kwargs[props[i]] = arg
+    parts = []
+    for name, val in kwargs.items():
+        parts.append(f"{name}={_ast.unparse(val)}")
+    return f"{func_name}({', '.join(parts)})"
 
 
 def _chat_message_for_genai(msg: dict[str, Any]) -> dict[str, Any]:
@@ -666,12 +919,97 @@ def run_multi_turn_gold_selftest(entries: list[dict[str, Any]]) -> dict[str, Any
     }
 
 
-def run_acquire_tokenize(out_dir: Path) -> dict[str, Any]:
-    from transformers import AutoTokenizer
+def run_xlam_gold_decode_selftest(entries: list[dict[str, Any]]) -> dict[str, Any]:
+    """Encode gold as XLAM Python-AST text → official decode → multi_turn_checker.
 
+    One gold call in the 20-entry pin uses a positional arg; official
+    ``resolve_ast_call`` drops positionals, so that call is kwargs-normalized
+    from the function schema before encoding (matches what the prompt asks).
+    """
+    details: list[dict[str, Any]] = []
+    n_positional_normalized = 0
+    for entry in entries:
+        if entry["kind"] != "multi_turn":
+            continue
+        functions = _bfcl_multi_turn_function_docs(entry)
+        decoded_steps: list[list[list[str]]] = []
+        parse_error: str | None = None
+        for turn in entry["reference"]:
+            if not turn:
+                decoded_steps.append([])
+                continue
+            normalized: list[str] = []
+            for call in turn:
+                before = call
+                after = _kwargs_normalize_execute_call(call, functions)
+                if after != before:
+                    n_positional_normalized += 1
+                normalized.append(after)
+            text = encode_execute_calls_as_xlam_text(normalized)
+            try:
+                decoded = decode_execute_xlam(text)
+                decoded_steps.append([decoded])
+            except Exception as exc:
+                parse_error = f"{type(exc).__name__}: {exc}"
+                break
+        if parse_error is not None:
+            details.append(
+                {
+                    "id": entry["id"],
+                    "category": entry["category"],
+                    "gold_xlam_decode_valid": False,
+                    "error": parse_error,
+                }
+            )
+            continue
+        try:
+            verdict = score_multi_turn(
+                test_entry=entry["raw_entry"],
+                ground_truth=entry["reference"],
+                model_result_decoded=decoded_steps,
+                test_category=entry["category"],
+                model_name=f"xlam_gold_{entry['id']}".replace("-", "_").replace(".", "_"),
+            )
+            ok = bool(verdict.get("valid"))
+            err = (
+                None
+                if ok
+                else {
+                    k: verdict.get(k)
+                    for k in ("error_message", "error_type", "details")
+                    if k in verdict
+                }
+            )
+        except Exception as exc:
+            ok = False
+            err = f"{type(exc).__name__}: {exc}"
+        details.append(
+            {
+                "id": entry["id"],
+                "category": entry["category"],
+                "gold_xlam_decode_valid": ok,
+                "error": err,
+            }
+        )
+    return {
+        "n": len(details),
+        "n_valid": sum(1 for d in details if d["gold_xlam_decode_valid"]),
+        "n_positional_normalized": n_positional_normalized,
+        "details": details,
+        "decoder": "bfcl_eval.model_handler.utils.default_decode_execute_prompting",
+        "checker": "bfcl_eval.eval_checker.multi_turn_eval.multi_turn_checker",
+        "note": (
+            "Gold execute strings wrapped as [call, ...] then decoded with the "
+            "official prompting-mode path. Positional gold args kwargs-normalized "
+            "because official resolve_ast_call ignores positionals."
+        ),
+    }
+
+
+def run_acquire_tokenize(out_dir: Path) -> dict[str, Any]:
     inv = inventory()
     entries = select_entries()
-    tokenizer = AutoTokenizer.from_pretrained(str(MODEL_DIR))
+    tokenizer = _hf_tokenizer()
     rows: list[dict[str, Any]] = []
     gold_checks: list[dict[str, Any]] = []
 
@@ -721,28 +1059,22 @@ def run_acquire_tokenize(out_dir: Path) -> dict[str, Any]:
 
     ir_bin = MODEL_DIR / "openvino_model.bin"
     # Directory-level ir_sha256 is the FetchedModelSpec pin; also record bin hash.
-    model_yaml = MODEL_SPEC.read_text(encoding="utf-8")
-    ir_pin_ok = IR_SHA256_EXPECTED in model_yaml
     bin_sha = _sha256_file(ir_bin) if ir_bin.is_file() else None
 
     report = {
         "probe": "bfcl_feasibility",
         "mode": "acquire_tokenize",
         "bfcl": inv,
-        "model": {
-            "spec": str(MODEL_SPEC),
-            "ir_dir": str(MODEL_DIR),
-            "ir_sha256_pin": IR_SHA256_EXPECTED,
-            "ir_sha256_pin_present_in_spec": ir_pin_ok,
-            "openvino_model_bin_sha256": bin_sha,
-            "enable_thinking": False,
-            "sealed_arm": {
+        "model": _model_report_fields(
+            openvino_model_bin_sha256=bin_sha,
+            enable_thinking=False,
+            sealed_arm={
                 "id": "gpu_only",
                 "load_sequence": ["GPU"],
                 "generate_device": "GPU",
                 "apply_chat_template_at_generate": False,
             },
-        },
+        ),
         "prompt_format_divergence": {
             "timing_arm": (
                 "apply_chat_template([{role:user, content}], "
@@ -887,14 +1219,13 @@ def estimate_opus_cost(rows: list[dict[str, Any]]) -> dict[str, Any]:
 def run_gpu(out_dir: Path, *, max_new_tokens: int = 512) -> dict[str, Any]:
     """gpu_only generate for the 20-entry probe. Caller must ensure host cleanliness."""
     import openvino_genai as ov_genai
-    from transformers import AutoTokenizer
 
     tokenize_report = run_acquire_tokenize(out_dir)
     entries = json.loads((out_dir / "probe_entries.json").read_text(encoding="utf-8"))
-    tokenizer = AutoTokenizer.from_pretrained(str(MODEL_DIR))
+    tokenizer = _hf_tokenizer()
 
     t_load0 = time.perf_counter()
-    pipe = ov_genai.LLMPipeline(str(MODEL_DIR), "GPU")
+    pipe = _make_llm_pipeline(ov_genai, "GPU")
     load_s = time.perf_counter() - t_load0
 
     cfg = ov_genai.GenerationConfig()
@@ -1202,11 +1533,9 @@ def load_arm_pipeline(
         if requested_kv is not None:
             core.set_property(device, {"KV_CACHE_PRECISION": properties["KV_CACHE_PRECISION"]})
         if pipeline_config:
-            pipes[device] = ov_genai.LLMPipeline(
-                str(MODEL_DIR), device, pipeline_config, **properties
-            )
+            pipes[device] = _make_llm_pipeline(ov_genai, device, pipeline_config, **properties)
         else:
-            pipes[device] = ov_genai.LLMPipeline(str(MODEL_DIR), device, **properties)
+            pipes[device] = _make_llm_pipeline(ov_genai, device, **properties)
         kv_check = enforce_kv_cache_precision(device=device, requested=requested_kv, core=core)
         loads.append(
             {
@@ -1404,6 +1733,11 @@ def run_multi_turn_agent_entry(
 
     try:
         for turn_idx, turn_msgs in enumerate(entry["question"]):
+            t_turn0 = time.perf_counter()
+            t_tool_exec = 0.0
+            t_template_build = 0.0
+            t_tokenize = 0.0
+            t_generate = 0.0
             new_turn_msgs = [dict(m) for m in turn_msgs if isinstance(m, dict)]
             messages.extend(new_turn_msgs)
             if resident_history is not None:
@@ -1422,8 +1756,12 @@ def run_multi_turn_agent_entry(
             turn_slo_ok: bool | None = None
 
             while True:
+                _t = time.perf_counter()
                 prompt_full = render_bfcl_tools_style(tokenizer, messages, tools)
+                t_template_build += time.perf_counter() - _t
+                _t = time.perf_counter()
                 prompt_n = len(tokenizer(prompt_full)["input_ids"])
+                t_tokenize += time.perf_counter() - _t
                 prompt_token_samples.append(prompt_n)
 
                 if mode == "RESIDENT":
@@ -1439,11 +1777,13 @@ def run_multi_turn_agent_entry(
                         )
                     gen_input: Any = resident_history
                     input_kind = "chat_history_resident"
+                    _t = time.perf_counter()
                     gen_input_tokens = len(
                         tokenizer(render_genai_chat_history(genai_tokenizer, resident_history))[
                             "input_ids"
                         ]
                     )
+                    t_tokenize += time.perf_counter() - _t
                     cfg_use = _generation_cfg(
                         ov_genai,
                         max_new_tokens=max_new,
@@ -1451,8 +1791,10 @@ def run_multi_turn_agent_entry(
                     )
                 elif mode == "NON_RESIDENT":
                     assert genai_tokenizer is not None
+                    _t = time.perf_counter()
                     hist = build_bfcl_chat_history(ov_genai, messages, tools)
                     rendered = render_genai_chat_history(genai_tokenizer, hist)
+                    t_template_build += time.perf_counter() - _t
                     if not session_generated_once:
                         first_turn_equiv = assert_first_turn_token_equivalence(
                             hf_tokenizer=tokenizer,
@@ -1464,7 +1806,9 @@ def run_multi_turn_agent_entry(
                         )
                     gen_input = rendered
                     input_kind = "full_prompt"
+                    _t = time.perf_counter()
                     gen_input_tokens = len(tokenizer(rendered)["input_ids"])
+                    t_tokenize += time.perf_counter() - _t
                     cfg_use = _generation_cfg(
                         ov_genai,
                         max_new_tokens=max_new,
@@ -1498,6 +1842,7 @@ def run_multi_turn_agent_entry(
                     t0 = time.perf_counter()
                     gen = pipe.generate([prompt_full], cfg)
                     wall_s = time.perf_counter() - t0
+                    t_generate += wall_s
                     texts = getattr(gen, "texts", None)
                     text = str(texts[0]) if texts else str(gen)
                     metrics = getattr(gen, "perf_metrics", None)
@@ -1526,6 +1871,7 @@ def run_multi_turn_agent_entry(
                 else:
                     timed = _timed_generate(pipe, ov_genai, gen_input, cfg_use)
                     wall_s = float(timed["wall_s"])
+                    t_generate += wall_s
                     text = timed.get("text") or ""
                     completion_n = timed.get("generated_tokens")
                     if completion_n is None:
@@ -1595,6 +1941,7 @@ def run_multi_turn_agent_entry(
                     break
 
                 turn_decoded_steps.append(decoded)
+                _t = time.perf_counter()
                 execution_results, _instances = execute_multi_turn_func_call(
                     decoded,
                     initial_config,
@@ -1604,6 +1951,7 @@ def run_multi_turn_agent_entry(
                     long_context=("long_context" in test_category or "composite" in test_category),
                     is_evaL_run=False,
                 )
+                t_tool_exec += time.perf_counter() - _t
                 for exec_str, exec_result in zip(decoded, execution_results, strict=False):
                     tool_msg = {
                         "role": "tool",
@@ -1630,6 +1978,14 @@ def run_multi_turn_agent_entry(
                     turn_decoded_steps, entry["reference"][turn_idx]
                 )
 
+            turn_wall_s = time.perf_counter() - t_turn0
+            phases = finalize_phase_timers(
+                turn_wall_s=turn_wall_s,
+                t_tool_exec=t_tool_exec,
+                t_template_build=t_template_build,
+                t_tokenize=t_tokenize,
+                t_generate=t_generate,
+            )
             turn_metrics.append(
                 {
                     "turn": turn_idx,
@@ -1646,6 +2002,8 @@ def run_multi_turn_agent_entry(
                     "slo_ok": turn_slo_ok,
                     "per_turn_accuracy": per_turn_acc,
                     "steps": turn_step_metrics,
+                    # Additive phase timers (future sealed runs). Not consumed by replay yet.
+                    **phases,
                 }
             )
             if force_quit:
@@ -1749,7 +2107,6 @@ def run_multi_turn_agent_entry(
 def run_gpu_multi_turn(out_dir: Path, *, max_new_tokens: int = 512) -> dict[str, Any]:
     """gpu_only full multi-turn probe for 20 multi_turn_base entries."""
     import openvino_genai as ov_genai
-    from transformers import AutoTokenizer
 
     out_dir.mkdir(parents=True, exist_ok=True)
     entries = select_multi_turn_entries()
@@ -1763,7 +2120,7 @@ def run_gpu_multi_turn(out_dir: Path, *, max_new_tokens: int = 512) -> dict[str,
         encoding="utf-8",
     )
 
-    tokenizer = AutoTokenizer.from_pretrained(str(MODEL_DIR))
+    tokenizer = _hf_tokenizer()
     # First-turn token profile (no agent loop) for distribution context.
     token_rows: list[dict[str, Any]] = []
     for entry in entries:
@@ -1789,7 +2146,7 @@ def run_gpu_multi_turn(out_dir: Path, *, max_new_tokens: int = 512) -> dict[str,
         r["token_delta_bfcl_minus_timing"] = r["bfcl_tools_style_tokens"] - r["timing_style_tokens"]
 
     t_load0 = time.perf_counter()
-    pipe = ov_genai.LLMPipeline(str(MODEL_DIR), "GPU")
+    pipe = _make_llm_pipeline(ov_genai, "GPU")
     load_s = time.perf_counter() - t_load0
 
     cfg = ov_genai.GenerationConfig()
@@ -1827,20 +2184,15 @@ def run_gpu_multi_turn(out_dir: Path, *, max_new_tokens: int = 512) -> dict[str,
     report = {
         "probe": "bfcl_feasibility_multi_turn",
         "mode": "run_gpu_multi_turn",
-        "model": {
-            "spec": str(MODEL_SPEC),
-            "ir_dir": str(MODEL_DIR),
-            "ir_sha256_pin": IR_SHA256_EXPECTED,
-            "ir_sha256_pin_present_in_spec": IR_SHA256_EXPECTED
-            in MODEL_SPEC.read_text(encoding="utf-8"),
-            "enable_thinking": False,
-            "sealed_arm": {
+        "model": _model_report_fields(
+            enable_thinking=False,
+            sealed_arm={
                 "id": "gpu_only",
                 "load_sequence": ["GPU"],
                 "generate_device": "GPU",
                 "apply_chat_template_at_generate": False,
             },
-        },
+        ),
         "multi_turn_checker_gold_selftest": gold,
         "first_turn_token_profile": {
             "entries": token_rows,
@@ -1888,6 +2240,527 @@ def run_gpu_multi_turn(out_dir: Path, *, max_new_tokens: int = 512) -> dict[str,
         },
     }
     (out_dir / "multi_turn_gpu_probe_report.json").write_text(
+        json.dumps(report, indent=2, sort_keys=True, default=str) + "\n",
+        encoding="utf-8",
+    )
+    return report
+
+
+def run_multi_turn_xlam_agent_entry(
+    *,
+    pipe: Any,
+    tokenizer: Any,
+    cfg: Any,
+    entry: dict[str, Any],
+) -> dict[str, Any]:
+    """Multi-turn agent loop identical to run_multi_turn_agent_entry (gpu_only path),
+    except prompt/decode use BFCL prompting-mode Python-AST (XLAM-format arm).
+    """
+    sys.path.insert(0, str(ROOT))
+    sys.path.insert(0, str(BFCL_UNPACKED))
+    from apu_characterization.cap01.bfcl_shims import install_bfcl_runtime_shims
+
+    install_bfcl_runtime_shims()
+    from bfcl_eval.eval_checker.multi_turn_eval.multi_turn_utils import (
+        execute_multi_turn_func_call,
+        is_empty_execute_response,
+    )
+
+    raw = entry["raw_entry"]
+    func_docs = _bfcl_multi_turn_function_docs(entry)
+    initial_config = raw.get("initial_config") or {}
+    involved_classes = raw.get("involved_classes") or []
+    test_entry_id = str(raw["id"])
+    test_category = entry["category"]
+    model_name = f"probe_gpu_xlam_{test_entry_id}".replace("-", "_").replace(".", "_")
+
+    execute_multi_turn_func_call(
+        [],
+        initial_config,
+        involved_classes,
+        model_name,
+        test_entry_id,
+        long_context=("long_context" in test_category or "composite" in test_category),
+        is_evaL_run=False,
+    )
+
+    messages: list[dict[str, Any]] = []
+    all_model_response: list[list[str]] = []
+    all_decoded: list[list[list[str]]] = []
+    calls_emitted_per_generation: list[int] = []
+    turn_metrics: list[dict[str, Any]] = []
+    prompt_token_samples: list[int] = []
+    completion_token_samples: list[int] = []
+    context_growth: list[dict[str, Any]] = []
+    force_quit = False
+    prev_turn0_prompt_tokens: int | None = None
+    t_entry0 = time.perf_counter()
+    wall_s = 0.0
+
+    for turn_idx, turn_msgs in enumerate(entry["question"]):
+        new_turn_msgs = [dict(m) for m in turn_msgs if isinstance(m, dict)]
+        if turn_idx == 0:
+            from bfcl_eval.model_handler.utils import system_prompt_pre_processing_chat_model
+
+            new_turn_msgs = system_prompt_pre_processing_chat_model(
+                new_turn_msgs, func_docs, test_entry_id
+            )
+        messages.extend(new_turn_msgs)
+
+        turn_responses: list[str] = []
+        turn_decoded_steps: list[list[str]] = []
+        turn_step_metrics: list[dict[str, Any]] = []
+        turn_calls_per_gen: list[int] = []
+        step = 0
+        turn_ttft_s: float | None = None
+        turn_decode_tok_s: float | None = None
+        turn_generated: int | None = None
+        turn_prompt_tokens: int | None = None
+        turn_delta_tokens: int | None = None
+        turn_slo_ok: bool | None = None
+
+        while True:
+            prompt_full = render_bfcl_prompting_xlam_style(tokenizer, messages)
+            prompt_n = len(tokenizer(prompt_full)["input_ids"])
+            prompt_token_samples.append(prompt_n)
+            context_growth.append(
+                {
+                    "turn": turn_idx,
+                    "step": step,
+                    "prompt_tokens": prompt_n,
+                    "delta_tokens_vs_prev_turn": (
+                        None
+                        if prev_turn0_prompt_tokens is None or step != 0
+                        else prompt_n - prev_turn0_prompt_tokens
+                    ),
+                    "generate_input_tokens": prompt_n,
+                    "input_kind": "full_prompt",
+                    "n_messages": len(messages),
+                    "residency_mode": None,
+                }
+            )
+
+            t0 = time.perf_counter()
+            gen = pipe.generate([prompt_full], cfg)
+            wall_s = time.perf_counter() - t0
+            texts = getattr(gen, "texts", None)
+            text = str(texts[0]) if texts else str(gen)
+            metrics = getattr(gen, "perf_metrics", None)
+            completion_n = None
+            ttft_s = None
+            decode_tok_s = None
+            prompt_tokens_reported: int | None = None
+            if metrics is not None:
+                with contextlib.suppress(Exception):
+                    completion_n = int(metrics.get_num_generated_tokens())
+                try:
+                    ttft_ms = float(metrics.get_ttft().mean)
+                    if ttft_ms > 0:
+                        ttft_s = ttft_ms / 1000.0
+                except Exception:
+                    pass
+                try:
+                    prompt_tokens_reported = int(metrics.get_num_input_tokens())
+                except Exception:
+                    prompt_tokens_reported = None
+            if completion_n is None:
+                completion_n = len(tokenizer(text)["input_ids"])
+            if ttft_s is not None and completion_n >= 2 and wall_s > ttft_s:
+                decode_tok_s = (completion_n - 1) / (wall_s - ttft_s)
+
+            completion_token_samples.append(int(completion_n))
+            turn_responses.append(text)
+            assert_no_think_in_generation(
+                text,
+                where=f"{entry['id']}/turn{turn_idx}/step{step}/xlam",
+            )
+
+            step_rec = {
+                "turn": turn_idx,
+                "step": step,
+                "prompt_tokens": prompt_n,
+                "generate_input_tokens": prompt_n,
+                "prompt_tokens_reported": prompt_tokens_reported,
+                "input_kind": "full_prompt",
+                "ttft_s": ttft_s,
+                "decode_tok_s": decode_tok_s,
+                "generated_tokens": int(completion_n),
+                "wall_s": wall_s,
+                "ok": True,
+                "error": None,
+                "calls_emitted": None,
+            }
+            turn_step_metrics.append(step_rec)
+
+            if step == 0:
+                turn_ttft_s = ttft_s
+                turn_decode_tok_s = decode_tok_s
+                turn_generated = int(completion_n)
+                turn_prompt_tokens = prompt_n
+                turn_delta_tokens = (
+                    None
+                    if prev_turn0_prompt_tokens is None
+                    else prompt_n - prev_turn0_prompt_tokens
+                )
+                turn_slo_ok = (
+                    ttft_s is not None
+                    and decode_tok_s is not None
+                    and ttft_s <= SLO_TTFT_S
+                    and decode_tok_s >= SLO_DECODE_TOK_S
+                )
+
+            messages.append({"role": "assistant", "content": text})
+
+            try:
+                decoded = decode_execute_xlam(text)
+                n_calls = len(decoded)
+                if is_empty_execute_response(decoded):
+                    step_rec["calls_emitted"] = 0
+                    calls_emitted_per_generation.append(0)
+                    turn_calls_per_gen.append(0)
+                    break
+            except Exception:
+                step_rec["calls_emitted"] = 0
+                calls_emitted_per_generation.append(0)
+                turn_calls_per_gen.append(0)
+                break
+
+            step_rec["calls_emitted"] = n_calls
+            calls_emitted_per_generation.append(n_calls)
+            turn_calls_per_gen.append(n_calls)
+            turn_decoded_steps.append(decoded)
+            execution_results, _instances = execute_multi_turn_func_call(
+                decoded,
+                initial_config,
+                involved_classes,
+                model_name,
+                test_entry_id,
+                long_context=("long_context" in test_category or "composite" in test_category),
+                is_evaL_run=False,
+            )
+            for exec_str, exec_result in zip(decoded, execution_results, strict=False):
+                messages.append(
+                    {
+                        "role": "tool",
+                        "name": exec_str,
+                        "content": str(exec_result),
+                    }
+                )
+            step += 1
+            if step > MAXIMUM_STEP_LIMIT:
+                force_quit = True
+                break
+
+        if turn_prompt_tokens is not None:
+            prev_turn0_prompt_tokens = turn_prompt_tokens
+
+        all_model_response.append(turn_responses)
+        all_decoded.append(turn_decoded_steps)
+
+        per_turn_acc = None
+        if turn_idx < len(entry["reference"]):
+            per_turn_acc = structural_turn_correct(turn_decoded_steps, entry["reference"][turn_idx])
+
+        turn_metrics.append(
+            {
+                "turn": turn_idx,
+                "n_generations": len(turn_responses),
+                "n_decoded_steps": len(turn_decoded_steps),
+                "calls_emitted_per_generation": turn_calls_per_gen,
+                "last_wall_s": wall_s,
+                "ttft_s": turn_ttft_s,
+                "prompt_tokens": turn_prompt_tokens,
+                "delta_tokens_vs_prev_turn": turn_delta_tokens,
+                "decode_tok_s": turn_decode_tok_s,
+                "generated_tokens": turn_generated,
+                "slo_ttft_s": SLO_TTFT_S,
+                "slo_decode_tok_s": SLO_DECODE_TOK_S,
+                "slo_ok": turn_slo_ok,
+                "per_turn_accuracy": per_turn_acc,
+                "steps": turn_step_metrics,
+            }
+        )
+        if force_quit:
+            break
+
+    wall_entry_s = time.perf_counter() - t_entry0
+
+    score: dict[str, Any]
+    if force_quit or len(all_model_response) != len(entry["reference"]):
+        score = {
+            "valid": False,
+            "error_type": "multi_turn:force_terminated",
+            "error_message": (
+                f"turns_model={len(all_model_response)} "
+                f"turns_gt={len(entry['reference'])} force_quit={force_quit}"
+            ),
+        }
+    else:
+        try:
+            score = score_multi_turn(
+                test_entry=raw,
+                ground_truth=entry["reference"],
+                model_result_decoded=all_decoded,
+                test_category=test_category,
+                model_name=model_name + "_score",
+            )
+        except Exception as exc:
+            score = {
+                "valid": False,
+                "error_type": "probe:multi_turn_exception",
+                "error_message": f"{type(exc).__name__}: {exc}",
+            }
+
+    prompt_by_turn = [g["prompt_tokens"] for g in context_growth if g["step"] == 0]
+    deltas_by_turn = [g.get("delta_tokens_vs_prev_turn") for g in context_growth if g["step"] == 0]
+    slo_flags = [t.get("slo_ok") for t in turn_metrics if t.get("slo_ok") is not None]
+    per_turn_correct = [
+        bool(t["per_turn_accuracy"]["correct"])
+        for t in turn_metrics
+        if t.get("per_turn_accuracy") is not None
+    ]
+    return {
+        "id": entry["id"],
+        "category": entry["category"],
+        "kind": "multi_turn",
+        "residency_mode": None,
+        "prompt_format": PROMPT_FORMAT_MULTI_TURN_XLAM,
+        "wall_s": wall_entry_s,
+        "force_quit": force_quit,
+        "n_user_turns": len(entry["question"]),
+        "n_completed_turns": len(all_model_response),
+        "prompt_tokens_all_steps": prompt_token_samples,
+        "completion_tokens_all_steps": completion_token_samples,
+        "prompt_tokens_sum": sum(prompt_token_samples),
+        "completion_tokens_sum": sum(completion_token_samples),
+        "prompt_tokens_first_step_per_turn": prompt_by_turn,
+        "delta_tokens_vs_prev_turn": deltas_by_turn,
+        "context_growth": context_growth,
+        "context_growth_delta_tokens": (
+            (context_growth[-1]["prompt_tokens"] - context_growth[0]["prompt_tokens"])
+            if len(context_growth) >= 2
+            else 0
+        ),
+        "calls_emitted_per_generation": calls_emitted_per_generation,
+        "calls_emitted_max": max(calls_emitted_per_generation)
+        if calls_emitted_per_generation
+        else 0,
+        "n_generations_with_multi_call": sum(1 for n in calls_emitted_per_generation if n > 1),
+        "turn_metrics": turn_metrics,
+        "session_summary": {
+            "total_latency_s": wall_entry_s,
+            "turn_count": len(turn_metrics),
+            "fraction_turns_slo_ok": (
+                sum(1 for x in slo_flags if x) / len(slo_flags) if slo_flags else None
+            ),
+            "n_turns_slo_ok": sum(1 for x in slo_flags if x),
+            "n_turns_slo_scored": len(slo_flags),
+            "per_turn_accuracy_correct": sum(1 for x in per_turn_correct if x),
+            "per_turn_accuracy_n": len(per_turn_correct),
+            "per_turn_accuracy": (
+                sum(1 for x in per_turn_correct if x) / len(per_turn_correct)
+                if per_turn_correct
+                else None
+            ),
+            "measured_context_growth_tokens": (
+                (prompt_by_turn[-1] - prompt_by_turn[0]) if len(prompt_by_turn) >= 2 else 0
+            ),
+            "n_generations_with_think": sum(
+                1 for turn in all_model_response for t in turn if THINK_OPEN_RE.search(t or "")
+            ),
+            "calls_emitted_max": (
+                max(calls_emitted_per_generation) if calls_emitted_per_generation else 0
+            ),
+            "n_generations_with_multi_call": sum(1 for n in calls_emitted_per_generation if n > 1),
+        },
+        "model_result_raw": all_model_response,
+        "model_result_raw_heads": [[t[:300] for t in turn] for turn in all_model_response],
+        "model_result_decoded": all_decoded,
+        "score": {
+            "valid": score.get("valid"),
+            "error_type": score.get("error_type"),
+            "error_message": score.get("error_message") or score.get("error"),
+        },
+    }
+
+
+def run_gpu_multi_turn_xlam(out_dir: Path, *, max_new_tokens: int = 512) -> dict[str, Any]:
+    """gpu_only multi-turn arm: identical loop/checker, BFCL prompting Python-AST protocol."""
+    import openvino_genai as ov_genai
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    entries = select_multi_turn_entries()
+    (out_dir / "multi_turn_probe_entries.json").write_text(
+        json.dumps(entries, indent=2, default=str) + "\n", encoding="utf-8"
+    )
+
+    gold = run_multi_turn_gold_selftest(entries)
+    (out_dir / "multi_turn_gold_selftest.json").write_text(
+        json.dumps(gold, indent=2, sort_keys=True, default=str) + "\n",
+        encoding="utf-8",
+    )
+    gold_xlam = run_xlam_gold_decode_selftest(entries)
+    (out_dir / "multi_turn_xlam_gold_decode_selftest.json").write_text(
+        json.dumps(gold_xlam, indent=2, sort_keys=True, default=str) + "\n",
+        encoding="utf-8",
+    )
+
+    tokenizer = _hf_tokenizer()
+    entry0 = entries[0]
+    tools_style_prompt = render_bfcl_tools_style(
+        tokenizer, messages_for_entry(entry0), tools_for_entry(entry0)
+    )
+    xlam_prompt = render_bfcl_prompting_xlam_style(
+        tokenizer, messages_for_xlam_prompting_turn0(entry0)
+    )
+    prompt_audit = {
+        "entry_id": entry0["id"],
+        "tools_style_prompt_format": PROMPT_FORMAT_MULTI_TURN_AGENT,
+        "xlam_prompt_format": PROMPT_FORMAT_MULTI_TURN_XLAM,
+        "tools_style_first_turn_prompt_verbatim": tools_style_prompt,
+        "xlam_first_turn_prompt_verbatim": xlam_prompt,
+        "prompt_construction": {
+            "method": "official_bfcl_eval",
+            "system_prompt": (
+                "bfcl_eval.model_handler.utils.system_prompt_pre_processing_chat_model"
+            ),
+            "decode": "bfcl_eval.model_handler.utils.default_decode_execute_prompting",
+            "render": (
+                "HF AutoTokenizer.apply_chat_template without tools=, "
+                "enable_thinking=False (same think control as tools-style arm)"
+            ),
+            "note": (
+                "BFCL non-FC / prompting Python-AST list format "
+                "[func(arg=val), ...]. Not Salesforce xLAM JSON-array handler."
+            ),
+        },
+    }
+    (out_dir / "xlam_vs_tools_first_turn_prompt_audit.json").write_text(
+        json.dumps(prompt_audit, indent=2, sort_keys=True, default=str) + "\n",
+        encoding="utf-8",
+    )
+
+    token_rows: list[dict[str, Any]] = []
+    for entry in entries:
+        prompt = render_bfcl_prompting_xlam_style(
+            tokenizer, messages_for_xlam_prompting_turn0(entry)
+        )
+        tools_prompt = render_bfcl_tools_style(
+            tokenizer, messages_for_entry(entry), tools_for_entry(entry)
+        )
+        token_rows.append(
+            {
+                "id": entry["id"],
+                "category": entry["category"],
+                "kind": "multi_turn",
+                "xlam_prompting_tokens": len(tokenizer(prompt)["input_ids"]),
+                "bfcl_tools_style_tokens": len(tokenizer(tools_prompt)["input_ids"]),
+                "token_delta_xlam_minus_tools": (
+                    len(tokenizer(prompt)["input_ids"]) - len(tokenizer(tools_prompt)["input_ids"])
+                ),
+                "n_tools": len(tools_for_entry(entry)),
+                "n_user_turns": len(entry["question"]),
+            }
+        )
+
+    t_load0 = time.perf_counter()
+    pipe = _make_llm_pipeline(ov_genai, "GPU")
+    load_s = time.perf_counter() - t_load0
+
+    cfg = ov_genai.GenerationConfig()
+    cfg.max_new_tokens = max_new_tokens
+    cfg.do_sample = False
+    cfg.apply_chat_template = False
+
+    results: list[dict[str, Any]] = []
+    for entry in entries:
+        print(f"[multi_turn_xlam] {entry['id']} …", flush=True)
+        results.append(
+            run_multi_turn_xlam_agent_entry(pipe=pipe, tokenizer=tokenizer, cfg=cfg, entry=entry)
+        )
+        (out_dir / "multi_turn_xlam_gpu_probe_partial.json").write_text(
+            json.dumps(results, indent=2, sort_keys=True, default=str) + "\n",
+            encoding="utf-8",
+        )
+
+    correct = sum(1 for r in results if r["score"].get("valid") is True)
+    all_prompt = [t for r in results for t in r["prompt_tokens_all_steps"]]
+    all_completion = [t for r in results for t in r["completion_tokens_all_steps"]]
+    walls = [float(r["wall_s"]) for r in results]
+    growth = [int(r["context_growth_delta_tokens"]) for r in results]
+    first_prompts = [t for r in results for t in r["prompt_tokens_first_step_per_turn"]]
+    all_calls = [n for r in results for n in r["calls_emitted_per_generation"]]
+
+    by_cat: dict[str, dict[str, int]] = {}
+    for r in results:
+        cat = r["category"]
+        by_cat.setdefault(cat, {"n": 0, "correct": 0})
+        by_cat[cat]["n"] += 1
+        if r["score"].get("valid") is True:
+            by_cat[cat]["correct"] += 1
+
+    report = {
+        "probe": "bfcl_feasibility_multi_turn_xlam",
+        "mode": "run_gpu_multi_turn_xlam",
+        "model": _model_report_fields(
+            enable_thinking=False,
+            sealed_arm={
+                "id": "gpu_only",
+                "load_sequence": ["GPU"],
+                "generate_device": "GPU",
+                "apply_chat_template_at_generate": False,
+            },
+        ),
+        "multi_turn_checker_gold_selftest": gold,
+        "xlam_gold_decode_selftest": gold_xlam,
+        "first_turn_prompt_audit": {
+            "entry_id": prompt_audit["entry_id"],
+            "prompt_construction": prompt_audit["prompt_construction"],
+            "xlam_first_turn_prompt_verbatim": xlam_prompt,
+            "tools_style_first_turn_prompt_verbatim": tools_style_prompt,
+        },
+        "first_turn_token_profile": {
+            "entries": token_rows,
+        },
+        "gpu_probe": {
+            "status": "complete",
+            "isolation_mode": "OPERATOR_ASSERTED_CLEAN",
+            "load_sequence": ["GPU"],
+            "generate_device": "GPU",
+            "enable_thinking": False,
+            "apply_chat_template_at_generate": False,
+            "prompt_format": PROMPT_FORMAT_MULTI_TURN_XLAM,
+            "contrast_prompt_format": PROMPT_FORMAT_MULTI_TURN_AGENT,
+            "model_load_s": load_s,
+            "max_new_tokens": max_new_tokens,
+            "maximum_step_limit": MAXIMUM_STEP_LIMIT,
+            "per_entry": results,
+            "accuracy_multi_turn": {
+                cat: {
+                    "correct": v["correct"],
+                    "n": v["n"],
+                    "accuracy": v["correct"] / v["n"] if v["n"] else None,
+                }
+                for cat, v in by_cat.items()
+            },
+            "accuracy_overall": {
+                "correct": correct,
+                "n": len(results),
+                "accuracy": correct / len(results) if results else None,
+            },
+            "wall_clock_s": _stats_float(walls),
+            "prompt_tokens_per_generation": _stats_int(all_prompt),
+            "completion_tokens_per_generation": _stats_int(all_completion),
+            "prompt_tokens_first_step_per_turn": _stats_int(first_prompts),
+            "context_growth_delta_tokens_per_entry": _stats_int(growth),
+            "calls_emitted_per_generation": _stats_int(all_calls),
+            "n_generations_with_multi_call": sum(1 for n in all_calls if n > 1),
+            "fraction_generations_multi_call": (
+                sum(1 for n in all_calls if n > 1) / len(all_calls) if all_calls else None
+            ),
+        },
+    }
+    (out_dir / "multi_turn_xlam_gpu_probe_report.json").write_text(
         json.dumps(report, indent=2, sort_keys=True, default=str) + "\n",
         encoding="utf-8",
     )
@@ -2800,6 +3673,51 @@ def run_cloud_multi_turn(
     return report
 
 
+def _host_uptime_s() -> float | None:
+    """Seconds since boot (GetTickCount64). Additive per-entry field for onset curves."""
+    try:
+        return round(float(ctypes.windll.kernel32.GetTickCount64()) / 1000.0, 3)
+    except Exception:
+        return None
+
+
+def _host_available_mb() -> dict[str, Any]:
+    """Available physical memory in MB at call time.
+
+    Uses GlobalMemoryStatusEx.ullAvailPhys (fast, per-entry). Gate scripts use
+    Get-Counter '\\Memory\\Available MBytes' (includes standby); method is recorded
+    so the two are not silently equated.
+    """
+    try:
+
+        class MEMORYSTATUSEX(ctypes.Structure):
+            _fields_ = [
+                ("dwLength", ctypes.c_ulong),
+                ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong),
+                ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong),
+                ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong),
+                ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+            ]
+
+        stat = MEMORYSTATUSEX()
+        stat.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+        if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat)):
+            raise OSError("GlobalMemoryStatusEx failed")
+        return {
+            "available_mb": round(float(stat.ullAvailPhys) / (1024.0 * 1024.0), 1),
+            "available_method": "GlobalMemoryStatusEx.ullAvailPhys",
+        }
+    except Exception as exc:
+        return {
+            "available_mb": None,
+            "available_method": f"unreadable:{type(exc).__name__}",
+        }
+
+
 def run_session_residency(
     out_dir: Path,
     *,
@@ -2811,7 +3729,6 @@ def run_session_residency(
 ) -> dict[str, Any]:
     """Session-level RESIDENT / NON_RESIDENT A/B cell on real BFCL multi_turn_base."""
     import openvino_genai as ov_genai
-    from transformers import AutoTokenizer
 
     mode = residency_mode.upper()
     if mode not in RESIDENCY_MODES:
@@ -2821,7 +3738,8 @@ def run_session_residency(
 
     out_dir.mkdir(parents=True, exist_ok=True)
     all_entries = select_multi_turn_entries()
-    # Paired cells: identical prefix of the fixed 20-entry order; seed recorded (no shuffle).
+    # Paired cells: identical file-order prefix; seed recorded (no shuffle).
+    # select_multi_turn_entries applies no difficulty or API filter — plain questions[:n].
     entries = all_entries[:n_entries]
     reduced_reason = None
 
@@ -2832,8 +3750,16 @@ def run_session_residency(
         json.dumps(gold, indent=2, sort_keys=True, default=str) + "\n",
         encoding="utf-8",
     )
+    # Scorer selftest is a hard gate: gold path must be 20/20 before any generation.
+    n_gold = int(gold.get("n") or 0)
+    n_valid = int(gold.get("n_valid") or 0)
+    if n_gold != len(entries) or n_valid != n_gold or n_gold < 1:
+        raise SystemExit(
+            f"REFUSED -- multi_turn_checker gold selftest {n_valid}/{n_gold} "
+            f"(need {len(entries)}/{len(entries)}) before arm {arm_id}/{mode} runs"
+        )
 
-    tokenizer = AutoTokenizer.from_pretrained(str(MODEL_DIR))
+    tokenizer = _hf_tokenizer()
     # DISPATCH L: NON_RESIDENT must disable ContinuousBatching prefix caching.
     # RESIDENT keeps LLMPipeline default (prefix caching ON) for history continuation.
     pipe, load_meta, load_s = load_arm_pipeline(
@@ -2848,17 +3774,26 @@ def run_session_residency(
     results: list[dict[str, Any]] = []
     partial_name = f"session_residency_{arm_id}_{mode}_partial.json"
     for entry in entries:
-        print(f"[session_residency {arm_id}/{mode}] {entry['id']} …", flush=True)
-        results.append(
-            run_multi_turn_agent_entry(
-                pipe=pipe,
-                tokenizer=tokenizer,
-                cfg=cfg,
-                entry=entry,
-                residency_mode=mode,
-                ov_genai=ov_genai,
-            )
+        # Per-entry host state (X-2): long arms span hours; onset is within-arm.
+        uptime_s = _host_uptime_s()
+        avail = _host_available_mb()
+        print(
+            f"[session_residency {arm_id}/{mode}] {entry['id']} "
+            f"uptime_s={uptime_s} available_mb={avail.get('available_mb')} …",
+            flush=True,
         )
+        row = run_multi_turn_agent_entry(
+            pipe=pipe,
+            tokenizer=tokenizer,
+            cfg=cfg,
+            entry=entry,
+            residency_mode=mode,
+            ov_genai=ov_genai,
+        )
+        row["uptime_s"] = uptime_s
+        row["available_mb"] = avail.get("available_mb")
+        row["available_method"] = avail.get("available_method")
+        results.append(row)
         (out_dir / partial_name).write_text(
             json.dumps(results, indent=2, sort_keys=True, default=str) + "\n",
             encoding="utf-8",
@@ -2900,15 +3835,12 @@ def run_session_residency(
         "n_entries_run": len(entries),
         "n_entries_reduced_reason": reduced_reason,
         "slo": {"ttft_s_max": SLO_TTFT_S, "decode_tok_s_min": SLO_DECODE_TOK_S},
-        "model": {
-            "spec": str(MODEL_SPEC),
-            "ir_dir": str(MODEL_DIR),
-            "ir_sha256_pin": IR_SHA256_EXPECTED,
-            "enable_thinking": False,
-            "arm": load_meta.get("device_config"),
-            "loads": load_meta.get("loads"),
-            "apply_chat_template_at_generate": False,
-        },
+        "model": _model_report_fields(
+            enable_thinking=False,
+            arm=load_meta.get("device_config"),
+            loads=load_meta.get("loads"),
+            apply_chat_template_at_generate=False,
+        ),
         "multi_turn_checker_gold_selftest": gold,
         "gpu_probe": {
             "status": "complete",
@@ -2950,6 +3882,21 @@ def run_session_residency(
                 ),
             },
             "per_entry": results,
+            "per_entry_host_onset": {
+                "fields": ["uptime_s", "available_mb", "available_method"],
+                "uptime_method": "GetTickCount64_s",
+                "available_method_note": (
+                    "Per-entry available_mb uses GlobalMemoryStatusEx.ullAvailPhys; "
+                    "launch gates use Get-Counter Available MBytes (includes standby). "
+                    "Methods differ; do not equate without conversion."
+                ),
+                "purpose": (
+                    "Within-arm onset: regress entry TTFT / session latency against "
+                    "uptime_s across a long cell (cpu-p NON_RESIDENT ~9630 s). "
+                    "If TTFT trends up with uptime_s inside one arm, that curve "
+                    "replaces the chosen 2 h gate with a measured knee."
+                ),
+            },
             "accuracy_trajectory": {
                 "correct": traj_correct,
                 "n": len(results),
@@ -3001,7 +3948,6 @@ def run_session_residency_cold_control(
     Fails loudly if turn-2 costs delta-sized time (prefix-cache contamination).
     """
     import openvino_genai as ov_genai
-    from transformers import AutoTokenizer
 
     out_dir.mkdir(parents=True, exist_ok=True)
     entry = select_multi_turn_entries()[0]
@@ -3011,7 +3957,7 @@ def run_session_residency_cold_control(
             f"{len(entry.get('question') or [])}"
         )
 
-    tokenizer = AutoTokenizer.from_pretrained(str(MODEL_DIR))
+    tokenizer = _hf_tokenizer()
     pipe, load_meta, load_s = load_arm_pipeline(arm_id, enable_prefix_caching=False)
     cfg = ov_genai.GenerationConfig()
     cfg.max_new_tokens = max_new_tokens
@@ -3154,6 +4100,10 @@ def run_session_residency_cold_control(
             "openvino": load_meta.get("openvino"),
             "openvino_genai": load_meta.get("openvino_genai"),
         },
+        "model": _model_report_fields(
+            arm=load_meta.get("device_config"),
+            loads=load_meta.get("loads"),
+        ),
         "entry_result": result,
     }
     path = out_dir / f"session_residency_cold_control_{arm_id}.json"
@@ -3182,12 +4132,11 @@ def run_session_residency_render_smoke(out_dir: Path) -> dict[str, Any]:
     prefix and fails loudly on any token mismatch or thinking-on tail.
     """
     import openvino_genai as ov_genai
-    from transformers import AutoTokenizer
 
     out_dir.mkdir(parents=True, exist_ok=True)
     entries = select_multi_turn_entries()[:20]
-    hf_tokenizer = AutoTokenizer.from_pretrained(str(MODEL_DIR))
-    genai_tokenizer = ov_genai.Tokenizer(str(MODEL_DIR))
+    hf_tokenizer = _hf_tokenizer()
+    genai_tokenizer = _genai_tokenizer(ov_genai)
     rows: list[dict[str, Any]] = []
     for entry in entries:
         tools = tools_for_entry(entry)
@@ -3211,6 +4160,7 @@ def run_session_residency_render_smoke(out_dir: Path) -> dict[str, Any]:
             "same render as a cold string (no start_chat double-template)."
         ),
         "per_entry": rows,
+        "model": _model_report_fields(),
         "stack": {
             "openvino_genai": getattr(ov_genai, "__version__", "unknown"),
         },
@@ -3573,14 +4523,13 @@ def run_gpu_kv_precision(
     import openvino as ov
     import openvino_genai as ov_genai
     from openvino import Type
-    from transformers import AutoTokenizer
 
     out_dir.mkdir(parents=True, exist_ok=True)
     entries = select_ast_precision_entries()
     (out_dir / "kv_precision_probe_entries.json").write_text(
         json.dumps(entries, indent=2, default=str) + "\n", encoding="utf-8"
     )
-    tokenizer = AutoTokenizer.from_pretrained(str(MODEL_DIR))
+    tokenizer = _hf_tokenizer()
     ir_bin = MODEL_DIR / "openvino_model.bin"
     bin_sha = _sha256_file(ir_bin) if ir_bin.is_file() else None
 
@@ -3595,8 +4544,8 @@ def run_gpu_kv_precision(
         core.set_property("GPU", {"KV_CACHE_PRECISION": ov_type})
         after_set = read_kv_cache_precision("GPU", core=core)
         t_load0 = time.perf_counter()
-        pipe = ov_genai.LLMPipeline(
-            str(MODEL_DIR),
+        pipe = _make_llm_pipeline(
+            ov_genai,
             "GPU",
             {"KV_CACHE_PRECISION": ov_type},
         )
@@ -3662,21 +4611,16 @@ def run_gpu_kv_precision(
         "mode": "run_gpu_kv_precision",
         "status": "complete",
         "isolation_mode": "OPERATOR_ASSERTED_CLEAN",
-        "model": {
-            "spec": str(MODEL_SPEC),
-            "ir_dir": str(MODEL_DIR),
-            "ir_sha256_pin": IR_SHA256_EXPECTED,
-            "ir_sha256_pin_present_in_spec": IR_SHA256_EXPECTED
-            in MODEL_SPEC.read_text(encoding="utf-8"),
-            "openvino_model_bin_sha256": bin_sha,
-            "enable_thinking": False,
-            "sealed_arm": {
+        "model": _model_report_fields(
+            openvino_model_bin_sha256=bin_sha,
+            enable_thinking=False,
+            sealed_arm={
                 "id": "gpu_only",
                 "load_sequence": ["GPU"],
                 "generate_device": "GPU",
                 "apply_chat_template_at_generate": False,
             },
-        },
+        ),
         "kv_cache_precision_property": "KV_CACHE_PRECISION",
         "precisions_requested": list(precisions),
         "n_entries": len(entries),
@@ -3729,7 +4673,7 @@ def run_npu_load(
         print(f"[npu_load] LLMPipeline(..., 'NPU', {props}) …", flush=True)
         t0 = time.perf_counter()
         try:
-            pipe = ov_genai.LLMPipeline(str(MODEL_DIR), "NPU", props)
+            pipe = _make_llm_pipeline(ov_genai, "NPU", props)
             load_s = time.perf_counter() - t0
             attempts.append(
                 {
@@ -3768,12 +4712,10 @@ def run_npu_load(
             "openvino_genai": getattr(ov_genai, "__version__", "unknown"),
             "available_devices": devices,
         },
-        "model": {
-            "ir_dir": str(MODEL_DIR),
-            "ir_sha256_pin": IR_SHA256_EXPECTED,
-            "load_sequence": ["NPU"],
-            "generate_device": "NPU",
-        },
+        "model": _model_report_fields(
+            load_sequence=["NPU"],
+            generate_device="NPU",
+        ),
         "static_shape_properties": {
             "MAX_PROMPT_LEN": "GenAI config option (error strings reference this name)",
             "NPUW_LLM_MAX_PROMPT_LEN": "NPUW / intel_npu plugin property",
@@ -3804,6 +4746,7 @@ def main() -> int:
             "run_gpu",
             "multi_turn_gold_selftest",
             "run_gpu_multi_turn",
+            "run_gpu_multi_turn_xlam",
             "run_cloud_multi_turn",
             "run_session_residency",
             "compare_session_residency",
@@ -3822,6 +4765,23 @@ def main() -> int:
         "--model",
         default=CLOUD_DEFAULT_MODEL,
         help="Anthropic model id for run_cloud_multi_turn (default claude-sonnet-5)",
+    )
+    parser.add_argument(
+        "--model-spec",
+        default=None,
+        help=(
+            "FetchedModelSpec YAML. Default: openvino.model_spec in configs/delta_n.yaml "
+            "(Qwen3-4B-int4-ov). Pass configs/models/Qwen3-8B-int4-ov.yaml to select 8B. "
+            "Does not change the yaml default. Applies to every local-IR mode."
+        ),
+    )
+    parser.add_argument(
+        "--print-model-identity",
+        action="store_true",
+        help=(
+            "resolve --model-spec (or the delta_n.yaml default) and print the report "
+            "identity block; no GPU load"
+        ),
     )
     parser.add_argument(
         "--selftest",
@@ -3867,9 +4827,23 @@ def main() -> int:
         help="NON_RESIDENT report JSON for compare_session_residency",
     )
     args = parser.parse_args()
+    if args.print_model_identity:
+        try:
+            apply_model_spec(args.model_spec)
+        except (ValueError, TypeError, OSError) as exc:
+            print(f"FATAL: {exc}", file=sys.stderr)
+            return 2
+        print(json.dumps(model_identity_block(), indent=2, default=str))
+        return 0
     if not BFCL_UNPACKED.is_dir():
         print("FATAL: bfcl_eval unpacked wheel missing at", BFCL_UNPACKED, file=sys.stderr)
         return 2
+    if args.model_spec is not None or args.mode in LOCAL_MODEL_MODES:
+        try:
+            apply_model_spec(args.model_spec)
+        except (ValueError, TypeError, OSError) as exc:
+            print(f"FATAL: {exc}", file=sys.stderr)
+            return 2
     if args.mode == "acquire_tokenize":
         report = run_acquire_tokenize(args.out)
         print(json.dumps({"ok": True, "mode": report["mode"], "out": str(args.out)}, indent=2))
@@ -3974,6 +4948,41 @@ def main() -> int:
         print(
             "wall_clock_s:",
             json.dumps(report["gpu_probe"]["wall_clock_s"], indent=2),
+        )
+        return 0
+    if args.mode == "run_gpu_multi_turn_xlam":
+        out_dir = args.out
+        if out_dir.resolve() == DEFAULT_OUT.resolve():
+            out_dir = DEFAULT_OUT_XLAM
+        # Refuse collision with sealed tools-style report trees.
+        blocked = {
+            (ROOT / "derived" / "bfcl_feasibility").resolve(),
+            (ROOT / "derived" / "bfcl_feasibility_8b").resolve(),
+        }
+        if out_dir.resolve() in blocked:
+            raise SystemExit(
+                f"FATAL: --out {out_dir} collides with a sealed tools-style report dir. "
+                f"Use a distinct path (default for this mode: {DEFAULT_OUT_XLAM})."
+            )
+        report = run_gpu_multi_turn_xlam(out_dir, max_new_tokens=args.max_new_tokens)
+        print(
+            json.dumps(
+                {
+                    "ok": True,
+                    "mode": report["mode"],
+                    "out": str(out_dir),
+                    "prompt_format": report["gpu_probe"]["prompt_format"],
+                },
+                indent=2,
+            )
+        )
+        print(
+            "xlam_gold_decode:",
+            json.dumps(report["xlam_gold_decode_selftest"], indent=2),
+        )
+        print(
+            "accuracy:",
+            json.dumps(report["gpu_probe"]["accuracy_multi_turn"], indent=2),
         )
         return 0
     if args.mode == "run_cloud_multi_turn":

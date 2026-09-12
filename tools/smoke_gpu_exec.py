@@ -158,19 +158,27 @@ def _timing_fields(
     }
 
 
-def _resolve_model(cfg: dict[str, Any]) -> tuple[str, Path]:
+def _model_spec_path(cfg: dict[str, Any], override: str | Path | None = None) -> Path:
+    """Resolve FetchedModelSpec path. Default is configs/delta_n.yaml openvino.model_spec (4B)."""
+    if override is not None:
+        path = Path(override)
+        return path if path.is_absolute() else ROOT / path
     ov = cfg.get("openvino") or {}
     model_spec = ov.get("model_spec")
     if not model_spec:
         raise ValueError("configs/delta_n.yaml: openvino.model_spec missing")
-    spec_path = ROOT / str(model_spec)
-    if not spec_path.is_file():
-        raise ValueError(f"model spec not found: {spec_path}")
-    model = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
-    model_id = str(model.get("name") or spec_path.stem)
+    return ROOT / str(model_spec)
+
+
+def _resolve_model(cfg: dict[str, Any], spec_path: str | Path | None = None) -> tuple[str, Path]:
+    path = _model_spec_path(cfg, spec_path)
+    if not path.is_file():
+        raise ValueError(f"model spec not found: {path}")
+    model = yaml.safe_load(path.read_text(encoding="utf-8"))
+    model_id = str(model.get("name") or path.stem)
     ir_dir = model.get("ir_dir")
     if not ir_dir:
-        raise ValueError(f"{spec_path}: ir_dir missing")
+        raise ValueError(f"{path}: ir_dir missing")
     model_dir = Path(str(ir_dir))
     if not model_dir.is_dir():
         raise ValueError(f"model ir_dir does not exist: {model_dir}")
@@ -233,6 +241,7 @@ def smoke(
     *,
     arm_id: str = "B",
     n_tokens: int | None = None,
+    model_spec: str | Path | None = None,
 ) -> dict[str, Any]:
     pid = os.getpid()
     probe_errors: dict[str, str] = {}
@@ -321,7 +330,7 @@ def smoke(
         }
 
     try:
-        return _smoke_body(record, arm_id=arm_id, n_tokens=n_tokens)
+        return _smoke_body(record, arm_id=arm_id, n_tokens=n_tokens, model_spec=model_spec)
     finally:
         if power_req is not None:
             with contextlib.suppress(Exception):
@@ -334,11 +343,14 @@ def _smoke_body(
     *,
     arm_id: str,
     n_tokens: int | None,
+    model_spec: str | Path | None = None,
 ) -> dict[str, Any]:
     try:
         cfg = _load_delta_n_cfg()
         device_config = _arm_device_config(cfg, arm_id)
-        model_id, model_dir = _resolve_model(cfg)
+        spec_path = _model_spec_path(cfg, model_spec)
+        model_id, model_dir = _resolve_model(cfg, spec_path)
+        record["diagnostics"]["model_spec"] = str(spec_path)
     except Exception as exc:
         record["compile_error"] = _describe(exc)
         record["classification"] = "OTHER"
@@ -598,6 +610,15 @@ def main(argv: list[str] | None = None) -> int:
         default="B",
         help="arm id from configs/delta_n.yaml (any declared arm id; default: B)",
     )
+    parser.add_argument(
+        "--model-spec",
+        default=None,
+        help=(
+            "FetchedModelSpec YAML. Default: openvino.model_spec in configs/delta_n.yaml "
+            "(Qwen3-4B-int4-ov). Pass configs/models/Qwen3-8B-int4-ov.yaml to select 8B. "
+            "Does not change the yaml default."
+        ),
+    )
     parser.add_argument("--out", type=Path, help="also write the object here")
     parser.add_argument(
         "--prompt-only",
@@ -625,10 +646,18 @@ def main(argv: list[str] | None = None) -> int:
             if args.n_tokens is None:
                 parser.error("--prompt-only requires -N / --n-tokens")
             record = _prompt_only_record(
-                args.launch_context, arm_id=args.arm, n_tokens=args.n_tokens
+                args.launch_context,
+                arm_id=args.arm,
+                n_tokens=args.n_tokens,
+                model_spec=args.model_spec,
             )
         else:
-            record = smoke(args.launch_context, arm_id=args.arm, n_tokens=args.n_tokens)
+            record = smoke(
+                args.launch_context,
+                arm_id=args.arm,
+                n_tokens=args.n_tokens,
+                model_spec=args.model_spec,
+            )
     except BaseException as exc:
         python_exe = str(Path(sys.executable).resolve())
         record = {
@@ -678,7 +707,13 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def _prompt_only_record(launch_context: str, *, arm_id: str, n_tokens: int) -> dict[str, Any]:
+def _prompt_only_record(
+    launch_context: str,
+    *,
+    arm_id: str,
+    n_tokens: int,
+    model_spec: str | Path | None = None,
+) -> dict[str, Any]:
     """Argparse / prompt-build check without GPU compile."""
     python_exe = str(Path(sys.executable).resolve())
     record: dict[str, Any] = {
@@ -713,8 +748,10 @@ def _prompt_only_record(launch_context: str, *, arm_id: str, n_tokens: int) -> d
     try:
         cfg = _load_delta_n_cfg()
         record["device_config"] = _arm_device_config(cfg, arm_id)
-        model_id, model_dir = _resolve_model(cfg)
+        spec_path = _model_spec_path(cfg, model_spec)
+        model_id, model_dir = _resolve_model(cfg, spec_path)
         record["model_id"] = model_id
+        record["diagnostics"]["model_spec"] = str(spec_path)
         _prompt, prompt_meta = _build_ladder_prompt(
             cfg=cfg, model_dir=model_dir, n_tokens=int(n_tokens)
         )

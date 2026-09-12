@@ -1,4 +1,4 @@
-# Vitis HLS build artifacts
+﻿# Vitis HLS build artifacts
 gcn_proj/
 gcn_*_proj/
 oe_proj/
@@ -37,7 +37,7 @@ Thumbs.db
 .env
 *.env
 
-# Large mock trace (regenerate locally; c1–c1000 stay tracked)
+# Large mock trace (regenerate locally; c1â€“c1000 stay tracked)
 orchestration_engine/characterization/out/gate/mock_action_heavy_c5000.json
 
 .cursor/
@@ -60,8 +60,8 @@ apu_characterization/out/oa01/evaluation/
 # ---------------------------------------------------------------------------------------------
 # SEAM (Phase -1)
 #
-# NOTE: raw/ is deliberately NOT ignored. Blueprint §5.3 makes raw/ write-once and checksummed,
-# and §5.7 targets an artifact-evaluation "reusable" badge, both of which require the raw data to
+# NOTE: raw/ is deliberately NOT ignored. Blueprint Â§5.3 makes raw/ write-once and checksummed,
+# and Â§5.7 targets an artifact-evaluation "reusable" badge, both of which require the raw data to
 # be committed. Only the blinding secret below is excluded.
 # ---------------------------------------------------------------------------------------------
 
@@ -77,15 +77,9 @@ raw/_blinding/salt.txt
 # it is not provenance for any SEAM claim and no manifest cites it.
 analysis/aipc-c1/tooling_validation/chrome_pm_profile/
 
-models/
+/models/
 
 apu_characterization/out/
 
-# derived/ holds raw measurement artifacts (2000+ files, 64 MB). Summary-level
-# reports are committed by explicit path; raw session directories are not, until
-# the matrix sealer emits one sealed artifact per session.
-derived/**
-!derived/**/
-!derived/**/*.md
-!derived/bfcl_feasibility/multi_turn_gpu_probe_report.json
-!derived/bfcl_feasibility/cloud_multi_turn_report.json
+# derived/ is tracked sealed evidence (GIT-1). Keep chrome profiles / local-only
+# junk out via patterns above; do not blanket-ignore derived/.

@@ -123,22 +123,42 @@ def _arm_device_config(cfg: dict[str, Any], arm_id: str) -> dict[str, Any]:
     }
 
 
-def _resolve_model(cfg: dict[str, Any]) -> tuple[str, Path]:
+def _model_spec_path(cfg: dict[str, Any], override: str | Path | None = None) -> Path:
+    """Resolve FetchedModelSpec path. Default is configs/delta_n.yaml openvino.model_spec (4B)."""
+    if override is not None:
+        path = Path(override)
+        return path if path.is_absolute() else ROOT / path
     ov = cfg.get("openvino") or {}
     model_spec = ov.get("model_spec")
     if not model_spec:
         raise ValueError("configs/delta_n.yaml: openvino.model_spec missing")
-    spec_path = ROOT / str(model_spec)
-    if not spec_path.is_file():
-        raise ValueError(f"model spec not found: {spec_path}")
-    model = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
-    model_id = str(model.get("name") or spec_path.stem)
+    return ROOT / str(model_spec)
+
+
+def _load_model_pin(cfg: dict[str, Any], spec_path: str | Path | None = None) -> dict[str, Any]:
+    path = _model_spec_path(cfg, spec_path)
+    if not path.is_file():
+        raise ValueError(f"model spec not found: {path}")
+    model = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(model, dict):
+        raise ValueError(f"{path}: expected mapping")
+    model["_spec_path"] = path
+    return model
+
+
+def _resolve_model(cfg: dict[str, Any], spec_path: str | Path | None = None) -> tuple[str, Path]:
+    model = _load_model_pin(cfg, spec_path)
+    path = model["_spec_path"]
+    model_id = str(model.get("name") or path.stem)
     ir_dir = model.get("ir_dir")
     if not ir_dir:
-        raise ValueError(f"{spec_path}: ir_dir missing")
+        raise ValueError(f"{path}: ir_dir missing")
     model_dir = Path(str(ir_dir))
     if not model_dir.is_dir():
         raise ValueError(f"model ir_dir does not exist: {model_dir}")
+    ir_sha = model.get("ir_sha256")
+    if not ir_sha:
+        raise ValueError(f"{path}: ir_sha256 missing (cell is not a measurement)")
     return model_id, model_dir
 
 
@@ -225,6 +245,19 @@ def _gen_cfg(ov_genai: Any, *, max_new: int) -> Any:
     return cfg
 
 
+def _is_continuous_batching_pipeline(pipe: Any) -> bool:
+    return type(pipe).__name__ == "ContinuousBatchingPipeline"
+
+
+def _normalize_generate_result(result: Any) -> Any:
+    """CB generate returns list[GenerationResult]; LLMPipeline returns a single result."""
+    if isinstance(result, (list, tuple)):
+        if not result:
+            raise RuntimeError("generate() returned an empty list")
+        return result[0]
+    return result
+
+
 def _run_generate(
     pipe: Any,
     ov_genai: Any,
@@ -246,7 +279,14 @@ def _run_generate(
     result: Any = None
     exc: BaseException | None = None
     try:
-        result = pipe.generate([prompt], gen_cfg, streamer)
+        # ContinuousBatchingPipeline rejects generate([prompt], scalar_cfg, streamer).
+        # Use scalar-prompt + scalar GenerationConfig (API form 3), or pass
+        # Sequence[GenerationConfig] with a prompt list. Scalar form is enough here.
+        if _is_continuous_batching_pipeline(pipe):
+            result = pipe.generate(prompt, gen_cfg, streamer)
+        else:
+            result = pipe.generate([prompt], gen_cfg, streamer)
+        result = _normalize_generate_result(result)
     except Exception as e:
         exc = e
     finally:
@@ -278,7 +318,15 @@ def _run_generate(
         return out
 
     texts = getattr(result, "texts", None)
-    text = str(texts[0]) if texts else str(result)
+    if texts:
+        text = str(texts[0])
+    else:
+        # ContinuousBatching GenerationResult exposes m_generation_ids, not texts.
+        gen_ids = getattr(result, "m_generation_ids", None)
+        if gen_ids:
+            text = str(gen_ids[0])
+        else:
+            text = str(getattr(result, "text", None) or result)
     out["text_head"] = text[:200]
 
     metrics = getattr(result, "perf_metrics", None)
@@ -446,6 +494,77 @@ def chat_api_check() -> dict[str, Any]:
     }
 
 
+PIPELINE_TYPES = ("llm", "cb_no_eviction")
+
+# Fixed 1-cell CB gate: must pass before any matrix that includes cb_no_eviction.
+CB_TOKEN_GATE_N_CACHED = 64
+CB_TOKEN_GATE_DELTA = 16
+CB_TOKEN_GATE_MAX_NEW = 8
+
+
+def run_cb_token_gate(
+    launch_context: str,
+    *,
+    arm_id: str,
+    model_spec: str | None,
+) -> dict[str, Any]:
+    """One CB cell that must emit non-empty generated text.
+
+    Hard gate for any matrix that includes ``cb_no_eviction``. Does not measure
+    equivalence; only asserts ContinuousBatchingPipeline.generate is callable
+    with the smoke signature and returns text.
+    """
+    record = run_cell(
+        launch_context,
+        arm_id=arm_id,
+        mode="RESIDENT",
+        n_cached=CB_TOKEN_GATE_N_CACHED,
+        delta=CB_TOKEN_GATE_DELTA,
+        max_new_tokens=CB_TOKEN_GATE_MAX_NEW,
+        model_spec=model_spec,
+        pipeline_type="cb_no_eviction",
+    )
+    text = ""
+    turn1 = record.get("turn1") or {}
+    if isinstance(turn1.get("text_head"), str):
+        text = turn1["text_head"]
+    tokens = turn1.get("tokens_generated")
+    tokens_ok = isinstance(tokens, int) and tokens >= 1
+    text_ok = bool(text and text.strip())
+    gate = {
+        "kind": "cb_no_eviction_token_gate",
+        "ok": False,
+        "classification": record.get("classification"),
+        "execute_error": record.get("execute_error"),
+        "compile_error": record.get("compile_error"),
+        "text_head": text[:200] if text else None,
+        "text_nonempty": text_ok,
+        "tokens_generated": tokens,
+        "tokens_ok": tokens_ok,
+        "n_cached": CB_TOKEN_GATE_N_CACHED,
+        "delta": CB_TOKEN_GATE_DELTA,
+        "max_new_tokens": CB_TOKEN_GATE_MAX_NEW,
+        "pipeline_type": "cb_no_eviction",
+        "arm_id": arm_id,
+        "cell": record,
+    }
+    if record.get("classification") != "OK":
+        gate["fail_reason"] = (
+            f"cell classification={record.get('classification')!r} "
+            f"execute_error={record.get('execute_error')!r}"
+        )
+        return gate
+    if not text_ok or not tokens_ok:
+        gate["fail_reason"] = (
+            f"cb_no_eviction output insufficient: text_nonempty={text_ok} "
+            f"tokens_generated={tokens!r} (need non-empty text and >=1 token)"
+        )
+        return gate
+    gate["ok"] = True
+    gate["fail_reason"] = None
+    return gate
+
+
 def run_cell(
     launch_context: str,
     *,
@@ -454,10 +573,15 @@ def run_cell(
     n_cached: int,
     delta: int,
     max_new_tokens: int = MAX_NEW_TOKENS,
+    model_spec: str | Path | None = None,
+    pipeline_type: str = "llm",
 ) -> dict[str, Any]:
     mode = mode.upper()
     if mode not in {"RESIDENT", "NON_RESIDENT"}:
         raise ValueError(f"mode must be RESIDENT or NON_RESIDENT, got {mode!r}")
+    pipeline_type = str(pipeline_type).strip().lower()
+    if pipeline_type not in PIPELINE_TYPES:
+        raise ValueError(f"pipeline_type must be one of {PIPELINE_TYPES}, got {pipeline_type!r}")
     # Matrix schedules NON_RESIDENT at every delta (see DEFECT_non_resident_max_delta_only.md).
     if mode == "NON_RESIDENT" and delta != 2000:
         pass
@@ -473,6 +597,7 @@ def run_cell(
         "launch_context": launch_context,
         "arm_id": arm_id,
         "mode": mode,
+        "pipeline_type": pipeline_type,
         "n_cached": int(n_cached),
         "delta": int(delta),
         "turn2_prompt_tokens": turn2_n,
@@ -548,6 +673,8 @@ def run_cell(
             n_cached=n_cached,
             delta=delta,
             max_new_tokens=max_new_tokens,
+            model_spec=model_spec,
+            pipeline_type=pipeline_type,
         )
     finally:
         if power_req is not None:
@@ -564,11 +691,19 @@ def _run_cell_body(
     n_cached: int,
     delta: int,
     max_new_tokens: int,
+    model_spec: str | Path | None = None,
+    pipeline_type: str = "llm",
 ) -> dict[str, Any]:
     try:
         cfg = _load_delta_n_cfg()
         device_config = _arm_device_config(cfg, arm_id)
-        model_id, model_dir = _resolve_model(cfg)
+        pin = _load_model_pin(cfg, model_spec)
+        spec_path = pin["_spec_path"]
+        model_id, model_dir = _resolve_model(cfg, spec_path)
+        record["diagnostics"]["model_spec"] = str(spec_path)
+        record["diagnostics"]["ir_sha256"] = str(pin.get("ir_sha256") or "")
+        if not record["diagnostics"]["ir_sha256"]:
+            raise ValueError(f"{spec_path}: ir_sha256 missing (cell is not a measurement)")
         record["diagnostics"]["chat_api"] = chat_api_check()
     except Exception as exc:
         record["compile_error"] = _describe(exc)
@@ -635,7 +770,36 @@ def _run_cell_body(
                     core.set_property(
                         device, {"KV_CACHE_PRECISION": properties["KV_CACHE_PRECISION"]}
                     )
-                pipes[device] = ov_genai.LLMPipeline(str(model_dir), device, **properties)
+                if pipeline_type == "cb_no_eviction":
+                    # N-1 / axis-5 gate: ContinuousBatchingPipeline with eviction
+                    # explicitly OFF — isolates the CB execution path from plain
+                    # LLMPipeline without enabling CacheEvictionConfig.
+                    if not hasattr(ov_genai, "ContinuousBatchingPipeline"):
+                        raise RuntimeError(
+                            "openvino_genai.ContinuousBatchingPipeline missing; "
+                            "cannot run cb_no_eviction cell"
+                        )
+                    sched = ov_genai.SchedulerConfig()
+                    sched.use_cache_eviction = False
+                    pipes[device] = ov_genai.ContinuousBatchingPipeline(
+                        str(model_dir),
+                        sched,
+                        device,
+                        properties,
+                    )
+                    record["diagnostics"]["pipeline_construction"] = {
+                        "class": "ContinuousBatchingPipeline",
+                        "use_cache_eviction": False,
+                        "scheduler_config_explicit": True,
+                    }
+                else:
+                    pipes[device] = ov_genai.LLMPipeline(str(model_dir), device, **properties)
+                    record["diagnostics"]["pipeline_construction"] = {
+                        "class": "LLMPipeline",
+                        "use_cache_eviction": None,
+                        "scheduler_config_explicit": False,
+                        "note": "plain LLMPipeline (corpus path); no SchedulerConfig passed",
+                    }
         except Exception as exc:
             err = _describe(exc)
             loads.append(
@@ -805,8 +969,10 @@ def _artifact_name(
     n_cached: int,
     delta: int,
     repeat: int | None,
+    pipeline_type: str = "llm",
 ) -> str:
-    base = f"{launch_context}_arm{arm_id}_{mode}_nc{n_cached}_d{delta}"
+    pipe = pipeline_type if pipeline_type != "llm" else "llm"
+    base = f"{launch_context}_arm{arm_id}_{mode}_nc{n_cached}_d{delta}_{pipe}"
     if repeat is not None and repeat >= 0:
         base = f"{base}_r{repeat}"
     return f"{base}.json"
@@ -820,6 +986,15 @@ def main(argv: list[str] | None = None) -> int:
         help="how this process was started; required except for --chat-api-check",
     )
     parser.add_argument("--arm", default="A", help="arm id from configs/delta_n.yaml")
+    parser.add_argument(
+        "--model-spec",
+        default=None,
+        help=(
+            "FetchedModelSpec YAML. Default: openvino.model_spec in configs/delta_n.yaml "
+            "(Qwen3-4B-int4-ov). Pass configs/models/Qwen3-8B-int4-ov.yaml to select 8B. "
+            "Does not change the yaml default."
+        ),
+    )
     parser.add_argument(
         "--mode",
         choices=["RESIDENT", "NON_RESIDENT", "resident", "non_resident"],
@@ -845,6 +1020,25 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="build/verify ladder prompts for n_cached and turn2 size; no compile",
     )
+    parser.add_argument(
+        "--pipeline-type",
+        choices=list(PIPELINE_TYPES),
+        default="llm",
+        help=(
+            "llm = plain LLMPipeline (corpus path). "
+            "cb_no_eviction = ContinuousBatchingPipeline with "
+            "SchedulerConfig.use_cache_eviction=False (N-1 equivalence arm)."
+        ),
+    )
+    parser.add_argument(
+        "--cb-token-gate",
+        action="store_true",
+        help=(
+            "Run the mandatory 1-cell cb_no_eviction generate smoke (non-empty "
+            "text). Exit 0 only if the gate passes. Required before any matrix "
+            "that includes cb_no_eviction."
+        ),
+    )
     args = parser.parse_args(argv)
 
     if args.chat_api_check:
@@ -854,6 +1048,40 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.launch_context:
         parser.error("--launch-context is required (except with --chat-api-check)")
+
+    if args.cb_token_gate:
+        try:
+            cfg = _load_delta_n_cfg()
+            known = _arm_ids(cfg)
+        except Exception as exc:
+            parser.error(f"cannot load configs/delta_n.yaml: {exc}")
+        if args.arm not in known:
+            parser.error(f"--arm {args.arm!r} not in {known}")
+        OUT_DIR.mkdir(parents=True, exist_ok=True)
+        out_path = (
+            args.out
+            if args.out
+            else OUT_DIR / (f"cb_token_gate_{args.launch_context}_arm{args.arm}.json")
+        )
+        gate = run_cb_token_gate(
+            args.launch_context,
+            arm_id=args.arm,
+            model_spec=args.model_spec,
+        )
+        # Persist gate without embedding the full nested cell twice under a
+        # different key shape — keep cell for diagnosis.
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(gate, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        summary = {
+            "event": "cb_no_eviction_token_gate",
+            "ok": gate["ok"],
+            "path": str(out_path),
+            "fail_reason": gate.get("fail_reason"),
+            "text_nonempty": gate.get("text_nonempty"),
+            "classification": gate.get("classification"),
+        }
+        print(json.dumps(summary, sort_keys=True), flush=True)
+        return 0 if gate["ok"] else 2
 
     if args.n_cached < 1 or args.delta < 1:
         parser.error("--n-cached and --delta must be >= 1")
@@ -883,13 +1111,15 @@ def main(argv: list[str] | None = None) -> int:
         n_cached=args.n_cached,
         delta=args.delta,
         repeat=repeat,
+        pipeline_type=args.pipeline_type,
     )
     if args.tag:
         default_name = f"{args.tag}_{default_name}"
     out_path = args.out if args.out else OUT_DIR / default_name
 
     if args.prompt_only:
-        model_id, model_dir = _resolve_model(cfg)
+        pin = _load_model_pin(cfg, args.model_spec)
+        model_id, model_dir = _resolve_model(cfg, pin["_spec_path"])
         turn2_n = args.delta if mode == "RESIDENT" else args.n_cached + args.delta
         p1, m1 = _build_ladder_prompt(cfg=cfg, model_dir=model_dir, n_tokens=args.n_cached)
         p2, m2 = _build_ladder_prompt(cfg=cfg, model_dir=model_dir, n_tokens=turn2_n)
@@ -902,6 +1132,8 @@ def main(argv: list[str] | None = None) -> int:
             "delta": args.delta,
             "turn2_prompt_tokens": turn2_n,
             "model_id": model_id,
+            "model_spec": str(pin["_spec_path"]),
+            "ir_sha256": str(pin.get("ir_sha256") or ""),
             "prompt_meta_turn1": m1,
             "prompt_meta_turn2": m2,
             "prompt_chars_turn1": len(p1),
@@ -937,6 +1169,8 @@ def main(argv: list[str] | None = None) -> int:
         n_cached=args.n_cached,
         delta=args.delta,
         max_new_tokens=args.max_new_tokens,
+        model_spec=args.model_spec,
+        pipeline_type=args.pipeline_type,
     )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -945,6 +1179,7 @@ def main(argv: list[str] | None = None) -> int:
         "path": str(out_path),
         "arm_id": record.get("arm_id"),
         "mode": record.get("mode"),
+        "pipeline_type": record.get("pipeline_type"),
         "n_cached": record.get("n_cached"),
         "delta": record.get("delta"),
         "classification": record.get("classification"),
