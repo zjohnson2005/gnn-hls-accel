@@ -47,6 +47,10 @@ decision) · `DEFERRED` (belongs to a later milestone).
 | AM-032 | 2026-08-04 | E-FILTER C2 | Withdraw 8 s headline deadline | RESOLVED (**PRE-DATA**) |
 | AM-033 | 2026-08-02 | Blueprint §0 | Operating mode R1–R4 replaces deadline-driven protocol (reissued from AM-025) | RESOLVED (**PRE-DATA** w.r.t. every hypothesis) |
 | AM-034 | 2026-08-02 | §8 / §10 | Dependency graph + yield queue; gates never reduce scope (reissued from AM-027) | RESOLVED (**PRE-DATA**) |
+| AM-035 | 2026-08-10 | delta-prefill model | Measured turn-2 form; retract arm-A 19.45 s constant | RESOLVED (**POST-DATA**) |
+| AM-036 | 2026-08-10 | §5.2 / manifest | Separate measurement vs promote-time power_state; refuse retro-seal leak | RESOLVED (**POST-DATA**) |
+| AM-037 | 2026-09-08 | C-1 ceiling | Position limit not enforced; no hard memory ceiling on 16 GB host | RESOLVED (**POST-DATA**) |
+| AM-038 | 2026-09-08 | C-2 pre-reg | Withdraw f16>u8≥u4 TTFT order; replace with turn-1 agreement | RESOLVED (**POST-DATA**; held on `62395fdb`) |
 
 ---
 
@@ -1110,6 +1114,198 @@ agent constraints. Gates that answer unmet criteria with "reduce scope" are forb
 Timeline → dependency graph + yield queue. Milestone chain → parallel tracks after M1.
 Gates rewritten so **no** gate response is ever "reduce scope." Recorded in
 `configs/project_state.yaml` (`tracks`, `yield_queue`, gate names) and seam-core.
+
+---
+
+## AM-035 — Delta-prefill model: measured form; retract arm-A 19.45 s constant
+
+**Date:** 2026-08-10 · **Pre/post data:** **POST-DATA** · **Status:** RESOLVED
+
+**Citing seals (derived_diagnostic; raw/ promotion blocked while tier-1 resident — see
+`PROMOTION_ATTEMPT.json` under each session):**
+
+| Session / run_id | Matrix | Seal path |
+|---|---|---|
+| `d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba` | n_cached=12000; 17 OK / 1 failed (robustness) | `derived/delta_prefill/sealed_d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba/` |
+| `9f38eb15-6fe6-40b4-871b-a02ec5629bb1` | n_cached=4000; 24/24 OK | `derived/delta_prefill/sealed_9f38eb15-6fe6-40b4-871b-a02ec5629bb1/` |
+
+**Prior form (retracted).** A constant-plus-linear (or constant-plus-delta) fit for arm A at a
+single cached length produced an intercept of **19.45 s** at `n_cached=12000`. That constant was
+an artifact of fitting two points at one cached length. It is withdrawn.
+
+**What depended on the retracted constant (also withdrawn or recomputed):**
+
+- Any local-feasibility bound that treated turn-2 cost as `19.45 + k·Δ` (or equivalent) independent
+  of session position / `n_cached`.
+- Cost-interaction claims that used that intercept in the replay / optimal-config stack — the
+  prior **6×** super-additive cost interaction is superseded (see corrected figures below).
+- Max-feasible-delta tables that did not condition on `n_cached`.
+
+**Latency interaction 2.4× is not retracted.** It came from measured medians, not from the
+retracted intercept fit.
+
+**Measured replacement (standing).** At two cached lengths (`9f38eb15` n=4000; `d5c98342` n=12000):
+
+```
+turn2_prefill_s ~ C · d · n_cached     (gpu_only; delta-only term fits ~0)
+gpu_only:  C = 4.34e-7
+
+arm A:     k(n) = 0.0166 · (n/4000)^0.70
+           turn2_prefill_s = k(n) · d
+```
+
+Per-delta-token cost is **flat in delta at fixed n** (three points at n=4000 from `9f38eb15`:
+0.0166 / 0.0159 / 0.0175 s/token) and **scales with n**.
+
+**Consequence.** Local feasibility depends on position in the session (`n_cached`), not delta
+alone. Max feasible delta at the 10 s bound under gpu_only+residency:
+
+| n_cached | max feasible Δ (10 s) |
+|---:|---:|
+| 4000 | 5760 |
+| 12000 | 1920 |
+| 27600 | 834 |
+
+**Corrected optimal-config cost figures** (supersede any prior narrative table that used the
+retracted model; standing writeup:
+`derived/delta_prefill/OPTIMAL_CONFIG_COST.md`):
+
+| Config | % local | Cost | Saving vs default |
+|---|---:|---:|---:|
+| default | 0% | $154.42 | — |
+| gpu_only alone | 25% | — | 7% |
+| gpu_only+residency | 42% | $130.33 | 16% |
+
+- Cost interaction super-additive at **2.3×** (was 6× on the retracted model).
+- Latency interaction **2.4× UNCHANGED**.
+
+**Does not invent a dual-definition collision.** This identifier is AMENDMENTS.md-only; Blueprint
+§14 is not given a parallel AM-035 row (see AM-025/AM-027 collision history and
+`tools/hooks/check_amendment_ledgers.py`).
+
+**Machine-readable companion:** `derived/delta_prefill/AM035_delta_prefill_model.json`.
+
+---
+
+## AM-036 — Measurement vs promote-time power_state; refuse retro-seal leakage
+
+**Date:** 2026-08-10 · **Pre/post data:** **POST-DATA** (leaked ceiling_a promotes already sealed)
+· **Status:** RESOLVED
+
+**What changed.** The run-manifest schema and emitter now distinguish:
+
+1. ``power_state`` — **measurement-time** host environment only (self-seal during the run, or
+   values derived from measurement / cell records).
+2. ``promote_time_power_state`` — optional forensic sample taken at raw-promote / retro-seal time.
+   Must never be read as measurement environment.
+3. ``power_state_note`` — provenance note when measurement power is unrecorded.
+
+``seam.manifest.emit(..., retro_seal=True)`` refuses any non-null measurement ``power_state``
+unless ``measurement_power_from_records=True``. Retro-seal tools
+(``tools/seal_ceiling_a_partial_session.py``, ``tools/seal_delta_prefill_session.py``) pass
+``power_state=None`` and may record promote-time samples only under ``promote_time_power_state``.
+
+**Why.** Post-hoc promote of ceiling_a arms ``b5ce21e5`` / ``64e525e7`` / ``404dc3d0`` called
+``capture_power_state()`` at promote time (2026-08-10) and wrote the result into ``power_state``,
+so sealed manifests claim ``on_battery=true`` / ``battery_pct_start=88.0`` for work measured on
+AC on 2026-08-06. Measurements are unaffected; this is sealed-metadata provenance error (AF-036).
+
+**Correction path.** ``raw/`` is write-once (``seam.rawstore`` refuses mutation and re-seal).
+No prior sealed-metadata amend-in-place pattern exists. Loaders use
+``seam.manifest.load_run_manifest``:
+
+1. Explicit amendments for the three AF-036 digests in
+   ``derived/manifest_corrections/registry.json``.
+2. A **structural** safety net (not a run_id list): when a run is marked retro-seal
+   (``manifest.retro_seal``) or post-hoc promote (``summary.promotion`` starts with
+   ``post_hoc``), ``promote_time_power_state`` is absent, measurement ``power_state`` is
+   populated, and ``measurement_power_from_records`` is not true — treat measurement power as
+   a promote-time leak (null it; move sealed sample to ``promote_time_power_state``; attach
+   note). Emit also stamps ``retro_seal`` / ``measurement_power_from_records`` on new
+   manifests so the rule stays marker-based.
+
+Sealed digests are unchanged and remain verifiable. Do not backfill measurement power from
+memory.
+
+**Self-sealed control.** ``693b44d2`` (sealed during the run) retains ``on_battery=false`` /
+``100.0``. Delta-prefill promotes ``d5c98342`` / ``9f38eb15`` already had null measurement power
+and stay null.
+
+---
+
+## AM-037 — C-1: position limit not enforced; no hard memory ceiling on 16 GB host
+
+**Date:** 2026-09-08 · **Pre/post data:** **POST-DATA** (session
+`83127e1b-9d6e-4103-bee6-2a63c00f479f`) · **Status:** RESOLVED
+
+**What changed (two corrections).**
+
+1. **`max_position_embeddings` of 40,960 is not enforced at inference.**
+   Config `models/Qwen3-4B-int4-ov/config.json` claims 40960, but
+   `gpu_only_f16` probes completed at **n=44,742** (incomplete attempt at
+   44,871). C-1 must not treat 40960 as a hard wall or as the PRIMARY
+   position-bound prediction without an observed failure naming a position /
+   context bound.
+
+2. **There is no hard memory ceiling on this 16 GB host.** The OS pages.
+   `available_mb_min` reached **0.0** on completed probes
+   (`n=36750` r0, `n=44742` r0) while generate continued. Memory-wall
+   predictions of the form `n_max=(M−W)/(k+w)` against Available do not
+   describe a hard stop under paging. Fit consumption with
+   **`peak_commit_bytes`**, not RSS (RSS is capped by
+   `SetProcessWorkingSetSizeEx` at 12 GB / 12884901888 bytes).
+
+**Session disposition.** `83127e1b` marked **aborted**,
+`abort_reason=no_ceiling_found_in_range`. Worker
+`tools/run_c1_ceiling.py` now probes `high` after `low` and, if `high`
+passes, terminates with that abort status instead of converging on the
+search upper bound as a fake ceiling.
+
+**Capability reframing.** Real capability numbers are SLO crossings
+(TTFT/prefill ≤ 10 s; decode ≥ 6 tok/s), not a memory/position hard wall
+in [12k, 45k]. See `derived/c1_ceiling/83127e1b-…/salvage_analysis.json`.
+
+---
+
+## AM-038 — C-2 pre-registration: withdraw turn-1 ordering; replace with agreement
+
+**Date:** 2026-09-08 · **Pre/post data:** registered **PRE-DATA**; evaluated
+**POST-DATA** on sealed C-2 `62395fdb-1899-415f-b708-6adc81a24dda` ·
+**Status:** RESOLVED (held)
+
+**WITHDRAWN.** `TTFT-bound limit orders f16 > u8 >= u4`.
+
+**Reason.** That ordering was inferred from the 15–27% f16 advantage in
+41e419bd Finding 2, which is a **turn-2 delta prefill** measurement. C-2
+bisects on **turn-1 bulk prefill**. Finding 2's direct statement about
+turn-1 is that arms agree within 1%.
+
+**REPLACEMENT (active).** The three turn-1 TTFT limits **AGREE** within the
+250-token resolution. KV precision does not move the cold-start context
+limit. **Falsified** if any pair differs by more than 250 tokens.
+
+**Outcome (`62395fdb`).** Limits f16 = u8 = u4 = **10,000**; span 0;
+`primary_prediction_held` true. Seal
+`derived/c2_ttft/sealed_62395fdb-1899-415f-b708-6adc81a24dda/`,
+`tree_sha256`
+`95cc9d5c28fc87dcefd7c990ab216854997c5fffdf2b8212d6173173da25ae0c`.
+
+**Consequence.** KV precision affects neither capability (memory does not
+bind, C-1) nor the cold-start SLO limit. Its only remaining measured effect
+on this hardware is memory footprint — report it that way rather than as
+buying context.
+
+**Separate experiment, not C-2.** Turn-2 delta-prefill 10 s limit (binds
+under RESIDENT; 15–27% advantage lives there; wider search above 12,000).
+Prediction there remains `f16 > u8 >= u4`. Recorded as
+`separate_experiment_not_c2` in C-2 `plan.json` so it is not folded into
+C-2.
+
+**Record.** Both withdrawn and replacement stay in
+`tools/run_c1_ceiling.py` (`_ttft_slo_predictions`) → `plan.json`
+`pre_registered_predictions`. Former `tools/run_c2_ttft.py` retired to
+`tools/_retired/run_c2_ttft.py`; C-2 launches
+`run_c1_ceiling.py --criterion ttft_slo`.
 
 ---
 

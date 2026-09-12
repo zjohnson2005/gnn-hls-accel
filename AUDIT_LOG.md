@@ -1713,8 +1713,1346 @@ pass at rest at the precision this instrument and this n provide.
 
 | Role | Blueprint SHA-256 | Spec SHA-256 |
 |---|---|---|
-| Standing (post-edit) | `ca5b0c44b3918acf454669aec5fa41c815acc6a76d4c83fc10a18b94792dfe8c` | `89d8feeff92b2947acd5446837c5d2d22aef0135280c5c52c0839182dca72e6c` |
+| Standing (post-edit) | `ffe349804fa36de9ac94473ecd9372c6cc1234c91424242e5fc39040a67b1253` | `9a905a340c513b40cd26a7d381b7d8ba9a28be316eaab04126aeb65cd5e1ca5b` |
 | As-delivered (superseded) | `11da7b34936522fc37531f1321d7150f7f3788da6de6cce0f7472e6a92ef4cfd` | `5b0275da53be54d382e1b67e28d71c8429d98b4c277c7362f58d0beaaf166ad2` |
 | Prior restore (superseded) | `72d9b6a32ea40d07201d35e22cfc6db6c0f62311a40c15bc5ecf4f9c4567c878` | `f42fad5bdf7377393684483b1f36dcc2da99e4fca94e9dd79292dde356198148` |
 
 **No M2 code.** No `seam/telemetry/`. No measurement runs. No M1 re-run.
+
+---
+
+## 2026-07-30 — AM-016: pinned profiles by measurement class (spec §3.7)
+
+**PRE-DATA w.r.t. M2 · authorized by Z. Johnson.** Spec-only; no telemetry implementation.
+
+Inserted Phase −1 spec **§3.7** defining `ac-pinned` and `battery-pinned`, with class→profile
+mapping (topology/thermal → AC; M2.1 battery char → battery; M2.5 energy → battery **and**
+elevated). Documents why SoC window alone is insufficient (M1 charge-**load** finding from
+`fb5cd2d5` vs C/D), the M2.5 compound constraint, and the open thermal-constant transfer
+question across profiles. M2.1/M2.3/M2.5 acceptance bullets updated. Standing spec pin:
+`a102d201311405e2d921b4c71dcf79aff9b3fc9994e8a1f438a353945bc6d7f2` (32411 bytes). Prior
+standing pin `89d8feef…` archived under AM-009.
+
+---
+
+## 2026-07-30 — M2.1 Step 2–4: profile pinning + S1 sampler (STOP before measure)
+
+**Code landed; measurement NOT started.** Machine remains under M1 AC regime until the operator
+confirms unplug + quiesce.
+
+### Implementation
+
+- `configs/platforms/aipc-c1.yaml`: `power.profiles` (`ac-pinned` / `battery-pinned` with
+  `settle_s` / `soc_window_pct` **null**, `determined_by: M2.1`), `class_profile_map`,
+  `s1_characterization` block.
+- `seam/powerstate.py`: `assert_profile`, `profile_for_class`, `raise_if_profile_mismatch`,
+  extended `manifest_power_state` (§3.7 fields).
+- `seam/telemetry/s1_battery_char.py`: WMI/`BatteryStatus` 10 Hz sampler → `samples.ndjson`;
+  pure analyzer for update period / quantum / min viable duration. Not the §3.6 unified sampler.
+- Schema + tests for profile mismatch refusal and capacity-series analysis.
+- **No RAPL / thermal / STREAM / M2.5 cross-validation code.**
+
+### Pre-measure proposal (awaiting operator confirmation)
+
+| Item | Proposal | Rationale |
+|---|---|---|
+| Duration | **≥1800 s** (30 min) continuous | Spec M2.1 acceptance; enough changes for ECDF/IQR |
+| SoC window (proposed, not yet pinned) | **[40, 85]%** | Headroom above empty/protective cutback; below CV top-off region where charge-load effects dominated M1; hard assert remains **not charging + settled** |
+| Synthetic load | `cpu_spin_all_logical` (YAML) | Constant load so DischargeRate / capacity deltas are interpretable |
+| `settle_s` / `soc_window_pct` in profile | remain **null** until citing run | AM-006 discipline |
+
+### Quiesce checklist (operator)
+
+1. Power plan: **Best Performance** (`ec87a53a-19a6-4f4a-980f-ab27cc929b25`).
+2. Display brightness: set to a **fixed** value and leave it; record the value (profile field null until measured).
+3. WiFi: prefer **off** (or leave connected but record state); no downloads.
+4. Windows Defender realtime: leave as-is but **record**; do not start a scan.
+5. Windows Update: pause if possible; record whether paused.
+6. Close: browsers with video, OneDrive/Dropbox sync storms, gaming overlays, Cursor/IDE heavy index if possible, any other background clients that spike CPU/disk.
+7. **Unplug AC** and confirm **not charging** (System → Power, or battery icon). Wait out settle once `settle_s` is known; for the first characterization run, wait **≥5 min** after unplug before starting the 30 min sample (settle_s still TBD).
+8. Confirm SoC is inside the proposed **40–85%** band before start.
+9. Reply in-chat that the machine is **unplugged, not charging, and quiesced** — only then may measurement start.
+
+### Document pins verified at this stop
+
+| Document | Expected SHA-256 |
+|---|---|
+| `docs/SEAM_research_blueprint.md` | `ca5b0c44b3918acf454669aec5fa41c815acc6a76d4c83fc10a18b94792dfe8c` |
+| `docs/PHASE_MINUS1_IMPLEMENTATION_SPEC.md` | `a102d201311405e2d921b4c71dcf79aff9b3fc9994e8a1f438a353945bc6d7f2` |
+
+Task brief listed post-§3.0 pin `89d8feef…` for the spec; that hash is **superseded** by AM-016 §3.7 (`a102d201…`). Mismatch vs brief is expected and archived — not a STOP condition after Step 1.
+
+---
+
+## 2026-07-30 — M2.1 measurement + findings (AM-017)
+
+**Operator confirmed unplugged.** Preflight: `on_battery=true`, `charging=false`, plan Best
+Performance. SoC at start **99%** (outside the then-proposed 40–85 window; window was not yet
+pinned). Run proceeded; SoC recorded as covariate.
+
+### Discarded incomplete attempts (logged; not cited)
+
+| run_id | Reason |
+|---|---|
+| `adbca28c-1f0d-43cf-9722-dfc12f05f740` | Aborted: samples were buffered until end; restarted with streaming writes |
+| `5265bbb1-d611-495e-9004-80693980bd70` | Aborted: orphan spin workers + PowerShell-per-sample WMI (~375 ms/poll) starved 10 Hz |
+
+Installed `WMI`+`pywin32` into `.venv-seam` (added to `seam/requirements.txt`) so a persistent
+COM session sustains ~10 Hz (~12 ms/poll).
+
+### Citing run
+
+**`911965cf-257c-4276-954b-17611a5e75eb`** — sealed; `allow_dirty=true`; synthetic load
+`cpu_spin_all_logical` on logical CPUs `[0..7]`; 17910 samples / 1799.85 s; SoC 99%→86%.
+Full report: `derived/m2_1/911965cf-257c-4276-954b-17611a5e75eb_report.json`.
+
+### (a)–(g) summary (distributions; see report JSON for ECDF / CIs)
+
+| Item | Result |
+|---|---|
+| (a) Update period | median **19.7902616 s**; IQR **[7.3849894, 23.4181828]**; bootstrap CI95 for median **[15.9701433, 20.4923018]**; ECDF in report. Not a fixed period. |
+| (b) Per-update energy increment | median **92 mWh**; IQR **[34, 126]**; CI95 for median **[81.0, 104.25]**; mean **95.30526315789474 mWh**. **Not a fixed counter quantum** — see closeout Item 1 (time-driven EC). Smallest observed increment **11 mWh**. |
+| (c) Min observed increment | **11 mWh** (power-dependent floor in this run, not a device quantum) |
+| (d) **MIN VIABLE ENERGY-RUN DURATION** | **395.805232 s** (numeric unchanged); CI95 **[319.402866, 409.846036]**. Justification corrected in closeout Item 1 (edge effect vs update period, not "≥20 quanta"). |
+| (e) `settle_s` | **360 s** — three consecutive 60 s DischargeRate windows within **±5%** relative band |
+| (f) SoC dependence | see closeout Item 4(a) — **not independent**; mean DischargeRate −13.2% high→lower half (CI95 below) |
+| (g) EC smoothing | see closeout Item 4(b) — DischargeRate is EC-smoothed relative to Δcap; prefer Δcap (AM-018) |
+
+### Profile bounds written (`configs/platforms/aipc-c1.yaml`)
+
+- `settle_s: 360` · `soc_window_pct: [40, 85]` · `discharge_rate_stable_band_frac: 0.05`
+- citing `settle_s_run_id` / `soc_window_run_id` = `911965cf-257c-4276-954b-17611a5e75eb`
+
+### Spec / pin
+
+- §10 OQ2 **CLOSED** (AM-017). Standing spec pin:
+  `18cf9264cef0b08ea01c3d42d1d1d01389a296f6477aac96059816dcc2778328` (33236 bytes).
+- Prior `a102d201…` archived. Blueprint pin unchanged (`ca5b0c44…`).
+
+**No M2.2–M2.5 code.**
+
+---
+
+## 2026-07-30 — M2.1 closeout (Items 1–4)
+
+Citing run unchanged: `911965cf-257c-4276-954b-17611a5e75eb`. No re-measure.
+
+### Item 1 — Time-driven identity (VERIFIED)
+
+| Quantity | Value |
+|---|---:|
+| Σ\|Δcap\| / changes (mean step) | 9054 / 95 = **95.30526315789474 mWh** |
+| duration / changes (mean interval) | 1799.8530491 / 95 = **18.945821569473683 s** |
+| mean_power × mean_interval | 18109.478446753492 mW × 18.945821569473683 s = **95.30526315789474 mWh** |
+| Relative agreement | **0** (exact within float) |
+| p10 cross-check | 2.6097349 s × 18.109478 kW → **13.128 mWh** vs observed min step **11 mWh** |
+
+**Mechanism.** The EC updates `RemainingCapacity` on a roughly fixed ~19 s cadence; step size
+varies because **power** varies, not because a device quantum varies.
+
+**Minimum-duration justification (rewritten; numeric unchanged).** The analysis window must be
+long relative to the **update period**. The dominant error is an **edge effect** (unknown phase
+within the first and last intervals). Modelling two unknown half-period edges gives uncertainty
+≈ `period / duration`. Requiring ≤5% yields `duration ≥ 20 × period`. With
+`period_median = 19.7902616 s` this is still **`min_viable = 395.805232 s`** (CI95 via period
+median bootstrap **[319.402866, 409.846036]**). This is **not** "≥20 energy quanta" — there is
+no fixed quantum. Observed per-update mWh increments are **power-dependent**, not a counter
+property.
+
+Planning (config `s1_characterization`): floor **410 s**, adopted **480 s**, reserve p90
+**713 s** only for single-conclusion points.
+
+### Item 2 — AM-018 S1 estimator (PRE-DATA w.r.t. M2.5)
+
+Locked: **`ΔRemainingCapacity` only** for all energy work / M2.5 regression. Rate vs Δcap
+totals 9779.124 / 9054.0 mWh (**+8.0%**); integrated DischargeRate is **cross-check only**,
+never substituted into the regression. See `AMENDMENTS.md` AM-018.
+
+### Item 3 — Battery budget for §3.2 sweep (NO DECISION)
+
+| Capacity field | mWh | Source |
+|---|---:|---|
+| Design | **68607** | `root\WMI` `BatteryStaticData.DesignedCapacity` (Win32 null) |
+| Full charge | **69043** | `root\WMI` `BatteryFullChargedCapacity` (Win32 null) |
+| Usable in SoC [40,85] | **31069.35** | 0.45 × 69043 |
+
+Assumptions for cost model (explicit):
+- 8 load levels linspace **15→55 W** (vendor `min_w`→`turbo_w`), **not** at the 18.1 W mean
+- per-level load duration = adopted **480 s**
+- one `settle_s` = **360 s** at 15 W
+- inter-level cooldown: **illustrative 120 s × 7 at 15 W** (thermal constants still null —
+  AM-006; labelled non-binding for M2.3)
+- Scenario A = load + settle + illustrative cooldown
+- Scenario B = A + §3.2 idle-load-idle brackets (`T_idle=180 s` each side × 8 levels at 15 W)
+
+| Scenario | Energy (mWh) | vs usable 31069 |
+|---|---:|---|
+| Load only (8×480 s) | 37333.33 | **exceeds by 6264** |
+| A (+settle+cool) | 42333.33 | **exceeds by 11264** |
+| B (+idle brackets) | 54333.33 | **exceeds by 23264** |
+| Turbo-alone share (55 W × 480 s) | 7333.33 | ~24% of usable by itself |
+
+**Verdict: does NOT fit** inside ONE discharge within `soc_window_pct [40, 85]` under the
+adopted 480 s planning duration.
+
+**Options (owner decision — not chosen here):**
+1. **Split across multiple discharge cycles** — declare cross-cycle comparability an open
+   question (charge history, temperature, FCC drift).
+2. **Widen `soc_window_pct`** — feasibility gated by Item 4(a); dependence was measured only
+   over ~99→86% SoC, so widening below 40% or above 85% is **not** supported by present data.
+3. **Reduce load levels below 8** — requires an amendment; §3.2 / AM-004 require ≥8.
+
+Full arithmetic: `derived/m2_1/battery_budget_m25_sweep.json`.
+
+### Item 4(a) — SoC dependence (5f), with CIs
+
+Constant `cpu_spin_all_logical` load; split series at midpoint (high-SoC half vs lower-SoC half).
+RemainingCapacity ranges: high **[63586, 68182]** mWh; lower **[59128, 63586]** mWh
+(approx SoC ~99→86% over the run — **above** the pinned window floor).
+
+| Segment | mean DischargeRate (mW) | bootstrap CI95 (mean) | median | IQR |
+|---|---:|---|---:|---|
+| High-SoC half | 20943.68 | [20843.49, 21044.81] | 18437 | [16647, 26254] |
+| Lower-SoC half | 18174.76 | [18110.63, 18236.64] | 17198 | [16000, 19194] |
+
+Relative change in **means**: **−13.22%** (bootstrap CI95 **[−13.76%, −12.69%]**).
+Relative change in **medians**: **−6.72%**.
+
+**Conclusion:** reported DischargeRate at this fixed load is **not independent of SoC**
+(and/or time-on-load thermal settling — not separable in one run). Window **[40, 85]** remains
+appropriate; **widening for Item 3 is not justified** by this dataset.
+
+### Item 4(b) — EC smoothing (5g)
+
+**Conclusion: yes — DischargeRate is EC-smoothed relative to ΔRemainingCapacity.**
+
+Evidence (run `911965cf…`):
+1. Integrated rate **9779.124 mWh** vs Σ\|Δcap\| **9054.0 mWh** → ratio **1.080** (systematic
+   +8.0%, not zero-mean noise).
+2. Capacity updates arrive as discrete steps on a ~19 s cadence (Item 1), while DischargeRate
+   varies within intervals; the rate signal does not track step edges one-for-one.
+3. Spec §3.2 already preferred Δcap to avoid EC smoothing; AM-018 locks that preference for
+   M2.5.
+
+### Capacities in config + schema
+
+`power.battery.design_capacity_mwh` / `full_charge_capacity_mwh` written; manifest
+`power_state` gains the same fields (nullable). Tests cover presence.
+
+---
+
+## 2026-08-02 — AM-019: dependency graph replaces linear milestone chain
+
+**PRE-DATA w.r.t. H1–H4 and all figures except S3/S4 energy. Authorized by Z. Johnson.**
+
+Defect: Phase −1 spec §7 "work strictly in order" serialized instrument work ahead of the
+research question, conflicting with blueprint §16.7 (H1 priority). M2 and M3 have no mutual
+dependency.
+
+Correction landed:
+- Spec §7 rewritten as parallel tracks I / A / L after M1; **M-SLICE** first-class
+- **M2 re-scoped to CERTIFY RAPL** (Stage A = 5 levels/target gate; Stage B = ≥8 confirmatory /
+  Paper 2)
+- Energy beyond RAPL cert = Paper 2; S4 may ship tokens/sec first
+- Controlling gate = H1 (G2), risk-based incompleteness allowed
+- `seam.mdc` milestone section updated; blueprint §16.7 affirmed (not rewritten)
+
+Standing spec pin: `9a905a340c513b40cd26a7d381b7d8ba9a28be316eaab04126aeb65cd5e1ca5b`
+(35968 bytes). Prior `18cf9264…` archived.
+
+**Blueprint §11 applied 2026-08-02 (same amendment).** Gates declared risk-based; **G0** energy
+criterion becomes RAPL **certification** (Stage A, ≥5 levels/target + NPU coverage verdict); new
+confirmatory **G0-B** carries the full ≥8-level AM-004 criterion to Phase 3 / Paper 2 and does not
+block G1/G2; **G1** energy decomposition conditional on G0-B; §14.2 changelog row added. Standing
+blueprint pin `ffe349804fa36de9ac94473ecd9372c6cc1234c91424242e5fc39040a67b1253` (64861 bytes);
+prior `ca5b0c44…` archived. AM-004's physics is carried verbatim into G0-B — unchanged, only
+re-timed.
+
+**No measurement runs. No M2.2+ code.**
+
+---
+
+## 2026-08-02 — M-SLICE build landed; collection BLOCKED on two environmental faults
+
+Instrument and pre-registration complete. **No data collected. No money spent
+(`derived/budget/` ledger empty).** Recorded now so the pre-registration is provably prior to
+any observation.
+
+### Pre-registration (all PRE-DATA)
+
+| Amendment | Substance |
+|---|---|
+| **AM-020** | Model pinning is "pinned identifier **in the provider's convention**", not "dated alias". `claude-sonnet-5` is dateless BY DESIGN and IS the pin; a constructed dated variant does not exist. Floating aliases (`-latest`) stay forbidden. Serving-stack drift under a fixed ID is documented by the provider, so the **daily canary is retained** and this is its justification. |
+| **AM-021** | **Cross-model token deltas are not a valid behavioral metric.** Claude 4.7+ emits ~30% more tokens for identical text than earlier models; local models use unrelated tokenizers. A Δ-token comparison measures tokenizer disagreement plus behavior and cannot separate them — and the bias points *toward* H1 at roughly the magnitude of the ≥20% G2 threshold. Behavioral currency becomes **characters/bytes** (or re-tokenization under one declared reference tokenizer). Native counts retained for **cost only**. |
+| **AM-022** | M-SLICE policy frozen: **predictive** (not preemptive) local-first routing; prefill included; deadline **advisory** with overrun rate reported as the predictor's error rate; isolation invariant asserted in code; pre-registered prediction that the two curves collapse under `escalation_lpe(D) ≈ escalation_p(D × R_p/R_lpe)`; preemptive semantics **deferred** as the H4 cascade axis. |
+
+### Built (minimum viable subsets only)
+
+`seam/budget.py` (durable ledger + structural ceiling), `seam/backends/` (protocol, OpenVINO CPU,
+Anthropic w/ caching), `seam/agent/` (fixed scaffold, deterministic tool world, policy),
+`seam/analysis/slice_stats.py` (bootstrap CIs, noise floor, A/A verdict, 2×CV null rule),
+`seam/tools/` (scripted IR export, per-core affinity verifier, phase runner).
+Configs: `configs/mslice.yaml`, `configs/pricing/anthropic.yaml` (dated table spanning the
+2026-09-01 increase), `configs/tasks/bfcl_slice_v1.json` (20 tasks, frozen before collection).
+
+Suite **240 passed**, ruff clean, mypy clean (45 files).
+
+### BLOCKER 1 — local model weights unreachable from this network
+
+`huggingface.co` resolves and completes TLS, and **small files download normally**, but every
+**large weight file** gets `WinError 10054` (connection reset) on the `resolve` HEAD, or opens a
+connection that transfers **zero bytes**. Reproduced on `Qwen/Qwen2.5-3B-Instruct`
+(`aa8e7253…`, shard 1 of 2 — shard 2 *did* download, 2101 MB) and on
+`Qwen/Qwen2.5-1.5B-Instruct` (`989aa798…`, `model.safetensors`), with and without
+`HF_HUB_DISABLE_XET=1`. Consistent with a middlebox resetting large binary transfers.
+
+**No third-party mirror was used.** `hf-mirror.com` is reachable, but pulling research weights
+from an unofficial mirror would weaken the ModelSpec's provenance claim, which this project
+cannot afford. Recorded as a deliberate refusal, not an oversight.
+
+Consequence: step 1 (throughput baseline) cannot run, so `R_prefill`/`R_decode`,
+the cpu-p/cpu-lpe ratio, `n_out_pred`, the frozen deadlines, and the **mandatory per-core
+affinity verification** are all outstanding.
+
+### BLOCKER 2 — `ANTHROPIC_API_KEY` absent from the environment
+
+Not visible to the harness process. The cloud arm refuses to construct a client without it, by
+design (the key is read from the environment only and is never logged or written to a manifest).
+Checkpoint 1 (single key-validation call) therefore has not run.
+
+### Spend
+
+**USD 0.00.** Ledger `derived/budget/ledger.ndjson` does not exist because no paid call was ever
+authorized. Slice ceiling 10.00, project ceiling 50.00 — both unconsumed.
+
+---
+
+## FINDING — OpenVINO PCORE_ONLY fall-through on Panther Lake (2026-08-02)
+
+**Pre/post data:** PRE-DATA w.r.t. M-SLICE partition measurement. Evidence from throwaway
+0.6B validator artifact derived/mslice/affinity_validation.json (not yet the quiesced A1–A6
+matrix on the 4B).
+
+**Observation.** With SCHEDULING_CORE_TYPE=PCORE_ONLY, ENABLE_CPU_PINNING=true,
+INFERENCE_NUM_THREADS=4, mean per-CPU utilization during generate() was high on **all eight**
+logical CPUs (approx 76–93%), including LP-E CPUs 4–7. M1-committed mapping expects P-cores
+on 0–3 only. Verdict: refused; leaked onto [4,5,6,7].
+
+**Asymmetry argument.** Under a working confinement, excluded cores bound background. On this
+arm the excluded cluster ran at ~90% — far above an idle background bound — so the reading is
+leakage, not noise. (A1–A6 will repeat with baseline-subtracted deltas on a quiesced machine;
+watcher processes are now on the quiesce forbidden list.)
+
+**ECORE_ONLY** on the same artifact largely loaded 4–7 (with a possible leak onto CPU 3 in the
+absolute-util reading). A2 (ENABLE_CPU_PINNING explicit vs default) is the load-bearing test
+that distinguishes a configuration miss from an OpenVINO defect.
+
+**Adopted mechanism.** Not yet written. DEFERRED-BY-DEPENDENCY on A1–A6. Isolation invariant
+requires one symmetric mechanism for both arms.
+
+**Upstream.** Draft only — docs/upstream/openvino_pcore_only_panther_lake_DRAFT.md. Not submitted.
+
+**C9.** Accrues as a client-platform measurement pathology: a competitor measuring P-vs-LP-E with
+OpenVINO on Panther Lake can have leaking affinity and not know it.
+
+---
+
+## Phase E post-verification record-keeping (2026-08-02) — PRE-DATA w.r.t. A0–A6 / H1
+
+### Ledger externally verified
+
+Independent recompute of all **11** `derived/budget/ledger.ndjson` rows against
+`configs/pricing/anthropic.yaml` tier `introductory` (effective through 2026-08-31):
+**11/11 exact matches, zero mismatches.** Total actual spend **USD 0.147928**
+(E1 0.001044 + E2 0.146884). Pricing version `2026-08-02.1`.
+
+### 0.1 — Proportion CI method (project-wide)
+
+**Chosen method: Wilson score interval** (`seam.analysis.proportions.PROPORTION_CI_METHOD =
+"wilson_score"`).
+
+The E2 failure-rate interval reported as “[0, 27.8%]” matches **Wilson** for 0/10
+(upper 27.75%), **not** Agresti–Coull (upper 32.09%). Rule of three for 0/n is 3/n
+(= 30.0% at n=10) and may be cited as a bound in prose, but every reported proportion
+interval in this project uses Wilson. Label corrected in `seam/tools/phase_e_cloud.py`
+and enforced by `tests/test_proportions.py`.
+
+### 0.2 — Do NOT recalibrate the projector on Phase E data
+
+Verified separately: the Phase E synthetic payload tokenizes at **exactly 1.000000
+tokens/byte** (incremental slope over 8000 bytes) with a **constant 452-token intercept**.
+Real content runs ~3–4 bytes/token. Back-solving the Phase E projections shows the
+estimator assumed ~2.95 bytes/token, which is **correct for realistic text**.
+
+The 92–176% under-projection on E2 calls 1–3 is therefore an **artifact of the synthetic
+1-tok/byte test payload**, not a defect in the projector. Recalibrating the byte→token
+slope against Phase E would break the projector for the workload it will actually serve
+(BFCL / prose prompts). **Do not “fix” this.**
+
+### 0.3 — Genuine projector gap: cache state
+
+Cache-read calls over-projected by ~67% because estimates assumed worst-case cache-write
+on every call. Safe for the authorization bound; useless as a calibration estimate.
+
+**Implemented:** `BudgetGuard.projected_call_usd(..., cache_state={"cold","warm","unknown"})`.
+Authorization still always uses `worst_case_call_usd` (= cold/write).
+`AnthropicBackend` tracks `_cache_prefix_written` and passes `warm` on subsequent cached
+calls. Tests: `tests/test_budget_cache_projection.py`.
+
+### 0.4 — Cloud round-trip for the deadline grid
+
+Measured wall-clock on E2 (10 sequential long POSTs): **min 1.226 s, max 5.370 s,
+mean 2.469 s**. This is the escalation cost input to the deadline grid.
+
+Rate limits observed at E1 (10k req, 10M input tok, 2M output tok, 12M aggregate tok)
+are far above H1 needs — **throughput/rate-limit question CLOSED**. Binding H1 constraint
+is tokens (and cost), not request rate.
+
+### Code changes from response shapes (cross-ref)
+
+- `claude-sonnet-5` rejects `temperature` (400) — omitted in `cloud_anthropic.py`.
+- Usage fields include nested `cache_creation.{ephemeral_5m,ephemeral_1h}_input_tokens`;
+  flat `cache_creation_input_tokens` matched 5m counts in E2.
+
+### A0–A6 / Phase D status at this entry
+
+Matrix harness upgraded (default **5 blocks**, A0 required, per-gen ≥10 s baseline,
+prefill/decode separate, PDH frequency sampler, Wilson CI module, AC hard-refuse).
+**Measurement not yet run:** machine was **on battery** at the attempt; quiesce requires
+AC. STOP — not a workaround.
+
+---
+
+## INTERRUPTED — A0–A6 matrix mid-run (2026-08-03)
+
+**Pre/post data:** PRE-DATA w.r.t. adoption. Incomplete run is not a confinement result.
+
+**What ran.** Full matrix launched on AC at 2026-08-02T23:59:30Z
+(`--blocks 5 --seed 20260802 --cooldown-s 30`). Blocks 1–3 completed with every cell
+`ok=True`. Block 4 completed A3, A4, A0 successfully; **A2 child exited 4294967295**
+(unsigned -1; process killed — consistent with sleep / AC loss / OOM). Parent/shell then
+exited with the same code at 2026-08-03T13:20:00Z (~13.3 h wall, including overnight).
+**No `affinity_matrix.json` was written** — results were only flushed at end.
+
+**Quiesce at resume (2026-08-03 morning).** AC **disconnected** again (`on_battery=true`,
+SoC ~62%, charging=false). Protocol STOP. Not resumed with `--allow-battery`.
+
+**Log-only decode tok/s breadcrumbs** (not classification; not for adoption) show the
+expected P vs LP-E throughput split (~15–17 vs ~7–10 tok/s decode) across successful
+cells. Without per-core baseline-subtracted deltas and full 5 blocks, A2 verdict and
+mechanism adoption are **unavailable**.
+
+**Harness fix applied before next attempt.** Per-cell durable checkpoint
+(`*.partial.json`), mid-matrix AC re-check, and STOP-on-child-killed. Next run must be
+a **full** 5-block matrix on sustained AC — incomplete blocks are not patched with log
+crumbs.
+
+**Phase D.** Not started (blocked on A.8 adoption).
+
+**Artifact.** `derived/mslice/affinity_matrix_interrupted_20260803.json`
+
+## 2026-08-03 09:21 — affinity_matrix stopped (AC loss)
+
+- A0–A6 affinity matrix stopped after AC loss (Windows kill mid block 4 / A2; exit 4294967295).
+- Partial cells not publishable; no `affinity_matrix.json` / `phase_d` sealed.
+- Marker: `derived/mslice/affinity_matrix_stopped_battery.json` (reason `ac_lost_mid_run`; ok=True count=24).
+- Full AC re-run required from scratch; do not resume on battery.
+
+---
+
+## FINDING — A0–A6 matrix complete on AC; A0 sanity FAILED; mechanism not adopted (2026-08-03)
+
+**Pre/post data:** PRE-DATA w.r.t. adoption. Sealed matrix exists; adoption gate failed.
+
+### Quiesce (recorded in artifact)
+
+| Field | Value |
+|---|---|
+| on_battery | false (mains) |
+| charging | true |
+| battery_pct start → end | 63.0 → 99.0 |
+| power plan | Best Performance / `ec87a53a-19a6-4f4a-980f-ab27cc929b25` |
+| overlay GUID | `00000000-0000-0000-0000-000000000000` |
+| display_brightness | 100.0 |
+| defender_realtime | enabled |
+| ambient_c | null (`unavailable_pending_M2.3_LHM`) |
+| package_temp_c | null |
+| thermal.regime | confound |
+| hard forbidden hits | none (OneDrive.exe soft-recorded) |
+| threads | 4 (`INFERENCE_NUM_THREADS`) |
+
+### Citing artifact (no sealed `raw/` run_id — harness gap)
+
+- Path: `derived/mslice/affinity_matrix.json`
+- SHA-256: `d02a14cbb40e29269e5163df4bd418dda83ad6646564672e365573e1be20ef27`
+- Bytes: 240868
+- Wall: 2026-08-03T09:22:03 → 10:46:17 local (AC online throughout)
+- Log: `derived/mslice/affinity_matrix_run2.log` (tee of the successful AC re-run; prior interrupted attempt remains in `affinity_matrix_run.log`)
+- Command: `python -u -m seam.tools.affinity_matrix --blocks 5 --seed 20260802 --cooldown-s 30 --out derived\mslice\affinity_matrix.json`
+- OpenVINO 2026.2.1 / GenAI 2026.2.1.0; model `Qwen3-4B-int4-ov`; prompt_sha256 `f1f2eddead735a108a9d6b4a083a7696d1d27ff1de303d7635aa9af8e8ac91fa`
+- **Manifest gap:** affinity_matrix does not emit a sealed `raw/<run_id>/manifest.json`. Citation is path + SHA-256 + timestamp above until that is wired.
+
+### Noise band
+
+`NOISE_BAND = 2 * mean(per-core CV of pooled idle baseline means) = **1.4096`**
+(pooled n=70 baseline means per core 0–7).
+
+### Prefill sampling failure (blocks all confinement verdicts)
+
+**70/70 scored generations have empty `prefill_mean_pct_per_cpu`.** Prefill deltas are therefore baseline-subtracted against missing phase samples and land negative on every core; `r_prefill_tok_s` is null everywhere. Every cell is **INVALID on prefill**. Decode util sampling worked. This is a harness/measurement defect, not a silicon result. Do not adopt from decode-only.
+
+### Per-core mean Δ% tables (baseline-subtracted)
+
+CPU order: 0,1,2,3 (P) | 4,5,6,7 (LP-E). Values are mean across 5 blocks × scored gens.
+
+#### Prefill Δ% (unusable — empty phase samples)
+
+| Cell | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | pref. verdict |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| A0 | -16.83 | -12.98 | -10.99 | -26.85 | -18.34 | -18.29 | -19.62 | -23.31 | N/A |
+| A1 | -12.01 | -7.64 | -6.88 | -20.91 | -16.57 | -17.54 | -16.80 | -20.65 | INVALID |
+| A2 | -15.34 | -10.90 | -9.69 | -22.41 | -13.62 | -14.00 | -15.32 | -17.37 | INVALID |
+| A3 | -18.38 | -13.70 | -10.99 | -27.43 | -19.23 | -19.13 | -22.56 | -23.79 | INVALID |
+| A4 | -12.85 | -7.50 | -6.45 | -20.17 | -14.49 | -17.43 | -17.07 | -21.03 | INVALID |
+| A5 | -19.46 | -14.36 | -12.52 | -29.80 | -16.13 | -16.87 | -17.18 | -21.56 | INVALID |
+| A6 | -17.00 | -10.74 | -9.37 | -22.76 | -12.00 | -10.74 | -11.23 | -14.56 | INVALID |
+
+#### Decode Δ% (sampled; not adoptible while A0/prefill gates fail)
+
+| Cell | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | decode states (0–7) | decode verdict |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
+| A0 | 78.06 | 80.55 | 82.72 | 67.83 | 4.42 | 4.98 | 2.63 | 0.86 | L L L L A A A Q | N/A (sanity) |
+| A1 | 82.81 | 85.10 | 86.93 | 74.00 | 5.68 | 6.01 | 6.68 | 4.65 | L L L L A A A A | UNCLEAR |
+| A2 | 82.26 | 77.41 | 77.96 | 69.44 | 3.10 | 3.07 | 2.57 | 2.13 | L L L L A A A A | UNCLEAR |
+| A3 | 1.84 | 3.22 | 2.78 | 2.64 | 74.40 | 74.40 | 72.03 | 71.98 | A A A A L L L L | UNCLEAR |
+| A4 | -0.09 | -0.24 | -0.85 | 1.01 | 84.80 | 68.53 | 70.48 | 66.66 | Q Q Q Q L L L L | CONFINED |
+| A5 | 76.56 | 81.59 | 83.30 | 67.52 | 1.43 | 0.38 | 1.13 | -1.35 | L L L L A Q Q Q | UNCLEAR |
+| A6 | -5.93 | -3.18 | -2.88 | -3.72 | 83.70 | 84.96 | 85.13 | 82.81 | Q Q Q Q L L L L | CONFINED |
+
+L=LOADED, Q=QUIET, A=AMBIGUOUS. Overall cell verdict = INVALID for A1–A6 (prefill INVALID).
+
+### Mask readback
+
+| Cell | process affinity mask | OpenVINO properties |
+|---|---|---|
+| A0–A4 | {0–7} | A1/A2: PCORE_ONLY (±pinning); A3/A4: ECORE_ONLY (±pinning); A0: threads only |
+| A5 | {0–3} | threads only |
+| A6 | {4–7} | threads only |
+
+### Decode tok/s (5-block means; bootstrap CI on block means)
+
+| Cell | mean | CI lo | CI hi |
+|---|---:|---:|---:|
+| A0 | 15.16 | 13.45 | 16.76 |
+| A1 | 15.22 | 13.31 | 16.54 |
+| A2 | 14.12 | 12.14 | 15.84 |
+| A3 | 6.86 | 5.75 | 7.65 |
+| A4 | 7.14 | 5.70 | 7.97 |
+| A5 | 15.05 | 13.02 | 16.78 |
+| A6 | 8.32 | 7.41 | 9.23 |
+
+Prefill tok/s: **null** (not emitted by GenAI path in these runs).
+
+### A0 sanity gate — FAILED
+
+Decode loaded **4/8** CPUs (0–3 LOADED; 4–6 AMBIGUOUS; 7 QUIET). `all_cpus_loaded=false`.
+With `INFERENCE_NUM_THREADS=4`, unconfined work saturates the P-cluster and does not load LP-E.
+Harness sets `adopted_mechanism=none` and STOP. Cannot distinguish leakage from unsaturated workload.
+
+### A2 verdict — inconclusive
+
+A1 decode UNCLEAR + overall INVALID; A2 decode UNCLEAR + overall INVALID. Label **inconclusive** (not configuration / not defect / not non-reproduction). Upstream draft must not claim a settled PCORE_ONLY defect from this run.
+
+### A3-vs-A6 (decode tok/s only; prefill null)
+
+- A3 mean 6.863 vs A6 mean 8.322; ratio A3/A6 = 0.8247; relative Δ = 0.1753
+- within-cell CV: A3=0.2051, A6=0.1447; material threshold 2×CV = 0.4102
+- **material = false** at that threshold. Symmetry remains required on isolation-invariant grounds regardless.
+
+### Throttle detectors
+
+1. **PDH frequency:** methods `win32pdh`; n_min_pct_observations=320; global_min_pct_of_max=**19.0** → flagged `frequency_dip_below_80pct_of_max`
+2. **Within-cell decode drift:** 35 pairs; **10** flagged with |g2−g1|/g1 > 15% (largest: A1 block3 +78.3%, A3 block2 −35.9%, A5 block2 +34.1%)
+3. **Block-position regression:** slope_decode_tok_s_per_block = **+0.444** (throughput rose across blocks; not a decaying thermal collapse signature)
+- `excluded_cells`: [] (flags recorded; no operator exclusion applied)
+- Cooldown remains time-based / unvalidated (`thermal.regime=confound`)
+
+### Adoption decision tree — STOP
+
+1. Zero mechanisms CONFINED in **both** prefill and decode → `adopted_mechanism: none`
+2. A0 sanity FAILED reinforces STOP
+3. **Not written** to `configs/mslice.yaml` / `configs/project_state.yaml` confinement fields (remain null / DEFERRED-BY-DEPENDENCY)
+4. Phase D **not started**
+5. Adding blocks alone does not repair empty prefill samples or 4-thread A0 non-saturation — next work must fix those gates, not re-roll the same matrix
+
+### Decision recorded by harness
+
+```
+adopted mechanism: none
+reason: A0 sanity FAILED: not all CPUs LOADED in the unconfined reference.
+a0_sanity_gate: FAILED
+```
+
+
+## FINDING — TTFT=0 root cause (GenAI plain-str return); streamer fix; A0 threads (2026-08-03)
+
+**Pre/post data:** PRE-DATA w.r.t. adoption. Supersedes the interpretation that empty prefill
+samples in `affinity_matrix_ttft0_invalid_20260803.json` (sha256 `d02a14cb…`, formerly
+`derived/mslice/affinity_matrix.json`) were an unexplained harness quirk.
+
+### Root cause
+
+OpenVINO GenAI **2026.2.1** `LLMPipeline.generate()` returns a plain `str` with **no**
+`perf_metrics` attribute. `LocalOpenVinoBackend.generate` then set `ttft_ns=None`, and
+`affinity_matrix._phase_means` treated that as `ttft=0`, so every util sample was classified as
+decode. Prefill windows were empty (70/70); prefill deltas were baseline-subtracted noise
+(negative everywhere); `r_prefill_tok_s` was null. **Not a silicon result.**
+
+Probe (same IR / GenAI): `result_type <class 'str'>`, `has_perf False`.
+
+### Fix (code)
+
+1. `seam/backends/local_openvino.py`: always pass a `StreamerBase` that timestamps the first
+   token; prefer `perf_metrics` TTFT when present, else `streamer_first_token`; **refuse**
+   (raise `BackendError`) if TTFT remains unavailable — never emit silent zero.
+2. `seam/tools/affinity_matrix.py`: missing/zero TTFT no longer collapses to decode-only;
+   scored generations raise if TTFT is missing; default `--threads` **8** (Platform A logical
+   CPU count) so A0 can saturate all cores (prior default 4 made `all_cpus_loaded` structurally
+   impossible under OpenVINO's 4-thread P-preferring placement).
+3. Unit tests: `tests/test_ttft_resolve.py`.
+
+Live smoke after fix: `ttft_source=streamer_first_token`, `ttft_ms≈9324`, `wall_ms≈13282`.
+
+### Side observation (Phase D relevance — not acted on here)
+
+With `enable_thinking=False`, the chat template still opens an empty `<think>` and greedy
+decode emitted real thinking text. Investigate before Phase D Arm 1; do not start Phase D
+until a mechanism is adopted under valid prefill+decode.
+
+### Artifact disposition
+
+- Invalid TTFT=0 matrix preserved at
+  `derived/mslice/affinity_matrix_ttft0_invalid_20260803.json` (do not adopt).
+- Re-run of full 7×5 matrix on AC with TTFT fix + `--threads 8` is the next measurement.
+
+### Spend
+
+$0.00 (local only).
+
+
+## FINDING — affinity_matrix sealed-manifest gap (2026-08-03)
+
+**Pre/post data:** PRE-DATA w.r.t. adoption. Instrumentation gap, not a silicon result.
+
+**Observation.** The 2026-08-03 AC matrix cited at
+`derived/mslice/affinity_matrix_ttft0_invalid_20260803.json` (sha256 `d02a14cb…`; formerly
+`derived/mslice/affinity_matrix.json`) completed without emitting a sealed
+`raw/<run_id>/manifest.json`. Citation was path + SHA-256 + timestamp only. Under blueprint
+§5.2 / Phase −1 §0, every emitted number must trace to a run_id manifest — this run violated
+that invariant.
+
+**Disposition.** Gap closed in harness: `seam.tools.affinity_matrix` now calls
+`seam.manifest.emit` for matrix/verification runs (`workload.kind=mslice_affinity_matrix`)
+and writes `affinity_matrix.json` into the sealed run directory. Prior artifact remains
+INVALID and must not be adopted. Do not backfill a fake run_id onto the invalid matrix.
+
+**Spend.** $0.00.
+
+---
+
+## FINDING — OpenVINO PCORE_ONLY fall-through SUPERSEDED-PENDING-REMEASUREMENT (2026-08-03)
+
+**Pre/post data:** PRE-DATA w.r.t. adoption. Supersedes the 2026-08-02 FINDING
+"OpenVINO PCORE_ONLY fall-through on Panther Lake" pending a clean dual-phase matrix.
+
+**Why superseded (not retracted as false).** The 2026-08-02 throwaway 0.6B validator that
+drove the upstream draft observed ~90% utilization on LP-E cores under `PCORE_ONLY`. That
+reading was taken beside a multi-gigabyte download; absolute utilization (not
+baseline-subtracted deltas) charged background load to the pipeline. On the later
+baseline-subtracted AC matrix (invalid for other gates; sha256 `d02a14cb…`), A1 decode
+excluded LP-E from LOADED and left ~5.8% AMBIGUOUS on outside cores — directional A1 vs A2
+signal is preserved for a clean re-measure, but the original "90% leakage = defect" claim
+does not survive baseline subtraction.
+
+**Status.** `SUPERSEDED-PENDING-REMEASUREMENT`. Upstream draft
+`docs/upstream/openvino_pcore_only_panther_lake_DRAFT.md` is **HOLD — do not submit**.
+Re-evaluate A2 verdict tree (configuration / defect / non-reproduction / original finding
+does not reproduce) only after a matrix with non-empty prefill+decode windows, A0a/A0b
+references, global LOADED_THRESHOLD from A0a, and ac-pinned charging-complete.
+
+**Spend.** $0.00.
+
+---
+
+## NOTE — affinity matrix harness repairs before re-measure (2026-08-03)
+
+Part-1 fixes landed before verification/full matrix:
+
+1. Fail-loud: empty/zero-duration util windows raise immediately; `ok=True` requires both
+   phase windows non-empty with positive duration.
+2. Prefill sampling: continuous util sampler across `generate()`; prefill/decode split
+   post-hoc from first-token timestamp (never gated on phase-end). TTFT=0 root cause was
+   GenAI plain-str return (prior FINDING); streamer path retained.
+3. A0 → A0a (threads=8 saturation) + A0b (threads=4 default placement); both exempt from
+   loaded-cores sanity. `LOADED_THRESHOLD = 0.5 * median(A0a per-core decode delta)` applied
+   identically to every cell both phases. `NOISE_BAND = 2 * pooled idle per-core CV`.
+4. ac-pinned: `require_charging=false`, ChargeRate max, brightness target 50 (not 100);
+   abort if charging resumes mid-run. Empirically on aipc-c1: BatteryStatus reports
+   `Charging=false`, `ChargeRate=0` when settled on AC at 100% SoC.
+5. Sealed `raw/<run_id>/` manifest emit for matrix runs.
+6. PCORE_ONLY FINDING marked SUPERSEDED-PENDING-REMEASUREMENT; upstream HOLD.
+
+Invalid 2026-08-03 matrix (`d02a14cb…`) is diagnostic evidence only — not for adoption.
+
+
+## FINDING — A0a threads=8 does not load LP-E; Part 2 verification STOP (2026-08-03)
+
+**Pre/post data:** PRE-DATA w.r.t. adoption. Verification block sealed; full 8×10 matrix NOT started.
+
+**Citing run.** `run_id=fc262806-debf-4905-828b-2b8061dc0333`
+(`raw/fc262806-debf-4905-828b-2b8061dc0333/`, derived `affinity_matrix_verify.json`).
+`--blocks 1 --seed 20260803 --cooldown-s 60`. Spend $0.00.
+
+**What passed.**
+- Prefill windows: all scored gens n_prefill>=14, n_decode>=456, positive duration
+- Prefill deltas positive on loaded cores
+- charging==false entire block; brightness target=actual=50
+- Sealed manifest emitted
+- LOADED_THRESHOLD=21.8912 (= 0.5 * median(A0a decode deltas)); NOISE_BAND=1.3581
+
+**What failed (STOP — gates never descope).**
+- A0a with INFERENCE_NUM_THREADS=8 loaded exactly 4 cores (P 0–3). LP-E decode deltas
+  1.7–6.4% (AMBIGUOUS under threshold 21.89). Does not meet "loads substantially more than
+  4 cores." OpenVINO unconfined placement prefers the P-cluster even at threads=8; pool size
+  alone does not engage LP-E.
+
+**Sampler note.** Prefill TTFT on this IR is ~0.21–0.62 s (`perf_metrics` ≈ streamer).
+100 Hz util sampling is required for >=10 prefill samples; 10 Hz structurally cannot.
+
+**Disposition.** Part 3 full matrix and Part 5 Phase D not started. Mechanism not adopted.
+Additive follow-up (not started): whether any OpenVINO property/thread setting engages LP-E
+without process affinity — feeds the same confinement main-line if it varies a design-space
+coordinate; otherwise record as displacing per blueprint §12.4.
+
+---
+
+## FINDING — OpenVINO default placement is P-cores; A0a demoted from saturation gate (2026-08-03)
+
+**Pre/post data:** PRE-DATA w.r.t. adoption. Instrumentation confirmed by verification
+`run_id=fc262806-debf-4905-828b-2b8061dc0333` (do not re-run Part 2 verification). Invalid
+2026-08-03 matrix `d02a14cb…` is not adopted from.
+
+**Finding.** OpenVINO default placement selects the four P-cores (logical 0–3) regardless of
+`INFERENCE_NUM_THREADS`. With threads=8, the pool oversubscribes those P-cores rather than
+engaging LP-E (4–7). This is consistent runtime behavior, not a harness defect.
+`SCHEDULING_CORE_TYPE` exists because the default is not "use everything."
+
+**Spec corrections applied (harness).**
+1. **A0a demoted.** A0a remains in the matrix as the oversubscription arm of the A0a-vs-A0b
+   pair (threads=8 vs 4 on the same four P-cores OpenVINO chooses by default). No gate
+   requires A0a to load substantially more than 4 cores / saturate all 8.
+2. **Per-core LOADED threshold (two-pass).** Replaced global
+   `LOADED_THRESHOLD = 0.5 * median(A0a decode deltas)` with
+   `threshold(c) = 0.5 * delta(c)` from the cell that deliberately targets `c`
+   (P-cores 0–3 from A5 decode; LP-E 4–7 from A6 decode), applied to both phases.
+   `NOISE_BAND` unchanged (`2 * pooled idle per-core CV`). Analysis collects all cells first,
+   then classifies — never during collection. Excluded cores of a cell are judged against a
+   different cell's reference; included cores against their own = sanity check.
+
+**Spend.** $0.00.
+
+---
+
+## INCIDENT — full affinity matrix ABORT: AC lost mid-run (2026-08-03)
+
+**Pre/post data:** PRE-DATA w.r.t. adoption. Partial matrix is NOT sealed for adoption.
+
+**Run parameters.** `--blocks 10 --seed 20260803 --cooldown-s 120`
+`--out derived/mslice/affinity_matrix.json`. Workload: 4B IR (sha256 074214fa…),
+reasoning OFF, prompt sha256 `f1f2eddead735a10…` (2093 tokens), 128 greedy
+`ignore_eos`, 3 gens (1 warmup + 2 scored), 100 Hz util sampling, ac-pinned.
+
+**Progress at abort.** 37/80 cells completed (all `ok=True`); A1 at block 4 had not
+started (no incomplete block to discard). Per-cell counts:
+A0a=4, A0b=5, A1=4, A2=4, A3=5, A4=5, A5=5, A6=5.
+Prefill sample counts across scored gens: min=13, median=19, max=78 (n=74).
+Checkpoint: `derived/mslice/affinity_matrix.partial.json` (+ interrupted twin).
+
+**Abort.** Harness STOP at 14:31 local: `ac_lost_mid_matrix` before cell A1 of block 4.
+`battery_pct` reported 100→99 with `charging=False`, `power_online=False`. Confirmed still
+on battery 10+ minutes later (SoC 99→97). Did **not** resume on battery. Did **not**
+adopt. Did **not** analyze partial matrix for confinement verdicts.
+
+**Disposition.** Parts 3–5 blocked. Resume only after AC restored + charging-complete
+quiesce, via `--resume` on the same seed/cooldown/schedule (protocol continuation, not
+salvage). Instrumentation citation remains
+`run_id=fc262806-debf-4905-828b-2b8061dc0333`. Invalid matrix `d02a14cb…` still not
+adopted from.
+
+**Spend.** $0.00.
+
+---
+
+## STOP — affinity matrix resume blocked: still on battery (2026-08-03 ~14:46 local)
+
+**Pre/post data:** PRE-DATA w.r.t. adoption. No measurement attempted.
+
+**Power check (harness).** on_battery=true, charging=false, SoC **97%**.
+BatteryStatus WMI: PowerOnline=false, Discharging=true, ChargeRate=0,
+DischargeRate=19437 mW. is_charging_complete returns true via charging_false,
+but **settled ac-pinned resume requires AC connected** — gate fails.
+
+**Disposition.** STOP waiting for AC. Checkpoint
+derived/mslice/affinity_matrix.partial.json (37/80) left untouched. Marker:
+derived/mslice/affinity_matrix_resume_waiting_ac.json. Did **not** resume,
+analyze, or measure on battery. Part 1 / c262806 not re-touched.
+
+**Spend.** \.00.
+
+
+---
+
+## FINDING — AC 8x10 affinity matrix sealed; dual-phase UNCLEAR; mechanism not adopted (2026-08-03)
+
+**Pre/post data:** PRE-DATA w.r.t. adoption. Sealed matrix exists; adoption gate failed (no CONFINED candidate).
+
+### Recovery / resume chain
+
+Prior sole --resume was killed by mistaken "duplicate" cleanup (Windows .venv-seam re-execs into a system/venv python child — one runner, not two). Checkpoint at 75/80 (interrupted mid block 10 A0a) parsed OK. Exactly one official --resume after AC settled (charging=false, SoC 100%). Incomplete block discarded by harness skip logic; five remaining cells of block 10 re-run. Log: derived/mslice/affinity_matrix_run_resume2.log.
+
+### Run parameters
+
+- Command: .\.venv-seam\Scripts\python.exe -u -m seam.tools.affinity_matrix --blocks 10 --seed 20260803 --cooldown-s 120 --out derived/mslice/affinity_matrix.json --allow-dirty --resume
+- Workload: Qwen3-4B-int4-ov; reasoning OFF; prompt_sha256 1f2eddead735a108a9d6b4a083a7696d1d27ff1de303d7635aa9af8e8ac91fa; 128 greedy ignore_eos; 3 gens (1 warmup + 2 scored); 100 Hz util sampling; ac-pinned
+- OpenVINO 2026.2.1 / GenAI 2026.2.1.0
+- Exit code 1 is harness convention when dopted_mechanism=none (not a crash)
+
+### Citing artifact (sealed)
+
+| Field | Value |
+|---|---|
+| run_id | 5eb09eba-b321-4b7e-b7df-e9b01194d388 |
+| sealed | 
+aw/5eb09eba-b321-4b7e-b7df-e9b01194d388/ (manifest + affinity_matrix.json + summary.json) |
+| derived | derived/mslice/affinity_matrix.json |
+| SHA-256 | 63d525b8e7300be20ff54925bd2409c1b5463971e14731be94fea0966de5af00 |
+| bytes | 701505 |
+| resumed_from | derived/mslice/affinity_matrix.partial.json |
+| n_ok | 10/10 blocks x 8 configs |
+
+Invalid prior TTFT=0 matrix d02a14cb… remains not adopted from.
+
+### Quiesce
+
+| Field | Value |
+|---|---|
+| pinned_profile | ac-pinned |
+| on_battery | false |
+| charging | false |
+| charging_complete | true |
+| battery_pct | 100.0 (start=end) |
+| power plan | Best Performance |
+| display_brightness | 50.0 (target 50) |
+| defender_realtime | enabled |
+| thermal.regime | confound |
+
+### Verification gates
+
+pass=true, failures=[]. Prefill windows OK. A0a saturation demoted to diagnostic-only (loaded_core_count=4). Min phase samples >=10. Charging complete throughout.
+
+### Two-pass LOADED thresholds (A5/A6 decode deltas)
+
+Formula: 	hreshold(c) = 0.5 * delta(c) — P-cores from A5 decode; LP-E from A6 decode. Applied to every cell, both phases (never during collection).
+
+| Core | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| threshold | 42.706 | 44.009 | 44.617 | 40.643 | 43.503 | 43.720 | 44.369 | 43.946 |
+
+NOISE_BAND = 2 * mean(per-core CV of pooled idle baseline means) = **1.1792** (pooled n=160 baseline means per core).
+
+### Prefill mean delta % (10-block; baseline-subtracted)
+
+CPU order: 0,1,2,3 (P) | 4,5,6,7 (LP-E). L=LOADED, Q=QUIET, A=AMBIGUOUS.
+
+| Cell | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | states | pref. verdict |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
+| A0a | 68.09 | 69.89 | 68.48 | 60.61 | 11.69 | 10.75 | 9.34 | 13.41 | L L L L A A A A | N/A |
+| A0b | 67.17 | 71.18 | 69.35 | 64.24 | 9.29 | 8.63 | 8.97 | 8.96 | L L L L A A A A | N/A |
+| A1 | 71.40 | 72.65 | 72.89 | 68.90 | 6.88 | 7.15 | 6.90 | 5.90 | L L L L A A A A | UNCLEAR |
+| A2 | 78.91 | 68.53 | 68.69 | 62.06 | 6.29 | 8.20 | 4.97 | 6.55 | L L L L A A A A | UNCLEAR |
+| A3 | 6.35 | 4.17 | 4.50 | 8.03 | 81.56 | 82.29 | 83.38 | 82.42 | A A A A L L L L | UNCLEAR |
+| A4 | 2.75 | 2.51 | -0.38 | 2.97 | 82.51 | 75.84 | 77.06 | 75.37 | A A Q A L L L L | UNCLEAR |
+| A5 | 71.49 | 76.42 | 78.71 | 70.44 | 5.14 | 3.30 | 1.80 | 1.18 | L L L L A A A A | UNCLEAR |
+| A6 | 1.74 | 1.35 | 0.17 | 4.33 | 77.75 | 78.35 | 80.35 | 81.09 | A A Q A L L L L | UNCLEAR |
+
+### Decode mean delta % (10-block; baseline-subtracted)
+
+| Cell | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | states | decode verdict |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
+| A0a | 81.07 | 82.33 | 83.03 | 73.29 | 7.88 | 7.05 | 8.09 | 7.27 | L L L L A A A A | N/A |
+| A0b | 87.12 | 88.70 | 89.69 | 80.73 | 6.01 | 6.53 | 6.60 | 5.18 | L L L L A A A A | N/A |
+| A1 | 88.48 | 89.53 | 90.63 | 83.46 | 4.06 | 3.66 | 4.06 | 2.74 | L L L L A A A A | UNCLEAR |
+| A2 | 90.46 | 84.12 | 85.40 | 77.54 | 4.52 | 3.60 | 5.05 | 4.04 | L L L L A A A A | UNCLEAR |
+| A3 | 2.07 | 1.66 | 1.15 | 3.97 | 88.35 | 88.18 | 88.75 | 87.82 | A A Q A L L L L | UNCLEAR |
+| A4 | 1.52 | 1.03 | 0.54 | 1.68 | 91.98 | 83.90 | 85.59 | 82.99 | A Q Q A L L L L | UNCLEAR |
+| A5 | 85.41 | 88.02 | 89.23 | 81.29 | 3.99 | 3.19 | 3.34 | 3.89 | L L L L A A A A | UNCLEAR |
+| A6 | 3.27 | 2.52 | 2.56 | 6.57 | 87.01 | 87.44 | 88.74 | 87.89 | A A A A L L L L | UNCLEAR |
+
+Overall cell verdict = UNCLEAR for A1–A6 (neither phase clears QUIET on excluded cores). Included-cluster LOADED holds for deliberate targets.
+
+### Throughput (10-block means; bootstrap CI on block means)
+
+| Cell | pref mean | CI lo | CI hi | dec mean | CI lo | CI hi |
+|---|---:|---:|---:|---:|---:|---:|
+| A0a | 6488.07 | 5802.49 | 7114.68 | 11.754 | 11.297 | 12.237 |
+| A0b | 8244.31 | 7573.86 | 8837.81 | 15.825 | 15.049 | 16.613 |
+| A1 | 8412.82 | 8051.14 | 8758.16 | 16.294 | 15.485 | 16.981 |
+| A2 | 8391.18 | 7670.20 | 9080.84 | 15.662 | 14.788 | 16.502 |
+| A3 | 4189.83 | 3785.11 | 4566.52 | 8.611 | 8.144 | 9.045 |
+| A4 | 4376.30 | 4126.92 | 4617.12 | 8.600 | 8.040 | 9.115 |
+| A5 | 8633.82 | 7917.74 | 9359.68 | 15.801 | 15.133 | 16.425 |
+| A6 | 4410.25 | 4145.75 | 4639.21 | 8.401 | 8.032 | 8.772 |
+
+A0a vs A0b decode: oversubscription cost on the same four P-cores OpenVINO selects by default (11.75 vs 15.83 tok/s).
+
+### A2 verdict — inconclusive
+
+A1 and A2 both UNCLEAR in prefill and decode. Label **inconclusive**. Upstream draft remains HOLD — do not submit.
+
+### A3-vs-A6 (decode tok/s)
+
+- A3 mean 8.611 vs A6 mean 8.401; ratio A3/A6 = 1.025; relative delta = 0.025
+- within-cell CV: A3=0.1028, A6=0.0879; material threshold 2xCV = 0.2056
+- **material = false**. Symmetry remains required on isolation-invariant grounds.
+
+### Throttle detectors
+
+1. **PDH frequency:** n_min_pct_observations=1280; global_min_pct_of_max=**19.0** → flagged requency_dip_below_80pct_of_max
+2. **Within-cell decode drift:** 80 pairs; **8** flagged |g2-g1|/g1 > 15%
+3. **Block-position regression:** slope_decode_tok_s_per_block = **-0.068** (mild; not a collapsing thermal signature)
+- excluded_cells: [] (flags recorded; no operator exclusion)
+- Cooldown remains time-based / unvalidated (	hermal.regime=confound)
+
+### Adoption decision tree — STOP
+
+1. Zero mechanisms CONFINED in **both** prefill and decode → dopted_mechanism: none
+2. Reason: outside-cluster residual util is AMBIGUOUS (above NOISE_BAND, below per-core LOADED threshold), so QUIET never clears on excluded cores
+3. **Not written** as adopted into configs/mslice.yaml / configs/project_state.yaml confinement fields (dopted_mechanism / citing_run_id remain null)
+4. Config notes + yield-queue blocker updated to cite 
+un_id=5eb09eba-… / sha256 63d525b8…
+5. Phase D **not started** (blocked on adoption)
+6. Upstream draft updated to cite this sealed run; **no upstream submit**
+
+### Decision recorded by harness
+
+`
+adopted mechanism: none
+reason: Zero mechanisms confined BOTH clusters in BOTH prefill and decode. STOP.
+verification_gates: pass=true
+run_id=5eb09eba-b321-4b7e-b7df-e9b01194d388
+`
+
+### Spend
+
+.00 (local only; unpaid).
+
+---
+
+## FINDING — E-FILTER Stage 1 sealed; filter operates in a 0.77 s band above a constant decode floor; throughput detector proven blind (2026-08-03)
+
+Track: **E-FILTER** (docs/EXPERIMENT_escalation_filter.md, Stage 1; CS-01 / CS-19). Written to this
+track only. Nothing here amends a hypothesis, threshold or prediction — those are frozen and are
+the human's to change.
+
+**Pre/post data:** POST-DATA. Two sealed runs exist. The pre-registered predictions were frozen
+before collection; the verdicts below are as computed by the analysis, not as chosen after seeing
+them.
+
+### What was built
+
+| Component | Purpose |
+|---|---|
+| `StepRecord` extension | `prompt_tokens_proxy`, `context_tokens_total`, `prompt_tokens_new`, `cache_instrumented`, `cache_evicted`, `evicted_bytes`, `kv_bytes_per_token`, `kv_bytes_resident_before`, `kv_bytes_resident`, `peak_rss_bytes`, `rss_bytes_end`, `t_pred_prefill/decode/total_s`, `ttft_ns` |
+| `seam/kvmath.py` | Analytic KV constant, device-readback of KV precision |
+| `seam/telemetry/rss.py` | Per-step process RSS high-water sampler |
+| `seam/agent/steplog.py` | NDJSON writer/reader, `allow_nan=False` both directions |
+| `seam/backends/refusing_cloud.py` | Raises `EscalationRefusedError` — deliberately **not** a `BackendError`, which the harness would absorb as a transient cloud failure and silently fall back to local |
+| `policy.DEADLINE_DISABLED_S` = 1e9 | Finite sentinel; `float('inf')` refused because `json.dumps` emits bare `Infinity` |
+| `policy.assert_escalation_disabled` | Per-step readback of the sentinel and its headroom |
+| `seam/analysis/efilter.py` | Offline counterfactual replay, envelope curve, bootstrap, proxy regression, figure |
+
+Arm L required **no new routing code path**: the sentinel deadline keeps every step local through
+exactly the harness a hybrid run uses. The replay **imports** `policy.decide` rather than
+reimplementing it (`rule_source` records this), so the counterfactual is evaluated by the same rule
+the run applied.
+
+### Citing artifacts (sealed)
+
+| Field | Pilot | Full |
+|---|---|---|
+| run_id | d8f0875b-dfc5-473f-8260-8c8827d18295 | 1a0166b9-cbaf-43f4-8d76-bcd7c01841e0 |
+| workload.kind | efilter_pilot | efilter_stage1 |
+| tasks / steps | 3 / 12 | 20 / 51 |
+| success rate | 0.667 | 0.950 |
+| wall | 236.9 s | 1812.4 s |
+| integrity_verified | — | true |
+
+Derived: `derived/efilter/envelope_vs_deadline.json` + `.png`, `full_report.json`,
+`pilot_report.json`. Analysis reads sealed `raw/` only; nothing under `raw/` was modified.
+
+### Quiesce (both runs, recorded by value and read back)
+
+| Field | Value |
+|---|---|
+| on_battery | false |
+| charging / charging_complete | false / true |
+| battery_pct | 100.0 (start = end) |
+| power plan | Best Performance |
+| display_brightness | 50.0 |
+| defender_realtime | enabled |
+| package_temp_c | null — `MSAcpi_ThermalZoneTemperature` returns "Not supported" (evidence recorded in manifest) |
+| thermal.regime | confound |
+| deviations | [] |
+| cloud credential present | false, by direct `os.environ` read (`load_dotenv` deliberately **not** called, since calling it would load the credential the check exists to rule out) |
+
+`charging_complete` is qualified locally as `is_charging_complete() AND on_battery is False`: the
+shared helper returns True for `charging is False`, which is also true of a **discharging** machine.
+Its other callers gate AC separately, so the helper is right for them and would have been misleading
+recorded raw in an E-FILTER manifest.
+
+### Escalation disabled — verified, not asserted
+
+| Field | Pilot | Full |
+|---|---|---|
+| deadline_s | 1e9 (finite sentinel) | 1e9 |
+| max observed t_pred | 3.403 s | 14.096 s |
+| headroom factor | 2.94e8 | 7.09e7 |
+| escalated steps / cloud attempts | 0 / 0 | 0 / 0 |
+
+`replay_self_check`: 51/51 steps reproduce their logged decision and `t_pred` at `rel_tol=1e-9`, and
+the logged prefill/decode terms sum to the logged total. Zero mismatches.
+
+### Cache instrumentation — NOT instrumented, and no reuse observed
+
+`cache_instrumented = false`. OpenVINO GenAI's `LLMPipeline` exposes no `cache_read` /
+`cache_creation` counters, so `cached_prompt_tokens` is a **structural zero, not a measurement**. The
+guard therefore fires: every metric derived from `prompt_tokens_new` is labelled an **upper bound**,
+and the §6 caching fork is recorded as `UNDETERMINED_FROM_COUNTERS`.
+
+An independent behavioural probe was run instead. **The two runs used different probe designs and
+their results must not be quoted interchangeably:**
+
+| | Pilot (d8f0875b) | Full (1a0166b9) |
+|---|---|---|
+| design | 2 calls: first, byte-identical repeat | 3 calls: first, byte-identical repeat, length-matched **distinct** control |
+| prompt_tokens | 655, 655 | 655, 655, 654 |
+| ttft (s) | — | 0.47226, 0.80658, 2.47228 |
+| ttft(repeat)/ttft(first) | **0.9936** | **1.7079** |
+| ttft(repeat)/ttft(control) | — | **0.3262** |
+| criterion | ratio < 0.5 | ratio < 0.5 against **both** first and control |
+| reuse_observed | false | false (fails on the first term) |
+
+`fraction_steps_cache_evicted` = 0.608, inferred and an upper bound by construction.
+
+**The full run's probe is internally inconsistent and underpowered, and is recorded as such.** The
+byte-identical repeat was *slower* than the first call (1.71x), which is incompatible with reuse; but
+it was 3x *faster* than a distinct prompt of the same length (0.33x), which is the signature of
+reuse. With n = 1 per condition and a 0.47-2.47 s spread across same-length prompts, TTFT noise
+exceeds the effect the probe is trying to resolve. The pilot's cleaner 2-call probe (0.9936, i.e. no
+difference) is the better behavioural evidence, and the **structural** fact is independent of both
+probes: the runtime exposes no counter, so the fork cannot be settled from this run either way.
+
+`peak_kv_bytes_resident` — the primary endpoint — is analytic from `context_tokens_total` and the KV
+constant, and is **independent of the cache counter**, which is why the primary endpoint survives the
+instrumentation gap.
+
+KV geometry, read back from the device rather than assumed: `2 * 36 layers * 8 kv_heads * 128
+head_dim * 1 byte` = **73,728 bytes/token**, `kv_dtype=u8` via `device_readback` (the config's
+assumed `f16` was **not** used; had it been, every KV figure would be 2x too large).
+
+### Proxy error — bias 77%, boundary reported as an interval
+
+The router prices a step before it renders, so it consumes a `chars // 4` transcript proxy, not the
+tokenizer. Regression of native on proxy across all 51 steps:
+
+| Quantity | Value |
+|---|---|
+| model | `native ~ a + b * proxy` |
+| slope | 0.9594 |
+| intercept | 637.13 tokens |
+| R² | 0.9983 |
+| residual SD / max abs | 11.93 / 48.53 tokens |
+| mean relative bias (proxy-native)/native | **-0.7737** |
+| threshold | 0.15 |
+
+The proxy is almost perfectly **linear** in the true count but badly **scaled**: it recovers 25% of
+the true token count (mean 252 vs 879). Bias far exceeds 0.15, so per the guard the filter boundary
+is reported as an **interval** between the proxy-driven and tokenizer-driven replays, not a line.
+
+### The envelope curve — the deliverable
+
+Full run, D grid log-spaced over the observed t_pred distribution (40 points, 10.67-17.62 s).
+`over_provisioning(D) = envelope_unfiltered / envelope_filtered(D)`, paired bootstrap over the 20
+tasks (10,000 resamples). Every figure is a mean of per-task peaks with a CI; no single max is
+reported as a headline, and P95 of per-step context is carried as the stable companion.
+
+| D (s) | escalation | surviving steps | OP peak KV | 95% CI | material (>=1.2x) | OP peak context |
+|---:|---:|---:|---:|---|---|---:|
+| <= 13.279 | 100% | 0 | — | — | — | — |
+| **13.451** | **51.0%** | 25 | **1.243** | **1.115 - 1.409** | **true** | 1.377 |
+| 13.625 | 13.7% | 44 | 1.060 | 1.000 - 1.153 | false | 1.087 |
+| 13.802 | 9.8% | 46 | 1.043 | 1.000 - 1.102 | false | 1.067 |
+| 13.980 | 5.9% | 48 | 1.026 | 1.000 - 1.060 | false | 1.027 |
+| >= 14.161 | 0% | 51 | 1.000 | 1.000 - 1.000 | false | 1.000 |
+
+**The entire filter lives in a 0.77 s band.** `t_pred = prompt_tokens_proxy / 1601.5 + n_out_pred /
+10.651`. The decode term is a **constant per step type** — 142 / 10.651 = **13.332 s** for
+`tool_call_synthesis` — and prefill contributes only 0.001-0.054 of `t_pred` at the observed context
+lengths. So `t_pred` spans [13.33, 14.10] s: below the floor everything escalates, above the ceiling
+nothing does. Prefill would not dominate until **21,352** context tokens for `tool_call_synthesis`;
+observed peak is **1,826**. The context-selective regime §6 describes is never entered.
+
+Proxy-vs-native interval on the boundary: the tokenizer-driven replay puts the material point at
+**D = 13.802 s, OP = 1.314**; the proxy-driven replay puts it at **D = 13.451 s, OP = 1.243**. The
+boundary is the interval **[13.451, 13.802] s**, over-provisioning **1.24x - 1.31x**.
+
+### Pre-registered predictions — as computed
+
+| | Verdict | Basis |
+|---|---|---|
+| P1 | UNDETERMINED at the headline D | at D = 8 s no task retains a surviving step, so no paired ratio exists. **The curve's maximum KV over-provisioning is 1.243x (CI 1.115-1.409) at D = 13.451 s**, above the 1.2x line but with a CI straddling it |
+| P2 | UNDETERMINED | premise not satisfiable — see below |
+| P3 | UNDETERMINED | no paired arithmetic-intensity ratio at the headline D |
+| P4 | PARTIAL | prefill share of t_pred rises monotonically with step_idx (0.105% -> 5.42%, slope +0.0072/step), so the **basis** of selection does shift toward context; but escalation-rate slope vs step_idx is 0.0, so the shift never changes **what is filtered** |
+| P5 | out of scope | requires Stage 2 |
+
+**P2's premise is not satisfiable on this workload.** No deadline on the grid delivers p95 realized
+step latency <= 8 s: the best achievable is p95 = 21.41 s at D = 13.451 s (unfiltered p95 = 23.52 s).
+Escalation triggers on *predicted* latency, and the predictor's output-length term is a per-step-type
+median, so the filter does not order steps by realized latency. This is a finding about the
+escalation mechanism, reported as one rather than worked around.
+
+**P1's deadline is unspecified in the pre-registration.** Evaluating it at the headline D (where the
+premise fails) yields UNDETERMINED; evaluating it as "at some deadline on the grid" yields a material
+1.243x. That choice changes a pre-registered verdict and is **flagged for the human**, not resolved
+here.
+
+### FINDING — the same machine ran 1.98x slower in the full run than in the pilot
+
+Identical config, identical prompt, 23 minutes apart, both quiesce-clean at AC / 100% / charging
+complete:
+
+| | Pilot (d8f0875b) | Full (1a0166b9) | ratio |
+|---|---:|---:|---:|
+| R_prefill tok/s | 3174.55 | 1601.50 | 1.983 |
+| R_decode tok/s | 21.21 | 10.651 | 1.992 |
+| steady-state wall / warmup gen | ~5.4 s | ~10.8 s | 2.00 |
+| warmup prefill CV | 0.194 | 0.036 | — |
+
+Both are **stable plateaus**, not noise: the full run held 10.6-10.8 tok/s across 8 scored warmup
+generations at CV 0.036. A uniform ~2x on *both* phases points at a clock/power operating point, not
+at contention on one phase.
+
+This is first-order for the result: throughput sets the entire deadline grid. At the pilot's
+21.21 tok/s the decode floor would be 142 / 21.21 = **6.70 s**, and the 8 s target — infeasible above
+— **would have been satisfiable**. P2's feasibility verdict therefore depends on an uncontrolled
+variable. Cause undetermined; `thermal.regime = confound` is declared for exactly this reason, and
+no temperature source exists on this platform to test it.
+
+### FINDING — PDH frequency throttle detection is blind on this platform
+
+Frequency-based throttle detection was authorized 2026-08-02 as the substitute for the unavailable
+package temperature. Measured directly today:
+
+| Condition | per-CPU MHz | % of Maximum Frequency | measured util |
+|---|---|---|---|
+| idle | [2100 x4, 1600 x4] | 100.0 (all) | LP-E ~20-35% |
+| 4-process CPU burn | [2100 x4, 1600 x4] | 100.0 (all) | 100% on all 8 |
+
+`\Processor Information(*)\Processor Frequency` returns **fixed nominal values** — exactly 2100.0 on
+the P-cores and 1600.0 on the LP-E cores, zero variance, unchanged between idle and saturation — and
+`% of Maximum Frequency` is pinned at 100.0 in both. (mslice's matrix did observe dips to 19%, which
+appear to track parked/deep-idle cores rather than throttling of an active one.) The counter cannot
+detect a sustained throughput reduction of an *active* core: both E-FILTER runs report 100% of max on
+all 8 CPUs while differing 1.98x in delivered throughput.
+
+Consequence: detector (a) of the three authorized throttle detectors is **inert on Platform A**.
+Detectors (b) within-cell drift and (c) block-position regression are within-run and did not fire —
+the 2x shift is *between* runs. Anything relying on frequency-based throttle detection should be
+re-read in this light; that includes other tracks, whose sections are not edited here.
+
+Secondary defect: `FrequencySampler.summary()` **samples** `mhz_per_cpu` and then discards it,
+retaining only the percentage. The 2026-08-02 authorization named both counters. The MHz series for
+both sealed runs is unrecoverable (sealed runs are write-once and were not modified).
+
+### FINDING — quiesce verifies a process-name allowlist, not measured idle
+
+`quiesce.forbidden_processes` lists four specific module names. It does **not** measure CPU load. At
+19:58:46, 17 s after E-FILTER collection ended, `seam.bench.attrib runtime-pilot` (another track)
+started and held 314% CPU / 3.85 GB RSS on the P-cores. It did not overlap this run, but nothing in
+the gate would have detected it if it had: the run would have recorded "deviations: []" while sharing
+the four P-cores OpenVINO selects by default. Not fixed here (it would change a gate mid-track);
+recorded as a defect in the quiescence check.
+
+### Limitations recorded with the result
+
+1. **Capacity regime not reached.** Context grows monotonically and linearly (~164 tokens/step, 655
+   -> 1826, ratio 2.79, no plateau) but is truncated by `max_steps = 8`. Peak KV is ~135 MB, ~1% of
+   the 12.5 GB budget. The §9 gate as written ("if context plateaus early") passes, but the memory
+   claim is being evaluated far from the regime it concerns. Changing `max_steps` or the task set is
+   the human's call.
+2. **`step_type` is hardcoded.** The router priced all 51 steps as `tool_call_synthesis`; the harness
+   rewrites the label to `answer_synthesis` **after** the routing decision (realized counts 32/19).
+   The replay uses `routing.step_type` — the label the router actually consumed — because using the
+   realized label would reprice every terminal step and the counterfactual would silently differ from
+   the rule the run applied. Taxonomy **not** expanded (that is its own amendment). Stratified by
+   `step_idx` instead, per AM-025.
+3. **`p95_required_decode_rate_tok_s` in the top-level `unfiltered_envelope` block is degenerate by
+   construction** (~1.9e-7 tok/s): that block is computed at `DEADLINE_DISABLED_S`, so the required
+   rate is ~0. Within each curve point the unfiltered side is recomputed at the same D as the filtered
+   side, so the ratios are sound; the top-level figure is not a quantity to quote.
+4. **n = 20 tasks / 51 steps.** Only 2 tasks exceeded 3 steps, so the deep-context strata rest on
+   n = 1-2.
+
+### Verification
+
+429 tests pass. ruff and mypy clean on all E-FILTER modules; the 7 ruff and 5 mypy errors remaining
+in the repo are all in `seam/tools/phase_e_cloud.py` (Phase E track, untouched here).
+
+### Spend
+
+$0.00 (local only; unpaid). No cloud call was made; no credential was loaded.
+
+---
+
+## C2b — context-ratio gate + memory fixes (2026-08-04) — PRE-DATA w.r.t. re-pilot
+
+Track: `agent`. Attrib frozen. Spec in force: `docs/CURSOR_PROMPT_C2b.md`.
+
+### Already landed (verified, not re-done)
+
+- **AM-032** present and RESOLVED: 8 s headline withdrawn; `configs/efilter.yaml`
+  `p95_step_target_s: null` / `p95_step_target_status: withdrawn_AM-032`.
+- **Router proxy** `chars // 4 + 621` scaffold already in config and harness
+  (`prompt_token_source: chars_div_4_plus_scaffold`).
+
+### C2b implementation (this session)
+
+- Replaced pilot **20k peak** gate with median per-task **`C_max/C_min ≥ 3.0`**
+  (`max/min` of `context_tokens_by_step`); absolute peak reported only.
+- `workload.context_cap_tokens: 7000` → harness terminates with `terminated_reason=context_cap`.
+- `max_tokens: 128`; constrained tool-call decoding via OpenVINO GenAI
+  `StructuredOutputConfig.Tag("<tool_call>", JSONSchema(...), "</tool_call>")`.
+- `n_out_pred` held **constant across step types**; freeze from measured median after re-pilot.
+- Analysis reports `context_ceiling` alongside over-provisioning; P6 falsifies if OP lands in
+  Stage-1 CI `[1.115, 1.409]` despite much higher ceiling (baseline run_id `1a0166b9…`).
+- C9 note: `derived/efilter/c9_practical_ceiling_note.json` citing
+  `0fe5e4c7-bb38-4666-826b-2c512b17a969` (partial; not mutated).
+
+### Launch (not executed by the agent)
+
+Detached: `tools/launch_efilter_c2_pilot.ps1` (5 tasks) and `tools/launch_efilter_c2_full.ps1`.
+
+## 2026-08-10 — AF-036 — Promote-time power_state leaked into retro-sealed ceiling_a manifests
+
+**Class:** provenance / sealed metadata
+**Found:** 2026-08-10
+**Milestone:** Phase -1 / ceiling_a promote
+**Blueprint reference:** §5.2 (run manifest); §6.3 (raw write-once); AMENDMENTS.md AM-036
+
+### Found
+
+`seam.manifest.emit()` accepts a `power_state` block that callers typically fill from
+`capture_power_state()` at emit time. For runs sealed during measurement this is correct. For
+retro-sealed / raw-promoted runs it records **promote-time** host state as if it were
+**measurement-time** environment.
+
+Three ceiling_a manifests promoted 2026-08-10T13:05Z from session `ad7b9288-…` (measured
+2026-08-06 on AC) sealed with:
+
+| run_id | role | sealed `power_state.on_battery` | sealed `battery_pct_start` |
+|---|---|---|---|
+| `b5ce21e5-9f29-46f4-8319-f74adcdeb628` | arm A | `true` | `88.0` |
+| `64e525e7-37df-4a7a-91e5-21419acf5dd2` | arm A_prime | `true` | `88.0` |
+| `404dc3d0-1760-41a8-b9c5-d0d439b1a1fe` | verdict | `true` | `88.0` |
+
+Those values match the promote-time machine state, not the measurement day. Control
+`693b44d2-8234-453c-bc8d-107a9ff259a0` (self-sealed during run) correctly records
+`on_battery=false`, `battery_pct_start=100.0`. Delta-prefill promotes `d5c98342` /
+`9f38eb15` already had null measurement power and are unaffected.
+
+### Blast radius
+
+Any reader of `raw/<run_id>/manifest.json` `power_state` for the three IDs would mis-attribute
+battery vs AC for the measurement. **Measurements themselves are unaffected** — this is
+provenance metadata only. `integrity.raw_sha256` covers data outputs excluding the manifest.
+
+### Correction (protocol path; raw/ not mutated)
+
+`seam.rawstore.RunDir` refuses writes and re-seal on sealed runs ("emit a NEW run and record
+the supersession"). No prior sealed-metadata amend-in-place exists. Per AM-036:
+
+1. Schema separates measurement `power_state` from optional `promote_time_power_state` and
+   `power_state_note`; emit stamps `retro_seal` / `measurement_power_from_records`.
+2. `emit(..., retro_seal=True)` refuses non-null measurement `power_state` unless
+   `measurement_power_from_records=True`.
+3. Retro-seal tools updated so they cannot reintroduce the leak.
+4. `derived/manifest_corrections/registry.json` registers the three AF-036 digests as
+   explicit amendments; `load_run_manifest` also applies a **structural** promote-time leak
+   rule (retro_seal / summary `promotion: post_hoc*` + populated measurement power + absent
+   `promote_time_power_state`) so future leaks do not require adding run_ids. Sealed tree
+   hashes unchanged and still verify.
+
+Sealed tree sha256 at correction time:
+
+| run_id | `.sealed.raw_sha256` |
+|---|---|
+| b5ce21e5… | `6647a2fe589263ab0e8cd8362887752837529509590d1cce4383162ca37e560d` |
+| 64e525e7… | `9d479c4c3aef09bb4aab9d7a9a15b089008e1461ae3b328822fe4b0b01c68381` |
+| 404dc3d0… | `6cab6b79e5cd7571dea5bd09e49955b31c49fc986da01af82a8f4139ebe0cd30` |
+
+### Blocker / dual-truth note
+
+Direct reads of `raw/*/manifest.json` still show the leaked values until a future authorized
+seal-marker supersession (not performed here). Analysis and MCP-style loaders must use
+`load_run_manifest`. Do not backfill measurement power from memory.
+
+---
+
+## 2026-08-24 — PRE-DATA — Qwen3-8B-int4 gpu_only predictions frozen (M1–M6)
+
+**Class:** pre-registration (AM-015)  
+**Found:** 2026-08-24, before any Qwen3-8B-int4 transfer, load, or generate  
+**Milestone:** model capability rung (blueprint §2.1); not a named M0–M6 instrument milestone  
+**Blueprint reference:** §1.2 additive filter; §2.1 workload coordinate `model capability rung`; AM-015
+
+### Frozen
+
+Operator-stated predictions for **Qwen3-8B-int4 on `gpu_only`**, derived from Qwen3-4B-int4
+constants attributed to session `41e419bd-f3e9-43b1-8364-0ebd89fa086b`
+(intercept 3.08 GB, f16 slope 234,827 B/tok, decode 19.85 tok/s).
+
+Write-once artifacts (do not edit after 8B measurement starts):
+
+| path | role |
+|---|---|
+| `derived/qwen3_8b/PREDICTION_BEFORE_RUN.md` | human freeze |
+| `derived/qwen3_8b/predictions.json` | machine freeze |
+
+`PREDICTION_BEFORE_RUN.md` sha256
+`af593d4f7aac0a7c4e2a19c3b389df5b309400a0b9a5d1740df9a3de2a9e2891` (3060 bytes).
+
+| id | claim | falsifier | this gate |
+|---|---|---|---|
+| M1 | loads at n=2000 without `CL_OUT_OF_RESOURCES` | load or first generate fails | yes |
+| M2 | peak_ws intercept 4.8–6.0 GB | outside band | yes |
+| M3 | TTFT n=5000 f16 in 4–7 s (USER_FACING 10 s) | >10 s or <3 s | yes |
+| M4 | decode 8–12 tok/s (floor 6 tok/s) | <6 tok/s | yes |
+| M5 | f16 resident slope within 10% of 234,827 B/tok | outside 10% (voids capacity extrapolations) | yes |
+| M6 | cpu-p does not fit at n=12000 | — | **no** (recorded for later) |
+
+**Filter:** additive (capability rung). Not a §12.4 displacing arm.
+
+**Pre/post data:** PRE-DATA. No 8B IR, load, or generate has been started in this session.
+A criterion written after seeing 8B numbers is not a substitute for this freeze.
+

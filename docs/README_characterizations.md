@@ -74,16 +74,28 @@ The residual holds near 95 KB/token while the ratio to nominal swings 1.6x to
 fixed. Any "amplification factor" expressed as a multiplier is an additive term
 written as a ratio at one precision.
 
-**Finding 2 — quantization costs prefill latency rather than saving it.**
-At n >= 8,000 and delta = 1000, f16 is 15–27% *faster* than u8 and u4. Prefill is
-compute-bound and precision-independent (turn-1 times agree within 1% across
-arms); the quantized arms pay dequantization on top. Precision buys capacity, not
-speed — the two trade against each other.
+**Finding 2 — quantization costs turn-2 delta-prefill latency rather than
+saving it.**
+At n >= 8,000 and delta = 1000, f16 is 15–27% *faster* than u8 and u4 on
+resident turn-2. Prefill turn-1 is compute-bound and precision-independent
+(times agree within 1% across arms); the quantized arms pay dequantization on
+top of turn-2.
 
 **Finding 3 — delta prefill is context-dominated, not delta-dominated.**
 A purely delta-driven cost would give a d1000/d50 ratio of 20 at every context.
 Observed: 0.74 at n = 2,000 rising to 3.0 at n = 12,000. The multiplicative form
 `turn2 = C * d * n_cached` is falsified.
+
+**Finding 4 — KV precision moves memory footprint and nothing else measurable
+on this platform (C-1 / C-2).**
+Cold-start TTFT limit (median prefill ≤ 10 s) is identical at **10,000** tokens
+for f16 / u8 / u4 (C-2 session `62395fdb-1899-415f-b708-6adc81a24dda`; primary
+AM-038 agreement claim held, span 0). No hard memory ceiling exists: pinned
+f16 completed n = 44,742 with Available at 0.0 MB via paging (C-1
+`83127e1b-9d6e-4103-bee6-2a63c00f479f`). Quality at n = 20 is uninformative
+rather than a precision null (41e419bd: 17 / 16 / 17; MDE ~24 points). Workload
+maximum context **7,743** is **77%** of the cold-start TTFT limit. The older
+"precision buys capacity" framing is withdrawn for Platform A.
 
 ## Axis 4 — Attention window
 
@@ -106,17 +118,16 @@ required before window results can be compared to the existing corpus.
 
 ## Open, and load-bearing
 
-**No f16 ceiling exists.** The arm previously labelled f16 never requested
-`KV_CACHE_PRECISION` and reads back `dynamic`. An interleaved equivalence probe
-shows it matches a pinned u8 arm within 0.1% on working set at three depths,
-while diverging up to 1 GB from pinned f16. The 36,500-token
-`CL_OUT_OF_RESOURCES` ceiling is therefore a **u8** measurement. A pinned
-`gpu_only_f16` arm now exists; its ceiling has not been run.
+**Pinned f16 has no memory ceiling on this host** (C-1 `83127e1b`: completed
+through n = 44,742 with Available at 0.0 MB via paging; aborted
+`no_ceiling_found_in_range`). The historical 36,500-token
+`CL_OUT_OF_RESOURCES` label remains a **u8** measurement from an arm that
+never requested `KV_CACHE_PRECISION` and read back `dynamic`.
 
-**Two u8 ceilings disagree** — 36,500 memory-walled against >= 40,000
-position-limited. Same configuration, different outcomes. Available memory on
-this device has ranged 1,203 to 10,290 MB across a week depending on uptime and
-background services, which is the leading candidate and is not yet tested.
+**Two historical u8 ceilings disagree** — 36,500 memory-walled against
+>= 40,000 position-limited. Same configuration, different outcomes. Available
+memory on this device has ranged 1,203 to 10,290 MB across a week depending on
+uptime and background services.
 
 **Instrument reproducibility is a standing FAIL.** Two orchestrated pairs give
 sigma 0.145 and 0.159 against a pass rule of sigma <= 0.10.

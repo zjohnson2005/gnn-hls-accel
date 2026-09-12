@@ -7,7 +7,7 @@
 # Windows PowerShell (no make required):
 #   .\apu_characterization\run_apu_gate.ps1
 
-.PHONY: apu-bootstrap apu-gate apu-replicate-v3 apu-validate apu-validate-sweep apu-replicate-check apu-replicate-unattended cap-gate tlp-gate turntrace-v2-gate mcp-bootstrap mcp-preflight mcp-gate mcp-matrix-plan mcp-postprocess mcp-validate mcp-bare-metal mcp-clean help
+.PHONY: apu-bootstrap apu-gate apu-replicate-v3 apu-validate apu-validate-sweep apu-replicate-check apu-replicate-unattended cap-gate tlp-gate turntrace-v2-gate oa01-bootstrap oa01-gate oa01-smoke oa01-pilot oa01-main oa01-evaluate oa01-atlas mcp-bootstrap mcp-preflight mcp-gate mcp-matrix-plan mcp-postprocess mcp-validate mcp-bare-metal mcp-clean help
 
 V3_ARTIFACT := apu_characterization/out/replication_remote_search_v3.json
 SWEEP_ARTIFACT := apu_characterization/out/concurrency_sweep.json
@@ -27,6 +27,13 @@ help:
 	@echo "  cap-gate                 CAP-01 v2 unit and contract gate"
 	@echo "  tlp-gate                 TLP-01 unit and contract gate"
 	@echo "  turntrace-v2-gate        TurnTrace v2 unit + replay acceptance gate"
+	@echo "  oa01-bootstrap           install pinned mini-SWE-agent + evaluator"
+	@echo "  oa01-gate                OA-01 unit, protocol, and dry-run gate"
+	@echo "  oa01-smoke               one retained cheap-tier live smoke"
+	@echo "  oa01-pilot               three retained gpt-4.1 pilot tasks"
+	@echo "  oa01-main                remaining twelve gpt-4.1 tasks"
+	@echo "  oa01-evaluate            official SWE-bench evaluation"
+	@echo "  oa01-atlas               regenerate OA-01 Markdown + JSON atlas"
 	@echo "  mcp-bootstrap            install exact MCP-01 dependency lock"
 	@echo "  mcp-preflight            verify complete MCP-01 source/runtime bundle"
 	@echo "  mcp-gate                 MCP-01 unit and integration-contract gate"
@@ -69,6 +76,27 @@ tlp-gate:
 
 turntrace-v2-gate:
 	bash apu_characterization/run_turntrace_v2_gate.sh
+
+oa01-bootstrap:
+	bash apu_characterization/bootstrap_oa01.sh
+
+oa01-gate:
+	bash apu_characterization/run_oa01_gate.sh
+
+oa01-smoke:
+	. .venv-oa01/bin/activate && python -m apu_characterization.oa01.runner --phase S --live
+
+oa01-pilot:
+	. .venv-oa01/bin/activate && python -m apu_characterization.oa01.runner --phase P --live
+
+oa01-main:
+	. .venv-oa01/bin/activate && python -m apu_characterization.oa01.runner --phase M --live
+
+oa01-evaluate:
+	. .venv-oa01/bin/activate && python -m apu_characterization.oa01.evaluation
+
+oa01-atlas:
+	. .venv-oa01/bin/activate && python -m apu_characterization.oa01.atlas
 
 mcp-bootstrap:
 	bash apu_characterization/bootstrap_mcp.sh
