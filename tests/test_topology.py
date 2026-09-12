@@ -2,10 +2,10 @@
 
 Windows calls are mocked, so the suite runs anywhere. Two areas get the most attention:
 
-* **Buffer parsing** — ``SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX`` is parsed by explicit byte
+* **Buffer parsing** - ``SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX`` is parsed by explicit byte
   offset, which is exactly the kind of code that silently produces plausible-but-wrong answers.
   Tested against synthetic buffers with known contents.
-* **The unverified state** — that ``affinity_for`` refuses rather than guessing. Spec §4 warns
+* **The unverified state** - that ``affinity_for`` refuses rather than guessing. Spec §4 warns
   against trusting ``EfficiencyClass`` ordering, and open question 4 asks whether it can be
   trusted, so a guessed mapping would answer an open research question by assumption.
 """
@@ -38,7 +38,9 @@ _RELATION_PROCESSOR_CORE = 0
 _SIZEOF_GROUP_AFFINITY = 16
 
 
-def make_core_record(*, efficiency_class: int, logical_cpus: list[int], group: int = 0, smt: bool = False) -> bytes:
+def make_core_record(
+    *, efficiency_class: int, logical_cpus: list[int], group: int = 0, smt: bool = False
+) -> bytes:
     """Build one synthetic ``SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX`` processor-core record."""
     size = 32 + _SIZEOF_GROUP_AFFINITY
     record = bytearray(size)
@@ -61,7 +63,9 @@ def make_core_record(*, efficiency_class: int, logical_cpus: list[int], group: i
 def make_platform_a_buffer(*, p_class: int = 1, lpe_class: int = 0) -> bytes:
     """A 4 P + 4 LP-E, 8C/8T buffer: CPUs 0-3 P, CPUs 4-7 LP-E."""
     records = [make_core_record(efficiency_class=p_class, logical_cpus=[cpu]) for cpu in range(4)]
-    records += [make_core_record(efficiency_class=lpe_class, logical_cpus=[cpu]) for cpu in range(4, 8)]
+    records += [
+        make_core_record(efficiency_class=lpe_class, logical_cpus=[cpu]) for cpu in range(4, 8)
+    ]
     return b"".join(records)
 
 
@@ -141,7 +145,7 @@ def test_splits_a_clean_bimodal_distribution() -> None:
 
 
 def test_split_is_independent_of_cpu_ordering() -> None:
-    """The fast cluster need not be the low-numbered CPUs — that is the point of measuring."""
+    """The fast cluster need not be the low-numbered CPUs - that is the point of measuring."""
     scores = {0: 60.0, 1: 100.0, 2: 61.0, 3: 101.0, 4: 59.0, 5: 99.0, 6: 60.5, 7: 102.0}
     fast, slow = _split_into_two_clusters(scores)
     assert fast == [1, 3, 5, 7]
@@ -162,7 +166,7 @@ def test_split_requires_at_least_two_cpus() -> None:
 
 
 # ==================================================================================================
-# Open question 4 — EfficiencyClass agreement
+# Open question 4 - EfficiencyClass agreement
 # ==================================================================================================
 
 
@@ -251,9 +255,7 @@ def _patch_measurement(
 ) -> None:
     """Run ``measure_topology`` against fixed scores and a fixed Windows core enumeration."""
     monkeypatch.setattr("seam.topology.enumerate_cores", lambda: _cores(efficiency_classes))
-    monkeypatch.setattr(
-        "seam.topology._bench_one_cpu", lambda cpu, **_kwargs: scores[cpu]
-    )
+    monkeypatch.setattr("seam.topology._bench_one_cpu", lambda cpu, **_kwargs: scores[cpu])
 
 
 _PLATFORM_A_CLASSES = [1, 1, 1, 1, 0, 0, 0, 0]
@@ -294,7 +296,7 @@ def test_measure_topology_records_a_refusal_instead_of_raising(
     assert result.p_cluster_cv == pytest.approx(0.0)
     assert result.lpe_cluster_cv == pytest.approx(0.0)
     assert result.scores == scores
-    # Open question 4 is answered for a refused run too — it is a separate question from whether
+    # Open question 4 is answered for a refused run too - it is a separate question from whether
     # the separation was large enough.
     assert result.efficiency_class_direction == "higher_is_faster"
 
@@ -346,11 +348,13 @@ def test_measure_topology_refuses_a_platform_that_is_not_the_declared_part(
 CITING_RUN_ID = "fb5cd2d5-e850-4de1-9b90-d368b5aa9994"
 
 
-def test_committed_config_carries_the_measured_mapping(real_platform_config: ResolvedConfig) -> None:
+def test_committed_config_carries_the_measured_mapping(
+    real_platform_config: ResolvedConfig,
+) -> None:
     """The committed mapping must be exactly what the citing run measured (AMENDMENTS.md AM-008).
 
     Replaces ``test_committed_config_ships_unverified``, which asserted the pre-M1 state. Its purpose
-    was never "verified must be false" — it was that ``verified: true`` may not appear without a
+    was never "verified must be false" - it was that ``verified: true`` may not appear without a
     measurement behind it. That purpose now lives in three places: this test pins the run_id, the
     test below re-derives the split from the recorded scores so the numbers cannot be invented, and
     ``test_committed_verification_thresholds_are_unchanged`` stops the thresholds being lowered to
@@ -439,8 +443,8 @@ def test_affinity_for_refuses_unverified_config(unverified_config: ResolvedConfi
     """Both CPU targets must refuse rather than guess, even now that a mapping exists upstream.
 
     The committed config carries a measured mapping since M1, so this behaviour no longer gets tested
-    incidentally. It is the guarantee spec §4 actually asks for — a machine whose split has not been
-    measured must not be handed one — so it is tested explicitly against a config built unverified.
+    incidentally. It is the guarantee spec §4 actually asks for - a machine whose split has not been
+    measured must not be handed one - so it is tested explicitly against a config built unverified.
     """
     for target in ("cpu-p", "cpu-lpe"):
         with pytest.raises(TopologyNotVerifiedError):
@@ -487,7 +491,9 @@ def test_affinity_for_rejects_non_cpu_targets(
 def test_load_verified_topology_rejects_overlapping_clusters(fake_repo: Any) -> None:
     config = resolve_config(
         [fake_repo / "configs" / "platforms" / "aipc-c1.yaml"],
-        overrides={"topology": {"verified": True, "p_cpus": [0, 1, 2, 3], "lpe_cpus": [3, 4, 5, 6]}},
+        overrides={
+            "topology": {"verified": True, "p_cpus": [0, 1, 2, 3], "lpe_cpus": [3, 4, 5, 6]}
+        },
         repo_root=fake_repo,
     )
     with pytest.raises(ConfigError, match="overlap"):
@@ -588,9 +594,9 @@ def test_writing_the_mapping_does_not_relabel_it_as_a_hypothesis(fake_repo: Any)
     expected_line = next(i for i, line in enumerate(lines) if line.strip() == "expected:")
 
     assert "[4, 5, 6, 7]" in lines[lpe_line], "the measured list must stay on its own key's line"
-    assert lpe_line < hypothesis_line < expected_line, (
-        "the hypothesis comment must sit between lpe_cpus and expected, not inside the measured list"
-    )
+    assert (
+        lpe_line < hypothesis_line < expected_line
+    ), "the hypothesis comment must sit between lpe_cpus and expected, not inside the measured list"
 
 
 def test_writing_the_mapping_changes_only_the_topology_block(fake_repo: Any) -> None:
@@ -599,7 +605,7 @@ def test_writing_the_mapping_changes_only_the_topology_block(fake_repo: Any) -> 
     Round-trip writers drift in ways that look harmless and are not: ruamel's defaults reindent
     block sequences and render ``null`` as an empty value. The second one is the dangerous one here,
     because this config gives ``null`` the specific meaning "not yet measured" and applies it to the
-    thermal constants M2.3 has to fill in (AMENDMENTS.md AM-006) — a blank value reads as an
+    thermal constants M2.3 has to fill in (AMENDMENTS.md AM-006) - a blank value reads as an
     oversight instead. A minimal diff also keeps the mapping commit reviewable.
     """
     path = fake_repo / "configs" / "platforms" / "aipc-c1.yaml"

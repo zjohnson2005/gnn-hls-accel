@@ -34,6 +34,19 @@ def _isolate_json_sinks() -> Iterator[None]:
     jsonlog._clear_json_sinks()
 
 
+@pytest.fixture(autouse=True)
+def _declare_isolation_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Declare ``local`` for the suite, since a test is never a measurement.
+
+    :func:`seam.manifest.emit` has no default for ``isolation_mode`` and refuses to emit without
+    one, which is the behaviour that keeps contended runs out of quiet comparisons. Tests emit
+    manifests into throwaway directories, so the declaration is made once here rather than in
+    every test -- and ``local`` is the honest value: the suite runs on a machine in normal use.
+    Tests that exercise the refusal itself delete the variable.
+    """
+    monkeypatch.setenv("SEAM_ISOLATION_MODE", "local")
+
+
 @pytest.fixture
 def real_platform_config() -> ResolvedConfig:
     """The committed Platform A config, loaded as-is.
@@ -53,7 +66,9 @@ def fake_repo(tmp_path: Path) -> Iterator[Path]:
     (tmp_path / "configs" / "platforms").mkdir(parents=True)
     shutil.copy(PLATFORM_CONFIG, tmp_path / "configs" / "platforms" / "aipc-c1.yaml")
 
-    config = resolve_config([tmp_path / "configs" / "platforms" / "aipc-c1.yaml"], repo_root=tmp_path)
+    config = resolve_config(
+        [tmp_path / "configs" / "platforms" / "aipc-c1.yaml"], repo_root=tmp_path
+    )
     for relative in config.get("provenance_artifacts") or []:
         artifact = tmp_path / relative
         artifact.parent.mkdir(parents=True, exist_ok=True)

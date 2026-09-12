@@ -79,7 +79,7 @@ def test_manifest_block_records_the_charging_state() -> None:
         (0x1, False),  # high, not charging
         (0x0, False),  # neither
         (128, False),  # no system battery
-        (255, None),  # unknown — an explicit null, not a guess
+        (255, None),  # unknown - an explicit null, not a guess
     ],
 )
 def test_charging_is_decoded_from_the_battery_flag(
@@ -96,6 +96,15 @@ def test_manifest_block_leaves_unmeasured_quiescence_controls_null() -> None:
     assert block["defender_realtime"] is None
     assert block["windows_update_paused"] is None
     assert block["battery_pct_end"] is None
+    assert block["pinned_profile"] is None
+    assert block["soc_at_start"] == block["battery_pct_start"]
+    assert block["soc_at_end"] is None
+    assert block["ac_disconnected_for_s"] is None
+    assert block["discharge_rate_stable"] is None
+    assert block["background_quiesced"] is None
+    assert block["wifi_state"] is None
+    assert block["design_capacity_mwh"] is None
+    assert block["full_charge_capacity_mwh"] is None
 
 
 # ==================================================================================================
@@ -108,14 +117,14 @@ def test_pinned_conditions_pass_on_ac_with_the_pinned_plan() -> None:
 
 
 def test_battery_power_is_reported_as_a_deviation() -> None:
-    """MACHINE.md: a session off AC power is INVALID, not noisy."""
+    """MACHINE.md: a session off AC power is INVALID, not noisy (ac-pinned profile)."""
     deviations = check_pinned_conditions(_state(on_battery=True), pinned=PINNED)
-    assert any("AC power" in d for d in deviations)
+    assert any("on_battery" in d for d in deviations)
 
 
 def test_unknown_ac_status_is_a_deviation_rather_than_an_assumption() -> None:
     deviations = check_pinned_conditions(_state(on_battery=None), pinned=PINNED)
-    assert any("AC power" in d for d in deviations)
+    assert any("on_battery" in d for d in deviations)
 
 
 def test_battery_saver_is_reported_as_a_deviation() -> None:
@@ -132,7 +141,7 @@ def test_wrong_power_plan_is_reported_as_a_deviation() -> None:
         ),
         pinned=PINNED,
     )
-    assert any("pinned power plan" in d for d in deviations)
+    assert any("requires plan" in d for d in deviations)
 
 
 def test_plan_guid_comparison_is_case_insensitive() -> None:
@@ -163,7 +172,7 @@ def test_an_unpinned_session_may_not_commit_its_result() -> None:
 
 
 def test_the_refusal_explains_that_the_measurement_is_still_citable() -> None:
-    """The run is not discarded — discarding it would recreate the AF-006 traceability hole."""
+    """The run is not discarded - discarding it would recreate the AF-006 traceability hole."""
     with pytest.raises(PinnedConditionError, match="manifest was still emitted"):
         assert_pinned_for_committed_result(["battery saver"])
 

@@ -1,7 +1,7 @@
 """Analysis-blinding boundary tests (spec §8, blueprint §5.1 "analysis drift").
 
 The rule: *analysis consumes ``blinded_label``; analysis code must not import the condition
-mapping.* Analysis does not exist yet — it arrives with M3/M6 — so these tests are the boundary's
+mapping.* Analysis does not exist yet - it arrives with M3/M6 - so these tests are the boundary's
 tripwire, installed now so that the first analysis module written cannot quietly cross it.
 
 The static-import checks pass trivially while ``seam/analysis/`` is empty. That is intentional and
@@ -47,12 +47,14 @@ def _analysis_modules() -> list[Path]:
 
 
 def test_analysis_does_not_import_the_condition_mapping() -> None:
-    """Spec §8: "Analysis code must not import the condition mapping.\""""
+    """Spec §8: "Analysis code must not import the condition mapping.\" """
     offenders: list[str] = []
     for module in _analysis_modules():
         forbidden = _imported_modules(module) & FORBIDDEN_FOR_ANALYSIS
         if forbidden:
-            offenders.append(f"{module.relative_to(SEAM_PACKAGE.parent)} imports {sorted(forbidden)}")
+            offenders.append(
+                f"{module.relative_to(SEAM_PACKAGE.parent)} imports {sorted(forbidden)}"
+            )
 
     assert not offenders, (
         "analysis code must not import the condition mapping; a separate explicit unblind step "
@@ -67,10 +69,9 @@ def test_analysis_does_not_reference_condition_label() -> None:
         for module in _analysis_modules()
         if "condition_label" in module.read_text(encoding="utf-8")
     ]
-    assert not offenders, (
-        "analysis code referenced condition_label; it must consume blinded_label only: "
-        f"{offenders}"
-    )
+    assert (
+        not offenders
+    ), f"analysis code referenced condition_label; it must consume blinded_label only: {offenders}"
 
 
 def test_blinding_module_documents_the_prohibition() -> None:
@@ -145,7 +146,9 @@ def test_unblind_map_accumulates_entries(tmp_path: Path) -> None:
     record_unblind_entry("A", "cond_aaaa", repo_root=tmp_path)
     record_unblind_entry("B", "cond_bbbb", repo_root=tmp_path)
 
-    data = json.loads((tmp_path / "raw" / "_blinding" / "unblind_map.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (tmp_path / "raw" / "_blinding" / "unblind_map.json").read_text(encoding="utf-8")
+    )
     assert data["map"] == {"cond_aaaa": "A", "cond_bbbb": "B"}
 
 

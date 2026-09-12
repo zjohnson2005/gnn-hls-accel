@@ -1,4 +1,4 @@
-"""M0 provenance tests — the AF-001 correction (blueprint Appendix B, spec §7/M0).
+"""M0 provenance tests - the AF-001 correction (blueprint Appendix B, spec §7/M0).
 
 ``analysis/aipc-c1/MACHINE.md`` is the provenance source for the ``platform`` block of every run
 manifest (blueprint §5.2), so a regression here silently corrupts every number the project ever
@@ -48,7 +48,7 @@ def read_probe_text(path: Path) -> str:
 
     The artifacts are read-only provenance (spec §9.1): they must never be re-encoded on disk to
     suit a reader, so the reader adapts instead. Falls back to UTF-8 only when no BOM is present,
-    and does not pass ``errors="replace"`` — a probe artifact this project cannot decode is a
+    and does not pass ``errors="replace"`` - a probe artifact this project cannot decode is a
     finding to report, not damage to paper over.
     """
     raw = path.read_bytes()
@@ -65,7 +65,7 @@ def machine_md() -> str:
 
 
 # ==================================================================================================
-# AF-001 — the correction itself
+# AF-001 - the correction itself
 # ==================================================================================================
 
 
@@ -77,7 +77,7 @@ def test_machine_md_identifies_panther_lake(machine_md: str) -> None:
 def test_machine_md_no_longer_asserts_lunar_lake(machine_md: str) -> None:
     """Every remaining mention of Lunar Lake must be contrastive evidence, never an assertion.
 
-    AF-001 named only line 12, but the mislabel occurred twice — see AMENDMENTS.md AM-001. Lunar
+    AF-001 named only line 12, but the mislabel occurred twice - see AMENDMENTS.md AM-001. Lunar
     Lake still appears legitimately in the evidence tables ("Lunar Lake *would be* 64A0"), so this
     checks the two original assertion sites are gone rather than banning the string.
     """
@@ -130,7 +130,7 @@ def test_machine_md_states_the_topology_does_not_discriminate(machine_md: str) -
 
 
 def test_machine_md_distinguishes_load_bearing_from_non_load_bearing(machine_md: str) -> None:
-    """Spec §7/M0 item 3: "State which evidence is load-bearing.\""""
+    """Spec §7/M0 item 3: "State which evidence is load-bearing.\" """
     lowered = machine_md.lower()
     assert "load-bearing" in lowered
     assert "inferred" in lowered
@@ -147,7 +147,7 @@ def test_core_names_appear_in_no_probe_artifact(core_name: str) -> None:
 
     Windows exposes no microarchitecture code-name field, so these strings cannot be probe-reported.
     If a future probe *does* capture them, this test fails and the classification in MACHINE.md must
-    be revisited — which is the correct outcome, not a nuisance.
+    be revisited - which is the correct outcome, not a nuisance.
     """
     for artifact in PROBE_ARTIFACTS:
         if not artifact.is_file():

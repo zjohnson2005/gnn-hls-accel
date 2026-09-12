@@ -45,7 +45,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 # Tests reach into private helpers deliberately: byte-level buffer parsing and clustering are
 # exactly the logic that needs direct unit tests rather than testing only through the public API.
-"tests/**/*.py" = ["SLF001", "ARG001", "E501"]
+"tests/**/*.py" = ["SLF001", "ARG001", "ARG002", "E501", "F841", "RUF001", "RUF003", "RUF005", "RUF012"]
 # ctypes structs mirror Win32 type names character for character. Renaming them to CapWords would
 # break the correspondence with the API documentation the field order has to be checked against,
 # which is the only way to know these layouts are right.

@@ -123,7 +123,7 @@ def test_schema_requires_every_field_named_in_the_spec() -> None:
                 "excluded",
             },
         ),
-        ("model", {"name", "revision", "quantization", "ir_sha256"}),
+        ("model", {"name", "revision", "quantization", "ir_sha256", "provenance"}),
         ("npu_config", {"MAX_PROMPT_LEN", "NPUW_LLM_PREFILL_CHUNK_SIZE"}),
         ("workload", {"kind", "benchmark", "task_ids", "seed", "n_repeats"}),
         ("outputs", {"samples", "steps", "summary"}),
@@ -142,7 +142,11 @@ def test_schema_rejects_unknown_top_level_field(
 ) -> None:
     """``additionalProperties: false`` means a field cannot appear without a schema change."""
     manifest = _build(
-        fake_config, fake_repo, clean_git_state, minimal_workload, topology_override=VERIFIED_TOPOLOGY
+        fake_config,
+        fake_repo,
+        clean_git_state,
+        minimal_workload,
+        topology_override=VERIFIED_TOPOLOGY,
     )
     manifest["undeclared_field"] = "sneaked in"
     with pytest.raises(ManifestValidationError, match="undeclared_field"):
@@ -161,7 +165,11 @@ def test_built_manifest_is_schema_valid(
     minimal_workload: dict[str, Any],
 ) -> None:
     manifest = _build(
-        fake_config, fake_repo, clean_git_state, minimal_workload, topology_override=VERIFIED_TOPOLOGY
+        fake_config,
+        fake_repo,
+        clean_git_state,
+        minimal_workload,
+        topology_override=VERIFIED_TOPOLOGY,
     )
     validate_manifest(manifest)
 
@@ -174,7 +182,11 @@ def test_manifest_hashes_provenance_artifacts_at_build_time(
 ) -> None:
     """Blueprint AF-002: hashes come from bytes on disk, not from a transcribed constant."""
     manifest = _build(
-        fake_config, fake_repo, clean_git_state, minimal_workload, topology_override=VERIFIED_TOPOLOGY
+        fake_config,
+        fake_repo,
+        clean_git_state,
+        minimal_workload,
+        topology_override=VERIFIED_TOPOLOGY,
     )
     artifacts = manifest["platform"]["provenance_artifacts"]
 
@@ -186,7 +198,11 @@ def test_manifest_hashes_provenance_artifacts_at_build_time(
     before = artifacts[0]["sha256"]
     target.write_text("mutated content\n", encoding="utf-8")
     after = _build(
-        fake_config, fake_repo, clean_git_state, minimal_workload, topology_override=VERIFIED_TOPOLOGY
+        fake_config,
+        fake_repo,
+        clean_git_state,
+        minimal_workload,
+        topology_override=VERIFIED_TOPOLOGY,
     )["platform"]["provenance_artifacts"][0]["sha256"]
     assert after != before
 
@@ -222,7 +238,11 @@ def test_thermal_constants_are_null_not_defaulted(
     number, which spec §9.2 forbids.
     """
     manifest = _build(
-        fake_config, fake_repo, clean_git_state, minimal_workload, topology_override=VERIFIED_TOPOLOGY
+        fake_config,
+        fake_repo,
+        clean_git_state,
+        minimal_workload,
+        topology_override=VERIFIED_TOPOLOGY,
     )
     thermal = manifest["thermal"]
     assert thermal["warmup_s"] is None
@@ -258,7 +278,7 @@ def test_topology_verify_may_run_before_the_topology_is_verified(
     """AF-006 / AM-010: the run that PRODUCES the mapping is exempt from requiring one.
 
     Without this, a refused verification could not emit a manifest at all, and its per-CPU scores
-    would be unciteable — the exact collision with spec §9.2 that AF-006 records.
+    would be unciteable - the exact collision with spec §9.2 that AF-006 records.
     """
     manifest = _build(
         fake_config,
@@ -496,7 +516,11 @@ def test_emit_refuses_dirty_tree_without_allow_dirty(
 
     # The refusal must happen before any run directory is created.
     raw = fake_repo / "raw"
-    run_dirs = [p for p in raw.iterdir() if p.is_dir() and not p.name.startswith("_")] if raw.is_dir() else []
+    run_dirs = (
+        [p for p in raw.iterdir() if p.is_dir() and not p.name.startswith("_")]
+        if raw.is_dir()
+        else []
+    )
     assert run_dirs == []
 
 
@@ -544,6 +568,30 @@ def test_emit_produces_distinct_run_ids(
         for _ in range(3)
     }
     assert len(ids) == 3
+
+
+def test_emit_uses_preallocated_run_id(
+    verified_config: ResolvedConfig,
+    fake_repo: Path,
+    clean_git_state: GitState,
+    minimal_workload: dict[str, Any],
+    patch_git: Any,
+) -> None:
+    patch_git(clean_git_state)
+    allocated = "2024c246-95fa-4f4b-905d-c4da0a28d23c"
+
+    handle = emit(
+        config=verified_config,
+        target="cpu-p",
+        workload=minimal_workload,
+        condition_label="A",
+        repo_root=fake_repo,
+        run_id=allocated,
+    )
+
+    assert handle.run_id == allocated
+    assert handle.manifest["run_id"] == allocated
+    assert handle.run_dir.path.name == allocated
 
 
 def test_emit_blinds_the_condition_label(

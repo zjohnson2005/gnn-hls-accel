@@ -69,7 +69,7 @@ def test_writes_succeed_while_open(open_run: RunDir) -> None:
 
 
 def test_write_text_refuses_to_overwrite_an_existing_file(open_run: RunDir) -> None:
-    """Raw files are written once, not overwritten — even before the run seals."""
+    """Raw files are written once, not overwritten - even before the run seals."""
     open_run.write_text("notes.txt", "first\n")
     with pytest.raises(RawStoreError, match="already exists"):
         open_run.write_text("notes.txt", "second\n")
@@ -131,7 +131,7 @@ def test_guard_refuses_before_writing_any_bytes(sealed_run: RunDir) -> None:
 
 
 def test_reseal_is_refused(sealed_run: RunDir) -> None:
-    """Re-sealing would overwrite the recorded hash — precisely the tampering this prevents."""
+    """Re-sealing would overwrite the recorded hash - precisely the tampering this prevents."""
     with pytest.raises(RunSealedError, match="already sealed"):
         sealed_run.seal()
 
@@ -191,7 +191,7 @@ def test_verify_sealed_detects_tampering(sealed_run: RunDir) -> None:
     """Blueprint §5.6 item 3: verifying raw checksums must actually catch a modification.
 
     The read-only attribute is cleared first, simulating an actor that bypassed this module
-    entirely — which is the only way a sealed file gets modified in practice.
+    entirely - which is the only way a sealed file gets modified in practice.
     """
     import stat
 

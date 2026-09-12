@@ -24,8 +24,8 @@ def test_current_raw_payload_is_under_ceiling() -> None:
     """Mechanical AM-014 check against the real repo ``raw/`` tree."""
     root = Path(__file__).resolve().parents[1]
     total = assert_raw_under_ceiling(root)
-    # M1 scale: seven sealed runs of JSON manifests/summaries — well under 1 MB.
-    assert total < 1_000_000
+    # M2.1 adds a ~2.4 MB S1 samples.ndjson; still well under the 100 MB AM-014 ceiling.
+    assert total < 100_000_000
 
 
 def test_blinding_dir_is_excluded_from_size(tmp_path: Path) -> None:
