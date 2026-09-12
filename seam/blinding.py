@@ -79,7 +79,7 @@ def blinded_label_for(condition_label: str, *, salt: str) -> str:
     """Map a condition label to its blinded form.
 
     Deterministic given the salt, so the same condition always yields the same blinded label across
-    runs — which is what lets analysis group runs by arm without knowing which arm is which.
+    runs - which is what lets analysis group runs by arm without knowing which arm is which.
     """
     if not condition_label:
         raise ValueError("condition_label must be non-empty")

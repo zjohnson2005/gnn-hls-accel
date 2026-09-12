@@ -1,7 +1,7 @@
 """Content hashing for provenance and integrity.
 
 Every hash in a manifest is computed here, at emit time, from bytes on disk. No hash is ever
-transcribed from a document by hand — a hand-copied hash is indistinguishable from a fabricated
+transcribed from a document by hand - a hand-copied hash is indistinguishable from a fabricated
 one and goes stale silently (blueprint AF-002).
 """
 
@@ -37,7 +37,7 @@ def sha256_file(path: Path) -> str:
     cannot change the result.
 
     Raises:
-        FileNotFoundError: If the path does not exist. Not defaulted to a sentinel — an absent
+        FileNotFoundError: If the path does not exist. Not defaulted to a sentinel - an absent
             provenance artifact must fail the run, not produce a placeholder hash.
     """
     digest = hashlib.sha256()

@@ -9,8 +9,8 @@ corrupt a sealed run and then discover the error.
 
 Two layers, deliberately:
 
-* **Advisory** — a ``.sealed`` marker holding the tree hash. This is what code checks.
-* **Best-effort OS enforcement** — the read-only file attribute, which stops a careless editor or
+* **Advisory** - a ``.sealed`` marker holding the tree hash. This is what code checks.
+* **Best-effort OS enforcement** - the read-only file attribute, which stops a careless editor or
   script that never asks this module for permission.
 
 Neither layer defends against a determined attacker, and neither is meant to. They defend against
@@ -20,6 +20,7 @@ the realistic failure: a well-intentioned later script appending "just one fix" 
 from __future__ import annotations
 
 import json
+import os
 import stat
 from dataclasses import dataclass
 from pathlib import Path
@@ -104,7 +105,7 @@ class RunDir:
     def append_ndjson(self, name: str, record: dict[str, Any]) -> Path:
         """Append one newline-delimited JSON record.
 
-        Appending is legitimate *while the run is open* — that is how ``samples.ndjson`` and
+        Appending is legitimate *while the run is open* - that is how ``samples.ndjson`` and
         ``steps.ndjson` are produced. It becomes illegal the moment the run seals.
 
         Raises:
@@ -115,6 +116,8 @@ class RunDir:
         target.parent.mkdir(parents=True, exist_ok=True)
         with target.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(record, sort_keys=True) + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
         return target
 
     def open_write(self, name: str, *, binary: bool = False) -> IO[Any]:
@@ -294,9 +297,7 @@ def verify_sealed(run_dir: RunDir) -> bool:
     log_event(
         "rawstore.integrity_check",
         severity="info" if matched else "critical",
-        message=(
-            f"raw integrity {'OK' if matched else 'FAILED'} for run {run_dir.run_id}"
-        ),
+        message=(f"raw integrity {'OK' if matched else 'FAILED'} for run {run_dir.run_id}"),
         run_id=run_dir.run_id,
         recorded_sha256=recorded,
         recomputed_sha256=actual,
@@ -309,7 +310,7 @@ def make_writable_for_test(path: Path) -> None:
     """Clear the read-only attribute on every file under ``path``.
 
     Sealed runs are read-only, which makes a pytest ``tmp_path`` impossible to clean up on Windows.
-    Exported for test teardown only. It is deliberately not used anywhere in the harness — that
+    Exported for test teardown only. It is deliberately not used anywhere in the harness - that
     would be a hole straight through the write-once guard.
     """
     for child in path.rglob("*"):

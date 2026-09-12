@@ -1,7 +1,7 @@
 """YAML configuration loading, resolution, and hashing (spec §8).
 
 "Fully resolved" means every ``!include`` expanded and every override applied, so that the object
-hashed into ``config_hash`` is exactly the configuration the run behaved according to — not a
+hashed into ``config_hash`` is exactly the configuration the run behaved according to - not a
 template that a later default silently changed.
 
 No magic numbers live in code. Anything a run's behaviour depends on is read from here.
@@ -55,7 +55,7 @@ class ResolvedConfig:
 
         Raises:
             ConfigError: If the key is missing or its value is ``None``. ``None`` is treated as
-                absent because in SEAM configs ``null`` means "not yet measured" — a caller that
+                absent because in SEAM configs ``null`` means "not yet measured" - a caller that
                 requires a value must not silently receive a not-yet-measured one.
         """
         sentinel = object()
@@ -65,7 +65,7 @@ class ResolvedConfig:
         if value is None:
             raise ConfigError(
                 f"required config key {dotted} is null. In SEAM configs null means "
-                f"'not yet measured' — run the milestone that determines it rather than "
+                f"'not yet measured' - run the milestone that determines it rather than "
                 f"supplying a default."
             )
         return value
@@ -74,7 +74,7 @@ class ResolvedConfig:
 def load_yaml(path: Path) -> dict[str, Any]:
     """Load a single YAML file into a dict.
 
-    Uses ``yaml.safe_load`` — configs are data, never executable.
+    Uses ``yaml.safe_load`` - configs are data, never executable.
 
     Raises:
         ConfigError: If the file is missing, unparseable, or does not contain a mapping.
@@ -90,8 +90,7 @@ def load_yaml(path: Path) -> dict[str, Any]:
         raise ConfigError(f"config file is empty: {path}")
     if not isinstance(raw, dict):
         raise ConfigError(
-            f"config file must contain a mapping at top level, "
-            f"got {type(raw).__name__}: {path}"
+            f"config file must contain a mapping at top level, got {type(raw).__name__}: {path}"
         )
     return raw
 
@@ -100,7 +99,7 @@ def apply_overrides(base: dict[str, Any], overrides: dict[str, Any]) -> dict[str
     """Deep-merge ``overrides`` onto a copy of ``base``.
 
     Mappings merge recursively; every other type replaces wholesale. Lists deliberately do not
-    concatenate — an experimental parameter list must be fully stated by whoever overrides it,
+    concatenate - an experimental parameter list must be fully stated by whoever overrides it,
     since a half-overridden list is very hard to read back out of a manifest.
     """
     merged = copy.deepcopy(base)

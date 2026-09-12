@@ -2,7 +2,7 @@
 
 YAML / JSON specs keep string names (``f16`` / ``u8`` / ``u4``). Pipeline load requires
 ``openvino.Type``. Effect is confirmed only by reading the property back from the **same**
-``ov.Core`` used for ``set_property`` / load — a fresh Core does not observe another Core's
+``ov.Core`` used for ``set_property`` / load - a fresh Core does not observe another Core's
 sticky device property (see ``tools/bfcl_feasibility_probe.py``).
 
 A requested/readback mismatch is a failed cell, not a measurement.
@@ -148,7 +148,7 @@ def enforce_kv_cache_precision(
     """Read back ``KV_CACHE_PRECISION`` and compare to the requested name when set.
 
     When ``requested`` is None (arm has no KV override), readback is still recorded and
-    ``match`` is True — there is nothing to enforce.
+    ``match`` is True - there is nothing to enforce.
     """
     readback = read_kv_cache_precision(device, core=core)
     if requested is None:

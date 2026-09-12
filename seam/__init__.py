@@ -1,10 +1,10 @@
-"""SEAM — Silicon-aware Exploration of Agentic Model partitioning.
+"""SEAM - Silicon-aware Exploration of Agentic Model partitioning.
 
 Sharc Lab @ Georgia Tech.
 
 Governing documents:
-    ``docs/SEAM_research_blueprint.md``           — governing research protocol (§5 audit standard)
-    ``docs/PHASE_MINUS1_IMPLEMENTATION_SPEC.md``  — what this package implements
+    ``docs/SEAM_research_blueprint.md``           - governing research protocol (§5 audit standard)
+    ``docs/PHASE_MINUS1_IMPLEMENTATION_SPEC.md``  - what this package implements
 
 This package is scientific instrumentation, not a demo. Three invariants hold everywhere:
 

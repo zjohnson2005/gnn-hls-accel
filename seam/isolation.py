@@ -58,7 +58,7 @@ ISOLATION_MODES: Final = ("remote", "local")
 
 ENV_VAR: Final = "SEAM_ISOLATION_MODE"
 
-# Tier 1 — REFUSE when resident under isolation_mode=remote.
+# Tier 1 - REFUSE when resident under isolation_mode=remote.
 # Operator-controlled interactive / background software. Cursor alone was roughly 20% of
 # system RAM. Named rather than inferred from load because a process can be resident and
 # momentarily idle during the quiescence window and still hold the memory that changes where
@@ -88,7 +88,7 @@ TIER1_CONTENDING_PROCESS_NAMES: Final = frozenset(
     }
 )
 
-# Tier 2 — RECORD only; do NOT refuse.
+# Tier 2 - RECORD only; do NOT refuse.
 # Auto-respawning Windows shell packages and OEM vendor agents. Verified 2026-08-09:
 # msedgewebview2 hosts are MicrosoftWindows.Client.CBS (Search / Copilot shell) and
 # MicrosoftWindows.Client.WebExperience (Widgets); killing them alongside Widgets and
@@ -155,7 +155,7 @@ def harness_termination_record() -> dict[str, Any]:
             "resolve_isolation_mode / acceptance.ps1 refuse remote mode while tier-1 "
             "operator-controlled software is resident; the harness does not terminate those "
             "processes. Tier-2 shell/vendor agents are recorded only. If the operator killed "
-            "processes outside the harness, that kill time is unobservable here — do not infer it."
+            "processes outside the harness, that kill time is unobservable here - do not infer it."
         ),
     }
 

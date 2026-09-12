@@ -2,8 +2,8 @@
 
 Two sinks, one call site:
 
-* **stderr** — human-readable, for the operator watching a run.
-* **JSON lines** — machine-readable, one object per line, for the audit trail.
+* **stderr** - human-readable, for the operator watching a run.
+* **JSON lines** - machine-readable, one object per line, for the audit trail.
 
 The JSON sink is what makes spec §9.6 enforceable. "No silent fallbacks" is only meaningful if
 there is somewhere for a fallback to be recorded, so :func:`log_event` is the mechanism by which
@@ -48,7 +48,7 @@ _SEVERITY_TO_LEVEL: Final[dict[str, int]] = {
 def utc_now_iso() -> str:
     """Return the current UTC time as an ISO-8601 string with explicit offset.
 
-    Used for cross-signal correlation only. Never for measuring durations — spec §3.5 requires
+    Used for cross-signal correlation only. Never for measuring durations - spec §3.5 requires
     :func:`time.perf_counter_ns` for those, because wall-clock time is not monotonic.
     """
     return datetime.now(UTC).isoformat()
@@ -131,7 +131,7 @@ def log_event(
     line = json.dumps(record, sort_keys=True)
 
     logger = get_logger()
-    logger.log(_SEVERITY_TO_LEVEL[severity], "%s%s", event, f" — {message}" if message else "")
+    logger.log(_SEVERITY_TO_LEVEL[severity], "%s%s", event, f" - {message}" if message else "")
 
     with _lock:
         sinks = list(_json_sinks)

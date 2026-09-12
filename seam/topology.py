@@ -12,7 +12,7 @@ module treats the OS as a *hypothesis* and measurement as the authority:
 3. Cluster the scores into exactly two groups and require a clean separation matching the
    expected split, with the P-cluster faster.
 4. Compare the measured partition against the ``EfficiencyClass`` partition and record whether
-   they agree. **That comparison is spec §10 open question 4** — it is an output of this module,
+   they agree. **That comparison is spec §10 open question 4** - it is an output of this module,
    never an input to it.
 
 The direction of ``EfficiencyClass`` is deliberately not hardcoded. Both interpretations are
@@ -77,7 +77,7 @@ TopologyVerdict = Literal["pass", "refused"]
 
 #: ``LOGICAL_PROCESSOR_RELATIONSHIP.RelationProcessorCore``.
 _RELATION_PROCESSOR_CORE: Final = 0
-#: ``ERROR_INSUFFICIENT_BUFFER`` — expected from the sizing call.
+#: ``ERROR_INSUFFICIENT_BUFFER`` - expected from the sizing call.
 _ERROR_INSUFFICIENT_BUFFER: Final = 122
 
 # Byte offsets within SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX when the union holds a
@@ -122,7 +122,7 @@ class TopologyResult:
     Serialised verbatim into ``raw/<run_id>/summary.json`` so every field below is traceable.
 
     ``p_cpus`` and ``lpe_cpus`` name the measured fast and slow clusters. **On a refused run they
-    are a clustering of the scores, not a verified mapping** — ``verdict`` is the field that says
+    are a clustering of the scores, not a verified mapping** - ``verdict`` is the field that says
     which, and nothing may consume them as a mapping unless ``verdict == "pass"``.
     """
 
@@ -309,7 +309,7 @@ class KernelSpec:
     """One fully-parameterised microbenchmark kernel.
 
     Spec §4 prescribes "a fixed single-thread integer+FP benchmark" but not its implementation, and
-    which implementation runs is a measurable property of a run — so the kernel is selected by name
+    which implementation runs is a measurable property of a run - so the kernel is selected by name
     from config (``topology.verification.kernel``) and its name is recorded as the manifest's
     ``workload.benchmark``. Changing the instrument therefore changes ``config_hash``, and cannot
     happen invisibly.
@@ -493,7 +493,7 @@ def _split_into_two_clusters(scores: dict[int, float]) -> tuple[list[int], list[
 
     For one-dimensional data the optimal 2-means partition is always contiguous in sorted order,
     so every split point is evaluated exactly and the lowest total within-cluster sum of squares
-    wins. No iteration, no seeding, no local minimum — the result is deterministic, which matters
+    wins. No iteration, no seeding, no local minimum - the result is deterministic, which matters
     for a value that gets committed to config.
 
     Returns:
@@ -592,7 +592,7 @@ def measure_topology(config: ResolvedConfig) -> TopologyResult:
         A :class:`TopologyResult` whose ``verdict`` is ``"pass"`` only if every criterion held.
 
     Raises:
-        TopologyVerificationError: Only for conditions that make a *measurement* impossible — not
+        TopologyVerificationError: Only for conditions that make a *measurement* impossible - not
             running on Windows, core enumeration failing, a CPU that cannot be pinned, or a
             platform that is not the declared part. Those are broken instruments, not verdicts.
     """
@@ -676,7 +676,7 @@ def measure_topology(config: ResolvedConfig) -> TopologyResult:
 
     fast_cv, slow_cv = _cv(fast_values), _cv(slow_values)
 
-    # The faster cluster is the P cluster by definition of "performance core" — but only if the
+    # The faster cluster is the P cluster by definition of "performance core" - but only if the
     # criteria below hold, which is what `verdict` records.
     p_cpus, lpe_cpus = fast_cpus, slow_cpus
 
@@ -692,7 +692,7 @@ def measure_topology(config: ResolvedConfig) -> TopologyResult:
     if fast_cv > max_within_cv or slow_cv > max_within_cv:
         refusal_reasons.append(
             f"within-cluster spread too high (fast CV {fast_cv:.4f}, slow CV {slow_cv:.4f}, "
-            f"limit {max_within_cv:.4f}); clusters are not clean. Likely background load — "
+            f"limit {max_within_cv:.4f}); clusters are not clean. Likely background load - "
             f"quiesce the machine and re-run."
         )
 
@@ -785,7 +785,7 @@ def verify_topology(config: ResolvedConfig) -> TopologyResult:
     Raises:
         TopologyVerificationError: If the clusters do not separate cleanly, do not match the
             expected split, or the P-cluster is not the faster one. Failure is a hard error, not a
-            warning — a caller must not proceed on an ambiguous mapping. Callers that need the
+            warning - a caller must not proceed on an ambiguous mapping. Callers that need the
             measurement regardless of the verdict use :func:`measure_topology` and inspect
             ``verdict`` themselves.
     """
@@ -860,7 +860,7 @@ def affinity_for(
         target: ``"cpu-p"`` or ``"cpu-lpe"``.
         config: Resolved platform config carrying the verified mapping.
         allow_unverified: Escape hatch for development on an unverified machine. Using it emits a
-            ``topology.unverified_waiver`` event — spec §9.6 forbids a silent fallback, so the
+            ``topology.unverified_waiver`` event - spec §9.6 forbids a silent fallback, so the
             waiver is auditable and cannot be mistaken for a verified run.
 
     Raises:
@@ -920,7 +920,7 @@ def _write_verified_topology(
     The CPU lists are written **flow style** (``p_cpus: [0, 1, 2, 3]``) rather than as block
     sequences. That is not cosmetic. The comment introducing ``topology.expected`` is attached to
     the preceding ``lpe_cpus`` key, so replacing that key's scalar ``null`` with a *block* sequence
-    emits the comment between the key and its items — leaving the text "Hypothesis, from vendor
+    emits the comment between the key and its items - leaving the text "Hypothesis, from vendor
     documentation. NOT evidence" sitting on top of the measured LP-E CPU list, which inverts its
     meaning. A flow sequence stays on the key's own line and the comment keeps its place.
 
@@ -944,8 +944,8 @@ def _write_verified_topology(
     # reindent every unrelated list in the document.
     yaml_rt.indent(mapping=2, sequence=4, offset=2)
     # Emit an explicit `null` rather than an empty value. This file's editing rules give `null` a
-    # meaning — "not yet measured", never to be replaced with a plausible number (AMENDMENTS.md
-    # AM-006) — and a blank value cannot be distinguished from a field someone forgot to fill in.
+    # meaning - "not yet measured", never to be replaced with a plausible number (AMENDMENTS.md
+    # AM-006) - and a blank value cannot be distinguished from a field someone forgot to fill in.
     yaml_rt.representer.add_representer(
         type(None),
         lambda representer, _data: representer.represent_scalar("tag:yaml.org,2002:null", "null"),
@@ -1039,7 +1039,16 @@ def main(argv: list[str] | None = None) -> int:
     # under, and so a session outside MACHINE.md's pinned conditions is visible in the artifact
     # rather than only in someone's memory (AUDIT_LOG.md AF-005).
     power_state = capture_power_state()
-    pinned_deviations = check_pinned_conditions(power_state, pinned=config.get("power.pinned"))
+    power_cfg = config.get("power") or {}
+    # Prefer profile-scoped assert (§3.7); fall back to legacy power.pinned for older configs.
+    if power_cfg.get("profiles") and power_cfg.get("class_profile_map"):
+        from seam.powerstate import assert_profile
+
+        profile_assertion = assert_profile("topology_verify", power_state, power_cfg=power_cfg)
+        pinned_deviations = list(profile_assertion.deviations)
+    else:
+        pinned_deviations = check_pinned_conditions(power_state, pinned=config.get("power.pinned"))
+        profile_assertion = None
 
     result = measure_topology(config)
     passed = result.verdict == "pass"
@@ -1048,7 +1057,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # AF-006: a refused verification emits a manifest too. Its per-CPU scores are measurements of
     # real silicon and spec §9.2 requires them to be citable to a run_id; spec §5.1's treatment of
-    # an UNSUPPORTED preflight is the same principle — a negative result is a data point.
+    # an UNSUPPORTED preflight is the same principle - a negative result is a data point.
     # A refused run records verified=false with null CPU lists, so the clustering it found can
     # never be read back as a mapping.
     run = emit(
@@ -1072,7 +1081,11 @@ def main(argv: list[str] | None = None) -> int:
                 "pinned_condition_deviations": pinned_deviations,
             },
         },
-        power_state=manifest_power_state(power_state, battery_pct_end=end_power_state.battery_pct),
+        power_state=manifest_power_state(
+            power_state,
+            battery_pct_end=end_power_state.battery_pct,
+            profile=profile_assertion,
+        ),
         topology_override=(
             {"p_cpus": result.p_cpus, "lpe_cpus": result.lpe_cpus, "verified": True}
             if passed

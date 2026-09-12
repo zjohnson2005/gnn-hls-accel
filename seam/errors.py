@@ -8,11 +8,16 @@ a specific failure must name it, and naming it makes the tolerance reviewable.
 from __future__ import annotations
 
 __all__ = [
+    "BackendError",
+    "BudgetExceededError",
     "ConfigError",
     "DirtyTreeError",
+    "EscalationRefusedError",
     "GitError",
+    "IsolationViolationError",
     "ManifestValidationError",
     "PinnedConditionError",
+    "ProfileMismatchError",
     "ProvenanceError",
     "RawStoreError",
     "RunSealedError",
@@ -62,8 +67,15 @@ class PinnedConditionError(SeamError):
     """A session outside MACHINE.md's pinned run conditions tried to commit a platform result.
 
     MACHINE.md § "Pinned run conditions (MANDATORY)" classifies such a session as **INVALID, not
-    noisy**. The session is still allowed to run and to emit its manifest — the measurement is real
-    and stays citable — but it may not write a result back into platform config.
+    noisy**. The session is still allowed to run and to emit its manifest - the measurement is real
+    and stays citable - but it may not write a result back into platform config.
+    """
+
+
+class ProfileMismatchError(PinnedConditionError):
+    """The host state does not match the pinned profile required by the measurement class.
+
+    Spec §3.7: emit a refusal manifest recording the mismatch, then stop. Refusal is a data point.
     """
 
 
@@ -88,4 +100,40 @@ class RunSealedError(RawStoreError):
 
     This is the write-once guard (spec §9.1, blueprint §5.3). Raised on *attempt*, before any
     bytes are written.
+    """
+
+
+class BudgetExceededError(SeamError):
+    """A paid call or a run was refused because it would exceed a spend ceiling.
+
+    Raised on *attempt*, before the request leaves the process, so the ceiling is a structural
+    property rather than a post-hoc observation. The caller emits a refusal manifest first -
+    a refused run is a data point, not an error to be swallowed.
+    """
+
+
+class IsolationViolationError(SeamError):
+    """Two arms of a comparison differ in something other than the variable under test.
+
+    AMENDMENTS.md AM-022: between ``cpu-p`` and ``cpu-lpe`` the only permitted difference is
+    measured throughput. Anything else silently converts the experiment into a comparison of
+    something nobody chose to study.
+    """
+
+
+class EscalationRefusedError(SeamError):
+    """A step tried to escalate in an arm where escalation is disabled.
+
+    Deliberately **not** a :class:`BackendError`: the harness treats a cloud ``BackendError`` as a
+    transient failure and falls back to local with the step marked. That is correct for a hybrid run
+    whose network broke, and wrong here - it would turn a violated arm invariant into a trajectory
+    that looks fine.
+    """
+
+
+class BackendError(SeamError):
+    """A local or cloud execution backend failed in a way the harness will not paper over.
+
+    Spec §9.6 forbids silent retries and swallowed exceptions. Every occurrence is logged as an
+    event before this is raised.
     """
