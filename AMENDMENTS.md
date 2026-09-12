@@ -51,6 +51,7 @@ decision) · `DEFERRED` (belongs to a later milestone).
 | AM-036 | 2026-08-10 | §5.2 / manifest | Separate measurement vs promote-time power_state; refuse retro-seal leak | RESOLVED (**POST-DATA**) |
 | AM-037 | 2026-09-08 | C-1 ceiling | Position limit not enforced; no hard memory ceiling on 16 GB host | RESOLVED (**POST-DATA**) |
 | AM-038 | 2026-09-08 | C-2 pre-reg | Withdraw f16>u8≥u4 TTFT order; replace with turn-1 agreement | RESOLVED (**POST-DATA**; held on `62395fdb`) |
+| AM-039 | 2026-09-12 | git history | Filter-repo strip of oversized blobs; SHA map in `docs/GIT_SHA_MAP.md` | RESOLVED (**PRE-DATA** w.r.t. sealed evidence bytes) |
 
 ---
 
@@ -1319,6 +1320,32 @@ re-prefill activation bound the practical ceiling near ~9100 vs architectural 40
 Contradicts meeting-brief KV-only capacity arithmetic. Artifact:
 `derived/efilter/c9_practical_ceiling_note.json`. C2b response: `context_cap_tokens=7000`,
 `max_tokens=128`, OpenVINO GenAI structured tool-call decoding.
+
+---
+
+## AM-039 — History rewrite to strip oversized blobs; sealed files untouched
+
+**Date:** 2026-09-12 · **Pre/post data:** PRE-DATA w.r.t. sealed evidence bytes
+(no sealed file edited) · **Status:** RESOLVED
+
+**Divergence.** Pushing the evidence-bearing branch failed GitHub's 100 MB hard
+limit on `apu_characterization/fixtures/vectors.npy` (146 MB), introduced in
+`1486fe7` and present in every descendant commit. Sealed manifests cite those
+descendant commits via `git_sha`. A naive rewrite would leave those citations
+pointing at unreachable SHAs.
+
+**Decision.** Rewrite history with `git filter-repo` to remove
+`apu_characterization/fixtures/vectors.npy` and
+`orchestration_engine/**/mock_action_heavy_c5000.json` from all commits; keep
+both files on disk and gitignored; archive the pre-rewrite graph
+(`../gnn-hls-accel-prerewrite-875dc74.bundle`, tag `prerewrite/875dc74`); record
+the filter-repo commit-map and a verified old→new table for every sealed- and
+ledger-cited SHA in `docs/GIT_SHA_MAP.md`. Do **not** edit any sealed file.
+
+**Why this preserves provenance.** Tree diffs for each cited SHA show the only
+change is deletion of the oversized paths (never referenced as run inputs). The
+`raw/` + `derived/` file-content digest is identical before and after. Old SHAs
+remain interpretable via the committed map and the local bundle/tag.
 
 ---
 
