@@ -167,3 +167,25 @@ def minimal_workload() -> dict[str, Any]:
         "seed": 1234,
         "n_repeats": 1,
     }
+
+
+#: Complete INF-5 / AM-040 block for unit tests (no live host probes).
+INF5_TEST_RUN_ENVIRONMENT: dict[str, Any] = {
+    "gpu_driver_version": "32.0.101.8724",
+    "windows_build": "26200.1",
+    "active_power_scheme_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+    "pip_freeze_sha256": "a" * 64,
+    "tokenizers_version": "0.22.2",
+    "prompt_render_sha256": "b" * 64,
+    "available_mb_start": 7000.0,
+    "available_mb_end": 6500.0,
+    "workloads_session_host_resident": False,
+    "session_design": "sequential",
+    "arm_order": ["unit_test"],
+}
+
+
+@pytest.fixture
+def inf5_run_environment() -> dict[str, Any]:
+    """Copy of the INF-5 test block so callers can mutate safely."""
+    return dict(INF5_TEST_RUN_ENVIRONMENT)

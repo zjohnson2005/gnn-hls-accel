@@ -1714,6 +1714,9 @@ def run_multi_turn_agent_entry(
     completion_token_samples: list[int] = []
     context_growth: list[dict[str, Any]] = []
     force_quit = False
+    # Why the agent loop stopped relative to len(question). Distinct events:
+    # completed | generation_error | empty_execute | no_tool_call | max_steps
+    stop_reason = "completed"
     session_generated_once = False
     first_turn_equiv: dict[str, Any] | None = None
     prev_turn0_prompt_tokens: int | None = None
@@ -1721,6 +1724,9 @@ def run_multi_turn_agent_entry(
     wall_s = 0.0
     max_new = int(getattr(cfg, "max_new_tokens", 512) or 512)
     genai_tokenizer = pipe.get_tokenizer() if mode is not None else None
+    # INF-5: digest of every rendered prompt string this entry fed to generate().
+    prompt_render_hasher = hashlib.sha256()
+    prompt_render_updates = 0
     # RESIDENT: one ChatHistory for the whole entry (tools + thinking off).
     resident_history: Any | None = (
         build_bfcl_chat_history(ov_genai, [], tools) if mode == "RESIDENT" else None
@@ -1759,6 +1765,9 @@ def run_multi_turn_agent_entry(
                 _t = time.perf_counter()
                 prompt_full = render_bfcl_tools_style(tokenizer, messages, tools)
                 t_template_build += time.perf_counter() - _t
+                prompt_render_hasher.update(b"\0")
+                prompt_render_hasher.update(prompt_full.encode("utf-8"))
+                prompt_render_updates += 1
                 _t = time.perf_counter()
                 prompt_n = len(tokenizer(prompt_full)["input_ids"])
                 t_tokenize += time.perf_counter() - _t
@@ -1931,26 +1940,55 @@ def run_multi_turn_agent_entry(
                     resident_history.append({"role": "assistant", "content": text})
 
                 if not gen_ok:
+                    # Generation failed: distinct from parse/empty-execute stops.
+                    stop_reason = "generation_error"
                     break
 
                 try:
                     decoded = decode_execute_qwen(text)
                     if is_empty_execute_response(decoded):
+                        # Empty execute ends the *step* loop for this user turn.
+                        # If no tool call was decoded yet, this is an emission
+                        # failure for the turn; if tools already ran, it is the
+                        # normal end-of-turn (model stopped calling tools).
+                        if not turn_decoded_steps:
+                            stop_reason = "empty_execute"
                         break
                 except Exception:
+                    # decode_execute_qwen raised: no parseable tool-call structure.
+                    stop_reason = "no_tool_call"
                     break
 
                 turn_decoded_steps.append(decoded)
                 _t = time.perf_counter()
-                execution_results, _instances = execute_multi_turn_func_call(
-                    decoded,
-                    initial_config,
-                    involved_classes,
-                    model_name,
-                    test_entry_id,
-                    long_context=("long_context" in test_category or "composite" in test_category),
-                    is_evaL_run=False,
-                )
+                tool_exec_error = False
+                tool_exec_error_class: str | None = None
+                try:
+                    execution_results, _instances = execute_multi_turn_func_call(
+                        decoded,
+                        initial_config,
+                        involved_classes,
+                        model_name,
+                        test_entry_id,
+                        long_context=("long_context" in test_category or "composite" in test_category),
+                        is_evaL_run=False,
+                    )
+                except Exception as exc:
+                    # Tool execution raised: distinct from emission / generation stops.
+                    tool_exec_error = True
+                    tool_exec_error_class = type(exc).__name__
+                    t_tool_exec += time.perf_counter() - _t
+                    turn_step_metrics.append(
+                        {
+                            "turn": turn_idx,
+                            "step": step,
+                            "tool_exec_error": True,
+                            "tool_exec_error_class": tool_exec_error_class,
+                            "error": f"{type(exc).__name__}: {exc}",
+                        }
+                    )
+                    stop_reason = "tool_exec_error"
+                    break
                 t_tool_exec += time.perf_counter() - _t
                 for exec_str, exec_result in zip(decoded, execution_results, strict=False):
                     tool_msg = {
@@ -1964,6 +2002,7 @@ def run_multi_turn_agent_entry(
                 step += 1
                 if step > MAXIMUM_STEP_LIMIT:
                     force_quit = True
+                    stop_reason = "max_steps"
                     break
 
             if turn_prompt_tokens is not None:
@@ -1986,6 +2025,14 @@ def run_multi_turn_agent_entry(
                 t_tokenize=t_tokenize,
                 t_generate=t_generate,
             )
+            # Last step's tool_exec_error (if the turn ended on a raise).
+            turn_tool_err = False
+            turn_tool_err_class: str | None = None
+            for sm in reversed(turn_step_metrics):
+                if sm.get("tool_exec_error"):
+                    turn_tool_err = True
+                    turn_tool_err_class = sm.get("tool_exec_error_class")
+                    break
             turn_metrics.append(
                 {
                     "turn": turn_idx,
@@ -2002,10 +2049,15 @@ def run_multi_turn_agent_entry(
                     "slo_ok": turn_slo_ok,
                     "per_turn_accuracy": per_turn_acc,
                     "steps": turn_step_metrics,
+                    "tool_exec_error": turn_tool_err,
+                    "tool_exec_error_class": turn_tool_err_class,
                     # Additive phase timers (future sealed runs). Not consumed by replay yet.
                     **phases,
                 }
             )
+            # Only max_steps (force_quit) aborts remaining user turns. Empty
+            # execute / no_tool_call / generation_error / tool_exec_error end the
+            # step loop for this turn; the next user turn still runs unless force_quit.
             if force_quit:
                 break
     finally:
@@ -2014,6 +2066,13 @@ def run_multi_turn_agent_entry(
 
     wall_entry_s = time.perf_counter() - t_entry0
 
+    # Entry-level stop_reason: short turn_metrics ⇒ session stopped early.
+    if force_quit or stop_reason == "max_steps":
+        stop_reason = "max_steps"
+    elif len(turn_metrics) >= len(entry["question"]):
+        stop_reason = "completed"
+    # else keep generation_error / empty_execute / no_tool_call / tool_exec_error
+
     score: dict[str, Any]
     if force_quit or len(all_model_response) != len(entry["reference"]):
         score = {
@@ -2021,7 +2080,8 @@ def run_multi_turn_agent_entry(
             "error_type": "multi_turn:force_terminated",
             "error_message": (
                 f"turns_model={len(all_model_response)} "
-                f"turns_gt={len(entry['reference'])} force_quit={force_quit}"
+                f"turns_gt={len(entry['reference'])} force_quit={force_quit} "
+                f"stop_reason={stop_reason}"
             ),
         }
     else:
@@ -2054,8 +2114,13 @@ def run_multi_turn_agent_entry(
         "residency_mode": mode,
         "wall_s": wall_entry_s,
         "force_quit": force_quit,
+        "stop_reason": stop_reason,
         "n_user_turns": len(entry["question"]),
         "n_completed_turns": len(all_model_response),
+        "prompt_render_sha256": (
+            prompt_render_hasher.hexdigest() if prompt_render_updates else None
+        ),
+        "prompt_render_n": prompt_render_updates,
         "prompt_tokens_all_steps": prompt_token_samples,
         "completion_tokens_all_steps": completion_token_samples,
         "prompt_tokens_sum": sum(prompt_token_samples),
@@ -3743,6 +3808,15 @@ def run_session_residency(
     entries = all_entries[:n_entries]
     reduced_reason = None
 
+    from seam.run_environment import RunEnvironmentSession
+
+    # Session-residency cells are sequential (one arm × one residency mode).
+    env_session = RunEnvironmentSession.begin(
+        session_design="sequential",
+        arm_order=[f"{arm_id}|{mode}"],
+    )
+    avail_start = env_session.available_mb_start
+
     entries_path = out_dir / f"session_residency_entries_{arm_id}_{mode}.json"
     entries_path.write_text(json.dumps(entries, indent=2, default=str) + "\n", encoding="utf-8")
     gold = run_multi_turn_gold_selftest(entries)
@@ -3793,6 +3867,9 @@ def run_session_residency(
         row["uptime_s"] = uptime_s
         row["available_mb"] = avail.get("available_mb")
         row["available_method"] = avail.get("available_method")
+        digest = row.get("prompt_render_sha256")
+        if isinstance(digest, str) and len(digest) == 64:
+            env_session.add_prompt_digest(digest)
         results.append(row)
         (out_dir / partial_name).write_text(
             json.dumps(results, indent=2, sort_keys=True, default=str) + "\n",
@@ -3825,6 +3902,7 @@ def run_session_residency(
                 all_deltas.append(int(d))
 
     traj_correct = sum(1 for r in results if r["score"].get("valid") is True)
+    run_environment = env_session.finalize()
     report = {
         "probe": "bfcl_session_residency",
         "mode": "run_session_residency",
@@ -3834,6 +3912,11 @@ def run_session_residency(
         "n_entries_requested": n_entries,
         "n_entries_run": len(entries),
         "n_entries_reduced_reason": reduced_reason,
+        "available_mb_start": avail_start,
+        "run_environment": run_environment,
+        "session_design": "sequential",
+        "arm_order": [f"{arm_id}|{mode}"],
+        "prompt_render_sha256": run_environment["prompt_render_sha256"],
         "slo": {"ttft_s_max": SLO_TTFT_S, "decode_tok_s_min": SLO_DECODE_TOK_S},
         "model": _model_report_fields(
             enable_thinking=False,

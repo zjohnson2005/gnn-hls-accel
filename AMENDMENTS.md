@@ -52,6 +52,7 @@ decision) · `DEFERRED` (belongs to a later milestone).
 | AM-037 | 2026-09-08 | C-1 ceiling | Position limit not enforced; no hard memory ceiling on 16 GB host | RESOLVED (**POST-DATA**) |
 | AM-038 | 2026-09-08 | C-2 pre-reg | Withdraw f16>u8≥u4 TTFT order; replace with turn-1 agreement | RESOLVED (**POST-DATA**; held on `62395fdb`) |
 | AM-039 | 2026-09-12 | git history | Filter-repo strip of oversized blobs; SHA map in `docs/GIT_SHA_MAP.md` | RESOLVED (**PRE-DATA** w.r.t. sealed evidence bytes) |
+| AM-040 | 2026-09-15 | §5.2 / manifest | INF-5 `run_environment` required on `spec_version` 1.1 seals | RESOLVED (**PRE-DATA**) |
 
 ---
 
@@ -1346,6 +1347,29 @@ ledger-cited SHA in `docs/GIT_SHA_MAP.md`. Do **not** edit any sealed file.
 change is deletion of the oversized paths (never referenced as run inputs). The
 `raw/` + `derived/` file-content digest is identical before and after. Old SHAs
 remain interpretable via the committed map and the local bundle/tag.
+
+---
+
+## AM-040 — INF-5 run_environment on every new seal (`spec_version` 1.1)
+
+**Date:** 2026-09-15 · **Pre/post data:** **PRE-DATA** (instrumentation; no experiment
+re-run) · **Status:** RESOLVED
+
+**Divergence.** ENV-DIFF of W-3 (`6225d6e1`) vs Q-KV / Q-REPRO showed every *recorded*
+decode-critical pin matching, yet `trajectory_pass` halved. The residual cause sat in
+fields the seal did not capture: GPU driver, measured Windows build, active power-scheme
+GUID, full pip-freeze hash, `tokenizers` version, prompt-render SHA-256, Available MB
+bookends, WorkloadsSessionHost residency, and session design / arm order.
+
+**Decision.** Additive schema bump `1.0` → `1.1`. New top-level `run_environment` block is
+**required** when `spec_version` is `1.1`. Historical `1.0` seals remain valid without the
+block (`raw/` write-once; never rewritten). Seal refuses (hard) if any required field is
+absent, null, or empty — no silent defaults. Host-readable fields are collected in
+`seam/run_environment.py` at emit; session fields must be supplied by the caller (or staged
+on `summary["run_environment"]`).
+
+**Pip-freeze canonicalization.** UTF-8, LF newlines, stripped non-empty lines **sorted**
+ascending, trailing newline, then SHA-256.
 
 ---
 

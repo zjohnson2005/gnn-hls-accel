@@ -23,6 +23,7 @@ from seam.gitinfo import GitState
 from seam.locks import ExclusiveLock, exclusive
 from seam.manifest import build_manifest, load_schema, validate_manifest
 from seam.tools.fetch_model import FetchedModelSpec
+from tests.conftest import INF5_TEST_RUN_ENVIRONMENT
 
 VERIFIED_TOPOLOGY = {"p_cpus": [0, 1, 2, 3], "lpe_cpus": [4, 5, 6, 7], "verified": True}
 
@@ -94,6 +95,8 @@ class TestManifestSchemaV2:
             repo_root=fake_repo,
             topology_override=VERIFIED_TOPOLOGY,
             thermal={"regime": "pooled"},  # illegal - confound|axis only
+            run_environment=dict(INF5_TEST_RUN_ENVIRONMENT),
+            capture_run_environment_host=False,
         )
         with pytest.raises(ManifestValidationError):
             validate_manifest(m)
@@ -118,6 +121,8 @@ class TestManifestSchemaV2:
             blinded_label="cond_0123456789ab",
             repo_root=fake_repo,
             topology_override=VERIFIED_TOPOLOGY,
+            run_environment=dict(INF5_TEST_RUN_ENVIRONMENT),
+            capture_run_environment_host=False,
         )
         validate_manifest(m)
         assert m["confinement_mechanism"] is None

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://sharclab.gatech.edu/seam/schemas/run_manifest-1.0.json",
+  "$id": "https://sharclab.gatech.edu/seam/schemas/run_manifest-1.1.json",
   "title": "SEAM run manifest",
-  "description": "Implements blueprint §5.2 plus the Platform-A fields of implementation spec §6.1. Every experimental run emits one of these. No manifest, no data. The union of the two field sets is deliberate: see AMENDMENTS.md AM-003 for the fields blueprint §5.2 requires that spec §6.1 omits — those are present here as optional and nullable so a blueprint requirement is never silently dropped.",
+  "description": "Implements blueprint §5.2 plus the Platform-A fields of implementation spec §6.1. Every experimental run emits one of these. No manifest, no data. The union of the two field sets is deliberate: see AMENDMENTS.md AM-003 for the fields blueprint §5.2 requires that spec §6.1 omits — those are present here as optional and nullable so a blueprint requirement is never silently dropped. spec_version 1.1 adds INF-5 run_environment (AM-040); 1.0 seals remain valid without that block.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -35,9 +35,9 @@
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
     },
     "spec_version": {
-      "description": "Manifest schema version. Bumped only alongside this file and an AMENDMENTS.md entry.",
+      "description": "Manifest schema version. Bumped only alongside this file and an AMENDMENTS.md entry. 1.0 = pre-INF-5 seals; 1.1 = INF-5 run_environment required (AM-040).",
       "type": "string",
-      "const": "1.0"
+      "enum": ["1.0", "1.1"]
     },
     "timestamp_utc": {
       "description": "ISO-8601 with explicit offset. For cross-signal correlation only — durations use perf_counter_ns (spec §3.5).",
@@ -146,6 +146,80 @@
     "window_station": {
       "description": "Window station name for the measuring process. Service-0x0-... means session 0 with no desktop; WinSta0 is the interactive desktop.",
       "type": ["string", "null"]
+    },
+
+    "run_environment": {
+      "description": "INF-5 (AM-040). Host + session provenance required on every spec_version 1.1 seal. Closes W-3→Q-KV undiagnosable trajectory drop. Absent/null/empty fields refuse the seal — no silent defaults. Optional on 1.0 seals (historical; never rewrite sealed raw/).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gpu_driver_version",
+        "windows_build",
+        "active_power_scheme_guid",
+        "pip_freeze_sha256",
+        "tokenizers_version",
+        "prompt_render_sha256",
+        "available_mb_start",
+        "available_mb_end",
+        "workloads_session_host_resident",
+        "session_design",
+        "arm_order"
+      ],
+      "properties": {
+        "gpu_driver_version": {
+          "description": "Win32_VideoController.DriverVersion (Platform A iGPU).",
+          "type": "string",
+          "minLength": 1
+        },
+        "windows_build": {
+          "description": "Measured Windows build (CurrentBuild[.UBR] or platform.version), not merely configs identity.os_build.",
+          "type": "string",
+          "minLength": 1
+        },
+        "active_power_scheme_guid": {
+          "description": "GUID from powercfg /getactivescheme.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "pip_freeze_sha256": {
+          "description": "SHA-256 of full pip freeze output: UTF-8, LF, stripped non-empty lines sorted ascending, trailing newline.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "tokenizers_version": {
+          "description": "importlib.metadata version string for the tokenizers package.",
+          "type": "string",
+          "minLength": 1
+        },
+        "prompt_render_sha256": {
+          "description": "SHA-256 of the exact rendered prompt bytes/string consumed by the run (same render path; never a second re-render).",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "available_mb_start": {
+          "description": "Host Available MBytes at session start (PDH Memory/Available MBytes preferred).",
+          "type": "number"
+        },
+        "available_mb_end": {
+          "description": "Host Available MBytes at session end / seal.",
+          "type": "number"
+        },
+        "workloads_session_host_resident": {
+          "description": "True if WorkloadsSessionHost.exe was observed resident during the run (any start/mid/end/seal probe).",
+          "type": "boolean"
+        },
+        "session_design": {
+          "description": "Arm scheduling design for the session.",
+          "type": "string",
+          "enum": ["sequential", "interleaved"]
+        },
+        "arm_order": {
+          "description": "Arm identifiers in the order executed (or the canonical interleave seed order for the session).",
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
     },
 
     "platform": {
@@ -626,6 +700,16 @@
   },
 
   "allOf": [
+    {
+      "description": "INF-5 / AM-040: spec_version 1.1 seals require a complete run_environment block. Historical 1.0 seals stay valid without it (raw/ write-once).",
+      "if": {
+        "properties": { "spec_version": { "const": "1.1" } },
+        "required": ["spec_version"]
+      },
+      "then": {
+        "required": ["run_environment"]
+      }
+    },
     {
       "description": "A run claiming remote isolation must have no contending interactive software resident. Enforced in the schema and not only in the emitter, so a manifest asserting a quiet machine while listing an editor cannot exist in raw/ at all.",
       "if": {

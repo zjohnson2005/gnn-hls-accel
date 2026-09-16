@@ -622,6 +622,8 @@ def _build_promotion_summary(
     sealed_summary: dict[str, Any],
     placement: dict[str, Any],
 ) -> dict[str, Any]:
+    from seam.run_environment import lift_session_fields
+
     summary: dict[str, Any] = {
         "kind": WORKLOAD_KIND,
         "promotion": "post_hoc_from_derived_diagnostic",
@@ -657,6 +659,60 @@ def _build_promotion_summary(
     sealed_marker = seal_path / ".sealed"
     if sealed_marker.is_file():
         summary["derived_tree_sha256"] = _read_json(sealed_marker).get("tree_sha256")
+
+    # INF-5: lift session fields from sealed summary and/or cell reports (new runs).
+    env: dict[str, Any] = {}
+    for key, value in lift_session_fields(sealed_summary).items():
+        env.setdefault(key, value)
+    cells_dir = seal_path / "cells"
+    if cells_dir.is_dir():
+        arm_order: list[str] = []
+        prompt_hasher = hashlib.sha256()
+        prompt_n = 0
+        mb_starts: list[float] = []
+        wsh_seen: bool | None = None
+        for cell_path in sorted(cells_dir.glob("session_residency_*_report.json")):
+            report = _read_json(cell_path)
+            lifted = lift_session_fields(report)
+            for key, value in lifted.items():
+                if key == "arm_order" and isinstance(value, list):
+                    for arm in value:
+                        if arm not in arm_order:
+                            arm_order.append(arm)
+                    continue
+                if key == "prompt_render_sha256" and isinstance(value, str):
+                    prompt_hasher.update(bytes.fromhex(value.lower()))
+                    prompt_n += 1
+                    continue
+                if key == "available_mb_start" and isinstance(value, (int, float)):
+                    mb_starts.append(float(value))
+                    continue
+                if key == "workloads_session_host_resident" and isinstance(value, bool):
+                    wsh_seen = bool(wsh_seen) if wsh_seen is not None else value
+                    wsh_seen = bool(wsh_seen or value)
+                    continue
+                env.setdefault(key, value)
+        if arm_order and "arm_order" not in env:
+            env["arm_order"] = arm_order
+        if prompt_n and "prompt_render_sha256" not in env:
+            env["prompt_render_sha256"] = prompt_hasher.hexdigest()
+        if mb_starts and "available_mb_start" not in env:
+            env["available_mb_start"] = mb_starts[0]
+        if wsh_seen is not None and "workloads_session_host_resident" not in env:
+            env["workloads_session_host_resident"] = wsh_seen
+        if "session_design" not in env and arm_order:
+            # Multi-cell matrix is sequential across cells (one arm x mode at a time).
+            env["session_design"] = "sequential"
+    if env:
+        summary["run_environment"] = env
+        for key in (
+            "prompt_render_sha256",
+            "available_mb_start",
+            "session_design",
+            "arm_order",
+        ):
+            if key in env:
+                summary[key] = env[key]
     return summary
 
 
@@ -808,6 +864,10 @@ def _dry_validate_emit_construction(
         session_id=placement.get("session_id"),
         window_station=placement.get("window_station"),
         require_launch_context=True,
+        run_environment=summary.get("run_environment")
+        if isinstance(summary.get("run_environment"), dict)
+        else None,
+        capture_run_environment_host=True,
     )
     validate_manifest(manifest)
 
@@ -941,6 +1001,9 @@ def _emit_raw_from_seal(
         window_station=placement.get("window_station"),
         require_launch_context=True,
         before_integrity_hash=_before,
+        run_environment=summary.get("run_environment")
+        if isinstance(summary.get("run_environment"), dict)
+        else None,
     )
     # load_run_manifest applies AM-036 corrections on read; prove the sealed raw
     # manifest is loadable under that path.

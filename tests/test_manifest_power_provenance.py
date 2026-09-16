@@ -23,6 +23,7 @@ from seam.manifest_corrections import (
     NULL_MEASUREMENT_POWER_STATE,
     detect_promote_time_power_leak,
 )
+from tests.conftest import INF5_TEST_RUN_ENVIRONMENT
 
 VERIFIED_TOPOLOGY = {"p_cpus": [0, 1, 2, 3], "lpe_cpus": [4, 5, 6, 7], "verified": True}
 
@@ -58,6 +59,8 @@ def _build(
         "blinded_label": "cond_0123456789ab",
         "repo_root": repo_root,
         "topology_override": VERIFIED_TOPOLOGY,
+        "run_environment": dict(INF5_TEST_RUN_ENVIRONMENT),
+        "capture_run_environment_host": False,
     }
     kwargs.update(overrides)
     return build_manifest(**kwargs)
@@ -170,6 +173,8 @@ def test_emit_retro_seal_nulls_measurement_and_keeps_promote_time(
         power_state_note="synthetic retro-seal; measurement power unrecorded",
         retro_seal=True,
         isolation_mode="local",
+        run_environment=dict(INF5_TEST_RUN_ENVIRONMENT),
+        capture_run_environment_host=False,
     )
     on_disk = json.loads((handle.run_dir.path / "manifest.json").read_text(encoding="utf-8-sig"))
     validate_manifest(on_disk)
@@ -189,6 +194,8 @@ def test_emit_retro_seal_nulls_measurement_and_keeps_promote_time(
             power_state={"on_battery": True, "battery_pct_start": 88.0},
             retro_seal=True,
             isolation_mode="local",
+            run_environment=dict(INF5_TEST_RUN_ENVIRONMENT),
+            capture_run_environment_host=False,
         )
 
 

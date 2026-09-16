@@ -141,18 +141,23 @@ def _manifest(
     repo_root: Path,
     **kwargs: Any,
 ) -> dict[str, Any]:
-    return build_manifest(
-        run_id="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-        config=config,
-        git_state=git_state,
-        allow_dirty=False,
-        target="cloud",
-        workload=workload,
-        condition_label="unit-test",
-        blinded_label="cond_abcd",
-        repo_root=repo_root,
-        **kwargs,
-    )
+    from tests.conftest import INF5_TEST_RUN_ENVIRONMENT
+
+    base: dict[str, Any] = {
+        "run_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        "config": config,
+        "git_state": git_state,
+        "allow_dirty": False,
+        "target": "cloud",
+        "workload": workload,
+        "condition_label": "unit-test",
+        "blinded_label": "cond_abcd",
+        "repo_root": repo_root,
+        "run_environment": dict(INF5_TEST_RUN_ENVIRONMENT),
+        "capture_run_environment_host": False,
+    }
+    base.update(kwargs)
+    return build_manifest(**base)
 
 
 def test_manifest_records_the_declared_mode(

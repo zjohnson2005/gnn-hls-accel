@@ -25,6 +25,7 @@ from seam.manifest import (
     load_schema,
     validate_manifest,
 )
+from tests.conftest import INF5_TEST_RUN_ENVIRONMENT
 
 VERIFIED_TOPOLOGY = {"p_cpus": [0, 1, 2, 3], "lpe_cpus": [4, 5, 6, 7], "verified": True}
 
@@ -47,6 +48,8 @@ def _build(
         "condition_label": "A",
         "blinded_label": "cond_0123456789ab",
         "repo_root": repo_root,
+        "run_environment": dict(INF5_TEST_RUN_ENVIRONMENT),
+        "capture_run_environment_host": False,
     }
     kwargs.update(overrides)
     return build_manifest(**kwargs)
@@ -61,7 +64,7 @@ def test_schema_file_exists_and_is_valid_json_schema() -> None:
     assert SCHEMA_PATH.is_file(), f"manifest schema missing at {SCHEMA_PATH}"
     schema = load_schema()
     assert schema["$schema"].endswith("2020-12/schema")
-    assert schema["properties"]["spec_version"]["const"] == "1.0"
+    assert schema["properties"]["spec_version"]["enum"] == ["1.0", "1.1"]
 
 
 def test_schema_requires_every_field_named_in_the_spec() -> None:
@@ -476,6 +479,8 @@ def test_emit_writes_schema_valid_manifest_and_seals_the_run(
         workload=minimal_workload,
         condition_label="A",
         repo_root=fake_repo,
+        run_environment=dict(INF5_TEST_RUN_ENVIRONMENT),
+        capture_run_environment_host=False,
         summary={"note": "unit test"},
     )
 
@@ -512,6 +517,8 @@ def test_emit_refuses_dirty_tree_without_allow_dirty(
             workload=minimal_workload,
             condition_label="A",
             repo_root=fake_repo,
+            run_environment=dict(INF5_TEST_RUN_ENVIRONMENT),
+            capture_run_environment_host=False,
         )
 
     # The refusal must happen before any run directory is created.
@@ -540,6 +547,8 @@ def test_emit_records_allow_dirty_when_passed(
         workload=minimal_workload,
         condition_label="A",
         repo_root=fake_repo,
+        run_environment=dict(INF5_TEST_RUN_ENVIRONMENT),
+        capture_run_environment_host=False,
         allow_dirty=True,
     )
 
@@ -564,6 +573,8 @@ def test_emit_produces_distinct_run_ids(
             workload=minimal_workload,
             condition_label="A",
             repo_root=fake_repo,
+            run_environment=dict(INF5_TEST_RUN_ENVIRONMENT),
+            capture_run_environment_host=False,
         ).run_id
         for _ in range(3)
     }
@@ -587,6 +598,8 @@ def test_emit_uses_preallocated_run_id(
         condition_label="A",
         repo_root=fake_repo,
         run_id=allocated,
+        run_environment=dict(INF5_TEST_RUN_ENVIRONMENT),
+        capture_run_environment_host=False,
     )
 
     assert handle.run_id == allocated
@@ -610,6 +623,8 @@ def test_emit_blinds_the_condition_label(
         workload=minimal_workload,
         condition_label="treatment_gpt5",
         repo_root=fake_repo,
+        run_environment=dict(INF5_TEST_RUN_ENVIRONMENT),
+        capture_run_environment_host=False,
     ).manifest
     second = emit(
         config=verified_config,
@@ -617,6 +632,8 @@ def test_emit_blinds_the_condition_label(
         workload=minimal_workload,
         condition_label="treatment_gpt5",
         repo_root=fake_repo,
+        run_environment=dict(INF5_TEST_RUN_ENVIRONMENT),
+        capture_run_environment_host=False,
     ).manifest
     other = emit(
         config=verified_config,
@@ -624,6 +641,8 @@ def test_emit_blinds_the_condition_label(
         workload=minimal_workload,
         condition_label="reference",
         repo_root=fake_repo,
+        run_environment=dict(INF5_TEST_RUN_ENVIRONMENT),
+        capture_run_environment_host=False,
     ).manifest
 
     assert first["blinded_label"] == second["blinded_label"]
