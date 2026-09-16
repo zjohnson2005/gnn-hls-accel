@@ -101,3 +101,13 @@ falsifier as P2).
 - No BFCL quality claim.
 - Do not cite 50 TOPS / ~120 GB/s / 1.38× topology as measurements.
 - Do not treat rungs >40960 as within native context without YaRN evidence.
+
+---
+
+## POST-CAP4 (answered — do not rewrite the pre-registration above)
+
+Open question (a) and P1 are **answered/falsified** by sealed run
+`2b3316b6-7f6e-474f-9177-bd5a89aeb58c`: median prefill at 46,000 is
+**230.4–252.7 s** (not ~115 s / ~2 min). Updated headline arithmetic, prefill
+refit (`MEASURED(2b3316b6)`), timing-variance result, and RES-DECOMP:
+`derived/cap4/POST_CAP4.md` and the POST-CAP4 section of `CAP4_RESULTS.md`.

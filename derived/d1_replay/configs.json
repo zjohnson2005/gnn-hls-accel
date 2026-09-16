@@ -46,7 +46,16 @@
     "delta_resident": "MEASURED(41e419bd-f3e9-43b1-8364-0ebd89fa086b) SD-001 noted (no ir_sha256 in run record)",
     "emission_granularity": "ENTRY: failure_bucket==multi_turn:empty_turn_model_response on sealed W-3 ledgers. Future W-3 runs also record per_turn.emitted_parseable_tool_call (boolean); sealed runs untouched. emission_escalate still uses entry granularity until a turn-level policy is specified.",
     "prefill_cpu_4b": "MEASURED(b5ce21e5-9f29-46f4-8319-f74adcdeb628) seal=ad7b9288-42e6-42e8-be3e-ad1a1b1abc4c fit_n=[2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000]",
-    "prefill_gpu_4b": "PROVISIONAL MEASURED(62395fdb-1899-415f-b708-6adc81a24dda) fit_n=[8000, 10000, 10250, 10500, 11000, 12000]",
+    "prefill_gpu_fit_range_n": [
+      12000,
+      76000
+    ],
+    "prefill_gpu_legacy_quad": "LEGACY PROVISIONAL MEASURED(62395fdb-1899-415f-b708-6adc81a24dda) quadratic fit_n=[8000, 10000, 10250, 10500, 11000, 12000] (superseded at depth by MEASURED(2b3316b6))",
+    "prefill_gpu_power_law": {
+      "f16": "MEASURED(2b3316b6) power_law prefill_s=C*n^b C=7.049677e-09 b=2.2516 fit_range_n=[12000, 76000] arm=gpu_only_f16",
+      "u4": "MEASURED(2b3316b6) power_law prefill_s=C*n^b C=1.983636e-08 b=2.1512 fit_range_n=[12000, 76000] arm=gpu_only_u4",
+      "u8": "MEASURED(2b3316b6) power_law prefill_s=C*n^b C=2.527464e-08 b=2.1244 fit_range_n=[12000, 76000] arm=gpu_only_u8"
+    },
     "tier_scale_8b": {
       "tag": "ASSUMED(from=4B) ir_bytes_8B/ir_bytes_4B pins",
       "value": 2.1315405864719406
@@ -113,7 +122,7 @@
     "over_slo": "completes slowly; penalty is modeled time, not failure",
     "predicate": "TTFT<=10s AND decode>=6 tok/s"
   },
-  "generated_utc": "2026-09-08T23:04:30.407906+00:00",
+  "generated_utc": "2026-09-16T17:52:29.337527+00:00",
   "kind": "d1_design_space_configs",
   "n_configs": 48,
   "rows": [

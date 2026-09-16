@@ -1,0 +1,42 @@
+{
+  "avoided_prefill_fraction_of_wall_delta": 1.0009233494624548,
+  "avoided_prefill_s": 6578.173883010999,
+  "cells": {
+    "NON_RESIDENT": {
+      "n_steps": 149.0,
+      "n_turns": 70.0,
+      "non_generate_overhead_s": 559.6547964200017,
+      "session_id": "cb781dbf-3486-4fbc-a69a-34026f801abe",
+      "session_wall_s": 8148.5469116,
+      "sum_decode_s": 195.77397509100552,
+      "sum_entry_wall_s": 8148.5469116,
+      "sum_ttft_steps_s": 7588.892115179999,
+      "sum_ttft_turn_field_s": 3493.5548554419997
+    },
+    "RESIDENT": {
+      "n_steps": 149.0,
+      "n_turns": 70.0,
+      "non_generate_overhead_s": 565.7231465310007,
+      "session_id": "9fdedb46-3318-4abc-a56f-50b7d23d25ca",
+      "session_wall_s": 1576.4413787000003,
+      "sum_decode_s": 197.1722110335387,
+      "sum_entry_wall_s": 1576.4413787000003,
+      "sum_ttft_steps_s": 1010.7182321689996,
+      "sum_ttft_turn_field_s": 870.4417408120001
+    }
+  },
+  "decode_delta_s": -1.3982359425331765,
+  "everything_else_fraction_of_wall_delta": -0.0009233494624547093,
+  "everything_else_s": -6.068350110998836,
+  "kind": "res_decomp",
+  "mechanism_prior": {
+    "note": "41e419bd: RESIDENT turn-2 delta-prefill << turn-1; NON_RESIDENT turn-2 \u2248 full re-prefill. Residency is a session-management decision whose payoff is set by how expensive prefill is on that hardware (cpu-p X-2: ~5.17\u00d7; absolute TTFT tens of seconds).",
+    "run_id": "41e419bd-f3e9-43b1-8364-0ebd89fa086b"
+  },
+  "method": "Avoided prefill = sum over all generate() steps of ttft_s (NON_RESIDENT) minus the same sum (RESIDENT). Turn-level ttft_s undercounts NON_RESIDENT multi-generate turns; step-level is required. Session walls are sealed session_total_latency_s.sum.",
+  "non_generate_overhead_delta_s": -6.068350110998949,
+  "question": "Of the X-2 cpu-p NON_RESIDENT/RESIDENT session-wall ratio, how much is avoided prefill vs everything else?",
+  "ratio_wall": 5.168950156788979,
+  "result": "cpu-p X-2 wall ratio = 5.169\u00d7 (8148.5 s NON_RESIDENT / 1576.4 s RESIDENT). Avoided prefill explains 100.1% of the 6572.1 s wall delta; everything else is -6.1 s (-0.1%). Residency payoff on this platform is almost entirely avoided re-prefill.",
+  "wall_delta_s": 6572.1055329
+}

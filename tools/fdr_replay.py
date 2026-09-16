@@ -1,7 +1,8 @@
 """D-1 SEAM design-space replay (fdr_replay).
 
 Rebuild of the Aug-7 FDR skeleton: trace replay, MEASURED/ASSUMED tags on every
-numeric input, quadratic prefill fit. Ceiling model, fixed kv_bytes=73728,
+numeric input. GPU prefill is CAP-4 power-law per KV arm (POST-CAP4); cpu-p
+prefill remains the ceiling_a quadratic. Ceiling model, fixed kv_bytes=73728,
 weight_bytes=2290000000, arm B, and assumed cloud/network profiles are gone.
 
 Config space: 48 = placement x residency x kv x weight x tier (full factorial).
@@ -42,6 +43,11 @@ OUT_DIR = ROOT / "derived" / "d1_replay"
 C2_SEAL = ROOT / "derived/c2_ttft/sealed_62395fdb-1899-415f-b708-6adc81a24dda"
 C2_PROBES = C2_SEAL / "artifacts/probes.ndjson"
 C2_SID = "62395fdb-1899-415f-b708-6adc81a24dda"
+
+CAP4_SID = "2b3316b6-7f6e-474f-9177-bd5a89aeb58c"
+CAP4_SEAL = ROOT / f"derived/cap4/sealed_{CAP4_SID}"
+CAP4_SUMMARY = CAP4_SEAL / "summary.json"
+CAP4_TAG = f"MEASURED({CAP4_SID[:8]})"
 
 CEILING_A_MANIFEST = (
     ROOT / "derived/ceiling_a/sealed_ad7b9288-42e6-42e8-be3e-ad1a1b1abc4c/manifest.json"
@@ -201,13 +207,24 @@ def _eval_quad(coef: tuple[float, float, float], x: float) -> float:
     return a + b * x + c * x * x
 
 
+def _eval_power(coef: tuple[float, float], x: float) -> float:
+    """prefill_s = C * n^b."""
+    c, b = coef
+    return float(c) * (float(x) ** float(b))
+
+
 # ---------------------------------------------------------------------------
 # Component model pack
 # ---------------------------------------------------------------------------
 @dataclass
 class ModelPack:
-    prefill_gpu_4b: tuple[float, float, float]
-    prefill_gpu_4b_tag: str
+    # CAP-4 power law per KV: (C, b) for prefill_s = C * n^b
+    prefill_gpu_power: dict[str, tuple[float, float]]
+    prefill_gpu_power_tag: dict[str, str]
+    prefill_gpu_fit_range_n: tuple[int, int]
+    # Legacy C-2 quadratic (f16 probes) retained for POST-CAP4 under/over-pred report
+    prefill_gpu_legacy_quad: tuple[float, float, float]
+    prefill_gpu_legacy_quad_tag: str
     prefill_cpu_4b: tuple[float, float, float]
     prefill_cpu_4b_tag: str
     tier_scale_8b: Tagged
@@ -226,11 +243,17 @@ class ModelPack:
     cloud_linear: dict[str, Any]
     sources: dict[str, Any] = field(default_factory=dict)
 
+    @property
+    def prefill_gpu_4b_tag(self) -> str:
+        """Representative tag for configs.json component_tags (u8 default / range)."""
+        tags = self.prefill_gpu_power_tag
+        return tags.get("u8") or next(iter(tags.values()))
+
 
 def load_models() -> ModelPack:
     sources: dict[str, Any] = {}
 
-    # --- gpu_only-4B prefill from C-2 probes (PROVISIONAL) ---
+    # --- Legacy gpu_only-4B quadratic from C-2 probes (POST-CAP4: superseded at depth) ---
     by_n: dict[int, list[float]] = defaultdict(list)
     for line in C2_PROBES.read_text(encoding="utf-8").splitlines():
         if not line.strip():
@@ -243,9 +266,56 @@ def load_models() -> ModelPack:
         by_n[int(row["n_tokens"])].append(float(row["prefill_s"]))
     xs = sorted(by_n)
     ys = [statistics.median(by_n[n]) for n in xs]
-    prefill_gpu = _quad_fit([float(x) for x in xs], ys)
-    prefill_gpu_tag = f"PROVISIONAL MEASURED({C2_SID}) fit_n={xs}"
-    sources["prefill_gpu_4b_points"] = {str(n): statistics.median(by_n[n]) for n in xs}
+    prefill_gpu_legacy = _quad_fit([float(x) for x in xs], ys)
+    prefill_gpu_legacy_tag = (
+        f"LEGACY PROVISIONAL MEASURED({C2_SID}) quadratic fit_n={xs} "
+        f"(superseded at depth by {CAP4_TAG})"
+    )
+    sources["prefill_gpu_legacy_quad_points"] = {str(n): statistics.median(by_n[n]) for n in xs}
+    sources["prefill_gpu_legacy_quad_coef"] = {
+        "a": prefill_gpu_legacy[0],
+        "b": prefill_gpu_legacy[1],
+        "c": prefill_gpu_legacy[2],
+        "form": "a + b*n + c*n^2",
+    }
+
+    # --- CAP-4 power-law gpu prefill per KV arm ---
+    cap4 = _read_json(CAP4_SUMMARY)
+    assert cap4.get("session_id") == CAP4_SID or cap4.get("session_id", "").startswith(
+        CAP4_SID[:8]
+    )
+    per_arm = cap4["analysis"]["per_arm"]
+    prefill_gpu_power: dict[str, tuple[float, float]] = {}
+    prefill_gpu_power_tag: dict[str, str] = {}
+    fit_range: tuple[int, int] | None = None
+    sources["prefill_gpu_cap4_points"] = {}
+    sources["prefill_gpu_cap4_fits"] = {}
+    for arm_id, block in per_arm.items():
+        kv = arm_id.replace("gpu_only_", "")
+        fit = block["power_law_fit"]
+        c_coef = float(fit["C"])
+        b_exp = float(fit["b"])
+        fr = fit["fit_range_n"]
+        fit_range = (int(fr[0]), int(fr[1]))
+        prefill_gpu_power[kv] = (c_coef, b_exp)
+        prefill_gpu_power_tag[kv] = (
+            f"{CAP4_TAG} power_law prefill_s=C*n^b "
+            f"C={c_coef:.6e} b={b_exp:.4f} fit_range_n={list(fr)} arm={arm_id}"
+        )
+        sources["prefill_gpu_cap4_points"][kv] = {
+            str(k): float(v) for k, v in block["median_prefill_s_by_n"].items()
+        }
+        sources["prefill_gpu_cap4_fits"][kv] = {
+            "C": c_coef,
+            "b": b_exp,
+            "fit_range_n": list(fr),
+            "form": "prefill_s = C * n^b",
+            "tag": CAP4_TAG,
+            "run_id": CAP4_SID,
+        }
+    if fit_range is None:
+        raise RuntimeError(f"CAP-4 summary missing power_law fits: {CAP4_SUMMARY}")
+    sources["prefill_gpu_cap4_run_id"] = CAP4_SID
 
     # --- cpu-p-4B prefill from ceiling_a sealed arm A ---
     man = _read_json(CEILING_A_MANIFEST)
@@ -430,8 +500,11 @@ def load_models() -> ModelPack:
     }
 
     return ModelPack(
-        prefill_gpu_4b=prefill_gpu,
-        prefill_gpu_4b_tag=prefill_gpu_tag,
+        prefill_gpu_power=prefill_gpu_power,
+        prefill_gpu_power_tag=prefill_gpu_power_tag,
+        prefill_gpu_fit_range_n=fit_range,
+        prefill_gpu_legacy_quad=prefill_gpu_legacy,
+        prefill_gpu_legacy_quad_tag=prefill_gpu_legacy_tag,
         prefill_cpu_4b=prefill_cpu,
         prefill_cpu_4b_tag=prefill_cpu_tag,
         tier_scale_8b=tier_scale,
@@ -455,11 +528,26 @@ def load_models() -> ModelPack:
 # ---------------------------------------------------------------------------
 # Evaluators
 # ---------------------------------------------------------------------------
-def prefill_s(models: ModelPack, n: float, *, placement: str, tier: str) -> Tagged:
+def prefill_s(
+    models: ModelPack, n: float, *, placement: str, tier: str, kv: str = "u8"
+) -> Tagged:
     n = max(1.0, float(n))
     if placement == "gpu_only":
-        v = max(0.0, _eval_quad(models.prefill_gpu_4b, n))
-        tag = models.prefill_gpu_4b_tag
+        if kv not in models.prefill_gpu_power:
+            raise ValueError(f"unknown kv for CAP-4 prefill: {kv}")
+        lo, hi = models.prefill_gpu_fit_range_n
+        if n < lo:
+            # Below CAP-4 fit range: retain C-2 quadratic (turn-1 arms agree; C-2).
+            v = max(0.0, _eval_quad(models.prefill_gpu_legacy_quad, n))
+            tag = (
+                f"{models.prefill_gpu_legacy_quad_tag}; "
+                f"used_because_n<{lo}_outside_{CAP4_TAG}_fit_range"
+            )
+        else:
+            v = max(0.0, _eval_power(models.prefill_gpu_power[kv], n))
+            tag = models.prefill_gpu_power_tag[kv]
+            if n > hi:
+                tag = f"{tag}; extrapolated_above_fit_range"
     elif placement == "cpu-p":
         v = max(0.0, _eval_quad(models.prefill_cpu_4b, n))
         tag = models.prefill_cpu_4b_tag
@@ -484,7 +572,9 @@ def delta_prefill_s(
     n_cached = max(0.0, float(n_cached))
     delta = max(0.0, float(delta))
     if residency == "NON_RESIDENT":
-        return prefill_s(models, n_cached + delta, placement=placement, tier=tier)
+        return prefill_s(
+            models, n_cached + delta, placement=placement, tier=tier, kv=kv
+        )
     # RESIDENT
     coef = models.delta_resident[kv]
     v = coef["a0"] + coef["n"] * n_cached + coef["n_times_d"] * n_cached * delta
@@ -492,8 +582,12 @@ def delta_prefill_s(
     tag = models.delta_resident_tag
     if placement == "cpu-p":
         # Scale resident delta by cpu/gpu prefill ratio at n_cached+delta
-        g = prefill_s(models, max(n_cached, 1.0), placement="gpu_only", tier="4B")
-        c = prefill_s(models, max(n_cached, 1.0), placement="cpu-p", tier="4B")
+        g = prefill_s(
+            models, max(n_cached, 1.0), placement="gpu_only", tier="4B", kv=kv
+        )
+        c = prefill_s(
+            models, max(n_cached, 1.0), placement="cpu-p", tier="4B", kv=kv
+        )
         scale = float(c.value) / float(g.value) if float(g.value) > 0 else 1.0
         v *= scale
         tag = f"ASSUMED(from=gpu_only RESIDENT {DP_41_SID} * cpu/gpu prefill ratio)"
@@ -930,7 +1024,7 @@ def local_turn_times(
         n = turn.prompt_tokens
         if residency == "RESIDENT":
             if i == 0 or n_cached <= 0:
-                ttft = prefill_s(models, n, placement=placement, tier=tier)
+                ttft = prefill_s(models, n, placement=placement, tier=tier, kv=kv)
             else:
                 d = max(0, n - n_cached)
                 ttft = delta_prefill_s(
@@ -943,7 +1037,7 @@ def local_turn_times(
                     tier=tier,
                 )
         else:
-            ttft = prefill_s(models, n, placement=placement, tier=tier)
+            ttft = prefill_s(models, n, placement=placement, tier=tier, kv=kv)
         dec = decode_tok_s(models, n, placement=placement, weight=weight, tier=tier, kv=kv)
         decode_s = float(turn.generated_tokens) / float(dec.value) if float(dec.value) > 0 else 0.0
         # NON_RESIDENT multi-generate turns re-prefill each generate() call.
@@ -989,7 +1083,7 @@ def cold_start_slo_limit(
     best = 0
     while lo <= hi:
         mid = (lo + hi) // 2
-        ttft = prefill_s(models, mid, placement=placement, tier=tier)
+        ttft = prefill_s(models, mid, placement=placement, tier=tier, kv=kv)
         dec = decode_tok_s(models, mid, placement=placement, weight=weight, tier=tier, kv=kv)
         ok = float(ttft.value) <= TTFT_SLO_S and float(dec.value) >= DECODE_SLO_TOK_S
         if ok:
@@ -1487,7 +1581,9 @@ def x2_per_turn_decomposition(models: ModelPack) -> dict[str, Any]:
                     # Use same residency/placement as cell; turn0-like prefill at n
                     # For RESIDENT subsequent turns use delta model with prev context —
                     # approximate with turn prompt_tokens and delta vs prev when present.
-                    pred_ttft = prefill_s(models, n, placement=cell["placement"], tier="4B")
+                    pred_ttft = prefill_s(
+                        models, n, placement=cell["placement"], tier="4B", kv="u8"
+                    )
                     if cell["residency"] == "RESIDENT":
                         dlt = tm.get("delta_tokens_vs_prev_turn")
                         if dlt is not None and int(tm.get("turn") or 0) > 0:
@@ -1980,7 +2076,11 @@ def run(*, write_outputs: bool = True) -> dict[str, Any]:
             "memory": "objective (peak commit), not a constraint; no ceiling",
         },
         "component_tags": {
-            "prefill_gpu_4b": models.prefill_gpu_4b_tag,
+            "prefill_gpu_power_law": {
+                kv: models.prefill_gpu_power_tag[kv] for kv in models.prefill_gpu_power
+            },
+            "prefill_gpu_fit_range_n": list(models.prefill_gpu_fit_range_n),
+            "prefill_gpu_legacy_quad": models.prefill_gpu_legacy_quad_tag,
             "prefill_cpu_4b": models.prefill_cpu_4b_tag,
             "delta_resident": models.delta_resident_tag,
             "decode_bw": models.decode_bw.as_dict(),
@@ -2015,7 +2115,12 @@ def run(*, write_outputs: bool = True) -> dict[str, Any]:
         "cloud_fit": cloud_fit,
         "x2_decomposition": x2_decomp,
         "models_meta": {
-            "prefill_gpu_coef": models.prefill_gpu_4b,
+            "prefill_gpu_power": {
+                kv: {"C": coef[0], "b": coef[1]}
+                for kv, coef in models.prefill_gpu_power.items()
+            },
+            "prefill_gpu_fit_range_n": list(models.prefill_gpu_fit_range_n),
+            "prefill_gpu_legacy_quad_coef": models.prefill_gpu_legacy_quad,
             "prefill_cpu_coef": models.prefill_cpu_4b,
             "delta_resident": models.delta_resident,
             "sources": models.sources,

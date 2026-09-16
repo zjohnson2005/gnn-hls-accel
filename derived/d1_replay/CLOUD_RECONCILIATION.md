@@ -1,6 +1,6 @@
 # Cloud cost exact-lookup test (D-1c; not H-1 reported number)
 
-Generated: 2026-09-08T23:04:30.412904+00:00
+Generated: 2026-09-16T17:52:29.342526+00:00
 
 sum over API calls of cloud_usd(prompt_tokens, completion_tokens); each call resent full context; tokens from cloud report, not local trace
 

@@ -1,6 +1,6 @@
 # X-2 replay check
 
-Generated: 2026-09-08T23:04:30.433396+00:00
+Generated: 2026-09-16T17:52:29.362002+00:00
 
 Replay the four X-2 cells from component curves (int4-4B, kv=u8).
 No pass/fail threshold — report the error.

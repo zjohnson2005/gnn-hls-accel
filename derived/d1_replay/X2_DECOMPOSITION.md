@@ -1,6 +1,6 @@
 # X-2 per-turn decomposition (holdout)
 
-Generated: 2026-09-08T23:04:30.420041+00:00
+Generated: 2026-09-16T17:52:29.349636+00:00
 
 No parameter fitted to X-2.
 

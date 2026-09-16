@@ -92,3 +92,20 @@
 - `gpu_only_u8`: [12000, 16000, 20000, 26000, 32000, 40000, 46000, 52000, 58000, 64000, 70000, 76000]
 - `gpu_only_u4`: [12000, 16000, 20000, 26000, 32000, 40000, 46000, 52000, 58000, 64000, 70000, 76000]
 
+## POST-CAP4 fold-in
+
+Generated: 2026-09-16T17:52:13.632559+00:00
+
+### Timing variance result
+
+On Platform A under CAP-4 interleaved gpu_only RESIDENT, within-rung prefill CV first exceeds ~10% at n=32000 on all three KV arms. That is the depth beyond which this platform stops reproducing prefill timing to the low-n instrument standard. CV is not monotonic thereafter (paging / quiescence pressure), but 32000 is the first crossing.
+
+First n with CV > 10%: `gpu_only_f16`=32000, `gpu_only_u4`=32000, `gpu_only_u8`=32000
+
+Low-n contrast: 0.03% cross-session canary agreement (`c4ddfd55-f64f-4c72-842c-a6470daaf5ca` vs W-2 ref); see `POST_CAP4.md`.
+
+### Headline arithmetic (replaces 9,750→46,000 / ~2 min)
+
+9,750 tokens @ 10 s TTFT SLO (c647f0c7 u8/u4) versus 46,000 tokens @ median prefill 230.4–252.7 s (full min–max across arms 165.3–254.5 s; 2b3316b6-7f6e-474f-9177-bd5a89aeb58c). Token depth ratio 4.72×; time ratio vs 10 s SLO is 23.0–25.3× (not ~12× / ~2 min).
+
+Full note: `derived/cap4/POST_CAP4.md`. Prefill model tag: `MEASURED(2b3316b6)`.
