@@ -1,0 +1,228 @@
+
+{
+  "protocol_version": "tlp01_v1",
+  "experiment": "TLP-01",
+  "status": "template_requires_t0_lock",
+  "supersedes": null,
+  "claim_under_test": "HISTORICAL tlp01_v1 template — superseded by tlp01_v2. Do not quote. Agent workloads contain measurable latent turn-level parallelism under in-order harness loops.",
+  "study_form": "trace_driven_limit_study",
+  "pre_registered_null": "Tier-C TLP < 1.5x broadly; agents are inherently serial at the turn level and the in-order loop is near-optimal.",
+  "validity_class": "turn_level_parallelism",
+  "phases": {
+    "T0": "trace_collection",
+    "T1": "dependence_graph_construction",
+    "T2": "scheduling_simulation"
+  },
+  "trace_sources": {
+    "S1": {
+      "name": "existing_artifacts",
+      "description": "Extraction from promoted mock-sweep and live-ladder run directories; standing task suite classes SO/RE/SH/CH/CN/FO/LH/RH.",
+      "requires_live_model": false,
+      "required_for_v1": true
+    },
+    "S2": {
+      "name": "fresh_multi_tool_traces",
+      "description": "Live OpenAI harness on tasks designed to contain independent tool calls.",
+      "requires_live_model": true,
+      "backend": "openai",
+      "target_sessions": 50,
+      "seeds": 5,
+      "temperature": 0,
+      "required_for_v1": true,
+      "task_design_rationale": "The standing suite was never designed to expose parallelism; S2 deliberately includes multi-tool shapes. Manifest published at lock."
+    },
+    "S3": {
+      "name": "adapter_arm_claude_code",
+      "description": "Rithwik adapter arm (Claude Code traces). Optional generalization axis.",
+      "requires_live_model": false,
+      "required_for_v1": false,
+      "absence_is": "stated_scope_limit"
+    }
+  },
+  "trace_schema": {
+    "format": "jsonl",
+    "version": "tlp01_trace_v1",
+    "event_types": ["turn", "tool_call", "delegation"],
+    "required_fields": [
+      "session_id",
+      "seq",
+      "event_type",
+      "t_issue_ns",
+      "t_complete_ns",
+      "inputs_hash",
+      "output_hash",
+      "output_text_ref",
+      "tool_name",
+      "args_ref",
+      "result_ref",
+      "stage_timings",
+      "harness_order_index"
+    ],
+    "content_store": "refs_into_content_store",
+    "immutability": "frozen_at_collection_never_edited",
+    "hashing": "per_trace_sha256"
+  },
+  "dependence_oracles": {
+    "Tier_S": {
+      "name": "syntactic_conservative_precise",
+      "role": "ceiling_edge_set_undercounts_dependences",
+      "edge_rule": "exact_string_span_containment_or_tool_result_id_or_path_or_delegation_parent_child",
+      "deterministic": true,
+      "headline_role": "TLP_ceiling"
+    },
+    "Tier_C": {
+      "name": "conservative_complete",
+      "role": "floor_edge_set_overcounts_dependences",
+      "edge_rule": "edge_unless_zero_ngram_overlap_and_disjoint_tool_namespaces_and_no_positional_adjacency",
+      "ngram_n": 3,
+      "ngram_overlap_threshold": 0,
+      "deterministic": true,
+      "headline_role": "TLP_floor"
+    },
+    "Tier_J": {
+      "name": "judged_secondary",
+      "role": "characterize_S_C_gap_only",
+      "headline_load_bearing": false,
+      "human_calibration_pairs": 100,
+      "demote_to_appendix_if_kappa_below": 0.6,
+      "required_publications": [
+        "judge_prompts",
+        "judge_model_version",
+        "all_rationales",
+        "human_agreement_kappa"
+      ]
+    },
+    "control_dependences": {
+      "separate_from_data": true,
+      "broken_by": "machine_model_speculation_assumptions"
+    },
+    "headline_form": "S_C_bracket_never_point"
+  },
+  "machine_models": {
+    "M0": {
+      "name": "baseline_in_order",
+      "assumptions": "harness_actual_recorded_execution",
+      "isolates": "denominator_and_simulator_validation"
+    },
+    "M1": {
+      "name": "oracle_ooo_infinite_width",
+      "assumptions": "perfect_dependence_knowledge_infinite_issue_zero_orch_perfect_control_speculation",
+      "isolates": "absolute_TLP_ceiling"
+    },
+    "M2": {
+      "name": "M1_plus_real_T_orch",
+      "assumptions": "every_unit_pays_measured_per_turn_orch_cost_on_its_path",
+      "isolates": "software_floor_tax_on_parallelism"
+    },
+    "M3": {
+      "name": "M2_plus_finite_width",
+      "assumptions": "bounded_concurrent_issue",
+      "widths": [2, 4, 8, null],
+      "isolates": "width_knee"
+    },
+    "M4": {
+      "name": "M3_plus_realistic_control_speculation",
+      "assumptions": "next_dispatch_predictor_on_held_out_traces; misprediction_pays_speculative_build_waste",
+      "misprediction_penalty": {
+        "software_ns": 10000000,
+        "praetor_ns": 20000,
+        "praetor_tier": "D",
+        "praetor_label": "Tier D design target - projection from measured relationship, not a result. Promotion path: csynth."
+      },
+      "isolates": "harvestable_in_practice"
+    },
+    "M5": {
+      "name": "M4_plus_provider_rate_limits",
+      "assumptions": "API_concurrency_caps_from_live_ladder_c25_to_c50_throttle",
+      "rate_limit_concurrency_cap": 25,
+      "isolates": "deployable_today"
+    }
+  },
+  "predictor_substudy": {
+    "train_fraction": 0.8,
+    "metrics": ["top1_accuracy", "top3_accuracy"],
+    "per_task_class": true,
+    "pre_registered_favorable_top1": 0.6,
+    "both_outcomes_prewritten": true
+  },
+  "gates": {
+    "G_V": {
+      "name": "simulator_validation",
+      "rule": "M0_replay_makespan_within_relative_tolerance_of_recorded",
+      "relative_tolerance": 0.05,
+      "failure_action": "block_all_counterfactual_claims"
+    },
+    "G_D": {
+      "name": "dependence_bracket_sanity",
+      "rule": "Tier_S_edge_set_subseteq_Tier_C_edge_set_on_every_trace",
+      "report": "S_C_disagreement_rate_per_task_class"
+    },
+    "G_A": {
+      "name": "acyclicity_and_conservation",
+      "rules": [
+        "every_graph_is_DAG",
+        "every_trace_event_appears_exactly_once",
+        "simulated_work_conserved_vs_trace_work"
+      ]
+    },
+    "G_R": {
+      "name": "replication",
+      "required_seeds": 5,
+      "report": "TLP_bands_across_seeds_never_points"
+    },
+    "G_J": {
+      "name": "judge_calibration",
+      "kappa_threshold": 0.6,
+      "failure_action": "demote_Tier_J_to_appendix"
+    }
+  },
+  "timer_resolution": {
+    "inherited_standing_principle": true,
+    "rule": "all_per_stage_timings_carry_original_resolution_floors; no_derived_quantity_quoted_below_input_resolution",
+    "principle_source": "CAP-01 died-ledger #5"
+  },
+  "claim_ladder": {
+    "rung_1": {
+      "name": "field_founding",
+      "criterion": "Tier_C_M1_speedup_ge_3x_on_multi_tool_task_classes",
+      "language": "SUPERSEDED — see tlp01_v2 ceiling_track.rung_1a"
+    },
+    "rung_2": {
+      "name": "taxonomy",
+      "criterion": "parallelism_concentrated_in_subset_of_task_classes",
+      "language": "TLP taxonomy — which agent work is parallel, which is inherently serial"
+    },
+    "rung_3": {
+      "name": "honest_null",
+      "criterion": "Tier_C_TLP_lt_1.5x_broadly",
+      "language": "agents are inherently serial at the turn level; speculation and pipelining become the only harvestable levers"
+    }
+  },
+  "headline_numbers": {
+    "available_TLP": "M1_Tier_S",
+    "harvestable_now": "M4_Tier_C",
+    "floor_tax_on_parallelism": "M2_minus_M1_gap"
+  },
+  "blocked_claims": [
+    "Never quote a TLP point estimate — always the S/C bracket with tier named.",
+    "Never present M1 (oracle) numbers as achievable; M4/M5 are the deployable claims.",
+    "Never let Tier-J (LLM-judged) edges into a headline number.",
+    "Never generalize beyond the traced task classes and harnesses; S3 absence (if absent) is a stated limit.",
+    "The Praetor speculation sub-variant in M4 uses Tier-D penalty constants — labeled every time; promotion path csynth.",
+    "'First agent microarchitecture' is a POSITIONING sentence for the founded-field frame, not a measured claim; it never appears in a results section."
+  ],
+  "projection": {
+    "tier": "D",
+    "praetor_misprediction_penalty_us": 20,
+    "measured_arm": false,
+    "required_label": "Tier D design target - projection from measured relationship, not a result. Promotion path: csynth.",
+    "blocked_subject_claim": "Praetor achieves"
+  },
+  "lock_fields": {
+    "trace_schema_sha256": null,
+    "s2_task_manifest_sha256": null,
+    "expectations_sha256": null,
+    "dependence_oracle_config_sha256": null,
+    "machine_model_ladder_sha256": null
+  }
+}

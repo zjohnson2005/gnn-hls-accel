@@ -494,80 +494,128 @@ def run_session(
             flush=True,
         )
 
-    if pipeline_mode == "triple_resident":
-        for entry in entries:
-            eid = str(entry["id"])
-            order = _arm_order_for_entry(eid, seed=interleave_seed)
-            for arm_id in order:
-                _run_cell(entry, arm_id, order)
-    else:
-        # Block interleave: within each block, arm-major (3 loads / block_size entries).
-        for block_start in range(0, len(entries), block_size):
-            block = entries[block_start : block_start + block_size]
-            # Rotate which arm runs first across blocks (seeded).
-            rng = random.Random(f"{interleave_seed}:block:{block_start}")
-            arm_cycle = list(ARMS)
-            rng.shuffle(arm_cycle)
-            for arm_id in arm_cycle:
-                for entry in block:
-                    eid = str(entry["id"])
-                    order = _arm_order_for_entry(eid, seed=interleave_seed)
+    status = "complete"
+    abort_reason: str | None = None
+    abort_verbatim: str | None = None
+    summary_out: dict[str, Any] | None = None
+
+    try:
+        if pipeline_mode == "triple_resident":
+            for entry in entries:
+                eid = str(entry["id"])
+                order = _arm_order_for_entry(eid, seed=interleave_seed)
+                for arm_id in order:
                     _run_cell(entry, arm_id, order)
+        else:
+            # Block interleave: within each block, arm-major (3 loads / block_size entries).
+            for block_start in range(0, len(entries), block_size):
+                block = entries[block_start : block_start + block_size]
+                # Rotate which arm runs first across blocks (seeded).
+                rng = random.Random(f"{interleave_seed}:block:{block_start}")
+                arm_cycle = list(ARMS)
+                rng.shuffle(arm_cycle)
+                for arm_id in arm_cycle:
+                    for entry in block:
+                        eid = str(entry["id"])
+                        order = _arm_order_for_entry(eid, seed=interleave_seed)
+                        _run_cell(entry, arm_id, order)
 
-    # Require full matrix before analysis seal.
-    missing = [
-        (eid, arm)
-        for eid in entry_ids
-        for arm in ARMS
-        if eid not in by_arm[arm]
-    ]
-    if missing:
-        raise SystemExit(f"REFUSED -- incomplete matrix; missing {len(missing)} cells")
+        # Require full matrix before analysis seal.
+        missing = [
+            (eid, arm)
+            for eid in entry_ids
+            for arm in ARMS
+            if eid not in by_arm[arm]
+        ]
+        if missing:
+            raise SystemExit(f"REFUSED -- incomplete matrix; missing {len(missing)} cells")
 
-    # Resume path: re-fold per-cell prompt digests recorded in the ledger.
-    if env_session.prompt_update_count == 0:
-        for arm_rows in by_arm.values():
-            for led in arm_rows.values():
-                digest = led.get("prompt_render_sha256")
-                if isinstance(digest, str) and len(digest) == 64:
-                    env_session.add_prompt_digest(digest)
+        # Resume path: re-fold per-cell prompt digests recorded in the ledger.
+        if env_session.prompt_update_count == 0:
+            for arm_rows in by_arm.values():
+                for led in arm_rows.values():
+                    digest = led.get("prompt_render_sha256")
+                    if isinstance(digest, str) and len(digest) == 64:
+                        env_session.add_prompt_digest(digest)
 
-    paired = analyze_paired(by_arm, entry_ids)
-    _write_json(out_dir / "paired_analysis.json", paired)
+        paired = analyze_paired(by_arm, entry_ids)
+        _write_json(out_dir / "paired_analysis.json", paired)
 
-    run_environment = env_session.finalize()
-    plan["run_environment"] = run_environment
-    plan["prompt_render_sha256"] = run_environment["prompt_render_sha256"]
-    _write_json(out_dir / "plan.json", plan)
+        run_environment = env_session.finalize()
+        plan["run_environment"] = run_environment
+        plan["prompt_render_sha256"] = run_environment["prompt_render_sha256"]
+        _write_json(out_dir / "plan.json", plan)
 
-    summary = {
-        "kind": "q_kv_quality",
-        "run_id": run_id,
-        "status": "complete",
-        "measurement_kind": "MEASURED",
-        "cloud_usd": 0.0,
-        "n_entries": len(entry_ids),
-        "n_cells": len(entry_ids) * len(ARMS),
-        "session_wall_s": time.perf_counter() - t_session0,
-        "finished_utc": _utc_now(),
-        "per_arm": paired["per_arm"],
-        "falsification": paired["falsification"],
-        "predictions_registered_utc": pred.get("registered_utc"),
-        "w3_unset_kv": pred.get("w3_unset_kv_readback"),
-        "scorer": assert_scorer_version(),
-        "session_design": "interleaved",
-        "arm_order": list(ARMS),
-        "available_mb_start": run_environment["available_mb_start"],
-        "available_mb_end": run_environment["available_mb_end"],
-        "prompt_render_sha256": run_environment["prompt_render_sha256"],
-        "run_environment": run_environment,
-    }
-    _write_json(out_dir / "summary.json", summary)
-    _write_json(out_dir / "entry_quality.json", {"entries": quality_rows})
-    _write_json(out_dir / "turn_ledger.json", {"by_arm": by_arm, "entry_ids": entry_ids})
-    _write_json(out_dir / "cell_log.json", {"cells": cell_log})
+        summary_out = {
+            "kind": "q_kv_quality",
+            "run_id": run_id,
+            "status": "complete",
+            "measurement_kind": "MEASURED",
+            "cloud_usd": 0.0,
+            "n_entries": len(entry_ids),
+            "n_cells": len(entry_ids) * len(ARMS),
+            "session_wall_s": time.perf_counter() - t_session0,
+            "finished_utc": _utc_now(),
+            "per_arm": paired["per_arm"],
+            "falsification": paired["falsification"],
+            "predictions_registered_utc": pred.get("registered_utc"),
+            "w3_unset_kv": pred.get("w3_unset_kv_readback"),
+            "scorer": assert_scorer_version(),
+            "session_design": "interleaved",
+            "arm_order": list(ARMS),
+            "available_mb_start": run_environment["available_mb_start"],
+            "available_mb_end": run_environment["available_mb_end"],
+            "prompt_render_sha256": run_environment["prompt_render_sha256"],
+            "run_environment": run_environment,
+        }
+    except BaseException as exc:
+        status = "aborted"
+        abort_reason = type(exc).__name__
+        abort_verbatim = str(exc)
+        raise
+    finally:
+        if summary_out is None:
+            # Mid-session abort: persist what completed; do not invent paired analysis.
+            partial_env = plan.get("run_environment") or {
+                "available_mb_start": float(mb_start),
+                "session_design": "interleaved",
+                "arm_order": list(ARMS),
+            }
+            last_mb = partial_env.get("available_mb_end")
+            summary_out = {
+                "kind": "q_kv_quality",
+                "run_id": run_id,
+                "status": status,
+                "abort_reason": abort_reason,
+                "abort_verbatim": abort_verbatim,
+                "measurement_kind": "MEASURED",
+                "cloud_usd": 0.0,
+                "n_entries": len(entry_ids),
+                "n_cells_completed": len(done),
+                "n_cells_planned": len(entry_ids) * len(ARMS),
+                "session_wall_s": time.perf_counter() - t_session0,
+                "finished_utc": _utc_now(),
+                "predictions_registered_utc": pred.get("registered_utc"),
+                "session_design": "interleaved",
+                "arm_order": list(ARMS),
+                "available_mb_start": partial_env.get("available_mb_start"),
+                "available_mb_end": last_mb,
+                "run_environment": partial_env,
+                "completed_cells": sorted([list(x) for x in done]),
+            }
+            plan["status"] = status
+            plan["abort_reason"] = abort_reason
+            plan["abort_verbatim"] = abort_verbatim
+            _write_json(out_dir / "plan.json", plan)
+        _write_json(out_dir / "summary.json", summary_out)
+        _write_json(out_dir / "entry_quality.json", {"entries": quality_rows})
+        _write_json(out_dir / "turn_ledger.json", {"by_arm": by_arm, "entry_ids": entry_ids})
+        _write_json(out_dir / "cell_log.json", {"cells": cell_log})
 
-    if seal:
+    assert summary_out is not None
+    summary = summary_out
+
+    if seal and status == "complete":
         tree = _sha256_tree(out_dir, exclude={".sealed"})
         seal_doc = {
             "run_id": run_id,

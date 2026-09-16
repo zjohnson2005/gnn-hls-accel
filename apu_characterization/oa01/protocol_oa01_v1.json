@@ -1,0 +1,142 @@
+{
+  "protocol_version": "oa01_v1",
+  "status": "pre_registered_locked",
+  "validity_class": "authentic_end_to_end_agent_trace",
+  "locked_at_utc": "2026-07-16",
+  "authenticity_contract": [
+    "subject source is upstream and unmodified",
+    "subject prompts sampling and native stops are not overridden",
+    "every launched trajectory is retained",
+    "external observation caps produce censoring not agent failure",
+    "authenticity takes precedence over model-internal timing precision"
+  ],
+  "subject": {
+    "repository": "https://github.com/SWE-agent/mini-swe-agent",
+    "commit": "388da74aad620a384ab47669b17c52133e30e7c3",
+    "install": "git+https://github.com/SWE-agent/mini-swe-agent.git@388da74aad620a384ab47669b17c52133e30e7c3",
+    "config": "packaged swebench.yaml",
+    "routing_overrides_only": [
+      "model_name",
+      "model.model_kwargs.api_base"
+    ],
+    "observed_defaults": {
+      "step_limit": 250,
+      "cost_limit_usd": 3.0,
+      "environment_timeout_s": 60,
+      "temperature_override": null,
+      "seed_override": null,
+      "stream_override": null,
+      "parallel_tool_calls": true
+    }
+  },
+  "workload": {
+    "dataset": "princeton-nlp/SWE-bench_Lite",
+    "dataset_revision": "6ec7bb89b9342f664a54a6e0a6ea6501d3437cc2",
+    "split": "test",
+    "population_size": 300,
+    "sample_n": 15,
+    "sample_seed": 20260716,
+    "sample_algorithm": "sort instance_id ascending then random.Random(seed).sample(population, 15)"
+  },
+  "task_manifest_path": "apu_characterization/oa01/task_manifest.json",
+  "task_manifest_sha256": "6559cdf9b36847141faf97fe3cfa96e045dd1fb374a0395149dbd337ff1d072f",
+  "models": {
+    "smoke": "openai/gpt-4o-mini",
+    "main": "openai/gpt-4.1"
+  },
+  "phases": {
+    "S": {
+      "task_orders": [
+        0
+      ],
+      "atlas_member": false,
+      "turn_cap": 15,
+      "wall_clock_cap_s": 3600,
+      "budget_flag_usd": 1.0
+    },
+    "P": {
+      "task_orders": [
+        0,
+        1,
+        2
+      ],
+      "atlas_member": true,
+      "turn_cap": 50,
+      "wall_clock_cap_s": 3600,
+      "budget_flag_usd": 5.0
+    },
+    "M": {
+      "task_orders": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "atlas_member": true,
+      "turn_cap": 50,
+      "wall_clock_cap_s": 3600,
+      "budget_flag_usd": 50.0
+    }
+  },
+  "budget": {
+    "trajectory_anomaly_usd": 4.0,
+    "arm_hard_flag_usd": 50.0,
+    "pilot_estimate_usd_range": [
+      0.7,
+      1.5
+    ],
+    "main_gate_pilot_mean_max_usd": 3.0,
+    "launch_policy": "sequential; stop launching at flag; finish in-flight"
+  },
+  "pricing_usd_per_1m_tokens": {
+    "gpt-4.1": {
+      "input": 2.0,
+      "cached_input": 0.5,
+      "output": 8.0
+    },
+    "gpt-4o-mini": {
+      "input": 0.15,
+      "cached_input": 0.075,
+      "output": 0.6
+    }
+  },
+  "instrumentation": {
+    "api_boundary": "transparent byte-relaying OpenAI-compatible proxy",
+    "tool_boundary": "process-level Docker executable wrapper",
+    "environment_snapshots": "asynchronous external sidecar after docker exec",
+    "orchestration": "gap-derived",
+    "subject_default_nonstreaming": true,
+    "nonstreaming_timing_policy": "retain total API span; model-internal prefill decode network are null"
+  },
+  "audit_gates": {
+    "conservation_rel": 0.02,
+    "conservation_abs_ms": 1.0,
+    "provider_cache_reconciliation": "recovered <= structural + template overhead envelope",
+    "raw_request_response_required": true,
+    "usage_cached_tokens_field_required": true,
+    "replay_bundle_required": true
+  },
+  "replay": {
+    "full_contexts": true,
+    "raw_outputs": true,
+    "tool_io": true,
+    "env_snapshot_per_exec": true,
+    "sampling_parameters": "recorded not overridden",
+    "swapped_replay_scope": "one smoke trajectory only",
+    "determinism_deviation": "provider/scaffold defaults; no forced temperature or seed"
+  },
+  "outcome": {
+    "success_metric": "official_swebench_resolved",
+    "submission_is_not_success": true,
+    "censoring_is_not_failure": true
+  },
+  "honest_scope": "one scaffold, one model, one benchmark, n=15; typical means typical-of-this-configuration; censoring explicit; gap-derived orchestration coarse; sampling nondeterministic"
+}

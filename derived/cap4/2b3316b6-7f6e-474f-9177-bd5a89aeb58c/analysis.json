@@ -1,0 +1,627 @@
+{
+  "P1": {
+    "band_s": [
+      60.0,
+      230.0
+    ],
+    "measured_median_prefill_s_at_46000": {
+      "gpu_only_f16": 252.707921875,
+      "gpu_only_u4": 239.800796875,
+      "gpu_only_u8": 230.360359375
+    },
+    "outcome": "falsified",
+    "predicted_s": 115.0
+  },
+  "P2": {
+    "any_alloc_failure": false,
+    "highest_successful_n": {
+      "gpu_only_f16": 76000,
+      "gpu_only_u4": 76000,
+      "gpu_only_u8": 76000
+    },
+    "outcome": "falsified",
+    "reason": "joint_falsifier: all three reached 46000 without ALLOC_FAILURE"
+  },
+  "P3": {
+    "any_alloc_failure": false,
+    "note": "Primary rungs start at n>=12000; C-2 already showed TTFT SLO binding near 9750 for u8/u4 and f16 ALLOC at 8000 (c647f0c7). CAP-4 asks whether ALLOC binds before the extrapolated 46k point under interleaved per-KV gpu_only RESIDENT.",
+    "outcome": "falsified"
+  },
+  "answer_a": {
+    "46000_reachable": true,
+    "measured_prefill_s_at_46000": {
+      "gpu_only_f16": 252.707921875,
+      "gpu_only_u4": 239.800796875,
+      "gpu_only_u8": 230.360359375
+    },
+    "prediction_115s": {
+      "band_s": [
+        60.0,
+        230.0
+      ],
+      "measured_median_prefill_s_at_46000": {
+        "gpu_only_f16": 252.707921875,
+        "gpu_only_u4": 239.800796875,
+        "gpu_only_u8": 230.360359375
+      },
+      "outcome": "falsified",
+      "predicted_s": 115.0
+    },
+    "question": "Is ~2 minutes / ~115 s at 46000 measured, or only extrapolated?"
+  },
+  "answer_b": {
+    "alloc_binds_before_46k": {
+      "gpu_only_f16": false,
+      "gpu_only_u4": false,
+      "gpu_only_u8": false
+    },
+    "p3": {
+      "any_alloc_failure": false,
+      "note": "Primary rungs start at n>=12000; C-2 already showed TTFT SLO binding near 9750 for u8/u4 and f16 ALLOC at 8000 (c647f0c7). CAP-4 asks whether ALLOC binds before the extrapolated 46k point under interleaved per-KV gpu_only RESIDENT.",
+      "outcome": "falsified"
+    },
+    "per_arm_first_failure_class": {
+      "gpu_only_f16": null,
+      "gpu_only_u4": null,
+      "gpu_only_u8": null
+    },
+    "per_arm_first_failure_n": {
+      "gpu_only_f16": null,
+      "gpu_only_u4": null,
+      "gpu_only_u8": null
+    },
+    "question": "Does GPU allocation ceiling bind before SLO on gpu_only?",
+    "slo_already_binds_by_n12000": true
+  },
+  "median_prefill_table": {
+    "gpu_only_f16": {
+      "12000": 13.504825195,
+      "16000": 21.57359375,
+      "20000": 32.124386718,
+      "26000": 51.842308593,
+      "32000": 80.473679687,
+      "40000": 124.303039062,
+      "46000": 252.707921875,
+      "52000": 301.92675,
+      "58000": 411.86878125,
+      "64000": 516.1146875,
+      "70000": 572.111,
+      "76000": 739.2479375
+    },
+    "gpu_only_u4": {
+      "12000": 13.550313476,
+      "16000": 21.931080078,
+      "20000": 32.104833984,
+      "26000": 52.206597656,
+      "32000": 105.01246875,
+      "40000": 143.384953125,
+      "46000": 239.800796875,
+      "52000": 274.62003125,
+      "58000": 420.3649375,
+      "64000": 341.573,
+      "70000": 551.6295625,
+      "76000": 663.5531875
+    },
+    "gpu_only_u8": {
+      "12000": 13.277133789,
+      "16000": 21.90034375,
+      "20000": 32.06515039,
+      "26000": 52.298699218,
+      "32000": 94.596367187,
+      "40000": 153.845390625,
+      "46000": 230.360359375,
+      "52000": 216.643875,
+      "58000": 370.80303125,
+      "64000": 328.81509375,
+      "70000": 568.3540625,
+      "76000": 660.426875
+    }
+  },
+  "per_arm": {
+    "gpu_only_f16": {
+      "available_mb_by_n": {
+        "12000": {
+          "available_mb_end_median": 9424.90625,
+          "available_mb_start_median": 9563.47265625
+        },
+        "16000": {
+          "available_mb_end_median": 9404.2421875,
+          "available_mb_start_median": 9398.51953125
+        },
+        "20000": {
+          "available_mb_end_median": 9496.60546875,
+          "available_mb_start_median": 9490.14453125
+        },
+        "26000": {
+          "available_mb_end_median": 9610.23046875,
+          "available_mb_start_median": 9607.3828125
+        },
+        "32000": {
+          "available_mb_end_median": 11180.71875,
+          "available_mb_start_median": 10979.22265625
+        },
+        "40000": {
+          "available_mb_end_median": 12042.90625,
+          "available_mb_start_median": 11819.58203125
+        },
+        "46000": {
+          "available_mb_end_median": 13028.08984375,
+          "available_mb_start_median": 12012.92578125
+        },
+        "52000": {
+          "available_mb_end_median": 13230.50390625,
+          "available_mb_start_median": 12837.26171875
+        },
+        "58000": {
+          "available_mb_end_median": 13183.59765625,
+          "available_mb_start_median": 12715.91796875
+        },
+        "64000": {
+          "available_mb_end_median": 13220.18359375,
+          "available_mb_start_median": 12798.33203125
+        },
+        "70000": {
+          "available_mb_end_median": 13169.48046875,
+          "available_mb_start_median": 12908.78125
+        },
+        "76000": {
+          "available_mb_end_median": 13205.5625,
+          "available_mb_start_median": 13202.8359375
+        }
+      },
+      "first_available_mb_fall_n": 16000,
+      "first_failure_class": null,
+      "first_failure_n": null,
+      "first_failure_verbatim": null,
+      "first_slo_exceeded_n": 12000,
+      "highest_successful_n": 76000,
+      "median_prefill_s_by_n": {
+        "12000": 13.504825195,
+        "16000": 21.57359375,
+        "20000": 32.124386718,
+        "26000": 51.842308593,
+        "32000": 80.473679687,
+        "40000": 124.303039062,
+        "46000": 252.707921875,
+        "52000": 301.92675,
+        "58000": 411.86878125,
+        "64000": 516.1146875,
+        "70000": 572.111,
+        "76000": 739.2479375
+      },
+      "power_law_fit": {
+        "C": 7.049676831758146e-09,
+        "b": 2.251598046194737,
+        "fit_n_list": [
+          12000,
+          16000,
+          20000,
+          26000,
+          32000,
+          40000,
+          46000,
+          52000,
+          58000,
+          64000,
+          70000,
+          76000
+        ],
+        "fit_range_n": [
+          12000,
+          76000
+        ],
+        "form": "prefill_s = C * n^b",
+        "n_points": 12,
+        "predict_46000_s": 222.2417419276886,
+        "ss_res_linear": 9219.516754327593,
+        "ss_tot_log_y": 20.97397570749291
+      },
+      "prefill_s_min_max_by_n": {
+        "12000": {
+          "max": 14.841583984,
+          "min": 13.047375976
+        },
+        "16000": {
+          "max": 21.739957031,
+          "min": 21.460964843
+        },
+        "20000": {
+          "max": 33.615578125,
+          "min": 32.100167968
+        },
+        "26000": {
+          "max": 51.872777343,
+          "min": 51.714527343
+        },
+        "32000": {
+          "max": 127.242742187,
+          "min": 77.485085937
+        },
+        "40000": {
+          "max": 128.813171875,
+          "min": 123.32959375
+        },
+        "46000": {
+          "max": 254.462625,
+          "min": 172.021859375
+        },
+        "52000": {
+          "max": 320.399125,
+          "min": 217.927328125
+        },
+        "58000": {
+          "max": 434.65015625,
+          "min": 387.91915625
+        },
+        "64000": {
+          "max": 558.3829375,
+          "min": 390.5569375
+        },
+        "70000": {
+          "max": 640.6465625,
+          "min": 555.2411875
+        },
+        "76000": {
+          "max": 773.1813125,
+          "min": 674.963
+        }
+      },
+      "reached_46000": true,
+      "rungs_completed": [
+        12000,
+        16000,
+        20000,
+        26000,
+        32000,
+        40000,
+        46000,
+        52000,
+        58000,
+        64000,
+        70000,
+        76000
+      ]
+    },
+    "gpu_only_u4": {
+      "available_mb_by_n": {
+        "12000": {
+          "available_mb_end_median": 9563.52734375,
+          "available_mb_start_median": 9595.640625
+        },
+        "16000": {
+          "available_mb_end_median": 9372.33203125,
+          "available_mb_start_median": 9374.84375
+        },
+        "20000": {
+          "available_mb_end_median": 9494.9921875,
+          "available_mb_start_median": 9488.45703125
+        },
+        "26000": {
+          "available_mb_end_median": 9586.55859375,
+          "available_mb_start_median": 9610.1171875
+        },
+        "32000": {
+          "available_mb_end_median": 11102.41796875,
+          "available_mb_start_median": 11259.75
+        },
+        "40000": {
+          "available_mb_end_median": 12039.296875,
+          "available_mb_start_median": 12042.7734375
+        },
+        "46000": {
+          "available_mb_end_median": 12805.0390625,
+          "available_mb_start_median": 12843.8125
+        },
+        "52000": {
+          "available_mb_end_median": 12855.19140625,
+          "available_mb_start_median": 13100.82421875
+        },
+        "58000": {
+          "available_mb_end_median": 12706.11328125,
+          "available_mb_start_median": 12883.29296875
+        },
+        "64000": {
+          "available_mb_end_median": 12833.43359375,
+          "available_mb_start_median": 12985.7421875
+        },
+        "70000": {
+          "available_mb_end_median": 12909.18359375,
+          "available_mb_start_median": 13292.46484375
+        },
+        "76000": {
+          "available_mb_end_median": 12777.47265625,
+          "available_mb_start_median": 13241.49609375
+        }
+      },
+      "first_available_mb_fall_n": 16000,
+      "first_failure_class": null,
+      "first_failure_n": null,
+      "first_failure_verbatim": null,
+      "first_slo_exceeded_n": 12000,
+      "highest_successful_n": 76000,
+      "median_prefill_s_by_n": {
+        "12000": 13.550313476,
+        "16000": 21.931080078,
+        "20000": 32.104833984,
+        "26000": 52.206597656,
+        "32000": 105.01246875,
+        "40000": 143.384953125,
+        "46000": 239.800796875,
+        "52000": 274.62003125,
+        "58000": 420.3649375,
+        "64000": 341.573,
+        "70000": 551.6295625,
+        "76000": 663.5531875
+      },
+      "power_law_fit": {
+        "C": 1.9836356223739442e-08,
+        "b": 2.151205039771416,
+        "fit_n_list": [
+          12000,
+          16000,
+          20000,
+          26000,
+          32000,
+          40000,
+          46000,
+          52000,
+          58000,
+          64000,
+          70000,
+          76000
+        ],
+        "fit_range_n": [
+          12000,
+          76000
+        ],
+        "form": "prefill_s = C * n^b",
+        "n_points": 12,
+        "predict_46000_s": 212.81882719704439,
+        "ss_res_linear": 16428.833252132154,
+        "ss_tot_log_y": 19.113019430974262
+      },
+      "prefill_s_min_max_by_n": {
+        "12000": {
+          "max": 13.565100585,
+          "min": 13.003280273
+        },
+        "16000": {
+          "max": 22.29724414,
+          "min": 21.62099414
+        },
+        "20000": {
+          "max": 33.592421875,
+          "min": 32.035283203
+        },
+        "26000": {
+          "max": 52.388722656,
+          "min": 51.794683593
+        },
+        "32000": {
+          "max": 133.022953125,
+          "min": 79.994226562
+        },
+        "40000": {
+          "max": 189.20453125,
+          "min": 125.57134375
+        },
+        "46000": {
+          "max": 249.965078125,
+          "min": 168.245609375
+        },
+        "52000": {
+          "max": 368.63228125,
+          "min": 218.65859375
+        },
+        "58000": {
+          "max": 429.78471875,
+          "min": 364.79909375
+        },
+        "64000": {
+          "max": 381.93771875,
+          "min": 322.19928125
+        },
+        "70000": {
+          "max": 552.35625,
+          "min": 453.517
+        },
+        "76000": {
+          "max": 673.217125,
+          "min": 660.3241875
+        }
+      },
+      "reached_46000": true,
+      "rungs_completed": [
+        12000,
+        16000,
+        20000,
+        26000,
+        32000,
+        40000,
+        46000,
+        52000,
+        58000,
+        64000,
+        70000,
+        76000
+      ]
+    },
+    "gpu_only_u8": {
+      "available_mb_by_n": {
+        "12000": {
+          "available_mb_end_median": 9595.6953125,
+          "available_mb_start_median": 9300.25
+        },
+        "16000": {
+          "available_mb_end_median": 9326.01953125,
+          "available_mb_start_median": 9325.94921875
+        },
+        "20000": {
+          "available_mb_end_median": 9490.23828125,
+          "available_mb_start_median": 9494.90625
+        },
+        "26000": {
+          "available_mb_end_median": 9579.78125,
+          "available_mb_start_median": 9586.67578125
+        },
+        "32000": {
+          "available_mb_end_median": 11237.375,
+          "available_mb_start_median": 11181.23828125
+        },
+        "40000": {
+          "available_mb_end_median": 12026.12109375,
+          "available_mb_start_median": 12039.12109375
+        },
+        "46000": {
+          "available_mb_end_median": 12725.39453125,
+          "available_mb_start_median": 12890.29296875
+        },
+        "52000": {
+          "available_mb_end_median": 12837.2265625,
+          "available_mb_start_median": 12866.05859375
+        },
+        "58000": {
+          "available_mb_end_median": 12883.49609375,
+          "available_mb_start_median": 13135.87109375
+        },
+        "64000": {
+          "available_mb_end_median": 12984.0546875,
+          "available_mb_start_median": 12909.640625
+        },
+        "70000": {
+          "available_mb_end_median": 13293.546875,
+          "available_mb_start_median": 13145.93359375
+        },
+        "76000": {
+          "available_mb_end_median": 13242.46484375,
+          "available_mb_start_median": 12784.62890625
+        }
+      },
+      "first_available_mb_fall_n": 52000,
+      "first_failure_class": null,
+      "first_failure_n": null,
+      "first_failure_verbatim": null,
+      "first_slo_exceeded_n": 12000,
+      "highest_successful_n": 76000,
+      "median_prefill_s_by_n": {
+        "12000": 13.277133789,
+        "16000": 21.90034375,
+        "20000": 32.06515039,
+        "26000": 52.298699218,
+        "32000": 94.596367187,
+        "40000": 153.845390625,
+        "46000": 230.360359375,
+        "52000": 216.643875,
+        "58000": 370.80303125,
+        "64000": 328.81509375,
+        "70000": 568.3540625,
+        "76000": 660.426875
+      },
+      "power_law_fit": {
+        "C": 2.527463597403244e-08,
+        "b": 2.1244217372829084,
+        "fit_n_list": [
+          12000,
+          16000,
+          20000,
+          26000,
+          32000,
+          40000,
+          46000,
+          52000,
+          58000,
+          64000,
+          70000,
+          76000
+        ],
+        "fit_range_n": [
+          12000,
+          76000
+        ],
+        "form": "prefill_s = C * n^b",
+        "n_points": 12,
+        "predict_46000_s": 203.39908858596317,
+        "ss_res_linear": 21134.21755814308,
+        "ss_tot_log_y": 18.6500659260343
+      },
+      "prefill_s_min_max_by_n": {
+        "12000": {
+          "max": 13.63718164,
+          "min": 13.12393164
+        },
+        "16000": {
+          "max": 22.054253906,
+          "min": 21.528511718
+        },
+        "20000": {
+          "max": 32.286710937,
+          "min": 31.993759765
+        },
+        "26000": {
+          "max": 52.52315625,
+          "min": 51.691785156
+        },
+        "32000": {
+          "max": 127.325585937,
+          "min": 83.825046875
+        },
+        "40000": {
+          "max": 166.922640625,
+          "min": 121.936007812
+        },
+        "46000": {
+          "max": 241.8601875,
+          "min": 165.25171875
+        },
+        "52000": {
+          "max": 217.448296875,
+          "min": 215.063203125
+        },
+        "58000": {
+          "max": 381.17684375,
+          "min": 320.81271875
+        },
+        "64000": {
+          "max": 394.6021875,
+          "min": 323.9404375
+        },
+        "70000": {
+          "max": 592.356375,
+          "min": 492.026125
+        },
+        "76000": {
+          "max": 802.6439375,
+          "min": 595.8115
+        }
+      },
+      "reached_46000": true,
+      "rungs_completed": [
+        12000,
+        16000,
+        20000,
+        26000,
+        32000,
+        40000,
+        46000,
+        52000,
+        58000,
+        64000,
+        70000,
+        76000
+      ]
+    }
+  },
+  "pre_registration_outcome": "falsified",
+  "stop_classification": {
+    "abort_at": {
+      "arm_id": "gpu_only_u4",
+      "n_tokens": 82000,
+      "repeat_index": 1,
+      "source": "cli_reconstruct_aborted"
+    },
+    "abort_reason": "SeamError",
+    "abort_verbatim": "cap4/gpu_only_u4/82000/1: 3 consecutive inadmissible blocks (['quiescence_refusal', 'quiescence_refusal', 'quiescence_refusal']); refusing to record a ceiling from a machine that will not hold still. Stop and report.",
+    "class": "quiescence_refusal_under_paging_pressure",
+    "note": "Sweep stopped on three consecutive quiescence refusals under paging pressure, not an allocation ceiling. No ALLOC_FAILURE cell was recorded. Prior C-2 f16 CL_OUT_OF_RESOURCES at n=8000 (c647f0c7) did not reproduce at 10\u00d7 that depth under CAP-4."
+  }
+}

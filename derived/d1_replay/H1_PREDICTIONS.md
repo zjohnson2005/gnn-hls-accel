@@ -40,8 +40,74 @@ entry stays on cloud. Completion/emission reported as floor/indep range.
 | R1 | agnostic_default | 200 | cpu-p NON_RESIDENT u8 int4-4B | 0.0000 [0.0000, 0.0000] | 0.1000 | 0.7750 | 0.0000 | 77197.8 |
 | R2a | slo_escalate | 200 | gpu_only RESIDENT u8 int4-4B | 0.0000 [0.0000, 0.0000] | 0.1000 | 0.7750 | 1.0000 | 2641.5 |
 | R2b | emission_escalate | 200 | gpu_only RESIDENT u8 int4-4B | 13.0812 [11.8752, 14.2871] | floor=0.1000/indep=0.2463 | floor=0.7750/indep=0.9213 | 1.0000 | 1983.7 |
+| R2c | full_signal_bounceback | 200 | gpu_only RESIDENT u8 int4-4B | 6.1911 [see deriv.] | floor=0.1000/indep=0.3113 | 1.0000 | 1.0000 | 4137.0 ASSUMED(R2a meas) |
 
-## Decode fit residuals (W-2)
+## R2c prediction (filed before any R2c run)
+
+Policy: on any of (a) no parseable tool call, (b) within-turn step count ≥ 5,
+(c) tool execution raises — cloud handles **that turn only**, output is
+injected into local context, local resumes next turn.
+
+### Inputs (sealed, no hardware)
+
+- R2a census (`86d0f4cf`, `derived/h1_hybrid/H1_RESULTS.md`):
+  - A (no parseable tool call) = 65
+  - B (max_steps) = 3 — these also trip step_budget=5 (they reached 21 gens)
+  - C (tool exec error) = 0 (not observable on sealed ledger; treat as 0)
+  - D (SILENT) = UNAVAILABLE (no BFCL score); R2c cannot see D → no bounce
+- R2b rescue (`8ffd8371`): operational rescue = 65/65 = 1.0; quality rescue
+  unknown → use n=20 cloud baseline 0.65 for BFCL-style indep completion only
+- R2b cost fit (spec): usd ≈ 0.00674 + 0.0843 × n_cloud_turns (R²=0.642)
+
+### Bounce count by class (arithmetic)
+
+```
+bounce_A   = 65          # one bounce at first no-emit turn per class-A entry
+bounce_B   = 3           # census max_steps entries; lower bound for step_budget=5
+                         # (true step≥5 rate may be higher; not in R2a ledger)
+bounce_C   = 0
+n_bounces  = 65 + 3 + 0 = 68
+```
+
+### Cloud $
+
+```
+usd_per_bounce = 0.00674 + 0.0843 × 1 = 0.09105
+                 # one cloud turn per bounce (not stay-on-cloud)
+cloud_$        = 68 × 0.09105 = 6.1911
+```
+
+No interval from the old 45-escalate fit; treat ± from R2b per-turn residual
+later. Point prediction: **$6.19**.
+
+### Completion / emission / SLO / time
+
+```
+completion_floor = 0.1000
+                 # local BFCL from W-3 int4; D still invisible to R2c
+completion_indep = 0.1000 + (65/200) × 0.65
+                 = 0.1000 + 0.21125 = 0.31125
+                 # ASSUMED: class-A entries recover at cloud baseline 0.65;
+                 # operational R2b rescue was 1.0 but that is not BFCL
+
+emission         = 1.0000
+                 # (135 emit-OK + 65 bounced-A) / 200; max_steps B already emitted
+
+SLO_frac         = 1.0000
+                 # R2a measured 1.0 over turns; bounce replaces the turn on cloud
+                 # but local trigger metrics still SLO-clean on R2a
+
+session_time_sum = 4137.0 s
+                 # ASSUMED from R2a measured sum (pred 2641 was low); bounce adds
+                 # negligible cloud wall vs local generate
+```
+
+### What R2c cannot buy
+
+Class D (SILENT) is still invisible. Until BFCL scores are sealed on H1
+ledgers, the D share — and whether routing or a capability warning is the
+story — remains unresolved.
+
 
 | weight | n | measured | predicted | residual |
 |---|---:|---:|---:|---:|

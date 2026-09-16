@@ -1,0 +1,176 @@
+{
+  "protocol_version": "cap01_v2.2",
+  "entries": [
+    {
+      "id": 1,
+      "timestamp_utc": "2026-07-14T17:59:00Z",
+      "claim": "Include τ²-Bench-class multi-turn service tasks in CAP-01.",
+      "reason": "Deferred from the CAP-01 v2 frozen-pool scope.",
+      "evidence": [
+        "requires live-environment interaction; incompatible with the frozen-pool matched-pair mechanism; deferred to a CAP-02 protocol with a frozen-environment-script design."
+      ]
+    },
+    {
+      "id": 2,
+      "timestamp_utc": "2026-07-14T17:59:00Z",
+      "claim": "Include Terminal-Bench-class multi-step shell tasks in CAP-01.",
+      "reason": "Deferred from the CAP-01 v2 frozen-pool scope.",
+      "evidence": [
+        "requires live-environment interaction; incompatible with the frozen-pool matched-pair mechanism; deferred to a CAP-02 protocol with a frozen-environment-script design."
+      ]
+    },
+    {
+      "id": 3,
+      "timestamp_utc": "2026-07-14T17:59:00Z",
+      "claim": "Include BIRD interactive mode in CAP-01.",
+      "reason": "Deferred from the CAP-01 v2 frozen-pool scope.",
+      "evidence": [
+        "requires live-environment interaction; incompatible with the frozen-pool matched-pair mechanism; deferred to a CAP-02 protocol with a frozen-environment-script design."
+      ]
+    },
+    {
+      "id": 4,
+      "timestamp_utc": "2026-07-14T17:59:00Z",
+      "claim": "Include the BFCL Multi-Turn subset in CAP-01.",
+      "reason": "Deferred from the CAP-01 v2 frozen-pool scope.",
+      "evidence": [
+        "requires live-environment interaction; incompatible with the frozen-pool matched-pair mechanism; deferred to a CAP-02 protocol with a frozen-environment-script design."
+      ]
+    },
+    {
+      "id": 5,
+      "timestamp_utc": "2026-07-14T19:20:00Z",
+      "claim": "Apply relative-only ±15% G8 verifier-cost parity to every domain including sub-millisecond MATH normalizer costs.",
+      "reason": "Behavioral verification audit Axis 1 measured MATH TOOL_COMPUTE medians near 0.09 ms where relative ±15% is below timer-stable resolution.",
+      "evidence": [
+        "AFTER-THE-FACT AMENDMENT: G8 band rule was changed mid-audit after relative-only ±15% converted MATH/TEXT_TO_SQL into FAIL. This is a process wound against pre-registration discipline; it is ledgered rather than silent. Justification is instrument physics (timer resolution / within-harness IQR), not convenience, and CODE-class relative ±15% was preserved.",
+        "protocol amendment: G8 half_width = max(0.15 * median, 0.25 ms absolute, max within-harness IQR)",
+        "relative ±15% alone is below timer/SQLite open noise for MATH (~0.09 ms) and TEXT_TO_SQL (~1 ms with IQR > band)",
+        "material CODE TOOL_COMPUTE (~80 ms) still governed by relative ±15% when it exceeds the floors",
+        "STANDING PRINCIPLE: any future gate over sub-millisecond quantities must freeze a timer-resolution floor at protocol freeze time, not at failure time (MCP-01 Windows tick lesson).",
+        "apu_characterization/cap01/cap01_verification_audit.md Axis 1 prior FAIL under relative-only rule"
+      ]
+    },
+    {
+      "id": 6,
+      "timestamp_utc": "2026-07-14T22:55:00Z",
+      "claim": "Treat the private synthetic five-domain fixture corpus as a licensed BFCL/BIRD/HumanEval+/MATH/extraction publication corpus.",
+      "reason": "Synthetic fixtures satisfy protocol shape for debug_only P0→P2 dry-run only; they are not licensed release data.",
+      "evidence": [
+        "apu_characterization/tools/build_cap01_synthetic_corpus.py",
+        "corpus_kind=synthetic_private_fixture; result_validity_ceiling=debug_only",
+        "scope exclusions for BFCL Multi-Turn and BIRD interactive retained in DOMAIN_HEADERS.json"
+      ]
+    },
+    {
+      "id": 7,
+      "timestamp_utc": "2026-07-14T22:55:00Z",
+      "claim": "Use live OpenAI generation_backend for the debug_only P0→P2 preflight on this host in this session.",
+      "reason": "250 tasks × 2048 candidates is 512000 completion calls; projected wall-clock and spend require an explicit budget decision before launch. synthetic_debug fills frozen 2048-deep pools for instrument/smoke dry-run only.",
+      "evidence": [
+        "generation_backend=synthetic_debug recorded in out/cap01/pools/; not capability_scaling publication",
+        "OpenAI live path remains the protocol template default; resume with --backend openai after cost-gate approval",
+        "tools/generate_cap01_pools.py --openai-probe-candidates for projection before remaining domains"
+      ]
+    },
+    {
+      "id": 8,
+      "timestamp_utc": "2026-07-15T00:50:00Z",
+      "claim": "Run live OpenAI pool generation before freezing corpus + generation_config in the protocol lock.",
+      "reason": "Pre-generation lock exists specifically to prevent corpus or generation-config drift after seeing pool outcomes; generation must follow lock, not precede it.",
+      "evidence": [
+        "tools/freeze_cap01_pregeneration.py writes lock_phase=pre_generation",
+        "tools/generate_cap01_pools.py --backend openai requires assert_generation_cleared",
+        "pool_manifest_sha256 and classification_manifest_sha256 use PENDING_MANIFEST_DIGEST until post-calibration amendment"
+      ]
+    },
+    {
+      "id": 9,
+      "timestamp_utc": "2026-07-15T01:30:00Z",
+      "claim": "Pre-generation generation_config template amendment after live probe fencing and MATH diversity flags.",
+      "reason": "Stage-2 probe showed markdown code fences on D1/D2/D3/D5 despite 'only' templates, and MATH answer-only framing collapsed to 1-2/8 unique strings at temp 1.0 across MATH-001/010/025 spot-checks. Templates amended; verifier fence-stripping unchanged as defense in depth.",
+      "evidence": [
+        "D1/D2/D3/D5: explicit no-fencing instructions added to DOMAIN_PROMPT_TEMPLATES",
+        "D4 MATH: answer-only replaced with 'show one brief final calculation step, then Final answer: <value>' after 3-task spot-check confirmed cross-task convergence (1/8, 1/8, 2/8 unique)",
+        "generation_config_sha256 before: c18f55687a032039c4bf24a51a99e74d234b61ec34b1af78ef07f36f2eb38d67",
+        "generation_config_sha256 after: e85481ce4832fa65f8c6cab600cf3dc5357cdc72b905a41a80d42e97a7fda04b",
+        "corpus_manifest_sha256 unchanged: 3e2773a16b3d05cae41ec6a376f22ab9e124db8f4721ea6f97d5e06126d7bf3f",
+        "verifier_pin_manifest_sha256 unchanged: d4e4f056b2914d18c5d6b7fb91e19eb87cc7409607911ae5391cb5aa4356ec05",
+        "re-probe v2: fencing 0/8 on D1/D2/D3/D5 PASS; MATH-001 still 1/8 unique (model ignored calculation-step instruction; exact-answer collapse disclosed as expected D4 property)",
+        "tools/freeze_cap01_pregeneration.py re-run required before re-probe"
+      ]
+    },
+    {
+      "id": 10,
+      "timestamp_utc": "2026-07-15T01:45:00Z",
+      "claim": "Treat string-uniqueness at temp 1.0 as the CAP-01 pool-quality quantity (vs p̂(correct)).",
+      "reason": "Category error: CAP-01 consumes per-draw solve probability. Identical CORRECT answers are p≈1 (probable SATURATED), not degenerate generation. Stage-1 verification converted probe JSONLs into p̂; MATH-001 was 0/8 identical WRONG (probable-DEAD), MATH-010 was 7/8 correct (probable-SATURATED). Depth-triage amendment (cap01_v2.2) freezes generation depth by triage band before full-corpus Stage-2 results are read.",
+      "evidence": [
+        "out/cap01/probe_verification_table.md",
+        "protocol amendment cap01_v2.2_depth_triage: p̂≥0.90→256 confirmation; p̂≤0.02→256 confirmation; intermediate→2048; CODE forced 2048 until -S/numpy sandbox executes",
+        "Axis-2 retarget: incorrect-only duplicate rate OR cross-task identical outputs; convergent CORRECT excluded; regression in tests/cap01/test_depth_triage.py",
+        "calibration escape hatch: confirmation-pool task flipping to SCALING tops up to 2048 (bounded second spend)",
+        "generation_config_sha256 after depth-triage amendment (lock_fields): bb071ca1b9b10d0c2c373eaf7f40f1f32bad46fb8244d3ae9f11a3a3f0576792",
+        "generation_config_sha256 before (fencing lock): e85481ce4832fa65f8c6cab600cf3dc5357cdc72b905a41a80d42e97a7fda04b",
+        "corpus_manifest_sha256 and verifier_pin_manifest_sha256 unchanged by this amendment",
+        "generation_config gains depth_triage policy block; templates/temperature unchanged from fencing lock",
+        "domain_verifiers.py: accept corpus key 'reference' and pass test_category into bfcl_record (wiring enablement for pinned BFCL wrapper; pin hash unchanged)",
+        "projected budget effect: confirmation pools ~1/8 depth of full pools; refined projection after Stage-2 token measurement"
+      ]
+    },
+    {
+      "id": 11,
+      "timestamp_utc": "2026-07-15T16:45:00Z",
+      "claim": "Treat pre-fix FC/SQL/EXT all-DEAD triage as corpus reality without gold self-check.",
+      "reason": "Stage A gold+garbage audit showed FC golds were environment/wiring blocked (not model-zero), CODE golds failed because the runner used -S and never called check(entry_point), while SQL/EXT golds largely passed — so those DEAD reads were real strictness/model failure. Scoring-relevant fixes require pin coverage of adapters + re-lock.",
+      "evidence": [
+        "out/cap01/verifier_ground_truth_audit.json post-fix: FC 50/50 gold+garbage, CODE 50/50, SQL 49/50 (SQL-041 timeout), EXT 45/50 (5 schema-inference defects), MATH 49/50 (MATH-019 truncated extract)",
+        "bfcl_cap01_checker: OpenAI-style→BFCL AST conversion; bfcl_shims stub java/js parsers + MODEL_CONFIG_MAPPING so Python live_multiple scores without tree_sitter==0.21.3 compile",
+        "verifier.py CODE: drop -S; pass entry_point; invoke check(entry_point); default wall_seconds=30 (CODE-046 special_factorial)",
+        "pin manifest extended to domain_verifiers.py, verifier.py, bfcl_cap01_checker.py, bfcl_shims/* (coverage-hole fix: prior 'wiring only' changes left pin hash unchanged while affecting verdicts)",
+        "VERIFIER_BLOCKED_DOMAINS cleared for CODE after gold PASS",
+        "EXT disposition recommendation: keep exact-match with disclosure (option a); near-miss audit in out/cap01/ext_near_miss_audit.json",
+        "permanent gate: tests/cap01/test_verifier_ground_truth.py with ledgered allowlist for MATH-019/SQL-041/EXT-017/027/030/032/034",
+        "corpus FC checker_source_sha256 updated to synced wrapper; composition of tasks unchanged"
+      ]
+    },
+    {
+      "id": 12,
+      "timestamp_utc": "2026-07-15T17:00:00Z",
+      "claim": "Accept SQL/EXT uniform-zero triage as capability DEAD after gold-verified verifiers alone.",
+      "reason": "Prompt-completeness audit showed both domains were structurally unsolvable as prompted: SQL lacked CREATE TABLE schema; EXT lacked target JSON schema in the generation prompt despite schema assets existing for the verifier. Uniform zero was an instrument bug (prompt wiring), not yet a model result.",
+      "evidence": [
+        "out/cap01/PROMPT_COMPLETENESS_AUDIT.md / prompt_completeness_audit.json: PROMPT INCOMPLETE for SQL (corpus_field_gap) and EXT (corpus_prompt_wiring_gap)",
+        "perturbed-gold audit PASS all five domains (EXT key-shuffle+whitespace still passes — verifier canonicalizes; not raw-string compare)",
+        "repair_cap01_sql_ext_prompts.py: wiring completion only — same task_ids/selection; inject schema DDL into SQL prompts and target schema JSON into EXT prompts; builder updated for future rebuilds",
+        "corpus_manifest_sha256 changes; generation_config templates unchanged (schema lives in task.prompt); verifier pins unchanged for scoring logic",
+        "tests/cap01/test_verifier_ground_truth.py gains canonicalization invariance clause",
+        "uniform-zero protocol added to METHODOLOGY_CAP01.md"
+      ]
+    },
+    {
+      "id": 13,
+      "timestamp_utc": "2026-07-15T17:05:00Z",
+      "claim": "Carry gold-failing corpus defects into generation pools as allowlisted passengers.",
+      "reason": "Tasks whose own golds cannot verify are corpus-defective; they must be excluded from pool generation counts, not scored as DEAD/SCALING.",
+      "evidence": [
+        "Excluded task_ids: MATH-019 (truncated boxed extract), SQL-041 (gold timeout), EXT-017, EXT-027, EXT-030, EXT-032, EXT-034 (schema-inference vs gt_parse mismatch)",
+        "Gate allowlist in test_verifier_ground_truth.py remains for detection; decision-packet pool-eligible counts are 49 MATH / 49 SQL / 45 EXT / 50 FC / 50 CODE pending tripwire/expansion",
+        "out/cap01/excluded_tasks.json"
+      ]
+    },
+    {
+      "id": 14,
+      "timestamp_utc": "2026-07-15T17:20:00Z",
+      "claim": "Require SQL result column-name identity for BIRD execution match.",
+      "reason": "After schema was added to prompts, gpt-4o produced semantically correct SQL (e.g. COUNT(*) vs gold COUNT(DISTINCT School) both returning 4) that the verifier marked wrong solely because column aliases differed. BIRD-style matching is on result bags, not aliases.",
+      "evidence": [
+        "frontier probe SQL-001: model COUNT(*) and gold COUNT(DISTINCT T2.School) both yield [(4,)] but pre-fix verify=wrong",
+        "domain_verifiers._result_equal: drop column-name equality; keep arity + cell-value compare",
+        "post-fix frontier re-score of same staging: SQL 9/20 correct (mean phat 0.45) vs 0/20 before",
+        "perturbed-gold SQL clause extended with AS alias rewrite; pin re-lock covers domain_verifiers.py"
+      ]
+    }
+  ],
+  "policy": "Append-only. Retire unsupported CAP-01 claims with evidence; never delete prior entries."
+}

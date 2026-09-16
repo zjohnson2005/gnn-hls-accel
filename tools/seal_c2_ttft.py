@@ -212,7 +212,7 @@ def _integrity(session_dir: Path, summary: dict[str, Any], plan: dict[str, Any])
     }
 
 
-def seal_session(*, session_id: str) -> Path:
+def seal_session(*, session_id: str, allow_unguarded: bool = False) -> Path:
     session_dir = SESSION_BASE / session_id
     if not session_dir.is_dir():
         raise SystemExit(f"REFUSED -- missing session dir {session_dir}")
@@ -225,6 +225,28 @@ def seal_session(*, session_id: str) -> Path:
     plan = _read_json(plan_path)
     if summary.get("status") != "complete":
         raise SystemExit(f"REFUSED -- status={summary.get('status')!r} (want complete)")
+
+    # INF-1b: refuse unarmed canary seal unless UNGUARDED / AllowUnguarded.
+    from tools.ttft_slo_canary import (
+        CanaryUnarmedSealRefuse,
+        assert_seal_requires_armed_or_unguarded,
+    )
+
+    canary = summary.get("canary") or plan.get("canary") or {}
+    gate = canary.get("canary_gate") or {}
+    armed = bool(gate.get("armed"))
+    unguarded_flag = bool(summary.get("UNGUARDED") or plan.get("UNGUARDED"))
+    try:
+        seal_guard = assert_seal_requires_armed_or_unguarded(
+            armed=armed,
+            allow_unguarded=bool(allow_unguarded) or unguarded_flag,
+            unguarded_already=unguarded_flag,
+        )
+    except CanaryUnarmedSealRefuse as exc:
+        raise SystemExit(f"REFUSED -- {exc.detail}") from exc
+    if seal_guard.get("UNGUARDED"):
+        summary["UNGUARDED"] = True
+        plan["UNGUARDED"] = True
 
     integrity = _integrity(session_dir, summary, plan)
 
@@ -280,6 +302,7 @@ def seal_session(*, session_id: str) -> Path:
         "kind": WORKLOAD_KIND,
         "seal_style": "derived_diagnostic",
         "sealed_utc": sealed_utc,
+        "UNGUARDED": bool(summary.get("UNGUARDED")),
         "source_session": _rel(session_dir),
         "model_spec": summary.get("model_spec") or plan.get("model_spec"),
         "ir_sha256": integrity["ir_sha256"],
@@ -304,6 +327,7 @@ def seal_session(*, session_id: str) -> Path:
         "primary_prediction_held": integrity["primary_prediction_held"],
         "integrity_status": integrity["status"],
         "sealed_utc": sealed_utc,
+        "UNGUARDED": bool(summary.get("UNGUARDED")),
     }
 
     (out / "manifest.json").write_text(
@@ -351,8 +375,13 @@ def seal_session(*, session_id: str) -> Path:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--session-id", required=True)
+    parser.add_argument(
+        "--allow-unguarded",
+        action="store_true",
+        help="Permit seal when canary armed==false; writes UNGUARDED into seal.",
+    )
     args = parser.parse_args(argv)
-    seal_session(session_id=args.session_id)
+    seal_session(session_id=args.session_id, allow_unguarded=bool(args.allow_unguarded))
     return 0
 
 

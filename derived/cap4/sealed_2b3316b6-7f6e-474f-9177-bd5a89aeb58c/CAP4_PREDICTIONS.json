@@ -1,0 +1,56 @@
+{
+  "experiment": "CAP-4",
+  "title": "Prefill curve to failure, per KV precision, gpu_only (merges MEM-CEIL)",
+  "status": "pre_registered_before_measurement",
+  "registered_utc": "2026-09-16T01:12:00+00:00",
+  "placement": "gpu_only",
+  "residency": "RESIDENT",
+  "model_spec": "configs/models/Qwen3-4B-int4-ov.yaml",
+  "ir_sha256": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+  "arms": ["gpu_only_f16", "gpu_only_u8", "gpu_only_u4"],
+  "session_design": "interleaved",
+  "arm_order": ["gpu_only_f16", "gpu_only_u8", "gpu_only_u4"],
+  "primary_rungs": [12000, 16000, 20000, 26000, 32000, 40000, 46000],
+  "continue_past_primary_step": 6000,
+  "repeats_per_cell": 3,
+  "report_statistic": "median",
+  "slo": {
+    "prefill_s_max": 10.0,
+    "decode_tok_s_min": 6.0,
+    "note": "Soft flag only; CAP-4 continues past SLO to measure the extrapolated curve. Soft SLO breach does not stop an arm."
+  },
+  "failure_classes": ["SLO_EXCEEDED", "ALLOC_FAILURE", "PAGING", "OTHER"],
+  "predictions": {
+    "P1_prefill_at_46000": {
+      "claim": "If n=46000 is reachable, median prefill_s near ~115 s (n^1.6 from ~13.54 s at 12000).",
+      "predicted_prefill_s": 115.0,
+      "anchor": {
+        "n": 12000,
+        "prefill_s_median_approx": 13.54,
+        "source": "41e419bd / C-2 family turn-1"
+      },
+      "evaluable_band_s": [60.0, 230.0],
+      "falsified_if": "46000 reached and median prefill outside [60, 230] s",
+      "not_evaluable_if": "46000 unreachable for all arms"
+    },
+    "P2_ceiling_order": {
+      "claim": "Allocation ceiling order f16 < u8 < u4; f16 hits ALLOC first; u4 reaches highest n.",
+      "k_plus_w_B_per_token": {
+        "gpu_only_f16": 234827,
+        "gpu_only_u8": 171532,
+        "gpu_only_u4": 135000,
+        "source": "41e419bd"
+      },
+      "falsified_if": [
+        "all three arms reach 46000 without ALLOC_FAILURE",
+        "highest-success order is not f16 < u8 < u4"
+      ]
+    },
+    "P3_failure_regime": {
+      "claim": "At least one arm fails by ALLOC_FAILURE before/at the extrapolated 46k point; SLO already binds earlier on TTFT axis (~9750).",
+      "citing_c647f0c7": "f16 CL_OUT_OF_RESOURCES at n=8000; u8/u4 TTFT limit 9750",
+      "falsified_if": "all three arms reach 46000 without ALLOC_FAILURE"
+    }
+  },
+  "joint_falsifier": "all three KV arms reach n=46000 without ALLOC_FAILURE"
+}

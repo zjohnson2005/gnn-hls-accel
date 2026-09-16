@@ -1,0 +1,93 @@
+
+{
+  "manifest_version": "tlp01_s2_v1",
+  "published_before_collection": true,
+  "backend": "openai",
+  "temperature": 0,
+  "seeds": [0, 1, 2, 3, 4],
+  "sessions_target": 50,
+  "templates_count": 10,
+  "population_rationale": "Realistic multi-tool work deliberately designed to contain plausibly-independent tool calls. Standing suite (S1) anchors the serial end; S2 is the basis for ceiling claims. Negative-control templates discipline the dependence oracle.",
+  "templates": [
+    {
+      "task_id": "MT-RS-01",
+      "class": "MT",
+      "shape": "multi_source_research",
+      "negative_control": false,
+      "independence_rationale": "Three unrelated lookup topics (corpus keywords) feed one synthesis; no lookup should need another's result.",
+      "goal": "Independently search for three unrelated topics: (1) 'graph neural network', (2) 'FPGA timing closure', (3) 'HTTP rate limiting'. Use the search tool once per topic. Do NOT pass from_result between these searches. After all three complete, write one short synthesis citing each result_id."
+    },
+    {
+      "task_id": "MT-RS-02",
+      "class": "MT",
+      "shape": "multi_source_research",
+      "negative_control": false,
+      "independence_rationale": "Four independent retrieve queries on disjoint questions before a summary turn.",
+      "goal": "Use retrieve for these four independent questions (separate calls, no from_result): 'What is a reorder buffer?', 'What is branch prediction?', 'What is ILP?', 'What is a scoreboard?'. Then summarize in one paragraph."
+    },
+    {
+      "task_id": "MT-CMP-01",
+      "class": "MT",
+      "shape": "comparison",
+      "negative_control": false,
+      "independence_rationale": "N independent retrievals then one comparison; comparison may cite via from_result.",
+      "goal": "Retrieve facts about 'sympy' and separately about 'numpy' (two retrieve calls, independent). Then compare them in text. If you reuse a prior tool output as input to another tool, pass from_result=<prior_result_id>."
+    },
+    {
+      "task_id": "MT-CMP-02",
+      "class": "MT",
+      "shape": "comparison",
+      "negative_control": false,
+      "independence_rationale": "Three independent calculator expressions, then compare magnitudes in language.",
+      "goal": "Evaluate with calculator, independently: '2**10', '3**7', '1000*1.05**10'. No from_result between these. Then say which is largest."
+    },
+    {
+      "task_id": "MT-FILE-01",
+      "class": "MT",
+      "shape": "multi_artifact",
+      "negative_control": false,
+      "independence_rationale": "Independent code_exec snippets produce values; merge may use from_result.",
+      "goal": "Run three independent code_exec snippets that set result to 11, 22, and 33 respectively (separate calls). Then use calculator with from_result to sum two of those prior results if needed, or compute 11+22+33 directly."
+    },
+    {
+      "task_id": "MT-MIX-01",
+      "class": "MT",
+      "shape": "mixed_serial_parallel",
+      "negative_control": false,
+      "independence_rationale": "Dependent spine (search then retrieve using from_result) plus an independent calculator branch.",
+      "goal": "First search 'orchestration engine'. Then retrieve a question about the search topic, passing from_result to the prior search result_id. In parallel spirit, also calculator-evaluate '80/(100-80)' with NO from_result. Finish with a short note tying all three."
+    },
+    {
+      "task_id": "MT-MIX-02",
+      "class": "MT",
+      "shape": "mixed_serial_parallel",
+      "negative_control": false,
+      "independence_rationale": "Two independent searches plus a dependent code_exec that must cite one via from_result.",
+      "goal": "Search 'attention mechanism' and separately search 'cache locality' (no from_result between them). Then code_exec that sets result to the string 'merged' and pass from_result pointing at one of the search result_ids in the query text as documentation of the dependency."
+    },
+    {
+      "task_id": "MT-FAN-01",
+      "class": "MT",
+      "shape": "fanout",
+      "negative_control": false,
+      "independence_rationale": "Five independent searches; classic fan-out shape.",
+      "goal": "Issue five independent search calls for: 'DAG', 'makespan', 'critical path', 'speculation', 'misprediction'. Do not use from_result between them. End with a one-sentence list of the five topics."
+    },
+    {
+      "task_id": "MT-SER-01",
+      "class": "MT",
+      "shape": "serial_negative_control",
+      "negative_control": true,
+      "independence_rationale": "NEGATIVE CONTROL: each step must consume the prior via from_result; oracle must find near-serial structure.",
+      "goal": "SERIAL PIPELINE (required): (1) calculator '1+1'. (2) calculator that uses from_result=<id of step 1> and evaluates that prior numeric result plus 1 (put the from_result id in the tool args). (3) calculator again with from_result from step 2, add 1. Do not issue independent parallel calls."
+    },
+    {
+      "task_id": "MT-SER-02",
+      "class": "MT",
+      "shape": "serial_negative_control",
+      "negative_control": true,
+      "independence_rationale": "NEGATIVE CONTROL: search → retrieve(from_result) → code_exec(from_result) chain.",
+      "goal": "SERIAL PIPELINE (required): search 'tokenizers'. Then retrieve with from_result set to that search's result_id and query about tokenization. Then code_exec with from_result set to the retrieve result_id that sets result='done'. No independent branches."
+    }
+  ]
+}

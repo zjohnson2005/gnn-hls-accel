@@ -1,0 +1,182 @@
+
+{
+  "protocol_version": "tlp01_v2.1",
+  "entries": [
+    {
+      "id": 1,
+      "timestamp_utc": "2026-07-14T20:00:00Z",
+      "claim": "Require S3 (Claude Code adapter traces) for TLP-01 v1 publication.",
+      "reason": "Optional generalization axis; absence is a stated scope limit, not a silent one.",
+      "evidence": [
+        "protocol_tlp01_v1.json trace_sources.S3.required_for_v1 = false",
+        "METHODOLOGY_TLP01.md Part II.1 Sources"
+      ]
+    },
+    {
+      "id": 2,
+      "timestamp_utc": "2026-07-14T21:00:00Z",
+      "claim": "Claim that turn-level parallelism is 'universally unharvested' / 'harvested by nobody' / that the field is single-issue.",
+      "reason": "False per literature: PASTE, B-PASTE, SPORK, LLMCompiler, and GAP all harvest parallelism or speculation today. v2 retires this framing.",
+      "evidence": [
+        "TLP-01 v2 redirect Step 1 / Step 5",
+        "protocol_tlp01_v2.json blocked_claims + related_work_required_citations",
+        "Ownable firsts are limit study, M2 floor-coupled measurement, and speculation-economics phase diagram — not first-to-parallelize"
+      ]
+    },
+    {
+      "id": 3,
+      "timestamp_utc": "2026-07-14T21:00:00Z",
+      "claim": "Single claim ladder from tlp01_v1 (rung_1/2/3 only).",
+      "reason": "Superseded by independent ceiling_track (1a/2a/3a) and frontier_track (1b/2b/3b).",
+      "evidence": [
+        "protocol_tlp01_v2.json claim_ladder",
+        "PREDICTIONS_TLP01.md two-track ladder"
+      ]
+    },
+    {
+      "id": 4,
+      "timestamp_utc": "2026-07-14T22:30:00Z",
+      "claim": "Treat the post-smoke phase-diagram boundary as coming from tuned overlap credits / thresholds on synthetic FO/CN data.",
+      "reason": "GENERAL throughput-formula bug, not tuning. On a correct speculative hit the wall accumulator still added duration_ns (serial charge), so overlap credit was structurally absent for every policy and every dataset. Comment claimed overlap hid the cost; code did not. Fix: hit_path_wall_ns(credit_overlap=True) omits duration_ns on hits; pays only extra-sibling waste.",
+      "evidence": [
+        "Before (bug): wall += dur on hit (plus extras waste) — equivalent to hit_path_wall_ns(..., credit_overlap=False)",
+        "After (fix): wall += penalty_ns * extras only on hit — hit_path_wall_ns(..., credit_overlap=True)",
+        "tests/tlp01/test_overlap_credit.py — fails under pre-fix formula, passes under post-fix",
+        "PROMOTION_SUMMARY.md Overlap-credit fix section"
+      ]
+    },
+    {
+      "id": 5,
+      "timestamp_utc": "2026-07-14T22:30:00Z",
+      "claim": "Attach claim-rung labels (ceiling/frontier track keys) to synthetic smoke outputs under out/tlp01/_gate_smoke/.",
+      "reason": "Rung labels are reserved for pre-registered verdicts on real T0 traces. Synthetic smoke must use smoke_diagnostic:* only. G-SMOKE-LABEL permanently guards this.",
+      "evidence": [
+        "tlp01/labels.py finalize_claim_label + audit_g_smoke_label",
+        "tests/tlp01/test_smoke_labels.py negative case",
+        "runner rejects smoke aggregates that still carry claim-rung key strings"
+      ]
+    },
+    {
+      "id": 6,
+      "timestamp_utc": "2026-07-15T00:00:00Z",
+      "claim": "M1–M5 speedup vs recorded wall-clock makespan measures turn-level parallelism.",
+      "reason": "On live S2 traces, recorded wall includes LLM/harness idle between events that is absent from per-event duration_ns. Fully serial Tier-C DAGs (max_in_flight=1) still showed ~3× 'speedup' by removing idle. Correct denominator for the limit study is simulate_in_order_work (serial schedule of the same unit costs). G-V continues to use recorded wall via simulate_in_order.",
+      "evidence": [
+        "MT-SER-01 Tier-C: max_in_flight=1, speedup_vs_recorded≈3×, speedup_vs_work=1.0×",
+        "tlp01/schedule.py simulate_in_order_work + simulate_model M1+ baselines",
+        "tests/tlp01/test_verdict_checks.py test_m1_baseline_is_work_not_recorded_wall"
+      ]
+    },
+    {
+      "id": 7,
+      "timestamp_utc": "2026-07-15T00:00:00Z",
+      "claim": "T2 ceiling taxonomy (track 2a) and frontier boundary (track 1b) are quotable as reported in t2_ladder_report.md.",
+      "reason": "Check A FAIL: MT-SER-02 Tier-S M1 max speedup 1.72× > 1.5× bound after work-baseline fix. Tier-C is clean (1.0×); SER-01 both tiers ≤1.01×. SER-02 traces are retry fan-outs (many code_exec ← retrieve) not the pre-registered 3-step serial chain — control contamination plus Tier-S allowing sibling width. Pre-registered disposition: both tracks SUSPENDED; nothing quotable until controls pass or are re-collected as true serial chains.",
+      "evidence": [
+        "out/tlp01/t2/t2_verdict_verification.md Check A",
+        "tests/tlp01/test_verdict_checks.py test_check_a_mt_ser02_tier_s_flags_material_speedup",
+        "t2_ladder_report.md VERIFICATION PENDING watermark retained"
+      ]
+    },
+    {
+      "id": 8,
+      "timestamp_utc": "2026-07-15T01:00:00Z",
+      "claim": "Check A SER-02 Tier-S 1.72x is caused by Tier-S missing dep_refs and/or allowing code_exec sibling width under retry fan-out.",
+      "reason": "False mechanism. On all five SER-02 seeds Tier-0 ⊆ Tier-S already holds (dep_refs recovered via result_id_ref / from_result= in input_text). Retry siblings are fully connected under Tier-S (136/136 sibling pairs on s3). The 1.40–1.72x is entirely turn∥tools overlap under M1 break_control=True: Tier-S has no data edge 0→1 while Tier-C adds positional_adjacency 0→1. Counterfactual adding data edge 0→first_tool collapses every SER-02 Tier-S M1 speedup to 1.000. SER-01 passes because tool_work is ~1% of turn_work so hiding the turn barely moves the ratio.",
+      "evidence": [
+        "out/tlp01/t2/ser02_diagnosis.md Tasks 1–3",
+        "out/tlp01/t2/ser02_s0_chain_dump.md",
+        "tests/tlp01/test_ser02_diagnosis.py"
+      ]
+    },
+    {
+      "id": 9,
+      "timestamp_utc": "2026-07-15T01:00:00Z",
+      "claim": "Tier-0 ⊆ Tier-S need not be gated because Tier-0 ⊆ Tier-C suffices.",
+      "reason": "Omission. dep_refs are Tier-S-class evidence by construction. Protocol/gate previously required only Tier-0 ⊆ Tier-C. Fixed: tier_s_edges unions Tier-0; assert_tier0_subseteq_tier_s in G-D; protocol_tlp01_v2.json tier0_subseteq_tier_s. On the frozen S2 corpus this is edge-set inert (already ⊆ via string match) — not the Check A root cause — but closes the hole permanently.",
+      "evidence": [
+        "tlp01/dependence.py tier_s_edges + assert_tier0_subseteq_tier_s",
+        "tlp01/audit.py audit_g_d",
+        "tests/tlp01/test_tier0.py test_tier0_subseteq_tier_s"
+      ]
+    },
+    {
+      "id": 10,
+      "timestamp_utc": "2026-07-15T01:00:00Z",
+      "claim": "Check A 'M1 speedup ≤1.2 / fail >1.5 on either tier' is a calibrated negative-control test of tool-chain seriality under current M1 semantics.",
+      "reason": "Miscalibrated. M1 sets break_control=True, so planning-turn cost may hide under a data-serial tool chain. Any session with substantial tool_work relative to turn_work then reports M1 speedup ≈ work/tool_work even with a perfect serial tool DAG. SER-02 (turn/work 0.28–0.42) trips >1.5; SER-01 (turn/work ≈0.99) does not. Control lesson: either evaluate tool-only makespans for Check A, or require an explicit turn→first_tool data edge in the control metric — do not treat raw M1 Tier-S>1.5 on SER-02 as proof of oracle-invented tool parallelism. Rungs remain SUSPENDED until Check A is redefined and A–G re-run.",
+      "evidence": [
+        "out/tlp01/t2/ser02_diagnosis.md disposition",
+        "tlp01/schedule.py _list_scheduling break_control",
+        "extract.py comment: M1 breaks control edges"
+      ]
+    },
+    {
+      "id": 11,
+      "timestamp_utc": "2026-07-15T02:00:00Z",
+      "claim": "Dependence graphs need only data/control kinds; Check A miscalibration (#10) is the root SER-02 issue.",
+      "reason": "Category error. The graph layer had no edge taxonomy. SC-EMIT (turn→tools it emits) is an ordering fact that is neither data dependence nor content-discoverable. Legacy M1 broke unclassified control edges via break_control=True, so Check A's ≈1x expectation was written for M1a semantics but applied to M1b. Taxonomy v2 classifies SC-EMIT/SD-*/HO/D*; machines declare breakable classes. SER-02's 1.72x is M1b speculation headroom, not a bug.",
+      "evidence": [
+        "tlp01/edge_taxonomy.py",
+        "out/tlp01/t2/edge_taxonomy_migration_report.md",
+        "out/tlp01/t2/ser02_diagnosis.md"
+      ]
+    },
+    {
+      "id": 12,
+      "timestamp_utc": "2026-07-15T02:00:00Z",
+      "claim": "Unqualified M1 is a valid machine-model label.",
+      "reason": "Retired. Split into M1a (breaks HO only — width ceiling, no speculation) and M1b (breaks HO+SC — perfect control speculation). Ceiling rungs evaluate M1a; speculation headroom is M1b/M1a reported unverdicted.",
+      "evidence": [
+        "protocol_tlp01_v2.json machine_models",
+        "tlp01/schedule.py simulate_model rejects model==M1",
+        "edge_taxonomy.assert_no_bare_m1"
+      ]
+    },
+    {
+      "id": 13,
+      "timestamp_utc": "2026-07-15T02:00:00Z",
+      "claim": "Check A scalar bound (serial controls ≈1x at M1).",
+      "reason": "Replaced by Check A v2: per-control per-machine analytical expectations frozen from trace durations before simulator comparison (±5%). Dilution can no longer masquerade as correctness.",
+      "evidence": [
+        "tlp01/check_a_v2.py",
+        "tlp01/check_a_v2_expectations.json",
+        "tests/tlp01/test_verdict_checks.py"
+      ]
+    },
+    {
+      "id": 14,
+      "timestamp_utc": "2026-07-15T03:00:00Z",
+      "claim": "Speculation headroom can be verdicted ad hoc once SER-02 shows 1.64x.",
+      "reason": "Pre-registered H-1/H-2/H-3 criteria in protocol v2.1 before any evaluation. Current SER-02 median 1.64x is reported only; retroactive eval forbidden. First evaluation on next collection cycle or designated re-analysis run.",
+      "evidence": [
+        "protocol_tlp01_v2.json edge_taxonomy.speculation_headroom.rungs",
+        "out/tlp01/t2/quotable_extracts.json",
+        "PROMOTION_SUMMARY.md headroom table"
+      ]
+    },
+    {
+      "id": 15,
+      "timestamp_utc": "2026-07-15T03:00:00Z",
+      "claim": "Canonical rung sentences may be paraphrased loosely in slides.",
+      "reason": "Frozen verbatim forms in protocol canonical_claims and PROMOTION_SUMMARY.md. Composite sentence requires both rungs and attachments; Module 13 blocked-claims extended for rung_3a width scope, v1 quarantine, headroom verdict block.",
+      "evidence": [
+        "protocol_tlp01_v2.json canonical_claims",
+        "apu_characterization/PROMOTION_SUMMARY.md",
+        "tools/check_tlp01_v1_quarantine.py"
+      ]
+    },
+    {
+      "id": 16,
+      "timestamp_utc": "2026-07-15T03:00:00Z",
+      "claim": "TLP-01 closeout can ship with v1-era numbers in citable artifacts.",
+      "reason": "G-V1-QUARANTINE gate fails build if citable reports cite dependence_graphs v1 hash a45e88c2 as authoritative input. v2 supersession table documents artifact pins; watermark removed from t2_ladder_report.md with closeout justification.",
+      "evidence": [
+        "out/tlp01/t2/v2_supersession_table.md",
+        "out/tlp01/t2/tlp01_closeout_report.md",
+        "tools/check_tlp01_v1_quarantine.py"
+      ]
+    }
+  ],
+  "policy": "Append-only. Retire unsupported TLP-01 claims with evidence; never delete prior entries."
+}

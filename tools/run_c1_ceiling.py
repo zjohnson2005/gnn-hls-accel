@@ -734,6 +734,23 @@ def main(argv: list[str] | None = None) -> int:
         default=",".join(ARMS),
         help="comma-separated arm ids (default gpu_only_f16,gpu_only_u8,gpu_only_u4)",
     )
+    parser.add_argument(
+        "--planned-probe-count",
+        type=int,
+        default=None,
+        help=(
+            "ttft_slo canary budget (INF-1b). Default: estimate from arms/search. "
+            "Refuse start if floor(planned/(C+1)) < 1."
+        ),
+    )
+    parser.add_argument(
+        "--allow-unguarded",
+        action="store_true",
+        help=(
+            "Allow finalize/seal when canary armed==false; writes UNGUARDED into "
+            "summary (and seal). Default: refuse unarmed complete."
+        ),
+    )
     args = parser.parse_args(argv)
 
     out_dir: Path = args.out
@@ -840,14 +857,38 @@ def main(argv: list[str] | None = None) -> int:
 
     canary_guard = None
     if criterion == CRITERION_TTFT_SLO:
-        from tools.ttft_slo_canary import CanaryDriftAbort, TtftSloCanaryGuard
-
-        canary_guard = TtftSloCanaryGuard(
-            root=ROOT,
-            model_spec=model_spec,
-            work_dir=work_dir / "canaries",
-            plan_path=out_dir / "plan.json",
+        from tools.ttft_slo_canary import (
+            CanaryBudgetRefuse,
+            CanaryDriftAbort,
+            CanaryUnarmedSealRefuse,
+            TtftSloCanaryGuard,
+            UNARMED_REFUSE,
+            estimate_bisect_planned_probes,
         )
+
+        planned = args.planned_probe_count
+        if planned is None:
+            planned = estimate_bisect_planned_probes(
+                n_arms=len(arm_ids),
+                low=int(args.low),
+                high=int(args.high),
+                resolution=int(args.resolution),
+                repeats=int(args.repeats),
+            )
+        plan["planned_probe_count"] = int(planned)
+        plan["allow_unguarded"] = bool(args.allow_unguarded)
+        try:
+            canary_guard = TtftSloCanaryGuard(
+                root=ROOT,
+                model_spec=model_spec,
+                work_dir=work_dir / "canaries",
+                plan_path=out_dir / "plan.json",
+                planned_probe_count=int(planned),
+                allow_unguarded=bool(args.allow_unguarded),
+            )
+        except CanaryBudgetRefuse as exc:
+            print(f"REFUSED -- {exc.detail}", flush=True)
+            raise SystemExit(f"REFUSED -- {exc.detail}") from exc
         plan["canary"] = canary_guard.plan_fragment()
         (out_dir / "plan.json").write_text(
             json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -901,6 +942,7 @@ def main(argv: list[str] | None = None) -> int:
             json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
 
+    mid_session_abort: dict[str, Any] | None = None
     try:
         for aid in arm_ids:
             print(f"[{label_prefix}] BEGIN arm={aid}", flush=True)
@@ -941,16 +983,74 @@ def main(argv: list[str] | None = None) -> int:
         # Import locally so completion path stays free of the canary module.
         from tools.ttft_slo_canary import CanaryDriftAbort
 
-        if not isinstance(exc, CanaryDriftAbort):
-            raise
-        session_status = "FAIL_CANARY_DRIFT"
+        from seam.errors import SeamError
+
+        if isinstance(exc, CanaryDriftAbort):
+            session_status = "FAIL_CANARY_DRIFT"
+            summary = {
+                "kind": kind,
+                "session_id": args.session_id,
+                "ended_utc": _utc(),
+                "status": session_status,
+                "abort_reason": "FAIL_CANARY_DRIFT",
+                "canary_trip_detail": exc.detail,
+                "canary": canary_guard.plan_fragment() if canary_guard else None,
+                "canaries": canary_guard.canaries if canary_guard else [],
+                "criterion": criterion,
+                "pre_registered_predictions": predictions,
+                "arm_results": arm_results,
+                "primary_claim_eval": None,
+                "n_probes": len(probes_log),
+            }
+            (out_dir / "summary.json").write_text(
+                json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            (out_dir / "probes.ndjson").write_text(
+                "".join(json.dumps(p, sort_keys=True) + "\n" for p in probes_log),
+                encoding="utf-8",
+            )
+            plan["status"] = session_status
+            plan["abort_reason"] = "FAIL_CANARY_DRIFT"
+            plan["canary"] = canary_guard.plan_fragment() if canary_guard else None
+            plan["canaries"] = canary_guard.canaries if canary_guard else []
+            plan["arm_results"] = arm_results
+            plan["ended_utc"] = summary["ended_utc"]
+            (out_dir / "plan.json").write_text(
+                json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            print(
+                json.dumps(
+                    {
+                        "ok": False,
+                        "status": session_status,
+                        "abort_reason": "FAIL_CANARY_DRIFT",
+                        "detail": exc.detail,
+                        "session_id": args.session_id,
+                        "out": str(out_dir),
+                    },
+                    indent=2,
+                )
+            )
+            return 2
+
+        # SeamError (e.g. three consecutive quiescence refusals from measured_repeat)
+        # and other mid-session exceptions: write aborted summary, then re-raise.
+        mid_session_abort = {
+            "status": "aborted",
+            "abort_reason": type(exc).__name__,
+            "abort_verbatim": str(exc),
+            "exception_type": type(exc).__name__,
+            "is_seam_error": isinstance(exc, SeamError),
+            "arm_results_partial": arm_results,
+            "n_probes": len(probes_log),
+        }
         summary = {
             "kind": kind,
             "session_id": args.session_id,
             "ended_utc": _utc(),
-            "status": session_status,
-            "abort_reason": "FAIL_CANARY_DRIFT",
-            "canary_trip_detail": exc.detail,
+            "status": "aborted",
+            "abort_reason": mid_session_abort["abort_reason"],
+            "abort_verbatim": mid_session_abort["abort_verbatim"],
             "canary": canary_guard.plan_fragment() if canary_guard else None,
             "canaries": canary_guard.canaries if canary_guard else [],
             "criterion": criterion,
@@ -960,35 +1060,40 @@ def main(argv: list[str] | None = None) -> int:
             "n_probes": len(probes_log),
         }
         (out_dir / "summary.json").write_text(
-            json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            json.dumps(summary, indent=2, sort_keys=True, default=str) + "\n",
+            encoding="utf-8",
         )
         (out_dir / "probes.ndjson").write_text(
             "".join(json.dumps(p, sort_keys=True) + "\n" for p in probes_log),
             encoding="utf-8",
         )
-        plan["status"] = session_status
-        plan["abort_reason"] = "FAIL_CANARY_DRIFT"
-        plan["canary"] = canary_guard.plan_fragment() if canary_guard else None
-        plan["canaries"] = canary_guard.canaries if canary_guard else []
+        (out_dir / "arm_results.json").write_text(
+            json.dumps(arm_results, indent=2, sort_keys=True, default=str) + "\n",
+            encoding="utf-8",
+        )
+        plan["status"] = "aborted"
+        plan["abort_reason"] = mid_session_abort["abort_reason"]
+        plan["abort_verbatim"] = mid_session_abort["abort_verbatim"]
         plan["arm_results"] = arm_results
         plan["ended_utc"] = summary["ended_utc"]
         (out_dir / "plan.json").write_text(
-            json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            json.dumps(plan, indent=2, sort_keys=True, default=str) + "\n",
+            encoding="utf-8",
         )
         print(
             json.dumps(
                 {
                     "ok": False,
-                    "status": session_status,
-                    "abort_reason": "FAIL_CANARY_DRIFT",
-                    "detail": exc.detail,
+                    "status": "aborted",
+                    "abort_reason": mid_session_abort["abort_reason"],
+                    "abort_verbatim": mid_session_abort["abort_verbatim"],
                     "session_id": args.session_id,
                     "out": str(out_dir),
                 },
                 indent=2,
             )
         )
-        return 2
+        raise
 
     by_id = {r["arm_id"]: r for r in arm_results}
     if criterion == CRITERION_TTFT_SLO:
@@ -1046,6 +1151,21 @@ def main(argv: list[str] | None = None) -> int:
         summary["canaries"] = canary_guard.canaries
         plan["canary"] = summary["canary"]
         plan["canaries"] = canary_guard.canaries
+        if session_status == "complete":
+            try:
+                fin = canary_guard.finalize_or_refuse()
+            except CanaryUnarmedSealRefuse as exc:
+                session_status = UNARMED_REFUSE
+                abort_reason = UNARMED_REFUSE
+                summary["status"] = session_status
+                summary["abort_reason"] = abort_reason
+                summary["canary_unarmed_detail"] = exc.detail
+                print(f"REFUSED -- {exc.detail}", flush=True)
+            else:
+                if fin.get("UNGUARDED"):
+                    summary["UNGUARDED"] = True
+                    summary["unguarded_reason"] = fin.get("note")
+                    plan["UNGUARDED"] = True
     if criterion == CRITERION_TTFT_SLO:
         summary["ttft_limits"] = {r["arm_id"]: r.get("ttft_limit_n") for r in arm_results}
         summary["per_probe_medians"] = {
@@ -1071,6 +1191,8 @@ def main(argv: list[str] | None = None) -> int:
     (out_dir / "plan.json").write_text(
         json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
+    plan["status"] = session_status
+    plan["abort_reason"] = abort_reason
     print(
         json.dumps(
             {
@@ -1080,6 +1202,7 @@ def main(argv: list[str] | None = None) -> int:
                 "criterion": criterion,
                 "session_id": args.session_id,
                 "out": str(out_dir),
+                "UNGUARDED": bool(summary.get("UNGUARDED")),
             },
             indent=2,
         )

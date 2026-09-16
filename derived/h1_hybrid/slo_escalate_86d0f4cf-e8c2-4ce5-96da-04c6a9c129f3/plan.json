@@ -1,0 +1,89 @@
+{
+  "arm_config": {
+    "kv": "u8",
+    "model": "Qwen3-4B-int4-ov",
+    "placement": "gpu_only",
+    "residency": "RESIDENT",
+    "tier": "4B",
+    "weight": "int4"
+  },
+  "entry_assert": {
+    "mode": "caller_supplied",
+    "n": 200
+  },
+  "local_backend": "openvino",
+  "max_usd": 5.0,
+  "measurement_kind": "MEASURED",
+  "n_entries": 200,
+  "openvino": {
+    "arm_id": "gpu_only_u8",
+    "kv": "u8",
+    "load_meta": {
+      "device_config": {
+        "arm_id": "gpu_only_u8",
+        "generate_device": "GPU",
+        "label": "gpu only (KV_CACHE_PRECISION=u8)",
+        "load_sequence": [
+          {
+            "device": "GPU",
+            "properties": {
+              "KV_CACHE_PRECISION": "u8"
+            }
+          }
+        ]
+      },
+      "loads": [
+        {
+          "device": "GPU",
+          "kv_cache_precision": {
+            "enforced": true,
+            "failure_mode": null,
+            "match": true,
+            "readback": {
+              "device": "GPU",
+              "error": null,
+              "normalized": "u8",
+              "ok": true,
+              "property": "KV_CACHE_PRECISION",
+              "raw": "<Type: 'uint8_t'>",
+              "to_string": "u8"
+            },
+            "requested": "u8"
+          },
+          "properties": {
+            "KV_CACHE_PRECISION": "u8"
+          },
+          "scheduler_config": null
+        }
+      ],
+      "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+      "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+      "scheduler_config": {
+        "enable_prefix_caching": null,
+        "source": "LLMPipeline_default_CB_prefix_caching_on"
+      }
+    },
+    "max_new_tokens": 512,
+    "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+    "residency": "RESIDENT"
+  },
+  "policy": "slo_escalate",
+  "resume_from_completed": [],
+  "run_id": "86d0f4cf-e8c2-4ce5-96da-04c6a9c129f3",
+  "scorer": {
+    "bfcl_eval_version": "2025.12.17",
+    "checker": "bfcl_eval.eval_checker.multi_turn_eval.multi_turn_checker",
+    "w3_seal_refs": [
+      "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+      "1d8db970-4c18-4bcf-824d-d9c141b6eb22"
+    ],
+    "wrapper": "apu_characterization.cap01.bfcl_cap01_multi_turn_checker"
+  },
+  "seal": true,
+  "started_utc": "2026-09-15T00:54:57.396691+00:00",
+  "w3_entry_pin": "3502c5356219f8bf5679f2f5626cb706a1f24b61eb38e51d6921e0fcfcf8628e",
+  "w3_seal_refs": [
+    "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+    "1d8db970-4c18-4bcf-824d-d9c141b6eb22"
+  ]
+}

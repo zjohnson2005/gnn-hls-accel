@@ -1,0 +1,227 @@
+{
+  "protocol_version": "cap01_v1",
+  "experiment": "CAP-01",
+  "status": "template_requires_p0_lock",
+  "claim_under_test": "At fixed wall-clock and energy budget per task, solve rate on verifiable tasks decreases as measured turn-path floor increases, with harness gaps emerging as model latency collapses.",
+  "pre_registered_null": "The floor clips throughput but not capability at these budgets and task profiles.",
+  "validity_class": "capability_scaling",
+  "candidate_pool": {
+    "generation_backend": "openai",
+    "minimum_candidates_per_task": 2048,
+    "candidate_order": "sha256_seeded_fisher_yates",
+    "hash_algorithm": "sha256",
+    "required_manifest_fields": [
+      "generation_model",
+      "temperature",
+      "prompt_template_sha256",
+      "candidate_token_counts",
+      "task_pool_sha256"
+    ],
+    "pool_exhaustion": "hard_gate_failure",
+    "blind_to_harness": true
+  },
+  "corpus": {
+    "domains": {
+      "MATH": 150,
+      "CODE": 100
+    },
+    "required_task_fields": [
+      "task_id",
+      "domain",
+      "prompt",
+      "provenance",
+      "license",
+      "verifier"
+    ],
+    "contamination_note_required": true
+  },
+  "calibration": {
+    "shuffles": 50,
+    "saturated_rule": {
+      "n": 4,
+      "probability_gt": 0.9
+    },
+    "dead_rule": {
+      "n": 2048,
+      "probability_lt": 0.05
+    },
+    "legacy_dead_context": {
+      "n": 128,
+      "probability_lt": 0.05,
+      "analysis_role": "secondary_context_only"
+    },
+    "primary_population": "SCALING",
+    "secondary_population": "ALL"
+  },
+  "latency_backend": {
+    "distribution": "lognormal",
+    "median_scales_ms": [
+      4000,
+      1000,
+      100,
+      20,
+      10,
+      5
+    ],
+    "sigma": 0.6,
+    "seed_derivation": "sha256(task_id,seed)",
+    "wall_wait_only": true,
+    "same_draw_stream_across_harnesses": true
+  },
+  "matrix": {
+    "harnesses": [
+      "langgraph",
+      "rust",
+      "raw_python"
+    ],
+    "wall_budgets_ms": [
+      2000,
+      10000
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "instrument_mode": "throttle",
+    "observer_mode": "stripped_subsample",
+    "measurement_order": "serial",
+    "budget_order": [
+      2000,
+      10000
+    ]
+  },
+  "budget": {
+    "clock": "CLOCK_MONOTONIC",
+    "start_barrier": "task_ready_after_session_setup",
+    "candidate_counts_when": "verifier_verdict_before_deadline",
+    "wall_overshoot_fraction": 0.02,
+    "max_violating_task_cell_fraction": 0.01,
+    "setup_in_primary_budget": false,
+    "in_flight_at_deadline": "abandoned"
+  },
+  "energy_variant": {
+    "required_for_wall_primary": false,
+    "host_requirement": "bare_metal_linux_with_rapl",
+    "wall_tier_ms": 10000,
+    "latency_scales_ms": [
+      4000,
+      5
+    ],
+    "budget_calibration": "median_package_joules_of_10000ms_wall_tier_at_4000ms",
+    "observer_validation_required": true
+  },
+  "floor_anchor": {
+    "latency_scale_ms": 20,
+    "promoted_reference_bands_ms": {
+      "langgraph": [
+        3.9,
+        7.0
+      ],
+      "rust": [
+        0.5,
+        1.0
+      ],
+      "raw_python": [
+        0.21,
+        0.24
+      ]
+    },
+    "out_of_band_action": "use_host_measured_floor_as_x_coordinate"
+  },
+  "gates": {
+    "G1": {
+      "name": "accounting",
+      "residual_limit_fraction": 0.15,
+      "standing_turntrace_tolerances": true
+    },
+    "G2": {
+      "name": "budget_integrity",
+      "max_overshoot_fraction": 0.02,
+      "max_violating_task_cell_fraction": 0.01,
+      "candidate_conservation": "started_equals_counted_plus_abandoned"
+    },
+    "G3": {
+      "name": "matched_candidate",
+      "prefix_match_required": true,
+      "cross_harness_common_sequence_required": true,
+      "pool_exhaustion_fails": true
+    },
+    "G4": {
+      "name": "verifier_determinism",
+      "postprocess_reexecutions": 1,
+      "any_flip_removes_task_globally": true
+    },
+    "G5": {
+      "name": "replication",
+      "required_seeds": 5
+    },
+    "G6": {
+      "name": "floor_verification",
+      "out_of_band_recalibrates_x_axis": true
+    },
+    "G7": {
+      "name": "throughput_consistency",
+      "relative_tolerance": 0.25,
+      "violations_retained": true,
+      "rmax_terms": [
+        "latency_draw_wall",
+        "host_measured_harness_floor",
+        "measured_verifier_wall"
+      ]
+    }
+  },
+  "statistics": {
+    "unit": "task_seed_pair",
+    "primary_cell": {
+      "latency_scale_ms": 5,
+      "wall_budget_ms": 10000,
+      "population": "SCALING",
+      "contrast": [
+        "langgraph",
+        "rust"
+      ]
+    },
+    "primary_test": "mcnemar_exact_two_sided",
+    "primary_alpha": 0.05,
+    "effect": "paired_solve_rate_difference_percentage_points",
+    "bootstrap": {
+      "method": "BCa",
+      "resamples": 10000,
+      "unit": "task"
+    },
+    "leave_one_seed_out_must_preserve_sign": true,
+    "capability_floor_fit": "descriptive_three_point",
+    "positive_control": {
+      "latency_scale_ms": 4000,
+      "expected": "no_harness_separation",
+      "failure_action": "stop_before_headline_for_diagnosis"
+    }
+  },
+  "projection": {
+    "tier": "D",
+    "target_floor_us": [
+      10,
+      50
+    ],
+    "measured_arm": false,
+    "required_label": "Tier D design target - projection from measured relationship, not a result. Promotion path: csynth.",
+    "rendering": "separate_dashed_extension_beyond_raw_python",
+    "blocked_subject_claim": "Praetor achieves"
+  },
+  "claim_ladder": {
+    "rung_1": "primary significant in predicted direction; 4000ms null holds; G3, G6, G7 clean",
+    "rung_2": "scoped gap only at one budget or only versus raw_python",
+    "rung_3": "no significant separation; throughput clipping confirmed"
+  },
+  "lock_fields": {
+    "corpus_manifest_sha256": null,
+    "pool_manifest_sha256": null,
+    "classification_manifest_sha256": null,
+    "generation_config_sha256": null,
+    "answer_space_sha256": null,
+    "expectations_sha256": null
+  }
+}

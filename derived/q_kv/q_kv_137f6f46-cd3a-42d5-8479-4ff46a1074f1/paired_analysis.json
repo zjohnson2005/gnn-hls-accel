@@ -1,0 +1,140 @@
+{
+  "completion": {
+    "gpu_only_f16__vs__gpu_only_u4": {
+      "mcnemar": {
+        "discordant": 9,
+        "first_only": 4,
+        "method": "mcnemar_exact_two_sided",
+        "p_value": 1.0,
+        "second_only": 5
+      },
+      "n": 200,
+      "table_2x2": {
+        "both_fail": 185,
+        "both_pass": 6,
+        "first_only": 4,
+        "layout": "[[both_pass, first_only], [second_only, both_fail]] (row=first arm pass/fail, col=second arm pass/fail)",
+        "second_only": 5
+      }
+    },
+    "gpu_only_f16__vs__gpu_only_u8": {
+      "mcnemar": {
+        "discordant": 11,
+        "first_only": 4,
+        "method": "mcnemar_exact_two_sided",
+        "p_value": 0.548828125,
+        "second_only": 7
+      },
+      "n": 200,
+      "table_2x2": {
+        "both_fail": 183,
+        "both_pass": 6,
+        "first_only": 4,
+        "layout": "[[both_pass, first_only], [second_only, both_fail]] (row=first arm pass/fail, col=second arm pass/fail)",
+        "second_only": 7
+      }
+    },
+    "gpu_only_u8__vs__gpu_only_u4": {
+      "mcnemar": {
+        "discordant": 10,
+        "first_only": 6,
+        "method": "mcnemar_exact_two_sided",
+        "p_value": 0.75390625,
+        "second_only": 4
+      },
+      "n": 200,
+      "table_2x2": {
+        "both_fail": 183,
+        "both_pass": 7,
+        "first_only": 6,
+        "layout": "[[both_pass, first_only], [second_only, both_fail]] (row=first arm pass/fail, col=second arm pass/fail)",
+        "second_only": 4
+      }
+    }
+  },
+  "emission": {
+    "gpu_only_f16__vs__gpu_only_u4": {
+      "mcnemar": {
+        "discordant": 35,
+        "first_only": 22,
+        "method": "mcnemar_exact_two_sided",
+        "p_value": 0.17546524899080396,
+        "second_only": 13
+      },
+      "n": 200,
+      "table_2x2": {
+        "both_fail": 49,
+        "both_pass": 116,
+        "first_only": 22,
+        "layout": "[[both_pass, first_only], [second_only, both_fail]] (row=first arm pass/fail, col=second arm pass/fail)",
+        "second_only": 13
+      }
+    },
+    "gpu_only_f16__vs__gpu_only_u8": {
+      "mcnemar": {
+        "discordant": 33,
+        "first_only": 18,
+        "method": "mcnemar_exact_two_sided",
+        "p_value": 0.7283324808813632,
+        "second_only": 15
+      },
+      "n": 200,
+      "table_2x2": {
+        "both_fail": 47,
+        "both_pass": 120,
+        "first_only": 18,
+        "layout": "[[both_pass, first_only], [second_only, both_fail]] (row=first arm pass/fail, col=second arm pass/fail)",
+        "second_only": 15
+      }
+    },
+    "gpu_only_u8__vs__gpu_only_u4": {
+      "mcnemar": {
+        "discordant": 30,
+        "first_only": 18,
+        "method": "mcnemar_exact_two_sided",
+        "p_value": 0.361594608053565,
+        "second_only": 12
+      },
+      "n": 200,
+      "table_2x2": {
+        "both_fail": 53,
+        "both_pass": 117,
+        "first_only": 18,
+        "layout": "[[both_pass, first_only], [second_only, both_fail]] (row=first arm pass/fail, col=second arm pass/fail)",
+        "second_only": 12
+      }
+    }
+  },
+  "falsification": {
+    "completion_arms_agree": true,
+    "emission_arms_agree": true,
+    "kv_quality_axis_falsified": true,
+    "rule": "Falsified if all pairwise McNemar p>=0.05 (or 0 discordant) on BOTH emission and completion"
+  },
+  "per_arm": {
+    "gpu_only_f16": {
+      "emission_failure_rate": 0.31,
+      "emission_failures": 62,
+      "emission_ok": 138,
+      "n": 200,
+      "trajectory_pass": 10,
+      "trajectory_pass_rate": 0.05
+    },
+    "gpu_only_u4": {
+      "emission_failure_rate": 0.355,
+      "emission_failures": 71,
+      "emission_ok": 129,
+      "n": 200,
+      "trajectory_pass": 11,
+      "trajectory_pass_rate": 0.055
+    },
+    "gpu_only_u8": {
+      "emission_failure_rate": 0.325,
+      "emission_failures": 65,
+      "emission_ok": 135,
+      "n": 200,
+      "trajectory_pass": 13,
+      "trajectory_pass_rate": 0.065
+    }
+  }
+}

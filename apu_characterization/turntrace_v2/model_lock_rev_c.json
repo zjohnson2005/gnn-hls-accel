@@ -1,0 +1,38 @@
+{
+  "schema_version": "turntrace_rev_c_model_lock_v1",
+  "campaign": "turntrace_rev_c_cpu_class_i",
+  "pinned_at": "2026-07-17",
+  "repo_id": "Qwen/Qwen2.5-1.5B-Instruct-GGUF",
+  "filename": "qwen2.5-1.5b-instruct-q4_k_m.gguf",
+  "quantization": "Q4_K_M",
+  "model_id": "Qwen2.5-1.5B-Instruct",
+  "sha256": "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e",
+  "bytes": 1117320736,
+  "relative_path": "apu_characterization/out/turntrace_v2/cpu_runtime/models/qwen2.5-1.5b-instruct-q4_k_m.gguf",
+  "engine": "llama.cpp",
+  "engine_version": "b10012-win-cpu",
+  "engine_binary_relative": "apu_characterization/out/turntrace_v2/cpu_runtime/bin/llama-server.exe",
+  "n_ctx_pinned": 16384,
+  "n_ctx_model_card": 32768,
+  "training_context_claimed": 32768,
+  "tool_role_remap": false,
+  "tinyllama_tool_remap_must_not_transfer": true,
+  "feasibility": {
+    "host_note": "Windows host ~15.6 GiB RAM. Model loads with n_ctx=16384 via mmap; working set ~2.2 GiB. Free RAM after load often <1.5 GiB.",
+    "n_ctx_16k_status": "pass_load_and_complete",
+    "n_ctx_16k_probe": {
+      "engine_tokens_in": 16383,
+      "t_prefill_ms": 264271.2,
+      "approx_tok_per_s": 62.0,
+      "tool_role_remap": false
+    },
+    "tt_doc_20k_box_status": "deferred_not_cpu_feasible_on_this_host",
+    "tt_doc_20k_reason": "Pinned server n_ctx=16384 (16K holds). Extending to 20480 would add KV pressure on a host already near RAM floor, and 16K alone already costs ~4.4 min/prefill — 20K box-target suite work is not CPU-feasible at useful speed here.",
+    "fallback_if_20k_infeasible": "Keep Qwen2.5-1.5B-Instruct Q4_K_M pinned at n_ctx=16384. Calibrate f(n) on {1K,2K,4K,8K,12K,16K}. Run C-P2 Class I on cpu_prebox targets (TT-EDIT 4K / TT-RET 5K). Defer TT-DOC 20K box calibration and long Class II cells to the arrival box or a host with >=16 GiB free RAM. Do not silently swap models."
+  },
+  "notes": [
+    "Official Qwen GGUF Q4_K_M from Qwen/Qwen2.5-1.5B-Instruct-GGUF.",
+    "CPU timing remains provisional forever; never headline.",
+    "live_authorized remains false; this lock is local Class I only."
+  ]
+}

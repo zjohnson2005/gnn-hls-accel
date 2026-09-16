@@ -15,7 +15,7 @@
 #   Search: low=8000, high=12000; bisect to +/- 250; 3 repeats
 #   Pass: median(prefill_s) <= 10 s
 #   Drift canary (INF-1): fixed gpu_only_f16 nc=4000 d=400 RESIDENT;
-#     N from THIS run's probe wall; C=3; early_max threshold floor 0.05;
+#     N=min(onset, budget) INF-1b; C=3; early_max threshold floor 0.05;
 #     trip => FAIL_CANARY_DRIFT abort (CanaryDriftAbort).
 #   Pre-registers (ACTIVE, AM-038): turn-1 TTFT limits agree within +/- 250
 #   WITHDRAWN (retained in plan.json): f16 > u8 >= u4 (turn-2 delta claim)
@@ -31,7 +31,9 @@ param(
     [int]$Low = 8000,
     [int]$High = 12000,
     [int]$Resolution = 250,
-    [int]$Repeats = 3
+    [int]$Repeats = 3,
+    [switch]$AllowUnguarded,
+    [Nullable[int]]$PlannedProbeCount = $null
 )
 
 $ErrorActionPreference = "Stop"
@@ -258,6 +260,13 @@ $resolvedCmd = 'set SEAM_LAUNCH_CONTEXT=ssh_detached' +
     ' --resolution ' + $Resolution +
     ' --repeats ' + $Repeats +
     ' --watchdog-interval-s ' + $WatchdogIntervalS
+if ($null -ne $PlannedProbeCount) {
+    $resolvedCmd = $resolvedCmd + ' --planned-probe-count ' + $PlannedProbeCount
+}
+if ($AllowUnguarded) {
+    $resolvedCmd = $resolvedCmd + ' --allow-unguarded'
+    Write-Host "NOTE -- -AllowUnguarded: session may finalize with UNGUARDED if canary never arms."
+}
 
 Write-Host "RESOLVED_CMD:"
 Write-Host $resolvedCmd

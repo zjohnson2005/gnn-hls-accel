@@ -1,0 +1,419 @@
+{
+  "protocol_version": "cap01_v2.2",
+  "experiment": "CAP-01",
+  "status": "template_requires_p0_lock",
+  "supersedes": "cap01_v2 uniform 2048 depth; Axis-2 all-content duplicate gate",
+  "amendment": "cap01_v2.2_depth_triage",
+  "claim_under_test": "Under a fixed resource allocation, a lower orchestration floor converts the identical allocation into more solved tasks.",
+  "budget_framing": "The fixed budget represents a resource ceiling — the compute/time allocation a production system grants a verifiable task — not user wait-time tolerance. The energy variant is the same ceiling denominated in joules. The claim under test is: under a fixed allocation, a lower orchestration floor converts the identical allocation into more solved tasks.",
+  "pre_registered_null": "The floor clips throughput but not capability at these budgets and task profiles.",
+  "validity_class": "capability_scaling",
+  "candidate_pool": {
+    "generation_backend": "openai",
+    "minimum_candidates_per_task": 2048,
+    "candidate_order": "sha256_seeded_fisher_yates",
+    "seed_namespace": "cap01_v1",
+    "hash_algorithm": "sha256",
+    "required_manifest_fields": [
+      "generation_model",
+      "temperature",
+      "prompt_template_sha256",
+      "candidate_token_counts",
+      "task_pool_sha256"
+    ],
+    "pool_exhaustion": "hard_gate_failure",
+    "blind_to_harness": true,
+    "surviving_v1_pools": "keep_only_for_tasks_surviving_the_v2_cut; never_regenerate",
+    "depth_triage": {
+      "enabled": true,
+      "triage_candidates": 16,
+      "upper_phat": 0.9,
+      "lower_phat": 0.02,
+      "confirmation_pool_depth": 256,
+      "scaling_pool_depth": 2048,
+      "verifier_blocked_domains_full_depth": [
+        "CODE"
+      ],
+      "axis2_degeneracy": {
+        "incorrect_duplicate_rate_max": 0.2,
+        "cross_task_identical_outputs": "fail",
+        "convergent_correct_excluded": true
+      },
+      "calibration_escape_hatch": {
+        "top_up_to_scaling_on_flip_to_SCALING": true,
+        "bounded_second_spend": true
+      }
+    }
+  },
+  "corpus": {
+    "tasks_per_domain": 50,
+    "total_tasks": 250,
+    "domains": {
+      "FUNCTION_CALLING": {
+        "domain_id": "D1",
+        "source": "BFCL v4",
+        "scope_restriction": "Single-turn and parallel-call subsets ONLY. The Multi-Turn category is excluded by name.",
+        "candidate": "one function call or parallel-call set: name plus parameters",
+        "verifier": "bfcl_ast_parameter_checker_adopted_as_is",
+        "primary_tier_ms": 2000,
+        "report_rationale": "Embedded in interactive flows; production copilot budgets are sub-few-second"
+      },
+      "TEXT_TO_SQL": {
+        "domain_id": "D2",
+        "source": "BIRD-Interact static / BIRD-Bench",
+        "scope_restriction": "Static single-shot mode ONLY. Interactive (a-Interact/c-Interact) modes are excluded by name.",
+        "candidate": "one SQL query string",
+        "verifier": "execute_against_snapshot_fixture_and_diff",
+        "primary_tier_ms": 10000,
+        "report_rationale": "Analytics/background class; async workflows tolerate multi-second ceilings"
+      },
+      "CODE": {
+        "domain_id": "D3",
+        "source": "HumanEval+ preferred; MBPP fallback",
+        "scope_restriction": "Full sets eligible",
+        "candidate": "one function implementation",
+        "verifier": "hidden_unit_tests_network_off_pinned_cpython",
+        "primary_tier_ms": 10000,
+        "report_rationale": "Verified synthesis is a think-time task in every production deployment"
+      },
+      "MATH": {
+        "domain_id": "D4",
+        "source": "MATH / AIME-style",
+        "scope_restriction": "Exact-answer problems only (no proof-graded items)",
+        "candidate": "one final answer",
+        "verifier": "numeric_or_string_normalizer_and_compare",
+        "primary_tier_ms": 10000,
+        "report_rationale": "Pure-reasoning control group; think-time class"
+      },
+      "STRUCTURED_EXTRACTION": {
+        "domain_id": "D5",
+        "source": "public invoice, receipt, contract, and ticket-triage document-extraction sets",
+        "scope_restriction": "Input document is FIXED and supplied in-prompt; no retrieval step",
+        "candidate": "one JSON object against a target schema",
+        "verifier": "json_schema_and_normalized_field_match",
+        "primary_tier_ms": 2000,
+        "report_rationale": "High-volume pipeline processing; per-document unit economics are tight",
+        "double_keyed_ground_truth_required": true,
+        "schema_complexity_gradient": [
+          "flat",
+          "shallow_nested",
+          "deep_nested"
+        ]
+      }
+    },
+    "required_task_fields": [
+      "task_id",
+      "domain",
+      "prompt",
+      "source",
+      "source_version",
+      "provenance",
+      "license",
+      "verifier",
+      "contamination_note"
+    ],
+    "contamination_policy": "For D3/D4, prefer perturbed or recent variants where obtainable at reasonable cost. Where unavailable, accept and disclose. Frozen matched replay makes memorization a level effect on absolute solve rates, never a between-harness confound. Record risk per source and task.",
+    "deferred_scopes": {
+      "tau2_bench_multi_turn_service_tasks": "requires live-environment interaction; incompatible with the frozen-pool matched-pair mechanism; deferred to a CAP-02 protocol with a frozen-environment-script design.",
+      "terminal_bench_multi_step_shell_tasks": "requires live-environment interaction; incompatible with the frozen-pool matched-pair mechanism; deferred to a CAP-02 protocol with a frozen-environment-script design.",
+      "bird_interactive_mode": "requires live-environment interaction; incompatible with the frozen-pool matched-pair mechanism; deferred to a CAP-02 protocol with a frozen-environment-script design.",
+      "bfcl_multi_turn_subset": "requires live-environment interaction; incompatible with the frozen-pool matched-pair mechanism; deferred to a CAP-02 protocol with a frozen-environment-script design."
+    }
+  },
+  "verifiers": {
+    "FUNCTION_CALLING": {
+      "adoption": "BFCL checker wrapped without modification",
+      "required_pin_fields": [
+        "checker_source_path",
+        "checker_source_sha256",
+        "checker_module",
+        "checker_callable",
+        "bfcl_version"
+      ]
+    },
+    "TEXT_TO_SQL": {
+      "engine": "sqlite",
+      "fixture_mode": "read_only_snapshot",
+      "single_statement_only": true,
+      "column_order": "canonicalize_by_column_name",
+      "row_order": "order_insensitive_unless_task_marks_order_sensitive",
+      "float_abs_tolerance": 1e-06,
+      "float_rel_tolerance": 1e-06,
+      "query_timeout_ms": 1000,
+      "max_result_rows": 10000
+    },
+    "CODE": {
+      "runtime": "pinned_cpython",
+      "network": "disabled",
+      "resource_limits": true
+    },
+    "MATH": {
+      "normalization": "NFKC, final-answer extraction, exact or finite Decimal comparison with task-frozen tolerances"
+    },
+    "STRUCTURED_EXTRACTION": {
+      "json_schema_draft": "2020-12",
+      "normalization_version": "cap01_d5_norm_v1",
+      "normalization": {
+        "strings": "Unicode NFKC, trim, collapse internal whitespace, casefold unless the schema path is listed as case_sensitive",
+        "dates": "Only fields with JSON Schema format=date are date-normalized. Accepted formats are YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY, Month D YYYY, and D Month YYYY. Ambiguous slash dates use the task-frozen date_order value MDY or DMY. Output is YYYY-MM-DD.",
+        "numbers": "JSON numeric values and numeric strings are converted to finite Decimal after removing ASCII grouping commas. Currency symbols are removed only for paths listed in currency_paths. Percent conversion occurs only for paths listed in percent_paths.",
+        "null_and_missing": "Null and missing are distinct and never normalized into each other.",
+        "objects": "Field names are exact. Values are compared recursively after path-specific normalization.",
+        "arrays": "Order-sensitive by default. Order-insensitive comparison is allowed only for paths listed in order_insensitive_paths.",
+        "extra_fields": "Governed only by the frozen target JSON Schema; no verifier-side discretionary allowance."
+      },
+      "ground_truth": "two independent annotations or source-provided labels plus an independent second key; hashes and agreement disposition required before pool generation"
+    }
+  },
+  "calibration": {
+    "shuffles": 50,
+    "freeze_scope": "once_after_all_five_domain_pools_exist",
+    "saturated_rule": {
+      "n": 4,
+      "probability_gt": 0.9
+    },
+    "dead_rule": {
+      "n": 2048,
+      "probability_lt": 0.05
+    },
+    "legacy_dead_context": {
+      "n": 128,
+      "probability_lt": 0.05,
+      "analysis_role": "secondary_context_only"
+    },
+    "primary_population": "SCALING",
+    "secondary_population": "ALL",
+    "minimum_scaling_tasks_per_domain": 20,
+    "below_minimum_action": "flag_before_P2_and_require_explicit_protocol_amendment"
+  },
+  "latency_backend": {
+    "distribution": "lognormal",
+    "median_scales_ms": [
+      4000,
+      1000,
+      100,
+      20,
+      10,
+      5
+    ],
+    "sigma": 0.6,
+    "seed_derivation": "sha256(task_id,seed)",
+    "wall_wait_only": true,
+    "same_draw_stream_across_harnesses": true
+  },
+  "matrix": {
+    "harnesses": [
+      "langgraph",
+      "rust",
+      "raw_python"
+    ],
+    "wall_budgets_ms": [
+      2000,
+      10000
+    ],
+    "domain_primary_tiers_ms": {
+      "FUNCTION_CALLING": 2000,
+      "TEXT_TO_SQL": 10000,
+      "CODE": 10000,
+      "MATH": 10000,
+      "STRUCTURED_EXTRACTION": 2000
+    },
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "instrument_mode": "throttle",
+    "observer_mode": "stripped_subsample",
+    "measurement_order": "serial",
+    "budget_order": [
+      2000,
+      10000
+    ],
+    "p3_descoping_order": [
+      "drop_off_tier_CODE",
+      "drop_off_tier_MATH"
+    ],
+    "never_descope": [
+      "domain_primary_cells",
+      "4000ms_positive_controls"
+    ]
+  },
+  "budget": {
+    "clock": "CLOCK_MONOTONIC",
+    "start_barrier": "task_ready_after_session_setup",
+    "candidate_counts_when": "verifier_verdict_before_deadline",
+    "wall_overshoot_fraction": 0.02,
+    "max_violating_task_cell_fraction": 0.01,
+    "setup_in_primary_budget": false,
+    "in_flight_at_deadline": "abandoned"
+  },
+  "energy_variant": {
+    "required_for_wall_primary": false,
+    "host_requirement": "bare_metal_linux_with_rapl",
+    "wall_tier_ms": 10000,
+    "latency_scales_ms": [
+      4000,
+      5
+    ],
+    "budget_calibration": "median_package_joules_of_10000ms_wall_tier_at_4000ms",
+    "observer_validation_required": true
+  },
+  "floor_anchor": {
+    "latency_scale_ms": 20,
+    "promoted_reference_bands_ms": {
+      "langgraph": [
+        3.9,
+        7.0
+      ],
+      "rust": [
+        0.5,
+        1.0
+      ],
+      "raw_python": [
+        0.21,
+        0.24
+      ]
+    },
+    "out_of_band_action": "use_host_measured_floor_as_x_coordinate"
+  },
+  "gates": {
+    "G1": {
+      "name": "accounting",
+      "residual_limit_fraction": 0.15,
+      "standing_turntrace_tolerances": true
+    },
+    "G2": {
+      "name": "budget_integrity",
+      "max_overshoot_fraction": 0.02,
+      "max_violating_task_cell_fraction": 0.01,
+      "candidate_conservation": "started_equals_counted_plus_abandoned"
+    },
+    "G3": {
+      "name": "matched_candidate",
+      "prefix_match_required": true,
+      "cross_harness_common_sequence_required": true,
+      "pool_exhaustion_fails": true
+    },
+    "G4": {
+      "name": "verifier_determinism",
+      "postprocess_reexecutions": 1,
+      "any_flip_removes_task_globally": true
+    },
+    "G5": {
+      "name": "replication",
+      "required_seeds": 5
+    },
+    "G6": {
+      "name": "floor_verification",
+      "out_of_band_recalibrates_x_axis": true
+    },
+    "G7": {
+      "name": "throughput_consistency",
+      "relative_tolerance": 0.25,
+      "violations_retained": true,
+      "rmax_terms": [
+        "latency_draw_wall",
+        "host_measured_harness_floor",
+        "measured_verifier_wall"
+      ]
+    },
+    "G8": {
+      "name": "verifier_cost_parity",
+      "relative_tolerance": 0.15,
+      "absolute_half_width_ms": 0.25,
+      "absolute_floor_applies_when_median_below_ms": 1.0,
+      "half_width_rule": "max(relative_tolerance * band_median, absolute_half_width_ms, max_within_harness_iqr_ms)",
+      "minimum_repeats_per_harness_domain": 200,
+      "metric": "TOOL_COMPUTE_wall_ms_median",
+      "scope": "in_situ_harness_dispatch_then_shared_verifier",
+      "what_g8_tests": "harness_dispatch_path_into_the_shared_verifier_not_independent_verifier_implementations",
+      "load_bearing_constraint": "shared_verifier_architecture; un-sharing the verifier for performance or any other reason re-opens Axis 1 / G8 before further measurement",
+      "failure_action": "fix_invocation_path_or_exclude_domain_harness_with_died_ledger",
+      "rerun_when": "any_harness_verifier_invocation_code_changes",
+      "noise_floor_rationale": "When the band median is below 1 ms, relative ±15% is smaller than Windows/WSL timer jitter on string-normalizer work. Absolute half-width 0.25 ms is the timer-stable floor; relative ±15% still governs for CODE/SQL/extraction where TOOL_COMPUTE is material. Timer-resolution floors for sub-millisecond gates must be frozen at protocol freeze time, not amended at failure time (died-ledger #5)."
+    }
+  },
+  "statistics": {
+    "unit": "task_seed_pair",
+    "primary_cell": {
+      "latency_scale_ms": 5,
+      "budget_selection": "domain_primary_tier",
+      "population": "SCALING",
+      "domains": [
+        "FUNCTION_CALLING",
+        "TEXT_TO_SQL",
+        "CODE",
+        "MATH",
+        "STRUCTURED_EXTRACTION"
+      ],
+      "pooling": "pooled_discordant_counts_across_domains",
+      "contrast": [
+        "langgraph",
+        "rust"
+      ]
+    },
+    "primary_test": "mcnemar_exact_two_sided",
+    "primary_alpha": 0.05,
+    "effect": "paired_solve_rate_difference_percentage_points",
+    "bootstrap": {
+      "method": "BCa",
+      "resamples": 10000,
+      "unit": "task"
+    },
+    "leave_one_seed_out_must_preserve_sign": true,
+    "capability_floor_fit": "descriptive_three_point",
+    "secondary_family": {
+      "correction": "Holm",
+      "tests": [
+        "five_per_domain_primary_contrasts",
+        "five_per_domain_off_tier_contrasts",
+        "pooled_langgraph_vs_raw_python_at_domain_primary_tiers",
+        "pooled_and_five_per_domain_4000ms_positive_controls"
+      ],
+      "exhaustive": true
+    },
+    "positive_control": {
+      "latency_scale_ms": 4000,
+      "budget_selection": "domain_primary_tier",
+      "expected": "no_harness_separation",
+      "must_hold_pooled": true,
+      "must_hold_each_domain": true,
+      "failure_action": "flag_per_domain_confound_and_stop_before_headline"
+    }
+  },
+  "schedule_estimate": {
+    "formula": "sum((tier_budget + measured_setup + measured_cooldown) * tasks_per_cell) over domain, scale, tier, seed, harness",
+    "record_at": "P2_exit",
+    "record_in": "run_root_manifest",
+    "requires_measured_p2_setup_and_cooldown": true
+  },
+  "projection": {
+    "tier": "D",
+    "target_floor_us": [
+      10,
+      50
+    ],
+    "measured_arm": false,
+    "required_label": "Tier D design target - projection from measured relationship, not a result. Promotion path: csynth.",
+    "rendering": "separate_dashed_extension_beyond_raw_python",
+    "blocked_subject_claim": "Praetor achieves"
+  },
+  "claim_ladder": {
+    "rung_1": "domain-primary pooled test significant in predicted direction; pooled and every per-domain 4000ms null hold; G3, G6, G7 clean",
+    "rung_2": "Holm-corrected scoped gap only in selected domains, tiers, or versus raw_python",
+    "rung_3": "no significant separation; throughput clipping confirmed"
+  },
+  "lock_fields": {
+    "corpus_manifest_sha256": null,
+    "pool_manifest_sha256": null,
+    "classification_manifest_sha256": null,
+    "generation_config_sha256": null,
+    "answer_space_sha256": null,
+    "expectations_sha256": null,
+    "verifier_pin_manifest_sha256": null,
+    "d5_normalization_sha256": null
+  }
+}
