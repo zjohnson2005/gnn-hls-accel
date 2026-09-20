@@ -29,6 +29,12 @@ def main(argv: list[str] | None = None) -> int:
         default=ROOT / "configs" / "models" / "Qwen3-4B-int4-ov.yaml",
     )
     parser.add_argument("--n-tokens", type=int, default=64)
+    parser.add_argument(
+        "--arm",
+        type=str,
+        default="gpu_only_f16",
+        help="delta_n arm id for the smoke cell (default gpu_only_f16)",
+    )
     args = parser.parse_args(argv)
 
     from transformers import AutoTokenizer
@@ -57,14 +63,19 @@ def main(argv: list[str] | None = None) -> int:
     spec = load_local_spec(model_spec)
     model_dir = str(spec["ir_dir"])
     arms_by_id = {a["id"]: a for a in cfg["arms"]}
-    arm = arms_by_id["gpu_only_f16"]
+    arm_id = str(args.arm).strip()
+    if arm_id == "cpu-p":
+        arm_id = "A"
+    if arm_id not in arms_by_id:
+        raise SystemExit(f"REFUSED -- unknown smoke arm {arm_id!r}")
+    arm = arms_by_id[arm_id]
     p_cpus = [int(c) for c in cfg["topology"]["p_cpus"]]
     unit = str(cfg["ladder"]["filler_unit"])
     n = int(args.n_tokens)
 
     tokenizer = AutoTokenizer.from_pretrained(model_dir)
     prompt = prompt_for(root=ROOT, tokenizer=tokenizer, n_tokens=n, unit=unit, cache={})
-    print(f"[c2_smoke] probe arm=gpu_only_f16 n={n} repeat=0", flush=True)
+    print(f"[c2_smoke] probe arm={arm_id} n={n} repeat=0", flush=True)
     rep = _probe_once(
         root=ROOT,
         cfg=cfg,

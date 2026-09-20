@@ -15,7 +15,9 @@
 
 $ErrorActionPreference = "Stop"
 $failed = 0
-$root = "C:\Users\zjohn\Projects\gnn-hls-accel"
+# Repo root = parent of tools/ (this script's directory).
+$root = Split-Path -Parent $PSScriptRoot
+if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 . (Join-Path $root "tools\SeamPsCommon.ps1")
 
 function Assert-True {

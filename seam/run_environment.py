@@ -20,6 +20,7 @@ import subprocess
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Final
 
 from seam.errors import ManifestValidationError
@@ -488,13 +489,22 @@ def probe_workloads_session_host() -> dict[str, Any]:
     }
 
 
-def capture_host_run_environment() -> dict[str, Any]:
-    """Collect host-readable INF-5 fields. Session fields stay unset (caller supplies)."""
+def capture_host_run_environment(
+    *,
+    include_measurement_gates: bool = False,
+    platform_id: str | None = None,
+    repo_root: Path | None = None,
+) -> dict[str, Any]:
+    """Collect host-readable INF-5 fields. Session fields stay unset (caller supplies).
+
+    When ``include_measurement_gates`` is true, evaluate PORT-2 gates and attach the
+    additive ``measurement_gates`` object (records unknown onset; does not invent values).
+    """
     from seam.telemetry.host_environment import available_mb_now
 
     available, available_method = available_mb_now()
     wsh = probe_workloads_session_host()
-    return {
+    out: dict[str, Any] = {
         "gpu_driver_version": _capture_gpu_driver_version(),
         "windows_build": _capture_windows_build(),
         "active_power_scheme_guid": _capture_active_power_scheme_guid(),
@@ -506,6 +516,16 @@ def capture_host_run_environment() -> dict[str, Any]:
         "workloads_session_host_resident": wsh.get("resident"),
         "workloads_session_host_probe": wsh,
     }
+    if include_measurement_gates:
+        from seam.measurement_gates import (
+            evaluate_measurement_gates,
+            run_environment_gate_fields,
+        )
+
+        root = repo_root or Path(__file__).resolve().parents[1]
+        report = evaluate_measurement_gates(root, platform_id=platform_id)
+        out.update(run_environment_gate_fields(report))
+    return out
 
 
 def _is_absent(value: Any) -> bool:
@@ -587,7 +607,7 @@ def require_run_environment(env: dict[str, Any] | None) -> dict[str, Any]:
             + ". No silent defaults — supply measured values or stop."
         )
 
-    return {
+    out = {
         "gpu_driver_version": str(env["gpu_driver_version"]),
         "windows_build": str(env["windows_build"]),
         "active_power_scheme_guid": str(env["active_power_scheme_guid"]).lower(),
@@ -600,3 +620,7 @@ def require_run_environment(env: dict[str, Any] | None) -> dict[str, Any]:
         "session_design": str(env["session_design"]),
         "arm_order": [str(item) for item in env["arm_order"]],
     }
+    # PORT-2 additive: preserve measurement_gates when present (never invent).
+    if "measurement_gates" in env and isinstance(env["measurement_gates"], dict):
+        out["measurement_gates"] = dict(env["measurement_gates"])
+    return out

@@ -14,6 +14,7 @@ from tools.run_q_kv_quality import (  # noqa: E402
     _arm_order_for_entry,
     _contingency,
     _entry_emission_ok,
+    _quality_row,
     analyze_paired,
 )
 
@@ -34,6 +35,23 @@ def test_entry_emission_ok() -> None:
         {"turn_metrics": [{"n_decoded_steps": 1}, {"n_decoded_steps": 0}]}
     )
     assert not _entry_emission_ok({"turn_metrics": []})
+
+
+def test_quality_row_persists_raw() -> None:
+    row = {
+        "id": "e0",
+        "score": {"valid": True},
+        "model_result_decoded": [[[]]],
+        "model_result_raw": [["call foo()"]],
+        "turn_metrics": [{"n_decoded_steps": 1, "generated_tokens": 5}],
+        "stop_reason": "completed",
+        "force_quit": False,
+        "n_user_turns": 1,
+        "n_completed_turns": 1,
+        "wall_s": 0.5,
+    }
+    q = _quality_row(row, arm_id="gpu_only_f16", kv="f16")
+    assert q["model_result_raw_per_turn"][0]["generations"][0]["text"] == "call foo()"
 
 
 def test_mcnemar_contingency_and_analyze() -> None:
@@ -77,6 +95,7 @@ def test_contingency_zero_discordant() -> None:
 if __name__ == "__main__":
     test_arm_order_is_permutation_and_deterministic()
     test_entry_emission_ok()
+    test_quality_row_persists_raw()
     test_mcnemar_contingency_and_analyze()
     test_contingency_zero_discordant()
     print("PASS tests/test_q_kv_quality.py")

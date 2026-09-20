@@ -31,6 +31,10 @@ if str(ROOT) not in sys.path:
 from apu_characterization.cap01.statistics import mcnemar_exact_two_sided  # noqa: E402
 from seam.ov_kv_precision import read_kv_cache_precision  # noqa: E402
 from seam.run_environment import RunEnvironmentSession  # noqa: E402
+from tools.quality_row_persist import (  # noqa: E402
+    DegenerateOutputGuard,
+    persist_model_result_raw_per_turn,
+)
 from tools.run_h1_hybrid import (  # noqa: E402
     W3_ENTRIES_SHA256,
     W3_SEAL_REFS,
@@ -174,6 +178,7 @@ def _quality_row(
         "score_error_message": score.get("error_message") or score.get("error"),
         "quality_scope": "local_probe",
         "model_result_decoded": row.get("model_result_decoded"),
+        "model_result_raw_per_turn": persist_model_result_raw_per_turn(row),
         "emission_ok": _entry_emission_ok(row),
         "stop_reason": row.get("stop_reason"),
         "force_quit": bool(row.get("force_quit")),
@@ -208,6 +213,7 @@ def _ledger_row(
             {
                 "turn": tm.get("turn"),
                 "n_decoded_steps": tm.get("n_decoded_steps"),
+                "generated_tokens": tm.get("generated_tokens"),
                 "emitted_parseable_tool_call": int(tm.get("n_decoded_steps") or 0) > 0,
                 "ttft_s": tm.get("ttft_s"),
                 "decode_tok_s": tm.get("decode_tok_s"),
@@ -527,6 +533,7 @@ def run_session(
 
     entry_ids = [str(e["id"]) for e in entries]
     t_session0 = time.perf_counter()
+    deg_guard = DegenerateOutputGuard(max_new_tokens=int(cfg.max_new_tokens))
 
     def _ensure_arm(arm_id: str) -> None:
         if arm_id in pipes and pipes[arm_id] is not None:
@@ -573,16 +580,18 @@ def run_session(
         if isinstance(digest, str) and len(digest) == 64:
             led["prompt_render_sha256"] = digest
             env_session.add_prompt_digest(digest)
-        by_arm[arm_id][eid] = led
-        quality_rows.append(
-            _quality_row(
-                row,
-                arm_id=arm_id,
-                kv_label=kv_label,
-                kv_readback_cell=kv_cell,
-                kv_readback_load=kv_load,
-            )
+        qrow = _quality_row(
+            row,
+            arm_id=arm_id,
+            kv_label=kv_label,
+            kv_readback_cell=kv_cell,
+            kv_readback_load=kv_load,
         )
+        deg = deg_guard.observe(row, entry_id=eid, arm_id=arm_id)
+        qrow["degenerate_max_burn"] = bool(deg["degenerate_max_burn"])
+        led["degenerate_max_burn"] = bool(deg["degenerate_max_burn"])
+        by_arm[arm_id][eid] = led
+        quality_rows.append(qrow)
         cell_log.append(
             {
                 "entry_id": eid,
@@ -591,6 +600,7 @@ def run_session(
                 "wall_s": wall,
                 "emission_ok": led["emission_ok"],
                 "trajectory_pass": led["trajectory_pass"],
+                "degenerate_max_burn": bool(deg["degenerate_max_burn"]),
                 "kv_readback_cell_normalized": (
                     (kv_cell or {}).get("normalized") if kv_cell else None
                 ),
@@ -616,9 +626,11 @@ def run_session(
         print(
             f"CELL_DONE entry={eid} arm={arm_id} wall_s={wall:.1f} "
             f"emission_ok={led['emission_ok']} traj={led['trajectory_pass']} "
-            f"kv_cell={(kv_cell or {}).get('normalized')!r}",
+            f"kv_cell={(kv_cell or {}).get('normalized')!r} "
+            f"degenerate={deg['degenerate_max_burn']}",
             flush=True,
         )
+        deg_guard.raise_if_refused()
 
     status = "complete"
     abort_reason: str | None = None

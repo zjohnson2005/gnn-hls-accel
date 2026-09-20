@@ -28,7 +28,7 @@ param(
     [switch]$Run,
     [switch]$ReportOnly,
     [string]$Tag = "f16_equiv",
-    [string]$PythonExe = "C:\Users\zjohn\Projects\gnn-hls-accel\.venv-seam\Scripts\python.exe",
+    [string]$PythonExe = "",
     [ValidateSet("local_console", "ssh_foreground", "ssh_detached")]
     [string]$LaunchContext = "ssh_foreground",
     [int]$CellTimeoutS = 1500,
@@ -36,7 +36,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$root = "C:\Users\zjohn\Projects\gnn-hls-accel"
+# Repo root = parent of tools/ (this script's directory).
+$root = Split-Path -Parent $PSScriptRoot
+if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 . (Join-Path $root "tools\SeamPsCommon.ps1")
 
 $cfgPath = Join-Path $root "configs\delta_n.yaml"

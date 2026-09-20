@@ -15,7 +15,7 @@ param(
     [switch]$Orchestrate,
     [switch]$Status,
     [switch]$DryRunGate,
-    [string]$PythonExe = "C:\Users\zjohn\Projects\gnn-hls-accel\.venv-seam\Scripts\python.exe",
+    [string]$PythonExe = "",
     [string]$Tag = "dispatch_p_interleaved",
     [int]$CellTimeoutS = 1500,
     [int]$Repeats = 3,
@@ -26,7 +26,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$root = "C:\Users\zjohn\Projects\gnn-hls-accel"
+# Repo root = parent of tools/ (this script's directory).
+$root = Split-Path -Parent $PSScriptRoot
+if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 $self = Join-Path $root "tools\run_delta_prefill_matrix.ps1"
 
 $modeCount = 0

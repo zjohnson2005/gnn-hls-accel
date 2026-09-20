@@ -1,30 +1,44 @@
-# CAP-4 launcher - Prefill curve to failure per KV precision (gpu_only / RESIDENT).
+# Q-8B launcher - interleaved int4-4B vs int4-8B tier quality (KV=f16).
 #
 # Production (Zach, bare SSH after cold boot):
-#   powershell -NoProfile -File tools/launch_cap4.ps1
+#   powershell -NoProfile -File tools/launch_q8b.ps1
 #
 # Dry-run (spawn suppressed; gates report-only; no measurement):
-#   powershell -NoProfile -File tools/launch_cap4.ps1 -DryRun
+#   powershell -NoProfile -File tools/launch_q8b.ps1 -DryRun
+#
+# Default pipeline: single-pipe block interleave (load one arm's block, unload,
+# load the other). Reload events in reload_events.json; excluded from TTFT/decode.
+#
+# Dual-resident is KNOWN-BROKEN on this iGPU (citing b1a291f0) — opt in only:
+#   powershell -NoProfile -File tools/launch_q8b.ps1 -AllowDualResident
 #
 # Steps: (1) non-persistent host clean  (2) five gates  (3) spawn_detached
 #        (4) print run_id + artifact dir and exit without waiting.
 #
-# Payload: tools/run_cap4_prefill_curve.py
-#   Arms: gpu_only_f16, gpu_only_u8, gpu_only_u4 (INTERLEAVED)
-#   Primary n: 12000,16000,20000,26000,32000,40000,46000; continue +6000
-#   Repeats: 3; report median
-#   Predictions: derived/cap4/CAP4_PREDICTIONS.json (must exist before probe)
+# Payload: tools/run_q_8b_quality.py
+#   Arms: int4_4B, int4_8B (model-spec axis; placement gpu_only_f16; KV=f16)
+#   Entries: same 200 as W-3 / Q-KV; block-interleaved; paired McNemar
+#   Predictions: derived/q8b/Q8B_PREDICTIONS.json (must exist before probe)
 #   INF-5: RunEnvironmentSession interleaved + arm_order
+#   Reload events: derived/.../reload_events.json (excluded from decode metrics)
+#   Degenerate guard: N consecutive max_new_tokens+zero-decode → SeamError refuse
 #
-# WSH watchdog interval 60 s.
+# Parameters:
+#   -AllowDualResident     pass --allow-dual-resident (KNOWN-BROKEN; citing b1a291f0)
+#   -ForceBlockInterleave  deprecated no-op (single-pipe is already default)
+#   -InterleaveSeed        default 20260916
+#   -DryRun                gates + resolve cmd only; no spawn
+#
+# WSH watchdog: worker does not spawn a WSH watchdog (quality path); host clean
+# still kills WorkloadsSessionHost before launch.
 # Banners are ASCII only.
 
 [CmdletBinding()]
 param(
     [switch]$DryRun,
-    [string]$ModelSpec = "",
-    [int]$Repeats = 3,
-    [int]$Seed = 20260915
+    [switch]$AllowDualResident,
+    [switch]$ForceBlockInterleave,
+    [int]$InterleaveSeed = 20260916
 )
 
 $ErrorActionPreference = "Stop"
@@ -33,21 +47,12 @@ $root = Split-Path -Parent $PSScriptRoot
 if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 Set-Location $root
 
-$Tag = "cap4"
-$WatchdogIntervalS = 60
-$ArmsCsv = "gpu_only_f16,gpu_only_u8,gpu_only_u4"
-$PrimaryRungs = "12000,16000,20000,26000,32000,40000,46000"
-$ContinueStep = 6000
-if ([string]::IsNullOrWhiteSpace($ModelSpec)) {
-    $ModelSpec = Join-Path $root "configs\models\Qwen3-4B-int4-ov.yaml"
-} elseif (-not [System.IO.Path]::IsPathRooted($ModelSpec)) {
-    $ModelSpec = Join-Path $root $ModelSpec
-}
+$Tag = "q8b"
 $PythonExe = Join-Path $root ".venv-seam\Scripts\python.exe"
-$WorkerPy = Join-Path $root "tools\run_cap4_prefill_curve.py"
+$WorkerPy = Join-Path $root "tools\run_q_8b_quality.py"
 $SpawnPs1 = Join-Path $root "tools\spawn_detached.ps1"
-$PredJson = Join-Path $root "derived\cap4\CAP4_PREDICTIONS.json"
-$SessionRoot = Join-Path $root "derived\cap4"
+$PredJson = Join-Path $root "derived\q8b\Q8B_PREDICTIONS.json"
+$SessionRoot = Join-Path $root "derived\q8b"
 $LaunchDir = Join-Path $SessionRoot "_launches"
 
 $WorkloadAppxNames = @(
@@ -73,34 +78,21 @@ function Refuse {
     exit 1
 }
 
-Write-Host "=== launch_cap4.ps1 ==="
+Write-Host "=== launch_q8b.ps1 ==="
 Write-Host ("mode           : {0}" -f $(if ($DryRun) { "DRY-RUN (spawn suppressed)" } else { "LIVE" }))
 Write-Host ("cwd            : {0}" -f (Get-Location).Path)
 Write-Host ("started_utc    : {0}" -f (Get-Date).ToUniversalTime().ToString("o"))
-Write-Host ("Worker         : tools/run_cap4_prefill_curve.py")
-Write-Host ("Arms           : {0} (INTERLEAVED)" -f $ArmsCsv)
-Write-Host ("Primary rungs  : {0}" -f $PrimaryRungs)
-Write-Host ("Continue step  : {0}" -f $ContinueStep)
-Write-Host ("Repeats        : {0}" -f $Repeats)
-Write-Host ("ModelSpec      : {0}" -f $ModelSpec)
-Write-Host ("WatchdogIntervalS: {0}" -f $WatchdogIntervalS)
-Write-Host ""
-Write-Host "PRE-REGISTERED (derived/cap4/CAP4_PREDICTIONS.json) BEFORE FIRST PROBE:"
-Write-Host "  P1: prefill ~ n^1.6 => ~115 s at 46000 if reachable"
-Write-Host "  P2: ALLOC ceiling order f16 < u8 < u4"
-Write-Host "  P3: at least one ALLOC_FAILURE before/at 46k; joint falsifier = all reach 46k w/o ALLOC"
-Write-Host ""
-
-if (-not (Test-Path -LiteralPath $PredJson)) {
-    Refuse "missing pre-registration: $PredJson"
-    exit 2
+Write-Host ("Worker         : tools/run_q_8b_quality.py")
+Write-Host ("Arms           : int4_4B, int4_8B (KV=f16; placement gpu_only_f16)")
+Write-Host ("Pipeline       : block_interleave_single_pipe (default)")
+Write-Host ("InterleaveSeed : {0}" -f $InterleaveSeed)
+Write-Host ("AllowDualResident: {0}  (KNOWN-BROKEN citing b1a291f0)" -f [bool]$AllowDualResident)
+if ($ForceBlockInterleave) {
+    Write-Host "ForceBlockInterleave: True (deprecated no-op; single-pipe already default)"
 }
-$pred = Get-Content -LiteralPath $PredJson -Raw | ConvertFrom-Json
-if ($pred.status -ne "pre_registered_before_measurement") {
-    Refuse "predictions status must be pre_registered_before_measurement (got $($pred.status))"
-    exit 2
-}
-Write-Host ("Predictions OK: registered_utc={0}" -f $pred.registered_utc)
+Write-Host ("Predictions    : {0}" -f $PredJson)
+Write-Host ""
+Write-Host "TIER NOTE: int4-vs-int4 only. No Qwen3-8B-int8-ov in registry."
 Write-Host ""
 
 # ---------------------------------------------------------------------------
@@ -161,7 +153,7 @@ Write-Host ("Available MBytes AFTER  clean: {0:N1}  (delta={1:N1})" -f `
 Write-Host ""
 
 # ---------------------------------------------------------------------------
-# 2. Five gates (same as C-1/C-2 — MEM-CEIL / allocation claims need a clean host)
+# 2. Five gates
 # ---------------------------------------------------------------------------
 Write-Host "=== 2. five gates ==="
 Write-Host "GATE NOTE -- PORT-2: platform YAML floors; AC/no-battery; processor AC 100/100 (GUID recorded only)."
@@ -179,9 +171,9 @@ Write-Host ""
 # ---------------------------------------------------------------------------
 # 3. Resolved command
 # ---------------------------------------------------------------------------
-Write-Host "=== 3. resolved CAP-4 command ==="
+Write-Host "=== 3. resolved Q-8B command ==="
 
-foreach ($p in @($WorkerPy, $SpawnPs1, $PythonExe, $ModelSpec, $PredJson)) {
+foreach ($p in @($WorkerPy, $SpawnPs1, $PythonExe, $PredJson)) {
     if (-not (Test-Path -LiteralPath $p)) {
         Refuse "missing required path: $p"
         exit 2
@@ -189,22 +181,23 @@ foreach ($p in @($WorkerPy, $SpawnPs1, $PythonExe, $ModelSpec, $PredJson)) {
 }
 
 $sid = [guid]::NewGuid().ToString()
-$tagLaunch = "cap4_" + (Get-Date -Format "yyyyMMdd_HHmmss")
+$tagLaunch = "q8b_" + (Get-Date -Format "yyyyMMdd_HHmmss")
 New-Item -ItemType Directory -Force -Path $LaunchDir | Out-Null
 $log = Join-Path $LaunchDir "$tagLaunch.log"
-$artifactDir = Join-Path $SessionRoot $sid
+$artifactDir = Join-Path $SessionRoot ("q8b_" + $sid)
 
 $resolvedCmd = 'set SEAM_LAUNCH_CONTEXT=ssh_detached' +
     '&& "' + $PythonExe + '" -u "' + $WorkerPy + '"' +
-    ' --session-id ' + $sid +
     ' --out "' + $artifactDir + '"' +
-    ' --model-spec "' + $ModelSpec + '"' +
-    ' --arms ' + $ArmsCsv +
-    ' --primary-rungs ' + $PrimaryRungs +
-    ' --continue-step ' + $ContinueStep +
-    ' --repeats ' + $Repeats +
-    ' --seed ' + $Seed +
-    ' --watchdog-interval-s ' + $WatchdogIntervalS
+    ' --run-id ' + $sid +
+    ' --interleave-seed ' + $InterleaveSeed
+if ($AllowDualResident) {
+    $resolvedCmd = $resolvedCmd + ' --allow-dual-resident'
+}
+if ($ForceBlockInterleave) {
+    # Deprecated no-op retained for old invocation scripts.
+    $resolvedCmd = $resolvedCmd + ' --force-block-interleave'
+}
 
 Write-Host "RESOLVED_CMD:"
 Write-Host $resolvedCmd
@@ -214,38 +207,67 @@ Write-Host ("artifact_dir        : {0}" -f $artifactDir)
 Write-Host ("launch_log          : {0}" -f $log)
 Write-Host ""
 
-# Extraction smoke (reuse C-2 n=64 smoke — same child metrics path)
-Write-Host "=== extraction smoke (n=64, real cell) ==="
-$SmokePy = Join-Path $root "tools\c2_extraction_smoke.py"
-$SmokeOut = Join-Path $SessionRoot "_extraction_smoke"
-if (-not (Test-Path -LiteralPath $SmokePy)) {
-    Refuse "missing extraction smoke: $SmokePy"
-    exit 2
-}
 if ($DryRun) {
-    Write-Host "DRY-RUN: would run extraction smoke (suppressed)"
-} else {
-    & $PythonExe -u $SmokePy --out $SmokeOut --model-spec $ModelSpec --n-tokens 64
+    Write-Host "=== DRY-RUN: predictions + arm model specs ==="
+    $dryPy = Join-Path $LaunchDir ("{0}_dryrun.py" -f $tagLaunch)
+    @"
+import json, sys
+from pathlib import Path
+sys.path.insert(0, r"$root")
+from tools.run_q_8b_quality import (
+    ARMS, ARM_MODEL_SPECS, PLACEMENT_ARM, KV_EXPECTED, PRED_PATH,
+    DUAL_RESIDENT_KNOWN_BROKEN, DUAL_RESIDENT_CITING,
+)
+from tools.quality_row_persist import DEGENERATE_CONSECUTIVE_N
+pred = json.loads(PRED_PATH.read_text(encoding="utf-8-sig"))
+assert pred["status"] == "pre_registered_before_measurement"
+assert pred["weight_precision"] == "int4"
+assert pred["no_int8_8b_in_registry"] is True
+for a in ARMS:
+    p = ARM_MODEL_SPECS[a]
+    assert p.is_file(), p
+    print("ARM_SPEC_OK", a, p)
+print("PLACEMENT", PLACEMENT_ARM, "KV", KV_EXPECTED)
+print("PRED_UTC", pred.get("registered_utc"))
+print("DUAL_RESIDENT_KNOWN_BROKEN", DUAL_RESIDENT_KNOWN_BROKEN, DUAL_RESIDENT_CITING)
+print("DEGENERATE_N", DEGENERATE_CONSECUTIVE_N)
+print("DRYRUN_OK")
+"@ | Set-Content -LiteralPath $dryPy -Encoding utf8
+    & $PythonExe -u $dryPy
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "REFUSED -- extraction smoke failed; not launching CAP-4"
+        Write-Host "REFUSED -- dry-run preflight failed"
         exit $LASTEXITCODE
     }
-}
-Write-Host ""
-
-if ($DryRun) {
-    Write-Host "=== DRY-RUN complete: no spawn ==="
-    Write-Host ("would session_id={0}" -f $sid)
-    Write-Host ("would out={0}" -f $artifactDir)
+    Write-Host ""
+    Write-Host "DRY-RUN complete. Spawn NOT executed."
     exit 0
 }
 
 Write-Host "=== 4. spawn_detached (live) ==="
-& $SpawnPs1 -CommandLine $resolvedCmd -LogPath $log -WorkingDirectory $root
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "REFUSED -- spawn_detached failed"
-    exit $LASTEXITCODE
+New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
+$json = & $SpawnPs1 -CommandLine $resolvedCmd -LogPath $log -WorkingDirectory $root
+Write-Host $json
+$info = $json | ConvertFrom-Json
+$launchMeta = @{
+    run_id = $sid
+    out = $artifactDir
+    log = $log
+    predictions = "derived/q8b/Q8B_PREDICTIONS.json"
+    launched_utc = (Get-Date).ToUniversalTime().ToString("o")
+    allow_dual_resident = [bool]$AllowDualResident
+    force_block_interleave_deprecated = [bool]$ForceBlockInterleave
+    pipeline_default = "block_interleave_single_pipe"
+    interleave_seed = $InterleaveSeed
 }
-Write-Host "launched CAP-4 detached"
-Write-Host ("tail: Get-Content -Wait '{0}'" -f $log)
+$launchMeta | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $LaunchDir ("launch_{0}.json" -f $sid.Substring(0, 8))) -Encoding utf8
+Write-Host ""
+Write-Host "launched Q-8B detached"
+Write-Host ("  run_id           : {0}" -f $sid)
+Write-Host ("  artifact_dir     : {0}" -f $artifactDir)
+Write-Host ("  pid              : {0} (parent {1})" -f $info.pid, $info.parent_name)
+Write-Host ("  log              : {0}" -f $log)
+Write-Host ""
+Write-Host "Exiting launcher now. Close SSH. Poll:"
+Write-Host ("  Get-Content {0}\plan.json" -f $artifactDir)
+Write-Host ("  Get-Content {0}\summary.json" -f $artifactDir)
 exit 0

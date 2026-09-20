@@ -9,7 +9,7 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-ROOT = Path(r"C:\Users\zjohn\Projects\gnn-hls-accel").resolve()
+ROOT = Path(__file__).resolve().parents[1]
 EXPORT = ROOT / "_seam_export_stage"
 BRANCH = "seam/characterization"
 FIVE_MB = 5 * 1024 * 1024

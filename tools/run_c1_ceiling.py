@@ -808,7 +808,9 @@ def main(argv: list[str] | None = None) -> int:
         "started_utc": _utc(),
         "model_spec": str(model_spec),
         "ir_sha256": spec.get("ir_sha256"),
-        "ir_bytes": IR_BYTES,
+        # Prefer FetchedModelSpec ir_bytes so non-default -ModelSpec (CAP-3 8B/int8)
+        # does not inherit the 4B-int4 constant.
+        "ir_bytes": int(spec["ir_bytes"]) if spec.get("ir_bytes") is not None else IR_BYTES,
         "arms": arm_ids,
         "criterion": criterion,
         "slo_s": slo_s if criterion == CRITERION_TTFT_SLO else None,

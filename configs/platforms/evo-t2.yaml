@@ -1,0 +1,173 @@
+# Platform B — "evo-t2"
+#
+# GMKtec EVO-T2 (T2S), Intel Core Ultra X7 358H (Panther Lake), mains-only mini PC.
+# Contrast host vs Platform A (aipc-c1): same NPU generation; wider iGPU; 64 GB;
+# no battery (RAPL-only energy path).
+#
+# Governing documents:
+#   docs/SEAM_research_blueprint.md (§4 Platforms)
+#   docs/PHASE_MINUS1_IMPLEMENTATION_SPEC.md (§1 / Platform B mains-only)
+#
+# RULES: same as aipc-c1.yaml — null means unmeasured; never invent numbers.
+
+platform_id: evo-t2
+spec_version: "1.0"
+
+identity:
+  cpu: Intel Core Ultra X7 358H
+  family: Panther Lake
+  chassis: GMKtec EVO-T2
+  os_build: null                  # attest on first T2S probe
+  hostname: null                  # fill after first boot probe
+
+  _provenance:
+    cpu: vendor_stated            # T2-3 prep / purchase SKU; not yet probe-attested on this repo
+    family: inferred
+    chassis: vendor_stated
+    os_build: null
+    hostname: null
+
+provenance_artifacts: []          # populate when T2S probe artifacts are committed
+
+topology:
+  verified: false
+  p_cpus: null
+  lpe_cpus: null
+  expected:
+    # 16 cores (4P+8E+4LP) per blueprint §4 — HYPOTHESIS until topology verify seals.
+    n_logical_cpus: 16
+    n_p_cores: 4
+    n_e_cores: 8
+    n_lpe_cores: 4
+    smt: false
+    _provenance: vendor_stated
+  measured: null
+  verification:
+    kernel: python_intfp_v1
+    integer_iterations: 4_000_000
+    float_iterations: 2_000_000
+    repeats_per_cpu: 7
+    warmup_repeats: 2
+    min_cluster_separation_ratio: 1.25
+    max_within_cluster_cv: 0.15
+    require_expected_split: true
+
+memory:
+  total_mb: 65536                 # 64 GB LPDDR5X vendor-stated; attest on probe
+  unified: true
+  upgradeable: false
+  bandwidth_gbps_measured: null
+  bandwidth_measured_by_run_id: null
+  _bandwidth_note: >-
+    Never cite ~120 GB/s or any derived bandwidth until M2.4 measures it (Platform A
+    prohibition carries; Platform B has its own unverified derived figure).
+  _provenance:
+    total_mb: vendor_stated
+    unified: vendor_stated
+
+accelerators:
+  igpu:
+    name: Intel Arc B390
+    cores: 12
+    pci_id: null
+    openvino_device: GPU
+    _provenance:
+      name: vendor_stated
+      cores: vendor_stated
+  npu:
+    name: NPU 5
+    model: null
+    openvino_device: NPU
+    peak_int8_tops: 50
+    achieved_tops_measured: null
+    achieved_measured_by_run_id: null
+    _provenance:
+      name: vendor_stated
+      peak_int8_tops: vendor_stated_peak_not_achieved
+
+power:
+  min_w: null
+  base_w: null
+  turbo_w: null
+  has_battery: false              # mains-only; Win32_Battery empty => AC gate passes with reason
+  turbo_sustainable_s: null
+  _provenance:
+    has_battery: vendor_stated
+  battery: null
+  pinned:
+    # GUID is RECORD-ONLY on PORT-2. Stock High performance on T2S is 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c;
+    # XPS Dell Best Performance is ec87a53a-…. Do not match GUID — assert AC 100/100.
+    power_plan_name: null
+    power_plan_guid: null
+    assert_script: null
+  profiles:
+    ac-pinned:
+      on_battery: false
+      require_charging: null      # no battery subsystem
+      power_plan_name: null
+      power_plan_guid: null
+      require_processor_ac_percent_min: 100
+      require_processor_ac_percent_max: 100
+      display_brightness_pct: null
+      wifi_state: null
+      defender_realtime: null
+      windows_update_paused: null
+      background_quiesced: null
+  class_profile_map:
+    topology_verify: ac-pinned
+    affinity_matrix: ac-pinned
+
+thermal:
+  determined_by: M2.3
+  warmup_s: null
+  cooldown_ceiling_c: null
+  throttle_threshold_pct: null
+  tjmax_c: null
+  high_rate_trigger_fraction_of_tjmax: 0.70
+  sample_rate_hz_default: 1
+  sample_rate_hz_elevated: 10
+
+targets:
+  local:
+    - cpu-p
+    - cpu-lpe
+    - igpu
+    - npu
+  cloud:
+    - cloud
+
+concurrency:
+  n_logical_cpus: 16
+  smt: false
+  default_workers: 4
+  sampler_workers: 1
+
+npu_config:
+  MAX_PROMPT_LEN: 2048
+  NPUW_LLM_PREFILL_CHUNK_SIZE: 1024
+  require_int4_weights: true
+
+measurement_gates:
+  # DERIVED (not clean-session measured on T2S). Deepest planned cell class is CAP-4 /
+  # large-n prefill on ~8B INT4 IR + KV at the upper rungs on a 64 GB unified pool.
+  # Peak resident estimate ~36–40 GB leaves ~24–28 GB Available; floor 24000 MB keeps
+  # ≥4 GB margin under that estimate. Replace citation after first T2S isolation probe.
+  pre_run_available_mb_min: 24000
+  pre_run_available_mb_min_citation: >-
+    DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory;
+    peak model+KV+runtime estimate ~36–40 GB => Available target ~24–28 GB;
+    floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.
+  onset_s: null
+  onset_status: unknown
+  onset_s_citation: >-
+    UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed.
+    Sessions on this platform must record onset_status=unknown in run_environment.
+  max_uptime_s: 7200
+  max_uptime_s_citation: >-
+    CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.
+  require_processor_ac_percent_min: 100
+  require_processor_ac_percent_max: 100
+  _provenance:
+    pre_run_available_mb_min: derived_unmeasured
+    onset_s: unknown
+    max_uptime_s: chosen_provisional

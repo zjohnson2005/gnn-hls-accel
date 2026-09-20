@@ -12,8 +12,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-Set-Location "C:\Users\zjohn\Projects\gnn-hls-accel"
-
+$root = Split-Path -Parent $PSScriptRoot
+Set-Location $root
 $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $logDir = "derived\efilter"
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null

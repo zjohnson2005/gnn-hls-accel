@@ -19,8 +19,8 @@
   derived/kv_precision/TIME_ESTIMATE.md).
 
   Mac:
-    ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools/chain_kv_precision.ps1 -Orchestrate"
-    ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools/chain_kv_precision.ps1 -Status"
+    ssh xps "cd <repo-root>; powershell -NoProfile -File tools/chain_kv_precision.ps1 -Orchestrate"
+    ssh xps "cd <repo-root>; powershell -NoProfile -File tools/chain_kv_precision.ps1 -Status"
 #>
 [CmdletBinding(DefaultParameterSetName = "Run")]
 param(
@@ -33,7 +33,7 @@ param(
     [Parameter(ParameterSetName = "Orchestrate")]
     [Parameter(ParameterSetName = "Status")]
     [Parameter(ParameterSetName = "DryRunGate")]
-    [string]$PythonExe = "C:\Users\zjohn\Projects\gnn-hls-accel\.venv-seam\Scripts\python.exe",
+    [string]$PythonExe = "",
     [Parameter(ParameterSetName = "Run")]
     [Parameter(ParameterSetName = "Orchestrate")]
     [int]$CellTimeoutS = 1500,
@@ -46,7 +46,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$root = "C:\Users\zjohn\Projects\gnn-hls-accel"
+# Repo root = parent of tools/ (this script's directory).
+$root = Split-Path -Parent $PSScriptRoot
+if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 . (Join-Path $root "tools\SeamPsCommon.ps1")
 
 $outRoot = Join-Path $root "derived\kv_precision"

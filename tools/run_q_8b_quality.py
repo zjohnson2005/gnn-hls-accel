@@ -1,16 +1,23 @@
-"""Q-KV: interleaved KV precision vs BFCL multi-turn quality (local only).
+"""Q-8B: interleaved int4-4B vs int4-8B tier quality (fixed KV=f16).
 
-Arms: gpu_only_f16, gpu_only_u8, gpu_only_u4 — RESIDENT, int4-4B.
-Same 200 entries as W-3 6225d6e1. One session, per-entry arm permutation
-so machine state cannot explain arm differences. KV readback enforced;
-REFUSE on mismatch. Persists entry_quality.json (H1-FIX path) so completion
-and emission land together.
+Same 200 entries as W-3 / Q-KV. One session, block-interleaved arms so
+machine state cannot explain arm differences. Placement: gpu_only_f16 for
+both arms (KV f16 pinned; readback enforced).
 
-Predictions must already exist in derived/q_kv/Q_KV_PREDICTIONS.json
-(registered before this process generates).
+This is a **tier comparison at fixed weight precision (int4)**.
+Registry has no ``Qwen3-8B-int8-ov`` — do not silently substitute int8.
+Model specs:
+  int4_4B -> configs/models/Qwen3-4B-int4-ov.yaml
+  int4_8B -> configs/models/Qwen3-8B-int4-ov.yaml
+Quant recipe confound (stated, not papered over): 4B is INT4_SYM; 8B is
+INT4_ASYM + scale_estimation (see FetchedModelSpec notes).
 
-Usage:
-  .\\.venv-seam\\Scripts\\python.exe tools\\run_q_kv_quality.py --out derived/q_kv/<run_id>
+Predictions must already exist in derived/q8b/Q8B_PREDICTIONS.json.
+
+Usage (default = single-pipe block interleave):
+  .\\.venv-seam\\Scripts\\python.exe tools\\run_q_8b_quality.py --out derived/q8b/<run_id>
+  # known-broken opt-in only:
+  ... --allow-dual-resident
 """
 
 from __future__ import annotations
@@ -30,9 +37,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from apu_characterization.cap01.statistics import mcnemar_exact_two_sided  # noqa: E402
+from seam.errors import SeamError  # noqa: E402
 from seam.run_environment import RunEnvironmentSession  # noqa: E402
 from tools.quality_row_persist import (  # noqa: E402
+    DEGENERATE_CONSECUTIVE_N,
+    DEGENERATE_CITING_RUN,
     DegenerateOutputGuard,
     persist_model_result_raw_per_turn,
 )
@@ -43,16 +52,25 @@ from tools.run_h1_hybrid import (  # noqa: E402
     assert_scorer_version,
     load_w3_entries,
 )
+from tools.run_q_kv_quality import (  # noqa: E402
+    _contingency,
+    _entry_emission_ok,
+)
 
-ARMS = ("gpu_only_f16", "gpu_only_u8", "gpu_only_u4")
-KV_EXPECTED = {
-    "gpu_only_f16": "f16",
-    "gpu_only_u8": "u8",
-    "gpu_only_u4": "u4",
+ARMS = ("int4_4B", "int4_8B")
+PLACEMENT_ARM = "gpu_only_f16"
+KV_EXPECTED = "f16"
+ARM_MODEL_SPECS: dict[str, Path] = {
+    "int4_4B": ROOT / "configs" / "models" / "Qwen3-4B-int4-ov.yaml",
+    "int4_8B": ROOT / "configs" / "models" / "Qwen3-8B-int4-ov.yaml",
 }
-PRED_PATH = ROOT / "derived" / "q_kv" / "Q_KV_PREDICTIONS.json"
-MODEL_SPEC_DEFAULT = ROOT / "configs" / "models" / "Qwen3-4B-int4-ov.yaml"
-INTERLEAVE_SEED = 20260915
+PRED_PATH = ROOT / "derived" / "q8b" / "Q8B_PREDICTIONS.json"
+INTERLEAVE_SEED = 20260916
+BLOCK_SIZE_DEFAULT = 5
+# Dual-resident is known-broken on this iGPU (citing b1a291f0). Kept only behind
+# an explicit opt-in flag; never the default.
+DUAL_RESIDENT_KNOWN_BROKEN = True
+DUAL_RESIDENT_CITING = "b1a291f0"
 
 
 def _utc_now() -> str:
@@ -92,15 +110,21 @@ def _assert_predictions_pre_registered() -> dict[str, Any]:
             f"REFUSED -- predictions status must be pre_registered_before_measurement; "
             f"got {pred.get('status')!r}"
         )
-    reg = pred.get("registered_utc")
-    if not reg:
+    if not pred.get("registered_utc"):
         raise SystemExit("REFUSED -- predictions missing registered_utc")
+    if pred.get("weight_precision") != "int4":
+        raise SystemExit(
+            "REFUSED -- Q-8B is int4-vs-int4 tier; predictions.weight_precision must be int4"
+        )
+    if pred.get("no_int8_8b_in_registry") is not True:
+        raise SystemExit(
+            "REFUSED -- predictions must state no_int8_8b_in_registry=true "
+            "(do not silently substitute int8)"
+        )
     return pred
 
 
-def _assert_kv_readback(meta: dict[str, Any], *, arm_id: str, expected: str) -> dict[str, Any]:
-    """Refuse unless loads[*].kv_cache_precision.readback.normalized == expected."""
-    expected_n = expected.strip().lower()
+def _assert_kv_f16(meta: dict[str, Any], *, arm_id: str) -> dict[str, Any]:
     loads = meta.get("loads")
     if not isinstance(loads, list) or not loads:
         raise SystemExit(f"REFUSED -- {arm_id} load meta missing loads")
@@ -120,46 +144,32 @@ def _assert_kv_readback(meta: dict[str, Any], *, arm_id: str, expected: str) -> 
                 f"(device={readback.get('device')!r} error={readback.get('error')!r})"
             )
         got = str(normalized).lower()
-        if not kv.get("match") or got != expected_n:
+        if not kv.get("match") or got != KV_EXPECTED:
             raise SystemExit(
                 f"REFUSED -- KV_PRECISION_MISMATCH arm={arm_id} "
-                f"expected={expected_n!r} got={got!r} match={kv.get('match')!r}"
+                f"expected={KV_EXPECTED!r} got={got!r} match={kv.get('match')!r}"
             )
         if not kv.get("enforced"):
-            raise SystemExit(
-                f"REFUSED -- {arm_id} KV pin not enforced; observed={kv!r}"
-            )
-    return {
-        "arm_id": arm_id,
-        "expected": expected_n,
-        "loads": loads,
-    }
+            raise SystemExit(f"REFUSED -- {arm_id} KV pin not enforced; observed={kv!r}")
+    return {"arm_id": arm_id, "expected": KV_EXPECTED, "loads": loads}
 
 
-def _entry_emission_ok(row: dict[str, Any]) -> bool:
-    """True iff every measured turn emitted at least one parseable tool call."""
-    metrics = row.get("turn_metrics") or []
-    if not metrics:
-        return False
-    for tm in metrics:
-        if int(tm.get("n_decoded_steps") or 0) <= 0:
-            return False
-    return True
-
-
-def _quality_row(row: dict[str, Any], *, arm_id: str, kv: str) -> dict[str, Any]:
+def _quality_row(row: dict[str, Any], *, arm_id: str) -> dict[str, Any]:
     score = row.get("score") if isinstance(row.get("score"), dict) else {}
     valid = score.get("valid")
     return {
         "entry_id": row.get("id"),
         "arm_id": arm_id,
-        "kv": kv,
+        "tier": arm_id,
+        "kv": KV_EXPECTED,
+        "placement_arm": PLACEMENT_ARM,
+        "model_spec": str(ARM_MODEL_SPECS[arm_id]),
         "trajectory_pass": bool(valid) if valid is not None else None,
         "score_error_type": score.get("error_type"),
         "score_error_message": score.get("error_message") or score.get("error"),
         "quality_scope": "local_probe",
         "model_result_decoded": row.get("model_result_decoded"),
-        # Permanent: never drop raw (b1a291f0 / prior investigations blocked).
+        # Permanent: never drop raw (b1a291f0 diagnosis was blocked without it).
         "model_result_raw_per_turn": persist_model_result_raw_per_turn(row),
         "emission_ok": _entry_emission_ok(row),
         "stop_reason": row.get("stop_reason"),
@@ -173,9 +183,8 @@ def _quality_row(row: dict[str, Any], *, arm_id: str, kv: str) -> dict[str, Any]
     }
 
 
-def _ledger_row(row: dict[str, Any], *, arm_id: str, kv: str, arm_order: list[str]) -> dict[str, Any]:
-    q = _quality_row(row, arm_id=arm_id, kv=kv)
-    # Compact ledger omits decoded (lives in entry_quality.json); keep raw.
+def _ledger_row(row: dict[str, Any], *, arm_id: str, arm_order: list[str]) -> dict[str, Any]:
+    q = _quality_row(row, arm_id=arm_id)
     q.pop("model_result_decoded", None)
     turns = []
     for tm in row.get("turn_metrics") or []:
@@ -204,39 +213,18 @@ def _ledger_row(row: dict[str, Any], *, arm_id: str, kv: str, arm_order: list[st
 
 
 def _arm_order_for_entry(entry_id: str, *, seed: int) -> list[str]:
-    rng = random.Random(f"{seed}:{entry_id}")
+    rng = random.Random(f"{seed}:q8b:{entry_id}")
     order = list(ARMS)
     rng.shuffle(order)
     return order
-
-
-def _contingency(a: list[bool], b: list[bool]) -> dict[str, Any]:
-    """2x2: rows=a, cols=b; cells both_pass, a_only, b_only, both_fail."""
-    both_pass = sum(1 for x, y in zip(a, b) if x and y)
-    a_only = sum(1 for x, y in zip(a, b) if x and not y)
-    b_only = sum(1 for x, y in zip(a, b) if (not x) and y)
-    both_fail = sum(1 for x, y in zip(a, b) if (not x) and (not y))
-    mcn = mcnemar_exact_two_sided(a, b)
-    return {
-        "n": len(a),
-        "table_2x2": {
-            "both_pass": both_pass,
-            "first_only": a_only,
-            "second_only": b_only,
-            "both_fail": both_fail,
-            "layout": "[[both_pass, first_only], [second_only, both_fail]] "
-            "(row=first arm pass/fail, col=second arm pass/fail)",
-        },
-        "mcnemar": mcn,
-    }
 
 
 def analyze_paired(
     by_arm: dict[str, dict[str, dict[str, Any]]],
     entry_ids: list[str],
 ) -> dict[str, Any]:
-    """Paired McNemar on emission_ok and trajectory_pass."""
-    pairs = [("gpu_only_f16", "gpu_only_u8"), ("gpu_only_f16", "gpu_only_u4"), ("gpu_only_u8", "gpu_only_u4")]
+    """Paired McNemar on emission_ok and trajectory_pass (4B vs 8B)."""
+    a, b = ARMS
     out: dict[str, Any] = {"emission": {}, "completion": {}, "per_arm": {}}
     for arm in ARMS:
         rows = [by_arm[arm][eid] for eid in entry_ids]
@@ -250,15 +238,14 @@ def analyze_paired(
             "trajectory_pass": n_pass,
             "trajectory_pass_rate": n_pass / len(rows) if rows else None,
         }
-    for a, b in pairs:
-        em_a = [bool(by_arm[a][eid]["emission_ok"]) for eid in entry_ids]
-        em_b = [bool(by_arm[b][eid]["emission_ok"]) for eid in entry_ids]
-        cp_a = [bool(by_arm[a][eid].get("trajectory_pass")) for eid in entry_ids]
-        cp_b = [bool(by_arm[b][eid].get("trajectory_pass")) for eid in entry_ids]
-        key = f"{a}__vs__{b}"
-        out["emission"][key] = _contingency(em_a, em_b)
-        out["completion"][key] = _contingency(cp_a, cp_b)
-    # Falsification: all pairwise p>=0.05 or zero discordant on BOTH endpoints.
+    em_a = [bool(by_arm[a][eid]["emission_ok"]) for eid in entry_ids]
+    em_b = [bool(by_arm[b][eid]["emission_ok"]) for eid in entry_ids]
+    cp_a = [bool(by_arm[a][eid].get("trajectory_pass")) for eid in entry_ids]
+    cp_b = [bool(by_arm[b][eid].get("trajectory_pass")) for eid in entry_ids]
+    key = f"{a}__vs__{b}"
+    out["emission"][key] = _contingency(em_a, em_b)
+    out["completion"][key] = _contingency(cp_a, cp_b)
+
     def _agree(block: dict[str, Any]) -> bool:
         for v in block.values():
             m = v["mcnemar"]
@@ -271,8 +258,11 @@ def analyze_paired(
     out["falsification"] = {
         "emission_arms_agree": _agree(out["emission"]),
         "completion_arms_agree": _agree(out["completion"]),
-        "kv_quality_axis_falsified": _agree(out["emission"]) and _agree(out["completion"]),
-        "rule": "Falsified if all pairwise McNemar p>=0.05 (or 0 discordant) on BOTH emission and completion",
+        "tier_quality_axis_falsified": _agree(out["emission"]) and _agree(out["completion"]),
+        "rule": (
+            "Falsified if McNemar p>=0.05 (or 0 discordant) on BOTH emission and "
+            "completion (int4-4B vs int4-8B agree within paired resolution)"
+        ),
     }
     return out
 
@@ -281,10 +271,10 @@ def run_session(
     *,
     out_dir: Path,
     entries: list[dict[str, Any]],
-    model_spec: Path,
     run_id: str,
     seal: bool,
     interleave_seed: int,
+    allow_dual_resident: bool,
 ) -> dict[str, Any]:
     import openvino_genai as ov_genai
 
@@ -293,7 +283,8 @@ def run_session(
     pred = _assert_predictions_pre_registered()
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    probe.apply_model_spec(model_spec)
+    # Gold selftest uses 4B tokenizer/path; entries are model-agnostic BFCL JSON.
+    probe.apply_model_spec(ARM_MODEL_SPECS["int4_4B"])
     gold = probe.run_multi_turn_gold_selftest(entries)
     if int(gold.get("n_valid") or 0) != len(entries):
         raise SystemExit(
@@ -302,7 +293,6 @@ def run_session(
         )
     _write_json(out_dir / "multi_turn_gold_selftest.json", gold)
 
-    tokenizer = probe._hf_tokenizer()
     cfg = ov_genai.GenerationConfig()
     cfg.max_new_tokens = 512
     cfg.do_sample = False
@@ -311,68 +301,147 @@ def run_session(
     avail0 = probe._host_available_mb()
     mb_start = avail0.get("available_mb")
     if mb_start is None:
-        raise SystemExit("REFUSED -- available_mb_start unreadable at Q-KV session begin")
+        raise SystemExit("REFUSED -- available_mb_start unreadable at Q-8B session begin")
     env_session = RunEnvironmentSession.begin(
         session_design="interleaved",
         arm_order=list(ARMS),
         available_mb_start=float(mb_start),
         available_mb_start_method=str(avail0.get("available_method") or "probe._host_available_mb"),
     )
+
     pipes: dict[str, Any] = {}
+    tokenizers: dict[str, Any] = {}
     load_metas: dict[str, Any] = {}
     kv_asserts: dict[str, Any] = {}
-    pipeline_mode = "triple_resident"
-    block_size = 1
+    reload_events: list[dict[str, Any]] = []
+    # Default: single-pipe block interleave (Q8B-FIX). Dual-resident only behind
+    # explicit --allow-dual-resident (known-broken on this iGPU; citing b1a291f0).
+    pipeline_mode = "block_interleave_single_pipe"
+    block_size = BLOCK_SIZE_DEFAULT
 
-    def _load_one(arm_id: str) -> None:
-        pipe, meta, load_s = probe.load_arm_pipeline(arm_id, enable_prefix_caching=None)
-        kv_asserts[arm_id] = _assert_kv_readback(
-            meta, arm_id=arm_id, expected=KV_EXPECTED[arm_id]
-        )
+    def _bind_arm(arm_id: str) -> Path:
+        spec = ARM_MODEL_SPECS[arm_id]
+        probe.apply_model_spec(spec)
+        return spec
+
+    def _load_one(arm_id: str, *, reason: str) -> None:
+        spec = _bind_arm(arm_id)
+        t0 = time.perf_counter()
+        pipe, meta, load_s = probe.load_arm_pipeline(PLACEMENT_ARM, enable_prefix_caching=None)
+        wall = time.perf_counter() - t0
+        kv_asserts[arm_id] = _assert_kv_f16(meta, arm_id=arm_id)
         pipes[arm_id] = pipe
-        load_metas[arm_id] = {**meta, "load_s": load_s}
-        print(f"LOAD_ARM_OK {arm_id} load_s={load_s:.2f}", flush=True)
+        tokenizers[arm_id] = probe._hf_tokenizer()
+        load_metas[arm_id] = {
+            **meta,
+            "load_s": load_s,
+            "load_wall_s": wall,
+            "model_spec": str(spec),
+            "placement_arm": PLACEMENT_ARM,
+        }
+        ev = {
+            "event": "model_load",
+            "arm_id": arm_id,
+            "model_spec": str(spec),
+            "reason": reason,
+            "load_s": load_s,
+            "load_wall_s": wall,
+            "excluded_from_decode_metrics": True,
+            "utc": _utc_now(),
+        }
+        reload_events.append(ev)
+        _write_json(out_dir / "reload_events.json", {"events": reload_events})
+        print(
+            f"LOAD_ARM_OK {arm_id} load_s={load_s:.2f} wall_s={wall:.2f} reason={reason}",
+            flush=True,
+        )
 
     def _drop_all() -> None:
         pipes.clear()
+        tokenizers.clear()
         import gc
 
         gc.collect()
 
-    # Prefer three resident pipes (true per-cell interleave, no reload).
-    # On OOM / low headroom, fall back to block-interleaved single pipe:
-    # every ``block_size`` entries, run all three arms (arm-grouped within the
-    # block) so machine drift cannot favor one KV across the corpus.
-    try_triple = float(avail0.get("available_mb") or 0) >= 7000.0
-    if try_triple:
-        try:
-            for arm_id in ARMS:
-                print(f"LOAD_ARM {arm_id} …", flush=True)
-                _load_one(arm_id)
-        except Exception as exc:
-            print(f"TRIPLE_LOAD_FAILED {type(exc).__name__}: {exc}; falling back", flush=True)
-            _drop_all()
-            pipeline_mode = "block_interleave_single_pipe"
-            block_size = 5
-    else:
+    if allow_dual_resident:
         print(
-            f"AVAILABLE_MB={avail0.get('available_mb')} < 7000; "
-            "using block_interleave_single_pipe",
+            "WARN --allow-dual-resident: KNOWN-BROKEN on this iGPU "
+            f"(citing {DUAL_RESIDENT_CITING}); dual 4B+8B corrupts pipeline "
+            "state after a few cells → exact 512-token empty burns",
             flush=True,
         )
-        pipeline_mode = "block_interleave_single_pipe"
-        block_size = 5
+        reload_events.append(
+            {
+                "event": "dual_resident_opt_in",
+                "known_broken": True,
+                "citing": DUAL_RESIDENT_CITING,
+                "excluded_from_decode_metrics": True,
+                "utc": _utc_now(),
+            }
+        )
+        try:
+            for arm_id in ARMS:
+                print(f"LOAD_ARM {arm_id} (dual-resident explicit opt-in) …", flush=True)
+                _load_one(arm_id, reason="dual_resident_opt_in")
+            pipeline_mode = "dual_resident"
+            block_size = 1
+        except Exception as exc:
+            print(
+                f"DUAL_LOAD_FAILED {type(exc).__name__}: {exc}; "
+                "using block_interleave_single_pipe (explicit; not silent)",
+                flush=True,
+            )
+            _drop_all()
+            pipeline_mode = "block_interleave_single_pipe"
+            block_size = BLOCK_SIZE_DEFAULT
+            reload_events.append(
+                {
+                    "event": "dual_resident_abandoned",
+                    "verbatim": f"{type(exc).__name__}: {exc}",
+                    "excluded_from_decode_metrics": True,
+                    "utc": _utc_now(),
+                }
+            )
+            _write_json(out_dir / "reload_events.json", {"events": reload_events})
+    else:
+        print(
+            "PIPELINE_MODE block_interleave_single_pipe "
+            "(default; dual-resident requires --allow-dual-resident)",
+            flush=True,
+        )
+        reload_events.append(
+            {
+                "event": "pipeline_mode_selected",
+                "pipeline_mode": pipeline_mode,
+                "reason": "default_single_pipe_block_interleave",
+                "dual_resident_known_broken": DUAL_RESIDENT_KNOWN_BROKEN,
+                "dual_resident_citing": DUAL_RESIDENT_CITING,
+                "excluded_from_decode_metrics": True,
+                "utc": _utc_now(),
+            }
+        )
+        _write_json(out_dir / "reload_events.json", {"events": reload_events})
 
     plan = {
-        "kind": "q_kv_quality",
+        "kind": "q_8b_quality",
         "run_id": run_id,
         "measurement_kind": "MEASURED",
         "cloud_usd": 0.0,
         "arms": list(ARMS),
-        "kv_expected": dict(KV_EXPECTED),
+        "arm_model_specs": {k: str(v) for k, v in ARM_MODEL_SPECS.items()},
+        "placement_arm": PLACEMENT_ARM,
+        "kv_expected": KV_EXPECTED,
+        "weight_precision": "int4",
+        "no_int8_8b_in_registry": True,
+        "quant_recipe_confound": {
+            "int4_4B": "INT4_SYM",
+            "int4_8B": "INT4_ASYM + scale_estimation (wikitext2)",
+            "note": (
+                "Tier comparison at fixed int4 weight precision; size confounded "
+                "with quant recipe. Stated, not silently ignored."
+            ),
+        },
         "residency": "RESIDENT",
-        "placement": "gpu_only",
-        "model_spec": str(model_spec),
         "max_new_tokens": 512,
         "do_sample": False,
         "n_entries": len(entries),
@@ -382,6 +451,14 @@ def run_session(
         "interleave_seed": interleave_seed,
         "pipeline_mode": pipeline_mode,
         "block_size": block_size,
+        "allow_dual_resident": bool(allow_dual_resident),
+        "dual_resident_known_broken": DUAL_RESIDENT_KNOWN_BROKEN,
+        "dual_resident_citing": DUAL_RESIDENT_CITING,
+        "degenerate_guard": {
+            "consecutive_n": DEGENERATE_CONSECUTIVE_N,
+            "citing": DEGENERATE_CITING_RUN,
+            "rule": "max_new_tokens burn with zero decodable steps",
+        },
         "available_mb_start": avail0,
         "session_design": "interleaved",
         "arm_order": list(ARMS),
@@ -391,13 +468,22 @@ def run_session(
             "arm_order": list(ARMS),
         },
         "interleave": (
-            "per_entry_shuffle_three_resident_pipes"
-            if pipeline_mode == "triple_resident"
-            else f"block_size={block_size}_arm_grouped_within_block_single_pipe"
+            "per_entry_shuffle_dual_resident_pipes"
+            if pipeline_mode == "dual_resident"
+            else f"block_size={block_size}_arm_grouped_within_block_reload_on_switch"
         ),
+        "reload_timing": {
+            "recorded_in": "reload_events.json",
+            "contaminates_cell_wall": False,
+            "contaminates_turn_ttft_decode": False,
+            "note": (
+                "load_s / load_wall_s are separate events; cell_wall and turn "
+                "ttft_s/decode_tok_s start after the active pipe is ready."
+            ),
+        },
         "predictions_path": str(PRED_PATH),
         "predictions_registered_utc": pred.get("registered_utc"),
-        "w3_unset_kv_note": pred.get("w3_unset_kv_readback"),
+        "q_kv_baseline": pred.get("q_kv_baseline"),
         "kv_readback_assert": kv_asserts,
         "load_metas": {k: v for k, v in load_metas.items()},
         "started_utc": _utc_now(),
@@ -405,7 +491,6 @@ def run_session(
     }
     _write_json(out_dir / "plan.json", plan)
 
-    # by_arm[arm][entry_id] = ledger row
     by_arm: dict[str, dict[str, dict[str, Any]]] = {a: {} for a in ARMS}
     quality_rows: list[dict[str, Any]] = []
     cell_log: list[dict[str, Any]] = []
@@ -431,16 +516,21 @@ def run_session(
     def _ensure_arm(arm_id: str) -> None:
         nonlocal current_arm
         if arm_id in pipes and pipes[arm_id] is not None:
+            # Re-bind globals so path asserts match the active IR.
+            _bind_arm(arm_id)
             current_arm = arm_id
             return
-        if pipeline_mode == "triple_resident":
-            raise SystemExit(f"REFUSED -- triple mode missing pipe for {arm_id}")
-        # Single-pipe: drop other arms, load this one, re-assert KV.
+        if pipeline_mode == "dual_resident":
+            raise SystemExit(f"REFUSED -- dual mode missing pipe for {arm_id}")
+        # Block-interleave: drop other arm, load this one (reload cost recorded).
+        prev = current_arm
         _drop_all()
-        print(f"LOAD_ARM {arm_id} (single-pipe switch) …", flush=True)
-        _load_one(arm_id)
+        print(
+            f"LOAD_ARM {arm_id} (block-interleave switch from={prev}) …",
+            flush=True,
+        )
+        _load_one(arm_id, reason=f"switch_from_{prev}")
         current_arm = arm_id
-        # Persist updated kv asserts into plan sidecar.
         _write_json(out_dir / "kv_readback_live.json", kv_asserts)
 
     def _run_cell(entry: dict[str, Any], arm_id: str, order: list[str]) -> None:
@@ -449,12 +539,12 @@ def run_session(
             print(f"SKIP {eid} {arm_id}", flush=True)
             return
         _ensure_arm(arm_id)
-        kv = KV_EXPECTED[arm_id]
         print(f"CELL_START entry={eid} arm={arm_id} order={order}", flush=True)
+        # Timing starts AFTER reload; load cost lives only in reload_events.
         t0 = time.perf_counter()
         row = probe.run_multi_turn_agent_entry(
             pipe=pipes[arm_id],
-            tokenizer=tokenizer,
+            tokenizer=tokenizers[arm_id],
             cfg=cfg,
             entry=entry,
             residency_mode="RESIDENT",
@@ -462,14 +552,15 @@ def run_session(
         )
         wall = time.perf_counter() - t0
         row["arm_id"] = arm_id
-        row["kv"] = kv
-        led = _ledger_row(row, arm_id=arm_id, kv=kv, arm_order=order)
+        row["kv"] = KV_EXPECTED
+        led = _ledger_row(row, arm_id=arm_id, arm_order=order)
         led["cell_wall_s"] = wall
+        led["reload_excluded_from_cell_wall"] = True
         digest = row.get("prompt_render_sha256")
         if isinstance(digest, str) and len(digest) == 64:
             led["prompt_render_sha256"] = digest
             env_session.add_prompt_digest(digest)
-        qrow = _quality_row(row, arm_id=arm_id, kv=kv)
+        qrow = _quality_row(row, arm_id=arm_id)
         deg = deg_guard.observe(row, entry_id=eid, arm_id=arm_id)
         qrow["degenerate_max_burn"] = bool(deg["degenerate_max_burn"])
         led["degenerate_max_burn"] = bool(deg["degenerate_max_burn"])
@@ -479,7 +570,7 @@ def run_session(
             {
                 "entry_id": eid,
                 "arm_id": arm_id,
-                "kv": kv,
+                "kv": KV_EXPECTED,
                 "arm_order": order,
                 "wall_s": wall,
                 "emission_ok": led["emission_ok"],
@@ -515,18 +606,16 @@ def run_session(
     summary_out: dict[str, Any] | None = None
 
     try:
-        if pipeline_mode == "triple_resident":
+        if pipeline_mode == "dual_resident":
             for entry in entries:
                 eid = str(entry["id"])
                 order = _arm_order_for_entry(eid, seed=interleave_seed)
                 for arm_id in order:
                     _run_cell(entry, arm_id, order)
         else:
-            # Block interleave: within each block, arm-major (3 loads / block_size entries).
             for block_start in range(0, len(entries), block_size):
                 block = entries[block_start : block_start + block_size]
-                # Rotate which arm runs first across blocks (seeded).
-                rng = random.Random(f"{interleave_seed}:block:{block_start}")
+                rng = random.Random(f"{interleave_seed}:q8b:block:{block_start}")
                 arm_cycle = list(ARMS)
                 rng.shuffle(arm_cycle)
                 for arm_id in arm_cycle:
@@ -535,7 +624,6 @@ def run_session(
                         order = _arm_order_for_entry(eid, seed=interleave_seed)
                         _run_cell(entry, arm_id, order)
 
-        # Require full matrix before analysis seal.
         missing = [
             (eid, arm)
             for eid in entry_ids
@@ -545,7 +633,6 @@ def run_session(
         if missing:
             raise SystemExit(f"REFUSED -- incomplete matrix; missing {len(missing)} cells")
 
-        # Resume path: re-fold per-cell prompt digests recorded in the ledger.
         if env_session.prompt_update_count == 0:
             for arm_rows in by_arm.values():
                 for led in arm_rows.values():
@@ -559,10 +646,14 @@ def run_session(
         run_environment = env_session.finalize()
         plan["run_environment"] = run_environment
         plan["prompt_render_sha256"] = run_environment["prompt_render_sha256"]
+        plan["pipeline_mode"] = pipeline_mode
+        plan["kv_readback_assert"] = kv_asserts
+        plan["load_metas"] = {k: v for k, v in load_metas.items()}
         _write_json(out_dir / "plan.json", plan)
+        _write_json(out_dir / "reload_events.json", {"events": reload_events})
 
         summary_out = {
-            "kind": "q_kv_quality",
+            "kind": "q_8b_quality",
             "run_id": run_id,
             "status": "complete",
             "measurement_kind": "MEASURED",
@@ -573,8 +664,11 @@ def run_session(
             "finished_utc": _utc_now(),
             "per_arm": paired["per_arm"],
             "falsification": paired["falsification"],
+            "pipeline_mode": pipeline_mode,
+            "n_reload_events": len(
+                [e for e in reload_events if e.get("event") == "model_load"]
+            ),
             "predictions_registered_utc": pred.get("registered_utc"),
-            "w3_unset_kv": pred.get("w3_unset_kv_readback"),
             "scorer": assert_scorer_version(),
             "session_design": "interleaved",
             "arm_order": list(ARMS),
@@ -590,15 +684,13 @@ def run_session(
         raise
     finally:
         if summary_out is None:
-            # Mid-session abort: persist what completed; do not invent paired analysis.
             partial_env = plan.get("run_environment") or {
                 "available_mb_start": float(mb_start),
                 "session_design": "interleaved",
                 "arm_order": list(ARMS),
             }
-            last_mb = partial_env.get("available_mb_end")
             summary_out = {
-                "kind": "q_kv_quality",
+                "kind": "q_8b_quality",
                 "run_id": run_id,
                 "status": status,
                 "abort_reason": abort_reason,
@@ -610,18 +702,21 @@ def run_session(
                 "n_cells_planned": len(entry_ids) * len(ARMS),
                 "session_wall_s": time.perf_counter() - t_session0,
                 "finished_utc": _utc_now(),
+                "pipeline_mode": pipeline_mode,
                 "predictions_registered_utc": pred.get("registered_utc"),
                 "session_design": "interleaved",
                 "arm_order": list(ARMS),
                 "available_mb_start": partial_env.get("available_mb_start"),
-                "available_mb_end": last_mb,
+                "available_mb_end": partial_env.get("available_mb_end"),
                 "run_environment": partial_env,
                 "completed_cells": sorted([list(x) for x in done]),
+                "degenerate_flagged": list(deg_guard.flagged),
             }
             plan["status"] = status
             plan["abort_reason"] = abort_reason
             plan["abort_verbatim"] = abort_verbatim
             _write_json(out_dir / "plan.json", plan)
+            _write_json(out_dir / "reload_events.json", {"events": reload_events})
         _write_json(out_dir / "summary.json", summary_out)
         _write_json(out_dir / "entry_quality.json", {"entries": quality_rows})
         _write_json(out_dir / "turn_ledger.json", {"by_arm": by_arm, "entry_ids": entry_ids})
@@ -634,7 +729,7 @@ def run_session(
         tree = _sha256_tree(out_dir, exclude={".sealed"})
         seal_doc = {
             "run_id": run_id,
-            "kind": "q_kv_quality",
+            "kind": "q_8b_quality",
             "sealed_utc": _utc_now(),
             "tree_sha256": tree,
             "status": "complete",
@@ -651,18 +746,24 @@ def run_session(
 
 def build_report(summary: dict[str, Any], paired: dict[str, Any], pred: dict[str, Any]) -> str:
     lines = [
-        "# Q-KV results",
+        "# Q-8B results (int4-4B vs int4-8B, KV=f16, interleaved)",
         "",
         f"run_id: `{summary.get('run_id')}`",
+        f"pipeline_mode: `{summary.get('pipeline_mode')}`",
         f"session_wall_s: {summary.get('session_wall_s')}",
         f"tree_sha256: `{summary.get('tree_sha256')}`",
         "",
-        "## W-3 unset KV",
+        "## Tier note",
         "",
-        f"Readback in seal 6225d6e1: **{pred.get('w3_unset_kv_readback', {}).get('normalized')}** "
-        f"(requested={pred.get('w3_unset_kv_readback', {}).get('requested')}, "
-        f"enforced={pred.get('w3_unset_kv_readback', {}).get('enforced')}). "
-        "Treated as unknown precision, not f16.",
+        "Fixed weight precision **int4**. No `Qwen3-8B-int8-ov` in registry — "
+        "not an int8 substitution. Quant recipe confound: 4B INT4_SYM vs 8B INT4_ASYM.",
+        "",
+        "## Q-KV f16 baseline (cross-session absolute rates not comparable)",
+        "",
+        f"Cited for prediction context only: run `{pred.get('q_kv_baseline', {}).get('run_id')}` "
+        f"gpu_only_f16 emission failures "
+        f"{pred.get('q_kv_baseline', {}).get('emission_failures')}/200, "
+        f"trajectory_pass {pred.get('q_kv_baseline', {}).get('trajectory_pass')}/200.",
         "",
         "## Per-arm emission and completion",
         "",
@@ -709,22 +810,37 @@ def build_report(summary: dict[str, Any], paired: dict[str, Any], pred: dict[str
     lines += [
         "## Verdict",
         "",
-        f"- emission arms agree (falsify KV-emission): **{fals['emission_arms_agree']}**",
+        f"- emission arms agree: **{fals['emission_arms_agree']}**",
         f"- completion arms agree: **{fals['completion_arms_agree']}**",
-        f"- KV quality-axis hypothesis falsified: **{fals['kv_quality_axis_falsified']}**",
+        f"- tier quality-axis hypothesis falsified: **{fals['tier_quality_axis_falsified']}**",
         "",
     ]
     return "\n".join(lines) + "\n"
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(description="Q-KV interleaved KV quality")
+    p = argparse.ArgumentParser(description="Q-8B interleaved int4 tier quality")
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--run-id", type=str, default=None)
-    p.add_argument("--model-spec", type=Path, default=MODEL_SPEC_DEFAULT)
     p.add_argument("--entries", type=Path, default=None)
     p.add_argument("--interleave-seed", type=int, default=INTERLEAVE_SEED)
     p.add_argument("--seal", action=argparse.BooleanOptionalAction, default=True)
+    p.add_argument(
+        "--allow-dual-resident",
+        action="store_true",
+        help=(
+            "KNOWN-BROKEN on this iGPU (citing b1a291f0): keep both 4B and 8B "
+            "pipes resident. Default is single-pipe block interleave with reload."
+        ),
+    )
+    p.add_argument(
+        "--force-block-interleave",
+        action="store_true",
+        help=(
+            "Deprecated no-op: single-pipe block interleave is already the default. "
+            "Retained so old launchers do not error."
+        ),
+    )
     p.add_argument(
         "--analyze-only",
         type=Path,
@@ -739,9 +855,7 @@ def main(argv: list[str] | None = None) -> int:
         paired = json.loads((out / "paired_analysis.json").read_text(encoding="utf-8-sig"))
         pred = json.loads(PRED_PATH.read_text(encoding="utf-8-sig"))
         report = build_report(summary, paired, pred)
-        # Headline H-1 + pruning decided in report extension below.
-        report = _extend_report_decisions(report, paired, pred)
-        (out / "Q_KV_RESULTS.md").write_text(report, encoding="utf-8")
+        (out / "Q8B_RESULTS.md").write_text(report, encoding="utf-8")
         print(report)
         return 0
 
@@ -753,86 +867,27 @@ def main(argv: list[str] | None = None) -> int:
     if len(entries) != 200:
         raise SystemExit(f"REFUSED -- need 200 entries, got {len(entries)}")
 
-    print(f"Q_KV_START run_id={run_id} out={out_dir}", flush=True)
+    print(f"Q8B_START run_id={run_id} out={out_dir}", flush=True)
+    if args.force_block_interleave:
+        print(
+            "NOTE --force-block-interleave is deprecated (default is already "
+            "single-pipe); ignoring",
+            flush=True,
+        )
     summary = run_session(
         out_dir=out_dir,
         entries=entries,
-        model_spec=args.model_spec,
         run_id=run_id,
         seal=bool(args.seal),
         interleave_seed=int(args.interleave_seed),
+        allow_dual_resident=bool(args.allow_dual_resident),
     )
     paired = json.loads((out_dir / "paired_analysis.json").read_text(encoding="utf-8-sig"))
-    report = _extend_report_decisions(build_report(summary, paired, pred), paired, pred)
-    (out_dir / "Q_KV_RESULTS.md").write_text(report, encoding="utf-8")
-    # Also copy to derived/q_kv/ for the track index.
-    (ROOT / "derived" / "q_kv" / "Q_KV_RESULTS.md").write_text(report, encoding="utf-8")
+    report = build_report(summary, paired, pred)
+    (out_dir / "Q8B_RESULTS.md").write_text(report, encoding="utf-8")
+    (ROOT / "derived" / "q8b" / "Q8B_RESULTS.md").write_text(report, encoding="utf-8")
     print(report)
     return 0
-
-
-def _extend_report_decisions(
-    report: str, paired: dict[str, Any], pred: dict[str, Any]
-) -> str:
-    """Append H-1 config recommendation and u8-vs-u4 pruning verdict."""
-    per = paired["per_arm"]
-    # Prefer highest emission_ok, then highest trajectory_pass, then denser KV.
-    ranked = sorted(
-        ARMS,
-        key=lambda a: (
-            per[a]["emission_ok"],
-            per[a]["trajectory_pass"],
-            {"gpu_only_u4": 3, "gpu_only_u8": 2, "gpu_only_f16": 1}[a],
-        ),
-        reverse=True,
-    )
-    headline = ranked[0]
-    u8 = per["gpu_only_u8"]
-    u4 = per["gpu_only_u4"]
-    em = paired["emission"]["gpu_only_u8__vs__gpu_only_u4"]["mcnemar"]
-    cp = paired["completion"]["gpu_only_u8__vs__gpu_only_u4"]["mcnemar"]
-    # first=u8, second=u4 in key gpu_only_u8__vs__gpu_only_u4
-    # first_only = u8 pass / u4 fail; second_only = u8 fail / u4 pass
-    # Pruning ("u8 dominated by u4") assumed quality-neutral. It does not survive
-    # if u4 is significantly worse than u8 on emission or completion.
-    u4_worse_em = em["first_only"] > em["second_only"] and float(em["p_value"]) < 0.05
-    u4_worse_cp = cp["first_only"] > cp["second_only"] and float(cp["p_value"]) < 0.05
-    pruning_survives = not (u4_worse_em or u4_worse_cp)
-    # Also: if u8 clearly better on emission rate absolute and McNemar significant.
-    lines = [
-        report.rstrip(),
-        "",
-        "## H-1 headline config",
-        "",
-        f"Recommended KV arm for H-1 local quality: **`{headline}`** "
-        f"(rank by emission_ok, then trajectory_pass, then denser KV as tie-break).",
-        f"- u8 emission failures: {u8['emission_failures']}/200; "
-        f"completion {u8['trajectory_pass']}/200",
-        f"- u4 emission failures: {u4['emission_failures']}/200; "
-        f"completion {u4['trajectory_pass']}/200",
-        "",
-        "## u8-dominated-by-u4 pruning",
-        "",
-        f"u4 significantly worse emission than u8 (McNemar): **{u4_worse_em}** "
-        f"(p={em['p_value']:.6g}, u8_only={em['first_only']}, u4_only={em['second_only']})",
-        f"u4 significantly worse completion than u8 (McNemar): **{u4_worse_cp}** "
-        f"(p={cp['p_value']:.6g})",
-        f"**Pruning survives: {pruning_survives}** "
-        "(survives only if u4 is not significantly worse than u8 on emission or completion).",
-        "",
-        "## Predictions vs measured",
-        "",
-        f"Predicted failures f16/u8/u4: 45 / 65 / ≥65; "
-        f"measured: {per['gpu_only_f16']['emission_failures']} / "
-        f"{per['gpu_only_u8']['emission_failures']} / "
-        f"{per['gpu_only_u4']['emission_failures']}.",
-        f"Predicted completion f16/u8/u4: 20 / 14 / ≤14; "
-        f"measured: {per['gpu_only_f16']['trajectory_pass']} / "
-        f"{per['gpu_only_u8']['trajectory_pass']} / "
-        f"{per['gpu_only_u4']['trajectory_pass']}.",
-        "",
-    ]
-    return "\n".join(lines)
 
 
 if __name__ == "__main__":

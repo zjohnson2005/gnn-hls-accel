@@ -5,8 +5,8 @@
 # No Phase 1. No 8192 MB headroom gate. Paging gate is reporting-only for this run.
 
 $ErrorActionPreference = "Stop"
-Set-Location "C:\Users\zjohn\Projects\gnn-hls-accel"
-
+$root = Split-Path -Parent $PSScriptRoot
+Set-Location $root
 $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $logDir = "derived\prompt_a"
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null

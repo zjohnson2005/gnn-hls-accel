@@ -32,7 +32,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$root = "C:\Users\zjohn\Projects\gnn-hls-accel"
+# Repo root = parent of tools/ (this script's directory).
+$root = Split-Path -Parent $PSScriptRoot
+if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 Set-Location $root
 
 $Tag = "c1_kv_ceiling"
@@ -147,75 +149,16 @@ Write-Host ""
 # 2. Five gates
 # ---------------------------------------------------------------------------
 Write-Host "=== 2. five gates ==="
-Write-Host "GATE NOTE -- uptime < 2 h: CHOSEN / PROVISIONAL (X-2 onset: no detectable"
-Write-Host "  TTFT degradation in 0-2.25 h window; gate not yet re-derived)."
+Write-Host "GATE NOTE -- PORT-2: platform YAML floors; AC/no-battery; processor AC 100/100 (GUID recorded only)."
 Write-Host ""
-$gateFails = New-Object System.Collections.Generic.List[string]
-
-$os = Get-CimInstance Win32_OperatingSystem
-$boot = [datetime]$os.LastBootUpTime
-$uptime = (Get-Date) - $boot
-$uptimeS = [math]::Round($uptime.TotalSeconds, 3)
-$uptimeOk = $uptime.TotalHours -lt 2.0
-Write-Host ("gate uptime:     uptime_s={0}  hours={1:N2}  ok={2}  [CHOSEN/PROVISIONAL]" -f `
-    $uptimeS, $uptime.TotalHours, $uptimeOk)
-if (-not $uptimeOk) { $gateFails.Add("uptime_not_cold (>= 2 h since boot; gate is CHOSEN/PROVISIONAL)") | Out-Null }
-
-$batt = @(Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue)
-if ($batt.Count -eq 0) {
-    $acOk = $true
-    Write-Host "gate AC:         ok=True (no battery; assume AC)"
-} else {
-    $statuses = @($batt | ForEach-Object { [int]$_.BatteryStatus })
-    $acOk = ($statuses | Where-Object { $_ -ne 2 }).Count -eq 0
-    Write-Host ("gate AC:         ok={0}  BatteryStatus={1}" -f $acOk, ($statuses -join ","))
-}
-if (-not $acOk) { $gateFails.Add("AC_offline") | Out-Null }
-
-$schemeLines = @(powercfg /getactivescheme)
-$schemeText = ($schemeLines -join " ")
-$planOk = ($schemeText -match "Best Performance")
-Write-Host ("gate power_plan: {0}  ok={1}" -f $schemeText.Trim(), $planOk)
-if (-not $planOk) { $gateFails.Add("power_plan_not_Best_Performance") | Out-Null }
-
-$availGate = Get-AvailableMBytes
-$availOk = $availGate -ge 7000.0
-Write-Host ("gate Available:  {0:N1} MB  floor=7000  ok={1}" -f $availGate, $availOk)
-if (-not $availOk) { $gateFails.Add("Available_MBytes_below_7000") | Out-Null }
-
-$tier1Names = @("Cursor", "chrome", "msedge", "claude", "vmmem")
-$wanted = @{}
-foreach ($n in $tier1Names) { $wanted[$n.ToLowerInvariant()] = $true }
-$tier1 = @(Get-Process -ErrorAction SilentlyContinue | Where-Object {
-    $wanted.ContainsKey($_.ProcessName.ToLowerInvariant())
-})
-$tier1Ok = $tier1.Count -eq 0
-if ($tier1Ok) {
-    Write-Host "gate tier1:      ok=True (Cursor/chrome/msedge/claude/vmmem absent)"
-} else {
-    Write-Host "gate tier1:      ok=False -- resident:"
-    $tier1 | Group-Object ProcessName | ForEach-Object {
-        $privateMb = ($_.Group | Measure-Object -Property PrivateMemorySize64 -Sum).Sum / 1MB
-        Write-Host ("  - {0} x{1} private={2:N0} MiB" -f $_.Name, $_.Count, $privateMb)
-    }
-    $gateFails.Add("tier1_resident") | Out-Null
-}
-
-Write-Host ""
-Write-Host ("NOTE -- WorkloadsSessionHost watchdog: worker re-kills every {0}s (respawn ~4 min)" -f $WatchdogIntervalS)
-Write-Host ""
-if ($gateFails.Count -gt 0) {
-    Write-Host ("GATES FAILED ({0}):" -f $gateFails.Count)
-    foreach ($r in $gateFails) { Write-Host ("  - {0}" -f $r) }
-    if (-not $DryRun) {
-        Write-Host ""
-        Write-Host "REFUSED -- gates failed; no spawn"
-        exit 1
-    }
-    Write-Host "DRY-RUN: continuing past gate failures (report-only)"
-} else {
-    Write-Host "GATES: all five PASS"
-}
+. (Join-Path $PSScriptRoot "_run_measurement_gates.ps1")
+$pythonForGates = if (Test-Path -LiteralPath $PythonExe) { $PythonExe } `
+    elseif (Test-Path -LiteralPath (Join-Path $root ".venv-seam\Scripts\python.exe")) {
+        Join-Path $root ".venv-seam\Scripts\python.exe"
+    } else { Join-Path $root ".venv-seam\Scripts\python.exe" }
+$platformId = if ($env:SEAM_PLATFORM_ID) { $env:SEAM_PLATFORM_ID } else { "" }
+Invoke-SeamMeasurementGates -RepoRoot $root -PythonExe $pythonForGates `
+    -PlatformId $platformId -DryRun:$DryRun
 Write-Host ""
 
 # ---------------------------------------------------------------------------

@@ -53,6 +53,7 @@ decision) · `DEFERRED` (belongs to a later milestone).
 | AM-038 | 2026-09-08 | C-2 pre-reg | Withdraw f16>u8≥u4 TTFT order; replace with turn-1 agreement | RESOLVED (**POST-DATA**; held on `62395fdb`) |
 | AM-039 | 2026-09-12 | git history | Filter-repo strip of oversized blobs; SHA map in `docs/GIT_SHA_MAP.md` | RESOLVED (**PRE-DATA** w.r.t. sealed evidence bytes) |
 | AM-040 | 2026-09-15 | §5.2 / manifest | INF-5 `run_environment` required on `spec_version` 1.1 seals | RESOLVED (**PRE-DATA**) |
+| AM-041 | 2026-09-20 | PORT-1/2 | Portable roots; platform-aware measurement gates | RESOLVED (**PRE-DATA**) |
 
 ---
 
@@ -1393,3 +1394,34 @@ gated on Phase 3 reasoning discriminant PASS; this dispatch takes no spend.
 Requirement is **landed** in `configs/canary.yaml` (`sustained_burst.required_before_collection`,
 n_calls≥10, prompt_chars_min≥20000) with a test that fails if removed. Execution of the burst
 itself awaits the paid-phase gate.
+
+---
+
+## AM-041 — Portable repo roots + platform-aware measurement gates (PORT-1 / PORT-2)
+
+**Date:** 2026-09-20 · **Pre/post data:** **PRE-DATA** · **Status:** RESOLVED
+
+**Divergence.** Launchers and several tools hard-coded a single developer's absolute
+repo path, so T2S (different Windows user) failed before any measurement. The five
+pre-spawn gates were also XPS-shaped: power-plan name/GUID matching Dell
+"Best Performance", a 7000 MB Available floor, and a 657 s onset baked into canary
+math — none of which are valid defaults on a mains-only mini PC.
+
+**Decision.**
+
+1. **PORT-1.** Every `tools/launch_*.ps1` and helper derives `$root` from
+   `$PSScriptRoot`. Absolute per-user roots are forbidden under `tools/` and
+   `seam/` (enforced by `tests/test_no_hardcoded_user_paths.py`). Model `ir_dir`
+   values are repo-relative and resolved in `load_local_spec`.
+2. **PORT-2.** Gate thresholds live in `configs/platforms/<id>.yaml`
+   `measurement_gates`. AC with no `Win32_Battery` instances passes with recorded
+   reason `no_battery_mains_only_assume_ac`. Power gate asserts AC
+   PROCTHROTTLEMIN/MAX == 100/100 and **records** the scheme GUID (does not match
+   it). `aipc-c1`: floor 7000 MB, onset 657 s (measured). `evo-t2`: floor 24000 MB
+   (derived, unmeasured), onset `null` / `onset_status: unknown` — unknown onset
+   is written into `run_environment.measurement_gates` and does not refuse the
+   session. Schema gains additive `measurement_gates` under `run_environment`;
+   `platform.id` enum becomes `aipc-c1` | `evo-t2`. Historical seals untouched.
+
+**Why it matters.** Without PORT-1/2 every T2S measurement is blocked at launch.
+

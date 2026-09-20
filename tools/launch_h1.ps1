@@ -39,7 +39,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$root = "C:\Users\zjohn\Projects\gnn-hls-accel"
+# Repo root = parent of tools/ (this script's directory).
+$root = Split-Path -Parent $PSScriptRoot
+if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 Set-Location $root
 
 # 1.5x H1_PREDICTIONS point estimates (launcher-side only; runner is blinded).
@@ -159,63 +161,17 @@ Write-Host ("Available MBytes AFTER  clean: {0:N1}" -f $availAfter)
 Write-Host ""
 
 # ---------------------------------------------------------------------------
-# 2. Five gates
+# 2. Five gates (PORT-2: platform YAML + processor AC 100/100; GUID recorded only)
 # ---------------------------------------------------------------------------
 Write-Host "=== 2. five gates ==="
-Write-Host "GATE NOTE -- uptime < 2 h: CHOSEN / PROVISIONAL (not derived)."
-$gateFails = New-Object System.Collections.Generic.List[string]
-
-$os = Get-CimInstance Win32_OperatingSystem
-$boot = [datetime]$os.LastBootUpTime
-$uptime = (Get-Date) - $boot
-$uptimeOk = $uptime.TotalHours -lt 2.0
-Write-Host ("gate uptime:     hours={0:N2} ok={1} [CHOSEN/PROVISIONAL]" -f $uptime.TotalHours, $uptimeOk)
-if (-not $uptimeOk) { $gateFails.Add("uptime_not_cold (>= 2 h since boot)") | Out-Null }
-
-$batt = @(Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue)
-if ($batt.Count -eq 0) {
-    Write-Host "gate AC:         no battery device; treating as AC-ok"
-} else {
-    $acOk = $true
-    foreach ($b in $batt) {
-        # BatteryStatus 2 = AC online on many Dell/Win32 mappings; also check PowerOnline if present
-        if ($b.BatteryStatus -eq 1) { $acOk = $false }
-    }
-    Write-Host ("gate AC:         ok={0}" -f $acOk)
-    if (-not $acOk) { $gateFails.Add("not_on_ac") | Out-Null }
-}
-
-$plan = powercfg /getactivescheme
-$planOk = ($plan -match "Best Performance") -or ($plan -match "High performance") -or ($plan -match "Ultimate Performance")
-Write-Host ("gate power_plan: {0} ok={1}" -f ($plan.Trim()), $planOk)
-if (-not $planOk) { $gateFails.Add("power_plan_not_best_performance") | Out-Null }
-
-$avail = Get-AvailableMBytes
-$memOk = $avail -ge 7000
-Write-Host ("gate Available:  {0:N1} MB ok={1} (need >= 7000)" -f $avail, $memOk)
-if (-not $memOk) { $gateFails.Add("available_mb_lt_7000") | Out-Null }
-
-$tier1Names = @("Cursor", "chrome", "msedge", "claude", "vmmem")
-$tier1Hit = @()
-foreach ($n in $tier1Names) {
-    $procs = @(Get-Process -Name $n -ErrorAction SilentlyContinue)
-    if ($procs.Count -gt 0) { $tier1Hit += $n }
-}
-$tier1Ok = $tier1Hit.Count -eq 0
-Write-Host ("gate tier1:      ok={0} hits={1}" -f $tier1Ok, ($tier1Hit -join ","))
-if (-not $tier1Ok) { $gateFails.Add("tier1_present: " + ($tier1Hit -join ",")) | Out-Null }
-
+Write-Host "GATE NOTE -- PORT-2: floors/onset from configs/platforms; AC/no-battery; processor AC 100/100."
 Write-Host ""
-if ($gateFails.Count -gt 0) {
-    Write-Host "GATE FAILURES:"
-    foreach ($r in $gateFails) { Write-Host ("  - {0}" -f $r) }
-    if (-not $DryRun) {
-        Refuse ("five gates failed: " + ($gateFails -join "; "))
-        exit 1
-    }
-} else {
-    Write-Host "All five gates PASS."
-}
+. (Join-Path $PSScriptRoot "_run_measurement_gates.ps1")
+$pythonForGates = if ($PythonExe -and (Test-Path -LiteralPath $PythonExe)) { $PythonExe } `
+    else { Join-Path $root ".venv-seam\Scripts\python.exe" }
+$platformId = if ($env:SEAM_PLATFORM_ID) { $env:SEAM_PLATFORM_ID } else { "" }
+Invoke-SeamMeasurementGates -RepoRoot $root -PythonExe $pythonForGates `
+    -PlatformId $platformId -DryRun:$DryRun
 Write-Host ""
 
 # ---------------------------------------------------------------------------

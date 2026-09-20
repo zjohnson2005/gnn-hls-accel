@@ -1,18 +1,28 @@
-# C-2 launcher - TTFT-bound context limit per KV precision (int4 / gpu_only_*).
+# C-2 launcher - TTFT-bound context limit (default: KV precision arms on gpu_only).
 #
 # Production (Zach, bare SSH after cold boot):
 #   powershell -NoProfile -File tools/launch_c2.ps1
 #
-# Dry-run (spawn suppressed; gates report-only; no measurement):
+# CAP-1b (cpu-p cold-start TTFT limit; low bracket below X-2 7743-token SLO miss):
+#   powershell -NoProfile -File tools/launch_c2.ps1 -Arms A -Low 500 -High 8000
+#   (alias: -Arms cpu-p  maps to delta_n arm id A)
+#
+# CAP-3 (non-default -ModelSpec; pre-registered in derived/cap3/CAP3_PREDICTIONS.*):
+#   powershell -NoProfile -File tools/launch_c2.ps1 -Arms gpu_only_f16 -Low 3000 -High 10000 -ModelSpec configs/models/Qwen3-8B-int4-ov.yaml
+#   powershell -NoProfile -File tools/launch_c2.ps1 -Arms gpu_only_f16 -Low 7000 -High 12000 -ModelSpec configs/models/Qwen3-4B-int8-ov.yaml
+#
+# Dry-run (spawn suppressed; gates report-only; extraction smoke still runs):
 #   powershell -NoProfile -File tools/launch_c2.ps1 -DryRun
+#   powershell -NoProfile -File tools/launch_c2.ps1 -DryRun -Arms A -Low 500 -High 8000
 #
 # Steps: (1) non-persistent host clean  (2) five gates  (3) spawn_detached
 #        (4) print run_id + artifact dir and exit without waiting.
 #
 # Payload: tools/run_c1_ceiling.py (same worker as C-1)
 #   --criterion ttft_slo --slo-s 10
-#   Arms: gpu_only_f16, gpu_only_u8, gpu_only_u4
-#   Search: low=8000, high=12000; bisect to +/- 250; 3 repeats
+#   --arms <csv>   (launcher -Arms; default gpu_only_f16,gpu_only_u8,gpu_only_u4)
+#   --low / --high (launcher -Low / -High; passed through to bisect bracket end-to-end)
+#   Search default: low=8000, high=12000; bisect to +/- 250; 3 repeats
 #   Pass: median(prefill_s) <= 10 s
 #   Drift canary (INF-1): fixed gpu_only_f16 nc=4000 d=400 RESIDENT;
 #     N=min(onset, budget) INF-1b; C=3; early_max threshold floor 0.05;
@@ -21,6 +31,14 @@
 #   WITHDRAWN (retained in plan.json): f16 > u8 >= u4 (turn-2 delta claim)
 #   Falsified if any pair of limits differs by more than 250 tokens.
 #
+# Parameters:
+#   -Arms <csv>     delta_n arm ids (comma-separated). Alias: cpu-p -> A.
+#   -Low / -High    bisect bracket (tokens). Honoured: launcher -> --low/--high -> bisect_arm.
+#   -Resolution     bisect stop when (high-low) <= Resolution (default 250).
+#   -Repeats        probes per n (default 3).
+#   -ModelSpec      FetchedModelSpec YAML (default Qwen3-4B-int4-ov).
+#   -AllowUnguarded / -PlannedProbeCount / -DryRun  as before.
+#
 # WSH watchdog interval 60 s (ENV_CHANGELOG).
 # Banners are ASCII only (no en-dash / em-dash in Write-Host).
 
@@ -28,6 +46,7 @@
 param(
     [switch]$DryRun,
     [string]$ModelSpec = "",
+    [string]$Arms = "gpu_only_f16,gpu_only_u8,gpu_only_u4",
     [int]$Low = 8000,
     [int]$High = 12000,
     [int]$Resolution = 250,
@@ -37,14 +56,35 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$root = "C:\Users\zjohn\Projects\gnn-hls-accel"
+# Repo root = parent of tools/ (this script's directory).
+$root = Split-Path -Parent $PSScriptRoot
+if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 Set-Location $root
 
 $Tag = "c2_ttft"
 $WatchdogIntervalS = 60
-$ArmsCsv = "gpu_only_f16,gpu_only_u8,gpu_only_u4"
 $Criterion = "ttft_slo"
 $SloS = 10
+# Normalize -Arms: trim, drop empties, map cpu-p -> A (delta_n id).
+$armParts = @()
+foreach ($raw in ($Arms -split ",")) {
+    $a = $raw.Trim()
+    if ([string]::IsNullOrWhiteSpace($a)) { continue }
+    if ($a -eq "cpu-p") { $a = "A" }
+    $armParts += $a
+}
+if ($armParts.Count -eq 0) {
+    Write-Host "REFUSED -- -Arms empty after parse"
+    exit 2
+}
+$ArmsCsv = ($armParts -join ",")
+# Extraction smoke checks metric plumbing (prefill_s), not the experiment arm.
+# Keep gpu_only_f16 so CAP-1b dry-runs are not blocked by cpu-p quiescence under tier-1 load.
+$SmokeArm = "gpu_only_f16"
+if ($Low -ge $High) {
+    Write-Host ("REFUSED -- -Low ({0}) must be < -High ({1})" -f $Low, $High)
+    exit 2
+}
 if ([string]::IsNullOrWhiteSpace($ModelSpec)) {
     $ModelSpec = Join-Path $root "configs\models\Qwen3-4B-int4-ov.yaml"
 } elseif (-not [System.IO.Path]::IsPathRooted($ModelSpec)) {
@@ -86,6 +126,8 @@ Write-Host ("started_utc    : {0}" -f (Get-Date).ToUniversalTime().ToString("o")
 Write-Host ("Worker         : tools/run_c1_ceiling.py")
 Write-Host ("Arms           : {0}" -f $ArmsCsv)
 Write-Host ("Search         : low={0} high={1} resolution={2} repeats={3}" -f $Low, $High, $Resolution, $Repeats)
+Write-Host ("Bracket chain  : -Low/-High -> worker --low/--high -> bisect_arm(low, high)")
+Write-Host ("ExtractionSmoke: gpu_only_f16 n=64 (metric path; independent of -Arms)")
 Write-Host ("Criterion      : {0}  slo_s={1}" -f $Criterion, $SloS)
 Write-Host ("ModelSpec      : {0}" -f $ModelSpec)
 Write-Host ("WatchdogIntervalS: {0}" -f $WatchdogIntervalS)
@@ -158,75 +200,16 @@ Write-Host ""
 # 2. Five gates
 # ---------------------------------------------------------------------------
 Write-Host "=== 2. five gates ==="
-Write-Host "GATE NOTE -- uptime < 2 h: CHOSEN / PROVISIONAL (X-2 onset: no detectable"
-Write-Host "  TTFT degradation in 0-2.25 h window; gate not yet re-derived)."
+Write-Host "GATE NOTE -- PORT-2: platform YAML floors; AC/no-battery; processor AC 100/100 (GUID recorded only)."
 Write-Host ""
-$gateFails = New-Object System.Collections.Generic.List[string]
-
-$os = Get-CimInstance Win32_OperatingSystem
-$boot = [datetime]$os.LastBootUpTime
-$uptime = (Get-Date) - $boot
-$uptimeS = [math]::Round($uptime.TotalSeconds, 3)
-$uptimeOk = $uptime.TotalHours -lt 2.0
-Write-Host ("gate uptime:     uptime_s={0}  hours={1:N2}  ok={2}  [CHOSEN/PROVISIONAL]" -f `
-    $uptimeS, $uptime.TotalHours, $uptimeOk)
-if (-not $uptimeOk) { $gateFails.Add("uptime_not_cold (>= 2 h since boot; gate is CHOSEN/PROVISIONAL)") | Out-Null }
-
-$batt = @(Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue)
-if ($batt.Count -eq 0) {
-    $acOk = $true
-    Write-Host "gate AC:         ok=True (no battery; assume AC)"
-} else {
-    $statuses = @($batt | ForEach-Object { [int]$_.BatteryStatus })
-    $acOk = ($statuses | Where-Object { $_ -ne 2 }).Count -eq 0
-    Write-Host ("gate AC:         ok={0}  BatteryStatus={1}" -f $acOk, ($statuses -join ","))
-}
-if (-not $acOk) { $gateFails.Add("AC_offline") | Out-Null }
-
-$schemeLines = @(powercfg /getactivescheme)
-$schemeText = ($schemeLines -join " ")
-$planOk = ($schemeText -match "Best Performance")
-Write-Host ("gate power_plan: {0}  ok={1}" -f $schemeText.Trim(), $planOk)
-if (-not $planOk) { $gateFails.Add("power_plan_not_Best_Performance") | Out-Null }
-
-$availGate = Get-AvailableMBytes
-$availOk = $availGate -ge 7000.0
-Write-Host ("gate Available:  {0:N1} MB  floor=7000  ok={1}" -f $availGate, $availOk)
-if (-not $availOk) { $gateFails.Add("Available_MBytes_below_7000") | Out-Null }
-
-$tier1Names = @("Cursor", "chrome", "msedge", "claude", "vmmem")
-$wanted = @{}
-foreach ($n in $tier1Names) { $wanted[$n.ToLowerInvariant()] = $true }
-$tier1 = @(Get-Process -ErrorAction SilentlyContinue | Where-Object {
-    $wanted.ContainsKey($_.ProcessName.ToLowerInvariant())
-})
-$tier1Ok = $tier1.Count -eq 0
-if ($tier1Ok) {
-    Write-Host "gate tier1:      ok=True (Cursor/chrome/msedge/claude/vmmem absent)"
-} else {
-    Write-Host "gate tier1:      ok=False -- resident:"
-    $tier1 | Group-Object ProcessName | ForEach-Object {
-        $privateMb = ($_.Group | Measure-Object -Property PrivateMemorySize64 -Sum).Sum / 1MB
-        Write-Host ("  - {0} x{1} private={2:N0} MiB" -f $_.Name, $_.Count, $privateMb)
-    }
-    $gateFails.Add("tier1_resident") | Out-Null
-}
-
-Write-Host ""
-Write-Host ("NOTE -- WorkloadsSessionHost watchdog: worker re-kills every {0}s (respawn ~4 min)" -f $WatchdogIntervalS)
-Write-Host ""
-if ($gateFails.Count -gt 0) {
-    Write-Host ("GATES FAILED ({0}):" -f $gateFails.Count)
-    foreach ($r in $gateFails) { Write-Host ("  - {0}" -f $r) }
-    if (-not $DryRun) {
-        Write-Host ""
-        Write-Host "REFUSED -- gates failed; no spawn"
-        exit 1
-    }
-    Write-Host "DRY-RUN: continuing past gate failures (report-only)"
-} else {
-    Write-Host "GATES: all five PASS"
-}
+. (Join-Path $PSScriptRoot "_run_measurement_gates.ps1")
+$pythonForGates = if (Test-Path -LiteralPath $PythonExe) { $PythonExe } `
+    elseif (Test-Path -LiteralPath (Join-Path $root ".venv-seam\Scripts\python.exe")) {
+        Join-Path $root ".venv-seam\Scripts\python.exe"
+    } else { Join-Path $root ".venv-seam\Scripts\python.exe" }
+$platformId = if ($env:SEAM_PLATFORM_ID) { $env:SEAM_PLATFORM_ID } else { "" }
+Invoke-SeamMeasurementGates -RepoRoot $root -PythonExe $pythonForGates `
+    -PlatformId $platformId -DryRun:$DryRun
 Write-Host ""
 
 # ---------------------------------------------------------------------------
@@ -287,7 +270,7 @@ if (-not (Test-Path -LiteralPath $SmokePy)) {
     Refuse "missing extraction smoke: $SmokePy"
     exit 2
 }
-& $PythonExe -u $SmokePy --out $SmokeOut --model-spec $ModelSpec --n-tokens 64
+& $PythonExe -u $SmokePy --out $SmokeOut --model-spec $ModelSpec --n-tokens 64 --arm $SmokeArm
 if ($LASTEXITCODE -ne 0) {
     Write-Host "REFUSED -- extraction smoke failed; not launching C-2"
     exit $LASTEXITCODE
@@ -295,10 +278,11 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host ""
 
 if ($DryRun) {
-    Write-Host "=== DRY-RUN: prompt 8000+12000 + arm pin + AM-038 payload ==="
+    Write-Host "=== DRY-RUN: prompt bracket + arm pin + AM-038 payload ==="
     $dryOut = Join-Path $SessionRoot ("{0}_dryrun" -f $Tag)
     New-Item -ItemType Directory -Force -Path $dryOut | Out-Null
     $dryPy = Join-Path $dryOut "_dryrun_preflight.py"
+    $armsPyLiteral = ($armParts | ForEach-Object { "'" + $_ + "'" }) -join ", "
     @"
 import json, sys
 from pathlib import Path
@@ -307,7 +291,7 @@ from transformers import AutoTokenizer
 from seam.config import resolve_config
 from seam.tools.delta_n import build_exact_prompt, _PLATFORM_PATH, _MEASUREMENT_PATH, _DELTA_N_PATH
 from tools.run_c1_ceiling import (
-    _ttft_slo_predictions, ARMS, CRITERION_TTFT_SLO, SLO_S_DEFAULT
+    _ttft_slo_predictions, CRITERION_TTFT_SLO, SLO_S_DEFAULT
 )
 
 root = Path(r"$root")
@@ -317,20 +301,32 @@ resolved = resolve_config(
 )
 cfg = resolved.data
 arms_by_id = {a["id"]: a for a in cfg["arms"]}
-for aid in ARMS:
+selected = [$armsPyLiteral]
+for aid in selected:
     assert aid in arms_by_id, aid
-props = arms_by_id["gpu_only_f16"].get("properties") or {}
-assert str(props.get("KV_CACHE_PRECISION")).lower() == "f16", props
-print("ARM_PIN_OK gpu_only_f16 KV_CACHE_PRECISION=f16")
-for aid in ("gpu_only_u8", "gpu_only_u4"):
-    props = arms_by_id[aid].get("properties") or {}
-    print("ARM", aid, "KV_CACHE_PRECISION", props.get("KV_CACHE_PRECISION"))
-tok = AutoTokenizer.from_pretrained(str(root / "models" / "Qwen3-4B-int4-ov"))
+    print("ARM_OK", aid)
+if "gpu_only_f16" in selected:
+    props = arms_by_id["gpu_only_f16"].get("properties") or {}
+    assert str(props.get("KV_CACHE_PRECISION")).lower() == "f16", props
+    print("ARM_PIN_OK gpu_only_f16 KV_CACHE_PRECISION=f16")
+for aid in selected:
+    if aid.startswith("gpu_only_"):
+        props = arms_by_id[aid].get("properties") or {}
+        print("ARM", aid, "KV_CACHE_PRECISION", props.get("KV_CACHE_PRECISION"))
+from seam.model_provenance import load_local_spec
+spec = load_local_spec(Path(r"$ModelSpec"))
+ir_dir = Path(str(spec["ir_dir"]))
+assert ir_dir.is_dir(), ir_dir
+print("MODEL_SPEC_OK", r"$ModelSpec")
+print("IR_DIR_OK", ir_dir)
+tok = AutoTokenizer.from_pretrained(str(ir_dir))
 unit = cfg["ladder"]["filler_unit"]
-for n in (8000, 10000, 12000):
+low, high = int($Low), int($High)
+for n in sorted({low, (low + high) // 2, high}):
     text, realized = build_exact_prompt(tok, target_tokens=n, unit=unit)
     assert realized == n, (n, realized)
     print("PROMPT_OK", n, "chars", len(text))
+print("BRACKET_OK low", low, "high", high)
 pred = _ttft_slo_predictions(slo_s=float($SloS), repeats=int($Repeats))
 print("CRITERION", CRITERION_TTFT_SLO)
 print("ACTIVE_ORDER", pred["primary_prediction"]["order"])

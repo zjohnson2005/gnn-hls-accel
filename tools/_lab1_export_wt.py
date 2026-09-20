@@ -8,8 +8,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path(r"C:\Users\zjohn\Projects\gnn-hls-accel").resolve()
-WT = Path(r"C:\Users\zjohn\Projects\seam-characterization-export").resolve()
+ROOT = Path(__file__).resolve().parents[1]
+# Sibling checkout; override with SEAM_CHAR_EXPORT_WT for non-default layouts.
+WT = Path(
+    __import__("os").environ.get(
+        "SEAM_CHAR_EXPORT_WT",
+        str(ROOT.parent / "seam-characterization-export"),
+    )
+).resolve()
 BRANCH = "seam/characterization"
 FIVE_MB = 5 * 1024 * 1024
 PY = str(ROOT / ".venv-seam" / "Scripts" / "python.exe")

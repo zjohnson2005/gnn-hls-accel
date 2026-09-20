@@ -13,11 +13,11 @@
        powershell -File tools/probe_igpu.ps1 -LaunchContext local_console
 
     B  ssh_foreground   over ssh, blocking in the SSH session
-       ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -File tools/probe_igpu.ps1 -LaunchContext ssh_foreground"
+       ssh xps "cd <repo-root>; powershell -File tools/probe_igpu.ps1 -LaunchContext ssh_foreground"
 
     C  ssh_detached     spawned through the WMI path verify_detach.ps1 proved survives disconnect
-       ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -File tools/probe_igpu.ps1 -LaunchContext ssh_detached -Detached"
-       ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -File tools/probe_igpu.ps1 -Show ssh_detached"
+       ssh xps "cd <repo-root>; powershell -File tools/probe_igpu.ps1 -LaunchContext ssh_detached -Detached"
+       ssh xps "cd <repo-root>; powershell -File tools/probe_igpu.ps1 -Show ssh_detached"
 
   C is the context that matters most and is the one most likely to fail: Win32_Process.Create
   parents the process to the WMI service, which can place it in session 0 with no window station.
@@ -46,11 +46,13 @@ param(
 
     [Parameter(ParameterSetName = "Run")]
     [Parameter(ParameterSetName = "Show")]
-    [string]$PythonExe = "C:\Users\zjohn\Projects\gnn-hls-accel\.venv-seam\Scripts\python.exe"
+    [string]$PythonExe = ""
 )
 
 $ErrorActionPreference = "Stop"
-$root = "C:\Users\zjohn\Projects\gnn-hls-accel"
+# Repo root = parent of tools/ (this script's directory).
+$root = Split-Path -Parent $PSScriptRoot
+if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 $script = Join-Path $root "tools\probe_igpu.py"
 $outDir = Join-Path $root "derived\igpu_probe"
 
