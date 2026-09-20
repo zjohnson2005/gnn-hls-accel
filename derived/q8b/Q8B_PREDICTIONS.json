@@ -1,0 +1,82 @@
+{
+  "experiment": "Q-8B",
+  "title": "Interleaved int4-4B vs int4-8B tier quality (KV=f16)",
+  "status": "pre_registered_before_measurement",
+  "registered_utc": "2026-09-16T18:02:41+00:00",
+  "runner_change_note": {
+    "utc_note": "Q8B-FIX before valid measurement session",
+    "prediction_content_unchanged": true,
+    "q_kv_baseline_unchanged": {
+      "emission_failures": 62,
+      "trajectory_pass": 10,
+      "n": 200
+    },
+    "changes": [
+      "default pipeline = block_interleave_single_pipe",
+      "dual-resident opt-in only via --allow-dual-resident / -AllowDualResident (known-broken citing b1a291f0)",
+      "persist model_result_raw_per_turn in quality rows",
+      "degenerate guard N=3 consecutive max_new_tokens+zero-decode → SeamError"
+    ],
+    "see": [
+      "derived/q8b/DUAL_RESIDENCY_FINDING.md",
+      "derived/q8b/DEGENERATE_GUARD.json"
+    ]
+  },
+  "weight_precision": "int4",
+  "no_int8_8b_in_registry": true,
+  "kv": "f16",
+  "placement_arm": "gpu_only_f16",
+  "arms": ["int4_4B", "int4_8B"],
+  "arm_model_specs": {
+    "int4_4B": "configs/models/Qwen3-4B-int4-ov.yaml",
+    "int4_8B": "configs/models/Qwen3-8B-int4-ov.yaml"
+  },
+  "quant_recipe_confound": {
+    "int4_4B": "INT4_SYM",
+    "int4_8B": "INT4_ASYM + scale_estimation (wikitext2)"
+  },
+  "n_entries": 200,
+  "session_design": "interleaved",
+  "arm_order": ["int4_4B", "int4_8B"],
+  "launcher": "tools/launch_q8b.ps1",
+  "worker": "tools/run_q_8b_quality.py",
+  "pipeline_default": "block_interleave_single_pipe",
+  "q_kv_baseline": {
+    "run_id": "137f6f46-cd3a-42d5-8479-4ff46a1074f1",
+    "arm": "gpu_only_f16",
+    "emission_failures": 62,
+    "trajectory_pass": 10,
+    "n": 200,
+    "note": "Cross-session absolute rates not comparable; anchors within-session 4B arm and prediction direction only."
+  },
+  "predictions": {
+    "P1_emission": {
+      "claim": "int4-8B fewer emission failures than int4-4B (McNemar p<0.05 favoring 8B); int4-8B failures <= 50/200.",
+      "absolute_band_int4_8B_emission_failures_max": 50,
+      "falsified_if": [
+        "emission McNemar p>=0.05 or zero discordant",
+        "int4-8B significantly worse emission than int4-4B",
+        "int4-8B emission failures > 50 while int4-4B within +/-10 of 62"
+      ]
+    },
+    "P2_completion": {
+      "claim": "int4-8B more trajectory_pass than int4-4B (McNemar p<0.05 favoring 8B); int4-8B completions >= 15/200.",
+      "absolute_band_int4_8B_trajectory_pass_min": 15,
+      "falsified_if": [
+        "completion McNemar p>=0.05 or zero discordant",
+        "int4-8B significantly fewer completions than int4-4B",
+        "int4-8B completions < 15 while int4-4B within +/-5 of 10"
+      ]
+    },
+    "joint_tier_axis": {
+      "claim": "Model tier is a quality axis at this resolution (P1 and P2 both hold).",
+      "falsified_if": "arms agree on BOTH emission and completion (McNemar p>=0.05 or 0 discordant)"
+    }
+  },
+  "reload_expectation": {
+    "ir_bytes_sum_gib": 6.68,
+    "default": "block_interleave_single_pipe with explicit reload on switch",
+    "dual_resident": "opt-in --allow-dual-resident only; known-broken citing b1a291f0",
+    "timing": "reload_events.json excluded_from_decode_metrics; cell/turn timing post-load"
+  }
+}

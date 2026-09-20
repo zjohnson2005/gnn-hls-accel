@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import atexit
+import copy
 import json
 import statistics
 import subprocess
@@ -33,6 +34,9 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+from tools.criterion_timeout import derive_probe_timeout_s  # noqa: E402
+from tools.ttft_slo_predictions import resolve_ttft_slo_plan_predictions  # noqa: E402
 
 ARMS = ("gpu_only_f16", "gpu_only_u8", "gpu_only_u4")
 POSITION_LIMIT = 40960
@@ -792,8 +796,24 @@ def main(argv: list[str] | None = None) -> int:
                     "REFUSED -- gpu_only_f16 must request KV_CACHE_PRECISION=f16 " f"(got {props})"
                 )
 
+    # INF-6: mutate a copy so criterion-aware timeout does not rewrite shared cfg.
+    cfg = copy.deepcopy(cfg)
+    timeout_derivation = derive_probe_timeout_s(
+        criterion=criterion,
+        slo_s=slo_s if criterion == CRITERION_TTFT_SLO else None,
+        config_timeout_s=float(cfg["generation"]["timeout_s"]),
+    )
+    cfg["generation"]["timeout_s"] = float(timeout_derivation["timeout_s"])
+
     if criterion == CRITERION_TTFT_SLO:
-        predictions = _ttft_slo_predictions(slo_s=slo_s, repeats=int(args.repeats))
+        predictions = resolve_ttft_slo_plan_predictions(
+            model_spec=model_spec,
+            arm_ids=arm_ids,
+            slo_s=slo_s,
+            repeats=int(args.repeats),
+            default_c2_predictions=_ttft_slo_predictions,
+            repo_root=ROOT,
+        )
         kind = "c2_ttft_bound_limit"
     else:
         m_mb = _available_mb()
@@ -823,6 +843,7 @@ def main(argv: list[str] | None = None) -> int:
             "criterion": criterion,
             "slo_s": slo_s if criterion == CRITERION_TTFT_SLO else None,
         },
+        "probe_timeout_derivation": timeout_derivation,
         "pre_registered_predictions": predictions,
         "gpu_only_f16_pin_note": (
             "gpu_only_f16 requests KV_CACHE_PRECISION=f16 and has matched "
@@ -859,12 +880,13 @@ def main(argv: list[str] | None = None) -> int:
 
     canary_guard = None
     if criterion == CRITERION_TTFT_SLO:
+        from tools.canary_power_gate import CanaryPowerTransitionAbort
         from tools.ttft_slo_canary import (
+            UNARMED_REFUSE,
             CanaryBudgetRefuse,
             CanaryDriftAbort,
             CanaryUnarmedSealRefuse,
             TtftSloCanaryGuard,
-            UNARMED_REFUSE,
             estimate_bisect_planned_probes,
         )
 
@@ -939,6 +961,50 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
             return 2
+
+        except CanaryPowerTransitionAbort as exc:
+            session_status = "FAIL_CANARY_POWER_TRANSITION"
+            summary = {
+                "kind": kind,
+                "session_id": args.session_id,
+                "ended_utc": _utc(),
+                "status": session_status,
+                "abort_reason": "FAIL_CANARY_POWER_TRANSITION",
+                "power_transition_detail": exc.detail,
+                "power_snapshot": exc.snapshot,
+                "canary": canary_guard.plan_fragment(),
+                "canaries": canary_guard.canaries,
+                "criterion": criterion,
+                "pre_registered_predictions": predictions,
+                "arm_results": [],
+                "primary_claim_eval": None,
+                "n_probes": 0,
+            }
+            (out_dir / "summary.json").write_text(
+                json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            plan["status"] = session_status
+            plan["abort_reason"] = "FAIL_CANARY_POWER_TRANSITION"
+            plan["canary"] = canary_guard.plan_fragment()
+            plan["canaries"] = canary_guard.canaries
+            plan["ended_utc"] = summary["ended_utc"]
+            (out_dir / "plan.json").write_text(
+                json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            print(
+                json.dumps(
+                    {
+                        "ok": False,
+                        "status": session_status,
+                        "abort_reason": "FAIL_CANARY_POWER_TRANSITION",
+                        "detail": exc.detail,
+                        "session_id": args.session_id,
+                        "out": str(out_dir),
+                    },
+                    indent=2,
+                )
+            )
+            return 2
         plan["canary"] = canary_guard.plan_fragment()
         (out_dir / "plan.json").write_text(
             json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -983,10 +1049,58 @@ def main(argv: list[str] | None = None) -> int:
                 )
     except Exception as exc:
         # Import locally so completion path stays free of the canary module.
+        from seam.errors import SeamError
+        from tools.canary_power_gate import CanaryPowerTransitionAbort
         from tools.ttft_slo_canary import CanaryDriftAbort
 
-        from seam.errors import SeamError
-
+        if isinstance(exc, CanaryPowerTransitionAbort):
+            session_status = "FAIL_CANARY_POWER_TRANSITION"
+            summary = {
+                "kind": kind,
+                "session_id": args.session_id,
+                "ended_utc": _utc(),
+                "status": session_status,
+                "abort_reason": "FAIL_CANARY_POWER_TRANSITION",
+                "power_transition_detail": exc.detail,
+                "power_snapshot": exc.snapshot,
+                "canary": canary_guard.plan_fragment() if canary_guard else None,
+                "canaries": canary_guard.canaries if canary_guard else [],
+                "criterion": criterion,
+                "pre_registered_predictions": predictions,
+                "arm_results": arm_results,
+                "primary_claim_eval": None,
+                "n_probes": len(probes_log),
+            }
+            (out_dir / "summary.json").write_text(
+                json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            (out_dir / "probes.ndjson").write_text(
+                "".join(json.dumps(p, sort_keys=True) + "\n" for p in probes_log),
+                encoding="utf-8",
+            )
+            plan["status"] = session_status
+            plan["abort_reason"] = "FAIL_CANARY_POWER_TRANSITION"
+            plan["canary"] = canary_guard.plan_fragment() if canary_guard else None
+            plan["canaries"] = canary_guard.canaries if canary_guard else []
+            plan["arm_results"] = arm_results
+            plan["ended_utc"] = summary["ended_utc"]
+            (out_dir / "plan.json").write_text(
+                json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            print(
+                json.dumps(
+                    {
+                        "ok": False,
+                        "status": session_status,
+                        "abort_reason": "FAIL_CANARY_POWER_TRANSITION",
+                        "detail": exc.detail,
+                        "session_id": args.session_id,
+                        "out": str(out_dir),
+                    },
+                    indent=2,
+                )
+            )
+            return 2
         if isinstance(exc, CanaryDriftAbort):
             session_status = "FAIL_CANARY_DRIFT"
             summary = {

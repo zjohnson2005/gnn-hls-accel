@@ -24,6 +24,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from tools.canary_power_gate import (
+    assert_no_ac_transition,
+    capture_canary_power_snapshot,
+)
+
 # Shortest observed degradation onset (docs/CANARY_PROTOCOL.md / 7f569929).
 ONSET_S = 657.0
 CALIBRATION_C = 3
@@ -375,6 +380,7 @@ class TtftSloCanaryGuard:
     probes_since_canary: int = 0
     opening_done: bool = False
     budget_preflight: dict[str, Any] = field(default_factory=dict)
+    last_power_snapshot: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         self.gate = new_canary_gate(
@@ -405,6 +411,11 @@ class TtftSloCanaryGuard:
             "canary_gate": self.gate,
             "n_canaries": len(self.canaries),
             "abort_on_trip": FAIL_STATUS,
+            "power_transition_refuse": (
+                "INF-6: capture Win32_Battery BatteryStatus + EstimatedChargeRemaining "
+                "at every canary; refuse on AC on_ac transition. "
+                "No-battery hosts pass trivially."
+            ),
             "enforcement": (
                 "CanaryDriftAbort exception; session status FAIL_CANARY_DRIFT. "
                 "Does not return a soft bool that a caller can ignore "
@@ -478,14 +489,22 @@ class TtftSloCanaryGuard:
         return rec
 
     def run_canary(self, *, after_probe_count: int) -> dict[str, Any]:
-        """Run one canary. Raises CanaryDriftAbort on trip — never soft-fails."""
+        """Run one canary. Raises CanaryDriftAbort / CanaryPowerTransitionAbort."""
         print(
             f"[c2_canary] index={len(self.canaries)} after_probes={after_probe_count} "
             f"armed={self.gate.get('armed')} every_n={self.n_every} "
             f"bound={(self.n_derivation or {}).get('binding_bound')}",
             flush=True,
         )
+        # INF-6: record BatteryStatus + charge; refuse on AC transition.
+        power = capture_canary_power_snapshot()
+        transition = assert_no_ac_transition(
+            previous=self.last_power_snapshot, current=power
+        )
+        self.last_power_snapshot = power
         rec = self._run_cell()
+        rec["power"] = power
+        rec["power_transition"] = transition
         rec["after_probe_count"] = after_probe_count
         prior_ok = [
             c

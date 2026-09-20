@@ -1,0 +1,151 @@
+{
+  "allow_unguarded": false,
+  "arms": [
+    "gpu_only_f16"
+  ],
+  "canary": {
+    "abort_on_trip": "FAIL_CANARY_DRIFT",
+    "allow_unguarded": false,
+    "budget_preflight": {
+      "calibration_c": 3,
+      "min_canaries_required": 4,
+      "n_budget": 5,
+      "ok": true,
+      "planned_probe_count": 21
+    },
+    "calibration_c": 3,
+    "canary_every_n": 5,
+    "canary_gate": {
+      "armed": false,
+      "calibration_c": 3,
+      "calibration_complete": false,
+      "derivation_applied": null,
+      "early_max_rel_t1": null,
+      "early_max_rel_t2": null,
+      "fixed_cell": {
+        "arm": "gpu_only_f16",
+        "delta": 400,
+        "mode": "RESIDENT",
+        "n_cached": 4000
+      },
+      "onset_s": 657.0,
+      "protocol": "docs/CANARY_PROTOCOL.md",
+      "ref_turn1_prefill_s": null,
+      "ref_turn2_prefill_s": null,
+      "rel_drift_floor": 0.05,
+      "threshold_t1": null,
+      "threshold_t2": null
+    },
+    "criterion_path": "ttft_slo",
+    "enabled": true,
+    "enforcement": "CanaryDriftAbort exception; session status FAIL_CANARY_DRIFT. Does not return a soft bool that a caller can ignore (Invoke-DriftCanary Write-Output bug class). INF-1b: refuse start if budget < C+1 canaries; refuse seal with armed==false unless AllowUnguarded writes UNGUARDED.",
+    "fixed_cell": {
+      "arm": "gpu_only_f16",
+      "delta": 400,
+      "mode": "RESIDENT",
+      "n_cached": 4000
+    },
+    "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-8B-int4-ov.yaml",
+    "n_canaries": 1,
+    "n_derivation": {
+      "binding_bound": "budget",
+      "calibration_c": 3,
+      "derivable": true,
+      "derivation": "N=min(floor(onset_s/mean_probe_wall_s), floor(planned/(C+1)))=min(None,5)=5 (binding=budget); onset_s=657.0; mean_probe_wall_s=None from THIS run (0 probes); planned_probe_count=21; C=3.",
+      "mean_probe_wall_s": null,
+      "n": 5,
+      "n_budget": 5,
+      "n_onset": null,
+      "n_probes_in_mean": 0,
+      "onset_s": 657.0,
+      "planned_probe_count": 21,
+      "refuse": false
+    },
+    "onset_s": 657.0,
+    "planned_probe_count": 21,
+    "rel_drift_floor": 0.05
+  },
+  "criterion": "ttft_slo",
+  "gpu_only_f16_pin_note": "gpu_only_f16 requests KV_CACHE_PRECISION=f16 and has matched readback=f16 on prior cells (not the old bare gpu_only that read back dynamic).",
+  "ir_bytes": 4882865352,
+  "ir_sha256": "cd97874b28acfc95cca83801636396c2673703ec800f6675a1b123c3eebb50fe",
+  "kind": "c2_ttft_bound_limit",
+  "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-8B-int4-ov.yaml",
+  "planned_probe_count": 21,
+  "pre_registered_predictions": {
+    "amended_utc_note": "PRE-DATA amendment before any C-2 probe: ordering claim withdrawn; replaced by turn-1 agreement within resolution. (AM-038)",
+    "coarse_bracket": {
+      "n_fail_side": 12000,
+      "n_ok_side": 8000,
+      "note": "All three arms under SLO at 8000 (~7.1-7.2 s) and over at 12000 (~13.5 s) on sealed turn-1 medians."
+    },
+    "primary_prediction": {
+      "claim": "The three turn-1 TTFT limits AGREE within the 250-token resolution. KV precision does not move the cold-start context limit.",
+      "consequence_if_holds": "KV precision affects neither capability (memory does not bind, C-1) nor the cold-start SLO limit. Its only remaining value on this hardware is the headroom it frees, which nothing needs. That makes it the weakest of the six axes on this machine, and it should be reported that way rather than on its nominal purpose.",
+      "falsified_if": [
+        "any pair of TTFT limits differs by more than 250 tokens"
+      ],
+      "order": "f16 ~= u8 ~= u4 (within +/- 250 tokens)",
+      "status": "ACTIVE"
+    },
+    "record_note": "Both withdrawn and replacement predictions stay in the record.",
+    "sealed_41e419bd_turn1_prefill_median_s": {
+      "gpu_only_f16": {
+        "8000": 7.1832,
+        "12000": 13.5377
+      },
+      "gpu_only_u4": {
+        "8000": 7.1324,
+        "12000": 13.5001
+      },
+      "gpu_only_u8": {
+        "8000": 7.1326,
+        "12000": 13.5273
+      }
+    },
+    "separate_experiment_not_c2": {
+      "displacing": true,
+      "name": "turn2_delta_prefill_ttft_limit",
+      "note": "The turn-2 delta-prefill limit binds under RESIDENT and is where the 15-27% f16 advantage lives. At n=12,000 turn-2 was roughly 0.16 of turn-1, so its 10 s crossing sits well above 12,000 and needs a wider search. There the ordering f16 > u8 >= u4 is still the prediction, and it matters more, because residency is the configuration the workload actually runs in. Recorded here so it is not silently folded into C-2.",
+      "prediction_if_run": "f16 > u8 >= u4",
+      "status": "NOT_STARTED"
+    },
+    "slo": {
+      "decode_tok_s_min": 6.0,
+      "pass_uses_median_of_repeats": true,
+      "prefill_s_max": 10.0,
+      "repeats": 3
+    },
+    "source": "docs/README_characterizations.md Finding 2 / sealed 41e419bd",
+    "withdrawn_prediction": {
+      "claim": "TTFT-bound limit orders f16 > u8 >= u4. Prefill is compute-bound; quantized arms pay dequantization, so f16 reaches a higher n before crossing the 10 s SLO.",
+      "falsified_if_when_active": [
+        "the three TTFT limits agree within the 250-token resolution",
+        "u4 exceeds f16"
+      ],
+      "order": "f16 > u8 >= u4",
+      "status": "WITHDRAWN",
+      "withdrawal_reason": "That ordering was inferred from the 15-27% f16 advantage in 41e419bd Finding 2, which is a TURN-2 DELTA PREFILL measurement. C-2 bisects on TURN-1 bulk prefill. Finding 2's direct statement about turn-1 is that arms agree within 1%.",
+      "withdrawn_before_any_probe": true
+    }
+  },
+  "search": {
+    "criterion": "ttft_slo",
+    "high": 10000,
+    "low": 3000,
+    "pass_requires_all_repeats": true,
+    "repeats_per_probe": 3,
+    "resolution_tokens": 250,
+    "slo_s": 10.0
+  },
+  "session_id": "9c037801-342b-478e-8e95-5b66d369eab8",
+  "slo_s": 10.0,
+  "started_utc": "2026-09-17T01:34:13.867533+00:00",
+  "status": "running",
+  "watchdog": {
+    "interval_s": 60,
+    "kill_log": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\c2_ttft\\9c037801-342b-478e-8e95-5b66d369eab8\\watchdog_kills.jsonl",
+    "mechanism": "Popen_CREATE_NEW_PROCESS_GROUP",
+    "pid": 21328
+  }
+}

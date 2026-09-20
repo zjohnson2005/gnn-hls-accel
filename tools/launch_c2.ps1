@@ -1,4 +1,4 @@
-# C-2 launcher - TTFT-bound context limit (default: KV precision arms on gpu_only).
+﻿# C-2 launcher - TTFT-bound context limit (default: KV precision arms on gpu_only).
 #
 # Production (Zach, bare SSH after cold boot):
 #   powershell -NoProfile -File tools/launch_c2.ps1
@@ -132,11 +132,29 @@ Write-Host ("Criterion      : {0}  slo_s={1}" -f $Criterion, $SloS)
 Write-Host ("ModelSpec      : {0}" -f $ModelSpec)
 Write-Host ("WatchdogIntervalS: {0}" -f $WatchdogIntervalS)
 Write-Host ""
+# INF-6: plan.json carries CAP-3 predictions when -ModelSpec matches CAP3_PREDICTIONS,
+# otherwise the C-2 AM-038 three-arm agreement claim.
+$cap3Pred = Join-Path $root "derived\cap3\CAP3_PREDICTIONS.json"
+$modelLeaf = [System.IO.Path]::GetFileName($ModelSpec)
+$isCap3 = $false
+if (Test-Path -LiteralPath $cap3Pred) {
+    $cap3Doc = Get-Content -LiteralPath $cap3Pred -Raw | ConvertFrom-Json
+    foreach ($arm in @($cap3Doc.arms.PSObject.Properties)) {
+        $armSpecLeaf = [System.IO.Path]::GetFileName([string]$arm.Value.model_spec)
+        if ($armSpecLeaf -eq $modelLeaf) { $isCap3 = $true; $script:cap3ArmKey = $arm.Name; break }
+    }
+}
 Write-Host "PRE-REGISTERED PREDICTION (written into plan.json before first probe):"
-Write-Host "  ACTIVE: three turn-1 TTFT limits AGREE within +/- 250 tokens."
-Write-Host "  FALSIFIED if any pair differs by more than 250 tokens."
-Write-Host "  WITHDRAWN (retained): f16 > u8 >= u4 - turn-2 delta claim, not turn-1."
-Write-Host "  NOT C-2: turn-2 delta-prefill 10 s limit (wider search; f16 > u8 >= u4)."
+if ($isCap3) {
+    Write-Host ("  CAP-3: plan.json points at derived/cap3/CAP3_PREDICTIONS.json (arm={0})." -f $cap3ArmKey)
+    Write-Host "  C-2 three-arm KV agreement claim does NOT apply to this -ModelSpec."
+} else {
+    Write-Host "  ACTIVE (C-2 / AM-038): three turn-1 TTFT limits AGREE within +/- 250 tokens."
+    Write-Host "  FALSIFIED if any pair differs by more than 250 tokens."
+    Write-Host "  WITHDRAWN (retained): f16 > u8 >= u4 - turn-2 delta claim, not turn-1."
+    Write-Host "  NOT C-2: turn-2 delta-prefill 10 s limit (wider search; f16 > u8 >= u4)."
+}
+Write-Host "  INF-6 probe timeout: ttft_slo => timeout_s = slo_s * 3 (recorded in plan.json)."
 Write-Host ""
 
 # ---------------------------------------------------------------------------

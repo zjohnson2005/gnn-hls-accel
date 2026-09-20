@@ -1,0 +1,270 @@
+{
+  "cell": {
+    "arm_id": "gpu_only_f16",
+    "cache_retention": null,
+    "classification": "OTHER",
+    "compile_error": "RuntimeError: Exception from src\\inference\\src\\cpp\\core.cpp:120:\nException from src\\inference\\src\\dev\\plugin.cpp:54:\n[CL ext] Can not allocate 622329856 bytes for USM Host. ptr: 0000000000000000, error: 0\n\n\n",
+    "compile_ok": false,
+    "delta": 400,
+    "device_config": {
+      "arm_id": "gpu_only_f16",
+      "arm_properties": {
+        "KV_CACHE_PRECISION": "f16"
+      },
+      "cpu_properties": {
+        "ENABLE_CPU_PINNING": true,
+        "INFERENCE_NUM_THREADS": 4,
+        "SCHEDULING_CORE_TYPE": "PCORE_ONLY"
+      },
+      "generate_device": "GPU",
+      "label": "gpu only (KV_CACHE_PRECISION=f16)",
+      "load_sequence": [
+        {
+          "device": "GPU",
+          "properties": {
+            "KV_CACHE_PRECISION": "f16"
+          }
+        }
+      ]
+    },
+    "diagnostics": {
+      "chat_api": {
+        "apply_chat_template_default": true,
+        "deprecation_warnings_on_inspect": [],
+        "finish_chat_doc": "finish_chat(self: openvino_genai.py_openvino_genai.LLMPipeline) -> None",
+        "genai_version": "2026.2.1.0-3123-7dea0459b2a",
+        "has_ChatHistory": true,
+        "has_finish_chat": true,
+        "has_start_chat": true,
+        "note": "openvino_genai 2026.2.1 deprecates start_chat/finish_chat in favour of generate(ChatHistory); this diagnostic still uses start_chat/finish_chat.",
+        "ok": true,
+        "ov_version": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+        "start_chat_doc": "start_chat(self: openvino_genai.py_openvino_genai.LLMPipeline, system_message: str = '') -> None"
+      },
+      "config_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\delta_n.yaml",
+      "context_field_errors": {
+        "is_interactive": "GetUserObjectInformationW(UOI_FLAGS) size query returned 0, GetLastError=0"
+      },
+      "ir_sha256": "cd97874b28acfc95cca83801636396c2673703ec800f6675a1b123c3eebb50fe",
+      "loads": [
+        {
+          "device": "GPU",
+          "error": "RuntimeError: Exception from src\\inference\\src\\cpp\\core.cpp:120:\nException from src\\inference\\src\\dev\\plugin.cpp:54:\n[CL ext] Can not allocate 622329856 bytes for USM Host. ptr: 0000000000000000, error: 0\n\n\n",
+          "ok": false,
+          "properties": {
+            "KV_CACHE_PRECISION": "f16"
+          }
+        }
+      ],
+      "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-8B-int4-ov.yaml",
+      "prompt_meta_turn1": {
+        "chars": 17995,
+        "n_tokens_realized": 4000,
+        "n_tokens_requested": 4000,
+        "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt",
+        "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3"
+      },
+      "prompt_meta_turn2": {
+        "chars": 1795,
+        "n_tokens_realized": 400,
+        "n_tokens_requested": 400,
+        "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt",
+        "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498"
+      },
+      "prompt_mode": "ladder_exact",
+      "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\tools\\smoke_delta_prefill.py\", line 796, in _run_cell_body\n    pipes[device] = ov_genai.LLMPipeline(str(model_dir), device, **properties)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: Exception from src\\inference\\src\\cpp\\core.cpp:120:\nException from src\\inference\\src\\dev\\plugin.cpp:54:\n[CL ext] Can not allocate 622329856 bytes for USM Host. ptr: 0000000000000000, error: 0\n\n\n\n",
+      "working_set_lock": {
+        "after": {
+          "flags": 9,
+          "hard_min_enabled": true,
+          "maximum_bytes": 12884901888,
+          "minimum_bytes": 4294967296,
+          "read": true
+        },
+        "before": {
+          "flags": 9,
+          "hard_min_enabled": true,
+          "maximum_bytes": 12884901888,
+          "minimum_bytes": 4294967296,
+          "read": true
+        },
+        "call": "SetProcessWorkingSetSizeEx",
+        "flags": 1,
+        "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+        "granted": true,
+        "last_error": 0,
+        "privilege": {
+          "attempted": true,
+          "granted": true,
+          "last_error": 0,
+          "last_error_meaning": "ERROR_SUCCESS",
+          "privilege": "SeIncreaseWorkingSetPrivilege",
+          "step": "AdjustTokenPrivileges"
+        },
+        "requested": true,
+        "requested_maximum_bytes": 12884901888,
+        "requested_minimum_bytes": 4294967296,
+        "returned": true
+      }
+    },
+    "environment_peak": null,
+    "environment_start": {
+      "available_mb": 12066.0,
+      "available_mb_method": "win32pdh:Memory/Available MBytes",
+      "committed_mb": 7951.87109375,
+      "pool_nonpaged_mb": 513.50390625,
+      "pool_paged_mb": 325.9375,
+      "probe_error": null,
+      "process_count": 229,
+      "sum_private_mb": 5452.5546875,
+      "tier2_private_mb": 610.734375,
+      "tier2_processes": [
+        {
+          "name": "ICPS.exe",
+          "pid": 12384,
+          "private_working_set_bytes": 117125120
+        },
+        {
+          "name": "SearchHost.exe",
+          "pid": 13260,
+          "private_working_set_bytes": 94646272
+        },
+        {
+          "name": "SupportAssistAgent.exe",
+          "pid": 11252,
+          "private_working_set_bytes": 98803712
+        },
+        {
+          "name": "msedgewebview2.exe",
+          "pid": 1780,
+          "private_working_set_bytes": 56852480
+        },
+        {
+          "name": "msedgewebview2.exe",
+          "pid": 2344,
+          "private_working_set_bytes": 59633664
+        },
+        {
+          "name": "msedgewebview2.exe",
+          "pid": 12412,
+          "private_working_set_bytes": 3039232
+        },
+        {
+          "name": "msedgewebview2.exe",
+          "pid": 12608,
+          "private_working_set_bytes": 40517632
+        },
+        {
+          "name": "msedgewebview2.exe",
+          "pid": 14112,
+          "private_working_set_bytes": 44253184
+        },
+        {
+          "name": "msedgewebview2.exe",
+          "pid": 14340,
+          "private_working_set_bytes": 3084288
+        },
+        {
+          "name": "msedgewebview2.exe",
+          "pid": 14784,
+          "private_working_set_bytes": 13393920
+        },
+        {
+          "name": "msedgewebview2.exe",
+          "pid": 14972,
+          "private_working_set_bytes": 9207808
+        },
+        {
+          "name": "msedgewebview2.exe",
+          "pid": 15032,
+          "private_working_set_bytes": 55177216
+        },
+        {
+          "name": "msedgewebview2.exe",
+          "pid": 17692,
+          "private_working_set_bytes": 12607488
+        },
+        {
+          "name": "msedgewebview2.exe",
+          "pid": 17860,
+          "private_working_set_bytes": 8413184
+        },
+        {
+          "name": "msedgewebview2.exe",
+          "pid": 17896,
+          "private_working_set_bytes": 23646208
+        }
+      ],
+      "uptime_s": 2307.2065765857697
+    },
+    "execute_error": null,
+    "execute_ok": false,
+    "hostname": "computadora",
+    "is_interactive": null,
+    "kind": "delta_prefill_cell",
+    "kv_bytes_expected_turn1": null,
+    "kv_bytes_expected_turn2": null,
+    "kv_bytes_per_token": null,
+    "launch_context": "ttft_slo_canary",
+    "max_new_tokens": 64,
+    "mode": "RESIDENT",
+    "model_id": "Qwen3-8B-int4-ov",
+    "n_cached": 4000,
+    "ov_version": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+    "path_head": [
+      "C:\\windows\\system32",
+      "C:\\windows",
+      "C:\\windows\\System32\\Wbem",
+      "C:\\windows\\System32\\WindowsPowerShell\\v1.0\\",
+      "C:\\windows\\System32\\OpenSSH\\",
+      "C:\\Program Files\\dotnet\\"
+    ],
+    "pipeline_type": "llm",
+    "power_request": {
+      "clear_last_error": 0,
+      "cleared": true,
+      "close_last_error": 0,
+      "closed": true,
+      "create_last_error": null,
+      "created": true,
+      "error": null,
+      "handle_repr": "0x13ec",
+      "mechanism": "PowerCreateRequest/PowerSetRequest",
+      "platform": "Windows",
+      "reason": "SEAM delta_prefill; PowerRequestSystemRequired for compile+generate",
+      "request_type": "PowerRequestSystemRequired",
+      "request_type_id": 1,
+      "role": "delta_prefill",
+      "set": true,
+      "set_last_error": 0,
+      "succeeded": true
+    },
+    "process_id": 3024,
+    "python_exe": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\.venv-seam\\Scripts\\python.exe",
+    "python_version": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+    "session_id": 0,
+    "timestamp_utc": "2026-09-17T02:09:16.394108+00:00",
+    "turn1": null,
+    "turn2": null,
+    "turn2_prompt_tokens": 400,
+    "window_station": "Service-0x0-466a10$",
+    "wslock_granted": true
+  },
+  "record": {
+    "after_probe_count": null,
+    "arm_id": "gpu_only_f16",
+    "available_mb_start": 12066.0,
+    "canary_index": 1,
+    "classification": "OTHER",
+    "delta": 400,
+    "execute_error": null,
+    "execute_ok": false,
+    "is_canary": true,
+    "mode": "RESIDENT",
+    "n_cached": 4000,
+    "raw_classification": "OTHER",
+    "turn1_prefill_s": null,
+    "turn2_prefill_s": null,
+    "utc": "2026-09-17T02:09:26.548002+00:00"
+  }
+}

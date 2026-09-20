@@ -1,0 +1,101 @@
+{
+  "arms": [
+    "int4_4B",
+    "int4_8B"
+  ],
+  "available_mb_start": {
+    "available_mb": 7863.1,
+    "available_method": "GlobalMemoryStatusEx.ullAvailPhys"
+  },
+  "code_derived": {
+    "apply_model_spec_is_global": true,
+    "cell_wall_starts_after_ensure_arm": true,
+    "different_model_specs_require_reload_or_dual_pipes": true,
+    "load_arm_pipeline_uses_MODEL_DIR": true,
+    "turn_ttft_decode_from_generate_only": true
+  },
+  "events": [
+    {
+      "arm_id": "int4_4B",
+      "event": "model_load",
+      "excluded_from_decode_metrics": true,
+      "generate_issued": false,
+      "kv_normalized": "f16",
+      "load_s": 7.202126100004534,
+      "load_wall_s": 7.443970599997556,
+      "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+      "reason": "initial_4b",
+      "utc": "2026-09-16T18:05:51.156184+00:00"
+    },
+    {
+      "before_load": "int4_8B",
+      "event": "drop_all",
+      "excluded_from_decode_metrics": true,
+      "utc": "2026-09-16T18:05:51.375039+00:00"
+    },
+    {
+      "arm_id": "int4_8B",
+      "event": "model_load",
+      "excluded_from_decode_metrics": true,
+      "generate_issued": false,
+      "kv_normalized": "f16",
+      "load_s": 13.522103100003733,
+      "load_wall_s": 13.529781500001263,
+      "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-8B-int4-ov.yaml",
+      "reason": "switch_4b_to_8b",
+      "utc": "2026-09-16T18:06:04.932018+00:00"
+    },
+    {
+      "before_load": "int4_4B",
+      "event": "drop_all",
+      "excluded_from_decode_metrics": true,
+      "utc": "2026-09-16T18:06:05.509226+00:00"
+    },
+    {
+      "arm_id": "int4_4B",
+      "event": "model_load",
+      "excluded_from_decode_metrics": true,
+      "generate_issued": false,
+      "kv_normalized": "f16",
+      "load_s": 6.430571999997483,
+      "load_wall_s": 6.438105900000664,
+      "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+      "reason": "switch_8b_to_4b",
+      "utc": "2026-09-16T18:06:11.973416+00:00"
+    }
+  ],
+  "finding": "reload_required_for_model_spec_switch",
+  "finding_detail": "Arm switch drops the prior pipe and reloads the target IR. Reload cost is recorded as model_load events with excluded_from_decode_metrics=true; no generate() timing fields exist in this smoke.",
+  "finished_utc": "2026-09-16T18:06:11.973416+00:00",
+  "ir_bytes": {
+    "int4_4B": 2290768181,
+    "int4_8B": 4882865352,
+    "sum_gib": 6.680966851301491
+  },
+  "kind": "q8b_reload_smoke",
+  "kv_expected": "f16",
+  "placement_arm": "gpu_only_f16",
+  "reload_costs_s": [
+    {
+      "arm_id": "int4_4B",
+      "load_s": 7.202126100004534,
+      "reason": "initial_4b"
+    },
+    {
+      "arm_id": "int4_8B",
+      "load_s": 13.522103100003733,
+      "reason": "switch_4b_to_8b"
+    },
+    {
+      "arm_id": "int4_4B",
+      "load_s": 6.430571999997483,
+      "reason": "switch_8b_to_4b"
+    }
+  ],
+  "simultaneous_residency": {
+    "attempted": false,
+    "note": "This smoke loads one arm at a time (drop between switches) to measure reload cost. Dual-resident attempt is the full runner's job when available_mb >= 10000."
+  },
+  "started_utc": "2026-09-16T18:05:43.685798+00:00",
+  "status": "complete"
+}

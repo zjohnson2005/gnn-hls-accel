@@ -1,0 +1,238 @@
+{
+  "arm_model_specs": {
+    "int4_4B": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+    "int4_8B": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-8B-int4-ov.yaml"
+  },
+  "arm_order": [
+    "int4_4B",
+    "int4_8B"
+  ],
+  "arms": [
+    "int4_4B",
+    "int4_8B"
+  ],
+  "available_mb_start": {
+    "available_mb": 10775.5,
+    "available_method": "GlobalMemoryStatusEx.ullAvailPhys"
+  },
+  "block_size": 1,
+  "cloud_usd": 0.0,
+  "do_sample": false,
+  "interleave": "per_entry_shuffle_dual_resident_pipes",
+  "interleave_seed": 20260916,
+  "kind": "q_8b_quality",
+  "kv_expected": "f16",
+  "kv_readback_assert": {
+    "int4_4B": {
+      "arm_id": "int4_4B",
+      "expected": "f16",
+      "loads": [
+        {
+          "device": "GPU",
+          "kv_cache_precision": {
+            "enforced": true,
+            "failure_mode": null,
+            "match": true,
+            "readback": {
+              "device": "GPU",
+              "error": null,
+              "normalized": "f16",
+              "ok": true,
+              "property": "KV_CACHE_PRECISION",
+              "raw": "<Type: 'float16'>",
+              "to_string": "f16"
+            },
+            "requested": "f16"
+          },
+          "properties": {
+            "KV_CACHE_PRECISION": "f16"
+          },
+          "scheduler_config": null
+        }
+      ]
+    },
+    "int4_8B": {
+      "arm_id": "int4_8B",
+      "expected": "f16",
+      "loads": [
+        {
+          "device": "GPU",
+          "kv_cache_precision": {
+            "enforced": true,
+            "failure_mode": null,
+            "match": true,
+            "readback": {
+              "device": "GPU",
+              "error": null,
+              "normalized": "f16",
+              "ok": true,
+              "property": "KV_CACHE_PRECISION",
+              "raw": "<Type: 'float16'>",
+              "to_string": "f16"
+            },
+            "requested": "f16"
+          },
+          "properties": {
+            "KV_CACHE_PRECISION": "f16"
+          },
+          "scheduler_config": null
+        }
+      ]
+    }
+  },
+  "load_metas": {
+    "int4_4B": {
+      "device_config": {
+        "arm_id": "gpu_only_f16",
+        "generate_device": "GPU",
+        "label": "gpu only (KV_CACHE_PRECISION=f16)",
+        "load_sequence": [
+          {
+            "device": "GPU",
+            "properties": {
+              "KV_CACHE_PRECISION": "f16"
+            }
+          }
+        ]
+      },
+      "load_s": 5.81905689999985,
+      "load_wall_s": 5.825828500000171,
+      "loads": [
+        {
+          "device": "GPU",
+          "kv_cache_precision": {
+            "enforced": true,
+            "failure_mode": null,
+            "match": true,
+            "readback": {
+              "device": "GPU",
+              "error": null,
+              "normalized": "f16",
+              "ok": true,
+              "property": "KV_CACHE_PRECISION",
+              "raw": "<Type: 'float16'>",
+              "to_string": "f16"
+            },
+            "requested": "f16"
+          },
+          "properties": {
+            "KV_CACHE_PRECISION": "f16"
+          },
+          "scheduler_config": null
+        }
+      ],
+      "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+      "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+      "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+      "placement_arm": "gpu_only_f16",
+      "scheduler_config": {
+        "enable_prefix_caching": null,
+        "source": "LLMPipeline_default_CB_prefix_caching_on"
+      }
+    },
+    "int4_8B": {
+      "device_config": {
+        "arm_id": "gpu_only_f16",
+        "generate_device": "GPU",
+        "label": "gpu only (KV_CACHE_PRECISION=f16)",
+        "load_sequence": [
+          {
+            "device": "GPU",
+            "properties": {
+              "KV_CACHE_PRECISION": "f16"
+            }
+          }
+        ]
+      },
+      "load_s": 16.289285100000598,
+      "load_wall_s": 16.301471400000082,
+      "loads": [
+        {
+          "device": "GPU",
+          "kv_cache_precision": {
+            "enforced": true,
+            "failure_mode": null,
+            "match": true,
+            "readback": {
+              "device": "GPU",
+              "error": null,
+              "normalized": "f16",
+              "ok": true,
+              "property": "KV_CACHE_PRECISION",
+              "raw": "<Type: 'float16'>",
+              "to_string": "f16"
+            },
+            "requested": "f16"
+          },
+          "properties": {
+            "KV_CACHE_PRECISION": "f16"
+          },
+          "scheduler_config": null
+        }
+      ],
+      "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-8B-int4-ov.yaml",
+      "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+      "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+      "placement_arm": "gpu_only_f16",
+      "scheduler_config": {
+        "enable_prefix_caching": null,
+        "source": "LLMPipeline_default_CB_prefix_caching_on"
+      }
+    }
+  },
+  "max_new_tokens": 512,
+  "measurement_kind": "MEASURED",
+  "n_entries": 200,
+  "no_int8_8b_in_registry": true,
+  "pipeline_mode": "dual_resident",
+  "placement_arm": "gpu_only_f16",
+  "predictions_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\q8b\\Q8B_PREDICTIONS.json",
+  "predictions_registered_utc": "2026-09-16T18:02:41+00:00",
+  "q_kv_baseline": {
+    "arm": "gpu_only_f16",
+    "emission_failures": 62,
+    "n": 200,
+    "note": "Cross-session absolute rates not comparable; anchors within-session 4B arm and prediction direction only.",
+    "run_id": "137f6f46-cd3a-42d5-8479-4ff46a1074f1",
+    "trajectory_pass": 10
+  },
+  "quant_recipe_confound": {
+    "int4_4B": "INT4_SYM",
+    "int4_8B": "INT4_ASYM + scale_estimation (wikitext2)",
+    "note": "Tier comparison at fixed int4 weight precision; size confounded with quant recipe. Stated, not silently ignored."
+  },
+  "reload_timing": {
+    "contaminates_cell_wall": false,
+    "contaminates_turn_ttft_decode": false,
+    "note": "load_s / load_wall_s are separate events; cell_wall and turn ttft_s/decode_tok_s start after the active pipe is ready.",
+    "recorded_in": "reload_events.json"
+  },
+  "residency": "RESIDENT",
+  "run_environment": {
+    "arm_order": [
+      "int4_4B",
+      "int4_8B"
+    ],
+    "available_mb_start": 10775.5,
+    "session_design": "interleaved"
+  },
+  "run_id": "b1a291f0-d7a4-48f3-b4fd-154290a9d5c5",
+  "scorer": {
+    "bfcl_eval_version": "2025.12.17",
+    "checker": "bfcl_eval.eval_checker.multi_turn_eval.multi_turn_checker",
+    "w3_seal_refs": [
+      "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+      "1d8db970-4c18-4bcf-824d-d9c141b6eb22"
+    ],
+    "wrapper": "apu_characterization.cap01.bfcl_cap01_multi_turn_checker"
+  },
+  "seal": true,
+  "session_design": "interleaved",
+  "started_utc": "2026-09-16T19:34:50.654200+00:00",
+  "w3_entry_pin": "3502c5356219f8bf5679f2f5626cb706a1f24b61eb38e51d6921e0fcfcf8628e",
+  "w3_seal_refs": [
+    "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+    "1d8db970-4c18-4bcf-824d-d9c141b6eb22"
+  ],
+  "weight_precision": "int4"
+}

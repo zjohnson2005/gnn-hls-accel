@@ -1,0 +1,191 @@
+{
+  "affinity_readback": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "completed": false,
+  "exception": {
+    "message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\graph\\impls\\onednn\\primitive_onednn_base.h:550:\ncould not execute a primitive\n\n",
+    "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 77, in main\n    return _run(spec, writer)\n           ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 105, in _run\n    return _run_with_power(spec, writer)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 246, in _run_with_power\n    result = pipe.generate([prompt], cfg, streamer)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\graph\\impls\\onednn\\primitive_onednn_base.h:550:\ncould not execute a primitive\n\n\n",
+    "type": "RuntimeError"
+  },
+  "failure_mode": "exception:RuntimeError",
+  "kv_cache_precision_readback": [
+    {
+      "enforced": true,
+      "failure_mode": null,
+      "match": true,
+      "readback": {
+        "device": "GPU",
+        "error": null,
+        "normalized": "f16",
+        "ok": true,
+        "property": "KV_CACHE_PRECISION",
+        "raw": "<Type: 'float16'>",
+        "to_string": "f16"
+      },
+      "requested": "f16"
+    }
+  ],
+  "loads": [
+    {
+      "available_delta_mb": 5098.51953125,
+      "compile_s": 7.669591999999739,
+      "device": "GPU",
+      "kv_cache_precision": {
+        "enforced": true,
+        "failure_mode": null,
+        "match": true,
+        "readback": {
+          "device": "GPU",
+          "error": null,
+          "normalized": "f16",
+          "ok": true,
+          "property": "KV_CACHE_PRECISION",
+          "raw": "<Type: 'float16'>",
+          "to_string": "f16"
+        },
+        "requested": "f16"
+      },
+      "memory_after": {
+        "available_mb": 5879.34375,
+        "percent": 63.2,
+        "rss_mb": 5146.53515625,
+        "used_mb": 10096.83203125
+      },
+      "memory_before": {
+        "available_mb": 10977.86328125,
+        "percent": 31.3,
+        "rss_mb": 52.36328125,
+        "used_mb": 4998.3125
+      },
+      "properties": {
+        "KV_CACHE_PRECISION": "<Type: 'float16'>"
+      },
+      "properties_requested": {
+        "KV_CACHE_PRECISION": "f16"
+      },
+      "rss_delta_mb": 5094.171875
+    }
+  ],
+  "memory_after_import": {
+    "available_mb": 10977.9296875,
+    "percent": 31.3,
+    "rss_mb": 52.0078125,
+    "used_mb": 4998.24609375
+  },
+  "memory_at_failure": {
+    "available_mb": 5095.8125,
+    "percent": 68.1,
+    "rss_mb": 5938.23046875,
+    "used_mb": 10880.36328125
+  },
+  "memory_baseline": {
+    "available_mb": 11010.59375,
+    "percent": 31.1,
+    "rss_mb": 19.21484375,
+    "used_mb": 4965.58203125
+  },
+  "memory_before_generate": {
+    "available_mb": 5877.6875,
+    "percent": 63.2,
+    "rss_mb": 5149.34375,
+    "used_mb": 10098.48828125
+  },
+  "memory_resident_before_inference": {
+    "available_mb": 5877.92578125,
+    "percent": 63.2,
+    "rss_mb": 5148.609375,
+    "used_mb": 10098.25
+  },
+  "phase": "failed",
+  "power_request": {
+    "clear_last_error": 0,
+    "cleared": true,
+    "close_last_error": 0,
+    "closed": true,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x2b0",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "measurement_child",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "spec": {
+    "affinity_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "arm_id": "gpu_only_f16",
+    "arm_properties": {
+      "KV_CACHE_PRECISION": "f16"
+    },
+    "generate_device": "GPU",
+    "load_sequence": [
+      {
+        "device": "GPU",
+        "properties": {
+          "KV_CACHE_PRECISION": "f16"
+        }
+      }
+    ],
+    "max_new_tokens": 8,
+    "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-8B-int4-ov",
+    "prompt_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n10000.txt",
+    "rss_interval_s": 0.05,
+    "wslock": {
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "mode": "request"
+    }
+  },
+  "standing_reservation": {
+    "available_delta_mb": 5132.66796875,
+    "basis": "delta from process baseline (pre-import) to all backends compiled and resident, before any measured generation; rss and system-available disagree when weights are file-backed or shared, and both are reported without attribution",
+    "rss_delta_mb": 5129.39453125
+  },
+  "working_set_lock": {
+    "after": {
+      "flags": 9,
+      "hard_min_enabled": true,
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "read": true
+    },
+    "before": {
+      "flags": 10,
+      "hard_min_enabled": false,
+      "maximum_bytes": 1413120,
+      "minimum_bytes": 204800,
+      "read": true
+    },
+    "call": "SetProcessWorkingSetSizeEx",
+    "flags": 1,
+    "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+    "granted": true,
+    "last_error": 0,
+    "privilege": {
+      "attempted": true,
+      "granted": true,
+      "last_error": 0,
+      "last_error_meaning": "ERROR_SUCCESS",
+      "privilege": "SeIncreaseWorkingSetPrivilege",
+      "step": "AdjustTokenPrivileges"
+    },
+    "requested": true,
+    "requested_maximum_bytes": 12884901888,
+    "requested_minimum_bytes": 4294967296,
+    "returned": true
+  }
+}

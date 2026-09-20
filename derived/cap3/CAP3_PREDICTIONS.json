@@ -1,0 +1,140 @@
+{
+  "experiment": "CAP-3",
+  "title": "8B-int4 and 4B-int8 gpu_only TTFT limits (ttft_slo)",
+  "status": "pre_registered_before_measurement",
+  "registered_utc": "2026-09-17T01:21:47+00:00",
+  "launcher": "tools/launch_c2.ps1",
+  "worker": "tools/run_c1_ceiling.py",
+  "criterion": "ttft_slo",
+  "slo_s": 10.0,
+  "placement": "gpu_only",
+  "kv": "f16",
+  "arm": "gpu_only_f16",
+  "residency": "RESIDENT",
+  "note": "Six capability axes complete; capability column previously held only 4B-int4 (cpu-p 500 via d3dcbd3b; gpu_only 9750 via c647f0c7). Tier result 72d270e2 makes 8B quality-relevant; its TTFT operating limit is load-bearing. CAP-3-PREP pre-registers only — no measurement session launched.",
+  "search_defaults_basis": {
+    "resolution_tokens": 250,
+    "repeats_per_probe": 3,
+    "source": "tools/launch_c2.ps1 -Resolution/-Repeats defaults (C-2 / CAP-1b ceiling tooling); worker --resolution/--repeats passed through to bisect_arm"
+  },
+  "arms": {
+    "arm1_8b_int4": {
+      "model_spec": "configs/models/Qwen3-8B-int4-ov.yaml",
+      "model_name": "Qwen3-8B-int4-ov",
+      "ir_sha256": "cd97874b28acfc95cca83801636396c2673703ec800f6675a1b123c3eebb50fe",
+      "ir_bytes": 4882865352,
+      "arm": "gpu_only_f16",
+      "search": {
+        "low": 3000,
+        "high": 10000,
+        "resolution_tokens": 250,
+        "repeats_per_probe": 3,
+        "basis": [
+          "Resolution 250 / repeats 3 match launch_c2.ps1 C-2 defaults (same chain as CAP-1b).",
+          "Low=3000 sits below the predicted limit band [4000, 7000] so bisect expects a known-good at the bottom if the point estimate ~5500 holds.",
+          "High=10000 sits above workload max 7743 and above the scaling falsifier bound 9750 (4B-int4 gpu_only limit from c647f0c7)."
+        ]
+      },
+      "invoke": "powershell -NoProfile -File tools/launch_c2.ps1 -Arms gpu_only_f16 -Low 3000 -High 10000 -Resolution 250 -Repeats 3 -ModelSpec configs/models/Qwen3-8B-int4-ov.yaml",
+      "predictions": {
+        "P1_limit_band": {
+          "claim": "8B-int4 gpu_only_f16 cold-start TTFT limit (ttft_limit_n) lands in [4000, 7000] tokens; point estimate ~5500.",
+          "predicted_ttft_limit_n_band": [4000, 7000],
+          "predicted_ttft_limit_n_point": 5500,
+          "basis": [
+            "8B ~2× parameters of 4B → prefill cost per token roughly proportional under compute-bound prefill.",
+            "4B-int4 gpu_only TTFT limit 9750 (c647f0c7) → half-ish scaling centers near ~4875–5500; band [4000, 7000] admits moderate non-linearity / recipe confound (8B is INT4_ASYM vs 4B INT4_SYM)."
+          ],
+          "falsified_if": [
+            "ttft_limit_n < 4000",
+            "ttft_limit_n > 7000 (band miss; see also P2 / P3 for claim-level falsifiers)"
+          ]
+        },
+        "P2_below_workload_7743": {
+          "claim": "8B TTFT limit is strictly below workload max 7743 tokens. If held, 8B cannot serve the deepest BFCL-style entries inside the TTFT SLO → capacity gates tier choice (alongside quality relevance from 72d270e2).",
+          "predicted_ttft_limit_n_upper_bound_exclusive": 7743,
+          "basis": [
+            "Predicted band [4000, 7000] lies entirely below 7743.",
+            "Workload max mid-session prompt size 7743 tokens (same operating point cited in CAP-1b / BFCL feasibility)."
+          ],
+          "falsified_if": [
+            "ttft_limit_n >= 7743",
+            "no_slo_crossing_in_range with highest_slo_ok_n >= 7743",
+            "any median prefill_s <= 10 s at n >= 7743"
+          ]
+        },
+        "P3_scaling_vs_4b": {
+          "claim": "8B is slower at prefill than 4B-int4 on the same placement: limit does not reach or exceed the 4B gpu_only limit 9750.",
+          "falsified_if": [
+            "ttft_limit_n > 9750",
+            "no_slo_crossing_in_range with highest_slo_ok_n > 9750"
+          ]
+        }
+      }
+    },
+    "arm2_4b_int8": {
+      "model_spec": "configs/models/Qwen3-4B-int8-ov.yaml",
+      "model_name": "Qwen3-4B-int8-ov",
+      "ir_sha256": "f7d323d0eb94a6bc9a1bf807416877cbb988cfbd95e7f9ef12403951b90886ae",
+      "ir_bytes": 4054072455,
+      "arm": "gpu_only_f16",
+      "search": {
+        "low": 7000,
+        "high": 12000,
+        "resolution_tokens": 250,
+        "repeats_per_probe": 3,
+        "basis": [
+          "Resolution 250 / repeats 3 match launch_c2.ps1 C-2 defaults.",
+          "Low=7000 is the lower edge of the predicted limit band [7000, 9750].",
+          "High=12000 matches the C-2 default high that located the 4B-int4 limit at 9750 (c647f0c7)."
+        ]
+      },
+      "invoke": "powershell -NoProfile -File tools/launch_c2.ps1 -Arms gpu_only_f16 -Low 7000 -High 12000 -Resolution 250 -Repeats 3 -ModelSpec configs/models/Qwen3-4B-int8-ov.yaml",
+      "predictions": {
+        "P1_limit_band": {
+          "claim": "4B-int8 gpu_only_f16 cold-start TTFT limit (ttft_limit_n) lands in [7000, 9750] tokens.",
+          "predicted_ttft_limit_n_band": [7000, 9750],
+          "basis": [
+            "int8 weights 4.05 GB (ir_bytes 4054072455) vs int4 2.29 GB (ir_bytes 2290768181).",
+            "Decode typically 1.3–1.5× slower for int8; prefill is compute-bound so weight-bandwidth effect is smaller than decode — expect limit near but not far below the int4 9750 anchor."
+          ],
+          "falsified_if": [
+            "ttft_limit_n < 7000",
+            "ttft_limit_n > 9750 (band miss; see P2 for resolution-relative claim)"
+          ]
+        },
+        "P2_near_int4_9750": {
+          "claim": "int8 TTFT limit agrees with int4's 9750 within one bisect resolution (250 tokens) either direction — i.e. |ttft_limit_n - 9750| <= 250.",
+          "int4_anchor_ttft_limit_n": 9750,
+          "int4_anchor_run_id": "c647f0c7",
+          "agreement_tolerance_tokens": 250,
+          "basis": [
+            "Prefill compute-bound → quantization width should not move the cold-start TTFT limit by more than C-2 resolution.",
+            "Tolerance equals launch_c2.ps1 / C-2 resolution_tokens=250 (same agreement grain as AM-038 turn-1 KV agreement)."
+          ],
+          "falsified_if": [
+            "abs(ttft_limit_n - 9750) > 250",
+            "REFUSED_LOW_OVER_SLO at low=7000 (implies limit < 7000, >250 below 9750)",
+            "no_slo_crossing_in_range with highest_slo_ok_n >= 12000 (implies limit > 9750+250)"
+          ]
+        }
+      }
+    }
+  },
+  "citing_priors": {
+    "c2_gpu_only_4b_int4_ttft_limit_9750": "c647f0c7",
+    "cap1b_cpu_p_ttft_limit_500": "d3dcbd3b",
+    "q8b_tier_quality_relevant": "72d270e2",
+    "token_workload_cited": 7743,
+    "note": "Prior capability column: cpu-p 500 (d3dcbd3b), gpu_only 9750 (c647f0c7), both 4B-int4. 72d270e2 establishes 8B as quality-relevant for tier choice."
+  },
+  "launcher_modelspec_trace": {
+    "confirmed": true,
+    "method": "code_trace_only_no_spawn_no_smoke",
+    "chain": "launch_c2.ps1 -ModelSpec -> resolvedCmd --model-spec -> run_c1_ceiling.py argparse -> load_local_spec(ir_dir)",
+    "prep_fixes": [
+      "launch_c2.ps1 DryRun tokenizer now loads from -ModelSpec ir_dir (was hardcoded Qwen3-4B-int4-ov).",
+      "run_c1_ceiling.py plan.json ir_bytes now taken from FetchedModelSpec when present (was hardcoded 4B-int4 IR_BYTES)."
+    ]
+  }
+}

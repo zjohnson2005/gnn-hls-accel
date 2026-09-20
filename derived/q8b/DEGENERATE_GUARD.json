@@ -1,0 +1,29 @@
+{
+  "kind": "q8b_degenerate_output_guard",
+  "consecutive_n": 3,
+  "rule": "Refuse session (SeamError) after N consecutive cells that hit max_new_tokens with zero decodable tool-call steps, counted across both arms.",
+  "cell_predicate": {
+    "any_turn": "generated_tokens >= max_new_tokens AND n_decoded_steps == 0"
+  },
+  "max_new_tokens": 512,
+  "derivation": {
+    "citing_run_prefix": "b1a291f0",
+    "citing_session": "q8b_b1a291f0-d7a4-48f3-b4fd-154290a9d5c5",
+    "observed": {
+      "early_emission_ok_cells": 3,
+      "subsequent_degenerate_streak": 42,
+      "signature": "exact 512-token burns; empty tool-call decode; both arms"
+    },
+    "why_n_equals_3": [
+      "Exceeds one dual-arm entry pair (2 cells), so a single entry under per-entry dual-arm scheduling cannot alone trip the guard.",
+      "Matches the earliest multi-entry streak in b1a291f0 (base_1/4B, base_2/4B, base_2/8B) — would abort before the remaining ~39 garbage cells.",
+      "Distinct from ordinary BFCL emission noise (Q-KV failures are short EOS / no tools, not unbroken 512-cap burns)."
+    ]
+  },
+  "code": "tools/quality_row_persist.py",
+  "wired_into": [
+    "tools/run_q_8b_quality.py",
+    "tools/run_q_kv_quality.py",
+    "tools/run_q_repro.py"
+  ]
+}

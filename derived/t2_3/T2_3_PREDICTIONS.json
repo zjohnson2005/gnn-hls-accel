@@ -1,0 +1,201 @@
+{
+  "experiment": "T2-3",
+  "title": "Cross-platform generalization predictions for GMKtec EVO-T2 (Platform B / T2S) before first contact",
+  "status": "pre_registered_before_measurement",
+  "registered_utc": "2026-09-20T14:55:13+00:00",
+  "prep_only": true,
+  "note": "T2-3-PREP files predictions before any T2S probe, session, or box contact. No measurement launched. Error on these claims is the generalization claim for the replay.",
+  "target_platform": {
+    "id": "evo-t2",
+    "alias": ["Platform B", "T2S", "GMKtec EVO-T2"],
+    "cpu": "Intel Core Ultra X7 358H (Panther Lake)",
+    "igpu": "Arc B390",
+    "memory": "64 GB LPDDR5X-8533",
+    "theoretical_memory_bandwidth_GB_s": 273,
+    "bandwidth_label": "theoretical_operator_stated_not_M2.4_measured"
+  },
+  "reference_platform": {
+    "id": "aipc-c1",
+    "alias": ["Platform A", "XPS"],
+    "cpu": "Intel Core Ultra 5 325 (Panther Lake)",
+    "memory": "16 GB LPDDR5X unified",
+    "theoretical_memory_bandwidth_GB_s_comparison": 102,
+    "bandwidth_label": "theoretical_operator_stated_comparison_not_M2.4_measured",
+    "seam_rule": "Never cite ~120 GB/s as measured XPS bandwidth until M2.4. The ~102 figure here is the operator-stated theoretical comparator for this pre-registration only."
+  },
+  "bandwidth_ratio": {
+    "formula": "273 / 102",
+    "exact": 2.676470588235294,
+    "rounded_claim": 2.6,
+    "prefill_time_scale_A_to_B": 0.3736263736263736,
+    "prefill_time_scale_formula": "102 / 273",
+    "efficiency_assumption": "Equal bandwidth efficiency: both platforms realize the same fraction of their theoretical peak memory bandwidth on the decode path. Under that assumption, decode tok/s scales with the theoretical bandwidth ratio (~2.6×). Prefill wall-time scales by the inverse (×102/273) if the same regime remains bandwidth-bound at equal efficiency.",
+    "blueprint_note": "Blueprint §risk table lists Platform B ≈136 GB/s (LPDDR5X-8533 × 128-bit, unverified). This prep uses the operator-stated 273 GB/s theoretical (consistent with a 256-bit / dual-128-bit arithmetic) vs XPS ~102 theoretical. Neither figure is an M2.4 measurement."
+  },
+  "citing_platform_a": {
+    "cap4_run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+    "cap4_tag": "MEASURED(2b3316b6)",
+    "sources": [
+      "derived/cap4/POST_CAP4.md",
+      "derived/cap4/CAP4_RESULTS.md",
+      "derived/cap4/sealed_2b3316b6-7f6e-474f-9177-bd5a89aeb58c/cells.json"
+    ],
+    "facts": {
+      "prefill_exponent_range": {
+        "claim": "gpu_only prefill power-law exponent b ∈ [2.12, 2.25]",
+        "per_arm": {
+          "gpu_only_f16": 2.2516,
+          "gpu_only_u8": 2.1244,
+          "gpu_only_u4": 2.1512
+        },
+        "fit_form": "prefill_s = C · n^b",
+        "fit_range_n": [12000, 76000]
+      },
+      "cv_exceeds_10pct_from_n": 32000,
+      "paging_quiescence_loss_n": 82000,
+      "paging_stop_classification": "quiescence_refusal_under_paging_pressure",
+      "abort_verbatim_head": "cap4/gpu_only_u4/82000/1: 3 consecutive inadmissible blocks (['quiescence_refusal', 'quiescence_refusal', 'quiescence_refusal'])"
+    },
+    "median_prefill_s": {
+      "statistic": "median of 3 repeats per cell",
+      "arm_policy": "all three CAP-4 KV arms reported; headline representative = gpu_only_f16",
+      "n12000": {
+        "gpu_only_f16": 13.504825195,
+        "gpu_only_u8": 13.277133789,
+        "gpu_only_u4": 13.550313476
+      },
+      "n46000": {
+        "gpu_only_f16": 252.707921875,
+        "gpu_only_u8": 230.360359375,
+        "gpu_only_u4": 239.800796875
+      }
+    },
+    "median_decode_tok_s": {
+      "statistic": "median of 3 repeats per cell",
+      "depth_definition": "Primary 'at depth' baseline = n=46000 (CAP-4 deep primary rung). Secondary pre-paging check = n=12000.",
+      "n12000": {
+        "gpu_only_f16": 17.347643282018748,
+        "gpu_only_u8": 19.848124420292695,
+        "gpu_only_u4": 19.38882952582931
+      },
+      "n46000": {
+        "gpu_only_f16": 1.1588870338648383,
+        "gpu_only_u8": 6.385833520956254,
+        "gpu_only_u4": 4.947198812
+      },
+      "caveat_n46000_f16": "gpu_only_f16 decode at n=46000 is already collapsed on Platform A (~1.16 tok/s) under CAP-4; treat the ratio claim as applying to arms/depths that remain in a bandwidth-bound non-paging regime. Prefer u8/u4 at 46k or f16 at 12k when scoring."
+    },
+    "eight_b_allocation_ceiling": {
+      "model": "Qwen3-8B-int4-ov",
+      "placement": "gpu_only_f16",
+      "n": 10000,
+      "failure": "RuntimeError (CL_OUT_OF_RESOURCES / could not execute a primitive)",
+      "citing_sessions": [
+        {
+          "session_id": "1269eaca-adce-42ec-a164-eb09ba654b6b",
+          "artifact": "derived/c2_ttft/1269eaca-adce-42ec-a164-eb09ba654b6b/work/gpu_only_f16.n10000.r0.a0.result.json",
+          "note": "CAP-3-family 8B gpu_only probe workdir; RuntimeError at n=10000. Not a sealed raw/ run — cite as derived session artifact."
+        },
+        {
+          "session_id": "9c037801-342b-478e-8e95-5b66d369eab8",
+          "artifact": "derived/c2_ttft/9c037801-342b-478e-8e95-5b66d369eab8/work/gpu_only_f16.n10000.r0.a0.result.json",
+          "note": "Second 8B gpu_only probe workdir; RuntimeError at n=10000."
+        }
+      ],
+      "related_4b_prior": {
+        "run_id": "c647f0c7-5cc9-47bb-a491-3450533c34d1",
+        "note": "4B-int4 gpu_only_f16 CL_OUT_OF_RESOURCES at n=8000 (sealed C-2 family); distinct from the 8B n=10000 ceiling."
+      }
+    }
+  },
+  "predictions": {
+    "P1_decode_tok_s_at_depth": {
+      "claim": "T2S decode tok/s at matched depth ≈ 2.6× Platform A (theoretical bandwidth ratio 273/102 ≈ 2.676), under equal bandwidth efficiency.",
+      "predicted_ratio_T2S_over_A": 2.676470588235294,
+      "rounded": 2.6,
+      "efficiency_assumption": "Equal fraction of theoretical peak bandwidth realized on the decode path on both platforms.",
+      "platform_a_baselines_run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+      "predicted_absolute_tok_s": {
+        "n12000": {
+          "gpu_only_f16": 46.430457,
+          "gpu_only_u8": 53.122921,
+          "gpu_only_u4": 51.893632
+        },
+        "n46000": {
+          "gpu_only_f16": 3.101727,
+          "gpu_only_u8": 17.091496,
+          "gpu_only_u4": 13.241032
+        }
+      },
+      "evaluable_ratio_band": [2.0, 3.4],
+      "falsified_if": [
+        "Measured T2S/A decode ratio at a matched non-paging depth outside [2.0, 3.4]",
+        "Decode ratio ≈1.0 (no bandwidth scaling) at equal efficiency-eligible depths",
+        "Decode slower on T2S than Platform A at matched n / arm (ratio < 1)"
+      ]
+    },
+    "P2_prefill_exponent": {
+      "claim": "T2S gpu_only prefill power-law exponent remains in 2.1–2.2 (property of attention computation, not platform bandwidth).",
+      "predicted_b_band": [2.1, 2.2],
+      "platform_a_measured_b_range": [2.1244, 2.2516],
+      "platform_a_tag": "MEASURED(2b3316b6)",
+      "note": "Platform A CAP-4 fits span ~2.12–2.25 across KV arms. Prediction for T2S centers the computational claim at 2.1–2.2; f16 on A slightly exceeded 2.2.",
+      "falsified_if": [
+        "Fitted T2S exponent b < 1.9 or b > 2.4 on a comparable fit_range_n",
+        "Exponent shifts by >0.3 relative to the matched Platform A arm"
+      ]
+    },
+    "P3_prefill_absolute": {
+      "claim": "T2S median prefill_s at n=12000 and n=46000 equals Platform A CAP-4 median × (102/273), i.e. scaled by the inverse theoretical bandwidth ratio (faster = lower prefill_s).",
+      "scale": 0.3736263736263736,
+      "scale_formula": "Platform_A_prefill_s × (102/273)",
+      "representative_arm": "gpu_only_f16",
+      "platform_a_source": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c cells.json medians",
+      "predicted_prefill_s": {
+        "n12000": {
+          "gpu_only_f16": 5.045759,
+          "gpu_only_u8": 4.960687,
+          "gpu_only_u4": 5.062754
+        },
+        "n46000": {
+          "gpu_only_f16": 94.418344,
+          "gpu_only_u8": 86.068706,
+          "gpu_only_u4": 89.595902
+        }
+      },
+      "evaluable_relative_band": [0.7, 1.4],
+      "evaluable_relative_band_note": "Measured / predicted within [0.7, 1.4] counts as held for the absolute-time claim; outside falsifies the pure bandwidth-scaling absolute.",
+      "falsified_if": [
+        "At n=12000 or n=46000, measured/predicted prefill_s outside [0.7, 1.4] on the representative arm (or all three arms)",
+        "T2S prefill slower than Platform A at matched n (scale failed directionally)"
+      ]
+    },
+    "P4_paging_boundary": {
+      "claim": "No paging-driven quiescence loss on T2S within the CAP-4-comparable sweep range (n ≤ 82000). With 64 GB vs Platform A's 16 GB (4× DRAM), the memory-linear paging onset scales to ~4 × 82000 = 328000 tokens.",
+      "platform_a_paging_n": 82000,
+      "platform_a_dram_GB": 16,
+      "t2s_dram_GB": 64,
+      "dram_ratio": 4,
+      "predicted_paging_onset_n_approx": 328000,
+      "predicted_within_sweep": "no_paging_quiescence_loss_for_n_le_82000",
+      "falsified_if": [
+        "Paging-driven quiescence refusal / stop_classification equivalent within n ≤ 82000 on T2S",
+        "Available-MB collapse + quiescence refusal pattern of CAP-4 appears at n < 164000 (half the 4× scaled onset)"
+      ]
+    },
+    "P5_8b_allocation_ceiling": {
+      "claim": "No 8B-int4 gpu_only allocation / RuntimeError ceiling on T2S within the CAP-3 search / operating range (n ≤ 10000). Platform A hit RuntimeError at 8B/n=10000.",
+      "platform_a_failure_n": 10000,
+      "platform_a_model": "Qwen3-8B-int4-ov",
+      "predicted": "no_RuntimeError_ALLOC_or_CL_OUT_OF_RESOURCES_for_8B_gpu_only_within_n_le_10000",
+      "falsified_if": [
+        "Qwen3-8B-int4-ov gpu_only raises RuntimeError / CL_OUT_OF_RESOURCES / alloc failure at any n ≤ 10000 on T2S",
+        "8B fails to load or compile on T2S gpu_only within the same IR / placement"
+      ]
+    }
+  },
+  "joint_generalization_claim": {
+    "statement": "If P1–P5 hold, Platform A CAP-4 / 8B ceilings generalize to T2S by theoretical bandwidth and DRAM capacity scaling under equal efficiency. If they fail, the failure mode is the published generalization result for the replay — do not silently re-fit.",
+    "no_measurement_confirmation": "T2-3-PREP did not launch a probe, session, or contact the T2S box."
+  }
+}

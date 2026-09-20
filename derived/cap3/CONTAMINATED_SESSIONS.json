@@ -1,0 +1,61 @@
+{
+  "policy": "Mark contaminated, do not delete. n=10000 and n=5500 behaviour is genuine boundary data; n=6500 from early sessions is not (free memory never recovered from preceding thrash).",
+  "recorded_utc": "2026-09-20T16:47:38.513754+00:00",
+  "sessions": {
+    "1269eaca-adce-42ec-a164-eb09ba654b6b": {
+      "contamination": "contaminated",
+      "genuine_boundary_data": [
+        "n=3000 pass",
+        "n=10000 CL_OUT_OF_RESOURCES / primitive mix"
+      ],
+      "not_genuine": [
+        "n=6500 fail (post-thrash)"
+      ],
+      "path": "derived/c2_ttft/1269eaca-adce-42ec-a164-eb09ba654b6b",
+      "reason": "Second session; same 1800 s timeout thrash class; n=6500 again follows unrecovered memory.",
+      "retain": true
+    },
+    "21dd48fb-21e2-468a-be00-c41be1acfe22": {
+      "contamination": "contaminated_timeout",
+      "genuine_boundary_data": [
+        "n=3000 pass",
+        "n=5500",
+        "n=8000"
+      ],
+      "not_genuine": [],
+      "path": "derived/c2_ttft/21dd48fb-21e2-468a-be00-c41be1acfe22",
+      "reason": "Unsealed; still used generation.timeout_s=1800. n=5500 thrash burned wall clock. Retained as boundary evidence (n=3000 pass, n=5500 thrash/CL_OOR, n=8000 fast refuse).",
+      "retain": true
+    },
+    "9c037801-342b-478e-8e95-5b66d369eab8": {
+      "contamination": "contaminated",
+      "genuine_boundary_data": [
+        "n=3000 pass",
+        "n=10000 refuse/thrash pattern"
+      ],
+      "not_genuine": [
+        "n=6500 fail (post-thrash)"
+      ],
+      "path": "derived/c2_ttft/9c037801-342b-478e-8e95-5b66d369eab8",
+      "reason": "First CAP-3 arm-1 session; n=10000 thrash under 1800 s timeout left free memory unrecovered; subsequent n=6500 is not independent boundary evidence.",
+      "retain": true
+    },
+    "c3efd48e-84c5-46c6-bb1f-42d13f7c0a16": {
+      "abort_reason": "FAIL_CANARY_DRIFT",
+      "canary_trip_detail": "turn1 rel_drift=0.083370 > threshold_t1=0.050000",
+      "contamination": "contaminated_power",
+      "genuine_boundary_data": [
+        "n=3000 pass",
+        "n=8000 fast RuntimeError",
+        "n=5500 CL_OUT_OF_RESOURCES"
+      ],
+      "not_genuine": [
+        "bisect points after AC loss / drift (n=4250, n=3625 under contaminated power)"
+      ],
+      "path": "derived/c2_ttft/c3efd48e-84c5-46c6-bb1f-42d13f7c0a16",
+      "reason": "FAIL_CANARY_DRIFT (turn1 rel_drift=0.083370 > 0.05). XPS came off AC mid-run 2026-09-17; canary caught drift but launch-only AC gate did not prevent. INF-6 adds mid-canary AC transition refuse.",
+      "retain": true
+    }
+  },
+  "title": "CAP-3 contaminated sessions (INF-6)"
+}

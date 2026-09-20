@@ -1,0 +1,44 @@
+{
+  "experiment": "CAP-1b",
+  "title": "cpu-p cold-start TTFT limit (ttft_slo)",
+  "status": "pre_registered_before_measurement",
+  "registered_utc": "2026-09-16T18:02:41+00:00",
+  "launcher": "tools/launch_c2.ps1",
+  "worker": "tools/run_c1_ceiling.py",
+  "criterion": "ttft_slo",
+  "slo_s": 10.0,
+  "arm": "A",
+  "arm_alias": "cpu-p",
+  "model_spec": "configs/models/Qwen3-4B-int4-ov.yaml",
+  "search": {
+    "low": 500,
+    "high": 8000,
+    "resolution_tokens": 250,
+    "repeats_per_probe": 3,
+    "note": "Bracket chosen below the cited 7743-token SLO miss (X-2 / BFCL mid-session)."
+  },
+  "invoke": "powershell -NoProfile -File tools/launch_c2.ps1 -Arms A -Low 500 -High 8000",
+  "predictions": {
+    "P1_limit_below_7743": {
+      "claim": "cpu-p cold-start TTFT limit (ttft_limit_n) is strictly below 7743 tokens.",
+      "predicted_ttft_limit_n_upper_bound_exclusive": 7743,
+      "stronger_expectation": "REFUSED_LOW_OVER_SLO at low=500, or ttft_limit_n < 500",
+      "basis": [
+        "X-2 cb781dbf-3486-4fbc-a69a-34026f801abe cpu-p NON_RESIDENT fraction_turns_slo_ok=0.0; first-step contexts ~4193 tok with TTFT 30-80s",
+        "7743-token BFCL mid-session prompt size: cpu-p already misses TTFT SLO at/below that operating point",
+        "d1_replay cold_start_slo_limit_tokens=0 for all cpu-p|int4|4B; ceiling_a fit b5ce21e5 prefill(500)~18s, prefill(7743)~116s"
+      ],
+      "falsified_if": [
+        "ttft_limit_n >= 7743",
+        "no_slo_crossing_in_range with highest_slo_ok_n >= 7743",
+        "any median prefill_s <= 10s at n >= 7743"
+      ]
+    }
+  },
+  "citing_priors": {
+    "x2_cpu_p_non_resident": "cb781dbf-3486-4fbc-a69a-34026f801abe",
+    "ceiling_a_arm_a": "b5ce21e5-9f29-46f4-8319-f74adcdeb628",
+    "ceiling_a_seal": "ad7b9288-42e6-42e8-be3e-ad1a1b1abc4c",
+    "token_workload_cited": 7743
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "citing_priors": {
+    "cost_tracks_context_at_escalation_r2": 0.001,
+    "cost_tracks_n_cloud_turns_r2": 0.64,
+    "note": "R2b on 4B cost falsified high ($17.47 vs ~$13 predicted) because escalations were 65 not 45. Cost tracks n_cloud_turns (R2=0.64), not context-at-escalation (R2=0.001). Q-8B (72d270e2) has 13 emission failures vs 4B's 64 \u2192 scale escalations.",
+    "q4b_emission_failures_reference": 64,
+    "q8b_emission_failures": 13,
+    "q8b_quality": "72d270e2",
+    "r2b_4b_cloud_usd": 17.467878,
+    "r2b_4b_emission_escalate": "8ffd8371-ac15-492b-afb7-a45e4fae2c1b",
+    "r2b_4b_n_escalated": 65
+  },
+  "experiment": "R2B-8B",
+  "inf": "INF-6 / R2B8B-PREP",
+  "invoke": "powershell -NoProfile -File tools/launch_h1.ps1 -Policy emission_escalate -ModelSpec configs/models/Qwen3-8B-int4-ov.yaml",
+  "joint_falsifier": {
+    "falsified_if_any": [
+      "cloud_usd > 8.0",
+      "n_escalated > 25"
+    ]
+  },
+  "launcher": "tools/launch_h1.ps1",
+  "launcher_modelspec": {
+    "default": "configs/models/Qwen3-4B-int4-ov.yaml",
+    "launch_h1_ps1_ModelSpec_param": true,
+    "run_h1_hybrid_accepts_model_spec": true
+  },
+  "max_usd_suggestion": {
+    "note": "1\u00d7 the cloud-$ falsifier bound; launcher -MaxUsd should be set explicitly for live arms.",
+    "value": 8.0
+  },
+  "model_spec": "configs/models/Qwen3-8B-int4-ov.yaml",
+  "policy": "emission_escalate",
+  "predictions": {
+    "P1_escalations": {
+      "claim": "n_escalated \u2248 13 (scaled from Q-8B emission failure count)",
+      "falsified_if": [
+        "n_escalated > 25"
+      ],
+      "predicted_n_escalated": 13
+    },
+    "P2_cloud_usd": {
+      "claim": "cloud spend \u2248 $3.50 (escalations\u00d7cost-per-escalation from 4B R2b, scaled)",
+      "derivation": "4B R2b: $17.47 / 65 escalations \u2248 $0.269/escalation. 13 \u00d7 0.269 \u2248 $3.50. Cost tracks n_cloud_turns (R2=0.64).",
+      "falsified_if": [
+        "cloud_usd > 8.0"
+      ],
+      "predicted_cloud_usd": 3.5
+    },
+    "P3_completion": {
+      "basis": [
+        "29 entries complete locally without escalation",
+        "cloud rescues ~65% of 13 escalated entries \u2192 ~8.45",
+        "29 + 8 \u2248 37"
+      ],
+      "claim": "operational completion \u2248 37/200 (29 local + cloud rescuing ~65% of 13)",
+      "falsified_if": [
+        "documented for forensic comparison; primary falsifiers are P1/P2"
+      ],
+      "predicted_completion_count": 37,
+      "predicted_completion_frac": 0.185
+    }
+  },
+  "registered_utc": "2026-09-20T16:47:38.513754+00:00",
+  "status": "pre_registered_before_measurement",
+  "title": "H-1 emission_escalate on Qwen3-8B-int4-ov (pre-registration)",
+  "worker": "tools/run_h1_hybrid.py"
+}

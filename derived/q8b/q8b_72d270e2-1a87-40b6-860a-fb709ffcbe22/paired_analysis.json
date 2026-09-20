@@ -1,0 +1,64 @@
+{
+  "completion": {
+    "int4_4B__vs__int4_8B": {
+      "mcnemar": {
+        "discordant": 27,
+        "first_only": 4,
+        "method": "mcnemar_exact_two_sided",
+        "p_value": 0.000310748815536499,
+        "second_only": 23
+      },
+      "n": 200,
+      "table_2x2": {
+        "both_fail": 167,
+        "both_pass": 6,
+        "first_only": 4,
+        "layout": "[[both_pass, first_only], [second_only, both_fail]] (row=first arm pass/fail, col=second arm pass/fail)",
+        "second_only": 23
+      }
+    }
+  },
+  "emission": {
+    "int4_4B__vs__int4_8B": {
+      "mcnemar": {
+        "discordant": 53,
+        "first_only": 1,
+        "method": "mcnemar_exact_two_sided",
+        "p_value": 1.199040866595169e-14,
+        "second_only": 52
+      },
+      "n": 200,
+      "table_2x2": {
+        "both_fail": 12,
+        "both_pass": 135,
+        "first_only": 1,
+        "layout": "[[both_pass, first_only], [second_only, both_fail]] (row=first arm pass/fail, col=second arm pass/fail)",
+        "second_only": 52
+      }
+    }
+  },
+  "falsification": {
+    "completion_arms_agree": false,
+    "emission_arms_agree": false,
+    "rule": "Falsified if McNemar p>=0.05 (or 0 discordant) on BOTH emission and completion (int4-4B vs int4-8B agree within paired resolution)",
+    "tier_quality_axis_falsified": false
+  },
+  "per_arm": {
+    "int4_4B": {
+      "emission_failure_rate": 0.32,
+      "emission_failures": 64,
+      "emission_ok": 136,
+      "n": 200,
+      "trajectory_pass": 10,
+      "trajectory_pass_rate": 0.05
+    },
+    "int4_8B": {
+      "emission_failure_rate": 0.065,
+      "emission_failures": 13,
+      "emission_ok": 187,
+      "n": 200,
+      "trajectory_pass": 29,
+      "trajectory_pass_rate": 0.145
+    }
+  }
+}

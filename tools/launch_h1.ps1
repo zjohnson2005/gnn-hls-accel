@@ -1,16 +1,16 @@
-# H-1 hybrid launcher — live routing arms (D-2).
+﻿# H-1 hybrid launcher - live routing arms (D-2).
 #
 # Order (least budget risk first):
 #   R2a slo_escalate, R2b emission_escalate, R0 cloud_only.
-#   R1 agnostic_default is DERIVED from sealed cb781dbf — never live.
+#   R1 agnostic_default is DERIVED from sealed cb781dbf - never live.
 #
 # Cost guard: --MaxUsd is REQUIRED for live arms. Defaults below are 1.5x the
-# H1_PREDICTIONS point estimate (read here in the launcher ONLY — the Python
+# H1_PREDICTIONS point estimate (read here in the launcher ONLY - the Python
 # runner never opens prediction files).
 #
-#   R2a slo_escalate:      predicted $0.0000  → MaxUsd 0.0000
-#   R2b emission_escalate: predicted $13.0812 → MaxUsd 19.6218
-#   R0  cloud_only:        predicted $54.0704 → MaxUsd 81.1056
+#   R2a slo_escalate:      predicted $0.0000  -> MaxUsd 0.0000
+#   R2b emission_escalate: predicted $13.0812 -> MaxUsd 19.6218
+#   R0  cloud_only:        predicted $54.0704 -> MaxUsd 81.1056
 #
 # Production (five gates + INF-1b canary preflight):
 #   powershell -NoProfile -File tools/launch_h1.ps1 -Policy slo_escalate
@@ -19,7 +19,8 @@
 #   powershell -NoProfile -File tools/launch_h1.ps1 -DeriveR1
 #
 # Hybrid arms load OpenVinoLocalBackend (greedy, max_new_tokens=512, W-3 path)
-# via configs/models/Qwen3-4B-int4-ov.yaml. -LocalScript is DEBUG --no-seal only.
+# via -ModelSpec (default configs/models/Qwen3-4B-int4-ov.yaml). -LocalScript is DEBUG --no-seal only.
+# R2b-on-8B: -ModelSpec configs/models/Qwen3-8B-int4-ov.yaml (derived/h1_hybrid/R2B_8B_PREDICTIONS.*).
 #
 # Dry-run (gates report-only; spawn suppressed):
 #   powershell -NoProfile -File tools/launch_h1.ps1 -Policy cloud_only -DryRun
@@ -35,6 +36,7 @@ param(
     [Nullable[double]]$MaxUsd = $null,
     [switch]$DryRun,
     [string]$LocalScript = "",
+    [string]$ModelSpec = "",
     [switch]$AllowUnguarded
 )
 
@@ -230,8 +232,17 @@ if (-not [string]::IsNullOrWhiteSpace($LocalScript)) {
     $resolvedCmd = $resolvedCmd + ' --local-script "' + $LocalScript + '" --no-seal'
     Write-Host "NOTE -- -LocalScript is DEBUG replay only (forces --no-seal)."
 } else {
-    $ModelSpec = Join-Path $root "configs\models\Qwen3-4B-int4-ov.yaml"
+    if ([string]::IsNullOrWhiteSpace($ModelSpec)) {
+        $ModelSpec = Join-Path $root "configs\models\Qwen3-4B-int4-ov.yaml"
+    } elseif (-not [System.IO.Path]::IsPathRooted($ModelSpec)) {
+        $ModelSpec = Join-Path $root $ModelSpec
+    }
+    if (-not (Test-Path -LiteralPath $ModelSpec)) {
+        Refuse "ModelSpec missing: $ModelSpec"
+        if (-not $DryRun) { exit 2 }
+    }
     $resolvedCmd = $resolvedCmd + ' --model-spec "' + $ModelSpec + '"'
+    Write-Host ("ModelSpec      : {0}" -f $ModelSpec)
 }
 
 Write-Host "RESOLVED_CMD:"
