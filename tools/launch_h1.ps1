@@ -8,7 +8,7 @@
 #   Same 200 entries, entry-by-entry. Default: H1-3POLICY
 #     slo_escalate -> emission_escalate -> full_signal_bounceback
 #     Caps: R2a $5, R2b $20, R2c $10, session $35.
-#   H1-2POLICY (R2c blocked on R2C-TURNWISE - do not pass bounceback):
+#   H1-2POLICY (R2c omitted by selection - optional subset):
 #     powershell -NoProfile -File tools/launch_h1.ps1 -Interleaved `
 #       -InterleavedPolicies slo_escalate,emission_escalate -SessionMaxUsd 25
 #     Caps: R2a $5, R2b $20, session $25. Seal records r2c_excluded.
@@ -36,10 +36,9 @@
 # via -ModelSpec (default configs/models/Qwen3-4B-int4-ov.yaml). -LocalScript is DEBUG --no-seal only.
 # R2b-on-8B: -ModelSpec configs/models/Qwen3-8B-int4-ov.yaml (derived/h1_hybrid/R2B_8B_PREDICTIONS.*).
 #
-# NOTE: Live seal of full_signal_bounceback still requires turn-by-turn OpenVINO
-# with cloud context injection; OpenVinoLocalBackend precomputes the full entry
-# and the worker REFUSES sealing R2c until that lands. Use -InterleavedPolicies
-# to omit R2c (H1-2POLICY) rather than launching the full three-policy set.
+# NOTE: R2C-TURNWISE is landed (MultiTurnAgentSession + inject/re-prefill).
+# Live R2c / H1-3POLICY seal still needs a clean host, RESIDENT u8, and a
+# measured re-prefill canary. Stub backends still refuse --seal.
 #
 # Machine lock: refuse spawn when .locks/machine.lock is held by a live PID, or
 # when another measurement worker (run_h1_hybrid.py / known matrix workers) is
@@ -198,7 +197,7 @@ if ($Interleaved) {
     }
     Write-Host ("Policy caps    : {0}" -f ($capBits -join " "))
     if (-not $hasR2c) {
-        Write-Host "R2c           : EXCLUDED (R2C-TURNWISE blocked; recorded in plan/seal)"
+        Write-Host "R2c           : EXCLUDED (H1-2POLICY subset; recorded in plan/seal)"
     }
     Write-Host "session_design : interleaved (INF-5)"
     Write-Host ""

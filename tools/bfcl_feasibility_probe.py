@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""BFCL feasibility probe — acquire real BFCL, tokenize, optional gpu_only generate, score.
+"""BFCL feasibility probe - acquire real BFCL, tokenize, optional gpu_only generate, score.
 
 Diagnostic only. Not a labelling harness. Not a seal path.
 
 Modes:
-  acquire_tokenize              — inventory + token profiles + AST/multi_turn gold selftests
-  run_gpu                       — A2 mix: single-turn AST + multi_turn first-turn (unscored)
-  multi_turn_gold_selftest      — A3: multi_turn_checker gold path on 20 multi_turn_base
-  run_gpu_multi_turn            — A3: full agent loop + multi_turn_checker on 20 entries
-  run_cloud_multi_turn          — same 20 entries + checker via Anthropic native tool-use
-  run_session_residency         — session-level RESIDENT vs NON_RESIDENT on real BFCL multi-turn
-  session_residency_cold_control — positive control: NON_RESIDENT turn-2 must be full cold prefill
-  session_residency_render_smoke — offline first-turn token equivalence (ChatHistory fix)
-  attention_window_inventory    — offline: CacheEvictionConfig / sink+window surface
-  kv_precision_property_smoke   — offline: Core set/get KV_CACHE_PRECISION f16/u8/u4
-  run_gpu_kv_precision          — gpu_only AST accuracy at KV_CACHE_PRECISION f16/u8/u4
-  run_npu_load                  — NPU load ladder for the resolved local IR + MAX_PROMPT_LEN
+  acquire_tokenize              - inventory + token profiles + AST/multi_turn gold selftests
+  run_gpu                       - A2 mix: single-turn AST + multi_turn first-turn (unscored)
+  multi_turn_gold_selftest      - A3: multi_turn_checker gold path on 20 multi_turn_base
+  run_gpu_multi_turn            - A3: full agent loop + multi_turn_checker on 20 entries
+  run_cloud_multi_turn          - same 20 entries + checker via Anthropic native tool-use
+  run_session_residency         - session-level RESIDENT vs NON_RESIDENT on real BFCL multi-turn
+  session_residency_cold_control - positive control: NON_RESIDENT turn-2 must be full cold prefill
+  session_residency_render_smoke - offline first-turn token equivalence (ChatHistory fix)
+  attention_window_inventory    - offline: CacheEvictionConfig / sink+window surface
+  kv_precision_property_smoke   - offline: Core set/get KV_CACHE_PRECISION f16/u8/u4
+  run_gpu_kv_precision          - gpu_only AST accuracy at KV_CACHE_PRECISION f16/u8/u4
+  run_npu_load                  - NPU load ladder for the resolved local IR + MAX_PROMPT_LEN
 
 Default mode (acquire_tokenize / multi_turn_gold_selftest) needs no GPU.
 GPU / NPU load modes require a clean host (Cursor/Chrome closed; Available >= 7000 MB).
@@ -38,6 +38,7 @@ import uuid
 import warnings
 from collections import Counter
 from pathlib import Path
+from dataclasses import dataclass, field
 from typing import Any
 
 import yaml
@@ -295,7 +296,7 @@ def _sha256_file(path: Path) -> str:
 
 
 def _bfcl_function_to_openai_tool(fn: dict[str, Any]) -> dict[str, Any]:
-    """Map BFCL function schema → OpenAI tool dict for Qwen chat_template tools=."""
+    """Map BFCL function schema -> OpenAI tool dict for Qwen chat_template tools=."""
     params = dict(fn.get("parameters") or {})
     if params.get("type") == "dict":
         params = {**params, "type": "object"}
@@ -491,7 +492,7 @@ def _type_to_precision_name(value: Any) -> str:
 def read_kv_cache_precision(device: str = "GPU", *, core: Any | None = None) -> dict[str, Any]:
     """Read OpenVINO plugin property KV_CACHE_PRECISION (exact property name).
 
-    Pass the same ``ov.Core`` instance used for ``set_property`` / pipeline load —
+    Pass the same ``ov.Core`` instance used for ``set_property`` / pipeline load -
     a fresh Core does not observe another Core's sticky device properties.
     """
     import openvino as ov
@@ -583,7 +584,7 @@ def messages_for_xlam_prompting_turn0(entry: dict[str, Any]) -> list[dict[str, A
 
 
 def decode_execute_xlam(text: str) -> list[str]:
-    """BFCL official prompting-mode decode: Python-AST list → execute strings."""
+    """BFCL official prompting-mode decode: Python-AST list -> execute strings."""
     sys.path.insert(0, str(ROOT))
     sys.path.insert(0, str(BFCL_UNPACKED))
     from apu_characterization.cap01.bfcl_shims import install_bfcl_runtime_shims
@@ -685,7 +686,7 @@ def assert_first_turn_token_equivalence(
 ) -> dict[str, Any]:
     """First turn must be identical by construction across residency arms.
 
-    RESIDENT path: GenAI ChatHistory → apply_chat_template (tools + thinking off).
+    RESIDENT path: GenAI ChatHistory -> apply_chat_template (tools + thinking off).
     NON_RESIDENT path: same ChatHistory render, then cold string generate.
     Also require byte-identity with HF ``render_bfcl_tools_style`` (known-good BFCL path).
     """
@@ -831,7 +832,7 @@ def extract_tool_calls_qwen(text: str) -> list[dict[str, Any]]:
 
 
 def decode_execute_qwen(text: str) -> list[str]:
-    """Map model text → BFCL execute strings via CAP-01 shims + convert_to_function_call."""
+    """Map model text -> BFCL execute strings via CAP-01 shims + convert_to_function_call."""
     sys.path.insert(0, str(ROOT))
     sys.path.insert(0, str(BFCL_UNPACKED))
     from apu_characterization.cap01.bfcl_shims import install_bfcl_runtime_shims
@@ -920,7 +921,7 @@ def run_multi_turn_gold_selftest(entries: list[dict[str, Any]]) -> dict[str, Any
 
 
 def run_xlam_gold_decode_selftest(entries: list[dict[str, Any]]) -> dict[str, Any]:
-    """Encode gold as XLAM Python-AST text → official decode → multi_turn_checker.
+    """Encode gold as XLAM Python-AST text -> official decode -> multi_turn_checker.
 
     One gold call in the 20-entry pin uses a positional arg; official
     ``resolve_ast_call`` drops positionals, so that call is kwargs-normalized
@@ -1494,12 +1495,12 @@ def load_arm_pipeline(
     """Compile the generate-device pipeline for a delta_n arm. Returns (pipe, meta, load_s).
 
     ``enable_prefix_caching``:
-      None  — omit SchedulerConfig; LLMPipeline's ContinuousBatching backend keeps its
+      None  - omit SchedulerConfig; LLMPipeline's ContinuousBatching backend keeps its
               client-scenario default (prefix caching ON for CPU/GPU). Use for RESIDENT.
-      False — pass SchedulerConfig(enable_prefix_caching=False). Required for NON_RESIDENT
+      False - pass SchedulerConfig(enable_prefix_caching=False). Required for NON_RESIDENT
               cold prefill (DISPATCH L): without this, string generate() reuses KV for the
               shared tools/conversation prefix on the same pipeline.
-      True  — explicitly enable prefix caching via SchedulerConfig.
+      True  - explicitly enable prefix caching via SchedulerConfig.
     """
     import openvino as ov
     import openvino_genai as ov_genai
@@ -1577,7 +1578,7 @@ def _timed_generate(
     """Generate with dual-source TTFT + decode_tok_s (same instrument as smoke_delta_prefill).
 
     ``prompt`` may be a pre-rendered string (NON_RESIDENT / legacy) or a GenAI
-    ``ChatHistory`` (RESIDENT — template applied once inside generate).
+    ``ChatHistory`` (RESIDENT - template applied once inside generate).
     """
     from seam.backends.local_openvino import (
         _extract_metrics,
@@ -1647,6 +1648,683 @@ def _generation_cfg(
     return cfg
 
 
+@dataclass
+class MultiTurnAgentSession:
+    """Turn-wise BFCL multi-turn agent (W-3 inner loop; hybrid owns outer turns).
+
+    Outer user-turn loop is driven by the caller (``run_multi_turn_agent_entry``
+    compositor or ``OpenVinoLocalBackend.run_turn``). The inner step loop,
+    ChatHistory / tools / decode path stay identical to the pre-TURNWISE W-3
+    ``run_multi_turn_agent_entry`` body.
+    """
+
+    pipe: Any
+    tokenizer: Any
+    cfg: Any
+    residency_mode: str | None = None
+    ov_genai: Any | None = None
+
+    # --- session state (set in begin) ---
+    entry: dict[str, Any] | None = field(default=None, init=False, repr=False)
+    tools: list[dict[str, Any]] = field(default_factory=list, init=False, repr=False)
+    messages: list[dict[str, Any]] = field(default_factory=list, init=False, repr=False)
+    model_name: str = field(default="", init=False)
+    mode: str | None = field(default=None, init=False)
+    resident_history: Any | None = field(default=None, init=False, repr=False)
+    genai_tokenizer: Any | None = field(default=None, init=False, repr=False)
+    max_new: int = field(default=512, init=False)
+
+    all_model_response: list[list[str]] = field(default_factory=list, init=False, repr=False)
+    all_decoded: list[list[list[str]]] = field(default_factory=list, init=False, repr=False)
+    turn_metrics: list[dict[str, Any]] = field(default_factory=list, init=False, repr=False)
+    prompt_token_samples: list[int] = field(default_factory=list, init=False, repr=False)
+    prompt_input_ids_all_steps: list[list[int]] = field(
+        default_factory=list, init=False, repr=False
+    )
+    completion_token_samples: list[int] = field(default_factory=list, init=False, repr=False)
+    context_growth: list[dict[str, Any]] = field(default_factory=list, init=False, repr=False)
+
+    force_quit: bool = field(default=False, init=False)
+    stop_reason: str = field(default="completed", init=False)
+    session_generated_once: bool = field(default=False, init=False)
+    first_turn_equiv: dict[str, Any] | None = field(default=None, init=False)
+    prev_turn0_prompt_tokens: int | None = field(default=None, init=False)
+    t_entry0: float = field(default=0.0, init=False)
+    prompt_render_hasher: Any = field(default=None, init=False, repr=False)
+    prompt_render_updates: int = field(default=0, init=False)
+    _begun: bool = field(default=False, init=False)
+    _finished: bool = field(default=False, init=False)
+    _pending_reprefill: bool = field(default=False, init=False)
+    _last_reprefill_s: float | None = field(default=None, init=False)
+    _last_reprefill_source: str | None = field(default=None, init=False)
+    _next_turn_idx: int = field(default=0, init=False)
+    _raw_entry: dict[str, Any] = field(default_factory=dict, init=False, repr=False)
+    _initial_config: dict[str, Any] = field(default_factory=dict, init=False, repr=False)
+    _involved_classes: list[str] = field(default_factory=list, init=False, repr=False)
+    _test_entry_id: str = field(default="", init=False)
+    _test_category: str = field(default="", init=False)
+    _execute_multi_turn_func_call: Any = field(default=None, init=False, repr=False)
+    _is_empty_execute_response: Any = field(default=None, init=False, repr=False)
+
+    def begin(self, entry: dict[str, Any]) -> None:
+        """Warm BFCL instances, reset hasher / history; ready for turn 0."""
+        if self._begun:
+            raise RuntimeError("MultiTurnAgentSession.begin called twice")
+        import openvino_genai as _ov_genai_mod
+
+        self.ov_genai = self.ov_genai if self.ov_genai is not None else _ov_genai_mod
+        mode = self.residency_mode.upper() if self.residency_mode else None
+        if mode is not None and mode not in RESIDENCY_MODES:
+            raise ValueError(f"residency_mode must be one of {RESIDENCY_MODES} or None")
+        self.mode = mode
+
+        sys.path.insert(0, str(ROOT))
+        sys.path.insert(0, str(BFCL_UNPACKED))
+        from apu_characterization.cap01.bfcl_shims import install_bfcl_runtime_shims
+
+        install_bfcl_runtime_shims()
+        from bfcl_eval.eval_checker.multi_turn_eval.multi_turn_utils import (
+            execute_multi_turn_func_call,
+            is_empty_execute_response,
+        )
+
+        self._execute_multi_turn_func_call = execute_multi_turn_func_call
+        self._is_empty_execute_response = is_empty_execute_response
+
+        self.entry = entry
+        raw = entry["raw_entry"]
+        self._raw_entry = raw
+        self.tools = tools_for_entry(entry)
+        self._initial_config = raw.get("initial_config") or {}
+        self._involved_classes = raw.get("involved_classes") or []
+        self._test_entry_id = str(raw["id"])
+        self._test_category = entry["category"]
+        model_name = f"probe_gpu_{self._test_entry_id}".replace("-", "_").replace(".", "_")
+        if mode:
+            model_name = (
+                f"probe_{mode.lower()}_{self._test_entry_id}".replace("-", "_").replace(".", "_")
+            )
+        self.model_name = model_name
+
+        execute_multi_turn_func_call(
+            [],
+            self._initial_config,
+            self._involved_classes,
+            self.model_name,
+            self._test_entry_id,
+            long_context=(
+                "long_context" in self._test_category or "composite" in self._test_category
+            ),
+            is_evaL_run=False,
+        )
+
+        self.messages = []
+        self.all_model_response = []
+        self.all_decoded = []
+        self.turn_metrics = []
+        self.prompt_token_samples = []
+        self.prompt_input_ids_all_steps = []
+        self.completion_token_samples = []
+        self.context_growth = []
+        self.force_quit = False
+        self.stop_reason = "completed"
+        self.session_generated_once = False
+        self.first_turn_equiv = None
+        self.prev_turn0_prompt_tokens = None
+        self.t_entry0 = time.perf_counter()
+        self.max_new = int(getattr(self.cfg, "max_new_tokens", 512) or 512)
+        self.genai_tokenizer = self.pipe.get_tokenizer() if mode is not None else None
+        self.prompt_render_hasher = hashlib.sha256()
+        self.prompt_render_updates = 0
+        self.resident_history = (
+            build_bfcl_chat_history(self.ov_genai, [], self.tools) if mode == "RESIDENT" else None
+        )
+        self._pending_reprefill = False
+        self._last_reprefill_s = None
+        self._last_reprefill_source = None
+        self._next_turn_idx = 0
+        self._begun = True
+        self._finished = False
+
+    def _finish_chat_safe(self) -> None:
+        with contextlib.suppress(Exception), warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            self.pipe.finish_chat()
+
+    def inject_assistant(
+        self,
+        *,
+        assistant_text: str,
+        tool_messages: list[dict[str, Any]] | None = None,
+        replace_last_local_assistant: bool = True,
+    ) -> None:
+        """Cloud->local handoff: splice assistant into messages/history; invalidate KV.
+
+        Mirrors stub pop-then-append. Resident KV is invalid after this call;
+        the next ``run_user_turn`` must re-prefill (measured TTFT).
+        """
+        if not self._begun or self._finished:
+            raise RuntimeError(
+                "inject_assistant requires an active (begun, not finished) session"
+            )
+        from tools.r2c_inject import inject_assistant_into_chat_history, invalidate_resident_kv
+
+        if replace_last_local_assistant:
+            if self.messages and self.messages[-1].get("role") == "assistant":
+                self.messages.pop()
+                if self.resident_history is not None:
+                    self.resident_history.pop()
+        self.messages.append({"role": "assistant", "content": str(assistant_text)})
+        for tm in tool_messages or []:
+            tool_msg = {
+                "role": str(tm.get("role") or "tool"),
+                "content": str(tm.get("content") or ""),
+            }
+            if tm.get("name") is not None:
+                tool_msg["name"] = str(tm["name"])
+            self.messages.append(tool_msg)
+        if self.resident_history is not None:
+            inject_assistant_into_chat_history(
+                self.resident_history,
+                assistant_text=assistant_text,
+                tool_messages=tool_messages,
+            )
+        invalidate_resident_kv(self.pipe)
+        self._pending_reprefill = True
+        self._last_reprefill_s = None
+        self._last_reprefill_source = "pending_next_local"
+
+    def run_user_turn(self, turn_idx: int) -> dict[str, Any]:
+        """Run the W-3 inner step loop for one user turn. Returns that turn's metrics."""
+        if not self._begun or self._finished:
+            raise RuntimeError("run_user_turn requires an active session")
+        if self.force_quit:
+            raise RuntimeError(
+                f"REFUSED -- session force_quit; cannot run turn {turn_idx} "
+                f"(next expected was {self._next_turn_idx})"
+            )
+        assert self.entry is not None
+        if turn_idx != self._next_turn_idx:
+            raise RuntimeError(
+                f"REFUSED -- turn_idx={turn_idx} != next expected {self._next_turn_idx}"
+            )
+        questions = self.entry["question"]
+        if turn_idx < 0 or turn_idx >= len(questions):
+            raise RuntimeError(
+                f"REFUSED -- turn_idx={turn_idx} out of range n_user_turns={len(questions)}"
+            )
+
+        execute_multi_turn_func_call = self._execute_multi_turn_func_call
+        is_empty_execute_response = self._is_empty_execute_response
+        mode = self.mode
+        tokenizer = self.tokenizer
+        pipe = self.pipe
+        cfg = self.cfg
+        ov_genai = self.ov_genai
+        tools = self.tools
+        entry = self.entry
+        max_new = self.max_new
+
+        t_turn0 = time.perf_counter()
+        t_tool_exec = 0.0
+        t_template_build = 0.0
+        t_tokenize = 0.0
+        t_generate = 0.0
+        wall_s = 0.0
+        turn_msgs = questions[turn_idx]
+        new_turn_msgs = [dict(m) for m in turn_msgs if isinstance(m, dict)]
+        self.messages.extend(new_turn_msgs)
+        if self.resident_history is not None:
+            for m in new_turn_msgs:
+                self.resident_history.append(_chat_message_for_genai(m))
+
+        turn_responses: list[str] = []
+        turn_decoded_steps: list[list[str]] = []
+        turn_step_metrics: list[dict[str, Any]] = []
+        step = 0
+        turn_ttft_s: float | None = None
+        turn_decode_tok_s: float | None = None
+        turn_generated: int | None = None
+        turn_prompt_tokens: int | None = None
+        turn_delta_tokens: int | None = None
+        turn_slo_ok: bool | None = None
+        # Capture first-step TTFT as re-prefill when returning from a bounce inject.
+        measure_reprefill = self._pending_reprefill
+
+        while True:
+            _t = time.perf_counter()
+            prompt_full = render_bfcl_tools_style(tokenizer, self.messages, tools)
+            t_template_build += time.perf_counter() - _t
+            self.prompt_render_hasher.update(b"\0")
+            self.prompt_render_hasher.update(prompt_full.encode("utf-8"))
+            self.prompt_render_updates += 1
+            _t = time.perf_counter()
+            prompt_ids = list(tokenizer(prompt_full)["input_ids"])
+            prompt_n = len(prompt_ids)
+            t_tokenize += time.perf_counter() - _t
+            self.prompt_token_samples.append(prompt_n)
+            self.prompt_input_ids_all_steps.append(prompt_ids)
+
+            if mode == "RESIDENT":
+                assert self.resident_history is not None and self.genai_tokenizer is not None
+                if not self.session_generated_once:
+                    self.first_turn_equiv = assert_first_turn_token_equivalence(
+                        hf_tokenizer=tokenizer,
+                        genai_tokenizer=self.genai_tokenizer,
+                        ov_genai=ov_genai,
+                        messages=self.messages,
+                        tools=tools,
+                        entry_id=str(entry["id"]),
+                    )
+                gen_input: Any = self.resident_history
+                input_kind = "chat_history_resident"
+                _t = time.perf_counter()
+                gen_input_tokens = len(
+                    tokenizer(
+                        render_genai_chat_history(self.genai_tokenizer, self.resident_history)
+                    )["input_ids"]
+                )
+                t_tokenize += time.perf_counter() - _t
+                cfg_use = _generation_cfg(
+                    ov_genai,
+                    max_new_tokens=max_new,
+                    apply_chat_template=True,
+                )
+            elif mode == "NON_RESIDENT":
+                assert self.genai_tokenizer is not None
+                _t = time.perf_counter()
+                hist = build_bfcl_chat_history(ov_genai, self.messages, tools)
+                rendered = render_genai_chat_history(self.genai_tokenizer, hist)
+                t_template_build += time.perf_counter() - _t
+                if not self.session_generated_once:
+                    self.first_turn_equiv = assert_first_turn_token_equivalence(
+                        hf_tokenizer=tokenizer,
+                        genai_tokenizer=self.genai_tokenizer,
+                        ov_genai=ov_genai,
+                        messages=self.messages,
+                        tools=tools,
+                        entry_id=str(entry["id"]),
+                    )
+                gen_input = rendered
+                input_kind = "full_prompt"
+                _t = time.perf_counter()
+                gen_input_tokens = len(tokenizer(rendered)["input_ids"])
+                t_tokenize += time.perf_counter() - _t
+                cfg_use = _generation_cfg(
+                    ov_genai,
+                    max_new_tokens=max_new,
+                    apply_chat_template=False,
+                )
+            else:
+                gen_input = prompt_full
+                input_kind = "full_prompt"
+                gen_input_tokens = prompt_n
+                cfg_use = cfg
+
+            self.context_growth.append(
+                {
+                    "turn": turn_idx,
+                    "step": step,
+                    "prompt_tokens": prompt_n,
+                    "delta_tokens_vs_prev_turn": (
+                        None
+                        if self.prev_turn0_prompt_tokens is None or step != 0
+                        else prompt_n - self.prev_turn0_prompt_tokens
+                    ),
+                    "generate_input_tokens": gen_input_tokens,
+                    "input_kind": input_kind,
+                    "n_messages": len(self.messages),
+                    "residency_mode": mode,
+                }
+            )
+
+            prompt_tokens_reported: int | None = None
+            if mode is None:
+                t0 = time.perf_counter()
+                gen = pipe.generate([prompt_full], cfg)
+                wall_s = time.perf_counter() - t0
+                t_generate += wall_s
+                texts = getattr(gen, "texts", None)
+                text = str(texts[0]) if texts else str(gen)
+                metrics = getattr(gen, "perf_metrics", None)
+                completion_n = None
+                ttft_s = None
+                decode_tok_s = None
+                if metrics is not None:
+                    with contextlib.suppress(Exception):
+                        completion_n = int(metrics.get_num_generated_tokens())
+                    try:
+                        ttft_ms = float(metrics.get_ttft().mean)
+                        if ttft_ms > 0:
+                            ttft_s = ttft_ms / 1000.0
+                    except Exception:
+                        pass
+                    try:
+                        prompt_tokens_reported = int(metrics.get_num_input_tokens())
+                    except Exception:
+                        prompt_tokens_reported = None
+                if completion_n is None:
+                    completion_n = len(tokenizer(text)["input_ids"])
+                if ttft_s is not None and completion_n >= 2 and wall_s > ttft_s:
+                    decode_tok_s = (completion_n - 1) / (wall_s - ttft_s)
+                gen_ok = True
+                gen_err = None
+            else:
+                timed = _timed_generate(pipe, ov_genai, gen_input, cfg_use)
+                wall_s = float(timed["wall_s"])
+                t_generate += wall_s
+                text = timed.get("text") or ""
+                completion_n = timed.get("generated_tokens")
+                if completion_n is None:
+                    completion_n = len(tokenizer(text)["input_ids"])
+                ttft_s = timed.get("ttft_s")
+                decode_tok_s = timed.get("decode_tok_s")
+                gen_ok = bool(timed["ok"])
+                gen_err = timed.get("error")
+                reported = timed.get("prompt_tokens_reported")
+                prompt_tokens_reported = int(reported) if reported is not None else None
+
+            if measure_reprefill and step == 0:
+                # First local generate after inject: TTFT is the re-prefill cost.
+                if ttft_s is not None:
+                    self._last_reprefill_s = float(ttft_s)
+                    self._last_reprefill_source = "measured"
+                else:
+                    self._last_reprefill_s = float(wall_s)
+                    self._last_reprefill_source = "measured_wall_fallback"
+                self._pending_reprefill = False
+                measure_reprefill = False
+
+            self.completion_token_samples.append(int(completion_n))
+            self.session_generated_once = True
+            turn_responses.append(text)
+
+            step_rec = {
+                "turn": turn_idx,
+                "step": step,
+                "prompt_tokens": prompt_n,
+                "generate_input_tokens": gen_input_tokens,
+                "prompt_tokens_reported": prompt_tokens_reported,
+                "input_kind": input_kind,
+                "ttft_s": ttft_s,
+                "decode_tok_s": decode_tok_s,
+                "generated_tokens": int(completion_n),
+                "wall_s": wall_s,
+                "ok": gen_ok,
+                "error": gen_err,
+            }
+            turn_step_metrics.append(step_rec)
+
+            if step == 0:
+                turn_ttft_s = ttft_s
+                turn_decode_tok_s = decode_tok_s
+                turn_generated = int(completion_n)
+                turn_prompt_tokens = prompt_n
+                turn_delta_tokens = (
+                    None
+                    if self.prev_turn0_prompt_tokens is None
+                    else prompt_n - self.prev_turn0_prompt_tokens
+                )
+                turn_slo_ok = (
+                    ttft_s is not None
+                    and decode_tok_s is not None
+                    and ttft_s <= SLO_TTFT_S
+                    and decode_tok_s >= SLO_DECODE_TOK_S
+                )
+
+            if gen_ok:
+                assert_no_think_in_generation(
+                    text,
+                    where=f"{entry['id']}/turn{turn_idx}/step{step}/{mode}",
+                )
+
+            self.messages.append({"role": "assistant", "content": text})
+            if self.resident_history is not None:
+                self.resident_history.append({"role": "assistant", "content": text})
+
+            if not gen_ok:
+                self.stop_reason = "generation_error"
+                break
+
+            try:
+                decoded = decode_execute_qwen(text)
+                if is_empty_execute_response(decoded):
+                    if not turn_decoded_steps:
+                        self.stop_reason = "empty_execute"
+                    break
+            except Exception:
+                self.stop_reason = "no_tool_call"
+                break
+
+            turn_decoded_steps.append(decoded)
+            _t = time.perf_counter()
+            tool_exec_error = False
+            tool_exec_error_class: str | None = None
+            try:
+                execution_results, _instances = execute_multi_turn_func_call(
+                    decoded,
+                    self._initial_config,
+                    self._involved_classes,
+                    self.model_name,
+                    self._test_entry_id,
+                    long_context=(
+                        "long_context" in self._test_category
+                        or "composite" in self._test_category
+                    ),
+                    is_evaL_run=False,
+                )
+            except Exception as exc:
+                tool_exec_error = True
+                tool_exec_error_class = type(exc).__name__
+                t_tool_exec += time.perf_counter() - _t
+                turn_step_metrics.append(
+                    {
+                        "turn": turn_idx,
+                        "step": step,
+                        "tool_exec_error": True,
+                        "tool_exec_error_class": tool_exec_error_class,
+                        "error": f"{type(exc).__name__}: {exc}",
+                    }
+                )
+                self.stop_reason = "tool_exec_error"
+                break
+            t_tool_exec += time.perf_counter() - _t
+            for exec_str, exec_result in zip(decoded, execution_results, strict=False):
+                tool_msg = {
+                    "role": "tool",
+                    "name": exec_str,
+                    "content": str(exec_result),
+                }
+                self.messages.append(tool_msg)
+                if self.resident_history is not None:
+                    self.resident_history.append(_chat_message_for_genai(tool_msg))
+            step += 1
+            if step > MAXIMUM_STEP_LIMIT:
+                self.force_quit = True
+                self.stop_reason = "max_steps"
+                break
+
+        if turn_prompt_tokens is not None:
+            self.prev_turn0_prompt_tokens = turn_prompt_tokens
+
+        self.all_model_response.append(turn_responses)
+        self.all_decoded.append(turn_decoded_steps)
+
+        per_turn_acc = None
+        if turn_idx < len(entry["reference"]):
+            per_turn_acc = structural_turn_correct(
+                turn_decoded_steps, entry["reference"][turn_idx]
+            )
+
+        turn_wall_s = time.perf_counter() - t_turn0
+        phases = finalize_phase_timers(
+            turn_wall_s=turn_wall_s,
+            t_tool_exec=t_tool_exec,
+            t_template_build=t_template_build,
+            t_tokenize=t_tokenize,
+            t_generate=t_generate,
+        )
+        turn_tool_err = False
+        turn_tool_err_class: str | None = None
+        for sm in reversed(turn_step_metrics):
+            if sm.get("tool_exec_error"):
+                turn_tool_err = True
+                turn_tool_err_class = sm.get("tool_exec_error_class")
+                break
+        turn_metric = {
+            "turn": turn_idx,
+            "n_generations": len(turn_responses),
+            "n_decoded_steps": len(turn_decoded_steps),
+            "last_wall_s": wall_s,
+            "ttft_s": turn_ttft_s,
+            "prompt_tokens": turn_prompt_tokens,
+            "delta_tokens_vs_prev_turn": turn_delta_tokens,
+            "decode_tok_s": turn_decode_tok_s,
+            "generated_tokens": turn_generated,
+            "slo_ttft_s": SLO_TTFT_S,
+            "slo_decode_tok_s": SLO_DECODE_TOK_S,
+            "slo_ok": turn_slo_ok,
+            "per_turn_accuracy": per_turn_acc,
+            "steps": turn_step_metrics,
+            "tool_exec_error": turn_tool_err,
+            "tool_exec_error_class": turn_tool_err_class,
+            **phases,
+        }
+        self.turn_metrics.append(turn_metric)
+        self._next_turn_idx = turn_idx + 1
+        return turn_metric
+
+    def finish(self) -> dict[str, Any]:
+        """Close RESIDENT chat mode and emit the entry-level probe row."""
+        if not self._begun:
+            raise RuntimeError("finish() before begin()")
+        if self._finished:
+            raise RuntimeError("finish() called twice")
+        assert self.entry is not None
+        entry = self.entry
+        mode = self.mode
+        try:
+            if mode == "RESIDENT":
+                self._finish_chat_safe()
+        finally:
+            self._finished = True
+
+        wall_entry_s = time.perf_counter() - self.t_entry0
+        force_quit = self.force_quit
+        stop_reason = self.stop_reason
+
+        if force_quit or stop_reason == "max_steps":
+            stop_reason = "max_steps"
+        elif len(self.turn_metrics) >= len(entry["question"]):
+            stop_reason = "completed"
+        self.stop_reason = stop_reason
+
+        score: dict[str, Any]
+        if force_quit or len(self.all_model_response) != len(entry["reference"]):
+            score = {
+                "valid": False,
+                "error_type": "multi_turn:force_terminated",
+                "error_message": (
+                    f"turns_model={len(self.all_model_response)} "
+                    f"turns_gt={len(entry['reference'])} force_quit={force_quit} "
+                    f"stop_reason={stop_reason}"
+                ),
+            }
+        else:
+            try:
+                score = score_multi_turn(
+                    test_entry=self._raw_entry,
+                    ground_truth=entry["reference"],
+                    model_result_decoded=self.all_decoded,
+                    test_category=self._test_category,
+                )
+            except Exception as exc:
+                score = {
+                    "valid": False,
+                    "error_type": "probe:multi_turn_exception",
+                    "error_message": f"{type(exc).__name__}: {exc}",
+                }
+
+        prompt_by_turn = [g["prompt_tokens"] for g in self.context_growth if g["step"] == 0]
+        deltas_by_turn = [
+            g.get("delta_tokens_vs_prev_turn") for g in self.context_growth if g["step"] == 0
+        ]
+        slo_flags = [t.get("slo_ok") for t in self.turn_metrics if t.get("slo_ok") is not None]
+        per_turn_correct = [
+            bool(t["per_turn_accuracy"]["correct"])
+            for t in self.turn_metrics
+            if t.get("per_turn_accuracy") is not None
+        ]
+        return {
+            "id": entry["id"],
+            "category": entry["category"],
+            "kind": "multi_turn",
+            "residency_mode": mode,
+            "wall_s": wall_entry_s,
+            "force_quit": force_quit,
+            "stop_reason": stop_reason,
+            "n_user_turns": len(entry["question"]),
+            "n_completed_turns": len(self.all_model_response),
+            "prompt_render_sha256": (
+                self.prompt_render_hasher.hexdigest() if self.prompt_render_updates else None
+            ),
+            "prompt_render_n": self.prompt_render_updates,
+            "prompt_tokens_all_steps": self.prompt_token_samples,
+            "prompt_input_ids_all_steps": self.prompt_input_ids_all_steps,
+            "completion_tokens_all_steps": self.completion_token_samples,
+            "prompt_tokens_sum": sum(self.prompt_token_samples),
+            "completion_tokens_sum": sum(self.completion_token_samples),
+            "prompt_tokens_first_step_per_turn": prompt_by_turn,
+            "delta_tokens_vs_prev_turn": deltas_by_turn,
+            "context_growth": self.context_growth,
+            "context_growth_delta_tokens": (
+                (
+                    self.context_growth[-1]["prompt_tokens"]
+                    - self.context_growth[0]["prompt_tokens"]
+                )
+                if len(self.context_growth) >= 2
+                else 0
+            ),
+            "turn_metrics": self.turn_metrics,
+            "first_turn_token_equivalence": self.first_turn_equiv,
+            "session_summary": {
+                "total_latency_s": wall_entry_s,
+                "turn_count": len(self.turn_metrics),
+                "fraction_turns_slo_ok": (
+                    sum(1 for x in slo_flags if x) / len(slo_flags) if slo_flags else None
+                ),
+                "n_turns_slo_ok": sum(1 for x in slo_flags if x),
+                "n_turns_slo_scored": len(slo_flags),
+                "per_turn_accuracy_correct": sum(1 for x in per_turn_correct if x),
+                "per_turn_accuracy_n": len(per_turn_correct),
+                "per_turn_accuracy": (
+                    sum(1 for x in per_turn_correct if x) / len(per_turn_correct)
+                    if per_turn_correct
+                    else None
+                ),
+                "measured_context_growth_tokens": (
+                    (prompt_by_turn[-1] - prompt_by_turn[0]) if len(prompt_by_turn) >= 2 else 0
+                ),
+                "n_generations_with_think": sum(
+                    1
+                    for turn in self.all_model_response
+                    for t in turn
+                    if THINK_OPEN_RE.search(t or "")
+                ),
+            },
+            "model_result_raw": self.all_model_response,
+            "model_result_raw_heads": [
+                [t[:300] for t in turn] for turn in self.all_model_response
+            ],
+            "model_result_decoded": self.all_decoded,
+            "score": {
+                "valid": score.get("valid"),
+                "error_type": score.get("error_type"),
+                "error_message": score.get("error_message") or score.get("error"),
+            },
+        }
+
+
 def run_multi_turn_agent_entry(
     *,
     pipe: Any,
@@ -1656,517 +2334,38 @@ def run_multi_turn_agent_entry(
     residency_mode: str | None = None,
     ov_genai: Any | None = None,
 ) -> dict[str, Any]:
-    """Full BFCL multi-turn agent loop (user turns x ≤MAXIMUM_STEP_LIMIT steps).
+    """Full BFCL multi-turn agent loop (user turns x <=MAXIMUM_STEP_LIMIT steps).
+
+    Thin compositor over ``MultiTurnAgentSession``: begin -> all user turns ->
+    finish. W-3 / X-2 / Q-REPRO call sites keep identical behaviour.
 
     residency_mode:
-      None           — legacy: full cold prompt every generate (no chat mode)
-      RESIDENT       — ChatHistory held across the session; ``generate(ChatHistory)``
+      None           - legacy: full cold prompt every generate (no chat mode)
+      RESIDENT       - ChatHistory held across the session; ``generate(ChatHistory)``
                        applies the template once (tools + enable_thinking=False) and
                        retains KV via history-prefix continuation
-      NON_RESIDENT   — same ChatHistory render each step, cold string generate with
+      NON_RESIDENT   - same ChatHistory render each step, cold string generate with
                        ``apply_chat_template=False``, on a pipeline loaded with
                        ``SchedulerConfig(enable_prefix_caching=False)`` so ContinuousBatching
                        cannot reuse KV across turns
     """
-    import openvino_genai as _ov_genai_mod
-
-    ov_genai = ov_genai if ov_genai is not None else _ov_genai_mod
-    mode = residency_mode.upper() if residency_mode else None
-    if mode is not None and mode not in RESIDENCY_MODES:
-        raise ValueError(f"residency_mode must be one of {RESIDENCY_MODES} or None")
-
-    sys.path.insert(0, str(ROOT))
-    sys.path.insert(0, str(BFCL_UNPACKED))
-    from apu_characterization.cap01.bfcl_shims import install_bfcl_runtime_shims
-
-    install_bfcl_runtime_shims()
-    from bfcl_eval.eval_checker.multi_turn_eval.multi_turn_utils import (
-        execute_multi_turn_func_call,
-        is_empty_execute_response,
+    session = MultiTurnAgentSession(
+        pipe=pipe,
+        tokenizer=tokenizer,
+        cfg=cfg,
+        residency_mode=residency_mode,
+        ov_genai=ov_genai,
     )
-
-    raw = entry["raw_entry"]
-    tools = tools_for_entry(entry)
-    initial_config = raw.get("initial_config") or {}
-    involved_classes = raw.get("involved_classes") or []
-    test_entry_id = str(raw["id"])
-    test_category = entry["category"]
-    model_name = f"probe_gpu_{test_entry_id}".replace("-", "_").replace(".", "_")
-    if mode:
-        model_name = f"probe_{mode.lower()}_{test_entry_id}".replace("-", "_").replace(".", "_")
-
-    # Warm instances (same as BFCL inference_multi_turn_*), is_evaL_run=False.
-    execute_multi_turn_func_call(
-        [],
-        initial_config,
-        involved_classes,
-        model_name,
-        test_entry_id,
-        long_context=("long_context" in test_category or "composite" in test_category),
-        is_evaL_run=False,
-    )
-
-    messages: list[dict[str, Any]] = []
-    all_model_response: list[list[str]] = []
-    all_decoded: list[list[list[str]]] = []
-    turn_metrics: list[dict[str, Any]] = []
-    prompt_token_samples: list[int] = []
-    completion_token_samples: list[int] = []
-    context_growth: list[dict[str, Any]] = []
-    force_quit = False
-    # Why the agent loop stopped relative to len(question). Distinct events:
-    # completed | generation_error | empty_execute | no_tool_call | max_steps
-    stop_reason = "completed"
-    session_generated_once = False
-    first_turn_equiv: dict[str, Any] | None = None
-    prev_turn0_prompt_tokens: int | None = None
-    t_entry0 = time.perf_counter()
-    wall_s = 0.0
-    max_new = int(getattr(cfg, "max_new_tokens", 512) or 512)
-    genai_tokenizer = pipe.get_tokenizer() if mode is not None else None
-    # INF-5: digest of every rendered prompt string this entry fed to generate().
-    prompt_render_hasher = hashlib.sha256()
-    prompt_render_updates = 0
-    # RESIDENT: one ChatHistory for the whole entry (tools + thinking off).
-    resident_history: Any | None = (
-        build_bfcl_chat_history(ov_genai, [], tools) if mode == "RESIDENT" else None
-    )
-
-    def _finish_chat_safe() -> None:
-        with contextlib.suppress(Exception), warnings.catch_warnings():
-            warnings.simplefilter("ignore", DeprecationWarning)
-            pipe.finish_chat()
-
+    session.begin(entry)
     try:
-        for turn_idx, turn_msgs in enumerate(entry["question"]):
-            t_turn0 = time.perf_counter()
-            t_tool_exec = 0.0
-            t_template_build = 0.0
-            t_tokenize = 0.0
-            t_generate = 0.0
-            new_turn_msgs = [dict(m) for m in turn_msgs if isinstance(m, dict)]
-            messages.extend(new_turn_msgs)
-            if resident_history is not None:
-                for m in new_turn_msgs:
-                    resident_history.append(_chat_message_for_genai(m))
-
-            turn_responses: list[str] = []
-            turn_decoded_steps: list[list[str]] = []
-            turn_step_metrics: list[dict[str, Any]] = []
-            step = 0
-            turn_ttft_s: float | None = None
-            turn_decode_tok_s: float | None = None
-            turn_generated: int | None = None
-            turn_prompt_tokens: int | None = None
-            turn_delta_tokens: int | None = None
-            turn_slo_ok: bool | None = None
-
-            while True:
-                _t = time.perf_counter()
-                prompt_full = render_bfcl_tools_style(tokenizer, messages, tools)
-                t_template_build += time.perf_counter() - _t
-                prompt_render_hasher.update(b"\0")
-                prompt_render_hasher.update(prompt_full.encode("utf-8"))
-                prompt_render_updates += 1
-                _t = time.perf_counter()
-                prompt_n = len(tokenizer(prompt_full)["input_ids"])
-                t_tokenize += time.perf_counter() - _t
-                prompt_token_samples.append(prompt_n)
-
-                if mode == "RESIDENT":
-                    assert resident_history is not None and genai_tokenizer is not None
-                    if not session_generated_once:
-                        first_turn_equiv = assert_first_turn_token_equivalence(
-                            hf_tokenizer=tokenizer,
-                            genai_tokenizer=genai_tokenizer,
-                            ov_genai=ov_genai,
-                            messages=messages,
-                            tools=tools,
-                            entry_id=str(entry["id"]),
-                        )
-                    gen_input: Any = resident_history
-                    input_kind = "chat_history_resident"
-                    _t = time.perf_counter()
-                    gen_input_tokens = len(
-                        tokenizer(render_genai_chat_history(genai_tokenizer, resident_history))[
-                            "input_ids"
-                        ]
-                    )
-                    t_tokenize += time.perf_counter() - _t
-                    cfg_use = _generation_cfg(
-                        ov_genai,
-                        max_new_tokens=max_new,
-                        apply_chat_template=True,
-                    )
-                elif mode == "NON_RESIDENT":
-                    assert genai_tokenizer is not None
-                    _t = time.perf_counter()
-                    hist = build_bfcl_chat_history(ov_genai, messages, tools)
-                    rendered = render_genai_chat_history(genai_tokenizer, hist)
-                    t_template_build += time.perf_counter() - _t
-                    if not session_generated_once:
-                        first_turn_equiv = assert_first_turn_token_equivalence(
-                            hf_tokenizer=tokenizer,
-                            genai_tokenizer=genai_tokenizer,
-                            ov_genai=ov_genai,
-                            messages=messages,
-                            tools=tools,
-                            entry_id=str(entry["id"]),
-                        )
-                    gen_input = rendered
-                    input_kind = "full_prompt"
-                    _t = time.perf_counter()
-                    gen_input_tokens = len(tokenizer(rendered)["input_ids"])
-                    t_tokenize += time.perf_counter() - _t
-                    cfg_use = _generation_cfg(
-                        ov_genai,
-                        max_new_tokens=max_new,
-                        apply_chat_template=False,
-                    )
-                else:
-                    gen_input = prompt_full
-                    input_kind = "full_prompt"
-                    gen_input_tokens = prompt_n
-                    cfg_use = cfg
-
-                context_growth.append(
-                    {
-                        "turn": turn_idx,
-                        "step": step,
-                        "prompt_tokens": prompt_n,
-                        "delta_tokens_vs_prev_turn": (
-                            None
-                            if prev_turn0_prompt_tokens is None or step != 0
-                            else prompt_n - prev_turn0_prompt_tokens
-                        ),
-                        "generate_input_tokens": gen_input_tokens,
-                        "input_kind": input_kind,
-                        "n_messages": len(messages),
-                        "residency_mode": mode,
-                    }
-                )
-
-                prompt_tokens_reported: int | None = None
-                if mode is None:
-                    t0 = time.perf_counter()
-                    gen = pipe.generate([prompt_full], cfg)
-                    wall_s = time.perf_counter() - t0
-                    t_generate += wall_s
-                    texts = getattr(gen, "texts", None)
-                    text = str(texts[0]) if texts else str(gen)
-                    metrics = getattr(gen, "perf_metrics", None)
-                    completion_n = None
-                    ttft_s = None
-                    decode_tok_s = None
-                    if metrics is not None:
-                        with contextlib.suppress(Exception):
-                            completion_n = int(metrics.get_num_generated_tokens())
-                        try:
-                            ttft_ms = float(metrics.get_ttft().mean)
-                            if ttft_ms > 0:
-                                ttft_s = ttft_ms / 1000.0
-                        except Exception:
-                            pass
-                        try:
-                            prompt_tokens_reported = int(metrics.get_num_input_tokens())
-                        except Exception:
-                            prompt_tokens_reported = None
-                    if completion_n is None:
-                        completion_n = len(tokenizer(text)["input_ids"])
-                    if ttft_s is not None and completion_n >= 2 and wall_s > ttft_s:
-                        decode_tok_s = (completion_n - 1) / (wall_s - ttft_s)
-                    gen_ok = True
-                    gen_err = None
-                else:
-                    timed = _timed_generate(pipe, ov_genai, gen_input, cfg_use)
-                    wall_s = float(timed["wall_s"])
-                    t_generate += wall_s
-                    text = timed.get("text") or ""
-                    completion_n = timed.get("generated_tokens")
-                    if completion_n is None:
-                        completion_n = len(tokenizer(text)["input_ids"])
-                    ttft_s = timed.get("ttft_s")
-                    decode_tok_s = timed.get("decode_tok_s")
-                    gen_ok = bool(timed["ok"])
-                    gen_err = timed.get("error")
-                    reported = timed.get("prompt_tokens_reported")
-                    prompt_tokens_reported = int(reported) if reported is not None else None
-
-                completion_token_samples.append(int(completion_n))
-                session_generated_once = True
-                turn_responses.append(text)
-
-                step_rec = {
-                    "turn": turn_idx,
-                    "step": step,
-                    "prompt_tokens": prompt_n,
-                    "generate_input_tokens": gen_input_tokens,
-                    "prompt_tokens_reported": prompt_tokens_reported,
-                    "input_kind": input_kind,
-                    "ttft_s": ttft_s,
-                    "decode_tok_s": decode_tok_s,
-                    "generated_tokens": int(completion_n),
-                    "wall_s": wall_s,
-                    "ok": gen_ok,
-                    "error": gen_err,
-                }
-                turn_step_metrics.append(step_rec)
-
-                if step == 0:
-                    turn_ttft_s = ttft_s
-                    turn_decode_tok_s = decode_tok_s
-                    turn_generated = int(completion_n)
-                    turn_prompt_tokens = prompt_n
-                    turn_delta_tokens = (
-                        None
-                        if prev_turn0_prompt_tokens is None
-                        else prompt_n - prev_turn0_prompt_tokens
-                    )
-                    turn_slo_ok = (
-                        ttft_s is not None
-                        and decode_tok_s is not None
-                        and ttft_s <= SLO_TTFT_S
-                        and decode_tok_s >= SLO_DECODE_TOK_S
-                    )
-
-                if gen_ok:
-                    assert_no_think_in_generation(
-                        text,
-                        where=f"{entry['id']}/turn{turn_idx}/step{step}/{mode}",
-                    )
-
-                messages.append({"role": "assistant", "content": text})
-                if resident_history is not None:
-                    resident_history.append({"role": "assistant", "content": text})
-
-                if not gen_ok:
-                    # Generation failed: distinct from parse/empty-execute stops.
-                    stop_reason = "generation_error"
-                    break
-
-                try:
-                    decoded = decode_execute_qwen(text)
-                    if is_empty_execute_response(decoded):
-                        # Empty execute ends the *step* loop for this user turn.
-                        # If no tool call was decoded yet, this is an emission
-                        # failure for the turn; if tools already ran, it is the
-                        # normal end-of-turn (model stopped calling tools).
-                        if not turn_decoded_steps:
-                            stop_reason = "empty_execute"
-                        break
-                except Exception:
-                    # decode_execute_qwen raised: no parseable tool-call structure.
-                    stop_reason = "no_tool_call"
-                    break
-
-                turn_decoded_steps.append(decoded)
-                _t = time.perf_counter()
-                tool_exec_error = False
-                tool_exec_error_class: str | None = None
-                try:
-                    execution_results, _instances = execute_multi_turn_func_call(
-                        decoded,
-                        initial_config,
-                        involved_classes,
-                        model_name,
-                        test_entry_id,
-                        long_context=("long_context" in test_category or "composite" in test_category),
-                        is_evaL_run=False,
-                    )
-                except Exception as exc:
-                    # Tool execution raised: distinct from emission / generation stops.
-                    tool_exec_error = True
-                    tool_exec_error_class = type(exc).__name__
-                    t_tool_exec += time.perf_counter() - _t
-                    turn_step_metrics.append(
-                        {
-                            "turn": turn_idx,
-                            "step": step,
-                            "tool_exec_error": True,
-                            "tool_exec_error_class": tool_exec_error_class,
-                            "error": f"{type(exc).__name__}: {exc}",
-                        }
-                    )
-                    stop_reason = "tool_exec_error"
-                    break
-                t_tool_exec += time.perf_counter() - _t
-                for exec_str, exec_result in zip(decoded, execution_results, strict=False):
-                    tool_msg = {
-                        "role": "tool",
-                        "name": exec_str,
-                        "content": str(exec_result),
-                    }
-                    messages.append(tool_msg)
-                    if resident_history is not None:
-                        resident_history.append(_chat_message_for_genai(tool_msg))
-                step += 1
-                if step > MAXIMUM_STEP_LIMIT:
-                    force_quit = True
-                    stop_reason = "max_steps"
-                    break
-
-            if turn_prompt_tokens is not None:
-                prev_turn0_prompt_tokens = turn_prompt_tokens
-
-            all_model_response.append(turn_responses)
-            all_decoded.append(turn_decoded_steps)
-
-            per_turn_acc = None
-            if turn_idx < len(entry["reference"]):
-                per_turn_acc = structural_turn_correct(
-                    turn_decoded_steps, entry["reference"][turn_idx]
-                )
-
-            turn_wall_s = time.perf_counter() - t_turn0
-            phases = finalize_phase_timers(
-                turn_wall_s=turn_wall_s,
-                t_tool_exec=t_tool_exec,
-                t_template_build=t_template_build,
-                t_tokenize=t_tokenize,
-                t_generate=t_generate,
-            )
-            # Last step's tool_exec_error (if the turn ended on a raise).
-            turn_tool_err = False
-            turn_tool_err_class: str | None = None
-            for sm in reversed(turn_step_metrics):
-                if sm.get("tool_exec_error"):
-                    turn_tool_err = True
-                    turn_tool_err_class = sm.get("tool_exec_error_class")
-                    break
-            turn_metrics.append(
-                {
-                    "turn": turn_idx,
-                    "n_generations": len(turn_responses),
-                    "n_decoded_steps": len(turn_decoded_steps),
-                    "last_wall_s": wall_s,
-                    "ttft_s": turn_ttft_s,
-                    "prompt_tokens": turn_prompt_tokens,
-                    "delta_tokens_vs_prev_turn": turn_delta_tokens,
-                    "decode_tok_s": turn_decode_tok_s,
-                    "generated_tokens": turn_generated,
-                    "slo_ttft_s": SLO_TTFT_S,
-                    "slo_decode_tok_s": SLO_DECODE_TOK_S,
-                    "slo_ok": turn_slo_ok,
-                    "per_turn_accuracy": per_turn_acc,
-                    "steps": turn_step_metrics,
-                    "tool_exec_error": turn_tool_err,
-                    "tool_exec_error_class": turn_tool_err_class,
-                    # Additive phase timers (future sealed runs). Not consumed by replay yet.
-                    **phases,
-                }
-            )
-            # Only max_steps (force_quit) aborts remaining user turns. Empty
-            # execute / no_tool_call / generation_error / tool_exec_error end the
-            # step loop for this turn; the next user turn still runs unless force_quit.
-            if force_quit:
+        for turn_idx in range(len(entry["question"])):
+            session.run_user_turn(turn_idx)
+            if session.force_quit:
                 break
     finally:
-        if mode == "RESIDENT":
-            _finish_chat_safe()
-
-    wall_entry_s = time.perf_counter() - t_entry0
-
-    # Entry-level stop_reason: short turn_metrics ⇒ session stopped early.
-    if force_quit or stop_reason == "max_steps":
-        stop_reason = "max_steps"
-    elif len(turn_metrics) >= len(entry["question"]):
-        stop_reason = "completed"
-    # else keep generation_error / empty_execute / no_tool_call / tool_exec_error
-
-    score: dict[str, Any]
-    if force_quit or len(all_model_response) != len(entry["reference"]):
-        score = {
-            "valid": False,
-            "error_type": "multi_turn:force_terminated",
-            "error_message": (
-                f"turns_model={len(all_model_response)} "
-                f"turns_gt={len(entry['reference'])} force_quit={force_quit} "
-                f"stop_reason={stop_reason}"
-            ),
-        }
-    else:
-        try:
-            score = score_multi_turn(
-                test_entry=raw,
-                ground_truth=entry["reference"],
-                model_result_decoded=all_decoded,
-                test_category=test_category,
-            )
-        except Exception as exc:
-            score = {
-                "valid": False,
-                "error_type": "probe:multi_turn_exception",
-                "error_message": f"{type(exc).__name__}: {exc}",
-            }
-
-    prompt_by_turn = [g["prompt_tokens"] for g in context_growth if g["step"] == 0]
-    deltas_by_turn = [g.get("delta_tokens_vs_prev_turn") for g in context_growth if g["step"] == 0]
-    slo_flags = [t.get("slo_ok") for t in turn_metrics if t.get("slo_ok") is not None]
-    per_turn_correct = [
-        bool(t["per_turn_accuracy"]["correct"])
-        for t in turn_metrics
-        if t.get("per_turn_accuracy") is not None
-    ]
-    return {
-        "id": entry["id"],
-        "category": entry["category"],
-        "kind": "multi_turn",
-        "residency_mode": mode,
-        "wall_s": wall_entry_s,
-        "force_quit": force_quit,
-        "stop_reason": stop_reason,
-        "n_user_turns": len(entry["question"]),
-        "n_completed_turns": len(all_model_response),
-        "prompt_render_sha256": (
-            prompt_render_hasher.hexdigest() if prompt_render_updates else None
-        ),
-        "prompt_render_n": prompt_render_updates,
-        "prompt_tokens_all_steps": prompt_token_samples,
-        "completion_tokens_all_steps": completion_token_samples,
-        "prompt_tokens_sum": sum(prompt_token_samples),
-        "completion_tokens_sum": sum(completion_token_samples),
-        "prompt_tokens_first_step_per_turn": prompt_by_turn,
-        "delta_tokens_vs_prev_turn": deltas_by_turn,
-        "context_growth": context_growth,
-        "context_growth_delta_tokens": (
-            (context_growth[-1]["prompt_tokens"] - context_growth[0]["prompt_tokens"])
-            if len(context_growth) >= 2
-            else 0
-        ),
-        "turn_metrics": turn_metrics,
-        "first_turn_token_equivalence": first_turn_equiv,
-        "session_summary": {
-            "total_latency_s": wall_entry_s,
-            "turn_count": len(turn_metrics),
-            "fraction_turns_slo_ok": (
-                sum(1 for x in slo_flags if x) / len(slo_flags) if slo_flags else None
-            ),
-            "n_turns_slo_ok": sum(1 for x in slo_flags if x),
-            "n_turns_slo_scored": len(slo_flags),
-            "per_turn_accuracy_correct": sum(1 for x in per_turn_correct if x),
-            "per_turn_accuracy_n": len(per_turn_correct),
-            "per_turn_accuracy": (
-                sum(1 for x in per_turn_correct if x) / len(per_turn_correct)
-                if per_turn_correct
-                else None
-            ),
-            "measured_context_growth_tokens": (
-                (prompt_by_turn[-1] - prompt_by_turn[0]) if len(prompt_by_turn) >= 2 else 0
-            ),
-            "n_generations_with_think": sum(
-                1 for turn in all_model_response for t in turn if THINK_OPEN_RE.search(t or "")
-            ),
-        },
-        # Seal complete generations (DISPATCH K); heads retained for skim.
-        "model_result_raw": all_model_response,
-        "model_result_raw_heads": [[t[:300] for t in turn] for turn in all_model_response],
-        "model_result_decoded": all_decoded,
-        "score": {
-            "valid": score.get("valid"),
-            "error_type": score.get("error_type"),
-            "error_message": score.get("error_message") or score.get("error"),
-        },
-    }
+        # Always finish (RESIDENT finish_chat) even if a turn raised.
+        result = session.finish()
+    return result
 
 
 def run_gpu_multi_turn(out_dir: Path, *, max_new_tokens: int = 512) -> dict[str, Any]:
@@ -2221,7 +2420,7 @@ def run_gpu_multi_turn(out_dir: Path, *, max_new_tokens: int = 512) -> dict[str,
 
     results: list[dict[str, Any]] = []
     for entry in entries:
-        print(f"[multi_turn] {entry['id']} …", flush=True)
+        print(f"[multi_turn] {entry['id']} ...", flush=True)
         results.append(
             run_multi_turn_agent_entry(pipe=pipe, tokenizer=tokenizer, cfg=cfg, entry=entry)
         )
@@ -2739,7 +2938,7 @@ def run_gpu_multi_turn_xlam(out_dir: Path, *, max_new_tokens: int = 512) -> dict
 
     results: list[dict[str, Any]] = []
     for entry in entries:
-        print(f"[multi_turn_xlam] {entry['id']} …", flush=True)
+        print(f"[multi_turn_xlam] {entry['id']} ...", flush=True)
         results.append(
             run_multi_turn_xlam_agent_entry(pipe=pipe, tokenizer=tokenizer, cfg=cfg, entry=entry)
         )
@@ -3171,7 +3370,7 @@ def anthropic_tools_for_entry(entry: dict[str, Any]) -> dict[str, Any]:
             "Each BFCL function doc (name, description, parameters, optional response) "
             "maps to one Anthropic tool {name, description, input_schema} via "
             "bfcl_eval.model_handler.utils.convert_to_tool(..., ModelStyle.ANTHROPIC). "
-            "parameters.type dict→object; response schema is appended to description. "
+            "parameters.type dict->object; response schema is appended to description. "
             "Tools are sent as the API tools= argument (native tool_use / tool_result "
             "blocks). The Qwen chat-template <tools> text is not placed in the prompt."
         ),
@@ -3646,7 +3845,7 @@ def run_cloud_multi_turn(
     running_usd = 0.0
     example_tools: dict[str, Any] | None = None
     for entry in entries:
-        print(f"[cloud_multi_turn] {entry['id']} …", flush=True)
+        print(f"[cloud_multi_turn] {entry['id']} ...", flush=True)
         if example_tools is None:
             example_tools = anthropic_tools_for_entry(entry)
         row = run_cloud_multi_turn_agent_entry(
@@ -3804,13 +4003,13 @@ def run_session_residency(
     out_dir.mkdir(parents=True, exist_ok=True)
     all_entries = select_multi_turn_entries()
     # Paired cells: identical file-order prefix; seed recorded (no shuffle).
-    # select_multi_turn_entries applies no difficulty or API filter — plain questions[:n].
+    # select_multi_turn_entries applies no difficulty or API filter - plain questions[:n].
     entries = all_entries[:n_entries]
     reduced_reason = None
 
     from seam.run_environment import RunEnvironmentSession
 
-    # Session-residency cells are sequential (one arm × one residency mode).
+    # Session-residency cells are sequential (one arm x one residency mode).
     env_session = RunEnvironmentSession.begin(
         session_design="sequential",
         arm_order=[f"{arm_id}|{mode}"],
@@ -3853,7 +4052,7 @@ def run_session_residency(
         avail = _host_available_mb()
         print(
             f"[session_residency {arm_id}/{mode}] {entry['id']} "
-            f"uptime_s={uptime_s} available_mb={avail.get('available_mb')} …",
+            f"uptime_s={uptime_s} available_mb={avail.get('available_mb')} ...",
             flush=True,
         )
         row = run_multi_turn_agent_entry(
@@ -3947,7 +4146,7 @@ def run_session_residency(
                     "same ChatHistory render each step; cold generate([rendered]) with "
                     "apply_chat_template=False; pipeline loaded with "
                     "SchedulerConfig(enable_prefix_caching=False) so CB cannot reuse KV "
-                    "(DISPATCH L). Rejected alternative: fresh LLMPipeline per turn — "
+                    "(DISPATCH L). Rejected alternative: fresh LLMPipeline per turn - "
                     "unnecessary once prefix caching is disabled, and would conflate load "
                     "time with TTFT."
                 ),
@@ -4026,7 +4225,7 @@ def run_session_residency_cold_control(
 
     One multi_turn_base entry. Asserts:
       - turn-2 generate_input_tokens == full conversation length (>> delta)
-      - metrics prompt_tokens_reported ≈ full length when present (not delta-sized)
+      - metrics prompt_tokens_reported ~ full length when present (not delta-sized)
       - turn-2 TTFT within cold tolerance of length-scaled turn-1 (and absolute floor)
     Fails loudly if turn-2 costs delta-sized time (prefix-cache contamination).
     """
@@ -4049,7 +4248,7 @@ def run_session_residency_cold_control(
 
     print(
         f"[cold_control {arm_id}/NON_RESIDENT] {entry['id']} "
-        f"(prefix_caching=False, load_s={load_s:.2f}) …",
+        f"(prefix_caching=False, load_s={load_s:.2f}) ...",
         flush=True,
     )
     result = run_multi_turn_agent_entry(
@@ -4151,7 +4350,7 @@ def run_session_residency_cold_control(
                 f"length-scaled turn-1 cold ({scaled_floor:.4f}s); "
                 f"ttft1={ttft1:.4f}s n1={n1} n2={n2}"
             )
-        # Explicit warm-ratio trap (contaminated gpu_only was ~0.13/2.6 ≈ 0.05).
+        # Explicit warm-ratio trap (contaminated gpu_only was ~0.13/2.6 ~ 0.05).
         if float(ttft2) < float(ttft1) * NON_RESIDENT_WARM_TTFT_RATIO_MAX:
             failures.append(
                 f"FATAL: turn-2 TTFT={ttft2:.4f}s is < "
@@ -4173,7 +4372,7 @@ def run_session_residency_cold_control(
             "rejection_reason": (
                 "SchedulerConfig.enable_prefix_caching=False is available on "
                 "LLMPipeline via config={'scheduler_config': ...} (openvino_genai "
-                "2026.2.1; CB backend defaults prefix caching ON — issue #2415). "
+                "2026.2.1; CB backend defaults prefix caching ON - issue #2415). "
                 "Fresh pipeline per turn rejected unless this control fails."
             ),
             "scheduler_config": load_meta.get("scheduler_config"),
@@ -4202,7 +4401,7 @@ def run_session_residency_cold_control(
             flush=True,
         )
     else:
-        print("[cold_control] FAIL — NON_RESIDENT is not cold:", flush=True)
+        print("[cold_control] FAIL - NON_RESIDENT is not cold:", flush=True)
         for f in failures:
             print(f"  - {f}", flush=True)
     return report
@@ -4618,7 +4817,7 @@ def run_gpu_kv_precision(
 
     per_precision: dict[str, Any] = {}
     for prec in precisions:
-        print(f"[kv_precision] loading GPU with KV_CACHE_PRECISION={prec} …", flush=True)
+        print(f"[kv_precision] loading GPU with KV_CACHE_PRECISION={prec} ...", flush=True)
         # One Core for set + readback; also pass the same property into LLMPipeline
         # so compilation cannot silently ignore a Core-only sticky default.
         core = ov.Core()
@@ -4643,7 +4842,7 @@ def run_gpu_kv_precision(
 
         results: list[dict[str, Any]] = []
         for entry in entries:
-            print(f"[kv_precision:{prec}] {entry['id']} …", flush=True)
+            print(f"[kv_precision:{prec}] {entry['id']} ...", flush=True)
             results.append(
                 _score_single_turn_entry(pipe=pipe, tokenizer=tokenizer, cfg=cfg, entry=entry)
             )
@@ -4753,7 +4952,7 @@ def run_npu_load(
             "NPUW_LLM_MAX_PROMPT_LEN": int(mpl),
             "NPUW_LLM_PREFILL_CHUNK_SIZE": int(prefill_chunk),
         }
-        print(f"[npu_load] LLMPipeline(..., 'NPU', {props}) …", flush=True)
+        print(f"[npu_load] LLMPipeline(..., 'NPU', {props}) ...", flush=True)
         t0 = time.perf_counter()
         try:
             pipe = _make_llm_pipeline(ov_genai, "NPU", props)

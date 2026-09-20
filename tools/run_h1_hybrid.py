@@ -77,7 +77,7 @@ INTERLEAVE_POLICIES: tuple[str, ...] = (
     "emission_escalate",
     "full_signal_bounceback",
 )
-# H1-2POLICY: R2a+R2b only (R2c blocked on R2C-TURNWISE).
+# H1-2POLICY: R2a+R2b only (R2c omitted from interleaved subset by selection).
 INTERLEAVE_POLICIES_2POLICY: tuple[str, ...] = (
     "slo_escalate",
     "emission_escalate",
@@ -91,10 +91,10 @@ DEFAULT_SESSION_CAP_USD = 35.0
 DEFAULT_SESSION_CAP_USD_2POLICY = 25.0
 
 R2C_EXCLUSION_REASON = (
-    "R2c (full_signal_bounceback) excluded: requires turn-by-turn OpenVINO "
-    "with cloud context injection (R2C-TURNWISE); OpenVinoLocalBackend still "
-    "precomputes the full entry and cannot bounce. This session is H1-2POLICY "
-    "(slo_escalate + emission_escalate only), not the full three-policy comparison."
+    "R2c (full_signal_bounceback) excluded from this interleaved session "
+    "(H1-2POLICY = slo_escalate + emission_escalate only). "
+    "Not the full three-policy comparison. R2C-TURNWISE is available for "
+    "dedicated R2c / H1-3POLICY seals."
 )
 
 
@@ -528,7 +528,7 @@ def attach_local_probe_quality(
 ) -> None:
     """Persist W-3 scorer outputs already computed by the OpenVINO probe path.
 
-    Probe ``run_multi_turn_agent_entry`` scores in-memory; sealed H-1 trees
+    Probe ``MultiTurnAgentSession.finish`` scores in-memory; sealed H-1 trees
     86d0f4cf / 8ffd8371 dropped that payload. Future seals keep it.
     Scope is local-probe only (pre-escalation generation), never improvised.
     """
@@ -536,6 +536,10 @@ def attach_local_probe_quality(
         return
     eid = str(entry["id"])
     row = local._entry_cache.get(eid)
+    if not isinstance(row, dict):
+        finalize = getattr(local, "finalize_entry", None)
+        if callable(finalize):
+            row = finalize(entry)
     if not isinstance(row, dict):
         return
     score = row.get("score") if isinstance(row.get("score"), dict) else {}
@@ -825,14 +829,15 @@ def arm_id_for_h1(arm: dict[str, str]) -> str:
 class OpenVinoLocalBackend:
     """Live local backend: same OpenVINO multi-turn path as W-3 / X-2.
 
-    Generation is ``bfcl_feasibility_probe.run_multi_turn_agent_entry`` (the
-    library function behind ``run_w3_bfcl_quality`` / ``run_x2_feasibility``).
+    Generation is turn-wise via ``bfcl_feasibility_probe.MultiTurnAgentSession``
+    (W-3 inner step loop unchanged; hybrid owns the outer user-turn loop).
     ``seam/measurement.py`` is the machine-validity envelope only - it does
     not generate tokens; no change was required there.
 
-    Per entry the agent loop runs once (greedy, max_new_tokens=512, W-3 decode
-    settings). ``run_turn`` indexes measured ``turn_metrics`` - no scripted
-    values. RESIDENT/NON_RESIDENT and KV pins are enforced at pipeline load.
+    Per turn: greedy, max_new_tokens=512, W-3 decode settings. ``run_turn``
+    drives ``session.run_user_turn`` - no full-entry precompute. RESIDENT /
+    NON_RESIDENT and KV pins are enforced at pipeline load. R2c inject uses
+    ``session.inject_assistant`` + measured re-prefill on the next local TTFT.
     """
 
     model_spec: Path
@@ -847,8 +852,13 @@ class OpenVinoLocalBackend:
     ov_genai: Any = field(init=False, repr=False)
     load_meta: dict[str, Any] = field(init=False, default_factory=dict)
     _entry_cache: dict[str, dict[str, Any]] = field(default_factory=dict, repr=False)
+    _sessions: dict[str, Any] = field(default_factory=dict, repr=False)
+    _span_state: dict[str, LocalEntrySpan] = field(default_factory=dict, repr=False)
+    _cloud_context: dict[str, dict[int, str]] = field(default_factory=dict, repr=False)
+    _last_injection: dict[str, Any] = field(default_factory=dict, repr=False)
 
     BACKEND_KIND = "openvino"
+    TURNWISE = True
 
     def __post_init__(self) -> None:
         import openvino_genai as ov_genai
@@ -980,10 +990,11 @@ class OpenVinoLocalBackend:
                     f"readback={got!r} requested={kv['requested']!r}"
                 )
 
-    def _ensure_entry(self, entry: dict[str, Any]) -> dict[str, Any]:
+    def _ensure_session(self, entry: dict[str, Any]) -> Any:
+        """Return the live MultiTurnAgentSession for this entry (begin once)."""
         eid = str(entry["id"])
-        if eid in self._entry_cache:
-            return self._entry_cache[eid]
+        if eid in self._sessions:
+            return self._sessions[eid]
         import tools.bfcl_feasibility_probe as probe
 
         if "raw_entry" not in entry or "question" not in entry:
@@ -991,64 +1002,65 @@ class OpenVinoLocalBackend:
                 f"REFUSED -- entry {eid} missing raw_entry/question "
                 "(need full BFCL multi_turn probe entry, not a fixture stub)"
             )
-        row = probe.run_multi_turn_agent_entry(
+        session = probe.MultiTurnAgentSession(
             pipe=self.pipe,
             tokenizer=self.tokenizer,
             cfg=self.cfg,
-            entry=entry,
             residency_mode=self.residency,
             ov_genai=self.ov_genai,
         )
-        self._entry_cache[eid] = row
-        return row
+        session.begin(entry)
+        self._sessions[eid] = session
+        return session
+
+    def finalize_entry(self, entry: dict[str, Any]) -> dict[str, Any] | None:
+        """Finish the session and cache the probe row (idempotent)."""
+        eid = str(entry["id"])
+        if eid in self._entry_cache:
+            return self._entry_cache[eid]
+        session = self._sessions.get(eid)
+        if session is None:
+            return None
+        if not getattr(session, "_finished", False):
+            row = session.finish()
+            self._entry_cache[eid] = row
+            return row
+        return self._entry_cache.get(eid)
 
     def local_span(self, entry: dict[str, Any]) -> LocalEntrySpan:
-        row = self._ensure_entry(entry)
-        turns_in = int(row.get("n_user_turns") or turns_in_entry_count(entry))
-        metrics = row.get("turn_metrics") or []
-        if not isinstance(metrics, list):
-            raise SystemExit(
-                f"REFUSED -- turn_metrics not a list for {entry.get('id')}: "
-                f"type={type(metrics).__name__}"
-            )
-        turns_ex = len(metrics)
-        reason = row.get("stop_reason")
-        if reason not in STOP_REASONS:
-            if bool(row.get("force_quit")):
-                reason = "max_steps"
-            elif turns_ex >= turns_in:
-                reason = "completed"
-            else:
-                raise SystemExit(
-                    f"REFUSED -- probe row for {entry.get('id')} missing stop_reason "
-                    f"with turns_executed={turns_ex} < turns_in_entry={turns_in}; "
-                    f"force_quit={row.get('force_quit')!r} observed_stop={row.get('stop_reason')!r}"
-                )
-        return LocalEntrySpan(turns_in, turns_ex, str(reason))
+        """Progressive span: provisional complete until force_quit shortens it.
+
+        The returned object is cached and mutated when ``run_turn`` hits
+        ``force_quit``, so ``run_hybrid_entry`` sees the updated bound.
+        """
+        eid = str(entry["id"])
+        if eid in self._span_state:
+            return self._span_state[eid]
+        turns_in = turns_in_entry_count(entry)
+        span = LocalEntrySpan(turns_in, turns_in, "completed")
+        self._span_state[eid] = span
+        return span
 
     def run_turn(self, entry: dict[str, Any], turn_idx: int, *, model: str) -> BackendTurn:
-        row = self._ensure_entry(entry)
-        metrics = row.get("turn_metrics") or []
-        if not isinstance(metrics, list):
+        del model  # configuration pin only; generation uses loaded IR
+        eid = str(entry["id"])
+        session = self._ensure_session(entry)
+        if session.force_quit:
             raise SystemExit(
-                f"REFUSED -- turn_metrics not a list for {entry.get('id')}: "
-                f"type={type(metrics).__name__}"
+                f"REFUSED -- turn_idx={turn_idx} after force_quit for entry {eid}; "
+                f"hybrid must stop at local_span.turns_executed"
             )
-        # Short turn_metrics is normal (session stopped). Caller must not index
-        # past turns_executed - that is a hybrid-loop bug, not an agent failure.
-        if turn_idx >= len(metrics):
-            raise SystemExit(
-                f"REFUSED -- turn_idx={turn_idx} out of range for entry "
-                f"{entry.get('id')} (n_turn_metrics={len(metrics)}). "
-                f"Use local_span() and stop at turns_executed; do not assume "
-                f"len(turn_metrics) == turns_in_entry."
-            )
-        tm = metrics[turn_idx]
+        tm = session.run_user_turn(turn_idx)
         if not isinstance(tm, dict):
             raise SystemExit(
-                f"REFUSED -- turn_metrics[{turn_idx}] not a dict: "
-                f"type={type(tm).__name__} value={tm!r}"
+                f"REFUSED -- turn_metrics for {eid}/t{turn_idx} not a dict: "
+                f"type={type(tm).__name__}"
             )
+        # Progressive span: shorten on max_steps / force_quit.
+        if session.force_quit:
+            span = self.local_span(entry)
+            span.turns_executed = turn_idx + 1
+            span.stop_reason = "max_steps"
         required_tm = (
             "n_decoded_steps",
             "prompt_tokens",
@@ -1067,21 +1079,13 @@ class OpenVinoLocalBackend:
                 f"REFUSED -- turn_metrics[{turn_idx}] missing keys {missing_tm}; "
                 f"observed_keys={sorted(tm.keys())}"
             )
-        raw_list = row["model_result_raw"] if "model_result_raw" in row else None
-        if not isinstance(raw_list, list):
-            raise SystemExit(
-                f"REFUSED -- entry row missing model_result_raw list; "
-                f"observed_keys={sorted(row.keys()) if isinstance(row, dict) else None}"
-            )
-        # model_result_raw may also be short when the session stopped early.
-        raws = raw_list[turn_idx] if turn_idx < len(raw_list) else []
+        raws = session.all_model_response[turn_idx] if turn_idx < len(session.all_model_response) else []
         if not isinstance(raws, list):
             raise SystemExit(
                 f"REFUSED -- model_result_raw[{turn_idx}] not a list: "
                 f"type={type(raws).__name__}"
             )
         raw_text = "\n".join(str(t) for t in raws if t)
-        # Same criterion W-3 uses: a successful decode_execute_qwen step.
         emitted = int(tm["n_decoded_steps"] or 0) > 0
         prompt_tokens = tm["prompt_tokens"]
         n_ctx = int(prompt_tokens) if prompt_tokens is not None else 0
@@ -1090,7 +1094,19 @@ class OpenVinoLocalBackend:
         if tool_err_class is not None:
             tool_err_class = str(tool_err_class)
         n_steps = int(tm["n_decoded_steps"] or 0)
-        # Phase timers are measured residuals from the agent loop (genuine t_other).
+        # Backfill measured re-prefill onto the last injection receipt.
+        if session._last_reprefill_s is not None and eid in self._last_injection:
+            inj = self._last_injection[eid]
+            if inj.get("re_prefill_s") is None:
+                inj["re_prefill_s"] = float(session._last_reprefill_s)
+                inj["re_prefill_source"] = str(
+                    session._last_reprefill_source or "measured"
+                )
+                self._last_injection[eid] = inj
+        # Finalize probe row when entry completes or force-quits.
+        turns_in = turns_in_entry_count(entry)
+        if session.force_quit or turn_idx >= turns_in - 1:
+            self.finalize_entry(entry)
         return BackendTurn(
             n_ctx=n_ctx,
             ttft_s=(float(tm["ttft_s"]) if tm["ttft_s"] is not None else None),
@@ -1122,23 +1138,25 @@ class OpenVinoLocalBackend:
         cloud_usd: float = 0.0,
         tool_messages: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
-        """Record cloud assistant text for an R2c handoff.
+        """Inject cloud assistant into the live session; invalidate resident KV.
 
-        ``ChatHistory.append(assistant)`` accepts an externally produced turn;
-        resident KV is then **invalid** and the next ``generate`` must
-        re-prefill (call ``finish_chat`` first). This precompute backend cannot
-        splice mid-entry, so ``re_prefill_source=inferred_unmeasured`` until a
-        turn-by-turn RESIDENT path measures TTFT (see
-        ``tools/measure_r2c_reprefill.py``). Sealing R2c with this backend
-        remains REFUSED.
+        Next ``run_turn`` measures re-prefill as that turn's first-step TTFT
+        (``re_prefill_source=measured``). Sealing R2c requires TURNWISE + RESIDENT.
         """
         from tools.r2c_inject import build_injection_receipt
 
         eid = str(entry["id"])
-        if not hasattr(self, "_cloud_context"):
-            self._cloud_context = {}
-        if not hasattr(self, "_last_injection"):
-            self._last_injection = {}
+        session = self._ensure_session(entry)
+        if self.residency != "RESIDENT":
+            raise SystemExit(
+                "REFUSED -- R2c accept_cloud_context requires RESIDENT residency "
+                f"(got {self.residency!r}); NON_RESIDENT has no resident KV to invalidate"
+            )
+        session.inject_assistant(
+            assistant_text=text,
+            tool_messages=tool_messages,
+            replace_last_local_assistant=True,
+        )
         self._cloud_context.setdefault(eid, {})[turn_idx] = text
         receipt = build_injection_receipt(
             entry_id=eid,
@@ -1150,12 +1168,11 @@ class OpenVinoLocalBackend:
             cloud_tokens_out=cloud_tokens_out,
             cloud_usd=cloud_usd,
             re_prefill_s=None,
-            re_prefill_source="inferred_unmeasured",
+            re_prefill_source="pending_next_local",
             shared_tool_exec=True,
             note=(
-                "ChatHistory accepts external assistant append; KV invalid; "
-                "next generate re-prefills. Precompute backend does not measure "
-                "re_prefill_s live."
+                "ChatHistory accepts external assistant append; KV invalidated via "
+                "finish_chat; next local generate TTFT is measured re_prefill_s."
             ),
         )
         self._last_injection[eid] = receipt.as_dict()
@@ -1176,18 +1193,23 @@ def assert_seal_allowed(*, seal: bool, local: LocalBackend, policy: str) -> None
     if policy == "cloud_only":
         # Local backend is unused; sealing cloud-only MEASURED arms is allowed.
         return
-    if policy == "full_signal_bounceback" and isinstance(local, OpenVinoLocalBackend):
-        raise SystemExit(
-            "REFUSED -- full_signal_bounceback (R2c) requires turn-by-turn local "
-            "generation with cloud context injection; OpenVinoLocalBackend still "
-            "precomputes the full entry and cannot bounce. Use a turn-by-turn "
-            "backend before sealing R2c."
-        )
     if not isinstance(local, OpenVinoLocalBackend):
         raise SystemExit(
             "REFUSED -- --seal requires OpenVinoLocalBackend for hybrid policies. "
             f"Got {local_backend_kind(local)}. Stub/scripted runs cannot be sealed."
         )
+    if policy == "full_signal_bounceback":
+        if not getattr(local, "TURNWISE", False):
+            raise SystemExit(
+                "REFUSED -- full_signal_bounceback (R2c) requires turn-by-turn "
+                "OpenVinoLocalBackend (TURNWISE=True) with cloud context injection."
+            )
+        if getattr(local, "residency", None) != "RESIDENT":
+            raise SystemExit(
+                "REFUSED -- full_signal_bounceback (R2c) requires RESIDENT residency "
+                "for measured re-prefill after inject; "
+                f"got {getattr(local, 'residency', None)!r}"
+            )
 
 
 @dataclass
