@@ -1,0 +1,235 @@
+{
+  "abort_at": {
+    "active_arms_at_abort": [
+      "gpu_only_f16",
+      "gpu_only_u8",
+      "gpu_only_u4"
+    ],
+    "highest_n_completed": 94000,
+    "last_completed_probe": {
+      "arm_id": "gpu_only_u8",
+      "ended_utc": "2026-09-20T20:43:44.577091+00:00",
+      "n_tokens": 94000,
+      "repeat_index": 2
+    },
+    "n_cells_completed": 45,
+    "n_probes_completed": 135,
+    "source": "seal_cap4.reconstruct"
+  },
+  "abort_reason": "Stop-Process -Force",
+  "abort_verbatim": "Worker killed with Stop-Process -Force on evo-t2 after completing n=94000 (all three KV arms PASS every rung through 94k; next rung would be 100000). finally skipped; no summary.json (same gap as 2b3316b6). Artifacts copied to aipc-c1 for reconstruct+seal.",
+  "arm_order": [
+    "gpu_only_f16",
+    "gpu_only_u8",
+    "gpu_only_u4"
+  ],
+  "arms": [
+    "gpu_only_f16",
+    "gpu_only_u8",
+    "gpu_only_u4"
+  ],
+  "available_mb_start": {
+    "available_mb": 60262.15625,
+    "percent": 7.3,
+    "used_mb": 4755.84375
+  },
+  "continue_past_primary_step": 6000,
+  "cross_host_reconstruct": true,
+  "ended_utc": "2026-09-20T20:55:50.616257+00:00",
+  "execution_platform_id": "evo-t2",
+  "experiment": "CAP-4",
+  "interleave_seed": 20260915,
+  "ir_bytes": 2290768181,
+  "ir_sha256": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+  "joint_falsifier": "all three KV arms reach n=46000 without ALLOC_FAILURE",
+  "kind": "cap4_prefill_curve_to_failure",
+  "model_spec": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+  "placement": "gpu_only",
+  "platform_id": "evo-t2",
+  "position_limit_tokens": 40960,
+  "power_state_at_start": {
+    "battery_pct": null,
+    "charging": false,
+    "on_battery": false,
+    "power_plan_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+    "power_plan_name": "High performance"
+  },
+  "pre_registered_predictions_path": "derived/cap4/CAP4_PREDICTIONS.json",
+  "predictions": {
+    "P1_prefill_at_46000": {
+      "anchor": {
+        "n": 12000,
+        "prefill_s_median_approx": 13.54,
+        "source": "41e419bd / C-2 family turn-1"
+      },
+      "claim": "If n=46000 is reachable, median prefill_s near ~115 s (n^1.6 from ~13.54 s at 12000).",
+      "evaluable_band_s": [
+        60.0,
+        230.0
+      ],
+      "falsified_if": "46000 reached and median prefill outside [60, 230] s",
+      "not_evaluable_if": "46000 unreachable for all arms",
+      "predicted_prefill_s": 115.0
+    },
+    "P2_ceiling_order": {
+      "claim": "Allocation ceiling order f16 < u8 < u4; f16 hits ALLOC first; u4 reaches highest n.",
+      "falsified_if": [
+        "all three arms reach 46000 without ALLOC_FAILURE",
+        "highest-success order is not f16 < u8 < u4"
+      ],
+      "k_plus_w_B_per_token": {
+        "gpu_only_f16": 234827,
+        "gpu_only_u4": 135000,
+        "gpu_only_u8": 171532,
+        "source": "41e419bd"
+      }
+    },
+    "P3_failure_regime": {
+      "citing_c647f0c7": "f16 CL_OUT_OF_RESOURCES at n=8000; u8/u4 TTFT limit 9750",
+      "claim": "At least one arm fails by ALLOC_FAILURE before/at the extrapolated 46k point; SLO already binds earlier on TTFT axis (~9750).",
+      "falsified_if": "all three arms reach 46000 without ALLOC_FAILURE"
+    }
+  },
+  "predictions_registered_utc": "2026-09-16T01:12:00+00:00",
+  "primary_rungs": [
+    12000,
+    16000,
+    20000,
+    26000,
+    32000,
+    40000,
+    46000
+  ],
+  "prompt_render_sha256": "5c6e763670a4f4ba5897b703d296b8c923f54b576315c2163a3902660c254e74",
+  "repeats_per_cell": 3,
+  "residency": "RESIDENT",
+  "run_environment": {
+    "active_power_scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+    "arm_order": [
+      "gpu_only_f16",
+      "gpu_only_u8",
+      "gpu_only_u4"
+    ],
+    "available_mb_end": 49961.3046875,
+    "available_mb_start": 60262.15625,
+    "cross_host_reconstruct": true,
+    "cross_host_unavailable_fields": [
+      "gpu_driver_version",
+      "windows_build",
+      "pip_freeze_sha256",
+      "tokenizers_version"
+    ],
+    "cross_host_unavailable_pip_freeze_marker": "pip_freeze_sha256 equals sha256(b'SEAM_UNAVAILABLE_CROSS_HOST_RECONSTRUCT'); not a measured freeze.",
+    "execution_platform_id": "evo-t2",
+    "gpu_driver_version": "UNAVAILABLE_CROSS_HOST_RECONSTRUCT",
+    "pip_freeze_sha256": "83231584596ad4ed90cce88d573c35a10540669cba31d0e8e58cd267518fc891",
+    "platform_id": "evo-t2",
+    "prompt_render_meta": {
+      "folded_stored_prompt_sha256_n": [
+        88000,
+        94000
+      ],
+      "missing_local_prompt_n": [
+        88000,
+        94000
+      ],
+      "note": "When local derived/delta_n/prompts/nN.txt is absent on the seal host, the probe's recorded prompt_sha256 is folded under a typed prefix. This preserves a deterministic INF-5 digest without inventing prompt text.",
+      "prompt_render_updates": 135
+    },
+    "prompt_render_sha256": "5c6e763670a4f4ba5897b703d296b8c923f54b576315c2163a3902660c254e74",
+    "prompt_render_updates": 135,
+    "reconstructed_from": "cells.json+probes.ndjson+plan.json",
+    "seal_platform_id": "aipc-c1",
+    "session_design": "interleaved",
+    "tokenizers_version": "UNAVAILABLE_CROSS_HOST_RECONSTRUCT",
+    "windows_build": "UNAVAILABLE_CROSS_HOST_RECONSTRUCT",
+    "workloads_session_host_note": "Force-kill left no WSH bookend; recorded False as unknown-at-reconstruct, not a measured end-of-run probe on the seal host.",
+    "workloads_session_host_resident": false
+  },
+  "rungs_completed_per_arm": {
+    "gpu_only_f16": [
+      12000,
+      16000,
+      20000,
+      26000,
+      32000,
+      40000,
+      46000,
+      52000,
+      58000,
+      64000,
+      70000,
+      76000,
+      82000,
+      88000,
+      94000
+    ],
+    "gpu_only_u4": [
+      12000,
+      16000,
+      20000,
+      26000,
+      32000,
+      40000,
+      46000,
+      52000,
+      58000,
+      64000,
+      70000,
+      76000,
+      82000,
+      88000,
+      94000
+    ],
+    "gpu_only_u8": [
+      12000,
+      16000,
+      20000,
+      26000,
+      32000,
+      40000,
+      46000,
+      52000,
+      58000,
+      64000,
+      70000,
+      76000,
+      82000,
+      88000,
+      94000
+    ]
+  },
+  "rungs_executed": [
+    12000,
+    16000,
+    20000,
+    26000,
+    32000,
+    40000,
+    46000,
+    52000,
+    58000,
+    64000,
+    70000,
+    76000,
+    82000,
+    88000,
+    94000
+  ],
+  "seal_platform_id": "aipc-c1",
+  "session_design": "interleaved",
+  "session_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+  "slo": {
+    "decode_tok_s_min": 6.0,
+    "prefill_s_max": 10.0,
+    "stops_arm": false
+  },
+  "started_utc": "2026-09-20T16:18:17.631525+00:00",
+  "status": "aborted",
+  "watchdog": {
+    "interval_s": 60,
+    "kill_log": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\cap4\\65e33de8-ac07-405a-a1f8-53698974afe9\\watchdog_kills.jsonl",
+    "mechanism": "Popen_CREATE_NEW_PROCESS_GROUP",
+    "pid": 7152
+  }
+}

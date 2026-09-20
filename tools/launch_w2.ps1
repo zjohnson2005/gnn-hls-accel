@@ -1,4 +1,4 @@
-# W-2 launcher — weight-precision matrix (int4 vs int8), bare SSH after cold boot.
+# W-2 launcher - weight-precision matrix (int4 vs int8), bare SSH after cold boot.
 #
 # Production (Zach, one line, no args):
 #   powershell -NoProfile -File tools/launch_w2.ps1
@@ -19,6 +19,8 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 Set-Location $root
+
+. (Join-Path $PSScriptRoot "_assert_machine_lock.ps1")
 
 # --- fixed W-2 coordinates (do not paraphrase matrix parameter names) ---
 $Tag = "w2_weight_precision"
@@ -300,6 +302,9 @@ if ($DryRun) {
 }
 
 # LIVE: spawn detached via tools/spawn_detached.ps1, then exit without waiting.
+
+# Machine-lock / alive-worker check (hard refuse before spawn)
+Assert-SeamMachineLockClear -RepoRoot $root -DryRun:$DryRun
 Write-Host "=== 4. spawn_detached (live) ==="
 $json = & $SpawnPs1 -CommandLine $resolvedCmd -LogPath $log -WorkingDirectory $root
 Write-Host $json

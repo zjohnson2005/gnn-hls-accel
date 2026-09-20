@@ -1,4 +1,4 @@
-"""CAP-4 — Prefill curve to failure per KV precision, gpu_only (merges MEM-CEIL).
+"""CAP-4 - Prefill curve to failure per KV precision, gpu_only (merges MEM-CEIL).
 
 Interleaved ladder across gpu_only_{f16,u8,u4}. One arm failing does not end the
 sweep for the others. Continues past the primary rungs until each arm stops
@@ -6,6 +6,11 @@ working (non-pass). Reuses C-1/C-2 measured_repeat / _probe_once child path.
 
 Predictions MUST exist in derived/cap4/CAP4_PREDICTIONS.json with
 status=pre_registered_before_measurement before the first probe.
+
+Graceful stop: create ``<out>/STOP`` (or set SEAM_CAP4_STOP_FILE) between cells;
+the worker writes summary.json status=aborted and exits. Prefer over
+Stop-Process -Force (skips finally -> no summary; see 2b3316b6 / 65e33de8).
+Other long workers (H-1, C-2, ceiling) should adopt the same STOP convention.
 
 Usage:
   .\\.venv-seam\\Scripts\\python.exe tools\\run_cap4_prefill_curve.py \\
@@ -17,6 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import random
 import statistics
 import sys
@@ -47,9 +53,37 @@ SLO_DECODE_TOK_S = 6.0
 POSITION_LIMIT = 40960
 MAX_N_SAFETY = 100_000
 
+#: Graceful stop: if this file appears in the session out dir (or SEAM_CAP4_STOP_FILE),
+#: the worker writes summary.json with status=aborted and exits cleanly between cells.
+#: Prefer this over Stop-Process -Force (which skips ``finally`` and loses summary).
+STOP_FILENAME = "STOP"
+
 
 def _utc() -> str:
     return datetime.now(UTC).isoformat()
+
+
+def _stop_file_path(out_dir: Path) -> Path:
+    override = os.environ.get("SEAM_CAP4_STOP_FILE")
+    if override:
+        return Path(override)
+    return out_dir / STOP_FILENAME
+
+
+def _check_stop_file(out_dir: Path) -> str | None:
+    """Return abort verbatim if a stop file is present; else None."""
+    path = _stop_file_path(out_dir)
+    if not path.is_file():
+        return None
+    try:
+        body = path.read_text(encoding="utf-8-sig").strip()
+    except OSError as exc:
+        body = f"(unreadable stop file: {exc})"
+    note = body or "(empty STOP file)"
+    return (
+        f"Graceful stop requested via {path.as_posix()}: {note}. "
+        "Writing summary and exiting cleanly (prefer over Stop-Process -Force)."
+    )
 
 
 def _write_json(path: Path, obj: Any) -> None:
@@ -163,7 +197,7 @@ def _min_max(xs: list[Any]) -> dict[str, float | None]:
 
 
 def _fit_power_law(ns: list[int], ys: list[float]) -> dict[str, Any] | None:
-    """log y = a + b log n  →  y = exp(a) * n^b."""
+    """log y = a + b log n  ->  y = exp(a) * n^b."""
     if len(ns) < 2 or len(ns) != len(ys):
         return None
     if any(n <= 0 or y <= 0 for n, y in zip(ns, ys, strict=True)):
@@ -609,7 +643,7 @@ def run_session(
             return run_environment
         try:
             run_environment = env_session.finalize()
-        except Exception as exc:  # noqa: BLE001 — abort path must still emit a summary
+        except Exception as exc:  # noqa: BLE001 - abort path must still emit a summary
             # Reconstruct what we can from plan + last probe bookends.
             last_mb_end = None
             if probes_log:
@@ -675,14 +709,27 @@ def run_session(
         }
         analysis = analyze_session(summary, pred)
         if final_status == "aborted":
-            analysis["stop_classification"] = {
-                "class": "quiescence_refusal_under_paging_pressure"
-                if abort_verbatim and "quiescence_refusal" in abort_verbatim
-                else "aborted",
-                "note": (
+            if abort_reason == "graceful_stop_file":
+                stop_class = "graceful_stop_file"
+                stop_note = (
+                    "Operator placed session STOP file; worker wrote summary and exited "
+                    "cleanly between cells. Prefer this over Stop-Process -Force."
+                )
+            elif abort_verbatim and "quiescence_refusal" in str(abort_verbatim):
+                stop_class = "quiescence_refusal_under_paging_pressure"
+                stop_note = (
                     "Sweep stopped on machine-admissibility refusal, not an allocation "
                     "ceiling (no ALLOC_FAILURE cell recorded)."
-                ),
+                )
+            else:
+                stop_class = "aborted"
+                stop_note = (
+                    "Sweep stopped on machine-admissibility refusal, not an allocation "
+                    "ceiling (no ALLOC_FAILURE cell recorded)."
+                )
+            analysis["stop_classification"] = {
+                "class": stop_class,
+                "note": stop_note,
                 "abort_reason": abort_reason,
                 "abort_verbatim": abort_verbatim,
                 "abort_at": abort_at,
@@ -728,6 +775,33 @@ def run_session(
             if not active:
                 break
 
+            stop_msg = _check_stop_file(out_dir)
+            if stop_msg:
+                status = "aborted"
+                abort_reason = "graceful_stop_file"
+                abort_verbatim = stop_msg
+                abort_at = {
+                    "n_tokens": n_tokens,
+                    "n_probes_completed": len(probes_log),
+                    "n_cells_completed": len(cells),
+                    "active_arms_at_abort": list(active),
+                    "stop_file": str(_stop_file_path(out_dir)),
+                    "source": "stop_file_rung_boundary",
+                }
+                print(
+                    json.dumps(
+                        {
+                            "event": "cap4.graceful_stop",
+                            "abort_reason": abort_reason,
+                            "abort_verbatim": abort_verbatim,
+                            "abort_at": abort_at,
+                        },
+                        sort_keys=True,
+                    ),
+                    flush=True,
+                )
+                break
+
             print(
                 json.dumps(
                     {"event": "cap4.rung_start", "n_tokens": n_tokens, "active": list(active)},
@@ -756,9 +830,42 @@ def run_session(
                 for arm_id in order:
                     if arm_id in arm_dead:
                         continue
+                    stop_msg = _check_stop_file(out_dir)
+                    if stop_msg:
+                        status = "aborted"
+                        abort_reason = "graceful_stop_file"
+                        abort_verbatim = stop_msg
+                        abort_at = {
+                            "arm_id": arm_id,
+                            "n_tokens": n_tokens,
+                            "repeat_index": round_i,
+                            "n_probes_completed": len(probes_log),
+                            "n_cells_completed": len(cells),
+                            "active_arms_at_abort": list(active),
+                            "stop_file": str(_stop_file_path(out_dir)),
+                            "source": "stop_file_between_cells",
+                        }
+                        print(
+                            json.dumps(
+                                {
+                                    "event": "cap4.graceful_stop",
+                                    "abort_reason": abort_reason,
+                                    "abort_verbatim": abort_verbatim,
+                                    "abort_at": abort_at,
+                                },
+                                sort_keys=True,
+                            ),
+                            flush=True,
+                        )
+                        break
                     row = measure_repeat(arm_id, n_tokens, round_i, order)
                     per_arm_reps.setdefault(arm_id, []).append(row)
                     persist()
+                if status == "aborted" and abort_reason == "graceful_stop_file":
+                    break
+            if status == "aborted" and abort_reason == "graceful_stop_file":
+                # Still summarize any completed repeats for this rung's arms, then exit.
+                pass
 
             # Summarize cells; kill arms that did not fully pass.
             for arm_id in list(active):
@@ -845,6 +952,8 @@ def run_session(
 
             persist()
             _write_json(out_dir / "realized_orders.json", {"orders": realized_orders})
+            if status == "aborted" and abort_reason == "graceful_stop_file":
+                break
             rung_i += 1
             if rung_i >= len(primary_rungs) and not active:
                 break
@@ -920,7 +1029,7 @@ def run_session(
 
 def _render_report(summary: dict[str, Any], analysis: dict[str, Any], pred: dict[str, Any]) -> str:
     lines: list[str] = []
-    lines.append("# CAP-4 results — prefill curve to failure (gpu_only / RESIDENT)")
+    lines.append("# CAP-4 results - prefill curve to failure (gpu_only / RESIDENT)")
     lines.append("")
     lines.append(f"- **session_id / run_id:** `{summary['session_id']}`")
     lines.append(f"- **status:** `{summary['status']}`")
@@ -929,7 +1038,7 @@ def _render_report(summary: dict[str, Any], analysis: dict[str, Any], pred: dict
         lines.append(f"- **abort_verbatim:** `{summary.get('abort_verbatim')}`")
         stop = (analysis.get("stop_classification") or {})
         if stop:
-            lines.append(f"- **stop_classification:** `{stop.get('class')}` — {stop.get('note')}")
+            lines.append(f"- **stop_classification:** `{stop.get('class')}` - {stop.get('note')}")
     lines.append(f"- **pre-registration outcome:** **{analysis['pre_registration_outcome']}**")
     lines.append(f"- **predictions registered:** `{pred.get('registered_utc')}`")
     lines.append(f"- **ended_utc:** `{summary.get('ended_utc')}`")
@@ -940,7 +1049,7 @@ def _render_report(summary: dict[str, Any], analysis: dict[str, Any], pred: dict
     lines.append("|---|---:|---:|---|---|")
     for arm, row in analysis["per_arm"].items():
         verb = row.get("first_failure_verbatim") or ""
-        verb_h = (verb[:120] + "…") if len(verb) > 120 else verb
+        verb_h = (verb[:120] + "...") if len(verb) > 120 else verb
         verb_h = verb_h.replace("\n", " ")
         lines.append(
             f"| `{arm}` | {row.get('highest_successful_n')} | {row.get('first_failure_n')} | "
@@ -956,7 +1065,7 @@ def _render_report(summary: dict[str, Any], analysis: dict[str, Any], pred: dict
             for n in row.get("median_prefill_s_by_n", {})
         }
     )
-    header = "| n | " + " | ".join(f"`{a}` median (min–max)" for a in analysis["per_arm"]) + " |"
+    header = "| n | " + " | ".join(f"`{a}` median (min-max)" for a in analysis["per_arm"]) + " |"
     lines.append(header)
     lines.append("|---:|" + "|".join(["---:" for _ in analysis["per_arm"]]) + "|")
     for n in all_n:
@@ -967,14 +1076,14 @@ def _render_report(summary: dict[str, Any], analysis: dict[str, Any], pred: dict
             if isinstance(v, float):
                 lo, hi = mm.get("min"), mm.get("max")
                 if lo is not None and hi is not None:
-                    cols.append(f"{v:.3f} ({lo:.3f}–{hi:.3f})")
+                    cols.append(f"{v:.3f} ({lo:.3f}-{hi:.3f})")
                 else:
                     cols.append(f"{v:.3f}")
             else:
-                cols.append("—")
+                cols.append("-")
         lines.append(f"| {n} | " + " | ".join(cols) + " |")
     lines.append("")
-    lines.append("## Power-law fit (prefill_s = C · n^b)")
+    lines.append("## Power-law fit (prefill_s = C * n^b)")
     lines.append("")
     for arm, row in analysis["per_arm"].items():
         fit = row.get("power_law_fit") or {}
@@ -1002,7 +1111,7 @@ def _render_report(summary: dict[str, Any], analysis: dict[str, Any], pred: dict
     lines.append("")
     header_mb = (
         "| n | "
-        + " | ".join(f"`{a}` start→end" for a in analysis["per_arm"])
+        + " | ".join(f"`{a}` start->end" for a in analysis["per_arm"])
         + " |"
     )
     lines.append(header_mb)
@@ -1020,9 +1129,9 @@ def _render_report(summary: dict[str, Any], analysis: dict[str, Any], pred: dict
             mb = row.get("available_mb_by_n", {}).get(str(n)) or {}
             s, e = mb.get("available_mb_start_median"), mb.get("available_mb_end_median")
             if s is None and e is None:
-                cols.append("—")
+                cols.append("-")
             else:
-                cols.append(f"{s:.1f}→{e:.1f}" if s is not None and e is not None else f"{s}/{e}")
+                cols.append(f"{s:.1f}->{e:.1f}" if s is not None and e is not None else f"{s}/{e}")
         lines.append(f"| {n} | " + " | ".join(cols) + " |")
     lines.append("")
     for arm, row in analysis["per_arm"].items():
@@ -1034,7 +1143,7 @@ def _render_report(summary: dict[str, Any], analysis: dict[str, Any], pred: dict
     lines.append("")
     lines.append("## Pre-registration")
     lines.append("")
-    lines.append(f"- **P1 (≈115 s @ 46k):** {analysis['P1']}")
+    lines.append(f"- **P1 (~=115 s @ 46k):** {analysis['P1']}")
     lines.append(f"- **P2 (f16 < u8 < u4):** {analysis['P2']}")
     lines.append(f"- **P3 (ALLOC binds):** {analysis['P3']}")
     lines.append("")
@@ -1201,7 +1310,7 @@ def reconstruct_aborted_summary(
             "Sweep stopped on three consecutive quiescence refusals under paging "
             "pressure, not an allocation ceiling. No ALLOC_FAILURE cell was recorded. "
             "Prior C-2 f16 CL_OUT_OF_RESOURCES at n=8000 (c647f0c7) did not reproduce "
-            "at 10× that depth under CAP-4."
+            "at 10x that depth under CAP-4."
         ),
         "abort_reason": abort_reason,
         "abort_verbatim": abort_verbatim,

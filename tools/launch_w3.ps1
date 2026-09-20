@@ -1,6 +1,6 @@
-# W-3 launcher — BFCL quality (axis 4) vs a621ff7d ordered entry-prefix pin.
+# W-3 launcher - BFCL quality (axis 4) vs a621ff7d ordered entry-prefix pin.
 #
-# Production (Zach, one line, no args, bare SSH after cold boot — byte-identical
+# Production (Zach, one line, no args, bare SSH after cold boot - byte-identical
 # defaults: NEntries=20, ModelSpec=Qwen3-4B-int8-ov.yaml):
 #   powershell -NoProfile -File tools/launch_w3.ps1
 #
@@ -14,7 +14,7 @@
 # Steps: (1) non-persistent host clean  (2) five gates  (3) spawn_detached
 #        (4) print run_id + artifact dir and exit without waiting.
 #
-# Payload: tools/run_w3_bfcl_quality.py → bfcl_feasibility_probe session_residency
+# Payload: tools/run_w3_bfcl_quality.py -> bfcl_feasibility_probe session_residency
 # / gpu_only / RESIDENT. Entry ids: ordered PREFIX of a621ff7d (plan.entry_assert
 # mode=prefix). Gold selftest must be n/n or refuse.
 #
@@ -33,6 +33,8 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 Set-Location $root
+
+. (Join-Path $PSScriptRoot "_assert_machine_lock.ps1")
 
 # --- fixed W-3 coordinates (NEntries / ModelSpec overridable; defaults preserve no-arg path) ---
 $Tag = "w3_bfcl_quality"
@@ -285,7 +287,7 @@ print(
 )
 print("ENTRY_POPULATION_NOTE",
       "select_multi_turn_entries applies no difficulty or API filter; "
-      "plain file-order prefix — never biased relative to the benchmark.")
+      "plain file-order prefix - never biased relative to the benchmark.")
 "@ | Set-Content -LiteralPath $dryPy -Encoding utf8
 
     & $PythonExe -u $dryPy
@@ -307,6 +309,9 @@ print("ENTRY_POPULATION_NOTE",
 }
 
 # LIVE: spawn detached, then exit without waiting.
+
+# Machine-lock / alive-worker check (hard refuse before spawn)
+Assert-SeamMachineLockClear -RepoRoot $root -DryRun:$DryRun
 Write-Host "=== 4. spawn_detached (live) ==="
 New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
 $json = & $SpawnPs1 -CommandLine $resolvedCmd -LogPath $log -WorkingDirectory $root

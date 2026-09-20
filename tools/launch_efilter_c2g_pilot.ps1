@@ -9,6 +9,9 @@
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
+
+. (Join-Path $PSScriptRoot "_assert_machine_lock.ps1")
+Assert-SeamMachineLockClear -RepoRoot $root
 $audit = "derived\efilter\c2f_wallclock_timeout_audit.json"
 if (-not (Test-Path $audit)) {
     throw "missing $audit - C2f wall-clock timeout audit required before pilot"

@@ -9,7 +9,7 @@
 # Default pipeline: single-pipe block interleave (load one arm's block, unload,
 # load the other). Reload events in reload_events.json; excluded from TTFT/decode.
 #
-# Dual-resident is KNOWN-BROKEN on this iGPU (citing b1a291f0) — opt in only:
+# Dual-resident is KNOWN-BROKEN on this iGPU (citing b1a291f0) - opt in only:
 #   powershell -NoProfile -File tools/launch_q8b.ps1 -AllowDualResident
 #
 # Steps: (1) non-persistent host clean  (2) five gates  (3) spawn_detached
@@ -21,7 +21,7 @@
 #   Predictions: derived/q8b/Q8B_PREDICTIONS.json (must exist before probe)
 #   INF-5: RunEnvironmentSession interleaved + arm_order
 #   Reload events: derived/.../reload_events.json (excluded from decode metrics)
-#   Degenerate guard: N consecutive max_new_tokens+zero-decode → SeamError refuse
+#   Degenerate guard: N consecutive max_new_tokens+zero-decode -> SeamError refuse
 #
 # Parameters:
 #   -AllowDualResident     pass --allow-dual-resident (KNOWN-BROKEN; citing b1a291f0)
@@ -46,6 +46,8 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 Set-Location $root
+
+. (Join-Path $PSScriptRoot "_assert_machine_lock.ps1")
 
 $Tag = "q8b"
 $PythonExe = Join-Path $root ".venv-seam\Scripts\python.exe"
@@ -243,6 +245,9 @@ print("DRYRUN_OK")
     exit 0
 }
 
+
+# Machine-lock / alive-worker check (hard refuse before spawn)
+Assert-SeamMachineLockClear -RepoRoot $root -DryRun:$DryRun
 Write-Host "=== 4. spawn_detached (live) ==="
 New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
 $json = & $SpawnPs1 -CommandLine $resolvedCmd -LogPath $log -WorkingDirectory $root

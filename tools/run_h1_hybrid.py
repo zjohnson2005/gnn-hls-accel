@@ -1,16 +1,26 @@
-"""H-1 live hybrid runner — one routing policy per sealed arm.
+"""H-1 live hybrid runner - one routing policy per sealed arm, or interleaved.
 
 Policies (``--policy``):
   cloud_only        every turn to cloud
   agnostic_default  local cpu-p NON_RESIDENT int4-4B; router sees task+model only
-  slo_escalate      local; escalate on TTFT>10s or decode<6 tok/s or ctx>CAP-1;
-                    stay on cloud for the rest of that entry
+  slo_escalate      local; escalate on MEASURED ttft_s>10s or decode_tok_s<6;
+                    stay on cloud for the rest of that entry (no ctx threshold)
   emission_escalate local; escalate when no parseable tool call; stay on cloud
                     for the rest of that entry
+  full_signal_bounceback  R2c: one-turn cloud bounce then resume local
 
-This module must never open prediction files under derived/d1_replay/ (blinding).
-Operators pass ``--max-usd`` explicitly; the launcher may compute the 1.5×
-default *outside* this process.
+Interleaved (``--interleaved`` / INF-5 session_design=interleaved):
+  Same 200 entries, entry-by-entry. Default arm order is slo_escalate ->
+  emission_escalate -> full_signal_bounceback (H1-3POLICY). Pass
+  ``--interleaved-policy`` repeatedly to select a subset (H1-2POLICY =
+  slo_escalate + emission_escalate). Per-policy caps + session cap; resume
+  skips completed entries *per policy* so a cap abort on one arm does not
+  re-bill others. When R2c is omitted, plan/seal record the exclusion so
+  the session is never mistaken for the full three-policy comparison.
+
+This module must never open prediction files under derived/d1_replay/ or
+derived/h1_hybrid/*PREDICTIONS* (blinding). Operators pass caps explicitly;
+the launcher may set defaults *outside* this process.
 
 R1 (agnostic_default) is not run live: use ``--derive-r1`` to scale from the
 sealed cb781dbf X-2 arm and mark the artifact DERIVED.
@@ -49,7 +59,9 @@ CB781_SEAL = "cb781dbf-3486-4fbc-a69a-34026f801abe"
 
 TTFT_SLO_S = 10.0
 DECODE_SLO_TOK_S = 6.0
-CTX_LIMIT = 10_000  # CAP-1 / C-2 cold-start ctx limit
+# CAP-1 / C-2 cold-start ctx limit - NOT an SLO escalate trigger under RESIDENT.
+# Kept for ledger comparison / docs only (see derived/h1_hybrid/slo_rule_old_vs_new_*).
+CTX_LIMIT_COLD_START = 10_000
 
 POLICIES = (
     "cloud_only",
@@ -59,6 +71,63 @@ POLICIES = (
     "full_signal_bounceback",  # R2c
 )
 
+# H1-3POLICY interleaved arm order (INF-5 session_design=interleaved).
+INTERLEAVE_POLICIES: tuple[str, ...] = (
+    "slo_escalate",
+    "emission_escalate",
+    "full_signal_bounceback",
+)
+# H1-2POLICY: R2a+R2b only (R2c blocked on R2C-TURNWISE).
+INTERLEAVE_POLICIES_2POLICY: tuple[str, ...] = (
+    "slo_escalate",
+    "emission_escalate",
+)
+DEFAULT_POLICY_CAPS_USD: dict[str, float] = {
+    "slo_escalate": 5.0,
+    "emission_escalate": 20.0,
+    "full_signal_bounceback": 10.0,
+}
+DEFAULT_SESSION_CAP_USD = 35.0
+DEFAULT_SESSION_CAP_USD_2POLICY = 25.0
+
+R2C_EXCLUSION_REASON = (
+    "R2c (full_signal_bounceback) excluded: requires turn-by-turn OpenVINO "
+    "with cloud context injection (R2C-TURNWISE); OpenVinoLocalBackend still "
+    "precomputes the full entry and cannot bounce. This session is H1-2POLICY "
+    "(slo_escalate + emission_escalate only), not the full three-policy comparison."
+)
+
+
+def interleaved_kind(policies: tuple[str, ...]) -> str:
+    """Distinguish 2-policy vs full 3-policy interleaved seals."""
+    if tuple(policies) == INTERLEAVE_POLICIES:
+        return "h1_3policy_interleaved"
+    if set(policies) == set(INTERLEAVE_POLICIES_2POLICY) and "full_signal_bounceback" not in policies:
+        return "h1_2policy_interleaved"
+    return "h1_interleaved"
+
+
+def interleaved_exclusion_meta(policies: tuple[str, ...]) -> dict[str, Any]:
+    """Record omitted interleaved arms (esp. R2c) so seals are unambiguous."""
+    selected = tuple(policies)
+    excluded = [p for p in INTERLEAVE_POLICIES if p not in selected]
+    meta: dict[str, Any] = {
+        "full_three_policy_comparison": selected == INTERLEAVE_POLICIES,
+        "excluded_from_interleave": excluded,
+    }
+    if "full_signal_bounceback" in excluded:
+        meta["r2c_excluded"] = True
+        meta["r2c_exclusion_reason"] = R2C_EXCLUSION_REASON
+        meta["excluded_policies"] = {
+            "full_signal_bounceback": {
+                "reason": R2C_EXCLUSION_REASON,
+                "blocked_on": "R2C-TURNWISE",
+            }
+        }
+    else:
+        meta["r2c_excluded"] = False
+    return meta
+
 # R2c: bounce to cloud for one turn, then resume local.
 BOUNCE_STEP_BUDGET = 5  # within-turn step count; not MAXIMUM_STEP_LIMIT (20)
 BOUNCE_TRIGGERS = (
@@ -67,7 +136,7 @@ BOUNCE_TRIGGERS = (
     "tool_exec_error",
 )
 
-# Local agent-loop stop reasons (entry-level). Distinct events — do not collapse.
+# Local agent-loop stop reasons (entry-level). Distinct events - do not collapse.
 # completed:       all turns_in_entry ran (or cloud_only finished the entry)
 # no_tool_call:    decode_execute_qwen raised (unparseable tool call)
 # empty_execute:   decoded to an empty execute list with no prior tool success
@@ -216,11 +285,40 @@ class TurnLedger:
 
 @dataclass
 class BounceEvent:
+    """Per-bounce ledger row for R2c (full_signal_bounceback).
+
+    ``re_prefill_s`` is the cost of re-prefilling local RESIDENT KV after
+    cloud->local context injection. It is a policy property, not overhead to
+    hide: external assistant append invalidates resident KV.
+    """
+
     turn: int
-    trigger: str  # one of BOUNCE_TRIGGERS
+    trigger: str  # one of BOUNCE_TRIGGERS (trigger class)
+    cloud_tokens_in: int = 0
+    cloud_tokens_out: int = 0
+    cloud_usd: float = 0.0
+    re_prefill_s: float | None = None
+    re_prefill_required: bool = True
+    re_prefill_source: str | None = None  # measured | stub_zero | inferred_unmeasured | pending_next_local
+    control_return_turn: int | None = None  # turn index where control returned to local
+    kv_valid_after_inject: bool = False
+    shared_tool_exec: bool = True
 
     def as_dict(self) -> dict[str, Any]:
-        return {"turn": self.turn, "trigger": self.trigger}
+        return {
+            "turn": self.turn,
+            "trigger": self.trigger,
+            "trigger_class": self.trigger,
+            "cloud_tokens_in": self.cloud_tokens_in,
+            "cloud_tokens_out": self.cloud_tokens_out,
+            "cloud_usd": self.cloud_usd,
+            "re_prefill_s": self.re_prefill_s,
+            "re_prefill_required": self.re_prefill_required,
+            "re_prefill_source": self.re_prefill_source,
+            "control_return_turn": self.control_return_turn,
+            "kv_valid_after_inject": self.kv_valid_after_inject,
+            "shared_tool_exec": self.shared_tool_exec,
+        }
 
 
 @dataclass
@@ -280,7 +378,7 @@ class LocalEntrySpan:
     """How far the local agent loop got for one entry.
 
     ``turns_executed`` is len(turn_metrics): the last index present is the turn
-    where the session stopped. Turns after it did not execute — not SLO
+    where the session stopped. Turns after it did not execute - not SLO
     failures, not successes; they did not happen.
     """
 
@@ -297,14 +395,36 @@ def turns_in_entry_count(entry: dict[str, Any]) -> int:
     return len(entry.get("turns") or [0])
 
 
-def turn_meets_slo(*, ttft_s: float | None, decode_tok_s: float | None, n_ctx: int) -> bool:
+def turn_meets_slo(*, ttft_s: float | None, decode_tok_s: float | None) -> bool:
+    """SLO gate uses MEASURED ttft_s / decode_tok_s only (no ctx threshold)."""
     if ttft_s is not None and ttft_s > TTFT_SLO_S:
         return False
     if decode_tok_s is not None and decode_tok_s < DECODE_SLO_TOK_S:
         return False
-    if n_ctx > CTX_LIMIT:
-        return False
     return True
+
+
+def decide_slo_escalate_legacy_with_ctx(
+    *,
+    already_on_cloud: bool,
+    ttft_s: float | None,
+    decode_tok_s: float | None,
+    n_ctx: int,
+    ctx_limit: int = CTX_LIMIT_COLD_START,
+) -> tuple[bool, str | None]:
+    """Pre-H1-3POLICY rule (TTFT OR decode OR ctx). For sealed-ledger diffs only."""
+    if already_on_cloud:
+        return True, "stay_cloud"
+    reasons: list[str] = []
+    if ttft_s is not None and ttft_s > TTFT_SLO_S:
+        reasons.append(f"ttft>{TTFT_SLO_S}")
+    if decode_tok_s is not None and decode_tok_s < DECODE_SLO_TOK_S:
+        reasons.append(f"decode<{DECODE_SLO_TOK_S}")
+    if n_ctx > ctx_limit:
+        reasons.append(f"ctx>{ctx_limit}")
+    if reasons:
+        return True, "+".join(reasons)
+    return False, None
 
 
 @dataclass
@@ -328,8 +448,8 @@ def decide_slo_escalate(
     already_on_cloud: bool,
     ttft_s: float | None,
     decode_tok_s: float | None,
-    n_ctx: int,
 ) -> tuple[bool, str | None]:
+    """Escalate on MEASURED ttft_s / decode_tok_s only (no cold-start ctx gate)."""
     if already_on_cloud:
         return True, "stay_cloud"
     reasons: list[str] = []
@@ -337,8 +457,6 @@ def decide_slo_escalate(
         reasons.append(f"ttft>{TTFT_SLO_S}")
     if decode_tok_s is not None and decode_tok_s < DECODE_SLO_TOK_S:
         reasons.append(f"decode<{DECODE_SLO_TOK_S}")
-    if n_ctx > CTX_LIMIT:
-        reasons.append(f"ctx>{CTX_LIMIT}")
     if reasons:
         return True, "+".join(reasons)
     return False, None
@@ -396,7 +514,7 @@ class BackendTurn:
     t_generate: float = 0.0
     turn_wall_s: float = 0.0
     raw_text: str = ""
-    # When set (OpenVINO measured path), use as-is — genuine residual, not re-filled.
+    # When set (OpenVINO measured path), use as-is - genuine residual, not re-filled.
     t_other: float | None = None
     # R2c observability
     n_steps: int | None = None
@@ -473,12 +591,23 @@ class StubLocalBackend:
     ``script[entry_id]`` length is ``turns_executed``. When shorter than
     ``turns_in_entry``, pass ``stop_reasons[entry_id]`` (required) so the
     hybrid loop does not invent turns that never ran.
+
+    R2c injection: ``accept_cloud_context`` appends an assistant turn into a
+    per-entry message history that subsequent ``run_turn`` calls see (mirrors
+    RESIDENT ChatHistory append). Stub reports ``re_prefill_s=0.0`` with
+    source ``stub_zero`` - live OpenVINO must measure real re-prefill.
     """
 
     # entry_id -> list of per-turn dicts
     script: dict[str, list[dict[str, Any]]]
     stop_reasons: dict[str, str] = field(default_factory=dict)
     BACKEND_KIND = "stub"
+    # Shared BFCL tool state (same object cloud bounce turns must use).
+    shared_tools: Any = None
+    _history: dict[str, list[dict[str, Any]]] = field(default_factory=dict, repr=False)
+    _cloud_context: dict[str, dict[int, str]] = field(default_factory=dict, repr=False)
+    _last_injection: dict[str, Any] = field(default_factory=dict, repr=False)
+    _pending_reprefill: dict[str, bool] = field(default_factory=dict, repr=False)
 
     def local_span(self, entry: dict[str, Any]) -> LocalEntrySpan:
         eid = str(entry["id"])
@@ -500,19 +629,40 @@ class StubLocalBackend:
             return LocalEntrySpan(turns_in, turns_ex, str(reason))
         return LocalEntrySpan(turns_in, turns_ex, "completed")
 
+    def history_for(self, entry_id: str) -> list[dict[str, Any]]:
+        return list(self._history.get(str(entry_id), []))
+
+    def context_contains(self, entry_id: str, text: str) -> bool:
+        return any(
+            text in str(m.get("content", "")) for m in self._history.get(str(entry_id), [])
+        )
+
     def run_turn(self, entry: dict[str, Any], turn_idx: int, *, model: str) -> BackendTurn:
-        rows = self.script[str(entry["id"])]
+        eid = str(entry["id"])
+        rows = self.script[eid]
         if turn_idx >= len(rows):
             raise SystemExit(
                 f"REFUSED -- stub turn_idx={turn_idx} out of range "
                 f"(n_script={len(rows)}); hybrid must stop at turns_executed"
             )
         row = rows[turn_idx]
+        # Mirror RESIDENT: user turn enters history before local generate.
+        hist = self._history.setdefault(eid, [])
+        hist.append({"role": "user", "content": f"[stub_user_turn_{turn_idx}]"})
+        # After a bounce inject, the next local turn *sees* cloud assistant text.
+        saw_cloud = any(m.get("role") == "assistant" and m.get("source") == "cloud" for m in hist)
         wall = float(row.get("turn_wall_s", 0.05))
         t_gen = float(row.get("t_generate", wall * 0.6))
         t_tok = float(row.get("t_tokenize", wall * 0.1))
         t_tmpl = float(row.get("t_template_build", wall * 0.1))
         t_tool = float(row.get("t_tool_exec", wall * 0.1))
+        # Stub: synthetic re-prefill accounted on the first local turn after inject.
+        if self._pending_reprefill.pop(eid, False):
+            # Real OpenVINO measures this; stub records explicit zero (not hidden).
+            inj = self._last_injection.get(eid) or {}
+            inj["re_prefill_s"] = 0.0
+            inj["re_prefill_source"] = "stub_zero"
+            self._last_injection[eid] = inj
         phases = finalize_phase_timers(
             turn_wall_s=wall,
             t_tool_exec=t_tool,
@@ -520,6 +670,20 @@ class StubLocalBackend:
             t_tokenize=t_tok,
             t_generate=t_gen,
         )
+        raw = str(row.get("raw_text", ""))
+        if saw_cloud and not raw:
+            raw = "[local_after_cloud_inject]"
+        hist.append({"role": "assistant", "content": raw or f"[stub_local_turn_{turn_idx}]", "source": "local"})
+        # Shared tool path (same SharedBfclToolState cloud bounce uses).
+        if self.shared_tools is not None and bool(row.get("emitted_parseable_tool_call", False)):
+            if not bool(row.get("tool_exec_error", False)):
+                self.shared_tools.execute(
+                    [f"stub_tool_turn_{turn_idx}()"],
+                    initial_config={},
+                    involved_classes=[],
+                    test_entry_id=eid,
+                    long_context=False,
+                )
         return BackendTurn(
             n_ctx=int(row["n_ctx"]),
             ttft_s=float(row["ttft_s"]),
@@ -530,7 +694,7 @@ class StubLocalBackend:
             t_template_build=phases["t_template_build"],
             t_tokenize=phases["t_tokenize"],
             t_generate=phases["t_generate"],
-            raw_text=str(row.get("raw_text", "")),
+            raw_text=raw,
             n_steps=(int(row["n_steps"]) if "n_steps" in row else None),
             tool_exec_error=bool(row.get("tool_exec_error", False)),
             tool_exec_error_class=(
@@ -541,13 +705,65 @@ class StubLocalBackend:
         )
 
     def accept_cloud_context(
-        self, entry: dict[str, Any], turn_idx: int, *, text: str
-    ) -> None:
-        """Record cloud bounce text into local context (stub bookkeeping)."""
+        self,
+        entry: dict[str, Any],
+        turn_idx: int,
+        *,
+        text: str,
+        trigger: str | None = None,
+        cloud_tokens_in: int = 0,
+        cloud_tokens_out: int = 0,
+        cloud_usd: float = 0.0,
+        tool_messages: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Inject cloud bounce text as an assistant turn into local history.
+
+        Mirrors OpenVINO ChatHistory.append(assistant) + finish_chat KV drop.
+        Stub does not hold real KV; ``re_prefill_required`` is still True and
+        ``re_prefill_s`` is filled as stub_zero on the next local turn.
+        """
+        from tools.r2c_inject import build_injection_receipt
+
         eid = str(entry["id"])
-        if not hasattr(self, "_cloud_context"):
-            self._cloud_context = {}  # type: ignore[attr-defined]
-        self._cloud_context.setdefault(eid, {})[turn_idx] = text  # type: ignore[attr-defined]
+        hist = self._history.setdefault(eid, [])
+        # Bounce replaces the failed local assistant for this turn if present.
+        if hist and hist[-1].get("role") == "assistant" and hist[-1].get("source") == "local":
+            hist.pop()
+        hist.append(
+            {
+                "role": "assistant",
+                "content": text,
+                "source": "cloud",
+                "bounce_turn": turn_idx,
+            }
+        )
+        for tm in tool_messages or []:
+            hist.append({**tm, "source": "cloud_tool"})
+            if self.shared_tools is not None:
+                self.shared_tools.execute(
+                    [str(tm.get("name") or "cloud_tool")],
+                    initial_config={},
+                    involved_classes=[],
+                    test_entry_id=eid,
+                    long_context=False,
+                )
+        self._cloud_context.setdefault(eid, {})[turn_idx] = text
+        self._pending_reprefill[eid] = True
+        receipt = build_injection_receipt(
+            entry_id=eid,
+            bounce_turn=turn_idx,
+            trigger_class=str(trigger or "unknown"),
+            assistant_text=text,
+            n_tool_messages=len(tool_messages or []),
+            cloud_tokens_in=cloud_tokens_in,
+            cloud_tokens_out=cloud_tokens_out,
+            cloud_usd=cloud_usd,
+            re_prefill_s=None,
+            re_prefill_source="pending_next_local",
+            shared_tool_exec=True,
+        )
+        self._last_injection[eid] = receipt.as_dict()
+        return self._last_injection[eid]
 
 
 @dataclass
@@ -555,6 +771,7 @@ class StubCloudBackend:
     tokens_in: int = 1000
     tokens_out: int = 200
     wall_s: float = 0.02
+    cloud_context_text: str = "[cloud_bounce_context]"
     # Optional per-call hook for cost-guard tests
     on_call: Callable[[], None] | None = None
 
@@ -583,12 +800,12 @@ class StubCloudBackend:
             t_tokenize=phases["t_tokenize"],
             t_generate=phases["t_generate"],
             raw_text="[cloud]",
-            cloud_context_text="[cloud_bounce_context]",
+            cloud_context_text=self.cloud_context_text,
         )
 
 
 def arm_id_for_h1(arm: dict[str, str]) -> str:
-    """Map H-1 arm_config placement/kv → delta_n.yaml arm id."""
+    """Map H-1 arm_config placement/kv -> delta_n.yaml arm id."""
     placement = arm["placement"]
     kv = (arm.get("kv") or "").lower()
     if placement == "cpu-p":
@@ -610,11 +827,11 @@ class OpenVinoLocalBackend:
 
     Generation is ``bfcl_feasibility_probe.run_multi_turn_agent_entry`` (the
     library function behind ``run_w3_bfcl_quality`` / ``run_x2_feasibility``).
-    ``seam/measurement.py`` is the machine-validity envelope only — it does
+    ``seam/measurement.py`` is the machine-validity envelope only - it does
     not generate tokens; no change was required there.
 
     Per entry the agent loop runs once (greedy, max_new_tokens=512, W-3 decode
-    settings). ``run_turn`` indexes measured ``turn_metrics`` — no scripted
+    settings). ``run_turn`` indexes measured ``turn_metrics`` - no scripted
     values. RESIDENT/NON_RESIDENT and KV pins are enforced at pipeline load.
     """
 
@@ -818,7 +1035,7 @@ class OpenVinoLocalBackend:
                 f"type={type(metrics).__name__}"
             )
         # Short turn_metrics is normal (session stopped). Caller must not index
-        # past turns_executed — that is a hybrid-loop bug, not an agent failure.
+        # past turns_executed - that is a hybrid-loop bug, not an agent failure.
         if turn_idx >= len(metrics):
             raise SystemExit(
                 f"REFUSED -- turn_idx={turn_idx} out of range for entry "
@@ -893,6 +1110,57 @@ class OpenVinoLocalBackend:
             tool_exec_error_class=tool_err_class,
         )
 
+    def accept_cloud_context(
+        self,
+        entry: dict[str, Any],
+        turn_idx: int,
+        *,
+        text: str,
+        trigger: str | None = None,
+        cloud_tokens_in: int = 0,
+        cloud_tokens_out: int = 0,
+        cloud_usd: float = 0.0,
+        tool_messages: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Record cloud assistant text for an R2c handoff.
+
+        ``ChatHistory.append(assistant)`` accepts an externally produced turn;
+        resident KV is then **invalid** and the next ``generate`` must
+        re-prefill (call ``finish_chat`` first). This precompute backend cannot
+        splice mid-entry, so ``re_prefill_source=inferred_unmeasured`` until a
+        turn-by-turn RESIDENT path measures TTFT (see
+        ``tools/measure_r2c_reprefill.py``). Sealing R2c with this backend
+        remains REFUSED.
+        """
+        from tools.r2c_inject import build_injection_receipt
+
+        eid = str(entry["id"])
+        if not hasattr(self, "_cloud_context"):
+            self._cloud_context = {}
+        if not hasattr(self, "_last_injection"):
+            self._last_injection = {}
+        self._cloud_context.setdefault(eid, {})[turn_idx] = text
+        receipt = build_injection_receipt(
+            entry_id=eid,
+            bounce_turn=turn_idx,
+            trigger_class=str(trigger or "unknown"),
+            assistant_text=text,
+            n_tool_messages=len(tool_messages or []),
+            cloud_tokens_in=cloud_tokens_in,
+            cloud_tokens_out=cloud_tokens_out,
+            cloud_usd=cloud_usd,
+            re_prefill_s=None,
+            re_prefill_source="inferred_unmeasured",
+            shared_tool_exec=True,
+            note=(
+                "ChatHistory accepts external assistant append; KV invalid; "
+                "next generate re-prefills. Precompute backend does not measure "
+                "re_prefill_s live."
+            ),
+        )
+        self._last_injection[eid] = receipt.as_dict()
+        return self._last_injection[eid]
+
 
 def local_backend_kind(local: LocalBackend) -> str:
     kind = getattr(local, "BACKEND_KIND", None)
@@ -935,7 +1203,7 @@ class ScriptedLiveLocalBackend:
 
 @dataclass
 class AnthropicCloudBackend:
-    """One Anthropic user-turn (native tool-use agent steps) → BackendTurn."""
+    """One Anthropic user-turn (native tool-use agent steps) -> BackendTurn."""
 
     client: Any
     cloud_model: str
@@ -1118,9 +1386,9 @@ def run_hybrid_entry(
     - emission_escalate: stop caused by no-parseable-tool-call / empty_execute
       *is* the escalation trigger. Cloud picks up from that turn and runs the
       rest of ``turns_in_entry``. ``generation_error`` / ``max_steps`` are
-      different events — recorded as ``stop_reason``, not emission escalate.
+      different events - recorded as ``stop_reason``, not emission escalate.
     - full_signal_bounceback (R2c): on (a) no parseable tool call, (b) step
-      count ≥ ``BOUNCE_STEP_BUDGET`` (5) within the turn, or (c) tool exec
+      count >= ``BOUNCE_STEP_BUDGET`` (5) within the turn, or (c) tool exec
       error, cloud handles *that turn only*; its output is injected into the
       local context; local resumes at the next turn. Does not stay on cloud.
     """
@@ -1297,16 +1565,60 @@ def run_hybrid_entry(
                         tool_exec_error_class=bt.tool_exec_error_class,
                     )
                 )
-                result.bounces.append(BounceEvent(turn=turn_idx, trigger=trigger))
                 result.cloud_usd_entry += bt_c.cloud_usd
                 # Inject cloud output into local context; do NOT stay on cloud.
+                cloud_text = (
+                    bt_c.cloud_context_text or bt_c.raw_text or "[cloud]"
+                )
+                inj: dict[str, Any] = {}
                 accept = getattr(local, "accept_cloud_context", None)
                 if callable(accept):
-                    accept(
-                        entry,
-                        turn_idx,
-                        text=bt_c.cloud_context_text or bt_c.raw_text or "[cloud]",
+                    inj = (
+                        accept(
+                            entry,
+                            turn_idx,
+                            text=cloud_text,
+                            trigger=trigger,
+                            cloud_tokens_in=bt_c.cloud_tokens_in,
+                            cloud_tokens_out=bt_c.cloud_tokens_out,
+                            cloud_usd=bt_c.cloud_usd,
+                        )
+                        or {}
                     )
+                # Per-bounce ledger: trigger class, cloud tokens/$, re-prefill, return turn.
+                result.bounces.append(
+                    BounceEvent(
+                        turn=turn_idx,
+                        trigger=trigger,
+                        cloud_tokens_in=int(
+                            inj.get("cloud_tokens_in", bt_c.cloud_tokens_in) or 0
+                        ),
+                        cloud_tokens_out=int(
+                            inj.get("cloud_tokens_out", bt_c.cloud_tokens_out) or 0
+                        ),
+                        cloud_usd=float(inj.get("cloud_usd", bt_c.cloud_usd) or 0.0),
+                        re_prefill_s=(
+                            float(inj["re_prefill_s"])
+                            if inj.get("re_prefill_s") is not None
+                            else None
+                        ),
+                        re_prefill_required=bool(
+                            inj.get("re_prefill_required", True)
+                        ),
+                        re_prefill_source=(
+                            str(inj["re_prefill_source"])
+                            if inj.get("re_prefill_source") is not None
+                            else "pending_next_local"
+                        ),
+                        control_return_turn=int(
+                            inj.get("control_return_turn", turn_idx + 1)
+                        ),
+                        kv_valid_after_inject=bool(
+                            inj.get("kv_valid_after_inject", False)
+                        ),
+                        shared_tool_exec=bool(inj.get("shared_tool_exec", True)),
+                    )
+                )
                 # Resume local on subsequent turns.
                 if turn_idx == local_span.turns_executed - 1 and local_span.stop_reason != "completed":
                     break
@@ -1339,6 +1651,17 @@ def run_hybrid_entry(
                     tool_exec_error_class=bt.tool_exec_error_class,
                 )
             )
+            # Backfill re_prefill onto the prior bounce once the next local turn ran.
+            _inj = getattr(local, "_last_injection", None)
+            if isinstance(_inj, dict):
+                _rec = _inj.get(str(entry["id"])) or {}
+                if result.bounces and _rec.get("re_prefill_s") is not None:
+                    _b = result.bounces[-1]
+                    if _b.re_prefill_s is None and _b.control_return_turn == turn_idx:
+                        _b.re_prefill_s = float(_rec["re_prefill_s"])
+                        _b.re_prefill_source = str(
+                            _rec.get("re_prefill_source") or "stub_zero"
+                        )
             if (
                 turn_idx == local_span.turns_executed - 1
                 and local_span.stop_reason != "completed"
@@ -1355,7 +1678,6 @@ def run_hybrid_entry(
                 already_on_cloud=False,
                 ttft_s=bt.ttft_s,
                 decode_tok_s=bt.decode_tok_s,
-                n_ctx=bt.n_ctx,
             )
         elif policy == "emission_escalate":
             # Distinguish emission failure from generation failure / max_steps.
@@ -1507,7 +1829,7 @@ def run_hybrid_entry(
             ok = sum(
                 1
                 for t in ran
-                if turn_meets_slo(ttft_s=t.ttft_s, decode_tok_s=t.decode_tok_s, n_ctx=t.n_ctx)
+                if turn_meets_slo(ttft_s=t.ttft_s, decode_tok_s=t.decode_tok_s)
             )
             result.slo_fraction = ok / len(ran)
         else:
@@ -1729,13 +2051,431 @@ def run_session(
     return summary
 
 
+def _policy_subdir(out_dir: Path, policy: str) -> Path:
+    return out_dir / "policies" / policy
+
+
+def run_interleaved_session(
+    *,
+    entries: list[dict[str, Any]],
+    out_dir: Path,
+    local: LocalBackend,
+    cloud: CloudBackend,
+    policy_caps_usd: dict[str, float] | None = None,
+    session_max_usd: float = DEFAULT_SESSION_CAP_USD,
+    policies: tuple[str, ...] = INTERLEAVE_POLICIES,
+    run_id: str | None = None,
+    model: str | None = None,
+    seal: bool = True,
+    skip_entry_assert: bool = False,
+) -> dict[str, Any]:
+    """Entry-by-entry interleave of selected H1 policy arms (INF-5 session_design=interleaved).
+
+    For each entry, run policies in ``policies`` order. Each policy has its own
+    cost cap and completed-entry set under ``out_dir/policies/<policy>/``.
+    A policy-cap abort stops *that* arm only; other arms continue. A session-cap
+    abort stops remaining work across all arms. Resume never re-bills a
+    completed (policy, entry) pair. When R2c is omitted from ``policies``,
+    plan/summary/seal record ``r2c_excluded`` so the artifact is not mistaken
+    for the full three-policy comparison.
+    """
+    caps = dict(policy_caps_usd or DEFAULT_POLICY_CAPS_USD)
+    for p in policies:
+        if p not in caps:
+            raise SystemExit(f"REFUSED -- missing per-policy cap for {p!r}")
+        if p == "agnostic_default":
+            raise SystemExit("REFUSED -- agnostic_default must not run in interleaved live")
+        assert_seal_allowed(seal=seal, local=local, policy=p)
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    run_id = run_id or str(uuid.uuid4())
+    session_ckpt_path = out_dir / "checkpoint.json"
+    session_ckpt = load_checkpoint(session_ckpt_path)
+    session_cost = CostGuard(
+        max_usd=float(session_max_usd),
+        running_usd=float(session_ckpt.get("running_usd") or 0.0),
+    )
+
+    # Per-policy state
+    state: dict[str, dict[str, Any]] = {}
+    for policy in policies:
+        pdir = _policy_subdir(out_dir, policy)
+        pdir.mkdir(parents=True, exist_ok=True)
+        ckpt = load_checkpoint(pdir / "checkpoint.json")
+        quality_path = pdir / "entry_quality.json"
+        quality_rows: list[dict[str, Any]] = []
+        if quality_path.is_file():
+            prev_q = json.loads(quality_path.read_text(encoding="utf-8-sig"))
+            quality_rows = list(prev_q.get("entries") or [])
+        arm = ARM_CONFIG[policy]
+        state[policy] = {
+            "dir": pdir,
+            "completed": set(ckpt.get("completed_entry_ids") or []),
+            "cost": CostGuard(
+                max_usd=float(caps[policy]),
+                running_usd=float(ckpt.get("running_usd") or 0.0),
+            ),
+            "ledger_rows": list(ckpt.get("entries") or []),
+            "quality_rows": quality_rows,
+            "status": str(ckpt.get("status") or "running"),
+            "abort_reason": ckpt.get("abort_reason"),
+            "arm": arm,
+            "model": model or arm["model"],
+        }
+
+    excl = interleaved_exclusion_meta(policies)
+    kind = interleaved_kind(policies)
+    plan = {
+        "run_id": run_id,
+        "kind": kind,
+        "session_design": "interleaved",
+        "arm_order": list(policies),
+        "policy_caps_usd": {p: float(caps[p]) for p in policies},
+        "session_max_usd": float(session_max_usd),
+        "n_entries": len(entries),
+        "measurement_kind": "MEASURED",
+        "local_backend": local_backend_kind(local),
+        "seal": bool(seal),
+        "started_utc": _utc_now(),
+        "w3_entry_pin": W3_ENTRIES_SHA256,
+        "w3_seal_refs": list(W3_SEAL_REFS),
+        "scorer": assert_scorer_version(),
+        "kv_match_seal": "86d0f4cf-e8c2-4ce5-96da-04c6a9c129f3",
+        "placement": "gpu_only",
+        "residency": "RESIDENT",
+        "tier": "4B",
+        "weight": "int4",
+        "resume_completed_by_policy": {
+            p: sorted(state[p]["completed"]) for p in policies
+        },
+        **excl,
+    }
+    if isinstance(local, OpenVinoLocalBackend):
+        plan["openvino"] = {
+            "arm_id": local.arm_id,
+            "model_spec": str(local.model_spec),
+            "residency": local.residency,
+            "kv": local.kv,
+            "max_new_tokens": local.max_new_tokens,
+            "load_meta": local.load_meta,
+        }
+    if not skip_entry_assert:
+        plan["entry_assert"] = {"n": len(entries), "mode": "caller_supplied"}
+    _write_json(out_dir / "plan.json", plan)
+
+    session_status = "complete"
+    session_abort: str | None = None
+    cell_log: list[dict[str, Any]] = list(session_ckpt.get("cell_log") or [])
+
+    def _persist_policy(policy: str) -> None:
+        st = state[policy]
+        pdir: Path = st["dir"]
+        cost: CostGuard = st["cost"]
+        save_checkpoint(
+            pdir / "checkpoint.json",
+            {
+                "completed_entry_ids": sorted(st["completed"]),
+                "running_usd": cost.running_usd,
+                "entries": st["ledger_rows"],
+                "status": st["status"],
+                "abort_reason": st["abort_reason"],
+                "updated_utc": _utc_now(),
+            },
+        )
+        _write_json(pdir / "turn_ledger.json", {"entries": st["ledger_rows"]})
+        _write_json(pdir / "entry_quality.json", {"entries": st["quality_rows"]})
+        n_scored = sum(1 for q in st["quality_rows"] if q.get("trajectory_pass") is not None)
+        n_pass = sum(1 for q in st["quality_rows"] if q.get("trajectory_pass") is True)
+        _write_json(
+            pdir / "summary.json",
+            {
+                "run_id": run_id,
+                "policy": policy,
+                "status": st["status"],
+                "abort_reason": st["abort_reason"],
+                "measurement_kind": "MEASURED",
+                "n_entries_planned": len(entries),
+                "n_entries_completed": len(st["completed"]),
+                "running_usd": cost.running_usd,
+                "max_usd": cost.max_usd,
+                "finished_utc": _utc_now(),
+                "arm_config": st["arm"],
+                "session_design": "interleaved",
+                "quality": {
+                    "scope": "local_probe",
+                    "n_entries_with_score": n_scored,
+                    "n_trajectory_pass": n_pass,
+                    "path": "entry_quality.json",
+                },
+            },
+        )
+
+    def _persist_session() -> None:
+        save_checkpoint(
+            session_ckpt_path,
+            {
+                "completed_entry_ids": [],  # completion is per-policy
+                "running_usd": session_cost.running_usd,
+                "cell_log": cell_log,
+                "policy_status": {p: state[p]["status"] for p in policies},
+                "updated_utc": _utc_now(),
+            },
+        )
+
+    try:
+        for entry in entries:
+            eid = str(entry["id"])
+            for policy in policies:
+                st = state[policy]
+                if st["status"] in ("aborted_cap", "aborted_session_cap"):
+                    continue
+                if eid in st["completed"]:
+                    print(f"RESUME_SKIP policy={policy} entry={eid}")
+                    continue
+                if session_cost.running_usd > session_cost.max_usd + 1e-12:
+                    session_status = "aborted_cap"
+                    session_abort = (
+                        f"session cost cap hit before cell: "
+                        f"running_usd={session_cost.running_usd:.6f} "
+                        f"max_usd={session_cost.max_usd:.6f}"
+                    )
+                    for p in policies:
+                        if state[p]["status"] == "running":
+                            state[p]["status"] = "aborted_session_cap"
+                            state[p]["abort_reason"] = session_abort
+                            _persist_policy(p)
+                    break
+
+                print(
+                    f"CELL_START policy={policy} entry={eid} "
+                    f"policy_usd={st['cost'].running_usd:.6f}/{st['cost'].max_usd:.6f} "
+                    f"session_usd={session_cost.running_usd:.6f}/{session_cost.max_usd:.6f}"
+                )
+                # Shared dual charge: policy guard first, then session.
+                # run_hybrid_entry only knows one CostGuard - wrap via a proxy.
+                dual = _DualCostGuard(policy_guard=st["cost"], session_guard=session_cost)
+                try:
+                    er = run_hybrid_entry(
+                        entry,
+                        policy=policy,
+                        local=local,
+                        cloud=cloud,
+                        cost=dual,  # type: ignore[arg-type]
+                        model=st["model"],
+                    )
+                except CostCapExceeded as exc:
+                    which = getattr(exc, "cap_which", "policy")
+                    if exc.partial is not None:
+                        st["ledger_rows"].append(exc.partial.as_ledger_dict())
+                        st["quality_rows"].append(exc.partial.as_quality_dict())
+                    if which == "session":
+                        st["status"] = "aborted_session_cap"
+                        st["abort_reason"] = str(exc)
+                        session_status = "aborted_cap"
+                        session_abort = str(exc)
+                        _persist_policy(policy)
+                        for p in policies:
+                            if p != policy and state[p]["status"] == "running":
+                                state[p]["status"] = "aborted_session_cap"
+                                state[p]["abort_reason"] = session_abort
+                                _persist_policy(p)
+                        cell_log.append(
+                            {
+                                "entry_id": eid,
+                                "policy": policy,
+                                "status": "aborted_session_cap",
+                                "running_usd_policy": st["cost"].running_usd,
+                                "running_usd_session": session_cost.running_usd,
+                            }
+                        )
+                        _persist_session()
+                        break
+                    # Policy-only cap: stop this arm; other arms continue.
+                    st["status"] = "aborted_cap"
+                    st["abort_reason"] = str(exc)
+                    print(f"POLICY_CAP_ABORT policy={policy} {exc}")
+                    _persist_policy(policy)
+                    cell_log.append(
+                        {
+                            "entry_id": eid,
+                            "policy": policy,
+                            "status": "aborted_cap",
+                            "running_usd_policy": st["cost"].running_usd,
+                            "running_usd_session": session_cost.running_usd,
+                        }
+                    )
+                    _persist_session()
+                    continue
+
+                st["ledger_rows"].append(er.as_ledger_dict())
+                st["quality_rows"].append(er.as_quality_dict())
+                st["completed"].add(eid)
+                _persist_policy(policy)
+                cell_log.append(
+                    {
+                        "entry_id": eid,
+                        "policy": policy,
+                        "status": "complete",
+                        "cloud_usd_entry": er.cloud_usd_entry,
+                        "running_usd_policy": st["cost"].running_usd,
+                        "running_usd_session": session_cost.running_usd,
+                    }
+                )
+                _persist_session()
+                print(
+                    f"CELL_DONE policy={policy} entry={eid} "
+                    f"cloud_usd_entry={er.cloud_usd_entry:.6f} "
+                    f"trajectory_pass={er.trajectory_pass}"
+                )
+            else:
+                continue
+            break  # session abort broke inner loop
+    finally:
+        for policy in policies:
+            if state[policy]["status"] == "running":
+                # Finished outer loop without abort -> complete if all entries done.
+                if len(state[policy]["completed"]) >= len(entries):
+                    state[policy]["status"] = "complete"
+                else:
+                    # Partial (other arms still) - leave as running unless all done.
+                    remaining = [
+                        e
+                        for e in entries
+                        if str(e["id"]) not in state[policy]["completed"]
+                    ]
+                    if not remaining:
+                        state[policy]["status"] = "complete"
+            _persist_policy(policy)
+        _persist_session()
+
+    all_complete = all(state[p]["status"] == "complete" for p in policies)
+    if session_status == "complete" and not all_complete:
+        # Some arms aborted_cap but session ok.
+        if any(state[p]["status"] == "aborted_cap" for p in policies):
+            session_status = "partial_policy_cap"
+        elif any(state[p]["status"] == "running" for p in policies):
+            session_status = "partial"
+
+    summary = {
+        "run_id": run_id,
+        "kind": kind,
+        "session_design": "interleaved",
+        "arm_order": list(policies),
+        "status": session_status,
+        "abort_reason": session_abort,
+        "measurement_kind": "MEASURED",
+        "n_entries_planned": len(entries),
+        "running_usd_session": session_cost.running_usd,
+        "session_max_usd": float(session_max_usd),
+        "policy_caps_usd": {p: float(caps[p]) for p in policies},
+        "policies": {
+            p: {
+                "status": state[p]["status"],
+                "abort_reason": state[p]["abort_reason"],
+                "n_entries_completed": len(state[p]["completed"]),
+                "running_usd": state[p]["cost"].running_usd,
+                "max_usd": state[p]["cost"].max_usd,
+                "path": str(_policy_subdir(out_dir, p).relative_to(out_dir)).replace(
+                    "\\", "/"
+                ),
+            }
+            for p in policies
+        },
+        "finished_utc": _utc_now(),
+        **excl,
+    }
+    _write_json(out_dir / "summary.json", summary)
+
+    if seal:
+        # Per-policy seals when that arm completed (R2c may refuse OpenVINO above).
+        for policy in policies:
+            st = state[policy]
+            if st["status"] != "complete":
+                continue
+            pdir: Path = st["dir"]
+            tree = _sha256_tree(pdir, exclude={".sealed"})
+            seal_doc = {
+                "run_id": run_id,
+                "policy": policy,
+                "sealed_utc": _utc_now(),
+                "tree_sha256": tree,
+                "status": st["status"],
+                "measurement_kind": "MEASURED",
+                "session_design": "interleaved",
+                "parent_run_id": run_id,
+                "parent_kind": kind,
+                **excl,
+            }
+            (pdir / ".sealed").write_text(
+                json.dumps(seal_doc, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+        tree = _sha256_tree(out_dir, exclude={".sealed"})
+        seal_doc = {
+            "run_id": run_id,
+            "kind": kind,
+            "sealed_utc": _utc_now(),
+            "tree_sha256": tree,
+            "status": session_status,
+            "measurement_kind": "MEASURED",
+            "session_design": "interleaved",
+            "arm_order": list(policies),
+            **excl,
+        }
+        if session_status == "complete":
+            (out_dir / ".sealed").write_text(
+                json.dumps(seal_doc, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            summary["tree_sha256"] = tree
+            _write_json(out_dir / "summary.json", summary)
+        else:
+            # Still record a seal marker for partial with explicit status.
+            (out_dir / ".sealed").write_text(
+                json.dumps({**seal_doc, "note": "non-complete interleaved session"}, indent=2, sort_keys=True)
+                + "\n",
+                encoding="utf-8",
+            )
+            summary["tree_sha256"] = tree
+            _write_json(out_dir / "summary.json", summary)
+
+    return summary
+
+
+@dataclass
+class _DualCostGuard:
+    """Charge policy and session caps; tag which cap tripped."""
+
+    policy_guard: CostGuard
+    session_guard: CostGuard
+
+    @property
+    def running_usd(self) -> float:
+        return float(self.policy_guard.running_usd)
+
+    @property
+    def max_usd(self) -> float:
+        return float(self.policy_guard.max_usd)
+
+    def charge(self, usd: float) -> None:
+        try:
+            self.policy_guard.charge(usd)
+        except CostCapExceeded as exc:
+            exc.cap_which = "policy"  # type: ignore[attr-defined]
+            raise
+        try:
+            self.session_guard.charge(usd)
+        except CostCapExceeded as exc:
+            # Policy already accepted the charge; session trips after.
+            exc.cap_which = "session"  # type: ignore[attr-defined]
+            raise
+
+
 def derive_r1_from_cb781(
     *,
     out_dir: Path,
     seal_dir: Path | None = None,
     run_id: str | None = None,
 ) -> dict[str, Any]:
-    """Scale sealed cb781dbf (n=20 cpu-p NON_RESIDENT) → 200-entry DERIVED R1.
+    """Scale sealed cb781dbf (n=20 cpu-p NON_RESIDENT) -> 200-entry DERIVED R1.
 
     Does not call cloud. Does not read prediction files.
     """
@@ -1820,7 +2560,7 @@ def derive_r1_from_cb781(
         "arm_config": ARM_CONFIG["agnostic_default"],
         "note": (
             "R1 is ~21 h of local compute; not run live. Scaled linearly from "
-            f"sealed {CB781_SEAL} (n=20 → n=200)."
+            f"sealed {CB781_SEAL} (n=20 -> n=200)."
         ),
         "finished_utc": _utc_now(),
     }
@@ -1863,10 +2603,42 @@ def build_argparser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="H-1 live hybrid runner")
     p.add_argument("--policy", choices=POLICIES, help="Routing policy (one arm per run)")
     p.add_argument(
+        "--interleaved",
+        action="store_true",
+        help="H1 interleaved: entry-by-entry over --interleaved-policy arms "
+        "(default: slo/emission/bounceback = H1-3POLICY; INF-5 session_design=interleaved). "
+        "Ignores --policy.",
+    )
+    p.add_argument(
+        "--interleaved-policy",
+        action="append",
+        default=[],
+        choices=list(INTERLEAVE_POLICIES),
+        metavar="POLICY",
+        help="Select interleaved arms (repeatable; order preserved). "
+        "Omit for full H1-3POLICY. H1-2POLICY: "
+        "--interleaved-policy slo_escalate --interleaved-policy emission_escalate.",
+    )
+    p.add_argument(
         "--max-usd",
         type=float,
         default=None,
-        help="Hard cloud spend cap (required for live policies; refuse without it)",
+        help="Hard cloud spend cap (required for single-policy live; refuse without it)",
+    )
+    p.add_argument(
+        "--session-max-usd",
+        type=float,
+        default=None,
+        help="Interleaved session cloud cap (default 35). Required with --interleaved "
+        "unless using the documented default via launcher.",
+    )
+    p.add_argument(
+        "--policy-cap",
+        action="append",
+        default=[],
+        metavar="POLICY=USD",
+        help="Per-policy cap for --interleaved (repeatable). "
+        "Defaults: slo_escalate=5, emission_escalate=20, full_signal_bounceback=10.",
     )
     p.add_argument("--out", type=Path, required=True, help="Output / seal directory")
     p.add_argument("--run-id", type=str, default=None)
@@ -1910,6 +2682,37 @@ def build_argparser() -> argparse.ArgumentParser:
     return p
 
 
+def _parse_policy_caps(raw: list[str]) -> dict[str, float]:
+    caps = dict(DEFAULT_POLICY_CAPS_USD)
+    for item in raw:
+        if "=" not in item:
+            raise SystemExit(f"REFUSED -- --policy-cap must be POLICY=USD, got {item!r}")
+        name, val = item.split("=", 1)
+        name = name.strip()
+        if name not in INTERLEAVE_POLICIES:
+            raise SystemExit(f"REFUSED -- unknown interleaved policy in --policy-cap: {name!r}")
+        caps[name] = float(val)
+    return caps
+
+
+def _resolve_interleaved_policies(raw: list[str] | None) -> tuple[str, ...]:
+    """Resolve --interleaved-policy list; default full H1-3POLICY order."""
+    if not raw:
+        return INTERLEAVE_POLICIES
+    seen: set[str] = set()
+    out: list[str] = []
+    for name in raw:
+        if name not in INTERLEAVE_POLICIES:
+            raise SystemExit(f"REFUSED -- unknown interleaved policy: {name!r}")
+        if name in seen:
+            raise SystemExit(f"REFUSED -- duplicate --interleaved-policy {name!r}")
+        seen.add(name)
+        out.append(name)
+    if not out:
+        raise SystemExit("REFUSED -- --interleaved-policy produced empty arm list")
+    return tuple(out)
+
+
 def _make_live_cloud(cloud_model: str | None) -> AnthropicCloudBackend:
     import os
 
@@ -1948,8 +2751,13 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"ok": True, "derived": doc}, indent=2, default=str))
         return 0
 
+    if args.interleaved:
+        return _main_interleaved(args)
+
     if args.policy is None:
-        raise SystemExit("REFUSED -- --policy is required (or pass --derive-r1)")
+        raise SystemExit(
+            "REFUSED -- --policy is required (or pass --interleaved / --derive-r1)"
+        )
     if args.max_usd is None:
         raise SystemExit("REFUSED -- --max-usd is required (cost guard; no default inside runner)")
 
@@ -2014,6 +2822,82 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
     return 0 if summary["status"] == "complete" else 2
+
+
+def _main_interleaved(args: argparse.Namespace) -> int:
+    policies = _resolve_interleaved_policies(list(args.interleaved_policy or []))
+    caps = _parse_policy_caps(list(args.policy_cap or []))
+    # Drop caps for arms not selected (keeps CostGuard wiring strict).
+    caps = {p: float(caps[p]) for p in policies}
+    if args.session_max_usd is not None:
+        session_max = float(args.session_max_usd)
+    elif "full_signal_bounceback" not in policies:
+        session_max = float(DEFAULT_SESSION_CAP_USD_2POLICY)
+    else:
+        session_max = float(DEFAULT_SESSION_CAP_USD)
+    seal = False if args.fixture is not None else (True if args.seal is None else bool(args.seal))
+
+    if args.fixture is not None:
+        if args.seal is True:
+            raise SystemExit("REFUSED -- --seal is incompatible with --fixture (stub cannot seal)")
+        fix = json.loads(args.fixture.read_text(encoding="utf-8"))
+        entries = fix["entries"]
+        local: LocalBackend = StubLocalBackend(
+            script=fix["local_script"],
+            stop_reasons=dict(fix.get("stop_reasons") or {}),
+        )
+        cloud: CloudBackend = StubCloudBackend(
+            tokens_in=int(fix.get("cloud_tokens_in", 1000)),
+            tokens_out=int(fix.get("cloud_tokens_out", 200)),
+        )
+        summary = run_interleaved_session(
+            entries=entries,
+            out_dir=args.out,
+            local=local,
+            cloud=cloud,
+            policy_caps_usd=caps,
+            session_max_usd=session_max,
+            policies=policies,
+            run_id=args.run_id,
+            skip_entry_assert=True,
+            seal=False,
+        )
+        print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
+        ok_statuses = {"complete", "partial_policy_cap"}
+        return 0 if summary["status"] in ok_statuses else 2
+
+    entries, entries_path = load_w3_entries(args.entries)
+    gold_path = entries_path.parent / "multi_turn_gold_selftest.json"
+    gold = json.loads(gold_path.read_text(encoding="utf-8-sig")) if gold_path.is_file() else None
+    assert_scorer_version(gold)
+
+    cloud = _make_live_cloud(args.cloud_model)
+    if args.local_script is not None:
+        if seal:
+            raise SystemExit(
+                "REFUSED -- --local-script cannot be sealed; pass --no-seal for debug replay"
+            )
+        script = json.loads(args.local_script.read_text(encoding="utf-8"))
+        local = ScriptedLiveLocalBackend(script=script)
+    else:
+        # Selected arms share gpu_only RESIDENT u8 int4-4B (match 86d0f4cf).
+        local = _make_openvino_local("slo_escalate", args.model_spec)
+
+    summary = run_interleaved_session(
+        entries=entries,
+        out_dir=args.out,
+        local=local,
+        cloud=cloud,
+        policy_caps_usd=caps,
+        session_max_usd=session_max,
+        policies=policies,
+        run_id=args.run_id,
+        skip_entry_assert=False,
+        seal=seal,
+    )
+    print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
+    ok_statuses = {"complete", "partial_policy_cap"}
+    return 0 if summary["status"] in ok_statuses else 2
 
 
 if __name__ == "__main__":

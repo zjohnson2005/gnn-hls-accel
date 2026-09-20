@@ -2,7 +2,7 @@
 # Run ONLY after the C2f pilot clears median C_max/C_min >= 3.0, seals (verify_sealed),
 # and writes derived/efilter/pilot_context_clearance.json.
 # Requires canary baseline applied to measurement.yaml.
-# Discard-first warmup + full timed task set. Timing = canary∩paging admissible.
+# Discard-first warmup + full timed task set. Timing = canary+paging admissible.
 # Freeze policy.n_out_pred_tokens from the pilot's measured median (both keys identical) first.
 # Analysis: python -m seam.analysis.efilter <run_id>
 # No absolute wall-clock claims (AM-032). Dirty tree allowed with --allow-dirty.
@@ -10,6 +10,9 @@
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
+
+. (Join-Path $PSScriptRoot "_assert_machine_lock.ps1")
+Assert-SeamMachineLockClear -RepoRoot $root
 $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $logDir = "derived\efilter"
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null

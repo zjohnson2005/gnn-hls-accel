@@ -1,4 +1,4 @@
-# C-1 launcher — KV-precision context ceiling (binary search), int4 / gpu_only_*.
+# C-1 launcher - KV-precision context ceiling (binary search), int4 / gpu_only_*.
 #
 # Production (Zach, bare SSH after cold boot):
 #   powershell -NoProfile -File tools/launch_c1.ps1
@@ -15,7 +15,7 @@
 #   Pre-registers n_max from measured Available M before first probe.
 #   Classifies every failure: memory_wall vs position_limit (verbatim).
 #   If high passes (no failure in range): status=aborted,
-#   abort_reason=no_ceiling_found_in_range — never report high as a ceiling.
+#   abort_reason=no_ceiling_found_in_range - never report high as a ceiling.
 #
 # WSH watchdog interval 60 s (ENV_CHANGELOG).
 # Corrections (AM-037): max_position_embeddings not enforced at inference;
@@ -36,6 +36,8 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 Set-Location $root
+
+. (Join-Path $PSScriptRoot "_assert_machine_lock.ps1")
 
 $Tag = "c1_kv_ceiling"
 $WatchdogIntervalS = 60
@@ -278,6 +280,9 @@ print("DRYRUN_OK")
     exit 0
 }
 
+
+# Machine-lock / alive-worker check (hard refuse before spawn)
+Assert-SeamMachineLockClear -RepoRoot $root -DryRun:$DryRun
 Write-Host "=== 4. spawn_detached (live) ==="
 New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
 $json = & $SpawnPs1 -CommandLine $resolvedCmd -LogPath $log -WorkingDirectory $root

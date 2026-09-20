@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-  ceiling_a — interleaved context-ceiling ladder under remote isolation.
+  ceiling_a - interleaved context-ceiling ladder under remote isolation.
 
 .DESCRIPTION
-  Phase 3 of ΔN. Arms are selected via -Arms (comma-separated ids from
+  Phase 3 of DeltaN. Arms are selected via -Arms (comma-separated ids from
   configs/delta_n.yaml). Default is A,A_prime (unchanged). Pass -Arms B,B_prime
   for the iGPU-resident pair, or -Arms gpu_only for the single GPU pipeline.
   stop_if_ceiling_at_position_limit fires when any selected arm PASSes the top rung.
@@ -38,7 +38,7 @@ param(
     [Parameter(ParameterSetName = "Status")][switch]$Status,
     [Parameter(ParameterSetName = "Resume")][switch]$Resume,
     [Parameter(ParameterSetName = "Resume")][string]$SessionId,
-    # [object] so unquoted A,A_prime / gpu_only_u4 never fails Object[]→string/int binding.
+    # [object] so unquoted A,A_prime / gpu_only_u4 never fails Object[]->string/int binding.
     [Parameter(ParameterSetName = "Run")]
     [Parameter(ParameterSetName = "Resume")]
     [object]$Arms = "A,A_prime",
@@ -52,6 +52,7 @@ $ErrorActionPreference = "Stop"
 # Repo root = parent of tools/ (this script's directory).
 $root = Split-Path -Parent $PSScriptRoot
 if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
+. (Join-Path $PSScriptRoot "_assert_machine_lock.ps1")
 . (Join-Path $root "tools\SeamPsCommon.ps1")
 $outDir = Join-Path $root "derived\ceiling_a\_launches"
 $statePath = Join-Path $outDir "launches.json"
@@ -236,7 +237,7 @@ if ($Status) {
             if ($newest) { $sid = $newest.Name }
         }
         if (-not $sid -and $last.log_path) {
-            # Bounded head read only — never Select-String the whole growing log.
+            # Bounded head read only - never Select-String the whole growing log.
             $head = Read-SharedTextFile -Path ([string]$last.log_path) -MaxBytes 65536
             if ($head -match '"session_id"\s*:\s*"([0-9a-f-]{36})"') {
                 $sid = $Matches[1]
@@ -340,6 +341,7 @@ if ($Resume) {
         $armsForPy = "A,A_prime"
     }
     Assert-No-Contending
+    Assert-SeamMachineLockClear -RepoRoot $root
     $mode = "remote"
     $launchContext = "ssh_detached"
     New-Item -ItemType Directory -Force -Path $outDir | Out-Null
@@ -399,6 +401,7 @@ if (-not $Orchestrate) {
 $mode = "remote"
 $launchContext = "ssh_detached"
 Assert-No-Contending
+Assert-SeamMachineLockClear -RepoRoot $root
 try {
     $armsCsv = ([string[]](ConvertTo-StringList -Value $Arms -Name "Arms")) -join ","
 } catch {
@@ -412,7 +415,7 @@ $log = Join-Path $outDir "$tag.log"
 $resultPath = Join-Path $outDir "$tag.result.json"
 
 # --allow-dirty: tree has been uncommitted since 2026-07-30; manifest records git_dirty.
-# Quote arms CSV — never splice Object[] into the cmd line.
+# Quote arms CSV - never splice Object[] into the cmd line.
 $inner = 'set SEAM_ISOLATION_MODE=' + $mode +
          '&& set SEAM_LAUNCH_CONTEXT=' + $launchContext +
          '&& "' + $py + '" -u -m seam.tools.ceiling_a --orchestrate' +

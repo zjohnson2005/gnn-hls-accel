@@ -1,12 +1,23 @@
-﻿# H-1 hybrid launcher - live routing arms (D-2).
+# H-1 hybrid launcher - live routing arms (D-2) + H1 interleaved (2- or 3-policy).
 #
-# Order (least budget risk first):
+# Single-policy order (least budget risk first):
 #   R2a slo_escalate, R2b emission_escalate, R0 cloud_only.
 #   R1 agnostic_default is DERIVED from sealed cb781dbf - never live.
 #
-# Cost guard: --MaxUsd is REQUIRED for live arms. Defaults below are 1.5x the
-# H1_PREDICTIONS point estimate (read here in the launcher ONLY - the Python
-# runner never opens prediction files).
+# Interleaved (INF-5 session_design=interleaved):
+#   Same 200 entries, entry-by-entry. Default: H1-3POLICY
+#     slo_escalate -> emission_escalate -> full_signal_bounceback
+#     Caps: R2a $5, R2b $20, R2c $10, session $35.
+#   H1-2POLICY (R2c blocked on R2C-TURNWISE - do not pass bounceback):
+#     powershell -NoProfile -File tools/launch_h1.ps1 -Interleaved `
+#       -InterleavedPolicies slo_escalate,emission_escalate -SessionMaxUsd 25
+#     Caps: R2a $5, R2b $20, session $25. Seal records r2c_excluded.
+#   KV/model match sealed R2a 86d0f4cf (gpu_only RESIDENT u8 int4-4B).
+#   Resume skips completed entries per policy.
+#
+# Cost guard: --MaxUsd is REQUIRED for single-policy live arms. Defaults below
+# are 1.5x the H1_PREDICTIONS point estimate (read here in the launcher ONLY -
+# the Python runner never opens prediction files).
 #
 #   R2a slo_escalate:      predicted $0.0000  -> MaxUsd 0.0000
 #   R2b emission_escalate: predicted $13.0812 -> MaxUsd 19.6218
@@ -17,23 +28,43 @@
 #   powershell -NoProfile -File tools/launch_h1.ps1 -Policy emission_escalate
 #   powershell -NoProfile -File tools/launch_h1.ps1 -Policy cloud_only
 #   powershell -NoProfile -File tools/launch_h1.ps1 -DeriveR1
+#   powershell -NoProfile -File tools/launch_h1.ps1 -Interleaved
+#   powershell -NoProfile -File tools/launch_h1.ps1 -Interleaved `
+#     -InterleavedPolicies slo_escalate,emission_escalate -SessionMaxUsd 25
 #
 # Hybrid arms load OpenVinoLocalBackend (greedy, max_new_tokens=512, W-3 path)
 # via -ModelSpec (default configs/models/Qwen3-4B-int4-ov.yaml). -LocalScript is DEBUG --no-seal only.
 # R2b-on-8B: -ModelSpec configs/models/Qwen3-8B-int4-ov.yaml (derived/h1_hybrid/R2B_8B_PREDICTIONS.*).
 #
+# NOTE: Live seal of full_signal_bounceback still requires turn-by-turn OpenVINO
+# with cloud context injection; OpenVinoLocalBackend precomputes the full entry
+# and the worker REFUSES sealing R2c until that lands. Use -InterleavedPolicies
+# to omit R2c (H1-2POLICY) rather than launching the full three-policy set.
+#
+# Machine lock: refuse spawn when .locks/machine.lock is held by a live PID, or
+# when another measurement worker (run_h1_hybrid.py / known matrix workers) is
+# already alive. Two interleaved launches eight minutes apart (2026-09-20) only
+# avoided contention because R2c refused - this check makes that a hard refuse.
+#
 # Dry-run (gates report-only; spawn suppressed):
 #   powershell -NoProfile -File tools/launch_h1.ps1 -Policy cloud_only -DryRun
+#   powershell -NoProfile -File tools/launch_h1.ps1 -Interleaved -DryRun
 #
 # Steps: (1) non-persistent host clean  (2) five gates  (3) INF-1b canary guard
-#        (4) spawn_detached  (5) print run_id + artifact dir; exit without waiting.
+#        (4) machine-lock / alive-worker check  (5) spawn_detached
+#        (6) print run_id + artifact dir; exit without waiting.
 
 [CmdletBinding()]
 param(
-    [ValidateSet("slo_escalate", "emission_escalate", "cloud_only", "agnostic_default")]
+    [ValidateSet("slo_escalate", "emission_escalate", "cloud_only", "agnostic_default", "full_signal_bounceback")]
     [string]$Policy = "",
+    [switch]$Interleaved,
+    # Comma-separated subset of interleaved arms (order preserved). Empty = full 3-policy.
+    # Example: -InterleavedPolicies slo_escalate,emission_escalate
+    [string]$InterleavedPolicies = "",
     [switch]$DeriveR1,
     [Nullable[double]]$MaxUsd = $null,
+    [Nullable[double]]$SessionMaxUsd = $null,
     [switch]$DryRun,
     [string]$LocalScript = "",
     [string]$ModelSpec = "",
@@ -46,12 +77,24 @@ $root = Split-Path -Parent $PSScriptRoot
 if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 Set-Location $root
 
+# Shared machine-lock / alive-worker gate
+. (Join-Path $PSScriptRoot "_assert_machine_lock.ps1")
+
 # 1.5x H1_PREDICTIONS point estimates (launcher-side only; runner is blinded).
 $DefaultMaxUsd = @{
-    "slo_escalate"      = 0.0
-    "emission_escalate" = 19.6218
-    "cloud_only"        = 81.1056
+    "slo_escalate"           = 0.0
+    "emission_escalate"      = 19.6218
+    "cloud_only"             = 81.1056
+    "full_signal_bounceback" = 10.0
 }
+
+$DefaultPolicyCapUsd = @{
+    "slo_escalate"           = 5.0
+    "emission_escalate"      = 20.0
+    "full_signal_bounceback" = 10.0
+}
+
+$AllowedInterleave = @("slo_escalate", "emission_escalate", "full_signal_bounceback")
 
 $PythonExe = Join-Path $root ".venv-seam\Scripts\python.exe"
 $WorkerPy = Join-Path $root "tools\run_h1_hybrid.py"
@@ -59,6 +102,7 @@ $SpawnPs1 = Join-Path $root "tools\spawn_detached.ps1"
 $SessionRoot = Join-Path $root "derived\h1_hybrid"
 $LaunchDir = Join-Path $SessionRoot "_launches"
 $W3Entries = Join-Path $root "derived\bfcl_feasibility\w3_weight_quality\sealed_6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a\artifacts\multi_turn_probe_entries.json"
+$MachineLockPath = Join-Path $root ".locks\machine.lock"
 
 $WorkloadAppxNames = @(
     "WindowsWorkload.EP.Intel.OpenVINO.1.8",
@@ -83,6 +127,33 @@ function Refuse {
     exit 1
 }
 
+function Resolve-InterleavedPolicyList {
+    param([string]$Raw)
+    if ([string]::IsNullOrWhiteSpace($Raw)) {
+        return @($AllowedInterleave)
+    }
+    $parts = @($Raw -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" })
+    if ($parts.Count -eq 0) {
+        Refuse "-InterleavedPolicies resolved to empty list"
+        return @()
+    }
+    $seen = @{}
+    $out = @()
+    foreach ($p in $parts) {
+        if ($AllowedInterleave -notcontains $p) {
+            Refuse ("-InterleavedPolicies unknown policy: {0} (allowed: {1})" -f $p, ($AllowedInterleave -join ","))
+            return @()
+        }
+        if ($seen.ContainsKey($p)) {
+            Refuse ("-InterleavedPolicies duplicate: {0}" -f $p)
+            return @()
+        }
+        $seen[$p] = $true
+        $out += $p
+    }
+    return $out
+}
+
 Write-Host "=== launch_h1.ps1 ==="
 Write-Host ("mode           : {0}" -f $(if ($DryRun) { "DRY-RUN" } else { "LIVE" }))
 Write-Host ("cwd            : {0}" -f (Get-Location).Path)
@@ -105,23 +176,53 @@ if ($DeriveR1) {
     exit $LASTEXITCODE
 }
 
-if ([string]::IsNullOrWhiteSpace($Policy)) {
-    Refuse "Pass -Policy slo_escalate|emission_escalate|cloud_only, or -DeriveR1"
+$resolvedInterleavePolicies = @()
+if ($Interleaved) {
+    if (-not [string]::IsNullOrWhiteSpace($Policy)) {
+        Refuse "Pass -Interleaved alone (do not combine with -Policy)"
+        exit 1
+    }
+    $resolvedInterleavePolicies = @(Resolve-InterleavedPolicyList -Raw $InterleavedPolicies)
+    $hasR2c = $resolvedInterleavePolicies -contains "full_signal_bounceback"
+    if ($null -eq $SessionMaxUsd) {
+        if ($hasR2c) { $SessionMaxUsd = [double]35.0 }
+        else { $SessionMaxUsd = [double]25.0 }
+    }
+    $tag = if ($hasR2c) { "H1-3POLICY" } else { "H1-2POLICY" }
+    Write-Host ("Mode           : INTERLEAVED ({0})" -f $tag)
+    Write-Host ("ArmOrder       : {0}" -f ($resolvedInterleavePolicies -join " -> "))
+    Write-Host ("SessionMaxUsd  : {0}" -f $SessionMaxUsd)
+    $capBits = @()
+    foreach ($p in $resolvedInterleavePolicies) {
+        $capBits += ("{0}={1}" -f $p, $DefaultPolicyCapUsd[$p])
+    }
+    Write-Host ("Policy caps    : {0}" -f ($capBits -join " "))
+    if (-not $hasR2c) {
+        Write-Host "R2c           : EXCLUDED (R2C-TURNWISE blocked; recorded in plan/seal)"
+    }
+    Write-Host "session_design : interleaved (INF-5)"
+    Write-Host ""
+} elseif (-not [string]::IsNullOrWhiteSpace($InterleavedPolicies)) {
+    Refuse "-InterleavedPolicies requires -Interleaved"
+    exit 1
+} elseif ([string]::IsNullOrWhiteSpace($Policy)) {
+    Refuse "Pass -Policy slo_escalate|emission_escalate|cloud_only|full_signal_bounceback, or -Interleaved, or -DeriveR1"
     exit 1
 }
-if ($Policy -eq "agnostic_default") {
+if (-not $Interleaved -and $Policy -eq "agnostic_default") {
     Refuse "agnostic_default must not run live. Use -DeriveR1."
     exit 1
 }
 
-if ($null -eq $MaxUsd) {
-    $MaxUsd = [double]$DefaultMaxUsd[$Policy]
+if (-not $Interleaved) {
+    if ($null -eq $MaxUsd) {
+        $MaxUsd = [double]$DefaultMaxUsd[$Policy]
+    }
+    Write-Host ("Policy         : {0}" -f $Policy)
+    Write-Host ("MaxUsd         : {0}" -f $MaxUsd)
+    Write-Host ("NOTE -- MaxUsd default is 1.5x H1_PREDICTIONS (launcher-side). Runner never reads predictions.")
+    Write-Host ""
 }
-Write-Host ("Policy         : {0}" -f $Policy)
-Write-Host ("MaxUsd         : {0}" -f $MaxUsd)
-Write-Host ("NOTE -- MaxUsd default is 1.5x H1_PREDICTIONS (launcher-side). Runner never reads predictions.")
-Write-Host ""
-
 # ---------------------------------------------------------------------------
 # 1. Non-persistent host cleaning
 # ---------------------------------------------------------------------------
@@ -208,25 +309,57 @@ if ($canaryRc -ne 0) {
 Write-Host ""
 
 # ---------------------------------------------------------------------------
-# 4. Spawn
+# 4. Machine-lock / alive-worker check (hard refuse)
+# ---------------------------------------------------------------------------
+Assert-SeamMachineLockClear -RepoRoot $root -DryRun:$DryRun
+if ($DryRun) {
+    # Assert already printed; DryRun returns without exit when workers found.
+    $dryWorkers = @(Get-SeamAliveMeasurementWorkers -ExcludePids @($PID))
+    if ($dryWorkers.Count -gt 0 -or (Test-Path -LiteralPath $MachineLockPath)) {
+        Write-Host "DRY-RUN: machine-lock / worker check would refuse live spawn"
+    }
+}
+
+# ---------------------------------------------------------------------------
+# 5. Spawn
 # ---------------------------------------------------------------------------
 if (-not (Test-Path -LiteralPath $SpawnPs1)) { Refuse "spawn_detached missing: $SpawnPs1"; exit 2 }
 if (-not (Test-Path -LiteralPath $PythonExe)) { Refuse "PythonExe missing: $PythonExe"; exit 2 }
-if (-not (Test-Path -LiteralPath $W3Entries)) { Refuse "W-3 entries pin missing: $W3Entries"; exit 2 }
+if (-not (Test-Path -LiteralPath $W3Entries)) { Refuse "W3 entries pin missing: $W3Entries"; exit 2 }
 
 $sid = [guid]::NewGuid().ToString()
-$tagLaunch = "h1_" + $Policy + "_" + (Get-Date -Format "yyyyMMdd_HHmmss")
+if ($Interleaved) {
+    $tagLaunch = "h1_interleaved_" + (Get-Date -Format "yyyyMMdd_HHmmss")
+    $artifactDir = Join-Path $SessionRoot ("interleaved_" + $sid)
+} else {
+    $tagLaunch = "h1_" + $Policy + "_" + (Get-Date -Format "yyyyMMdd_HHmmss")
+    $artifactDir = Join-Path $SessionRoot ($Policy + "_" + $sid)
+}
 New-Item -ItemType Directory -Force -Path $LaunchDir | Out-Null
 $log = Join-Path $LaunchDir "$tagLaunch.log"
-$artifactDir = Join-Path $SessionRoot ($Policy + "_" + $sid)
 
-$resolvedCmd = 'set SEAM_LAUNCH_CONTEXT=ssh_detached' +
-    '&& "' + $PythonExe + '" -u "' + $WorkerPy + '"' +
-    ' --policy ' + $Policy +
-    ' --max-usd ' + $MaxUsd +
-    ' --out "' + $artifactDir + '"' +
-    ' --run-id ' + $sid +
-    ' --entries "' + $W3Entries + '"'
+if ($Interleaved) {
+    $resolvedCmd = 'set SEAM_LAUNCH_CONTEXT=ssh_detached' +
+        '&& "' + $PythonExe + '" -u "' + $WorkerPy + '"' +
+        ' --interleaved' +
+        ' --session-max-usd ' + $SessionMaxUsd
+    foreach ($p in $resolvedInterleavePolicies) {
+        $resolvedCmd = $resolvedCmd + ' --interleaved-policy ' + $p
+        $resolvedCmd = $resolvedCmd + ' --policy-cap ' + $p + '=' + $DefaultPolicyCapUsd[$p]
+    }
+    $resolvedCmd = $resolvedCmd +
+        ' --out "' + $artifactDir + '"' +
+        ' --run-id ' + $sid +
+        ' --entries "' + $W3Entries + '"'
+} else {
+    $resolvedCmd = 'set SEAM_LAUNCH_CONTEXT=ssh_detached' +
+        '&& "' + $PythonExe + '" -u "' + $WorkerPy + '"' +
+        ' --policy ' + $Policy +
+        ' --max-usd ' + $MaxUsd +
+        ' --out "' + $artifactDir + '"' +
+        ' --run-id ' + $sid +
+        ' --entries "' + $W3Entries + '"'
+}
 
 if (-not [string]::IsNullOrWhiteSpace($LocalScript)) {
     $resolvedCmd = $resolvedCmd + ' --local-script "' + $LocalScript + '" --no-seal'
@@ -251,9 +384,13 @@ Write-Host ""
 Write-Host ("session_id (run_id) : {0}" -f $sid)
 Write-Host ("artifact_dir        : {0}" -f $artifactDir)
 Write-Host ("launch_log          : {0}" -f $log)
-Write-Host ("max_usd             : {0}" -f $MaxUsd)
+if ($Interleaved) {
+    Write-Host ("session_max_usd     : {0}" -f $SessionMaxUsd)
+    Write-Host ("arm_order           : {0}" -f ($resolvedInterleavePolicies -join ","))
+} else {
+    Write-Host ("max_usd             : {0}" -f $MaxUsd)
+}
 Write-Host ""
-
 if ($DryRun) {
     Write-Host "=== DRY-RUN gate refusal summary ==="
     if ($gateFails.Count -eq 0) {

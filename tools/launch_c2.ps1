@@ -1,4 +1,4 @@
-﻿# C-2 launcher - TTFT-bound context limit (default: KV precision arms on gpu_only).
+# C-2 launcher - TTFT-bound context limit (default: KV precision arms on gpu_only).
 #
 # Production (Zach, bare SSH after cold boot):
 #   powershell -NoProfile -File tools/launch_c2.ps1
@@ -60,6 +60,8 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 Set-Location $root
+
+. (Join-Path $PSScriptRoot "_assert_machine_lock.ps1")
 
 $Tag = "c2_ttft"
 $WatchdogIntervalS = 60
@@ -373,6 +375,9 @@ print("DRYRUN_OK")
     exit 0
 }
 
+
+# Machine-lock / alive-worker check (hard refuse before spawn)
+Assert-SeamMachineLockClear -RepoRoot $root -DryRun:$DryRun
 Write-Host "=== 4. spawn_detached (live) ==="
 New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
 $json = & $SpawnPs1 -CommandLine $resolvedCmd -LogPath $log -WorkingDirectory $root

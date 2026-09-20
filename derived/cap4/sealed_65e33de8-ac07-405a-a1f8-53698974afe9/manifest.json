@@ -1,0 +1,916 @@
+{
+  "abort": {
+    "abort_at": {
+      "active_arms_at_abort": [
+        "gpu_only_f16",
+        "gpu_only_u8",
+        "gpu_only_u4"
+      ],
+      "highest_n_completed": 94000,
+      "last_completed_probe": {
+        "arm_id": "gpu_only_u8",
+        "ended_utc": "2026-09-20T20:43:44.577091+00:00",
+        "n_tokens": 94000,
+        "repeat_index": 2
+      },
+      "n_cells_completed": 45,
+      "n_probes_completed": 135,
+      "source": "seal_cap4.reconstruct"
+    },
+    "abort_reason": "Stop-Process -Force",
+    "abort_verbatim": "Worker killed with Stop-Process -Force on evo-t2 after completing n=94000 (all three KV arms PASS every rung through 94k; next rung would be 100000). finally skipped; no summary.json (same gap as 2b3316b6). Artifacts copied to aipc-c1 for reconstruct+seal.",
+    "cross_host_reconstruct": true,
+    "execution_platform_id": "evo-t2",
+    "note": "ABORTED seal \u2014 completed cells are data; status is not complete. Do not treat this as a finished curve-to-failure. Executed on evo-t2; sealed on aipc-c1.",
+    "rungs_completed_per_arm": {
+      "gpu_only_f16": [
+        12000,
+        16000,
+        20000,
+        26000,
+        32000,
+        40000,
+        46000,
+        52000,
+        58000,
+        64000,
+        70000,
+        76000,
+        82000,
+        88000,
+        94000
+      ],
+      "gpu_only_u4": [
+        12000,
+        16000,
+        20000,
+        26000,
+        32000,
+        40000,
+        46000,
+        52000,
+        58000,
+        64000,
+        70000,
+        76000,
+        82000,
+        88000,
+        94000
+      ],
+      "gpu_only_u8": [
+        12000,
+        16000,
+        20000,
+        26000,
+        32000,
+        40000,
+        46000,
+        52000,
+        58000,
+        64000,
+        70000,
+        76000,
+        82000,
+        88000,
+        94000
+      ]
+    },
+    "seal_platform_id": "aipc-c1",
+    "status": "aborted"
+  },
+  "analysis": {
+    "P1": {
+      "band_s": [
+        60.0,
+        230.0
+      ],
+      "measured_median_prefill_s_at_46000": {
+        "gpu_only_f16": 50.747792968,
+        "gpu_only_u4": 50.673039062,
+        "gpu_only_u8": 50.627007812
+      },
+      "outcome": "falsified",
+      "predicted_s": 115.0
+    },
+    "P2": {
+      "any_alloc_failure": false,
+      "highest_successful_n": {
+        "gpu_only_f16": 94000,
+        "gpu_only_u4": 94000,
+        "gpu_only_u8": 94000
+      },
+      "outcome": "falsified",
+      "reason": "joint_falsifier: all three reached 46000 without ALLOC_FAILURE"
+    },
+    "P3": {
+      "any_alloc_failure": false,
+      "note": "Primary rungs start at n>=12000; C-2 already showed TTFT SLO binding near 9750 for u8/u4 and f16 ALLOC at 8000 (c647f0c7). CAP-4 asks whether ALLOC binds before the extrapolated 46k point under interleaved per-KV gpu_only RESIDENT.",
+      "outcome": "falsified"
+    },
+    "answer_a": {
+      "46000_reachable": true,
+      "measured_prefill_s_at_46000": {
+        "gpu_only_f16": 50.747792968,
+        "gpu_only_u4": 50.673039062,
+        "gpu_only_u8": 50.627007812
+      },
+      "prediction_115s": {
+        "band_s": [
+          60.0,
+          230.0
+        ],
+        "measured_median_prefill_s_at_46000": {
+          "gpu_only_f16": 50.747792968,
+          "gpu_only_u4": 50.673039062,
+          "gpu_only_u8": 50.627007812
+        },
+        "outcome": "falsified",
+        "predicted_s": 115.0
+      },
+      "question": "Is ~2 minutes / ~115 s at 46000 measured, or only extrapolated?"
+    },
+    "answer_b": {
+      "alloc_binds_before_46k": {
+        "gpu_only_f16": false,
+        "gpu_only_u4": false,
+        "gpu_only_u8": false
+      },
+      "p3": {
+        "any_alloc_failure": false,
+        "note": "Primary rungs start at n>=12000; C-2 already showed TTFT SLO binding near 9750 for u8/u4 and f16 ALLOC at 8000 (c647f0c7). CAP-4 asks whether ALLOC binds before the extrapolated 46k point under interleaved per-KV gpu_only RESIDENT.",
+        "outcome": "falsified"
+      },
+      "per_arm_first_failure_class": {
+        "gpu_only_f16": null,
+        "gpu_only_u4": null,
+        "gpu_only_u8": null
+      },
+      "per_arm_first_failure_n": {
+        "gpu_only_f16": null,
+        "gpu_only_u4": null,
+        "gpu_only_u8": null
+      },
+      "question": "Does GPU allocation ceiling bind before SLO on gpu_only?",
+      "slo_already_binds_by_n12000": true
+    },
+    "median_prefill_table": {
+      "gpu_only_f16": {
+        "12000": 4.549180664,
+        "16000": 7.391641113,
+        "20000": 11.110816406,
+        "26000": 17.648777343,
+        "32000": 25.634783203,
+        "40000": 38.946472656,
+        "46000": 50.747792968,
+        "52000": 64.106195312,
+        "58000": 79.128398437,
+        "64000": 95.855976562,
+        "70000": 116.400695312,
+        "76000": 138.444078125,
+        "82000": 164.029703125,
+        "88000": 192.2238125,
+        "94000": 228.699328125
+      },
+      "gpu_only_u4": {
+        "12000": 4.520159179,
+        "16000": 7.375479003,
+        "20000": 11.057879882,
+        "26000": 17.606330078,
+        "32000": 25.565955078,
+        "40000": 38.838996093,
+        "46000": 50.673039062,
+        "52000": 64.133894531,
+        "58000": 79.728132812,
+        "64000": 96.019632812,
+        "70000": 116.533453125,
+        "76000": 138.615765625,
+        "82000": 163.5998125,
+        "88000": 191.382171875,
+        "94000": 228.397109375
+      },
+      "gpu_only_u8": {
+        "12000": 4.529805664,
+        "16000": 7.376241699,
+        "20000": 11.070578125,
+        "26000": 17.672818359,
+        "32000": 25.541501953,
+        "40000": 38.857835937,
+        "46000": 50.627007812,
+        "52000": 63.951402343,
+        "58000": 79.282992187,
+        "64000": 95.9681875,
+        "70000": 116.605390625,
+        "76000": 138.25334375,
+        "82000": 164.17621875,
+        "88000": 191.851015625,
+        "94000": 229.1155
+      }
+    },
+    "per_arm": {
+      "gpu_only_f16": {
+        "available_mb_by_n": {
+          "12000": {
+            "available_mb_end_median": 60077.0703125,
+            "available_mb_start_median": 60086.3046875
+          },
+          "16000": {
+            "available_mb_end_median": 60080.203125,
+            "available_mb_start_median": 60082.66015625
+          },
+          "20000": {
+            "available_mb_end_median": 60070.33984375,
+            "available_mb_start_median": 60063.96484375
+          },
+          "26000": {
+            "available_mb_end_median": 60065.63671875,
+            "available_mb_start_median": 60055.41796875
+          },
+          "32000": {
+            "available_mb_end_median": 60054.91015625,
+            "available_mb_start_median": 60061.8984375
+          },
+          "40000": {
+            "available_mb_end_median": 60044.5703125,
+            "available_mb_start_median": 60050.859375
+          },
+          "46000": {
+            "available_mb_end_median": 60043.20703125,
+            "available_mb_start_median": 60050.70703125
+          },
+          "52000": {
+            "available_mb_end_median": 60035.65234375,
+            "available_mb_start_median": 60030.12890625
+          },
+          "58000": {
+            "available_mb_end_median": 60023.125,
+            "available_mb_start_median": 60035.19140625
+          },
+          "64000": {
+            "available_mb_end_median": 60031.59765625,
+            "available_mb_start_median": 60026.74609375
+          },
+          "70000": {
+            "available_mb_end_median": 60007.72265625,
+            "available_mb_start_median": 60006.5234375
+          },
+          "76000": {
+            "available_mb_end_median": 59987.5703125,
+            "available_mb_start_median": 59988.59375
+          },
+          "82000": {
+            "available_mb_end_median": 59978.53515625,
+            "available_mb_start_median": 59984.5859375
+          },
+          "88000": {
+            "available_mb_end_median": 59822.69921875,
+            "available_mb_start_median": 59800.58203125
+          },
+          "94000": {
+            "available_mb_end_median": 55879.7578125,
+            "available_mb_start_median": 56983.5
+          }
+        },
+        "first_available_mb_fall_n": 16000,
+        "first_failure_class": null,
+        "first_failure_n": null,
+        "first_failure_verbatim": null,
+        "first_slo_exceeded_n": 20000,
+        "highest_successful_n": 94000,
+        "median_prefill_s_by_n": {
+          "12000": 4.549180664,
+          "16000": 7.391641113,
+          "20000": 11.110816406,
+          "26000": 17.648777343,
+          "32000": 25.634783203,
+          "40000": 38.946472656,
+          "46000": 50.747792968,
+          "52000": 64.106195312,
+          "58000": 79.128398437,
+          "64000": 95.855976562,
+          "70000": 116.400695312,
+          "76000": 138.444078125,
+          "82000": 164.029703125,
+          "88000": 192.2238125,
+          "94000": 228.699328125
+        },
+        "power_law_fit": {
+          "C": 8.106573535803205e-08,
+          "b": 1.8910956492245918,
+          "fit_n_list": [
+            12000,
+            16000,
+            20000,
+            26000,
+            32000,
+            40000,
+            46000,
+            52000,
+            58000,
+            64000,
+            70000,
+            76000,
+            82000,
+            88000,
+            94000
+          ],
+          "fit_range_n": [
+            12000,
+            94000
+          ],
+          "form": "prefill_s = C * n^b",
+          "n_points": 15,
+          "predict_46000_s": 53.279283459692124,
+          "ss_res_linear": 709.1778297718988,
+          "ss_tot_log_y": 21.224536759706588
+        },
+        "prefill_s_min_max_by_n": {
+          "12000": {
+            "max": 4.557646972,
+            "min": 4.545473144
+          },
+          "16000": {
+            "max": 7.395020019,
+            "min": 7.383314941
+          },
+          "20000": {
+            "max": 11.112541015,
+            "min": 11.073707031
+          },
+          "26000": {
+            "max": 17.703050781,
+            "min": 17.647705078
+          },
+          "32000": {
+            "max": 25.673751953,
+            "min": 25.581283203
+          },
+          "40000": {
+            "max": 38.975035156,
+            "min": 38.90315625
+          },
+          "46000": {
+            "max": 50.82778125,
+            "min": 50.687253906
+          },
+          "52000": {
+            "max": 64.345886718,
+            "min": 64.053457031
+          },
+          "58000": {
+            "max": 80.02228125,
+            "min": 78.96221875
+          },
+          "64000": {
+            "max": 96.37196875,
+            "min": 95.847
+          },
+          "70000": {
+            "max": 117.100203125,
+            "min": 116.125890625
+          },
+          "76000": {
+            "max": 138.5485,
+            "min": 138.11371875
+          },
+          "82000": {
+            "max": 164.37625,
+            "min": 163.666375
+          },
+          "88000": {
+            "max": 192.420296875,
+            "min": 191.4055625
+          },
+          "94000": {
+            "max": 233.3445625,
+            "min": 222.28921875
+          }
+        },
+        "reached_46000": true,
+        "rungs_completed": [
+          12000,
+          16000,
+          20000,
+          26000,
+          32000,
+          40000,
+          46000,
+          52000,
+          58000,
+          64000,
+          70000,
+          76000,
+          82000,
+          88000,
+          94000
+        ]
+      },
+      "gpu_only_u4": {
+        "available_mb_by_n": {
+          "12000": {
+            "available_mb_end_median": 60089.17578125,
+            "available_mb_start_median": 60093.6875
+          },
+          "16000": {
+            "available_mb_end_median": 60082.6640625,
+            "available_mb_start_median": 60080.1328125
+          },
+          "20000": {
+            "available_mb_end_median": 60061.734375,
+            "available_mb_start_median": 60072.38671875
+          },
+          "26000": {
+            "available_mb_end_median": 60057.7890625,
+            "available_mb_start_median": 60072.40625
+          },
+          "32000": {
+            "available_mb_end_median": 60062.0390625,
+            "available_mb_start_median": 60060.2578125
+          },
+          "40000": {
+            "available_mb_end_median": 60029.90625,
+            "available_mb_start_median": 60046.2578125
+          },
+          "46000": {
+            "available_mb_end_median": 60047.6875,
+            "available_mb_start_median": 60051.96875
+          },
+          "52000": {
+            "available_mb_end_median": 60038.20703125,
+            "available_mb_start_median": 60043.79296875
+          },
+          "58000": {
+            "available_mb_end_median": 60033.9609375,
+            "available_mb_start_median": 60022.2265625
+          },
+          "64000": {
+            "available_mb_end_median": 60027.08203125,
+            "available_mb_start_median": 60030.03515625
+          },
+          "70000": {
+            "available_mb_end_median": 59999.88671875,
+            "available_mb_start_median": 60007.40625
+          },
+          "76000": {
+            "available_mb_end_median": 59989.18359375,
+            "available_mb_start_median": 59990.25
+          },
+          "82000": {
+            "available_mb_end_median": 59969.0546875,
+            "available_mb_start_median": 59977.35546875
+          },
+          "88000": {
+            "available_mb_end_median": 59947.66796875,
+            "available_mb_start_median": 59945.8515625
+          },
+          "94000": {
+            "available_mb_end_median": 59159.96875,
+            "available_mb_start_median": 59805.953125
+          }
+        },
+        "first_available_mb_fall_n": 16000,
+        "first_failure_class": null,
+        "first_failure_n": null,
+        "first_failure_verbatim": null,
+        "first_slo_exceeded_n": 20000,
+        "highest_successful_n": 94000,
+        "median_prefill_s_by_n": {
+          "12000": 4.520159179,
+          "16000": 7.375479003,
+          "20000": 11.057879882,
+          "26000": 17.606330078,
+          "32000": 25.565955078,
+          "40000": 38.838996093,
+          "46000": 50.673039062,
+          "52000": 64.133894531,
+          "58000": 79.728132812,
+          "64000": 96.019632812,
+          "70000": 116.533453125,
+          "76000": 138.615765625,
+          "82000": 163.5998125,
+          "88000": 191.382171875,
+          "94000": 228.397109375
+        },
+        "power_law_fit": {
+          "C": 7.882715126945886e-08,
+          "b": 1.8935978784960912,
+          "fit_n_list": [
+            12000,
+            16000,
+            20000,
+            26000,
+            32000,
+            40000,
+            46000,
+            52000,
+            58000,
+            64000,
+            70000,
+            76000,
+            82000,
+            88000,
+            94000
+          ],
+          "fit_range_n": [
+            12000,
+            94000
+          ],
+          "form": "prefill_s = C * n^b",
+          "n_points": 15,
+          "predict_46000_s": 53.218688762787075,
+          "ss_res_linear": 660.2757691100057,
+          "ss_tot_log_y": 21.27858640425226
+        },
+        "prefill_s_min_max_by_n": {
+          "12000": {
+            "max": 4.552668945,
+            "min": 4.516632324
+          },
+          "16000": {
+            "max": 7.382560546,
+            "min": 7.315713378
+          },
+          "20000": {
+            "max": 11.085249023,
+            "min": 11.049648437
+          },
+          "26000": {
+            "max": 17.625626953,
+            "min": 17.539978515
+          },
+          "32000": {
+            "max": 25.671611328,
+            "min": 25.531160156
+          },
+          "40000": {
+            "max": 38.885480468,
+            "min": 38.821941406
+          },
+          "46000": {
+            "max": 50.758804687,
+            "min": 50.613808593
+          },
+          "52000": {
+            "max": 64.724753906,
+            "min": 63.943660156
+          },
+          "58000": {
+            "max": 80.1419375,
+            "min": 78.737539062
+          },
+          "64000": {
+            "max": 96.025757812,
+            "min": 95.832125
+          },
+          "70000": {
+            "max": 116.812617187,
+            "min": 116.020070312
+          },
+          "76000": {
+            "max": 138.992140625,
+            "min": 138.293296875
+          },
+          "82000": {
+            "max": 164.105921875,
+            "min": 163.2964375
+          },
+          "88000": {
+            "max": 192.05240625,
+            "min": 191.289953125
+          },
+          "94000": {
+            "max": 230.106734375,
+            "min": 222.57325
+          }
+        },
+        "reached_46000": true,
+        "rungs_completed": [
+          12000,
+          16000,
+          20000,
+          26000,
+          32000,
+          40000,
+          46000,
+          52000,
+          58000,
+          64000,
+          70000,
+          76000,
+          82000,
+          88000,
+          94000
+        ]
+      },
+      "gpu_only_u8": {
+        "available_mb_by_n": {
+          "12000": {
+            "available_mb_end_median": 60087.73828125,
+            "available_mb_start_median": 60080.7421875
+          },
+          "16000": {
+            "available_mb_end_median": 60076.359375,
+            "available_mb_start_median": 60076.2890625
+          },
+          "20000": {
+            "available_mb_end_median": 60066.94140625,
+            "available_mb_start_median": 60068.9921875
+          },
+          "26000": {
+            "available_mb_end_median": 60069.6328125,
+            "available_mb_start_median": 60062.2890625
+          },
+          "32000": {
+            "available_mb_end_median": 60055.34765625,
+            "available_mb_start_median": 60054.76953125
+          },
+          "40000": {
+            "available_mb_end_median": 60051.09375,
+            "available_mb_start_median": 60030.1171875
+          },
+          "46000": {
+            "available_mb_end_median": 60049.015625,
+            "available_mb_start_median": 60047.421875
+          },
+          "52000": {
+            "available_mb_end_median": 60045.2890625,
+            "available_mb_start_median": 60038.046875
+          },
+          "58000": {
+            "available_mb_end_median": 60032.44921875,
+            "available_mb_start_median": 60035.5
+          },
+          "64000": {
+            "available_mb_end_median": 60027.0234375,
+            "available_mb_start_median": 60029.47265625
+          },
+          "70000": {
+            "available_mb_end_median": 60006.82421875,
+            "available_mb_start_median": 59999.3359375
+          },
+          "76000": {
+            "available_mb_end_median": 59990.578125,
+            "available_mb_start_median": 59975.52734375
+          },
+          "82000": {
+            "available_mb_end_median": 59977.7109375,
+            "available_mb_start_median": 59978.0625
+          },
+          "88000": {
+            "available_mb_end_median": 59800.9609375,
+            "available_mb_start_median": 59947.25
+          },
+          "94000": {
+            "available_mb_end_median": 56983.92578125,
+            "available_mb_start_median": 59159.30859375
+          }
+        },
+        "first_available_mb_fall_n": 16000,
+        "first_failure_class": null,
+        "first_failure_n": null,
+        "first_failure_verbatim": null,
+        "first_slo_exceeded_n": 20000,
+        "highest_successful_n": 94000,
+        "median_prefill_s_by_n": {
+          "12000": 4.529805664,
+          "16000": 7.376241699,
+          "20000": 11.070578125,
+          "26000": 17.672818359,
+          "32000": 25.541501953,
+          "40000": 38.857835937,
+          "46000": 50.627007812,
+          "52000": 63.951402343,
+          "58000": 79.282992187,
+          "64000": 95.9681875,
+          "70000": 116.605390625,
+          "76000": 138.25334375,
+          "82000": 164.17621875,
+          "88000": 191.851015625,
+          "94000": 229.1155
+        },
+        "power_law_fit": {
+          "C": 7.922092350521749e-08,
+          "b": 1.89315583791242,
+          "fit_n_list": [
+            12000,
+            16000,
+            20000,
+            26000,
+            32000,
+            40000,
+            46000,
+            52000,
+            58000,
+            64000,
+            70000,
+            76000,
+            82000,
+            88000,
+            94000
+          ],
+          "fit_range_n": [
+            12000,
+            94000
+          ],
+          "form": "prefill_s = C * n^b",
+          "n_points": 15,
+          "predict_46000_s": 53.23130467169574,
+          "ss_res_linear": 712.852256598449,
+          "ss_tot_log_y": 21.270790718748856
+        },
+        "prefill_s_min_max_by_n": {
+          "12000": {
+            "max": 4.539261718,
+            "min": 4.526051269
+          },
+          "16000": {
+            "max": 7.392512695,
+            "min": 7.360631835
+          },
+          "20000": {
+            "max": 11.086490234,
+            "min": 11.054083984
+          },
+          "26000": {
+            "max": 17.677890625,
+            "min": 17.667191406
+          },
+          "32000": {
+            "max": 25.54171289,
+            "min": 25.520457031
+          },
+          "40000": {
+            "max": 38.882011718,
+            "min": 38.85309375
+          },
+          "46000": {
+            "max": 50.756261718,
+            "min": 50.616945312
+          },
+          "52000": {
+            "max": 64.348046875,
+            "min": 63.905226562
+          },
+          "58000": {
+            "max": 80.320382812,
+            "min": 78.978640625
+          },
+          "64000": {
+            "max": 96.205234375,
+            "min": 95.818460937
+          },
+          "70000": {
+            "max": 117.197257812,
+            "min": 116.346320312
+          },
+          "76000": {
+            "max": 138.33115625,
+            "min": 137.58134375
+          },
+          "82000": {
+            "max": 164.4465625,
+            "min": 163.64303125
+          },
+          "88000": {
+            "max": 191.87275,
+            "min": 191.728953125
+          },
+          "94000": {
+            "max": 231.943359375,
+            "min": 222.83475
+          }
+        },
+        "reached_46000": true,
+        "rungs_completed": [
+          12000,
+          16000,
+          20000,
+          26000,
+          32000,
+          40000,
+          46000,
+          52000,
+          58000,
+          64000,
+          70000,
+          76000,
+          82000,
+          88000,
+          94000
+        ]
+      }
+    },
+    "pre_registration_outcome": "falsified",
+    "stop_classification": {
+      "abort_at": {
+        "active_arms_at_abort": [
+          "gpu_only_f16",
+          "gpu_only_u8",
+          "gpu_only_u4"
+        ],
+        "highest_n_completed": 94000,
+        "last_completed_probe": {
+          "arm_id": "gpu_only_u8",
+          "ended_utc": "2026-09-20T20:43:44.577091+00:00",
+          "n_tokens": 94000,
+          "repeat_index": 2
+        },
+        "n_cells_completed": 45,
+        "n_probes_completed": 135,
+        "source": "seal_cap4.reconstruct"
+      },
+      "abort_reason": "Stop-Process -Force",
+      "abort_verbatim": "Worker killed with Stop-Process -Force on evo-t2 after completing n=94000 (all three KV arms PASS every rung through 94k; next rung would be 100000). finally skipped; no summary.json (same gap as 2b3316b6). Artifacts copied to aipc-c1 for reconstruct+seal.",
+      "class": "force_killed_no_summary",
+      "execution_platform_id": "evo-t2",
+      "note": "Worker was killed (Stop-Process -Force / equivalent); finally did not run, so summary.json was absent. Completed cells are retained as aborted data. Not an allocation ceiling and not a quiescence-refusal stop.",
+      "seal_platform_id": "aipc-c1"
+    }
+  },
+  "arm_dead": {},
+  "arm_order": [
+    "gpu_only_f16",
+    "gpu_only_u8",
+    "gpu_only_u4"
+  ],
+  "cross_host_reconstruct": true,
+  "execution_platform_id": "evo-t2",
+  "experiment": "CAP-4",
+  "ir_sha256": "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2",
+  "kind": "cap4_prefill_curve_to_failure",
+  "placement": "gpu_only",
+  "predictions_registered_utc": "2026-09-16T01:12:00+00:00",
+  "raw_promote": {
+    "attempted": false,
+    "reason": "derived_diagnostic seal only; raw/ promote not requested for CAP-4."
+  },
+  "residency": "RESIDENT",
+  "run_environment": {
+    "active_power_scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+    "arm_order": [
+      "gpu_only_f16",
+      "gpu_only_u8",
+      "gpu_only_u4"
+    ],
+    "available_mb_end": 49961.3046875,
+    "available_mb_start": 60262.15625,
+    "cross_host_reconstruct": true,
+    "cross_host_unavailable_fields": [
+      "gpu_driver_version",
+      "windows_build",
+      "pip_freeze_sha256",
+      "tokenizers_version"
+    ],
+    "cross_host_unavailable_pip_freeze_marker": "pip_freeze_sha256 equals sha256(b'SEAM_UNAVAILABLE_CROSS_HOST_RECONSTRUCT'); not a measured freeze.",
+    "execution_platform_id": "evo-t2",
+    "gpu_driver_version": "UNAVAILABLE_CROSS_HOST_RECONSTRUCT",
+    "pip_freeze_sha256": "83231584596ad4ed90cce88d573c35a10540669cba31d0e8e58cd267518fc891",
+    "platform_id": "evo-t2",
+    "prompt_render_meta": {
+      "folded_stored_prompt_sha256_n": [
+        88000,
+        94000
+      ],
+      "missing_local_prompt_n": [
+        88000,
+        94000
+      ],
+      "note": "When local derived/delta_n/prompts/nN.txt is absent on the seal host, the probe's recorded prompt_sha256 is folded under a typed prefix. This preserves a deterministic INF-5 digest without inventing prompt text.",
+      "prompt_render_updates": 135
+    },
+    "prompt_render_sha256": "5c6e763670a4f4ba5897b703d296b8c923f54b576315c2163a3902660c254e74",
+    "prompt_render_updates": 135,
+    "reconstructed_from": "cells.json+probes.ndjson+plan.json",
+    "seal_platform_id": "aipc-c1",
+    "session_design": "interleaved",
+    "tokenizers_version": "UNAVAILABLE_CROSS_HOST_RECONSTRUCT",
+    "windows_build": "UNAVAILABLE_CROSS_HOST_RECONSTRUCT",
+    "workloads_session_host_note": "Force-kill left no WSH bookend; recorded False as unknown-at-reconstruct, not a measured end-of-run probe on the seal host.",
+    "workloads_session_host_resident": false
+  },
+  "run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+  "rungs_executed": [
+    12000,
+    16000,
+    20000,
+    26000,
+    32000,
+    40000,
+    46000,
+    52000,
+    58000,
+    64000,
+    70000,
+    76000,
+    82000,
+    88000,
+    94000
+  ],
+  "seal_platform_id": "aipc-c1",
+  "seal_style": "derived_diagnostic",
+  "sealed_utc": "2026-09-20T20:55:50.790649+00:00",
+  "session_design": "interleaved",
+  "session_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+  "source_session": "derived/cap4/65e33de8-ac07-405a-a1f8-53698974afe9",
+  "spec_version_note": "INF-5 run_environment required; not a raw/ 1.1 emit",
+  "status": "aborted"
+}

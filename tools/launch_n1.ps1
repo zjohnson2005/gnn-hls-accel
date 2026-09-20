@@ -1,4 +1,4 @@
-# N-1 launcher — CB equivalence probe (gates attention-window / axis 5).
+# N-1 launcher - CB equivalence probe (gates attention-window / axis 5).
 #
 # Production (Zach, one line, no args, bare SSH after cold boot):
 #   powershell -NoProfile -File tools/launch_n1.ps1
@@ -26,6 +26,8 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 Set-Location $root
+
+. (Join-Path $PSScriptRoot "_assert_machine_lock.ps1")
 
 # --- fixed N-1 coordinates (do not paraphrase matrix parameter names) ---
 $Tag = "n1_cb_equivalence"
@@ -303,6 +305,9 @@ if ($DryRun) {
     exit 0
 }
 
+
+# Machine-lock / alive-worker check (hard refuse before spawn)
+Assert-SeamMachineLockClear -RepoRoot $root -DryRun:$DryRun
 Write-Host "=== 4. spawn_detached (live) ==="
 New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
 $json = & $SpawnPs1 -CommandLine $resolvedCmd -LogPath $log -WorkingDirectory $root

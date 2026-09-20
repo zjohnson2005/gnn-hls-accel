@@ -74,7 +74,7 @@ def test_policy_dispatch_slo_and_emission_on_3entry_fixture(tmp_path: Path) -> N
         tokens_out=fix["cloud_tokens_out"],
     )
 
-    # slo_escalate: entry_0 turn1 has n_ctx=12000 > 10000 → escalate
+    # slo_escalate: entry_0 turn1 has ttft_s=11 > 10 -> escalate (ctx alone must not)
     er0 = run_hybrid_entry(
         fix["entries"][0],
         policy="slo_escalate",
@@ -87,7 +87,8 @@ def test_policy_dispatch_slo_and_emission_on_3entry_fixture(tmp_path: Path) -> N
     assert er0.turns[0].escalated is False
     assert er0.turns[1].escalated is True
     assert er0.turns[1].placement == "cloud"
-    assert "ctx>" in (er0.turns[1].escalate_reason or "")
+    assert "ttft>" in (er0.turns[1].escalate_reason or "")
+    assert "ctx>" not in (er0.turns[1].escalate_reason or "")
     assert er0.turns[2].placement == "cloud"
     assert er0.turns[2].escalate_reason == "stay_cloud"
 
@@ -119,7 +120,7 @@ def test_policy_dispatch_slo_and_emission_on_3entry_fixture(tmp_path: Path) -> N
 def test_cost_guard_trips(tmp_path: Path) -> None:
     fix = _load_fix()
     local = StubLocalBackend(script=fix["local_script"])
-    # One cloud turn ≈ cloud_usd(1000,200) = 0.006
+    # One cloud turn ~= cloud_usd(1000,200) = 0.006
     per = cloud_usd(1000, 200)
     cloud = StubCloudBackend(tokens_in=1000, tokens_out=200)
     with pytest.raises(CostCapExceeded) as ei:
@@ -194,14 +195,13 @@ def test_resume_skips_completed_entries(tmp_path: Path) -> None:
 
 
 def test_decide_helpers() -> None:
-    esc, reason = decide_slo_escalate(
-        already_on_cloud=False, ttft_s=11.0, decode_tok_s=10.0, n_ctx=100
-    )
+    esc, reason = decide_slo_escalate(already_on_cloud=False, ttft_s=11.0, decode_tok_s=10.0)
     assert esc and "ttft>" in (reason or "")
-    esc, reason = decide_slo_escalate(
-        already_on_cloud=False, ttft_s=1.0, decode_tok_s=3.0, n_ctx=100
-    )
+    esc, reason = decide_slo_escalate(already_on_cloud=False, ttft_s=1.0, decode_tok_s=3.0)
     assert esc and "decode<" in (reason or "")
+    # High ctx alone must NOT escalate under the RESIDENT rule.
+    esc, reason = decide_slo_escalate(already_on_cloud=False, ttft_s=1.0, decode_tok_s=12.0)
+    assert not esc
     esc, _ = decide_emission_escalate(already_on_cloud=False, emitted_parseable_tool_call=True)
     assert not esc
 
@@ -325,7 +325,7 @@ def test_early_stop_all_four_policies() -> None:
     assert er_slo.slo_fraction == 1.0  # both ran turns meet SLO; unexecuted excluded
     assert not any(t.escalated for t in er_slo.turns)
 
-    # emission_escalate: empty_execute on last local turn → cloud from that turn.
+    # emission_escalate: empty_execute on last local turn -> cloud from that turn.
     er_em = run_hybrid_entry(
         entry,
         policy="emission_escalate",
@@ -435,7 +435,7 @@ def test_r2c_full_signal_bounceback_each_trigger_once() -> None:
     assert er.turns[3].placement == "local" and not er.turns[3].escalated
     assert er.turns[3].tool_exec_error is False
     assert er.turns[3].tool_exec_error_class is None
-    # Cloud did not stay after bounce — turn 3 is local again.
+    # Cloud did not stay after bounce - turn 3 is local again.
     assert er.cloud_usd_entry == 3 * cloud_usd(100, 20)
     # Context injection recorded for each bounce turn.
     assert local._cloud_context["bounce_all_triggers"][0]
@@ -548,6 +548,335 @@ def test_entry_quality_dict_shape() -> None:
     assert led["trajectory_pass"] is False
 
 
+def test_slo_rule_ignores_ctx_even_when_above_cold_start() -> None:
+    from tools.run_h1_hybrid import (
+        CTX_LIMIT_COLD_START,
+        decide_slo_escalate,
+        decide_slo_escalate_legacy_with_ctx,
+    )
+
+    # New rule: ctx=12000 with healthy TTFT/decode -> no escalate.
+    esc, reason = decide_slo_escalate(already_on_cloud=False, ttft_s=2.0, decode_tok_s=12.0)
+    assert esc is False
+    assert reason is None
+    # Legacy would fire on ctx alone.
+    esc_old, reason_old = decide_slo_escalate_legacy_with_ctx(
+        already_on_cloud=False,
+        ttft_s=2.0,
+        decode_tok_s=12.0,
+        n_ctx=CTX_LIMIT_COLD_START + 1,
+    )
+    assert esc_old is True
+    assert "ctx>" in (reason_old or "")
+
+
+def test_interleave_order_entry_by_entry(tmp_path: Path) -> None:
+    from tools.run_h1_hybrid import INTERLEAVE_POLICIES, run_interleaved_session
+
+    fix = _load_fix()
+    local = StubLocalBackend(script=fix["local_script"])
+    cloud = StubCloudBackend(
+        tokens_in=fix["cloud_tokens_in"],
+        tokens_out=fix["cloud_tokens_out"],
+    )
+    out = tmp_path / "intl"
+    summary = run_interleaved_session(
+        entries=fix["entries"],
+        out_dir=out,
+        local=local,
+        cloud=cloud,
+        policy_caps_usd={p: 100.0 for p in INTERLEAVE_POLICIES},
+        session_max_usd=1000.0,
+        run_id="intl-order",
+        skip_entry_assert=True,
+        seal=False,
+    )
+    assert summary["session_design"] == "interleaved"
+    assert summary["arm_order"] == list(INTERLEAVE_POLICIES)
+    ckpt = json.loads((out / "checkpoint.json").read_text(encoding="utf-8"))
+    cell_log = ckpt["cell_log"]
+    eids = [e["id"] for e in fix["entries"]]
+    expected: list[tuple[str, str]] = []
+    for eid in eids:
+        for pol in INTERLEAVE_POLICIES:
+            expected.append((eid, pol))
+    got = [(c["entry_id"], c["policy"]) for c in cell_log]
+    assert got == expected
+    plan = json.loads((out / "plan.json").read_text(encoding="utf-8"))
+    assert plan["session_design"] == "interleaved"
+    for pol in INTERLEAVE_POLICIES:
+        assert (out / "policies" / pol / "entry_quality.json").is_file()
+        assert (out / "policies" / pol / "turn_ledger.json").is_file()
+
+
+def test_interleave_resume_per_policy_skips_completed(tmp_path: Path) -> None:
+    from tools.run_h1_hybrid import INTERLEAVE_POLICIES, run_interleaved_session
+
+    fix = _load_fix()
+    local = StubLocalBackend(script=fix["local_script"])
+    calls = {"n": 0}
+
+    def _count() -> None:
+        calls["n"] += 1
+
+    cloud = StubCloudBackend(
+        tokens_in=10,
+        tokens_out=5,
+        on_call=_count,
+    )
+    out = tmp_path / "intl_resume"
+    caps = {p: 100.0 for p in INTERLEAVE_POLICIES}
+    s1 = run_interleaved_session(
+        entries=fix["entries"],
+        out_dir=out,
+        local=local,
+        cloud=cloud,
+        policy_caps_usd=caps,
+        session_max_usd=1000.0,
+        run_id="intl-resume",
+        skip_entry_assert=True,
+        seal=False,
+    )
+    assert s1["status"] == "complete"
+    n_first = calls["n"]
+    assert n_first > 0
+    calls["n"] = 0
+    s2 = run_interleaved_session(
+        entries=fix["entries"],
+        out_dir=out,
+        local=local,
+        cloud=cloud,
+        policy_caps_usd=caps,
+        session_max_usd=1000.0,
+        run_id="intl-resume",
+        skip_entry_assert=True,
+        seal=False,
+    )
+    assert s2["status"] == "complete"
+    assert calls["n"] == 0
+    for pol in INTERLEAVE_POLICIES:
+        ckpt = json.loads((out / "policies" / pol / "checkpoint.json").read_text(encoding="utf-8"))
+        assert set(ckpt["completed_entry_ids"]) == {e["id"] for e in fix["entries"]}
+
+
+def test_interleave_policy_cap_does_not_rebill_other_arms(tmp_path: Path) -> None:
+    """Cap abort on emission_escalate must not prevent slo/bounceback completion."""
+    from tools.run_h1_hybrid import cloud_usd, run_interleaved_session
+
+    fix = _load_fix()
+    local = StubLocalBackend(script=fix["local_script"])
+    per = cloud_usd(1000, 200)
+    cloud = StubCloudBackend(tokens_in=1000, tokens_out=200)
+    out = tmp_path / "intl_cap"
+    # Tiny emission cap trips quickly; other arms keep full budget.
+    caps = {
+        "slo_escalate": 100.0,
+        "emission_escalate": per * 0.5,
+        "full_signal_bounceback": 100.0,
+    }
+    summary = run_interleaved_session(
+        entries=fix["entries"],
+        out_dir=out,
+        local=local,
+        cloud=cloud,
+        policy_caps_usd=caps,
+        session_max_usd=1000.0,
+        run_id="intl-cap",
+        skip_entry_assert=True,
+        seal=False,
+    )
+    assert summary["policies"]["emission_escalate"]["status"] == "aborted_cap"
+    assert summary["policies"]["slo_escalate"]["status"] == "complete"
+    assert summary["policies"]["full_signal_bounceback"]["status"] == "complete"
+    slo_ckpt = json.loads(
+        (out / "policies" / "slo_escalate" / "checkpoint.json").read_text(encoding="utf-8")
+    )
+    assert set(slo_ckpt["completed_entry_ids"]) == {e["id"] for e in fix["entries"]}
+
+
+def test_interleave_2policy_excludes_r2c_in_plan_and_seal(tmp_path: Path) -> None:
+    """H1-2POLICY: subset arms; plan/summary record R2c exclusion (not 3-policy)."""
+    from tools.run_h1_hybrid import (
+        INTERLEAVE_POLICIES_2POLICY,
+        R2C_EXCLUSION_REASON,
+        run_interleaved_session,
+    )
+
+    fix = _load_fix()
+    local = StubLocalBackend(script=fix["local_script"])
+    cloud = StubCloudBackend(
+        tokens_in=fix["cloud_tokens_in"],
+        tokens_out=fix["cloud_tokens_out"],
+    )
+    out = tmp_path / "intl_2p"
+    summary = run_interleaved_session(
+        entries=fix["entries"],
+        out_dir=out,
+        local=local,
+        cloud=cloud,
+        policy_caps_usd={p: 100.0 for p in INTERLEAVE_POLICIES_2POLICY},
+        session_max_usd=25.0,
+        policies=INTERLEAVE_POLICIES_2POLICY,
+        run_id="intl-2policy",
+        skip_entry_assert=True,
+        seal=False,
+    )
+    assert summary["kind"] == "h1_2policy_interleaved"
+    assert summary["r2c_excluded"] is True
+    assert summary["r2c_exclusion_reason"] == R2C_EXCLUSION_REASON
+    assert "full_signal_bounceback" not in summary["policies"]
+    plan = json.loads((out / "plan.json").read_text(encoding="utf-8"))
+    assert plan["kind"] == "h1_2policy_interleaved"
+    assert plan["full_three_policy_comparison"] is False
+    assert plan["excluded_policies"]["full_signal_bounceback"]["blocked_on"] == "R2C-TURNWISE"
+    assert plan["arm_order"] == list(INTERLEAVE_POLICIES_2POLICY)
+    ckpt = json.loads((out / "checkpoint.json").read_text(encoding="utf-8"))
+    cell_log = ckpt["cell_log"]
+    eids = [e["id"] for e in fix["entries"]]
+    expected: list[tuple[str, str]] = []
+    for eid in eids:
+        for pol in INTERLEAVE_POLICIES_2POLICY:
+            expected.append((eid, pol))
+    got = [(c["entry_id"], c["policy"]) for c in cell_log]
+    assert got == expected
+    assert not (out / "policies" / "full_signal_bounceback").exists()
+
+
+def test_interleave_2policy_kind_and_exclusion_helpers() -> None:
+    """Kind + exclusion helpers distinguish 2-policy from full 3-policy seals."""
+    from tools.run_h1_hybrid import (
+        INTERLEAVE_POLICIES,
+        INTERLEAVE_POLICIES_2POLICY,
+        R2C_EXCLUSION_REASON,
+        interleaved_exclusion_meta,
+        interleaved_kind,
+    )
+
+    meta = interleaved_exclusion_meta(INTERLEAVE_POLICIES_2POLICY)
+    assert meta["r2c_excluded"] is True
+    assert meta["r2c_exclusion_reason"] == R2C_EXCLUSION_REASON
+    assert interleaved_kind(INTERLEAVE_POLICIES_2POLICY) == "h1_2policy_interleaved"
+    full = interleaved_exclusion_meta(INTERLEAVE_POLICIES)
+    assert full["r2c_excluded"] is False
+    assert full["full_three_policy_comparison"] is True
+    assert interleaved_kind(INTERLEAVE_POLICIES) == "h1_3policy_interleaved"
+
+
+def test_resolve_interleaved_policies_subset() -> None:
+    from tools.run_h1_hybrid import (
+        INTERLEAVE_POLICIES,
+        INTERLEAVE_POLICIES_2POLICY,
+        _resolve_interleaved_policies,
+    )
+
+    assert _resolve_interleaved_policies([]) == INTERLEAVE_POLICIES
+    assert (
+        _resolve_interleaved_policies(["slo_escalate", "emission_escalate"])
+        == INTERLEAVE_POLICIES_2POLICY
+    )
+
+
+def test_h1_3policy_prediction_files_exist() -> None:
+    base = ROOT / "derived" / "h1_hybrid"
+    for name in (
+        "H1_3POLICY_PREDICTIONS.json",
+        "H1_3POLICY_PREDICTIONS.md",
+        "slo_rule_old_vs_new_86d0f4cf.json",
+        "r2a_class_c_census.json",
+    ):
+        assert (base / name).is_file(), f"missing {name}"
+
+
+INJECT_FIXTURE = ROOT / "tests" / "fixtures" / "h1_hybrid_r2c_inject.json"
+
+
+def test_r2c_inject_bounce_turn1_then_local_sees_cloud() -> None:
+    """Bounce at turn 1; turns 2-3 complete locally with cloud text in context."""
+    from tools.r2c_inject import SharedBfclToolState
+
+    fix = json.loads(INJECT_FIXTURE.read_text(encoding="utf-8"))
+    entry = fix["entries"][0]
+    cloud_text = fix["cloud_context_text"]
+    shared = SharedBfclToolState(model_name="stub_shared_bfcl")
+    local = StubLocalBackend(script=fix["local_script"], shared_tools=shared)
+    cloud = StubCloudBackend(
+        tokens_in=fix["cloud_tokens_in"],
+        tokens_out=fix["cloud_tokens_out"],
+        cloud_context_text=cloud_text,
+    )
+    er = run_hybrid_entry(
+        entry,
+        policy="full_signal_bounceback",
+        local=local,
+        cloud=cloud,
+        cost=CostGuard(max_usd=100.0),
+        model="stub-4B",
+    )
+    assert er.turns_in_entry == 3
+    assert er.turns_executed == 3
+    assert len(er.bounces) == 1
+    b0 = er.bounces[0]
+    assert b0.turn == 0
+    assert b0.trigger == "no_parseable_tool_call"
+    assert b0.cloud_tokens_in == fix["cloud_tokens_in"]
+    assert b0.cloud_tokens_out == fix["cloud_tokens_out"]
+    assert b0.cloud_usd == cloud_usd(fix["cloud_tokens_in"], fix["cloud_tokens_out"])
+    assert b0.re_prefill_required is True
+    assert b0.kv_valid_after_inject is False
+    assert b0.control_return_turn == 1
+    assert b0.shared_tool_exec is True
+    # After turn 1 local runs, stub_zero re-prefill is backfilled onto the bounce.
+    assert b0.re_prefill_s == 0.0
+    assert b0.re_prefill_source == "stub_zero"
+
+    assert er.turns[0].placement == "cloud"
+    assert er.turns[0].bounce_trigger == "no_parseable_tool_call"
+    assert er.turns[1].placement == "local" and not er.turns[1].escalated
+    assert er.turns[2].placement == "local" and not er.turns[2].escalated
+
+    # Cloud assistant turn is present in local history; later local turns see it.
+    assert local.context_contains(entry["id"], cloud_text)
+    hist = local.history_for(entry["id"])
+    cloud_idxs = [
+        i
+        for i, m in enumerate(hist)
+        if m.get("source") == "cloud" and cloud_text in str(m.get("content"))
+    ]
+    assert cloud_idxs, "injected cloud assistant missing from local history"
+    assert any(i > cloud_idxs[0] and m.get("source") == "local" for i, m in enumerate(hist))
+
+
+def test_r2c_inject_stub_still_refuses_seal(tmp_path: Path) -> None:
+    fix = json.loads(INJECT_FIXTURE.read_text(encoding="utf-8"))
+    local = StubLocalBackend(script=fix["local_script"])
+    with pytest.raises(SystemExit, match="OpenVinoLocalBackend|REFUSED"):
+        assert_seal_allowed(seal=True, local=local, policy="full_signal_bounceback")
+
+
+def test_r2c_shared_tool_state_is_single_path() -> None:
+    """Local and cloud-inject tool exec share one SharedBfclToolState (not duplicated)."""
+    from tools.r2c_inject import SharedBfclToolState
+
+    shared = SharedBfclToolState(model_name="shared_bfcl_r2c")
+    out_a, _ = shared.execute(
+        ["alpha()"],
+        initial_config={},
+        involved_classes=[],
+        test_entry_id="e",
+        long_context=False,
+    )
+    out_b, _ = shared.execute(
+        ["beta()"],
+        initial_config={},
+        involved_classes=[],
+        test_entry_id="e",
+        long_context=False,
+    )
+    assert out_a and out_b
+    assert len(shared.calls) == 2
+    assert {c["model_name"] for c in shared.calls} == {"shared_bfcl_r2c"}
+
+
 if __name__ == "__main__":
     import tempfile
 
@@ -556,9 +885,12 @@ if __name__ == "__main__":
     test_decide_bounceback_priority()
     test_tool_exec_error_ledger_fields_typed()
     test_entry_quality_dict_shape()
+    test_slo_rule_ignores_ctx_even_when_above_cold_start()
     test_early_stop_all_four_policies()
     test_early_stop_generation_error_is_not_emission_escalate()
     test_r2c_full_signal_bounceback_each_trigger_once()
+    test_r2c_inject_bounce_turn1_then_local_sees_cloud()
+    test_r2c_shared_tool_state_is_single_path()
     with tempfile.TemporaryDirectory() as td:
         p = Path(td)
         test_phase_timers_sum_on_hybrid_ledger(p)
@@ -568,4 +900,8 @@ if __name__ == "__main__":
         test_agnostic_default_refused_live(p)
         test_stub_cannot_seal_hybrid(p)
         test_fixture_cli_refuses_seal(p)
-    print("PASS tests/test_h1_hybrid.py")
+        test_r2c_inject_stub_still_refuses_seal(p)
+        test_interleave_order_entry_by_entry(p)
+        test_interleave_resume_per_policy_skips_completed(p)
+        test_interleave_policy_cap_does_not_rebill_other_arms(p)
+    print("PASS tests/test_h1_hybrid.py (prediction file check skipped in __main__)")

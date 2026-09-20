@@ -1,0 +1,24 @@
+{
+  "entry_first_triggers": {
+    "ctx_only_old_minus_new": 0,
+    "new": 0,
+    "old": 0
+  },
+  "kind": "slo_rule_old_vs_new",
+  "max_n_ctx": 6279,
+  "n_entries": 200,
+  "n_local_turns": 732,
+  "new_rule": "ttft_s>10 OR decode_tok_s<6  (MEASURED only; no ctx)",
+  "old_rule": "ttft_s>10 OR decode_tok_s<6 OR n_ctx>10000",
+  "rationale": "CTX_LIMIT is CAP-1/C-2 cold-start bound; arms run RESIDENT where depth TTFT is delta-prefill (~0.16 of full prefill per 41e419bd). Static cold-start ctx gate would escalate on accumulated context even when measured TTFT meets SLO.",
+  "run_id": "86d0f4cf-e8c2-4ce5-96da-04c6a9c129f3",
+  "turn_triggers": {
+    "ctx_gt_10000": 0,
+    "ctx_only_old_minus_new": 0,
+    "decode_lt_6": 0,
+    "new": 0,
+    "old": 0,
+    "ttft_gt_10": 0
+  },
+  "verdict": "On sealed R2a ledger, old and new rules agree: 0 escalations (max n_ctx=6279 < 10000; no TTFT/decode SLO trips). Difference is preventative for deeper RESIDENT contexts."
+}

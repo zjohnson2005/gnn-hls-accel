@@ -33,6 +33,8 @@ $root = Split-Path -Parent $PSScriptRoot
 if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 Set-Location $root
 
+. (Join-Path $PSScriptRoot "_assert_machine_lock.ps1")
+
 $Tag = "cap4"
 $WatchdogIntervalS = 60
 $ArmsCsv = "gpu_only_f16,gpu_only_u8,gpu_only_u4"
@@ -161,7 +163,7 @@ Write-Host ("Available MBytes AFTER  clean: {0:N1}  (delta={1:N1})" -f `
 Write-Host ""
 
 # ---------------------------------------------------------------------------
-# 2. Five gates (same as C-1/C-2 — MEM-CEIL / allocation claims need a clean host)
+# 2. Five gates (same as C-1/C-2 - MEM-CEIL / allocation claims need a clean host)
 # ---------------------------------------------------------------------------
 Write-Host "=== 2. five gates ==="
 Write-Host "GATE NOTE -- PORT-2: platform YAML floors; AC/no-battery; processor AC 100/100 (GUID recorded only)."
@@ -214,7 +216,7 @@ Write-Host ("artifact_dir        : {0}" -f $artifactDir)
 Write-Host ("launch_log          : {0}" -f $log)
 Write-Host ""
 
-# Extraction smoke (reuse C-2 n=64 smoke — same child metrics path)
+# Extraction smoke (reuse C-2 n=64 smoke - same child metrics path)
 Write-Host "=== extraction smoke (n=64, real cell) ==="
 $SmokePy = Join-Path $root "tools\c2_extraction_smoke.py"
 $SmokeOut = Join-Path $SessionRoot "_extraction_smoke"
@@ -240,6 +242,9 @@ if ($DryRun) {
     exit 0
 }
 
+
+# Machine-lock / alive-worker check (hard refuse before spawn)
+Assert-SeamMachineLockClear -RepoRoot $root -DryRun:$DryRun
 Write-Host "=== 4. spawn_detached (live) ==="
 & $SpawnPs1 -CommandLine $resolvedCmd -LogPath $log -WorkingDirectory $root
 if ($LASTEXITCODE -ne 0) {

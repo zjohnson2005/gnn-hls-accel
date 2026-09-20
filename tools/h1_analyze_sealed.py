@@ -21,7 +21,6 @@ OUT_DIR = ROOT / "derived/h1_hybrid"
 
 TTFT_SLO_S = 10.0
 DECODE_SLO_TOK_S = 6.0
-CTX_LIMIT = 10_000
 
 SCORER_CHECKER = "bfcl_eval.eval_checker.multi_turn_eval.multi_turn_checker"
 SCORER_WRAPPER = "apu_characterization.cap01.bfcl_cap01_multi_turn_checker"
@@ -75,11 +74,10 @@ def assert_scorer_matches_w3(plan: dict[str, Any]) -> dict[str, Any]:
 
 
 def slo_ok(t: dict[str, Any]) -> bool:
+    """MEASURED ttft/decode only - ctx is not an SLO escalate gate (H1-3POLICY)."""
     if t.get("ttft_s") is not None and float(t["ttft_s"]) > TTFT_SLO_S:
         return False
     if t.get("decode_tok_s") is not None and float(t["decode_tok_s"]) < DECODE_SLO_TOK_S:
-        return False
-    if int(t.get("n_ctx") or 0) > CTX_LIMIT:
         return False
     return True
 
@@ -196,10 +194,10 @@ def phase_timers(entries: list[dict[str, Any]]) -> dict[str, Any]:
         "x2_uncovered_s_per_turn": 4.8,
         "finding": (
             "X-2 ~4.8 s/turn gap is gone on R2a: median t_other is ~0.09 s "
-            "(entry0 turn0 t_other≈0.094 s). Phase timers now capture "
+            "(entry0 turn0 t_other~=0.094 s). Phase timers now capture "
             "t_template_build + t_tokenize + t_generate + t_tool_exec + t_other "
             "with residual closure; X-2 lacked these additive phases so the "
-            "wall−(prefill+decode) remainder looked like ~4.8 s uncovered."
+            "wall-(prefill+decode) remainder looked like ~4.8 s uncovered."
         ),
     }
 
@@ -208,7 +206,7 @@ def census_r2a(entries: list[dict[str, Any]]) -> dict[str, Any]:
     """Host-observable failure classes at zero cost from the sealed ledger.
 
     Class D (SILENT) requires BFCL trajectory failure with clean tool calls.
-    Scores were not persisted → D cannot be separated from pass among host-clear.
+    Scores were not persisted -> D cannot be separated from pass among host-clear.
     """
     class_a: list[str] = []
     class_b: list[str] = []
@@ -349,7 +347,7 @@ def main() -> None:
         ),
         "independence_vs_correlation": (
             "Operational rescue=1.0 >> 0.65 baseline means cloud finished "
-            "remaining turns whenever local emission failed — not a BFCL "
+            "remaining turns whenever local emission failed - not a BFCL "
             "quality statement. Quality correlation still unknown."
         ),
     }

@@ -1,0 +1,226 @@
+{
+  "affinity_readback": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "completed": true,
+  "exception": null,
+  "failure_mode": null,
+  "generation": {
+    "available_mb_at_peak": 47023.0,
+    "available_mb_min": 47018.0,
+    "available_mb_start": 57507.0,
+    "commit_bytes_end": 10897973248,
+    "commit_bytes_start": 3162398720,
+    "completion_chars": 43,
+    "completion_tokens_reported": 8,
+    "decode_s": 0.6455880939997982,
+    "decode_tok_s": 10.842826974442605,
+    "free_memory_mb_end": 50034.92578125,
+    "free_memory_mb_min": 47018.63671875,
+    "free_memory_mb_start": 57525.828125,
+    "free_physical_mb_at_peak": 47023.06640625,
+    "free_physical_mb_min": 47018.63671875,
+    "free_physical_mb_start": 57525.828125,
+    "n_rss_samples": 1007,
+    "peak_commit_bytes": 14046904320,
+    "peak_rss_bytes": 13510049792,
+    "prefill_s": 50.687253906,
+    "prompt_tokens_reported": 46000,
+    "r_decode_tok_s": 10.842826974442605,
+    "r_prefill_tok_s": 907.5259844478346,
+    "rss_bytes_end": 10377830400,
+    "rss_bytes_start": 2652086272,
+    "rss_interval_s": 0.05,
+    "rss_sampler_overhead_s": 0.1112542,
+    "text_head": "The passage you've provided is a repetition",
+    "ttft_ns": 50687253906,
+    "ttft_source": "perf_metrics",
+    "wall_s": 51.3328419999998
+  },
+  "kv_cache_precision_readback": [
+    {
+      "enforced": true,
+      "failure_mode": null,
+      "match": true,
+      "readback": {
+        "device": "GPU",
+        "error": null,
+        "normalized": "f16",
+        "ok": true,
+        "property": "KV_CACHE_PRECISION",
+        "raw": "<Type: 'float16'>",
+        "to_string": "f16"
+      },
+      "requested": "f16"
+    }
+  ],
+  "loads": [
+    {
+      "available_delta_mb": 2469.53515625,
+      "compile_s": 3.0865391999996064,
+      "device": "GPU",
+      "kv_cache_precision": {
+        "enforced": true,
+        "failure_mode": null,
+        "match": true,
+        "readback": {
+          "device": "GPU",
+          "error": null,
+          "normalized": "f16",
+          "ok": true,
+          "property": "KV_CACHE_PRECISION",
+          "raw": "<Type: 'float16'>",
+          "to_string": "f16"
+        },
+        "requested": "f16"
+      },
+      "memory_after": {
+        "available_mb": 57532.328125,
+        "percent": 11.5,
+        "rss_mb": 2526.00390625,
+        "used_mb": 7485.671875
+      },
+      "memory_before": {
+        "available_mb": 60001.86328125,
+        "percent": 7.7,
+        "rss_mb": 52.17578125,
+        "used_mb": 5016.13671875
+      },
+      "properties": {
+        "KV_CACHE_PRECISION": "<Type: 'float16'>"
+      },
+      "properties_requested": {
+        "KV_CACHE_PRECISION": "f16"
+      },
+      "rss_delta_mb": 2473.828125
+    }
+  ],
+  "memory_after_generate": {
+    "available_mb": 50034.90625,
+    "percent": 23.0,
+    "rss_mb": 9897.07421875,
+    "used_mb": 14983.09375
+  },
+  "memory_after_import": {
+    "available_mb": 60001.859375,
+    "percent": 7.7,
+    "rss_mb": 51.76171875,
+    "used_mb": 5016.140625
+  },
+  "memory_baseline": {
+    "available_mb": 60041.70703125,
+    "percent": 7.7,
+    "rss_mb": 18.91796875,
+    "used_mb": 4976.29296875
+  },
+  "memory_before_generate": {
+    "available_mb": 57526.02734375,
+    "percent": 11.5,
+    "rss_mb": 2529.2109375,
+    "used_mb": 7491.97265625
+  },
+  "memory_resident_before_inference": {
+    "available_mb": 57530.08984375,
+    "percent": 11.5,
+    "rss_mb": 2528.046875,
+    "used_mb": 7487.91015625
+  },
+  "phase": "done",
+  "power_request": {
+    "clear_last_error": 0,
+    "cleared": true,
+    "close_last_error": 0,
+    "closed": true,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x2b4",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "measurement_child",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "spec": {
+    "affinity_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "arm_id": "gpu_only_f16",
+    "arm_properties": {
+      "KV_CACHE_PRECISION": "f16"
+    },
+    "generate_device": "GPU",
+    "load_sequence": [
+      {
+        "device": "GPU",
+        "properties": {
+          "KV_CACHE_PRECISION": "f16"
+        }
+      }
+    ],
+    "max_new_tokens": 8,
+    "model_dir": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "prompt_path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n46000.txt",
+    "rss_interval_s": 0.05,
+    "wslock": {
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "mode": "request"
+    }
+  },
+  "standing_reservation": {
+    "available_delta_mb": 2511.6171875,
+    "basis": "delta from process baseline (pre-import) to all backends compiled and resident, before any measured generation; rss and system-available disagree when weights are file-backed or shared, and both are reported without attribution",
+    "rss_delta_mb": 2509.12890625
+  },
+  "working_set_limits_after": {
+    "flags": 9,
+    "hard_min_enabled": true,
+    "maximum_bytes": 12884901888,
+    "minimum_bytes": 4294967296,
+    "read": true
+  },
+  "working_set_lock": {
+    "after": {
+      "flags": 9,
+      "hard_min_enabled": true,
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "read": true
+    },
+    "before": {
+      "flags": 10,
+      "hard_min_enabled": false,
+      "maximum_bytes": 1413120,
+      "minimum_bytes": 204800,
+      "read": true
+    },
+    "call": "SetProcessWorkingSetSizeEx",
+    "flags": 1,
+    "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+    "granted": true,
+    "last_error": 0,
+    "privilege": {
+      "attempted": true,
+      "granted": true,
+      "last_error": 0,
+      "last_error_meaning": "ERROR_SUCCESS",
+      "privilege": "SeIncreaseWorkingSetPrivilege",
+      "step": "AdjustTokenPrivileges"
+    },
+    "requested": true,
+    "requested_maximum_bytes": 12884901888,
+    "requested_minimum_bytes": 4294967296,
+    "returned": true
+  }
+}

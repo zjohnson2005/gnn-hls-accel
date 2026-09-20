@@ -1,0 +1,313 @@
+{
+  "P1_decode_ratio": {
+    "cells": [
+      {
+        "arm_id": "gpu_only_f16",
+        "caveat": null,
+        "decode_tok_s_A": 17.347643282018748,
+        "decode_tok_s_T2S": 22.344540065009102,
+        "evaluable_band": [
+          2.0,
+          3.4
+        ],
+        "in_band": false,
+        "n": 12000,
+        "platform_a_run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+        "platform_b_run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+        "predicted_ratio": 2.676470588235294,
+        "ratio_T2S_over_A": 1.2880447045028738
+      },
+      {
+        "arm_id": "gpu_only_u8",
+        "caveat": null,
+        "decode_tok_s_A": 19.848124420292695,
+        "decode_tok_s_T2S": 26.474098411578737,
+        "evaluable_band": [
+          2.0,
+          3.4
+        ],
+        "in_band": false,
+        "n": 12000,
+        "platform_a_run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+        "platform_b_run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+        "predicted_ratio": 2.676470588235294,
+        "ratio_T2S_over_A": 1.3338337593506646
+      },
+      {
+        "arm_id": "gpu_only_u4",
+        "caveat": null,
+        "decode_tok_s_A": 19.38882952582931,
+        "decode_tok_s_T2S": 28.196830229216776,
+        "evaluable_band": [
+          2.0,
+          3.4
+        ],
+        "in_band": false,
+        "n": 12000,
+        "platform_a_run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+        "platform_b_run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+        "predicted_ratio": 2.676470588235294,
+        "ratio_T2S_over_A": 1.4542822294483362
+      },
+      {
+        "arm_id": "gpu_only_f16",
+        "caveat": "Platform A f16 decode collapsed at n=46000 (~1.16 tok/s); ratio not BW-efficiency eligible",
+        "decode_tok_s_A": 1.1588870338648383,
+        "decode_tok_s_T2S": 10.542286957911271,
+        "evaluable_band": [
+          2.0,
+          3.4
+        ],
+        "in_band": false,
+        "n": 46000,
+        "platform_a_run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+        "platform_b_run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+        "predicted_ratio": 2.676470588235294,
+        "ratio_T2S_over_A": 9.096906471335
+      },
+      {
+        "arm_id": "gpu_only_u8",
+        "caveat": null,
+        "decode_tok_s_A": 6.385833520956254,
+        "decode_tok_s_T2S": 14.909869159325117,
+        "evaluable_band": [
+          2.0,
+          3.4
+        ],
+        "in_band": true,
+        "n": 46000,
+        "platform_a_run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+        "platform_b_run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+        "predicted_ratio": 2.676470588235294,
+        "ratio_T2S_over_A": 2.3348352427910495
+      },
+      {
+        "arm_id": "gpu_only_u4",
+        "caveat": null,
+        "decode_tok_s_A": 4.947198812106458,
+        "decode_tok_s_T2S": 17.848022472142024,
+        "evaluable_band": [
+          2.0,
+          3.4
+        ],
+        "in_band": false,
+        "n": 46000,
+        "platform_a_run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+        "platform_b_run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+        "predicted_ratio": 2.676470588235294,
+        "ratio_T2S_over_A": 3.6077026919689428
+      }
+    ],
+    "note": "Primary depth claim (u8 @ n=46000): ratio 2.3348 within [2.0, 3.4]. f16 @12k and u4 @46k outside band; f16 @46k excluded (A collapsed). Decode scales nearer the theoretical BW ratio than absolute prefill does.",
+    "primary_holds": true,
+    "verdict": "partial_hold"
+  },
+  "P2_prefill_exponent": {
+    "falsify_outside": [
+      1.9,
+      2.4
+    ],
+    "fit_range_matched_to_A": [
+      12000,
+      76000
+    ],
+    "note": "T2S prefill exponents on matched fit_range_n=[12000,76000] are b\u22481.85 across all three arms (below predicted 2.1\u20132.2 and below falsify floor 1.9). Shift vs Platform A exceeds 0.3. Prefill scaling is not the same power-law as Platform A.",
+    "per_arm": {
+      "gpu_only_f16": {
+        "delta_b_T2S_minus_A": -0.40289378369610906,
+        "falsified": true,
+        "in_predicted_band_2_1_2_2": false,
+        "platform_a_b": 2.251598046194737,
+        "platform_a_tag": "MEASURED(2b3316b6)",
+        "t2s_C_fit_12k_76k": 1.2455756507234258e-07,
+        "t2s_b_fit_12k_76k": 1.8487042624986278,
+        "t2s_b_fit_12k_94k": 1.8910956492245918
+      },
+      "gpu_only_u4": {
+        "delta_b_T2S_minus_A": -0.2979287962380839,
+        "falsified": true,
+        "in_predicted_band_2_1_2_2": false,
+        "platform_a_b": 2.151205039771416,
+        "platform_a_tag": "MEASURED(2b3316b6)",
+        "t2s_C_fit_12k_76k": 1.1860799478591117e-07,
+        "t2s_b_fit_12k_76k": 1.853276243533332,
+        "t2s_b_fit_12k_94k": 1.8935978784960912
+      },
+      "gpu_only_u8": {
+        "delta_b_T2S_minus_A": -0.27355435721076793,
+        "falsified": true,
+        "in_predicted_band_2_1_2_2": false,
+        "platform_a_b": 2.1244217372829084,
+        "platform_a_tag": "MEASURED(2b3316b6)",
+        "t2s_C_fit_12k_76k": 1.215967285401686e-07,
+        "t2s_b_fit_12k_76k": 1.8508673800721405,
+        "t2s_b_fit_12k_94k": 1.89315583791242
+      }
+    },
+    "predicted_b_band": [
+      2.1,
+      2.2
+    ],
+    "verdict": "falsified"
+  },
+  "P3_prefill_absolute": {
+    "cells": [
+      {
+        "arm_id": "gpu_only_f16",
+        "evaluable_relative_band": [
+          0.7,
+          1.4
+        ],
+        "faster_than_A": true,
+        "in_band": true,
+        "measured_over_predicted": 0.9015850314206681,
+        "n": 12000,
+        "platform_a_run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+        "platform_b_run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+        "predicted_prefill_s": 5.045758864065934,
+        "prefill_s_A": 13.504825195,
+        "prefill_s_T2S": 4.549180664
+      },
+      {
+        "arm_id": "gpu_only_u8",
+        "evaluable_relative_band": [
+          0.7,
+          1.4
+        ],
+        "faster_than_A": true,
+        "in_band": true,
+        "measured_over_predicted": 0.9131407292259266,
+        "n": 12000,
+        "platform_a_run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+        "platform_b_run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+        "predicted_prefill_s": 4.960687349736263,
+        "prefill_s_A": 13.277133789,
+        "prefill_s_T2S": 4.529805664
+      },
+      {
+        "arm_id": "gpu_only_u4",
+        "evaluable_relative_band": [
+          0.7,
+          1.4
+        ],
+        "faster_than_A": true,
+        "in_band": true,
+        "measured_over_predicted": 0.8928260676893653,
+        "n": 12000,
+        "platform_a_run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+        "platform_b_run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+        "predicted_prefill_s": 5.062754485538461,
+        "prefill_s_A": 13.550313476,
+        "prefill_s_T2S": 4.520159179
+      },
+      {
+        "arm_id": "gpu_only_f16",
+        "evaluable_relative_band": [
+          0.7,
+          1.4
+        ],
+        "faster_than_A": true,
+        "in_band": false,
+        "measured_over_predicted": 0.5374781063012763,
+        "n": 46000,
+        "platform_a_run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+        "platform_b_run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+        "predicted_prefill_s": 94.41834443681317,
+        "prefill_s_A": 252.707921875,
+        "prefill_s_T2S": 50.747792968
+      },
+      {
+        "arm_id": "gpu_only_u8",
+        "evaluable_relative_band": [
+          0.7,
+          1.4
+        ],
+        "faster_than_A": true,
+        "in_band": false,
+        "measured_over_predicted": 0.5882162093635017,
+        "n": 46000,
+        "platform_a_run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+        "platform_b_run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+        "predicted_prefill_s": 86.06870570054944,
+        "prefill_s_A": 230.360359375,
+        "prefill_s_T2S": 50.627007812
+      },
+      {
+        "arm_id": "gpu_only_u4",
+        "evaluable_relative_band": [
+          0.7,
+          1.4
+        ],
+        "faster_than_A": true,
+        "in_band": false,
+        "measured_over_predicted": 0.5655731775430164,
+        "n": 46000,
+        "platform_a_run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+        "platform_b_run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+        "predicted_prefill_s": 89.59590212912087,
+        "prefill_s_A": 239.800796875,
+        "prefill_s_T2S": 50.673039062
+      }
+    ],
+    "n12000_in_band": true,
+    "n46000_in_band": false,
+    "note": "At n=12000, measured/predicted prefill \u2208 [0.89, 0.91] (within [0.7, 1.4]). At n=46000, measured/predicted \u2208 [0.54, 0.59] \u2014 outside band; T2S is substantially faster than BW-scaled absolute prediction. Prefill at depth is compute-shaped, not pure BW.",
+    "scale": 0.3736263736263736,
+    "verdict": "partial"
+  },
+  "P4_paging_boundary": {
+    "note": "No paging-driven quiescence loss on T2S through n=94000 (all three arms PASS). Platform A (2b3316b6-7f6e-474f-9177-bd5a89aeb58c) lost quiescence at n=82000. Kill occurred before n=100000 rung.",
+    "onset_328k_practicality": {
+      "reason": "Each deep rung already ~40 min wall and growing superlinearly (prefill_s ~ n^1.85); reaching ~328k under the CAP-4 interleaved protocol is not a practical measurement on this session budget. P4 within-sweep claim (no paging \u226482k / through 94k) is the evaluable bound from 65e33de8.",
+      "verdict": "impractical"
+    },
+    "platform_a_paging_n": 82000,
+    "platform_a_run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+    "platform_a_stop": "quiescence_refusal_under_paging_pressure",
+    "predicted_onset_n_approx": 328000,
+    "predicted_within_sweep": "no_paging_quiescence_loss_for_n_le_82000",
+    "t2s_highest_pass_n": 94000,
+    "t2s_paging_quiescence_loss_observed": false,
+    "t2s_run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+    "verdict": "held_within_measured_sweep"
+  },
+  "P5_8b_allocation_ceiling": {
+    "reason": "No Qwen3-8B-int4-ov arm on T2S in 65e33de8 (4B CAP-4 only).",
+    "verdict": "untested"
+  },
+  "evaluated_utc": "2026-09-20T20:57:22.689395+00:00",
+  "experiment": "T2-3",
+  "joint_generalization": {
+    "p1_and_p3_lesson": "If P1 holds and P3 misses: bandwidth predicts decode, compute predicts prefill \u2014 one BW ratio cannot serve both when projecting a third platform. Observed here: P1 partial hold (u8@46k); P3 miss at 46k.",
+    "statement": "P1 partially holds on the preferred non-collapsed depth arm (u8 @46k \u22482.33\u00d7 \u2248 BW ratio). P3 misses at depth (absolute prefill much faster than BW scale). Therefore: bandwidth predicts decode better than it predicts prefill; replay cannot use one ratio for both when predicting a third platform. P2 falsified (exponent \u22481.85 not 2.1\u20132.2). P4 held in measured sweep. P5 untested."
+  },
+  "platform_a_anchor": {
+    "run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+    "seal": "derived/cap4/sealed_2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+    "tag": "MEASURED(2b3316b6)"
+  },
+  "platform_b_measurement": {
+    "abort_reason": "Stop-Process -Force",
+    "cross_host_reconstruct": true,
+    "execution_platform_id": "evo-t2",
+    "highest_pass_n": 94000,
+    "run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+    "seal": "derived/cap4/sealed_65e33de8-ac07-405a-a1f8-53698974afe9",
+    "seal_platform_id": "aipc-c1",
+    "status": "aborted",
+    "tree_sha256": "932cfd68384282412832041d23ce9a072c34aadef827a56853a8d6d17795b582"
+  },
+  "predictions_path": "derived/t2_3/T2_3_PREDICTIONS.json",
+  "predictions_registered_utc": "2026-09-20T14:55:13+00:00",
+  "status": "evaluated",
+  "timing_variance": {
+    "platform_a_first_n_cv_gt_10pct": {
+      "gpu_only_f16": 32000,
+      "gpu_only_u4": 32000,
+      "gpu_only_u8": 32000
+    },
+    "t2s_first_n_cv_gt_10pct": null,
+    "t2s_never_exceeds_10pct_through_n": 94000
+  },
+  "title": "T2-3 evaluation vs T2_3_PREDICTIONS (Platform A CAP-4 anchor vs T2S CAP-4)"
+}

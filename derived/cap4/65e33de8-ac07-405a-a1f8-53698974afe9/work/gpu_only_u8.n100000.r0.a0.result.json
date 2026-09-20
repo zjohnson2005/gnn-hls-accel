@@ -1,0 +1,181 @@
+{
+  "affinity_readback": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "completed": false,
+  "exception": null,
+  "failure_mode": null,
+  "kv_cache_precision_readback": [
+    {
+      "enforced": true,
+      "failure_mode": null,
+      "match": true,
+      "readback": {
+        "device": "GPU",
+        "error": null,
+        "normalized": "u8",
+        "ok": true,
+        "property": "KV_CACHE_PRECISION",
+        "raw": "<Type: 'uint8_t'>",
+        "to_string": "u8"
+      },
+      "requested": "u8"
+    }
+  ],
+  "loads": [
+    {
+      "available_delta_mb": 2535.796875,
+      "compile_s": 3.562501300002623,
+      "device": "GPU",
+      "kv_cache_precision": {
+        "enforced": true,
+        "failure_mode": null,
+        "match": true,
+        "readback": {
+          "device": "GPU",
+          "error": null,
+          "normalized": "u8",
+          "ok": true,
+          "property": "KV_CACHE_PRECISION",
+          "raw": "<Type: 'uint8_t'>",
+          "to_string": "u8"
+        },
+        "requested": "u8"
+      },
+      "memory_after": {
+        "available_mb": 46755.41796875,
+        "percent": 28.1,
+        "rss_mb": 2532.3046875,
+        "used_mb": 18262.58203125
+      },
+      "memory_before": {
+        "available_mb": 49291.21484375,
+        "percent": 24.2,
+        "rss_mb": 53.1640625,
+        "used_mb": 15726.78515625
+      },
+      "properties": {
+        "KV_CACHE_PRECISION": "<Type: 'uint8_t'>"
+      },
+      "properties_requested": {
+        "KV_CACHE_PRECISION": "u8"
+      },
+      "rss_delta_mb": 2479.140625
+    }
+  ],
+  "memory_after_import": {
+    "available_mb": 49291.2421875,
+    "percent": 24.2,
+    "rss_mb": 52.66796875,
+    "used_mb": 15726.7578125
+  },
+  "memory_baseline": {
+    "available_mb": 49335.6484375,
+    "percent": 24.1,
+    "rss_mb": 19.73828125,
+    "used_mb": 15682.3515625
+  },
+  "memory_before_generate": {
+    "available_mb": 46751.4375,
+    "percent": 28.1,
+    "rss_mb": 2536.30078125,
+    "used_mb": 18266.5625
+  },
+  "memory_resident_before_inference": {
+    "available_mb": 46753.29296875,
+    "percent": 28.1,
+    "rss_mb": 2534.39453125,
+    "used_mb": 18264.70703125
+  },
+  "phase": "generating",
+  "power_request": {
+    "clear_last_error": null,
+    "cleared": false,
+    "close_last_error": null,
+    "closed": false,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x19c",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "measurement_child",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "spec": {
+    "affinity_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "arm_id": "gpu_only_u8",
+    "arm_properties": {
+      "KV_CACHE_PRECISION": "u8"
+    },
+    "generate_device": "GPU",
+    "load_sequence": [
+      {
+        "device": "GPU",
+        "properties": {
+          "KV_CACHE_PRECISION": "u8"
+        }
+      }
+    ],
+    "max_new_tokens": 8,
+    "model_dir": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "prompt_path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n100000.txt",
+    "rss_interval_s": 0.05,
+    "wslock": {
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "mode": "request"
+    }
+  },
+  "standing_reservation": {
+    "available_delta_mb": 2582.35546875,
+    "basis": "delta from process baseline (pre-import) to all backends compiled and resident, before any measured generation; rss and system-available disagree when weights are file-backed or shared, and both are reported without attribution",
+    "rss_delta_mb": 2514.65625
+  },
+  "working_set_lock": {
+    "after": {
+      "flags": 9,
+      "hard_min_enabled": true,
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "read": true
+    },
+    "before": {
+      "flags": 10,
+      "hard_min_enabled": false,
+      "maximum_bytes": 1413120,
+      "minimum_bytes": 204800,
+      "read": true
+    },
+    "call": "SetProcessWorkingSetSizeEx",
+    "flags": 1,
+    "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+    "granted": true,
+    "last_error": 0,
+    "privilege": {
+      "attempted": true,
+      "granted": true,
+      "last_error": 0,
+      "last_error_meaning": "ERROR_SUCCESS",
+      "privilege": "SeIncreaseWorkingSetPrivilege",
+      "step": "AdjustTokenPrivileges"
+    },
+    "requested": true,
+    "requested_maximum_bytes": 12884901888,
+    "requested_minimum_bytes": 4294967296,
+    "returned": true
+  }
+}

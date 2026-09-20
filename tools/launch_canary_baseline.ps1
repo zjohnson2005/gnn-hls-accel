@@ -1,5 +1,5 @@
-# C2f canary noise-floor baseline — detached bare-machine launch.
-# Machine lock + quiescence, NO inference workload. ≥31 canary samples (≥30 consecutive pairs)
+# C2f canary noise-floor baseline - detached bare-machine launch.
+# Machine lock + quiescence, NO inference workload. >=31 canary samples (>=30 consecutive pairs)
 # with spacing = efilter canary.settle_s (default 10s). Derives threshold = idle_p95 + margin
 # (margin default 0.05). Does NOT choose the threshold to pass a pilot.
 #
@@ -14,6 +14,9 @@ param(
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
+
+. (Join-Path $PSScriptRoot "_assert_machine_lock.ps1")
+Assert-SeamMachineLockClear -RepoRoot $root
 $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $logDir = "derived\efilter"
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null

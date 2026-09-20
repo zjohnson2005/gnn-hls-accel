@@ -1,6 +1,6 @@
-# X-2 launcher — feasibility table under clean protocol (one arm per invocation).
+# X-2 launcher - feasibility table under clean protocol (one arm per invocation).
 #
-# Production (Zach, bare SSH after cold boot — pick one of four cells):
+# Production (Zach, bare SSH after cold boot - pick one of four cells):
 #   powershell -NoProfile -File tools/launch_x2.ps1 -Arm cpu-p -ResidencyMode NON_RESIDENT
 #   powershell -NoProfile -File tools/launch_x2.ps1 -Arm cpu-p -ResidencyMode RESIDENT
 #   powershell -NoProfile -File tools/launch_x2.ps1 -Arm gpu_only -ResidencyMode NON_RESIDENT
@@ -12,10 +12,10 @@
 # Steps: (1) non-persistent host clean  (2) five gates  (3) spawn_detached
 #        (4) print run_id + artifact dir and exit without waiting.
 #
-# Payload: tools/run_x2_feasibility.py → bfcl_feasibility_probe session_residency.
+# Payload: tools/run_x2_feasibility.py -> bfcl_feasibility_probe session_residency.
 # Entry ids: exact equality to a621ff7d's 20. Gold selftest n/n before generation.
-# Same greedy GenerationConfig. Default n=20 (not 200 — table comparability;
-# cpu-p @ 200 ≈ 27 h). Model: Qwen3-4B-int4-ov (a621 / characterization table).
+# Same greedy GenerationConfig. Default n=20 (not 200 - table comparability;
+# cpu-p @ 200 a%%^ 27 h). Model: Qwen3-4B-int4-ov (a621 / characterization table).
 #
 # CRITICAL: worker records uptime_s + available_mb PER ENTRY (onset within arm).
 # WorkloadsSessionHost watchdog lives in the worker (interval 60 s; respawn ~4 min).
@@ -38,6 +38,8 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 Set-Location $root
+
+. (Join-Path $PSScriptRoot "_assert_machine_lock.ps1")
 
 # --- fixed X-2 coordinates (Arm / ResidencyMode required; NEntries default 20) ---
 $Tag = "x2_feasibility"
@@ -329,6 +331,9 @@ print("FEASIBILITY_CELL", f"{arm_cli} x {residency}")
 }
 
 # LIVE: spawn detached, then exit without waiting.
+
+# Machine-lock / alive-worker check (hard refuse before spawn)
+Assert-SeamMachineLockClear -RepoRoot $root -DryRun:$DryRun
 Write-Host "=== 4. spawn_detached (live) ==="
 New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
 $json = & $SpawnPs1 -CommandLine $resolvedCmd -LogPath $log -WorkingDirectory $root

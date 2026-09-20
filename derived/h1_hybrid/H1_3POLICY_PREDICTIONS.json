@@ -1,0 +1,167 @@
+{
+  "arm_order": [
+    "slo_escalate",
+    "emission_escalate",
+    "full_signal_bounceback"
+  ],
+  "baseline_regime": {
+    "completion_band": "10-14 / 200 (~0.05-0.07)",
+    "emission_failure_band": "61-64 / 200",
+    "emit_fail_mid": 63,
+    "local_completion_mid": 0.06,
+    "note": "Cross-session absolute rates unstable (W-3 vs Q-KV); numbers below are the current 4B band.",
+    "runs": {
+      "q8b_72d270e2_int4_4B": {
+        "emission_failures": 64,
+        "trajectory_pass": 10
+      },
+      "q_kv_137f6f46_u8": {
+        "emission_failures": 65,
+        "trajectory_pass": 13
+      },
+      "q_repro_6dd387aa_gpu_only": {
+        "emission_failures": 61,
+        "trajectory_pass": 14
+      }
+    },
+    "superseded_w3_completion": 0.1,
+    "superseded_w3_empty_turn": 45
+  },
+  "caps_usd": {
+    "emission_escalate": 20.0,
+    "full_signal_bounceback": 10.0,
+    "session": 35.0,
+    "slo_escalate": 5.0
+  },
+  "config": {
+    "kv": "u8",
+    "kv_match_seal": "86d0f4cf-e8c2-4ce5-96da-04c6a9c129f3",
+    "model": "Qwen3-4B-int4-ov",
+    "placement": "gpu_only",
+    "residency": "RESIDENT",
+    "tier": "4B",
+    "weight": "int4"
+  },
+  "cost_fit_r2b_8ffd8371": {
+    "a": 0.006739318451771448,
+    "b": 0.08430605099324187,
+    "mean_n_cloud_turns": 3.1076923076923078,
+    "usd_per_escalated_entry": 0.26873658461538463,
+    "usd_per_single_bounce_turn": 0.09104536944501332
+  },
+  "kind": "h1_3policy_predictions",
+  "predictions": {
+    "R2a": {
+      "cloud_usd_total": {
+        "tag": "MEASURED(86d0f4cf) 0 esc; new rule still 0",
+        "value": 0.0
+      },
+      "completion": {
+        "range": [
+          0.05,
+          0.07
+        ],
+        "tag": "REANCHORED mid(10..14)/200",
+        "value": 0.06
+      },
+      "emission": {
+        "range": [
+          0.6799999999999999,
+          0.6950000000000001
+        ],
+        "value": 0.685
+      },
+      "label": "R2a",
+      "policy": "slo_escalate",
+      "slo_fraction_local_turns": 1.0,
+      "superseded": {
+        "cloud_usd_total": 0.0,
+        "completion": 0.1,
+        "emission": 0.775,
+        "source": "derived/d1_replay/h1_predictions.json"
+      }
+    },
+    "R2b": {
+      "cloud_usd_total": {
+        "alt_scale_from_8ffd8371": {
+          "arithmetic": "17.467878 * (63/65) = 16.9304",
+          "value": 16.9304
+        },
+        "arithmetic": "63 * (0.006739 + 0.084306*3.107692) = 16.9304",
+        "hi": 17.1991,
+        "lo": 16.3929,
+        "value": 16.9304
+      },
+      "completion": {
+        "arithmetic_indep": "0.06 + (63/200)*0.65 = 0.26475000000000004",
+        "floor": 0.06,
+        "indep": 0.26475000000000004
+      },
+      "label": "R2b",
+      "n_escalated": {
+        "range": [
+          61,
+          64
+        ],
+        "value": 63
+      },
+      "policy": "emission_escalate",
+      "superseded": {
+        "cloud_usd_interval": [
+          11.875233793513566,
+          14.287090313137643
+        ],
+        "cloud_usd_total": 13.081162053325604,
+        "completion_floor": 0.1,
+        "completion_indep": 0.24625,
+        "n_escalated": 45,
+        "source": "derived/d1_replay/h1_predictions.json"
+      }
+    },
+    "R2c": {
+      "cloud_usd_total": {
+        "arithmetic": "66 * (0.006739+0.084306) = 6.0090",
+        "hi": 6.1,
+        "lo": 5.8269,
+        "value": 6.009
+      },
+      "completion": {
+        "range": [
+          0.05,
+          0.07
+        ],
+        "value": 0.06
+      },
+      "label": "R2c",
+      "n_bounces": {
+        "arithmetic": "63+3+0 = 66",
+        "components": {
+          "A_no_parseable_approx": 63,
+          "B_max_steps_sealed_r2a": 3,
+          "C_tool_exec_error": 0
+        },
+        "range": [
+          64,
+          67
+        ],
+        "value": 66
+      },
+      "policy": "full_signal_bounceback",
+      "trigger_surface_note": "R2c is a two-trigger policy on BFCL multi_turn_base: tool_exec_error (class C) is live in code but zero on this workload. Active: no_parseable_tool_call + step_budget/max_steps.",
+      "injection_note": "R2C-INJECT: cloud assistant enters local ChatHistory; KV invalid after inject; next local generate re-prefills (re_prefill_s on bounce ledger).",
+      "superseded": {
+        "arithmetic_superseded": "68 * 0.091045 = 6.1911 (filed as ~$6.19)",
+        "census_note": "Incomplete census: A(65)+B(3), C field absent",
+        "cloud_usd_total": 6.1911,
+        "n_bounces": 68,
+        "source": "H1-ANALYZE R2c pre-registration from 86d0f4cf census"
+      }
+    }
+  },
+  "registered_for": "H1-3POLICY interleaved session (no live measurement in this filing)",
+  "session_design": "interleaved",
+  "slo_rule": {
+    "class_c_artifact": "derived/h1_hybrid/r2a_class_c_census.json",
+    "old_vs_new_artifact": "derived/h1_hybrid/slo_rule_old_vs_new_86d0f4cf.json"
+  }
+}
