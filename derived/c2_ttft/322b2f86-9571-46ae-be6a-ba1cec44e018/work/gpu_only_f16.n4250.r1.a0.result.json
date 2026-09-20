@@ -5,41 +5,13 @@
     2,
     3
   ],
-  "completed": true,
-  "exception": null,
-  "failure_mode": null,
-  "generation": {
-    "available_mb_at_peak": 6899.0,
-    "available_mb_min": 6894.0,
-    "available_mb_start": 6910.0,
-    "commit_bytes_end": 4675821568,
-    "commit_bytes_start": 4616187904,
-    "completion_chars": 42,
-    "completion_tokens_reported": 8,
-    "decode_s": 0.351853897999423,
-    "decode_tok_s": 19.894621147586317,
-    "free_memory_mb_end": 6899.61328125,
-    "free_memory_mb_min": 6894.11328125,
-    "free_memory_mb_start": 6928.76171875,
-    "free_physical_mb_at_peak": 6899.51953125,
-    "free_physical_mb_min": 6894.0390625,
-    "free_physical_mb_start": 6928.76171875,
-    "n_rss_samples": 14,
-    "peak_commit_bytes": 4675903488,
-    "peak_rss_bytes": 4538675200,
-    "prefill_s": 0.225689102,
-    "prompt_tokens_reported": 64,
-    "r_decode_tok_s": 19.894621147586317,
-    "r_prefill_tok_s": 283.5759433346498,
-    "rss_bytes_end": 4538671104,
-    "rss_bytes_start": 4479844352,
-    "rss_interval_s": 0.05,
-    "rss_sampler_overhead_s": 0.0055374,
-    "text_head": "It seems like you've repeated the sentence",
-    "ttft_ns": 225689102,
-    "ttft_source": "perf_metrics",
-    "wall_s": 0.577542999999423
+  "completed": false,
+  "exception": {
+    "message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\graph\\impls\\onednn\\primitive_onednn_base.h:550:\ncould not execute a primitive\n\n",
+    "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 77, in main\n    return _run(spec, writer)\n           ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 105, in _run\n    return _run_with_power(spec, writer)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 246, in _run_with_power\n    result = pipe.generate([prompt], cfg, streamer)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\graph\\impls\\onednn\\primitive_onednn_base.h:550:\ncould not execute a primitive\n\n\n",
+    "type": "RuntimeError"
   },
+  "failure_mode": "exception:RuntimeError",
   "kv_cache_precision_readback": [
     {
       "enforced": true,
@@ -59,8 +31,8 @@
   ],
   "loads": [
     {
-      "available_delta_mb": 4181.60546875,
-      "compile_s": 9.937416000000667,
+      "available_delta_mb": 5062.3203125,
+      "compile_s": 6.186070400000062,
       "device": "GPU",
       "kv_cache_precision": {
         "enforced": true,
@@ -78,16 +50,16 @@
         "requested": "f16"
       },
       "memory_after": {
-        "available_mb": 6930.7421875,
-        "percent": 56.6,
-        "rss_mb": 4269.64453125,
-        "used_mb": 9045.43359375
+        "available_mb": 5664.45703125,
+        "percent": 64.5,
+        "rss_mb": 5134.88671875,
+        "used_mb": 10311.71875
       },
       "memory_before": {
-        "available_mb": 11112.34765625,
-        "percent": 30.4,
-        "rss_mb": 51.8046875,
-        "used_mb": 4863.828125
+        "available_mb": 10726.77734375,
+        "percent": 32.9,
+        "rss_mb": 52.109375,
+        "used_mb": 5249.3984375
       },
       "properties": {
         "KV_CACHE_PRECISION": "<Type: 'float16'>"
@@ -95,40 +67,40 @@
       "properties_requested": {
         "KV_CACHE_PRECISION": "f16"
       },
-      "rss_delta_mb": 4217.83984375
+      "rss_delta_mb": 5082.77734375
     }
   ],
-  "memory_after_generate": {
-    "available_mb": 6899.5625,
-    "percent": 56.8,
-    "rss_mb": 4328.43359375,
-    "used_mb": 9076.61328125
-  },
   "memory_after_import": {
-    "available_mb": 11112.36328125,
-    "percent": 30.4,
-    "rss_mb": 51.7890625,
-    "used_mb": 4863.8125
+    "available_mb": 10726.7734375,
+    "percent": 32.9,
+    "rss_mb": 51.921875,
+    "used_mb": 5249.40234375
+  },
+  "memory_at_failure": {
+    "available_mb": 4802.69140625,
+    "percent": 69.9,
+    "rss_mb": 5994.13671875,
+    "used_mb": 11173.484375
   },
   "memory_baseline": {
-    "available_mb": 11124.2265625,
-    "percent": 30.4,
-    "rss_mb": 19.203125,
-    "used_mb": 4851.94921875
+    "available_mb": 10757.71875,
+    "percent": 32.7,
+    "rss_mb": 19.06640625,
+    "used_mb": 5218.45703125
   },
   "memory_before_generate": {
-    "available_mb": 6928.76171875,
-    "percent": 56.6,
-    "rss_mb": 4272.296875,
-    "used_mb": 9047.4140625
+    "available_mb": 5671.89453125,
+    "percent": 64.5,
+    "rss_mb": 5137.5859375,
+    "used_mb": 10304.28125
   },
   "memory_resident_before_inference": {
-    "available_mb": 6928.87109375,
-    "percent": 56.6,
-    "rss_mb": 4271.6875,
-    "used_mb": 9047.3046875
+    "available_mb": 5665.87890625,
+    "percent": 64.5,
+    "rss_mb": 5136.95703125,
+    "used_mb": 10310.296875
   },
-  "phase": "done",
+  "phase": "failed",
   "power_request": {
     "clear_last_error": 0,
     "cleared": true,
@@ -137,7 +109,7 @@
     "create_last_error": null,
     "created": true,
     "error": null,
-    "handle_repr": "0x2bc",
+    "handle_repr": "0x2b8",
     "mechanism": "PowerCreateRequest/PowerSetRequest",
     "platform": "Windows",
     "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
@@ -169,8 +141,8 @@
       }
     ],
     "max_new_tokens": 8,
-    "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int8-ov",
-    "prompt_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n64.txt",
+    "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-8B-int4-ov",
+    "prompt_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4250.txt",
     "rss_interval_s": 0.05,
     "wslock": {
       "maximum_bytes": 12884901888,
@@ -179,16 +151,9 @@
     }
   },
   "standing_reservation": {
-    "available_delta_mb": 4195.35546875,
+    "available_delta_mb": 5091.83984375,
     "basis": "delta from process baseline (pre-import) to all backends compiled and resident, before any measured generation; rss and system-available disagree when weights are file-backed or shared, and both are reported without attribution",
-    "rss_delta_mb": 4252.484375
-  },
-  "working_set_limits_after": {
-    "flags": 9,
-    "hard_min_enabled": true,
-    "maximum_bytes": 12884901888,
-    "minimum_bytes": 4294967296,
-    "read": true
+    "rss_delta_mb": 5117.890625
   },
   "working_set_lock": {
     "after": {
