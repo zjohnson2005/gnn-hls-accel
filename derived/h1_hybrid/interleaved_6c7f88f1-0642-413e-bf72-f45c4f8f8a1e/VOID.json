@@ -1,0 +1,51 @@
+{
+  "status": "void",
+  "run_id": "6c7f88f1-0642-413e-bf72-f45c4f8f8a1e",
+  "kind": "h1_3policy_interleaved",
+  "voided_utc": "2026-09-22T20:30:00+00:00",
+  "do_not_seal_as_three_policy_result": true,
+  "artifacts_retained": true,
+  "diagnosis": {
+    "summary": "BFCL tool instance globals reused across interleaved policy re-begin of the same entry_id. MultiTurnAgentSession.begin called execute_multi_turn_func_call([], initial_config, ...) with a stable model_name=probe_resident_{entry_id}; BFCL only _load_scenario when the globals() instance_name is absent, so policies 2+ inherited policy 1 mutated GorillaFileSystem. Not caused by cloud injection (slo_escalate: 0 cloud, $0).",
+    "divergence": {
+      "site": "tools/bfcl_feasibility_probe.py:MultiTurnAgentSession.begin",
+      "expected": "Empty warmup reloads initial_config (fresh entry semantics).",
+      "actual": "Warmup reuses existing multi_turn_utils.globals() instance; no reset.",
+      "trigger": "H1-3POLICY interleaved: for each entry, slo then emission then bounceback share one process and the same entry_id model_name.",
+      "fix": "Unique model_name nonce per begin + explicit eviction before warmup (same uniqueness rule as score_multi_turn)."
+    },
+    "evidence": {
+      "slo_escalate": {
+        "n": 200,
+        "trajectory_pass": 20,
+        "instance_state_mismatch": 96,
+        "cloud_usd": 0.0,
+        "note": "First policy per entry; matches W-3 int4 baseline taxonomy (~20/200 pass, ~95 mismatch). Local turn-wise path healthy when begin gets a virgin globals slot."
+      },
+      "emission_escalate": {
+        "n": 200,
+        "trajectory_pass": 8,
+        "instance_state_mismatch": 104,
+        "escalations": 184,
+        "cloud_usd": 0.8509,
+        "cloud_turns_tout_eq_0": 172,
+        "note": "Quality collapse + excess escalations consistent with dirty BFCL world on re-begin; cloud path later dead (credit exhaustion)."
+      },
+      "full_signal_bounceback": {
+        "n": 200,
+        "trajectory_pass": 8,
+        "instance_state_mismatch": 104,
+        "cloud_usd": 0.8689,
+        "cloud_turns_tout_eq_0": 75
+      }
+    },
+    "salvage": {
+      "slo_local_quality": "Confirmatory only vs W-3 int4 6225d6e1 (20/200 pass; mismatch/empty/exec taxonomy aligned). Not a three-policy H1 result. Do not cite emission/bounceback numbers or session spend.",
+      "cloud_spend": "Unusable after multi_turn_base_52 (tin=0/tout=0 streak). Motivates CLOUD_DEAD_PATH_GUARD N=3."
+    }
+  },
+  "related": {
+    "cloud_dead_path_guard": "derived/h1_hybrid/CLOUD_DEAD_PATH_GUARD.json",
+    "w3_int4_seal_ref": "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a"
+  }
+}

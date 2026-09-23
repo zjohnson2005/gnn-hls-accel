@@ -1,0 +1,6301 @@
+{
+  "entries": [
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_0",
+      "model_result_decoded": [
+        [
+          [
+            "mkdir(dir_name='temp')",
+            "mv(source='final_report.pdf',destination='temp/final_report.pdf')"
+          ]
+        ],
+        [
+          [
+            "grep(file_name='document.txt',pattern='budget analysis')"
+          ]
+        ],
+        [
+          [
+            "sort(file_name='final_report.pdf')"
+          ]
+        ],
+        [
+          [
+            "mkdir(dir_name='temp')",
+            "mv(source='previous_report.pdf',destination='temp/previous_report.pdf')",
+            "mv(source='final_report.pdf',destination='temp/final_report.pdf')",
+            "diff(file_name1='final_report.pdf',file_name2='previous_report.pdf')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_1",
+      "model_result_decoded": [
+        [
+          [
+            "pwd()"
+          ],
+          [
+            "ls(a=True)"
+          ]
+        ],
+        [
+          [
+            "cd(folder='workspace')"
+          ],
+          [
+            "mkdir(dir_name='archive')"
+          ]
+        ],
+        [
+          [
+            "grep(file_name='log.txt',pattern='Error')"
+          ]
+        ],
+        [
+          [
+            "tail(file_name='log.txt',lines=20)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_2",
+      "model_result_decoded": [
+        [
+          [
+            "cd(folder='document')"
+          ],
+          [
+            "mkdir(dir_name='document')"
+          ],
+          [
+            "cd(folder='document')"
+          ],
+          [
+            "touch(file_name='TeamNotes.txt')"
+          ],
+          [
+            "echo(content='This is a new document for tracking fresh ideas. You can start adding your ideas here.',file_name='TeamNotes.txt')"
+          ]
+        ],
+        [
+          [
+            "echo(content='Collaboration leads to success. Innovation ignites growth.',file_name='TeamNotes.txt')"
+          ]
+        ],
+        [
+          [
+            "diff(file_name1='ideas.txt',file_name2='TeamNotes.txt')"
+          ],
+          [
+            "ls(a=False)"
+          ],
+          [
+            "cat(file_name='TeamNotes.txt')"
+          ]
+        ],
+        [
+          [
+            "ls(a=False)"
+          ],
+          [
+            "mkdir(dir_name='archive')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ],
+          [
+            "cp(source='TeamNotes.txt',destination='archive/IdeasArchive.txt')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=4 turns_gt=5 force_quit=True stop_reason=max_steps",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "stopped_early",
+      "stop_reason": "max_steps",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_3",
+      "model_result_decoded": [
+        [
+          [
+            "find(path='.',name='test')"
+          ]
+        ],
+        [
+          [
+            "cp(source='projects/photography/test_image1.jpg',destination='backup_tests')",
+            "cp(source='projects/photography/test_document.txt',destination='backup_tests')",
+            "cp(source='projects/photography/backup_tests',destination='backup_tests')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_4",
+      "model_result_decoded": [
+        [
+          [
+            "ls(a=True)"
+          ]
+        ],
+        [
+          [
+            "sort(file_name='report.txt')"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content='Here is the sorted result of the report: \\n\\nInitial report content\\nUnsorted data\\nMore unsorted data',tags=['#currenttechtrend'],mentions=['Julia'])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TwitterAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_5",
+      "model_result_decoded": [
+        [
+          [
+            "find(path='.',name='analysis_report.csv')"
+          ]
+        ],
+        [
+          [
+            "mv(source='analysis_report.csv',destination='archive/analysis_report.csv')"
+          ]
+        ],
+        [
+          [
+            "authenticate_twitter(username='dr_smith',password='securePass123')"
+          ],
+          [
+            "post_tweet(content='Managed to archive important data files!',tags=['#DataManagement', '#Efficiency'])"
+          ]
+        ],
+        [
+          [
+            "comment(tweet_id=0,comment_content='Another successful task completed today!')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_6",
+      "model_result_decoded": [
+        [
+          [
+            "touch(file_name='Annual_Report_2023.docx')"
+          ]
+        ],
+        [
+          [
+            "echo(content='Company Earning: 2000 Company Expenditure: 500 Company Name: Gorilla',file_name='Annual_Report_2023.docx')"
+          ]
+        ],
+        [
+          [
+            "cat(file_name='Annual_Report_2023.docx')"
+          ]
+        ],
+        [
+          [
+            "wc(file_name='Annual_Report_2023.docx',mode='w')"
+          ]
+        ],
+        [
+          [
+            "echo(content='The number of words in Annual_Report_2023.docx is 9.',file_name='report_word_count.txt')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_7",
+      "model_result_decoded": [
+        [
+          [
+            "cd(folder='academic_venture')",
+            "mkdir(dir_name='academic_hub')"
+          ]
+        ],
+        [
+          [
+            "ls(a=True)"
+          ]
+        ],
+        [
+          [
+            "cat(file_name='goals.txt')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 1.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_8",
+      "model_result_decoded": [
+        [
+          [
+            "grep(file_name='experiment_log.txt',pattern='Anomaly')"
+          ]
+        ],
+        [
+          [
+            "diff(file_name1='experiment_log.txt',file_name2='previous_study_log.txt')"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content=\"Here are the differences between my experiment log and the previous study log:\\n\\nexperiment_log.txt:\\nObservation 1: Normal Observation 2: Anomaly detected Observation 3: Normal Observation 4: Anomaly detected \\n\\nprevious_study_log.txt:\\nObservation A: Normal Observation B: Normal Observation C: Anomaly detected\\n\\nDifferences:\\n1. The previous study's log has a different set of observations (A, B, C) compared to my experiment (1, 2, 3).\\n2. My experiment shows two anomalies (Observations 2 and 4), while the previous study only has one anomaly (Observation C).\\n3. The previous study's log does not mention any anomalies in Observations A and B, whereas my experiment notes anomalies in Observations 2 and 4.\\n\\nThese differences may indicate novel discoveries or deviations from the previous study's findings, which could influence our hypothesis.\",tags=['#experiment', '#anomaly', '#research'],mentions=['@dr_smith'])"
+          ]
+        ],
+        [
+          [
+            "comment(tweet_id=1,comment_content='Cheers!')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TwitterAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_9",
+      "model_result_decoded": [
+        [
+          [
+            "find(path='Documentation',name='FinalReport.txt')"
+          ]
+        ],
+        [
+          [
+            "cp(source='Documentation/FinalReport.txt',destination='Archives/ArchivedFinalReport2024.txt')"
+          ]
+        ],
+        [
+          [
+            "sort(file_name='Archives/ArchivedFinalReport2024.txt')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_10",
+      "model_result_decoded": [
+        [
+          [
+            "mkdir(dir_name='Projects')"
+          ]
+        ],
+        [
+          [
+            "mv(source='proposal_document',destination='Projects/final_proposal_2024')"
+          ]
+        ],
+        [
+          [
+            "touch(file_name='notes.md')"
+          ]
+        ],
+        [
+          [
+            "echo(content='Hello',file_name='summary.txt')"
+          ]
+        ],
+        [
+          [
+            "wc(file_name='summary.txt',mode='c')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_11",
+      "model_result_decoded": [
+        [
+          [
+            "ls(a=True)"
+          ]
+        ],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 1",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_12",
+      "model_result_decoded": [
+        [
+          [
+            "cd(folder='Documents')",
+            "touch(file_name='summary.txt')"
+          ]
+        ],
+        [
+          [
+            "echo(content='quantum computing',file_name='summary.txt')"
+          ]
+        ],
+        [
+          [
+            "wc(file_name='summary.txt',mode='w')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_13",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "find(path='documents',name='alphabetically_first_file')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_14",
+      "model_result_decoded": [
+        [
+          [
+            "cd(folder='ResearchDocs')",
+            "find(path='.',name='report.csv')"
+          ]
+        ],
+        [
+          [
+            "grep(file_name='report.csv',pattern='Quarterly Financial Overview')"
+          ]
+        ],
+        [
+          [
+            "tail(file_name='report.csv',lines=5)"
+          ]
+        ],
+        [
+          [
+            "message_login(user_id='USR001')",
+            "add_contact(user_name='John Levy')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for MessageAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_15",
+      "model_result_decoded": [
+        [
+          [
+            "touch(file_name='DataSet1.csv')"
+          ]
+        ],
+        [
+          [
+            "echo(content='Student | Math | Computer Science\\nAlice | 5 | 9\\nBob | 10 | 7',file_name='DataSet1.csv')"
+          ]
+        ],
+        [
+          [
+            "tail(file_name='DataSet1.csv',lines=1)"
+          ]
+        ],
+        [
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ],
+          [
+            "wc(file_name='DataSet1.csv',mode='lwc')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=4 turns_gt=5 force_quit=True stop_reason=max_steps",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "stopped_early",
+      "stop_reason": "max_steps",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_16",
+      "model_result_decoded": [
+        [
+          [
+            "cp(source='research_notes.txt',destination='archives/2024_research_backup.txt')"
+          ]
+        ],
+        [
+          [
+            "sort(file_name='2024_research_backup.txt')"
+          ]
+        ],
+        [
+          [
+            "wc(file_name='2024_research_backup.txt',mode='l')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_17",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "cd(folder='project folder')",
+            "find(path='.',name=\"Kelly's test report\")",
+            "cat(file_name=\"Kelly's test report\")"
+          ]
+        ],
+        [
+          [
+            "add_contact(user_name='Kelly')",
+            "view_messages_sent()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_18",
+      "model_result_decoded": [
+        [
+          [
+            "cp(source='Quarter1_Reports/*.txt',destination='Archived_Quarter1')"
+          ]
+        ],
+        [
+          [
+            "cat(file_name='MonthlySummary.docx')"
+          ]
+        ],
+        [
+          [
+            "diff(file_name1='History101.txt',file_name2='History202.txt')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_19",
+      "model_result_decoded": [
+        [
+          [
+            "find(path='.',name='test_document.txt')"
+          ]
+        ],
+        [
+          [
+            "cp(source='test_document.txt',destination='archives/final_document.txt')"
+          ]
+        ],
+        [
+          [
+            "cat(file_name='archives/final_document.txt')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_20",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "diff(file_name1='file1.txt',file_name2='file2.txt')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_21",
+      "model_result_decoded": [
+        [
+          [
+            "echo(content='To be discussed',file_name='ProjectOverview.txt')"
+          ]
+        ],
+        [
+          [
+            "diff(file_name1='ProjectOverview.txt',file_name2='Draft.txt')"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content='Initial summary of the project. To be discussed.',tags=['#ProjectUpdate'],mentions=['@manager', '@team_lead'])"
+          ],
+          [
+            "authenticate_twitter(username='tech_guru',password='securePass123')"
+          ],
+          [
+            "post_tweet(content='Initial summary of the project. To be discussed.',tags=['#ProjectUpdate'],mentions=['@manager', '@team_lead'])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_22",
+      "model_result_decoded": [
+        [
+          [
+            "cat(file_name='project_analysis.txt')"
+          ]
+        ],
+        [
+          [
+            "cp(source='project_analysis.txt',destination='project_archive/project_analysis.txt')"
+          ]
+        ],
+        [
+          [
+            "diff(file_name1='project_analysis.txt',file_name2='old_project_analysis.txt')"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content='Just completed a comparative analysis between the latest and previous project data. Some insightful findings! #ProjectInsight',mentions=['@colleagues'])"
+          ],
+          [
+            "authenticate_twitter(username='tech_guru',password='securePass123')"
+          ],
+          [
+            "post_tweet(content='Just completed a comparative analysis between the latest and previous project data. Some insightful findings! #ProjectInsight',mentions=['@colleagues'])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_23",
+      "model_result_decoded": [
+        [
+          [
+            "touch(file_name='Project_Guide_1.md')",
+            "echo(content='Comprehensive guide for the new initiative.',file_name='Project_Guide_1.md')"
+          ]
+        ],
+        [
+          [
+            "du(human_readable=True)"
+          ]
+        ],
+        [
+          [
+            "resolve_ticket(ticket_id=7423,resolution='')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_24",
+      "model_result_decoded": [
+        [
+          [
+            "find(path='.',name='draft')",
+            "find(path='.',name='final')",
+            "diff(file_name1='draft',file_name2='final')"
+          ]
+        ],
+        [
+          [
+            "mv(source='temp_notes.txt',destination='archives')",
+            "mv(source='archives/temp_notes.txt',destination='notes_2024.txt')"
+          ]
+        ],
+        [
+          [
+            "get_ticket(ticket_id=987654)"
+          ]
+        ],
+        [
+          [
+            "resolve_ticket(ticket_id=987654,resolution='Fixed through manual troubleshooting techniques.')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_25",
+      "model_result_decoded": [
+        [
+          [
+            "find(path='.',name='summary.txt')"
+          ]
+        ],
+        [
+          [
+            "cp(source='summary.txt',destination='Research2023')"
+          ]
+        ],
+        [
+          [
+            "sort(file_name='summary.txt')"
+          ]
+        ],
+        [
+          [
+            "wc(file_name='summary.txt',mode='l')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_26",
+      "model_result_decoded": [
+        [
+          [
+            "cd(folder='temporary_directory')",
+            "ls(a=True)"
+          ]
+        ],
+        [],
+        [
+          [
+            "touch(file_name='tmp.docx')",
+            "echo(content='This is the content of the new docx file.',file_name='tmp.docx')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_27",
+      "model_result_decoded": [
+        [
+          [
+            "mv(source='project_plan.md',destination='project_overview.md')"
+          ]
+        ],
+        [
+          [
+            "create_ticket(title='emergency',description='Initial project plan details.',priority=3)"
+          ]
+        ],
+        [
+          [
+            "create_ticket(title='emergency',description='Additional insights.',priority=5)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_28",
+      "model_result_decoded": [
+        [
+          [
+            "find(path='.',name='analysis')"
+          ]
+        ],
+        [
+          [
+            "cd(folder='data')"
+          ],
+          [
+            "grep(file_name='analysis_report.txt',pattern='error')"
+          ]
+        ],
+        [
+          [
+            "du(human_readable=True)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_29",
+      "model_result_decoded": [
+        [
+          [
+            "cd(folder='VisionX')",
+            "du(human_readable=True)"
+          ]
+        ],
+        [
+          [
+            "touch(file_name='79.pdf')"
+          ]
+        ],
+        [
+          [
+            "echo(content='Finally, in that file, Write my last question in it.',file_name='79.pdf')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_30",
+      "model_result_decoded": [
+        [
+          [
+            "find(path='.',name='test_result.json')"
+          ]
+        ],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_31",
+      "model_result_decoded": [
+        [
+          [
+            "mkdir(dir_name='Reports')",
+            "find(path='.',name='summary.doc')",
+            "mv(source='summary.doc',destination='Reports/summary.doc')",
+            "find(path='.',name='data.txt')",
+            "open(file_name='data.txt')",
+            "grep(file_name='data.txt',pattern='Q4 financials')",
+            "wc(file_name='data.txt',mode='l')"
+          ]
+        ],
+        [
+          [
+            "wc(file_name='Reports/summary.doc',mode='c')",
+            "ls(a=True)",
+            "sum_values(numbers=[1, 2, 3, 4, 5])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_32",
+      "model_result_decoded": [
+        [
+          [
+            "cat(file_name='Spring2023Draft')",
+            "wc(file_name='Spring2023Draft',mode='c')"
+          ]
+        ],
+        [
+          [
+            "logarithm(value=36,base=6,precision=4)",
+            "echo(content='The logarithm of 36 to the base 6 is: ${log_result}',file_name='result.txt')"
+          ],
+          [
+            "echo(content='The logarithm of 36 to the base 6 is: 2.0',file_name='result.txt')"
+          ],
+          [
+            "touch(file_name='result.txt')",
+            "echo(content='The logarithm of 36 to the base 6 is: 2.0',file_name='result.txt')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_33",
+      "model_result_decoded": [
+        [
+          [
+            "ls(a=True)"
+          ]
+        ],
+        [
+          [
+            "grep(file_name='deploy.py',pattern='def')"
+          ]
+        ],
+        [
+          [
+            "grep(file_name='deploy.py',pattern='update')"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='USR002',message='update the system')"
+          ]
+        ],
+        [
+          [
+            "get_message_stats()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for MessageAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_34",
+      "model_result_decoded": [
+        [
+          [
+            "tail(file_name='finance_report.txt',lines=1)"
+          ]
+        ],
+        [
+          [
+            "cat(file_name='finance_report.txt')"
+          ],
+          [
+            "wc(file_name='finance_report.txt',mode='c')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='Revenue|Expenses|Profit')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ],
+          [
+            "grep(file_name='finance_report.txt',pattern='[$][0-9]+')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=2 turns_gt=2 force_quit=True stop_reason=max_steps",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "max_steps",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_35",
+      "model_result_decoded": [
+        [
+          [
+            "find(path='.',name='config.py')"
+          ],
+          [
+            "tail(file_name='config.py',lines=1)"
+          ]
+        ],
+        [
+          [
+            "cat(file_name='real_config.py')"
+          ]
+        ],
+        [
+          [
+            "diff(file_name1='config.py',file_name2='real_config.py')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_36",
+      "model_result_decoded": [
+        [
+          [
+            "touch(file_name='project_summary.txt')"
+          ]
+        ],
+        [
+          [
+            "cp(source='project_summary.txt',destination='archive/summary_2024.txt')"
+          ]
+        ],
+        [
+          [
+            "grep(file_name='archive/summary_2024.txt',pattern='Progress')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_37",
+      "model_result_decoded": [
+        [
+          [
+            "cd(folder='temp')",
+            "ls()",
+            "wc(file_name='file1.txt',mode='l')",
+            "wc(file_name='file2.txt',mode='l')",
+            "wc(file_name='file3.txt',mode='l')"
+          ]
+        ],
+        [
+          [
+            "grep(file_name='dev_summary.txt',pattern='server error')"
+          ]
+        ],
+        [
+          [
+            "touch(file_name='2.txt')",
+            "echo(content='The team is working on resolving the server error.',file_name='2.txt')",
+            "pwd()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_38",
+      "model_result_decoded": [
+        [
+          [
+            "find(path='SuperResearch',name='findings_report')"
+          ],
+          [
+            "rm(file_name='SuperResearch/findings_report')"
+          ]
+        ],
+        [
+          [
+            "ls(a=True)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_39",
+      "model_result_decoded": [
+        [
+          [
+            "mkdir(dir_name='WebDevProjects')"
+          ]
+        ],
+        [],
+        [],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 1",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_40",
+      "model_result_decoded": [
+        [
+          [
+            "ls(a=True)"
+          ]
+        ],
+        [
+          [
+            "cp(source='Documents/annual_report.txt',destination='Reports/annual_report.txt')"
+          ]
+        ],
+        [
+          [
+            "tail(file_name='Q4_summary.doc',lines=10)"
+          ]
+        ],
+        [
+          [
+            "message_login(user_id='USR001')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_41",
+      "model_result_decoded": [
+        [
+          [
+            "find(path='.',name='notes')"
+          ],
+          [
+            "send_message(receiver_id='Bob',message='Please find the attached notes file.')"
+          ],
+          [
+            "message_login(user_id='Bob')"
+          ],
+          [
+            "get_user_id(user='Bob')"
+          ],
+          [
+            "send_message(receiver_id='USR002',message='Please find the attached notes file.')"
+          ],
+          [
+            "message_login(user_id='USR002')"
+          ],
+          [
+            "send_message(receiver_id='USR002',message='Please find the attached notes file.')"
+          ]
+        ],
+        [
+          [
+            "rm(file_name='notes')"
+          ],
+          [
+            "find(path='.',name='notes')"
+          ],
+          [
+            "rm(file_name='initial_directory/notes')"
+          ],
+          [
+            "find(path='.',name='notes')"
+          ],
+          [
+            "rm(file_name='initial_directory/notes')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for MessageAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_42",
+      "model_result_decoded": [
+        [
+          [
+            "touch(file_name='Notes2023.txt')"
+          ]
+        ],
+        [
+          [
+            "echo(content='Study diligently, practice programming, master algorithms.',file_name='Notes2023.txt')"
+          ]
+        ],
+        [
+          [
+            "wc(file_name='Notes2023.txt',mode='c')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_43",
+      "model_result_decoded": [
+        [
+          [
+            "ls(a=True)"
+          ]
+        ],
+        [
+          [
+            "find(path='.',name='annual_report.txt')"
+          ]
+        ],
+        [
+          [
+            "cat(file_name='annual_report.txt')"
+          ]
+        ],
+        [
+          [
+            "message_login(user_id='USR001')",
+            "send_message(receiver_id='USR002',message=\"The content of the file is: \\n\\nThis is the content of the file 'annual_report.txt'.\\n\\nIt contains information about the annual report of the company.\\n\\nPlease find the details below:\\n\\n- Revenue: $1,200,000\\n- Expenses: $800,000\\n- Profit: $400,000\\n\\nThank you.\")"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 2.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_44",
+      "model_result_decoded": [
+        [
+          [
+            "echo(content='Q1: $5000, Q2: $7000, Q3: $6000, Q4: $8000',file_name='annual_report.txt')"
+          ],
+          [
+            "touch(file_name='annual_report.txt')"
+          ],
+          [
+            "echo(content='Q1: $5000, Q2: $7000, Q3: $6000, Q4: $8000',file_name='annual_report.txt')"
+          ]
+        ],
+        [
+          [
+            "mean(numbers=[5000, 7000, 6000, 8000])"
+          ]
+        ],
+        [
+          [
+            "echo(content='6500',file_name='MeanRevenue.txt')"
+          ],
+          [
+            "touch(file_name='MeanRevenue.txt')"
+          ],
+          [
+            "echo(content='6500',file_name='MeanRevenue.txt')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_45",
+      "model_result_decoded": [
+        [
+          [
+            "find(path='ResearchDocs',name='draft')"
+          ]
+        ],
+        [
+          [
+            "cp(source='ResearchDocs/summary_draft.docx',destination='ResearchDocs/ultimate_draft.docx')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_46",
+      "model_result_decoded": [
+        [
+          [
+            "rmdir(dir_name='Drafts')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_47",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "wc(file_name='student_record.txt')"
+          ],
+          [
+            "cat(file_name='student_record.txt')"
+          ]
+        ],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_48",
+      "model_result_decoded": [
+        [
+          [
+            "ls(a=True)"
+          ]
+        ],
+        [
+          [
+            "wc(file_name='test',mode='c')"
+          ]
+        ],
+        [
+          [
+            "get_ticket(ticket_id=654321)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_49",
+      "model_result_decoded": [
+        [
+          [
+            "ls(a=True)"
+          ]
+        ],
+        [
+          [
+            "tail(file_name='file3.txt',lines=10)"
+          ]
+        ],
+        [
+          [
+            "wc(file_name='file3.txt',mode='l')"
+          ]
+        ],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 1.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_50",
+      "model_result_decoded": [
+        [
+          [
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+            "setHeadlights(mode='on')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_51",
+      "model_result_decoded": [
+        [
+          [
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='USR002',message='I am on my way to your place.')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_52",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content='Tires checked and engine purring smoothly!',tags=['#RoadTrip'],mentions=['@AutoUpdates'])"
+          ]
+        ],
+        [
+          [
+            "comment(tweet_id=10,comment_content='Safety first! Remember tire checks are crucial.')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_53",
+      "model_result_decoded": [
+        [
+          [
+            "liter_to_gallon(gallon=30)"
+          ],
+          [
+            "liter_to_gallon(liter=30)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [],
+        [
+          [
+            "post_tweet(content='Tire pressures are optimal!',tags=['#CarMaintenance'],mentions=['@VehicleGuru'])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_54",
+      "model_result_decoded": [
+        [
+          [
+            "liter_to_gallon(liter=20)",
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ],
+        [
+          [
+            "retweet(tweet_id=1234567890)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_55",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ],
+        [
+          [
+            "create_ticket(title='Tire Pressure Issue',description='Urgent tire pressure issue.',priority=5)"
+          ]
+        ],
+        [
+          [
+            "get_ticket(ticket_id=2)"
+          ]
+        ],
+        [
+          [
+            "resolve_ticket(ticket_id=2,resolution='Issue resolved!')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_56",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "fillFuelTank(fuelAmount=50)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_57",
+      "model_result_decoded": [
+        [],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_58",
+      "model_result_decoded": [
+        [
+          [
+            "get_zipcode_based_on_city(city='Rivermist')"
+          ],
+          [
+            "get_zipcode_based_on_city(city='San Francisco')"
+          ],
+          [
+            "estimate_distance(cityA='83214',cityB='94016')"
+          ]
+        ],
+        [
+          [
+            "fillFuelTank(fuelAmount=30)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])"
+          ],
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content='Excited for the trip!')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_59",
+      "model_result_decoded": [
+        [
+          [
+            "estimate_distance(cityA='94101',cityB='94710')"
+          ]
+        ],
+        [],
+        [
+          [
+            "fillFuelTank(fuelAmount=50)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "logarithm(value=100,base=20,precision=10)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_60",
+      "model_result_decoded": [
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])"
+          ],
+          [
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "pressBrakePedal(pedalPosition=0.5)"
+          ],
+          [
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "pressBrakePedal(pedalPosition=1.0)"
+          ],
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ],
+        [
+          [
+            "create_ticket(title='Tire Pressure Issue',priority=5)"
+          ]
+        ],
+        [
+          [
+            "get_last_ticket()"
+          ]
+        ],
+        [
+          [
+            "close_ticket(ticket_id=2)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_61",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "estimate_distance(cityA='94104',cityB='94538')"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])"
+          ],
+          [
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "pressBrakePedal(pedalPosition=0.5)"
+          ],
+          [
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "pressBrakePedal(pedalPosition=1.0)"
+          ],
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_62",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_63",
+      "model_result_decoded": [
+        [
+          [
+            "liter_to_gallon(liter=166)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')",
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+            "activateParkingBrake(mode='engage')"
+          ]
+        ],
+        [
+          [
+            "estimate_distance(cityA='San Francisco',cityB='Rivermist')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_64",
+      "model_result_decoded": [
+        [
+          [
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])"
+          ]
+        ],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_65",
+      "model_result_decoded": [
+        [
+          [
+            "fillFuelTank(fuelAmount=15.0)",
+            "gallon_to_liter(gallon=15.0)",
+            "check_tire_pressure()",
+            "post_tweet(content='Just filled up the tank and checked the tire pressures. Ready for the next adventure!',tags=[])",
+            "get_battery_voltage()",
+            "get_fuel_level()"
+          ]
+        ],
+        [
+          [
+            "retweet(tweet_id=5)",
+            "comment(tweet_id=5,comment_content='Ready for the next adventure!')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_66",
+      "model_result_decoded": [
+        [
+          [
+            "set_navigation(destination='1914 7th St, Apt B, Berkeley, CA 94710')"
+          ]
+        ],
+        [
+          [
+            "fillFuelTank(fuelAmount=40)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "set_navigation(destination='2107 Channing Way, Berkeley, CA')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_67",
+      "model_result_decoded": [
+        [],
+        [],
+        [],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_68",
+      "model_result_decoded": [
+        [
+          [
+            "fillFuelTank(fuelAmount=50)"
+          ]
+        ],
+        [
+          [
+            "get_current_speed()"
+          ]
+        ],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ],
+        [
+          [
+            "set_navigation(destination='nearest tire service station')"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content='Starting my road trip with a car that is fully prepared and raring to go!',tags=['#Roadtrip', '#Adventure'])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_69",
+      "model_result_decoded": [
+        [
+          [
+            "estimate_distance(cityA='San Francisco',cityB='Rivermist')",
+            "fillFuelTank(fuelAmount=40.0)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')",
+            "post_tweet(content='Just started my journey!',tags=['#RoadTrip'],mentions=['@carenthusiast'])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_70",
+      "model_result_decoded": [
+        [
+          [
+            "fillFuelTank(fuelAmount=38)",
+            "startEngine(ignitionMode='START')",
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+            "activateParkingBrake(mode='engage')"
+          ]
+        ],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_71",
+      "model_result_decoded": [
+        [],
+        [],
+        [
+          [
+            "fillFuelTank(fuelAmount=50)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "set_navigation(destination='Crescent Hollow, Spring, TX')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_72",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='USR005',message='Road trip itinerary update.')"
+          ]
+        ],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_73",
+      "model_result_decoded": [
+        [
+          [
+            "fillFuelTank(fuelAmount=50)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "set_navigation(destination='123 Pine St, San Francisco, CA 94016')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_74",
+      "model_result_decoded": [
+        [
+          [
+            "fillFuelTank(fuelAmount=38.0)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_75",
+      "model_result_decoded": [
+        [
+          [
+            "fillFuelTank(fuelAmount=30)"
+          ]
+        ],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ],
+        [],
+        [
+          [
+            "comment(tweet_id=1234567890,comment_content='Is this pressure too low? Should I take any action?')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TwitterAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_76",
+      "model_result_decoded": [
+        [
+          [
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content='Tire pressure is perfect! #CarCare #TireHealth',tags=['#CarCare', '#TireHealth'],mentions=['mike53'])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_77",
+      "model_result_decoded": [
+        [
+          [
+            "get_zipcode_based_on_city(city='San Francisco')"
+          ],
+          [
+            "get_zipcode_based_on_city(city='Stonebrook')"
+          ],
+          [
+            "estimate_distance(cityA='94016',cityB='74532')"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content='Setting forth on an exciting quest from San Francisco to Stonebrook to uncover ancestral stories!',tags=['#GenealogyAdventure', '#FamilyHistory'])"
+          ]
+        ],
+        [
+          [
+            "retweet(tweet_id=10)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_78",
+      "model_result_decoded": [
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content='Ensuring my wheels are well-maintained. Maintenance is key to success!',tags=['#BusinessOnTheMove'])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_79",
+      "model_result_decoded": [
+        [
+          [
+            "lockDoors(unlock=True,door=['driver', 'passenger', 'rear_left', 'rear_right'])"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "setCruiseControl(speed=65.0,activate=True,distanceToNextVehicle=100.0)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_80",
+      "model_result_decoded": [
+        [
+          [
+            "get_zipcode_based_on_city(city='San Francisco')"
+          ]
+        ],
+        [],
+        [
+          [
+            "fillFuelTank(fuelAmount=50)"
+          ]
+        ],
+        [
+          [
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "mean(numbers=[750.0, 320.0, 450.0, 290.0])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_81",
+      "model_result_decoded": [
+        [
+          [
+            "fillFuelTank(fuelAmount=10)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_82",
+      "model_result_decoded": [
+        [
+          [
+            "check_tire_pressure()"
+          ],
+          [
+            "find_nearest_tire_shop()"
+          ],
+          [
+            "set_navigation(destination='456 Oakwood Avenue, Rivermist, 83214')"
+          ]
+        ],
+        [
+          [
+            "fillFuelTank(fuelAmount=50.0)"
+          ],
+          [
+            "fillFuelTank(fuelAmount=50.0)"
+          ],
+          [
+            "get_car_info()"
+          ],
+          [
+            "fillFuelTank(fuelAmount=50.0)"
+          ],
+          [
+            "liter_to_gallon(liter=50.0)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])"
+          ],
+          [
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "pressBrakePedal(pedalPosition=0.8)"
+          ],
+          [
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "pressBrakePedal(pedalPosition=1.0)"
+          ],
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_83",
+      "model_result_decoded": [
+        [
+          [
+            "fillFuelTank(fuelAmount=30.0)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_84",
+      "model_result_decoded": [
+        [
+          [
+            "fillFuelTank(fuelAmount=30)",
+            "startEngine(ignitionMode='START')",
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+            "activateParkingBrake(mode='engage')"
+          ]
+        ],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_85",
+      "model_result_decoded": [
+        [
+          [
+            "get_zipcode_based_on_city(city='Rivermist')"
+          ],
+          [
+            "get_zipcode_based_on_city(city='San Francisco')"
+          ],
+          [
+            "estimate_distance(cityA='83214',cityB='94016')"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_86",
+      "model_result_decoded": [
+        [
+          [
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+            "activateParkingBrake(mode='engage')",
+            "startEngine(ignitionMode='START')",
+            "check_tire_pressure()"
+          ]
+        ],
+        [
+          [
+            "find_nearest_tire_shop()",
+            "set_navigation(destination='Nearest tire shop')"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content='Thank you to our vehicle for a smooth start!',tags=['#Journey', '#SmoothRide', '#Grateful'])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_87",
+      "model_result_decoded": [
+        [
+          [
+            "gallon_to_liter(gallon=60)"
+          ]
+        ],
+        [
+          [
+            "fillFuelTank(fuelAmount=20)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')",
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+            "activateParkingBrake(mode='engage')"
+          ]
+        ],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_88",
+      "model_result_decoded": [
+        [
+          [
+            "liter_to_gallon(gallon=13.2)"
+          ],
+          [
+            "gallon_to_liter(gallon=13.2)"
+          ]
+        ],
+        [
+          [
+            "fillFuelTank(fuelAmount=50)"
+          ],
+          [
+            "fillFuelTank(fuelAmount=36.8)"
+          ],
+          [
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])"
+          ],
+          [
+            "activateParkingBrake(mode='engage')"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "pressBrakePedal(pedalPosition=1.0)"
+          ],
+          [
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "post_tweet(content='Embarking on an exciting road trip from SF to Rivermist!',tags=['#RoadTrip', '#Adventure', '#Exploring'])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_89",
+      "model_result_decoded": [
+        [
+          [
+            "estimate_distance(cityA='Rivermist',cityB='Stonebrook')"
+          ]
+        ],
+        [],
+        [
+          [
+            "fillFuelTank(fuelAmount=10)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_90",
+      "model_result_decoded": [
+        [
+          [
+            "fillFuelTank(fuelAmount=40)"
+          ]
+        ],
+        [
+          [
+            "estimate_distance(cityA='94104',cityB='94710')"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content='Excited for my trip from San Francisco to Rivermist!',tags=['#JourneyAhead'],mentions=['@TravelBuddy'])"
+          ]
+        ],
+        [
+          [
+            "mention(tweet_id=10,mentioned_usernames=['@RoadsideAssistance'])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_91",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_92",
+      "model_result_decoded": [
+        [
+          [
+            "estimate_distance(cityA='83214',cityB='74532')"
+          ]
+        ],
+        [],
+        [
+          [
+            "fillFuelTank(fuelAmount=50.0)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 1",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_93",
+      "model_result_decoded": [
+        [
+          [
+            "displayCarStatus(option='fuel')"
+          ]
+        ],
+        [
+          [
+            "fillFuelTank(fuelAmount=39.5)",
+            "startEngine(ignitionMode='START')",
+            "check_tire_pressure()"
+          ]
+        ],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_94",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_95",
+      "model_result_decoded": [
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "get_zipcode_based_on_city(city='Rivermist')"
+          ]
+        ],
+        [
+          [
+            "estimate_distance(cityA='83214',cityB='San Francisco')"
+          ]
+        ],
+        [],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_96",
+      "model_result_decoded": [
+        [
+          [
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "pressBrakePedal(pedalPosition=0.5)",
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "pressBrakePedal(pedalPosition=1.0)",
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "estimate_distance(cityA='94104',cityB='94710')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 1.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_97",
+      "model_result_decoded": [
+        [],
+        [],
+        [
+          [
+            "fillFuelTank(fuelAmount=50)"
+          ]
+        ],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='Michael',message='I am on my way.')"
+          ]
+        ],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_98",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "estimate_distance(cityA='Silverpine',cityB='Oakendale')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_99",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "startEngine(ignitionMode='START')",
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+            "displayCarStatus(option='engine')",
+            "displayCarStatus(option='climate')",
+            "displayCarStatus(option='headlights')",
+            "displayCarStatus(option='parkingBrake')"
+          ]
+        ],
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_100",
+      "model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='NVDA')"
+          ]
+        ],
+        [
+          [
+            "trading_login(username='Ramkumar',password='hello123')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_101",
+      "model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='XTC')"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='USR003',message='The latest stock price of XTC is $150.75.')"
+          ]
+        ],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_102",
+      "model_result_decoded": [
+        [
+          [
+            "place_order(order_type='Buy',symbol='TSLA',price=700.0,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "get_account_info()"
+          ]
+        ],
+        [
+          [
+            "create_ticket(title='Account Information Error',description='User-reported issue where updated account information, such as email and phone number, is not displaying correctly and is not syncing across services despite attempts to log out and back in.',priority=3)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TicketAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_103",
+      "model_result_decoded": [
+        [
+          [
+            "get_symbol_by_name(name='Omega Industries')"
+          ],
+          [
+            "add_to_watchlist(stock='OMEG')"
+          ]
+        ],
+        [],
+        [
+          [
+            "get_stock_info(symbol='OMEG')"
+          ],
+          [
+            "place_order(order_type='Buy',symbol='OMEG',price=457.23,amount=150)"
+          ]
+        ],
+        [],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 1",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_104",
+      "model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='QSR')"
+          ]
+        ],
+        [
+          [
+            "get_watchlist()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_105",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "get_available_stocks(sector='Technology')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_106",
+      "model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='AAPL')"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12345)"
+          ]
+        ],
+        [
+          [
+            "get_ticket(ticket_id=67890)"
+          ]
+        ],
+        [
+          [
+            "resolve_ticket(ticket_id=67890,resolution='The issue with the trading system query, caused by a brief network delay, has been resolved, and no further action is required as the system is now functioning properly.')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_107",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "place_order(order_type='Buy',symbol='ZT',price=25.5,amount=50)"
+          ]
+        ],
+        [],
+        [
+          [
+            "cancel_order(order_id=12345)"
+          ]
+        ],
+        [
+          [
+            "get_account_info()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_108",
+      "model_result_decoded": [
+        [],
+        [],
+        [],
+        [],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_109",
+      "model_result_decoded": [
+        [
+          [
+            "get_available_stocks(sector='Technology')"
+          ]
+        ],
+        [
+          [
+            "get_stock_info(symbol='MSFT')"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='MSFT',price=310.23,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "get_account_info()"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content='Just made a move in the tech sector! I initiated and then canceled a 100-share buy order for $MSFT. Always staying sharp with my investment decisions!',tags=['#TechInvesting', '#StockMarket'],mentions=['@MSFT'])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TwitterAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_110",
+      "model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='AAPL',price=195.25,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "get_account_info()"
+          ]
+        ],
+        [
+          [
+            "create_ticket(title='Urgent: Transaction Issue',description='There is an issue with a recent transaction involving a canceled buy order for 100 shares of AAPL and I am requesting confirmation of the cancellation along with an account summary.',priority=3)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_111",
+      "model_result_decoded": [
+        [
+          [
+            "add_to_watchlist(stock='Zeta Corp')"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12345)"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='Jane',message='What are the new stock inclusion and the status of my current order?')"
+          ]
+        ],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for MessageAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_112",
+      "model_result_decoded": [
+        [
+          [
+            "get_available_stocks(sector='Technology')"
+          ]
+        ],
+        [
+          [
+            "get_stock_info(symbol='NVDA')"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12345)"
+          ]
+        ],
+        [
+          [
+            "get_account_info()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_113",
+      "model_result_decoded": [
+        [],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_114",
+      "model_result_decoded": [
+        [
+          [
+            "get_symbol_by_name(name='Quasar Ltd.')"
+          ],
+          [
+            "get_stock_info(symbol='QUAS')"
+          ]
+        ],
+        [
+          [
+            "add_to_watchlist(stock='QUAS')"
+          ]
+        ],
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='USR007',message='NVDA and QUAS.')"
+          ]
+        ],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_115",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "get_stock_info(symbol='AMZN')"
+          ]
+        ],
+        [
+          [
+            "get_order_history()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_116",
+      "model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "remove_stock_from_watchlist(symbol='ZETA')"
+          ]
+        ],
+        [
+          [
+            "get_stock_info(symbol='OMEG')"
+          ]
+        ],
+        [
+          [
+            "get_available_stocks(sector='Technology')"
+          ]
+        ],
+        [
+          [
+            "fund_account(amount=10000)"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='AAPL',price=150,amount=50)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_117",
+      "model_result_decoded": [
+        [
+          [
+            "remove_stock_from_watchlist(symbol='Zeta Corp')"
+          ]
+        ],
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "get_available_stocks(sector='Technology')"
+          ]
+        ],
+        [
+          [
+            "get_stock_info(symbol='MSFT')"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='MSFT',price=320.0,amount=50)"
+          ]
+        ],
+        [
+          [
+            "fund_account(amount=10000.0)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_118",
+      "model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "remove_stock_from_watchlist(symbol='NVDA')"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='AAPL',price=198.5,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_119",
+      "model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='ZTA')"
+          ]
+        ],
+        [
+          [
+            "get_available_stocks(sector='Technology')"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "close_ticket(ticket_id=3)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_120",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "get_order_details(order_id=12345)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12345)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_121",
+      "model_result_decoded": [
+        [
+          [
+            "get_available_stocks(sector='Technology')"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='AAPL',price=195.5,amount=150)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "withdraw_funds(amount=500)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_122",
+      "model_result_decoded": [
+        [
+          [
+            "place_order(order_type='Buy',symbol='AAPL',price=150.0,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "trading_logout()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_123",
+      "model_result_decoded": [
+        [
+          [
+            "get_account_info()",
+            "place_order(order_type='Buy',symbol='TSLA',price=150.0,amount=150)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "trading_logout()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_124",
+      "model_result_decoded": [
+        [
+          [
+            "place_order(order_type='Buy',symbol='AAPL',price=145.75,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_125",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "place_order(order_type='Buy',symbol='ALPH',price=1500.0,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12345)"
+          ]
+        ],
+        [
+          [
+            "get_ticket(ticket_id=67890)"
+          ]
+        ],
+        [
+          [
+            "resolve_ticket(ticket_id=67890,resolution='Verified with the trading platform.')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_126",
+      "model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='XYZ',price=100.0,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_127",
+      "model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "remove_stock_from_watchlist(symbol='BDX')"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='BDX',price=25.5,amount=150)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_128",
+      "model_result_decoded": [
+        [
+          [
+            "get_current_time()",
+            "get_available_stocks(sector='Technology')"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='MSFT',price=300.5,amount=150)"
+          ]
+        ],
+        [],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_129",
+      "model_result_decoded": [
+        [],
+        [],
+        [
+          [
+            "get_ticket(ticket_id=1)"
+          ]
+        ],
+        [
+          [
+            "resolve_ticket(ticket_id=1,resolution='The issue related to the previous transaction inquiry has been resolved by verifying the accuracy of the NVDA stock order, and the ticket has been marked as completed with no further action required.')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_130",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "get_order_details(order_id=12345)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12345)"
+          ]
+        ],
+        [
+          [
+            "get_account_info()"
+          ]
+        ],
+        [
+          [
+            "fund_account(amount=5000.0)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_131",
+      "model_result_decoded": [
+        [
+          [
+            "get_current_time()"
+          ]
+        ],
+        [
+          [
+            "get_available_stocks(sector='Technology')"
+          ]
+        ],
+        [],
+        [
+          [
+            "place_order(order_type='Buy',symbol='MSFT',price=250.0,amount=150)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='Alice',message='I just executed another order. What do you think of it? I am Jane.')"
+          ]
+        ],
+        [
+          [
+            "delete_message(receiver_id='Alice')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 2",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_132",
+      "model_result_decoded": [
+        [],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_133",
+      "model_result_decoded": [
+        [
+          [
+            "add_to_watchlist(stock='AAPL')"
+          ]
+        ],
+        [
+          [
+            "get_stock_info(symbol='NVDA')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_134",
+      "model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='QSL')"
+          ]
+        ],
+        [],
+        [
+          [
+            "get_account_info()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_135",
+      "model_result_decoded": [
+        [
+          [
+            "add_to_watchlist(stock='ZTA')"
+          ]
+        ],
+        [
+          [
+            "get_stock_info(symbol='NVDA')"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='ZTA',price=120.0,amount=100)"
+          ]
+        ],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_136",
+      "model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='ZT')"
+          ]
+        ],
+        [],
+        [],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_137",
+      "model_result_decoded": [
+        [
+          [
+            "add_to_watchlist(stock='Zeta Corp')"
+          ]
+        ],
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "get_stock_info(symbol='NVDA')"
+          ]
+        ],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 3",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_138",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "place_order(order_type='Buy',symbol='SYNEX',price=25.5,amount=150)"
+          ]
+        ],
+        [],
+        [
+          [
+            "send_message(receiver_id='Sarah',message='Order for purchasing SYNX is completed.')"
+          ]
+        ],
+        [
+          [
+            "delete_message(receiver_id='Sarah')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_139",
+      "model_result_decoded": [
+        [
+          [
+            "add_to_watchlist(stock='Zeta Corp')"
+          ]
+        ],
+        [
+          [
+            "get_watchlist()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_140",
+      "model_result_decoded": [
+        [
+          [
+            "add_to_watchlist(stock='Zeta Corp')"
+          ]
+        ],
+        [
+          [
+            "get_account_info()"
+          ]
+        ],
+        [
+          [
+            "create_ticket(title='Critical Order Assistance',description='I have an order issue that requires immediate attention. The order details are as follows: Order ID 789123, stock symbol NVDA, order type Buy, price $250.00, amount 10 shares. The issue is not resolved, and I need urgent assistance.',priority=5)"
+          ]
+        ],
+        [
+          [
+            "resolve_ticket(ticket_id=2,resolution='Self-resolved, no longer requiring assistance.')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_141",
+      "model_result_decoded": [
+        [
+          [
+            "remove_stock_from_watchlist(symbol='TSLA')"
+          ]
+        ],
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='GOOG',price=1500.5,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='Michael',message='100 shares of GOOG purchased, thoughts?')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_142",
+      "model_result_decoded": [
+        [
+          [
+            "add_to_watchlist(stock='Zeta Corp')"
+          ]
+        ],
+        [],
+        [
+          [
+            "get_stock_info(symbol='ZETA')"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='ZETA',price=150.0,amount=50)"
+          ]
+        ],
+        [
+          [
+            "fund_account(amount=5000.0)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 1",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_143",
+      "model_result_decoded": [
+        [
+          [
+            "add_to_watchlist(stock='Zeta Corp')"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12345)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12345)"
+          ]
+        ],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 1.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_144",
+      "model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='AAPL')"
+          ]
+        ],
+        [
+          [
+            "mean(numbers=[227.16, 2.552, 227.11, 227.09])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_145",
+      "model_result_decoded": [
+        [],
+        [],
+        [],
+        [
+          [
+            "send_message(receiver_id='USR003',message='Zeta Corp seems to have potential. What do you think of their recent financial report?')"
+          ]
+        ],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_146",
+      "model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "remove_stock_from_watchlist(symbol='ZETA')"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='AAPL',price=195.5,amount=50)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_147",
+      "model_result_decoded": [
+        [
+          [
+            "search_tweets(keyword='Omega Industries')"
+          ]
+        ],
+        [
+          [
+            "mention(tweet_id=123456789,mentioned_usernames=['technewsworld'])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TwitterAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_148",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "get_order_details(order_id=12345)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12345)"
+          ]
+        ],
+        [
+          [
+            "get_account_info()"
+          ]
+        ],
+        [
+          [
+            "create_ticket(title='Platform Error: Issue with a recent trading platform error following the cancellation of an AAPL order and a request for an account overview.',description=\"Following a disappointing experience with a recent error on the trading platform, I need to lodge a complaint ticket labeled 'Platform Error' complete with a thorough explanation for the support team to investigate. The message is: 'Issue with a recent trading platform error following the cancellation of an AAPL order and a request for an account overview.'\",priority=3)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_149",
+      "model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='ZT')",
+            "remove_stock_from_watchlist(symbol='ZT')"
+          ]
+        ],
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='USR003',message=\"I've decided to drop those dipping stocks from my line-up.\")"
+          ]
+        ],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ],
+        [
+          [
+            "delete_message(receiver_id='USR003')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_150",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='RIV',travel_to='SBR',travel_date='2026-10-06',travel_class='economy')"
+          ]
+        ],
+        [
+          [
+            "set_budget_limit(access_token='abc123token',budget_limit=15400)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_151",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='SFO',travel_to='LAX',travel_date='2026-11-10',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='abc123xyz',booking_id='1234567890')"
+          ]
+        ],
+        [
+          [
+            "authenticate_twitter(username='john',password='john1234')"
+          ],
+          [
+            "post_tweet(content='Just cancelled my trip to LA',tags=['TravelUpdate', 'BusinessTrip'])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_152",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='SFO',travel_to='ORD',travel_date='2026-11-15',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='secureAccessToken12345',booking_id='1234567890')"
+          ]
+        ],
+        [
+          [
+            "create_ticket(title='Flight Cancellation Alert',description=\"Detailing the reservation specifics 'Request to cancel'.\",priority=5)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_153",
+      "model_result_decoded": [
+        [
+          [
+            "verify_traveler_information(first_name='Michael',last_name='Thompson',date_of_birth='1950-01-01',passport_number='P12345678')"
+          ]
+        ],
+        [
+          [
+            "get_nearest_airport_by_city(location='Rivermist')",
+            "get_flight_cost(travel_from='RIV',travel_to='GFD',travel_date='2026-12-15',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "set_budget_limit(access_token='abc123xyz',budget_limit=5000)"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='abc123xyz',card_id='card1234',travel_date='2026-12-15',travel_from='RMS',travel_to='GFD',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123xyz',booking_id='3426812')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 1.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_154",
+      "model_result_decoded": [
+        [
+          [
+            "verify_traveler_information(first_name='Michael',last_name='Smith',date_of_birth='1962-02-14',passport_number='P87654321')"
+          ]
+        ],
+        [
+          [
+            "get_nearest_airport_by_city(location='Chicago')"
+          ]
+        ],
+        [
+          [
+            "set_budget_limit(access_token='token_ABC123XYZ',budget_limit=1500.0)"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='token_ABC123XYZ',card_id='card1',travel_date='2026-08-10',travel_from='ORD',travel_to='LAX',travel_class='economy')"
+          ]
+        ],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 1.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_155",
+      "model_result_decoded": [
+        [
+          [
+            "book_flight(access_token='abc123xyz',card_id='id15583',travel_date='2026-11-15',travel_from='LAX',travel_to='JFK',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "purchase_insurance(access_token='abc123xyz',insurance_type='comprehensive',insurance_cost=120,booking_id='3426812',card_id='id15583')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_156",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='SFO',travel_to='LAX',travel_date='2026-10-15',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123xyz456',booking_id='booking_12345')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='booking_12345',message='I need assistance with my flight booking from San Francisco to Los Angeles on October 15, 2026. My reservation is not working, and I need immediate help to resolve the issue.')"
+          ]
+        ],
+        [],
+        [
+          [
+            "edit_ticket(ticket_id=12345,updates={'status': 'Urgent', 'priority': 5})"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_157",
+      "model_result_decoded": [
+        [
+          [
+            "list_all_airports()"
+          ]
+        ],
+        [
+          [
+            "get_nearest_airport_by_city(location='Crescent Hollow')"
+          ]
+        ],
+        [
+          [
+            "get_flight_cost(travel_from='CRH',travel_to='PINEH',travel_date='2026-03-03',travel_class='business')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 2.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_158",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "get_flight_cost(travel_from='JFK',travel_to='LAX',travel_date='2026-10-15',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='abc123xyz',booking_id='1234567890')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_159",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "get_flight_cost(travel_from='SFO',travel_to='LAX',travel_date='2026-11-15',travel_class='economy')"
+          ]
+        ],
+        [
+          [
+            "purchase_insurance(access_token='abc123xyz',insurance_type='travel_insurance',insurance_cost=500.0,booking_id='booking_12345',card_id='card_3456')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_160",
+      "model_result_decoded": [
+        [
+          [
+            "set_budget_limit(access_token='abc123xyz',budget_limit=20000.0)"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='abc123xyz',card_id='card_3478',travel_date='2026-02-28',travel_from='JFK',travel_to='LAX',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "close_ticket(ticket_id=83912)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_161",
+      "model_result_decoded": [
+        [
+          [
+            "authenticate_travel(client_id='client_520',client_secret='rise_to_sky',refresh_token='token990125',grant_type='read_write',user_first_name='Michael',user_last_name='Thompson')"
+          ]
+        ],
+        [
+          [
+            "get_credit_card_balance(access_token='251675',card_id='card_4455')"
+          ]
+        ],
+        [
+          [
+            "mean(numbers=[45.99, 78.25, 102.5, 38.75, 92.1])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_162",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "get_nearest_airport_by_city(location='Rivermist')"
+          ]
+        ],
+        [
+          [
+            "get_flight_cost(travel_from='RMS',travel_to='JFK',travel_date='2026-09-10',travel_class='economy')"
+          ]
+        ],
+        [
+          [
+            "compute_exchange_rate(base_currency='USD',target_currency='RMB',value=2940)"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',card_id='card6749',travel_date='2026-09-10',travel_from='RMS',travel_to='JFK',travel_class='economy')"
+          ]
+        ],
+        [
+          [
+            "close_ticket(ticket_id=458219)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_163",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='SFO',travel_to='LAX',travel_date='2026-11-15',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='abc123xyz',booking_id='BOOKING123456')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_164",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='RIV',travel_to='JFK',travel_date='2026-12-01',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "compute_exchange_rate(base_currency='CNY',target_currency='USD',value=10000)"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='abc123',card_id='card_3456',travel_date='2026-12-01',travel_from='RIV',travel_to='JFK',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123',booking_id='booking_12345')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_165",
+      "model_result_decoded": [
+        [
+          [
+            "verify_traveler_information(first_name='Eleanor',last_name='Smith',date_of_birth='1985-03-15',passport_number='US123456789')"
+          ]
+        ],
+        [
+          [
+            "get_nearest_airport_by_city(location='Crescent Hollow')"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='abc123xyz',card_id='primary',travel_date='2026-12-15',travel_from='HKG',travel_to='CRH',travel_class='economy')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123xyz',booking_id='1234567890')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='1234567890',message='I am experiencing a discrepancy with my booking (ID: 1234567890). The invoice could not be located, and I need assistance to review the transaction details. Please help me resolve this issue as soon as possible.')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_166",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='Crescent Hollow',travel_to='Rivermist',travel_date='2026-07-15',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "set_budget_limit(access_token='access_token_abc123',budget_limit=2000)"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='access_token_abc123',card_id='card7320',travel_date='2026-07-15',travel_from='Crescent Hollow',travel_to='Rivermist',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='access_token_abc123',booking_id='booking_12345')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='booking_12345',message='Concerns regarding seating arrangements')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_167",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='RIV',travel_to='LAX',travel_date='2026-12-15',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "compute_exchange_rate(base_currency='RMB',target_currency='USD',value=20000)"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='abc123xyz456',card_id='card_0064',travel_date='2026-12-15',travel_from='RIV',travel_to='LAX',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='abc123xyz456',booking_id='booking_12345')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123xyz456',booking_id='booking_12345')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_168",
+      "model_result_decoded": [
+        [
+          [
+            "compute_exchange_rate(base_currency='USD',target_currency='EUR',value=1500)"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='abc123xyz456',card_id='card5638',travel_date='2026-07-01',travel_from='SFO',travel_to='BOS',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123xyz456',booking_id='3426812')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='3426812',message='Require assistance with the transaction particulars')"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='travel_advisor',message='Details regarding problems faced with the flight booking transaction.')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 4.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_169",
+      "model_result_decoded": [
+        [
+          [
+            "book_flight(access_token='2278-9812-3456-4567',card_id='card_6789',travel_date='2026-11-10',travel_from='Rivermist',travel_to='Los Angeles',travel_class='business')"
+          ],
+          [
+            "get_nearest_airport_by_city(location='Rivermist')"
+          ],
+          [
+            "book_flight(access_token='2278-9812-3456-4567',card_id='card_6789',travel_date='2026-11-10',travel_from='RMS',travel_to='Los Angeles',travel_class='business')"
+          ],
+          [
+            "get_nearest_airport_by_city(location='Los Angeles')"
+          ],
+          [
+            "book_flight(access_token='2278-9812-3456-4567',card_id='card_6789',travel_date='2026-11-10',travel_from='RMS',travel_to='LAX',travel_class='business')"
+          ],
+          [
+            "retrieve_invoice(access_token='2278-9812-3456-4567',booking_id='3426812')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='3426812',message='I need assistance with my luggage restrictions for the flight booking with Booking ID 3426812. Please provide details on the luggage policies and any restrictions for business class on the flight from RMS to LAX on 2026-11-10.')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_170",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='SFO',travel_to='LAX',travel_date='2026-11-15',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='access_token_abc123',booking_id='booking_12345')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='booking_12345',message='I need assistance with my itinerary. Please help me resolve any issues with my booking.')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='access_token_abc123',booking_id='booking_12345')"
+          ]
+        ],
+        [
+          [
+            "authenticate_twitter(username='michael_smith',password='michael1234')"
+          ],
+          [
+            "post_tweet(content='Exploring the world, one city at a time!',tags=['Travel', 'Adventure'])"
+          ]
+        ],
+        [
+          [
+            "retweet(tweet_id=0)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_171",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='JFK',travel_to='PEK',travel_date='2026-06-15',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "purchase_insurance(access_token='897362',insurance_type='luxury_travel',insurance_cost=250.0,booking_id='booking_12345',card_id='card_8283')"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='travel_agent',message='Thank you for your efficient handling of my booking to Beijing. My trip is confirmed for June 15th from JFK to PEK in first class')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_172",
+      "model_result_decoded": [
+        [
+          [
+            "authenticate_travel(client_id='trav3lMaxID2023',client_secret='M@xSecret!',refresh_token='r3freshM3n0w',grant_type='read_write',user_first_name='Maxwell',user_last_name='Edison')"
+          ]
+        ],
+        [
+          [
+            "register_credit_card(access_token='251675',card_number='2345-6789-1234-5678',expiration_date='08/2025',cardholder_name='Maxwell Edison',card_verification_number=567)",
+            "book_flight(access_token='251675',card_id='card_123456',travel_date='2026-12-15',travel_from='SFO',travel_to='LAX',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='m0llyTr@vel2k24',message='Everything for our trip is sorted and ready!')"
+          ]
+        ],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_173",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='LAX',travel_to='JFK',travel_date='2026-11-15',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "compute_exchange_rate(base_currency='USD',target_currency='GBP',value=10000.0)"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='abc123xyz',card_id='card_1496',travel_date='2026-11-15',travel_from='LAX',travel_to='JFK',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='abc123xyz',booking_id='3426812')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 1.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_174",
+      "model_result_decoded": [
+        [
+          [
+            "book_flight(access_token='abc123xyz',card_id='card_7243',travel_date='2026-10-10',travel_from='SFO',travel_to='ROM',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "purchase_insurance(access_token='abc123xyz',insurance_type='travel',insurance_cost=150.0,booking_id='booking_12345',card_id='card_7243')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123xyz',booking_id='booking_12345',insurance_id='insurance_67890')"
+          ]
+        ],
+        [
+          [
+            "authenticate_twitter(username='bookworm_traveler',password='Tr@v3lB00ks2023')"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content=\"Off to Rome! Can't wait to explore the ancient wonders and dive into Italian cuisine!\",tags=[],mentions=[])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_175",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='SFO',travel_to='LAX',travel_date='2026-11-25',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "authenticate_twitter(username='john',password='john1234')"
+          ],
+          [
+            "post_tweet(content='Loved my flight journey!',tags=['#TravelDiaries'])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_176",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "cancel_booking(access_token='ABCD1234',booking_id='flight_123456')",
+            "create_ticket(title='Urgent Flight Cancellation',description='Due to unexpected changes in schedule, the flight from JFK to LAX on December 15, 2026, needs to be canceled immediately.',priority=5)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_177",
+      "model_result_decoded": [
+        [
+          [
+            "book_flight(access_token='abc123xyz',card_id='card_7629',travel_date='2026-12-15',travel_from='LAX',travel_to='TYO',travel_class='business')"
+          ]
+        ],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_178",
+      "model_result_decoded": [
+        [
+          [
+            "register_credit_card(access_token='abc123xyz',card_number='4012888888881881',expiration_date='12/2028',cardholder_name='Michael Smith',card_verification_number=465)"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123xyz',booking_id='flight_001',insurance_id='262919693687')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='flight_001',message='I need immediate assistance with insurance-related issues for my trip to New York. Please contact me as soon as possible.')"
+          ]
+        ],
+        [
+          [
+            "create_ticket(title='Unsatisfactory Customer Support',description='',priority=5)"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='abc123xyz',booking_id='flight_001')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_179",
+      "model_result_decoded": [
+        [
+          [
+            "book_flight(access_token='abc123xyz',card_id='card_6789',travel_date='2026-11-12',travel_from='Crescent Hollow',travel_to='New York',travel_class='economy')"
+          ],
+          [
+            "get_nearest_airport_by_city(location='Crescent Hollow')"
+          ],
+          [
+            "book_flight(access_token='abc123xyz',card_id='card_6789',travel_date='2026-11-12',travel_from='CRH',travel_to='New York',travel_class='economy')"
+          ],
+          [
+            "get_nearest_airport_by_city(location='New York')"
+          ],
+          [
+            "book_flight(access_token='abc123xyz',card_id='card_6789',travel_date='2026-11-12',travel_from='CRH',travel_to='JFK',travel_class='economy')"
+          ]
+        ],
+        [
+          [
+            "purchase_insurance(access_token='abc123xyz',insurance_type='travel_insurance',insurance_cost=100.0,booking_id='3426812',card_id='card_6789')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123xyz',booking_id='3426812',insurance_id='498276044')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='3426812',message='I need to adjust my itinerary due to a family emergency. Please let me know the options for changes or a full refund.')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_180",
+      "model_result_decoded": [
+        [
+          [
+            "compute_exchange_rate(base_currency='RMB',target_currency='USD',value=20000)"
+          ],
+          [
+            "set_budget_limit(access_token='abc123xyz',budget_limit=2857.14)"
+          ]
+        ],
+        [
+          [
+            "get_flight_cost(travel_from='LAX',travel_to='JFK',travel_date='2026-10-12',travel_class='business')"
+          ],
+          [
+            "book_flight(access_token='abc123xyz',card_id='card123',travel_date='2026-10-12',travel_from='LAX',travel_to='JFK',travel_class='business')"
+          ],
+          [
+            "register_credit_card(access_token='abc123xyz',card_number='4111111111111111',expiration_date='12/2027',cardholder_name='John Doe',card_verification_number=1234)"
+          ],
+          [
+            "book_flight(access_token='abc123xyz',card_id='262919693687',travel_date='2026-10-12',travel_from='LAX',travel_to='JFK',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='abc123xyz',booking_id='7223063')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123xyz',booking_id='7223063')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='7223063',message=\"I'm having trouble retrieving the invoice for my flight booking. Please assist me in resolving this issue.\")"
+          ]
+        ],
+        [
+          [
+            "create_ticket(title='Invoice Discrepancy',description='Problem encountered with invoicing.',priority=3)"
+          ],
+          [
+            "ticket_login(username='mzhang',password='SecurePass123')"
+          ],
+          [
+            "create_ticket(title='Invoice Discrepancy',description='Problem encountered with invoicing.',priority=3)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_181",
+      "model_result_decoded": [
+        [
+          [
+            "verify_traveler_information(first_name='Carlos',last_name='Martinez',date_of_birth='1968-03-23',passport_number='123456')"
+          ]
+        ],
+        [
+          [
+            "get_nearest_airport_by_city(location='New York')",
+            "get_flight_cost(travel_from='JFK',travel_to='LAX',travel_date='2026-10-10',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='abc123xyz',card_id='card_3456',travel_date='2026-10-10',travel_from='JFK',travel_to='LAX',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='abc123xyz',booking_id='3426812')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='3426812',message='The abrupt cancellation caused significant inconvenience, disrupting my travel plans and causing financial loss.')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TicketAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_182",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='ORD',travel_to='SVP',travel_date='2026-07-14',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "set_budget_limit(access_token='abc123xyz456',budget_limit=20000.0)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_183",
+      "model_result_decoded": [
+        [
+          [
+            "verify_traveler_information(first_name='Matt',last_name='Bradley',date_of_birth='1995-04-23',passport_number='US9148817941')"
+          ]
+        ],
+        [
+          [
+            "get_nearest_airport_by_city(location='Rivermist')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123xyz456',booking_id='booking_20261115')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='booking_20261115',message='I need clarification on my booking details. Please provide the invoice and confirm the flight cost and booking status.')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='abc123xyz456',booking_id='booking_20261115')"
+          ]
+        ],
+        [
+          [
+            "authenticate_twitter(username='john',password='john1234')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_184",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='JFK',travel_to='LAX',travel_date='2026-12-15',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123xyz',booking_id='booking_12345')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='abc123xyz',booking_id='booking_12345')"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='USR006',message=\"Hi Sam, my travel plans have changed. I'll update you soon\")"
+          ]
+        ],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ],
+        [
+          [
+            "delete_message(receiver_id='USR006')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_185",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='first',travel_to='second',travel_date='2026-12-15',travel_class='business')"
+          ],
+          [
+            "get_nearest_airport_by_city(location='first')"
+          ],
+          [
+            "get_nearest_airport_by_city(location='second')"
+          ]
+        ],
+        [
+          [
+            "purchase_insurance(access_token='12345-67890',insurance_type='business',insurance_cost=300.0,booking_id='d184e2c0-2ebb-4f39-a525-d5e01b67dc6c',card_id='0001')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='12345-67890',booking_id='d184e2c0-2ebb-4f39-a525-d5e01b67dc6c')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_186",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='RIV',travel_to='JFK',travel_date='2026-12-15',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='secure_access_token_987654321',card_id='card_4526',travel_date='2026-12-15',travel_from='RIV',travel_to='JFK',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='secure_access_token_987654321',booking_id='booking_12345')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='booking_12345',message='I am experiencing an issue with my booking and would appreciate your assistance in resolving it. Please provide me with the necessary information to facilitate my travel arrangements smoothly.')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='secure_access_token_987654321',booking_id='booking_12345')"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content='Postponing my plans.',tags=['#Travel', '#PlansChanged'],mentions=['@AirlineSupport'])"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 0.",
+      "score_error_type": "multi_turn:execution_response_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_187",
+      "model_result_decoded": [
+        [
+          [
+            "purchase_insurance(access_token='token_abc123',insurance_type='comprehensive',insurance_cost=1500.0,booking_id='insurance_12345',card_id='card_4893')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='token_abc123',booking_id='insurance_12345',insurance_id='255316027')"
+          ]
+        ],
+        [],
+        [
+          [
+            "create_ticket(title='Discrepancy in Travel Costs',description=\"Customer support provided feedback that was less than satisfactory. The issue is regarding the discrepancy in travel costs for the insurance purchase (Booking ID: insurance_12345). The customer is requesting to submit a high-priority ticket with the title 'Discrepancy in Travel Costs' and the description should include the feedback received from customer support. The username is 'mthompson' and the password is 'SecurePass123'.\")"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 2",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_188",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "set_budget_limit(access_token='abc123xyz',budget_limit=10000.0)"
+          ]
+        ],
+        [
+          [
+            "purchase_insurance(access_token='abc123xyz',insurance_type='travel_insurance',insurance_cost=500.0,booking_id='latest_reservation',card_id='primary')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123xyz',booking_id='latest_reservation')"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content='Excited for my upcoming adventure! \ud83c\udf1f #TravelGoals',mentions=['@TravelBuddy'])"
+          ]
+        ],
+        [
+          [
+            "retweet(tweet_id=0)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_189",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='JFK',travel_to='NRT',travel_date='2026-12-24',travel_class='first')"
+          ],
+          [
+            "get_nearest_airport_by_city(location='New York')"
+          ],
+          [
+            "get_flight_cost(travel_from='JFK',travel_to='NRT',travel_date='2026-12-24',travel_class='first')"
+          ],
+          [
+            "get_nearest_airport_by_city(location='Tokyo')"
+          ],
+          [
+            "get_flight_cost(travel_from='JFK',travel_to='HND',travel_date='2026-12-24',travel_class='first')"
+          ],
+          [
+            "book_flight(access_token='abc123xyz',card_id='card_5678',travel_date='2026-12-24',travel_from='JFK',travel_to='HND',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "post_tweet(content='Flexibility is key! Plans changed, but the adventure continues.',tags=['#TravelBlog'],mentions=['@Spontaneity'])"
+          ]
+        ],
+        [
+          [
+            "retweet(tweet_id=1234567890)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TwitterAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_190",
+      "model_result_decoded": [
+        [
+          [
+            "book_flight(access_token='token_value',card_id='crd6789',travel_date='2026-11-15',travel_from='Oakendale',travel_to='Los Angeles',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "purchase_insurance(access_token='token_value',insurance_type='comprehensive protection',insurance_cost=50.0,booking_id='booking_id_value',card_id='crd6789')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='token_value',booking_id='booking_id_value',insurance_id='insurance_id_value')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='booking_id_value',message='There is an unexpected charge on the invoice for the flight and insurance. Please investigate and resolve the issue.')"
+          ]
+        ],
+        [
+          [
+            "create_ticket(title='Billing Concern',description='Detailed exchange with customer support regarding unexpected charge.',priority=2)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_191",
+      "model_result_decoded": [
+        [
+          [
+            "verify_traveler_information(first_name='Michael',last_name='Thompson',date_of_birth='1995-08-15',passport_number='US1234')"
+          ]
+        ],
+        [
+          [
+            "get_nearest_airport_by_city(location='San Francisco')"
+          ]
+        ],
+        [
+          [
+            "get_flight_cost(travel_from='LAX',travel_to='SFO',travel_date='2026-12-15',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='auth_token_987654321',card_id='card_9012',travel_date='2026-12-15',travel_from='LAX',travel_to='SFO',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='auth_token_987654321',booking_id='3426812')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_192",
+      "model_result_decoded": [
+        [
+          [
+            "get_nearest_airport_by_city(location='Rivermist')",
+            "get_nearest_airport_by_city(location='Stonebrook')"
+          ]
+        ],
+        [
+          [
+            "get_flight_cost(travel_from='RMS',travel_to='LAX',travel_date='2026-08-15',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "set_budget_limit(access_token='ABCDE12345',budget_limit=1500.0)"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='ABCDE12345',card_id='1432',travel_date='2026-08-15',travel_from='RMS',travel_to='LAX',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='ABCDE12345',booking_id='3426812')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_193",
+      "model_result_decoded": [
+        [
+          [
+            "authenticate_travel(client_id='my_client_id',client_secret='my_client_secret',refresh_token='my_refresh_token',grant_type='read_write',user_first_name='Michael',user_last_name='Thompson')"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='251675',card_id='credit_9988',travel_date='2026-12-25',travel_from='JFK',travel_to='MPC',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='251675',booking_id='5431449')"
+          ]
+        ],
+        [
+          [
+            "create_ticket(title='Urgent Change in Travel Plans',description='An unexpected change has arisen, and I need to cancel my booking for the trip to the Maldives.',priority=4)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": null,
+      "score_error_type": null,
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": true
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_194",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "book_flight(access_token='abc123xyz',card_id='main1234',travel_date='2026-10-31',travel_from='JFK',travel_to='LAX',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "purchase_insurance(access_token='abc123xyz',insurance_type='comprehensive',insurance_cost=769.0,booking_id='3426812',card_id='main1234')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123xyz',booking_id='3426812',insurance_id='498276044')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='3426812',message='I need to reach out to customer service regarding my booking 3426812. Please assist me.')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='abc123xyz',booking_id='3426812')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_195",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='RIV',travel_to='LAX',travel_date='2026-11-15',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='abc123xyz',booking_id='1_3456')"
+          ]
+        ],
+        [
+          [
+            "authenticate_twitter(username='michael_t',password='michaelSecurePass123')"
+          ]
+        ],
+        [
+          [
+            "retweet(tweet_id=1234567890)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_196",
+      "model_result_decoded": [
+        [
+          [
+            "set_budget_limit(access_token='abc123xyz',budget_limit=50000.0)"
+          ]
+        ],
+        [
+          [
+            "get_flight_cost(travel_from='LHR',travel_to='CDG',travel_date='2026-11-15',travel_class='business')"
+          ],
+          [
+            "book_flight(access_token='abc123xyz',card_id='primary_8970',travel_date='2026-11-15',travel_from='LHR',travel_to='CDG',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='abc123xyz',booking_id='1234567890')"
+          ]
+        ],
+        [
+          [
+            "create_ticket(title='Cancellation Issue',description='Error encountered during flight cancellation process.',priority=3)"
+          ]
+        ],
+        [
+          [
+            "resolve_ticket(ticket_id=1,resolution='')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_197",
+      "model_result_decoded": [
+        [
+          [
+            "register_credit_card(access_token='abc123xyz456',card_number='1432-7890-6543-9876',expiration_date='12/25',cardholder_name='Michael Thompson',card_verification_number=321)",
+            "purchase_insurance(access_token='abc123xyz456',insurance_type='family_vacation',insurance_cost=2000.0,booking_id='insurance_12345',card_id='1432-7890-6543-9876')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123xyz456',booking_id='insurance_12345',insurance_id='262919693687')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='insurance_12345',message='During this adventure, an unexpected hiccup arose. Kindly notify the customer support service about this incident to guarantee that our case receives immediate attention, ahead of others.')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_198",
+      "model_result_decoded": [
+        [
+          [
+            "cancel_booking(access_token='abc123token',booking_id='6789')",
+            "post_tweet(content='Disappointed over my canceled plans.',tags=['#TravelWoes'],mentions=['@CarlinaYates'])",
+            "authenticate_twitter(username='john',password='john1234')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TwitterAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_199",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='LOS',travel_to='JFK',travel_date='2026-04-15',travel_class='business')"
+          ],
+          [
+            "get_nearest_airport_by_city(location='Los Angeles')"
+          ],
+          [
+            "get_nearest_airport_by_city(location='New York')"
+          ],
+          [
+            "get_flight_cost(travel_from='LAX',travel_to='JFK',travel_date='2026-04-15',travel_class='business')"
+          ],
+          [
+            "book_flight(access_token='abc123xyz',card_id='card_123456789',travel_date='2026-04-15',travel_from='LAX',travel_to='JFK',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123xyz',booking_id='3426812')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='3426812',message='There were hiccups during the booking process. I encountered issues with the flight booking, and I need to reach out to customer support to detail the challenges I faced.')"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='USR003',message='Update on flight issue and customer support contact.')"
+          ]
+        ],
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for MessageAPI does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    }
+  ]
+}
