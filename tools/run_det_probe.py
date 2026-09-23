@@ -304,6 +304,14 @@ def capture_run_git(*, allow_dirty: bool = False, root: Path | None = None) -> d
 
 def main() -> int:
     git_rec = capture_run_git(allow_dirty=False)
+    from seam.locks import ExclusiveLock
+
+    # After the clean-tree check. A lock file created earlier would itself dirty the tree.
+    with ExclusiveLock(ROOT / ".locks" / "machine.lock"):
+        return _main_body(git_rec)
+
+
+def _main_body(git_rec: dict[str, Any]) -> int:
     prereg_rev = _require_committed_prereg()
     run_id = str(uuid.uuid4())
     out_dir = ROOT / "derived" / "h1_hybrid" / f"det_probe_{run_id}"
