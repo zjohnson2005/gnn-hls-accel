@@ -108,7 +108,10 @@ def interleaved_kind(policies: tuple[str, ...]) -> str:
     """Distinguish 2-policy vs full 3-policy interleaved seals."""
     if tuple(policies) == INTERLEAVE_POLICIES:
         return "h1_3policy_interleaved"
-    if set(policies) == set(INTERLEAVE_POLICIES_2POLICY) and "full_signal_bounceback" not in policies:
+    if (
+        set(policies) == set(INTERLEAVE_POLICIES_2POLICY)
+        and "full_signal_bounceback" not in policies
+    ):
         return "h1_2policy_interleaved"
     return "h1_interleaved"
 
@@ -133,6 +136,7 @@ def interleaved_exclusion_meta(policies: tuple[str, ...]) -> dict[str, Any]:
     else:
         meta["r2c_excluded"] = False
     return meta
+
 
 # R2c: bounce to cloud for one turn, then resume local.
 BOUNCE_STEP_BUDGET = 5  # within-turn step count; not MAXIMUM_STEP_LIMIT (20)
@@ -274,6 +278,9 @@ class TurnLedger:
     tool_exec_error_class: str | None = None
     # Per Anthropic request inside this user turn. None on local turns.
     cloud_requests: list[dict[str, Any]] | None = None
+    # Execute strings for this user turn (list of agent steps). Cloud turns
+    # are decode_execute_anthropic output; local turns are the probe decode.
+    decoded_steps: list[list[str]] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -307,7 +314,9 @@ class BounceEvent:
     cloud_usd: float = 0.0
     re_prefill_s: float | None = None
     re_prefill_required: bool = True
-    re_prefill_source: str | None = None  # measured | stub_zero | inferred_unmeasured | pending_next_local
+    re_prefill_source: str | None = (
+        None  # measured | stub_zero | inferred_unmeasured | pending_next_local
+    )
     control_return_turn: int | None = None  # turn index where control returned to local
     kv_valid_after_inject: bool = False
     shared_tool_exec: bool = True
@@ -343,11 +352,18 @@ class EntryResult:
     bounces: list[BounceEvent] = field(default_factory=list)
     # W-3 scorer outputs (persisted for H-1 quality; sealed trees that lack
     # these cannot be scored offline).
-    trajectory_pass: bool | None = None
+    trajectory_pass: bool | None = None  # local_probe only; never hybrid
     score_error_type: str | None = None
     score_error_message: str | None = None
-    model_result_decoded: list[Any] | None = None
-    quality_scope: str | None = None  # "local_probe" | None
+    model_result_decoded: list[Any] | None = None  # local_probe decode
+    quality_scope: str | None = None  # "local_probe" when local score is attached
+    local_pass: bool | None = None
+    local_model_result_decoded: list[Any] | None = None
+    hybrid_pass: bool | None = None
+    hybrid_model_result_decoded: list[Any] | None = None
+    hybrid_score_error_type: str | None = None
+    hybrid_score_error_message: str | None = None
+    hybrid_quality_scope: str | None = None  # "hybrid" when the merged score ran
 
     def as_ledger_dict(self) -> dict[str, Any]:
         return {
@@ -360,21 +376,39 @@ class EntryResult:
             "cloud_usd_entry": self.cloud_usd_entry,
             "bounces": [b.as_dict() for b in self.bounces],
             "trajectory_pass": self.trajectory_pass,
+            "local_pass": self.local_pass,
+            "hybrid_pass": self.hybrid_pass,
             "score_error_type": self.score_error_type,
             "score_error_message": self.score_error_message,
             "quality_scope": self.quality_scope,
+            "hybrid_quality_scope": self.hybrid_quality_scope,
             "turns": [t.as_dict() for t in self.turns],
         }
 
     def as_quality_dict(self) -> dict[str, Any]:
-        """Full quality payload including decoded tool calls for offline re-score."""
+        """Local-probe and hybrid scores, each under its own scope name."""
+        local_pass = self.local_pass if self.local_pass is not None else self.trajectory_pass
+        local_decoded = (
+            self.local_model_result_decoded
+            if self.local_model_result_decoded is not None
+            else self.model_result_decoded
+        )
         return {
             "entry_id": self.entry_id,
-            "trajectory_pass": self.trajectory_pass,
+            "local_pass": local_pass,
+            "local_quality_scope": "local_probe",
+            "local_model_result_decoded": local_decoded,
+            "hybrid_pass": self.hybrid_pass,
+            "hybrid_quality_scope": self.hybrid_quality_scope,
+            "hybrid_model_result_decoded": self.hybrid_model_result_decoded,
+            "hybrid_score_error_type": self.hybrid_score_error_type,
+            "hybrid_score_error_message": self.hybrid_score_error_message,
+            # local_probe aliases. trajectory_pass is never the hybrid score.
+            "trajectory_pass": local_pass,
             "score_error_type": self.score_error_type,
             "score_error_message": self.score_error_message,
-            "quality_scope": self.quality_scope,
-            "model_result_decoded": self.model_result_decoded,
+            "quality_scope": "local_probe",
+            "model_result_decoded": local_decoded,
             "cloud_usd_entry": self.cloud_usd_entry,
             "stop_reason": self.stop_reason,
             "status": self.status,
@@ -533,6 +567,8 @@ class BackendTurn:
     cloud_error: str | None = None
     # One dict per Anthropic request in this user turn.
     cloud_requests: list[dict[str, Any]] | None = None
+    # Per user-turn execute steps. One inner list per agent step.
+    decoded_steps: list[list[str]] | None = None
 
 
 def attach_local_probe_quality(
@@ -560,7 +596,74 @@ def attach_local_probe_quality(
     result.score_error_message = str(err_msg) if err_msg is not None else None
     decoded = row.get("model_result_decoded")
     result.model_result_decoded = decoded if isinstance(decoded, list) else None
+    result.local_model_result_decoded = result.model_result_decoded
     result.quality_scope = "local_probe"
+    result.local_pass = result.trajectory_pass
+
+
+def merged_decoded_steps(result: EntryResult) -> list[list[list[str]]]:
+    """User-turn order: cloud turns contribute their converted calls, local theirs."""
+    merged: list[list[list[str]]] = []
+    for turn in result.turns:
+        steps = turn.decoded_steps or []
+        merged.append([list(step) for step in steps])
+    return merged
+
+
+def score_hybrid_trajectory(result: EntryResult, entry: dict[str, Any]) -> None:
+    """BFCL checker on the merged local+cloud trajectory. Scope is hybrid."""
+    from tools.bfcl_feasibility_probe import score_multi_turn
+
+    merged = merged_decoded_steps(result)
+    result.hybrid_model_result_decoded = merged
+    raw = entry.get("raw_entry")
+    ground = entry.get("reference")
+    if not isinstance(raw, dict) or not isinstance(ground, list):
+        result.hybrid_pass = None
+        result.hybrid_score_error_type = "unscored_missing_entry"
+        result.hybrid_quality_scope = None
+        return
+    result.hybrid_quality_scope = "hybrid"
+    scored = score_multi_turn(
+        test_entry=raw,
+        ground_truth=ground,
+        model_result_decoded=merged,
+        test_category=str(entry.get("category") or "multi_turn_base"),
+        model_name=f"hybrid_{result.entry_id}_{id(result)}",
+    )
+    valid = scored.get("valid")
+    result.hybrid_pass = bool(valid) if valid is not None else None
+    err_t = scored.get("error_type")
+    result.hybrid_score_error_type = str(err_t) if err_t is not None else None
+    err_m = scored.get("error_message") or scored.get("error")
+    result.hybrid_score_error_message = str(err_m) if err_m is not None else None
+
+
+def _entry_escalated(result: EntryResult) -> bool:
+    return any(t.placement == "cloud" or t.escalated for t in result.turns)
+
+
+def attach_entry_quality(result: EntryResult, local: LocalBackend, entry: dict[str, Any]) -> None:
+    """Attach local_probe and hybrid scores under separate scope names.
+
+    local_pass is local-alone completion with no escalation. hybrid_pass is
+    the checker on the merged trajectory. An escalated entry is a local_pass
+    failure even when the cloud turns make hybrid_pass true.
+    """
+    attach_local_probe_quality(result, local, entry)
+    if result.local_pass is None and result.trajectory_pass is not None:
+        result.local_pass = result.trajectory_pass
+    score_hybrid_trajectory(result, entry)
+    if _entry_escalated(result):
+        result.local_pass = False
+    elif result.local_pass is None:
+        result.local_pass = result.hybrid_pass
+
+
+def _stamp_decoded(ledger: TurnLedger, source: BackendTurn) -> TurnLedger:
+    steps = source.decoded_steps or []
+    ledger.decoded_steps = [list(step) for step in steps]
+    return ledger
 
 
 def _backend_begin_entry(local: LocalBackend, entry: dict[str, Any], *, policy: str) -> None:
@@ -589,9 +692,7 @@ def phases_from_backend_turn(bt: BackendTurn) -> dict[str, float]:
             "t_other": float(bt.t_other),
         }
         if not phases_sum_to_wall(phases, tol_s=1e-3):
-            raise SystemExit(
-                "REFUSED -- measured phase timers do not sum to turn_wall within 1 ms"
-            )
+            raise SystemExit("REFUSED -- measured phase timers do not sum to turn_wall within 1 ms")
         return phases
     return finalize_phase_timers(
         turn_wall_s=bt.turn_wall_s,
@@ -706,9 +807,7 @@ class StubLocalBackend:
 
     def context_contains(self, entry_id: str, text: str) -> bool:
         for key in self._history_keys_for(entry_id):
-            if any(
-                text in str(m.get("content", "")) for m in self._history.get(key, [])
-            ):
+            if any(text in str(m.get("content", "")) for m in self._history.get(key, [])):
                 return True
         return False
 
@@ -747,9 +846,16 @@ class StubLocalBackend:
             t_generate=t_gen,
         )
         raw = str(row.get("raw_text", ""))
+        decoded_steps = row.get("decoded_steps")
         if saw_cloud and not raw:
             raw = "[local_after_cloud_inject]"
-        hist.append({"role": "assistant", "content": raw or f"[stub_local_turn_{turn_idx}]", "source": "local"})
+        hist.append(
+            {
+                "role": "assistant",
+                "content": raw or f"[stub_local_turn_{turn_idx}]",
+                "source": "local",
+            }
+        )
         # Shared tool path (same SharedBfclToolState cloud bounce uses).
         if self.shared_tools is not None and bool(row.get("emitted_parseable_tool_call", False)):
             if not bool(row.get("tool_exec_error", False)):
@@ -765,6 +871,9 @@ class StubLocalBackend:
             ttft_s=float(row["ttft_s"]),
             decode_tok_s=float(row["decode_tok_s"]),
             emitted_parseable_tool_call=bool(row["emitted_parseable_tool_call"]),
+            decoded_steps=(
+                [list(step) for step in decoded_steps] if isinstance(decoded_steps, list) else None
+            ),
             turn_wall_s=phases["turn_wall_s"],
             t_tool_exec=phases["t_tool_exec"],
             t_template_build=phases["t_template_build"],
@@ -851,10 +960,18 @@ class StubCloudBackend:
     cloud_context_text: str = "[cloud_bounce_context]"
     # Optional per-call hook for cost-guard tests
     on_call: Callable[[], None] | None = None
+    # turn_idx -> Anthropic tool_use dicts. Converted with decode_execute_anthropic.
+    tool_use_by_turn: dict[int, list[dict[str, Any]]] | None = None
 
     def run_turn(self, entry: dict[str, Any], turn_idx: int, *, model: str) -> BackendTurn:
         if self.on_call is not None:
             self.on_call()
+        decoded_steps: list[list[str]] | None = None
+        blocks = (self.tool_use_by_turn or {}).get(turn_idx)
+        if blocks:
+            from tools.bfcl_feasibility_probe import decode_execute_anthropic
+
+            decoded_steps = [decode_execute_anthropic(blocks)]
         usd = cloud_usd(self.tokens_in, self.tokens_out)
         phases = finalize_phase_timers(
             turn_wall_s=self.wall_s,
@@ -878,6 +995,7 @@ class StubCloudBackend:
             t_generate=phases["t_generate"],
             raw_text="[cloud]",
             cloud_context_text=self.cloud_context_text,
+            decoded_steps=decoded_steps,
         )
 
 
@@ -951,7 +1069,9 @@ class OpenVinoLocalBackend:
 
         residency = self.residency.upper()
         if residency not in ("RESIDENT", "NON_RESIDENT"):
-            raise SystemExit(f"REFUSED -- residency must be RESIDENT|NON_RESIDENT, got {residency!r}")
+            raise SystemExit(
+                f"REFUSED -- residency must be RESIDENT|NON_RESIDENT, got {residency!r}"
+            )
         self.residency = residency
         arm = {
             "placement": self.placement,
@@ -962,9 +1082,7 @@ class OpenVinoLocalBackend:
         # NON_RESIDENT: SchedulerConfig(enable_prefix_caching=False).
         # RESIDENT: omit SchedulerConfig (CB default prefix caching ON).
         enable_pc = False if residency == "NON_RESIDENT" else None
-        pipe, meta, _load_s = probe.load_arm_pipeline(
-            self.arm_id, enable_prefix_caching=enable_pc
-        )
+        pipe, meta, _load_s = probe.load_arm_pipeline(self.arm_id, enable_prefix_caching=enable_pc)
         # load_arm_pipeline already raises on KV_PRECISION_MISMATCH when the arm
         # requests a pin. Re-check expected kv against readback for H-1 arm_config.
         self._assert_kv_readback(meta, expected=self.kv)
@@ -1063,8 +1181,7 @@ class OpenVinoLocalBackend:
         for i, load in enumerate(loads):
             if not isinstance(load, dict) or "kv_cache_precision" not in load:
                 raise SystemExit(
-                    f"REFUSED -- loads[{i}] missing kv_cache_precision; "
-                    f"observed={load!r}"
+                    f"REFUSED -- loads[{i}] missing kv_cache_precision; observed={load!r}"
                 )
             kv = load["kv_cache_precision"]
             if not isinstance(kv, dict):
@@ -1170,9 +1287,7 @@ class OpenVinoLocalBackend:
             # Already finished / never begun. Do not guess across policy cells.
             return None
         if key.split("\0", 1)[0] != eid:
-            raise SystemExit(
-                f"REFUSED -- finish_entry entry={eid!r} but active cell={key!r}"
-            )
+            raise SystemExit(f"REFUSED -- finish_entry entry={eid!r} but active cell={key!r}")
         session = self._sessions.get(key)
         row: dict[str, Any] | None = self._entry_cache.get(key)
         if session is not None and not getattr(session, "_finished", False):
@@ -1212,18 +1327,13 @@ class OpenVinoLocalBackend:
         key = self._active_cell
         if key is None:
             raise SystemExit(
-                f"REFUSED -- OpenVinoLocalBackend.run_turn without begin_entry "
-                f"(entry={eid})"
+                f"REFUSED -- OpenVinoLocalBackend.run_turn without begin_entry (entry={eid})"
             )
         if key.split("\0", 1)[0] != eid:
-            raise SystemExit(
-                f"REFUSED -- active cell {key!r} does not match entry {eid!r}"
-            )
+            raise SystemExit(f"REFUSED -- active cell {key!r} does not match entry {eid!r}")
         session = self._sessions.get(key)
         if session is None or not getattr(session, "_begun", False):
-            raise SystemExit(
-                f"REFUSED -- no begun MultiTurnAgentSession for cell {key!r}"
-            )
+            raise SystemExit(f"REFUSED -- no begun MultiTurnAgentSession for cell {key!r}")
         if getattr(session, "_finished", False):
             # Session torn down mid-entry (e.g. premature finish before bounce resume).
             # Re-begin on the same cell key; caller must not rely on prior KV.
@@ -1271,9 +1381,7 @@ class OpenVinoLocalBackend:
         eid = str(entry["id"])
         key = self._active_cell
         if key is None:
-            raise SystemExit(
-                f"REFUSED -- run_turn without begin_entry (entry={eid})"
-            )
+            raise SystemExit(f"REFUSED -- run_turn without begin_entry (entry={eid})")
         session = self._require_active_session(entry)
         if session.force_quit:
             raise SystemExit(
@@ -1309,11 +1417,14 @@ class OpenVinoLocalBackend:
                 f"REFUSED -- turn_metrics[{turn_idx}] missing keys {missing_tm}; "
                 f"observed_keys={sorted(tm.keys())}"
             )
-        raws = session.all_model_response[turn_idx] if turn_idx < len(session.all_model_response) else []
+        raws = (
+            session.all_model_response[turn_idx]
+            if turn_idx < len(session.all_model_response)
+            else []
+        )
         if not isinstance(raws, list):
             raise SystemExit(
-                f"REFUSED -- model_result_raw[{turn_idx}] not a list: "
-                f"type={type(raws).__name__}"
+                f"REFUSED -- model_result_raw[{turn_idx}] not a list: type={type(raws).__name__}"
             )
         raw_text = "\n".join(str(t) for t in raws if t)
         emitted = int(tm["n_decoded_steps"] or 0) > 0
@@ -1324,23 +1435,20 @@ class OpenVinoLocalBackend:
         if tool_err_class is not None:
             tool_err_class = str(tool_err_class)
         n_steps = int(tm["n_decoded_steps"] or 0)
+        decoded_steps = session.all_decoded[turn_idx] if turn_idx < len(session.all_decoded) else []
         # Backfill measured re-prefill onto the last injection receipt.
         if session._last_reprefill_s is not None and key in self._last_injection:
             inj = self._last_injection[key]
             if inj.get("re_prefill_s") is None:
                 inj["re_prefill_s"] = float(session._last_reprefill_s)
-                inj["re_prefill_source"] = str(
-                    session._last_reprefill_source or "measured"
-                )
+                inj["re_prefill_source"] = str(session._last_reprefill_source or "measured")
                 self._last_injection[key] = inj
         # Do not finish here: finish_entry owns end-of-entry / abort closeout so
         # bounce inject on the last local turn still sees an active session.
         return BackendTurn(
             n_ctx=n_ctx,
             ttft_s=(float(tm["ttft_s"]) if tm["ttft_s"] is not None else None),
-            decode_tok_s=(
-                float(tm["decode_tok_s"]) if tm["decode_tok_s"] is not None else None
-            ),
+            decode_tok_s=(float(tm["decode_tok_s"]) if tm["decode_tok_s"] is not None else None),
             emitted_parseable_tool_call=emitted,
             turn_wall_s=float(tm["turn_wall_s"]),
             t_tool_exec=float(tm["t_tool_exec"]),
@@ -1352,6 +1460,7 @@ class OpenVinoLocalBackend:
             n_steps=n_steps,
             tool_exec_error=tool_err,
             tool_exec_error_class=tool_err_class,
+            decoded_steps=[list(step) for step in decoded_steps],
         )
 
     def accept_cloud_context(
@@ -1376,9 +1485,7 @@ class OpenVinoLocalBackend:
         eid = str(entry["id"])
         key = self._active_cell
         if key is None or key.split("\0", 1)[0] != eid:
-            raise SystemExit(
-                f"REFUSED -- accept_cloud_context without begin_entry (entry={eid})"
-            )
+            raise SystemExit(f"REFUSED -- accept_cloud_context without begin_entry (entry={eid})")
         session = self._require_active_session(entry)
         if self.residency != "RESIDENT":
             raise SystemExit(
@@ -1485,7 +1592,11 @@ class AnthropicCloudBackend:
     def run_turn(self, entry: dict[str, Any], turn_idx: int, *, model: str) -> BackendTurn:
         row = self._ensure_entry(entry)
         entry_error = row.get("entry_error")
-        calls = [c for c in (row.get("calls") or []) if int(c.get("user_turn", c.get("turn", -1))) == turn_idx]
+        calls = [
+            c
+            for c in (row.get("calls") or [])
+            if int(c.get("user_turn", c.get("turn", -1))) == turn_idx
+        ]
         if not calls:
             # Fallback: apportion entry totals across user turns.
             n = max(1, int(row.get("n_user_turns") or 1))
@@ -1515,6 +1626,9 @@ class AnthropicCloudBackend:
             cloud_error = str(entry_error)
         elif tin == 0 and tout == 0:
             cloud_error = "cloud_empty_tokens"
+        md = row.get("model_result_decoded") or []
+        turn_steps = md[turn_idx] if isinstance(md, list) and turn_idx < len(md) else None
+        decoded_steps = [list(step) for step in turn_steps] if isinstance(turn_steps, list) else []
         return BackendTurn(
             n_ctx=tin,
             ttft_s=None,
@@ -1531,6 +1645,7 @@ class AnthropicCloudBackend:
             raw_text="[anthropic]",
             cloud_error=cloud_error,
             cloud_requests=list(calls),
+            decoded_steps=decoded_steps,
         )
 
 
@@ -1670,7 +1785,9 @@ def assert_entry_set_matches_w3(entries_path: Path) -> dict[str, Any]:
         )
     entries = json.loads(entries_path.read_text(encoding="utf-8-sig"))
     if not isinstance(entries, list) or len(entries) != 200:
-        raise SystemExit(f"REFUSED -- expected 200 entries, got {type(entries)} n={getattr(entries, '__len__', lambda: '?')()}")
+        raise SystemExit(
+            f"REFUSED -- expected 200 entries, got {type(entries)} n={getattr(entries, '__len__', lambda: '?')()}"
+        )
     return {"sha256": digest, "n": len(entries), "seal_refs": list(W3_SEAL_REFS)}
 
 
@@ -1822,9 +1939,7 @@ def _run_hybrid_entry_body(
         # --- cloud path (cloud_only, or stay-on-cloud after escalate) ---
         if on_cloud or policy == "cloud_only":
             bt = cloud.run_turn(entry, turn_idx, model=model)
-            _note_cloud_turn(
-                cloud_dead_guard, bt, entry=entry, turn_idx=turn_idx, policy=policy
-            )
+            _note_cloud_turn(cloud_dead_guard, bt, entry=entry, turn_idx=turn_idx, policy=policy)
             if policy == "cloud_only":
                 reason_out = "cloud_only"
             else:
@@ -1856,11 +1971,11 @@ def _run_hybrid_entry_body(
                     tool_exec_error=bool(bt.tool_exec_error),
                     tool_exec_error_class=bt.tool_exec_error_class,
                 )
-                result.turns.append(ledger)
+                result.turns.append(_stamp_decoded(ledger, bt))
                 result.cloud_usd_entry += bt.cloud_usd
                 result.status = "aborted_cap"
                 result.turns_executed = len(result.turns)
-                attach_local_probe_quality(result, local, entry)
+                attach_entry_quality(result, local, entry)
                 raise CostCapExceeded(cost.running_usd, cost.max_usd, partial=result)
             phases = phases_from_backend_turn(bt)
             ledger = TurnLedger(
@@ -1886,7 +2001,7 @@ def _run_hybrid_entry_body(
                 tool_exec_error=bool(bt.tool_exec_error),
                 tool_exec_error_class=bt.tool_exec_error_class,
             )
-            result.turns.append(ledger)
+            result.turns.append(_stamp_decoded(ledger, bt))
             result.cloud_usd_entry += bt.cloud_usd
             continue
 
@@ -1939,6 +2054,7 @@ def _run_hybrid_entry_body(
                             t_tokenize=phases["t_tokenize"],
                             t_generate=phases["t_generate"],
                             t_other=phases["t_other"],
+                            decoded_steps=[list(s) for s in (bt_c.decoded_steps or [])],
                             bounce_trigger=trigger,
                             tool_exec_error=bool(bt.tool_exec_error),
                             tool_exec_error_class=bt.tool_exec_error_class,
@@ -1948,7 +2064,7 @@ def _run_hybrid_entry_body(
                     result.cloud_usd_entry += bt_c.cloud_usd
                     result.status = "aborted_cap"
                     result.turns_executed = len(result.turns)
-                    attach_local_probe_quality(result, local, entry)
+                    attach_entry_quality(result, local, entry)
                     raise CostCapExceeded(cost.running_usd, cost.max_usd, partial=result)
                 phases = phases_from_backend_turn(bt_c)
                 result.turns.append(
@@ -1972,6 +2088,7 @@ def _run_hybrid_entry_body(
                         t_tokenize=phases["t_tokenize"],
                         t_generate=phases["t_generate"],
                         t_other=phases["t_other"],
+                        decoded_steps=[list(s) for s in (bt_c.decoded_steps or [])],
                         bounce_trigger=trigger,
                         tool_exec_error=bool(bt.tool_exec_error),
                         tool_exec_error_class=bt.tool_exec_error_class,
@@ -1979,9 +2096,7 @@ def _run_hybrid_entry_body(
                 )
                 result.cloud_usd_entry += bt_c.cloud_usd
                 # Inject cloud output into local context; do NOT stay on cloud.
-                cloud_text = (
-                    bt_c.cloud_context_text or bt_c.raw_text or "[cloud]"
-                )
+                cloud_text = bt_c.cloud_context_text or bt_c.raw_text or "[cloud]"
                 inj: dict[str, Any] = {}
                 accept = getattr(local, "accept_cloud_context", None)
                 if callable(accept):
@@ -2002,9 +2117,7 @@ def _run_hybrid_entry_body(
                     BounceEvent(
                         turn=turn_idx,
                         trigger=trigger,
-                        cloud_tokens_in=int(
-                            inj.get("cloud_tokens_in", bt_c.cloud_tokens_in) or 0
-                        ),
+                        cloud_tokens_in=int(inj.get("cloud_tokens_in", bt_c.cloud_tokens_in) or 0),
                         cloud_tokens_out=int(
                             inj.get("cloud_tokens_out", bt_c.cloud_tokens_out) or 0
                         ),
@@ -2014,25 +2127,22 @@ def _run_hybrid_entry_body(
                             if inj.get("re_prefill_s") is not None
                             else None
                         ),
-                        re_prefill_required=bool(
-                            inj.get("re_prefill_required", True)
-                        ),
+                        re_prefill_required=bool(inj.get("re_prefill_required", True)),
                         re_prefill_source=(
                             str(inj["re_prefill_source"])
                             if inj.get("re_prefill_source") is not None
                             else "pending_next_local"
                         ),
-                        control_return_turn=int(
-                            inj.get("control_return_turn", turn_idx + 1)
-                        ),
-                        kv_valid_after_inject=bool(
-                            inj.get("kv_valid_after_inject", False)
-                        ),
+                        control_return_turn=int(inj.get("control_return_turn", turn_idx + 1)),
+                        kv_valid_after_inject=bool(inj.get("kv_valid_after_inject", False)),
                         shared_tool_exec=bool(inj.get("shared_tool_exec", True)),
                     )
                 )
                 # Resume local on subsequent turns.
-                if turn_idx == local_span.turns_executed - 1 and local_span.stop_reason != "completed":
+                if (
+                    turn_idx == local_span.turns_executed - 1
+                    and local_span.stop_reason != "completed"
+                ):
                     break
                 continue
 
@@ -2059,15 +2169,14 @@ def _run_hybrid_entry_body(
                     t_tokenize=phases["t_tokenize"],
                     t_generate=phases["t_generate"],
                     t_other=phases["t_other"],
+                    decoded_steps=[list(s) for s in (bt.decoded_steps or [])],
                     tool_exec_error=bool(bt.tool_exec_error),
                     tool_exec_error_class=bt.tool_exec_error_class,
                 )
             )
             # Backfill re_prefill onto the prior bounce once the next local turn ran.
             _inj = getattr(local, "_last_injection", None)
-            _active = getattr(local, "_active_key", None) or getattr(
-                local, "_active_cell", None
-            )
+            _active = getattr(local, "_active_key", None) or getattr(local, "_active_cell", None)
             if isinstance(_inj, dict):
                 _rec = {}
                 if _active is not None and _active in _inj:
@@ -2078,13 +2187,8 @@ def _run_hybrid_entry_body(
                     _b = result.bounces[-1]
                     if _b.re_prefill_s is None and _b.control_return_turn == turn_idx:
                         _b.re_prefill_s = float(_rec["re_prefill_s"])
-                        _b.re_prefill_source = str(
-                            _rec.get("re_prefill_source") or "stub_zero"
-                        )
-            if (
-                turn_idx == local_span.turns_executed - 1
-                and local_span.stop_reason != "completed"
-            ):
+                        _b.re_prefill_source = str(_rec.get("re_prefill_source") or "stub_zero")
+            if turn_idx == local_span.turns_executed - 1 and local_span.stop_reason != "completed":
                 break
             continue
 
@@ -2120,9 +2224,7 @@ def _run_hybrid_entry_body(
             # Re-do this turn on cloud and stay there for the rest of the entry.
             on_cloud = True
             bt_c = cloud.run_turn(entry, turn_idx, model=model)
-            _note_cloud_turn(
-                cloud_dead_guard, bt_c, entry=entry, turn_idx=turn_idx, policy=policy
-            )
+            _note_cloud_turn(cloud_dead_guard, bt_c, entry=entry, turn_idx=turn_idx, policy=policy)
             try:
                 cost.charge(bt_c.cloud_usd)
             except CostCapExceeded:
@@ -2148,6 +2250,7 @@ def _run_hybrid_entry_body(
                         t_tokenize=phases["t_tokenize"],
                         t_generate=phases["t_generate"],
                         t_other=phases["t_other"],
+                        decoded_steps=[list(s) for s in (bt_c.decoded_steps or [])],
                         tool_exec_error=bool(bt.tool_exec_error),
                         tool_exec_error_class=bt.tool_exec_error_class,
                     )
@@ -2155,7 +2258,7 @@ def _run_hybrid_entry_body(
                 result.cloud_usd_entry += bt_c.cloud_usd
                 result.status = "aborted_cap"
                 result.turns_executed = len(result.turns)
-                attach_local_probe_quality(result, local, entry)
+                attach_entry_quality(result, local, entry)
                 raise CostCapExceeded(cost.running_usd, cost.max_usd, partial=result)
             phases = phases_from_backend_turn(bt_c)
             result.turns.append(
@@ -2179,6 +2282,7 @@ def _run_hybrid_entry_body(
                     t_tokenize=phases["t_tokenize"],
                     t_generate=phases["t_generate"],
                     t_other=phases["t_other"],
+                    decoded_steps=[list(s) for s in (bt_c.decoded_steps or [])],
                     tool_exec_error=bool(bt.tool_exec_error),
                     tool_exec_error_class=bt.tool_exec_error_class,
                 )
@@ -2208,6 +2312,7 @@ def _run_hybrid_entry_body(
                 t_tokenize=phases["t_tokenize"],
                 t_generate=phases["t_generate"],
                 t_other=phases["t_other"],
+                decoded_steps=[list(s) for s in (bt.decoded_steps or [])],
                 tool_exec_error=bool(bt.tool_exec_error),
                 tool_exec_error_class=bt.tool_exec_error_class,
             )
@@ -2248,16 +2353,12 @@ def _run_hybrid_entry_body(
         # Denominator = turns that ran only (never turns_in_entry).
         ran = result.turns
         if ran:
-            ok = sum(
-                1
-                for t in ran
-                if turn_meets_slo(ttft_s=t.ttft_s, decode_tok_s=t.decode_tok_s)
-            )
+            ok = sum(1 for t in ran if turn_meets_slo(ttft_s=t.ttft_s, decode_tok_s=t.decode_tok_s))
             result.slo_fraction = ok / len(ran)
         else:
             result.slo_fraction = None
 
-    attach_local_probe_quality(result, local, entry)
+    attach_entry_quality(result, local, entry)
     return result
 
 
@@ -2393,8 +2494,10 @@ def run_session(
 
     def _write_session_summary() -> dict[str, Any]:
         nonlocal summary_written
-        n_scored = sum(1 for q in quality_rows if q.get("trajectory_pass") is not None)
-        n_pass = sum(1 for q in quality_rows if q.get("trajectory_pass") is True)
+        n_scored = sum(1 for q in quality_rows if q.get("local_pass") is not None)
+        n_pass = sum(1 for q in quality_rows if q.get("local_pass") is True)
+        n_hybrid_scored = sum(1 for q in quality_rows if q.get("hybrid_pass") is not None)
+        n_hybrid_pass = sum(1 for q in quality_rows if q.get("hybrid_pass") is True)
         doc = {
             "run_id": run_id,
             "policy": policy,
@@ -2409,9 +2512,16 @@ def run_session(
             "finished_utc": _utc_now(),
             "arm_config": arm,
             "quality": {
-                "scope": "local_probe",
-                "n_entries_with_score": n_scored,
-                "n_trajectory_pass": n_pass,
+                "local_probe": {
+                    "scope": "local_probe",
+                    "n_entries_with_score": n_scored,
+                    "n_local_pass": n_pass,
+                },
+                "hybrid": {
+                    "scope": "hybrid",
+                    "n_entries_with_score": n_hybrid_scored,
+                    "n_hybrid_pass": n_hybrid_pass,
+                },
                 "path": "entry_quality.json",
             },
         }
@@ -2683,8 +2793,11 @@ def run_interleaved_session(
         )
         _write_json(pdir / "turn_ledger.json", {"entries": _annotate_cloud_requests(st["ledger_rows"], cloud_dead_guard, policy)})
         _write_json(pdir / "entry_quality.json", {"entries": st["quality_rows"]})
-        n_scored = sum(1 for q in st["quality_rows"] if q.get("trajectory_pass") is not None)
-        n_pass = sum(1 for q in st["quality_rows"] if q.get("trajectory_pass") is True)
+        rows = st["quality_rows"]
+        n_scored = sum(1 for q in rows if q.get("local_pass") is not None)
+        n_pass = sum(1 for q in rows if q.get("local_pass") is True)
+        n_hybrid_scored = sum(1 for q in rows if q.get("hybrid_pass") is not None)
+        n_hybrid_pass = sum(1 for q in rows if q.get("hybrid_pass") is True)
         _write_json(
             pdir / "summary.json",
             {
@@ -2701,9 +2814,16 @@ def run_interleaved_session(
                 "arm_config": st["arm"],
                 "session_design": "interleaved",
                 "quality": {
-                    "scope": "local_probe",
-                    "n_entries_with_score": n_scored,
-                    "n_trajectory_pass": n_pass,
+                    "local_probe": {
+                        "scope": "local_probe",
+                        "n_entries_with_score": n_scored,
+                        "n_local_pass": n_pass,
+                    },
+                    "hybrid": {
+                        "scope": "hybrid",
+                        "n_entries_with_score": n_hybrid_scored,
+                        "n_hybrid_pass": n_hybrid_pass,
+                    },
                     "path": "entry_quality.json",
                 },
             },
@@ -2853,9 +2973,7 @@ def run_interleaved_session(
                 else:
                     # Partial (other arms still) - leave as running unless all done.
                     remaining = [
-                        e
-                        for e in entries
-                        if str(e["id"]) not in state[policy]["completed"]
+                        e for e in entries if str(e["id"]) not in state[policy]["completed"]
                     ]
                     if not remaining:
                         state[policy]["status"] = "complete"
@@ -2889,9 +3007,7 @@ def run_interleaved_session(
                 "n_entries_completed": len(state[p]["completed"]),
                 "running_usd": state[p]["cost"].running_usd,
                 "max_usd": state[p]["cost"].max_usd,
-                "path": str(_policy_subdir(out_dir, p).relative_to(out_dir)).replace(
-                    "\\", "/"
-                ),
+                "path": str(_policy_subdir(out_dir, p).relative_to(out_dir)).replace("\\", "/"),
             }
             for p in policies
         },
@@ -2946,7 +3062,11 @@ def run_interleaved_session(
         else:
             # Still record a seal marker for partial with explicit status.
             (out_dir / ".sealed").write_text(
-                json.dumps({**seal_doc, "note": "non-complete interleaved session"}, indent=2, sort_keys=True)
+                json.dumps(
+                    {**seal_doc, "note": "non-complete interleaved session"},
+                    indent=2,
+                    sort_keys=True,
+                )
                 + "\n",
                 encoding="utf-8",
             )
@@ -2996,11 +3116,7 @@ def derive_r1_from_cb781(
     """
     git_rec = _seal_git(seal_git)
     seal_dir = seal_dir or (
-        ROOT
-        / "derived"
-        / "bfcl_feasibility"
-        / "x2_feasibility_table"
-        / f"sealed_{CB781_SEAL}"
+        ROOT / "derived" / "bfcl_feasibility" / "x2_feasibility_table" / f"sealed_{CB781_SEAL}"
     )
     if not seal_dir.is_dir():
         raise SystemExit(f"REFUSED -- missing cb781 seal dir {seal_dir}")
@@ -3163,7 +3279,9 @@ def build_argparser() -> argparse.ArgumentParser:
         help="Output / seal directory (required except --lifecycle-smoke)",
     )
     p.add_argument("--run-id", type=str, default=None)
-    p.add_argument("--entries", type=Path, default=None, help="BFCL entries JSON (default: W-3 seal)")
+    p.add_argument(
+        "--entries", type=Path, default=None, help="BFCL entries JSON (default: W-3 seal)"
+    )
     p.add_argument(
         "--lifecycle-smoke",
         action="store_true",
@@ -3396,8 +3514,7 @@ def run_turnwise_lifecycle_smoke(
         raise SystemExit("REFUSED -- lifecycle smoke: empty entries")
     if entry_index < 0 or entry_index >= len(entries):
         raise SystemExit(
-            f"REFUSED -- lifecycle smoke entry_index={entry_index} "
-            f"out of range n={len(entries)}"
+            f"REFUSED -- lifecycle smoke entry_index={entry_index} out of range n={len(entries)}"
         )
     entry = entries[entry_index]
     hf = _hf_tokenizer()
@@ -3433,9 +3550,7 @@ def run_turnwise_lifecycle_smoke(
                     f"REFUSED -- lifecycle smoke: session key {key!r} survived "
                     f"across policy boundary into {policy}"
                 )
-        cache_keys = [
-            k for k in local._entry_cache if k.startswith(f"{entry['id']}\0")
-        ]
+        cache_keys = [k for k in local._entry_cache if k.startswith(f"{entry['id']}\0")]
         results.append(
             {
                 "policy": policy,
@@ -3457,9 +3572,7 @@ def run_turnwise_lifecycle_smoke(
         # Cache dict values could theoretically alias; keys already distinct above.
         pass
     # Cross-policy key isolation: three distinct cell keys present.
-    cell_keys = [
-        OpenVinoLocalBackend.cell_key(str(entry["id"]), p) for p in INTERLEAVE_POLICIES
-    ]
+    cell_keys = [OpenVinoLocalBackend.cell_key(str(entry["id"]), p) for p in INTERLEAVE_POLICIES]
     if len(set(cell_keys)) != 3:
         raise SystemExit("REFUSED -- lifecycle smoke: cell keys not unique per policy")
     for k in cell_keys:
