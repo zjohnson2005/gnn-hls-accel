@@ -17,3 +17,5 @@ Registry of operating-limit claims taken out of the paper line, or held until a 
   - schema share 0.823 (2598/3156): KV_CACHE_PRECISION on the 3156 denominator (`322b2f86`, gpu_only_f16). The numerator is a dataset token count, not a run field.
 
 - 2026-09-23. 9,750 anchor (`c647f0c7`). Pending guarded re-measure. The canary never armed. The reconstruct seal is labeled RECONSTRUCTED_UNGUARDED.
+
+- 2026-09-23. HELD. Cited workload max 7743. Trajectory-derived, no run_id. `derived/dataset/BFCL_TOKEN_COUNTS.json` keeps `workload_max_tokens_dataset` 5036 and records `workload_max_tokens_observed` 6279 from sealed `d482c621-4292-4281-b6a1-8635e5eeb6da` (policy slo_escalate, entry multi_turn_base_180, turn 5, 1924 local turns).

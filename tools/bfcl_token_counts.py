@@ -27,6 +27,8 @@ from tools.bfcl_feasibility_probe import (  # noqa: E402
 CITED_WORKLOAD_MAX_TOKENS = 7743
 CITED_SCHEMA_TOKENS = 2598
 OUT_PATH = ROOT / "derived" / "dataset" / "BFCL_TOKEN_COUNTS.json"
+D482_RUN_ID = "d482c621-4292-4281-b6a1-8635e5eeb6da"
+D482_SEAL = ROOT / "derived" / "h1_hybrid" / f"interleaved_{D482_RUN_ID}"
 
 TOKENIZER_FILES = (
     "tokenizer.json",
@@ -47,6 +49,38 @@ def _sha256(path: Path) -> str:
 
 def _count(tokenizer: Any, text: str) -> int:
     return len(tokenizer(text)["input_ids"])
+
+
+def observed_local_n_ctx(seal: Path) -> dict[str, Any]:
+    """Max n_ctx on turns whose placement is local, across every policy ledger."""
+    best: int | None = None
+    where: dict[str, Any] | None = None
+    n_local = 0
+    policies = sorted((seal / "policies").glob("*/turn_ledger.json"))
+    for ledger in policies:
+        doc = json.loads(ledger.read_text(encoding="utf-8"))
+        for entry in doc.get("entries") or []:
+            for turn in entry.get("turns") or []:
+                if turn.get("placement") != "local":
+                    continue
+                raw = turn.get("n_ctx")
+                if raw is None:
+                    continue
+                n_local += 1
+                value = int(raw)
+                if best is None or value > best:
+                    best = value
+                    where = {
+                        "policy": ledger.parent.name,
+                        "entry_id": entry.get("entry_id"),
+                        "turn": turn.get("turn"),
+                    }
+    return {
+        "run_id": D482_RUN_ID,
+        "n_ctx": best,
+        "n_local_turns": n_local,
+        "where": where,
+    }
 
 
 def main() -> int:
@@ -102,6 +136,7 @@ def main() -> int:
     entry_2 = by_id.get("multi_turn_base_2")
     workload_max = max(user_only_values)
     schema_tokens = entry_10["turn0_prompt_tokens"] if entry_10 else min(turn0_values)
+    observed = observed_local_n_ctx(D482_SEAL)
 
     doc = {
         "method": (
@@ -115,6 +150,8 @@ def main() -> int:
             "bfcl_tool_schema_tokens": CITED_SCHEMA_TOKENS,
         },
         "workload_max_tokens": workload_max,
+        "workload_max_tokens_dataset": workload_max,
+        "workload_max_tokens_observed": observed,
         "bfcl_tool_schema_tokens": schema_tokens,
         "turn0_prompt_tokens": {
             "min": min(turn0_values),
