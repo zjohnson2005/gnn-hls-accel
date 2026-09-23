@@ -1,0 +1,107 @@
+{
+  "all_passed": false,
+  "gates": [
+    {
+      "detail": {
+        "ac_ok": true,
+        "battery_present": true,
+        "battery_status_values": [
+          2
+        ]
+      },
+      "name": "ac",
+      "passed": true,
+      "reason": "ac_ok"
+    },
+    {
+      "detail": {
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "required_ac_max": 100,
+        "required_ac_min": 100,
+        "scheme_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "scheme_name": "Best Performance",
+        "scheme_text": "Power Scheme GUID: ec87a53a-19a6-4f4a-980f-ab27cc929b25  (Best Performance)"
+      },
+      "name": "processor_ac",
+      "passed": true,
+      "reason": "processor_ac_100_100"
+    },
+    {
+      "detail": {
+        "citation": "2026-08-09 clean session / 7477 MB Available; arm A lowest free_physical_mb_start 6926; floor 7000 (configs/delta_n.yaml isolation.pre_run_available_mb_min).",
+        "floor_mb": 7000.0,
+        "observed_mb": 7053.0
+      },
+      "name": "available_mb",
+      "passed": true,
+      "reason": "available_mb_ok"
+    },
+    {
+      "detail": {
+        "citation": "CHOSEN/PROVISIONAL cold-boot window (< 2 h) used by launch_*.ps1 five-gate block; not yet re-derived from an onset curve denser than the 657 s canary bound.",
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 19157.049773454666
+      },
+      "name": "uptime",
+      "passed": false,
+      "reason": "uptime_not_cold"
+    },
+    {
+      "detail": {
+        "onset_citation": "Shortest observed degradation onset from session 7f569929 / docs/CANARY_PROTOCOL.md; tools/ttft_slo_canary.py ONSET_S.",
+        "onset_s": 657.0,
+        "onset_status": "measured",
+        "seal_note": null
+      },
+      "name": "onset",
+      "passed": true,
+      "reason": "onset_measured"
+    }
+  ],
+  "platform_id": "aipc-c1",
+  "refusal_reasons": [
+    "uptime:uptime_not_cold"
+  ],
+  "run_environment_fields": {
+    "measurement_gates": {
+      "ac": {
+        "detail": {
+          "ac_ok": true,
+          "battery_present": true,
+          "battery_status_values": [
+            2
+          ]
+        },
+        "passed": true,
+        "reason": "ac_ok"
+      },
+      "all_passed": false,
+      "available_mb": {
+        "citation": "2026-08-09 clean session / 7477 MB Available; arm A lowest free_physical_mb_start 6926; floor 7000 (configs/delta_n.yaml isolation.pre_run_available_mb_min).",
+        "floor_mb": 7000.0,
+        "observed_mb": 7053.0,
+        "passed": true
+      },
+      "onset_citation": "Shortest observed degradation onset from session 7f569929 / docs/CANARY_PROTOCOL.md; tools/ttft_slo_canary.py ONSET_S.",
+      "onset_s": 657.0,
+      "onset_seal_note": null,
+      "onset_status": "measured",
+      "platform_id": "aipc-c1",
+      "processor_ac": {
+        "passed": true,
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "reason": "processor_ac_100_100",
+        "scheme_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "scheme_name": "Best Performance"
+      },
+      "uptime": {
+        "citation": "CHOSEN/PROVISIONAL cold-boot window (< 2 h) used by launch_*.ps1 five-gate block; not yet re-derived from an onset curve denser than the 657 s canary bound.",
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 19157.049773454666,
+        "passed": false
+      }
+    }
+  }
+}

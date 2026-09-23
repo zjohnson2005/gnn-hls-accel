@@ -1,0 +1,92 @@
+{
+  "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+  "code_caveat": "tools/run_h1_hybrid.py mtime is after started_utc (see closeout/PROVENANCE_ADDENDUM.json, label RUNNER_CODE_UNRECOVERABLE). Call-site quotes below are the current tree. Commit a001b45, which was HEAD at start, also sets do_sample False in the local backend and in _generation_cfg. The sealed plan records the prefix-caching source independently of the later file write. do_sample is not a field in the seal.",
+  "B1_generation": {
+    "verdict": "HARNESS_GREEDY",
+    "decoding_was_greedy": true,
+    "harness": {
+      "do_sample": false,
+      "temperature": null,
+      "top_p": null,
+      "top_k": null,
+      "seed": null,
+      "where": [
+        "tools/run_h1_hybrid.py OpenVinoLocalBackend.__post_init__ sets cfg.do_sample = False and does not set temperature, top_p, top_k, or seed",
+        "tools/bfcl_feasibility_probe.py _generation_cfg sets do_sample False, max_new_tokens, apply_chat_template, and nothing else",
+        "RESIDENT run_user_turn passes that _generation_cfg object to generate, not the model directory file"
+      ]
+    },
+    "model_generation_config_json": {
+      "path": "models/Qwen3-4B-int4-ov/generation_config.json",
+      "do_sample": true,
+      "temperature": 0.6,
+      "top_k": 20,
+      "top_p": 0.95,
+      "seed": null
+    },
+    "note": "The file on disk would sample. The generate call receives a new GenerationConfig with do_sample false, so the harness path is greedy."
+  },
+  "B2_interleaved_pipeline": {
+    "verdict": "ONE_PIPELINE_PREFIX_CACHE_DEFAULT_ON_NOT_FLUSHED_AT_BEGIN",
+    "one_pipeline_across_arms": true,
+    "enable_prefix_caching": null,
+    "prefix_caching_on": true,
+    "source": "LLMPipeline_default_CB_prefix_caching_on",
+    "sealed_plan_matches": true,
+    "begin_entry_resets": [
+      "per-cell session, entry cache, span, cloud context, and injection maps",
+      "a new MultiTurnAgentSession on the same pipe",
+      "session.begin resets messages, hashes, BFCL tool instances (unique model_name nonce), and builds a new resident ChatHistory"
+    ],
+    "begin_entry_does_not": [
+      "reload the pipeline",
+      "call start_chat",
+      "call finish_chat",
+      "set enable_prefix_caching false"
+    ],
+    "finish_entry": "session.finish calls _finish_chat_safe, which calls pipe.finish_chat(). That drops chat-mode KV. It does not pass SchedulerConfig and does not document a prefix-block flush.",
+    "later_arm_can_hit_cached_blocks": true
+  },
+  "B3_sealed_turn0": {
+    "verdict": "TURN0_N_CTX_EQUAL_TTFT_DROPS_AFTER_FIRST_ARM",
+    "n_entries": 200,
+    "arm_order": ["slo_escalate", "emission_escalate", "full_signal_bounceback"],
+    "arm_order_mismatches": 0,
+    "turn0_ttft_median_s": {
+      "slo_escalate": {"median_s": 1.9763783565000002, "n_local": 200, "n_cloud": 0},
+      "emission_escalate": {"median_s": 0.0909523005, "median_local_s": 0.09207915450000001, "n_local": 168, "n_cloud": 32},
+      "full_signal_bounceback": {"median_s": 0.089874946, "median_local_s": 0.09124019950000001, "n_local": 162, "n_cloud": 38}
+    },
+    "turn0_ttft_by_arm_position_median_s": {
+      "1": 1.9763783565000002,
+      "2": 0.0909523005,
+      "3": 0.089874946
+    },
+    "turn0_n_ctx_mismatches": 0,
+    "note": "Position equals policy because every entry's cell_log order is slo_escalate, then emission_escalate, then full_signal_bounceback. Local-only medians at positions 2 and 3 stay near 0.09 s, so the drop is not the cloud turn-0 rows."
+  },
+  "B4_cap3_cap4": {
+    "verdict": "ONE_PIPELINE_PER_CHILD_PROCESS_ONE_GENERATE_COLD_CELL_CANNOT_HIT_PRIOR_CELL_BLOCKS",
+    "cap3": {
+      "runner": "tools/launch_c2.ps1 payload tools/run_c1_ceiling.py _probe_once",
+      "pipeline": "per child process, one LLMPipeline per device in the load sequence",
+      "prefix_caching_flag": "absent; SchedulerConfig is not passed",
+      "generates_per_child": 1,
+      "do_sample": false,
+      "cold_cell_can_hit_cached_blocks_from_another_cell": false
+    },
+    "cap4": {
+      "runner": "tools/run_cap4_prefill_curve.py measure_repeat",
+      "pipeline": "same measured_repeat child as CAP-3",
+      "prefix_caching_flag": "absent in run_cap4_prefill_curve.py",
+      "cold_cell_can_hit_cached_blocks_from_another_cell": false
+    },
+    "quotes": [
+      "seam/tools/delta_n.py: each repeat runs in its own child process (seam.tools._delta_n_child); subprocess.run of that module",
+      "seam/tools/_delta_n_child.py: pipes[device] = ov_genai.LLMPipeline(model_dir, device, **properties) with no SchedulerConfig; cfg.do_sample = False; one pipe.generate",
+      "tools/run_c1_ceiling.py _probe_once calls measured_repeat",
+      "tools/run_cap4_prefill_curve.py measure_repeat calls the same measured_repeat",
+      "tools/bfcl_feasibility_probe.py load_arm_pipeline: omitting SchedulerConfig leaves ContinuousBatching prefix caching ON. The CAP child omits it, so that default is on inside the child, and the child generates once, so there is no prior block in that pipeline."
+    ]
+  }
+}

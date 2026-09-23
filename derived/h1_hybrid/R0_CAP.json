@@ -1,0 +1,25 @@
+{
+  "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+  "formula": "cap = expected + 3 * sqrt(sum_k N_slo(k) * var_usd(k))",
+  "expected_formula": "expected = sum_k N_slo(k) * mean_usd(k)",
+  "var_definition": "var_usd(k) is the sample variance (ddof=1) of cloud_usd on sealed turns with placement cloud and turn index k, pooled across slo_escalate, emission_escalate, and full_signal_bounceback.",
+  "N_slo_definition": "N_slo(k) is the number of slo_escalate turns whose turn index is k, local and cloud.",
+  "mean_definition": "mean_usd(k) is the mean cloud_usd of the sealed cloud turns at turn index k.",
+  "source": "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/*/turn_ledger.json",
+  "n_slo_turns": 732,
+  "n_cloud_turns": 275,
+  "depths_covered": true,
+  "expected_usd": 64.82314053260804,
+  "sum_N_slo_times_var": 1.3145267441691977,
+  "cap_usd": 68.26272491121001,
+  "depths": [
+    {"k": 0, "N_slo": 200, "n_cloud": 70, "mean_usd": 0.10011308571428572, "var_usd_ddof1": 0.0016504638764273292, "N_slo_times_var": 0.3300927752854658},
+    {"k": 1, "N_slo": 197, "n_cloud": 70, "mean_usd": 0.07846641428571428, "var_usd_ddof1": 0.0015889586370577637, "N_slo_times_var": 0.31302485150037945},
+    {"k": 2, "N_slo": 157, "n_cloud": 57, "mean_usd": 0.08306242105263158, "var_usd_ddof1": 0.002142558052105263, "N_slo_times_var": 0.33638161418052626},
+    {"k": 3, "N_slo": 107, "n_cloud": 44, "mean_usd": 0.09777211363636364, "var_usd_ddof1": 0.002761538207265856, "N_slo_times_var": 0.2954845881774466},
+    {"k": 4, "N_slo": 55, "n_cloud": 27, "mean_usd": 0.07913511111111111, "var_usd_ddof1": 0.000647292739948718, "N_slo_times_var": 0.03560110069717949},
+    {"k": 5, "N_slo": 14, "n_cloud": 5, "mean_usd": 0.0972186, "var_usd_ddof1": 0.00028155816629999976, "N_slo_times_var": 0.003941814328199997},
+    {"k": 6, "N_slo": 2, "n_cloud": 2, "mean_usd": 0.063366, "var_usd_ddof1": 0.0, "N_slo_times_var": 0.0}
+  ],
+  "launch": false
+}
