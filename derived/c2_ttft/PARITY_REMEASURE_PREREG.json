@@ -1,0 +1,135 @@
+{
+  "id": "PARITY-REMEASURE",
+  "registered_before_any_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "kv_cache_precision": "u8",
+  "harness": {
+    "entry": "tools/run_c1_ceiling.py",
+    "criterion": "ttft_slo",
+    "slo_s": 10.0,
+    "repeats": 3,
+    "affinity_cpus": [0, 1, 2, 3],
+    "wslock": {"mode": "request", "minimum_bytes": 4294967296, "maximum_bytes": 12884901888},
+    "max_new_tokens": 8,
+    "canary": "Must arm. Refuse to start and refuse to seal if armed stays false. Do not pass --allow-unguarded."
+  },
+  "kv_bytes_per_token": {
+    "formula": "2 * n_layers * n_kv_heads * head_dim * dtype_bytes",
+    "config": "Qwen3-4B-int4-ov and Qwen3-8B-int4-ov and Qwen3-4B-int8-ov: num_hidden_layers 36, num_key_value_heads 8, head_dim 128",
+    "f16": 147456,
+    "u8": 73728,
+    "ratio_f16_over_u8": 2
+  },
+  "interpretation": "KV-only model predicts the token wall scales by 2 when KV changes f16 to u8 and every other byte stays fixed. A larger shift falsifies the KV-only model. A smaller shift points at a non-KV term (for example the logits buffer, vocab_size 151936).",
+  "cells": [
+    {
+      "boot": "XPS-1",
+      "cell": "4B-int4 GPU",
+      "role": "guarded anchor",
+      "model_dir": "Qwen3-4B-int4-ov",
+      "device": "GPU",
+      "arm_id": "gpu_only_u8",
+      "existing_run": "c647f0c7-5cc9-47bb-a491-3450533c34d1",
+      "predicted_limit_n": 9750,
+      "predicted_limit_kind": "SLO",
+      "derivation": "Existing u8 cell. First miss n=10000. Pass prefill_s 9.674988281, 9.731766601, 14.13602246. Fail prefill_s 10.103576171, 10.078882812, 9.868484375. One passing repeat is over the SLO; the median is under it. Search step is 250 tokens.",
+      "existing_generation_wall_s": 183.928515,
+      "estimated_wall_s": 367.857
+    },
+    {
+      "boot": "XPS-1",
+      "cell": "4B-int8 GPU",
+      "model_dir": "Qwen3-4B-int8-ov",
+      "device": "GPU",
+      "arm_id": "gpu_only_u8",
+      "existing_run": "fea55e0c-b9f8-4ba9-b5ea-558401910d74",
+      "existing_kv": "f16",
+      "predicted_limit_n": 15562,
+      "predicted_first_fail_n": 15874,
+      "predicted_limit_kind": "memory_wall",
+      "derivation": "Existing f16 cell is memory-bound: n=7781 all repeats under the SLO (prefill_s 6.8355708, 6.720876464, 6.719874023), n=7937 all RuntimeError. KV-only: 7781 * 2 = 15562 and 7937 * 2 = 15874. At n=7781 r0, peak_commit_bytes 6478282752, openvino_model.bin 4026830485, analytic KV 7781 * 147456 = 1147355136, unaccounted 1304097131. If that unaccounted term is fixed, the shift is exactly 2x.",
+      "existing_generation_wall_s": 69.485079,
+      "estimated_wall_s": 138.970
+    },
+    {
+      "boot": "XPS-1",
+      "cell": "8B-int4 GPU",
+      "model_dir": "Qwen3-8B-int4-ov",
+      "device": "GPU",
+      "arm_id": "gpu_only_u8",
+      "existing_run": "322b2f86-9571-46ae-be6a-ba1cec44e018",
+      "existing_kv": "f16",
+      "predicted_limit_n": 6312,
+      "predicted_first_fail_n": 6624,
+      "predicted_limit_kind": "memory_wall",
+      "derivation": "Existing f16 operating limit 3156 is the last n where every repeat completed. First incomplete n is 3312 (r1 RuntimeError; r0 and r2 prefill_s 3.194305419 and 3.208868896). All repeats fail at 3625. KV-only shift: 3156 * 2 = 6312 and 3312 * 2 = 6624. At n=3156 r0, peak_commit_bytes 6493294592, openvino_model.bin 4855348053, analytic KV 3156 * 147456 = 465371136, unaccounted 1172575403. At the passing n=3312 r0 commit 6527934464, headroom above the bin is 1672586411. If the unaccounted bytes scale with n (about 357552 bytes/token at n=3312), slope_u8 = 73728 + 357552 = 431280 and n_u8 = 1672586411 / 431280 = 3878, a smaller shift that would implicate a non-KV term. A full-sequence logits buffer is vocab_size 151936 * 2 = 303872 bytes/token. The registered prediction is the KV-only pair 6312 / 6624. A measured wall above 6624 falsifies KV-only. A measured wall below 6624 points at a non-KV term.",
+      "existing_generation_wall_s": 28.232898,
+      "estimated_wall_s": 56.466
+    },
+    {
+      "boot": "XPS-1",
+      "cell": "4B-int4 CPU",
+      "model_dir": "Qwen3-4B-int4-ov",
+      "device": "CPU",
+      "arm_id": "A",
+      "kv_request": "u8",
+      "record_kv_readback": true,
+      "existing_run": "d3dcbd3b-5107-4b5e-a0dd-402f99f6f90c",
+      "predicted_limit_n": 500,
+      "predicted_limit_kind": "SLO",
+      "derivation": "Existing CPU cell, readback already u8. First miss n=734, prefill_s 10.865801757, 10.855466796, 10.847664062. Passing n=500 prefill_s 8.765566406, 9.038981445, 9.028679687.",
+      "existing_generation_wall_s": 1005.109196,
+      "estimated_wall_s": 2010.218
+    },
+    {
+      "boot": "T2S-1",
+      "cell": "4B-int4 GPU",
+      "model_dir": "Qwen3-4B-int4-ov",
+      "device": "GPU",
+      "arm_id": "gpu_only_u8",
+      "existing_run": "5c714535-9f36-4614-a594-698b6cd09296",
+      "existing_kv": "f16",
+      "predicted_limit_n": 18687,
+      "predicted_limit_kind": "SLO",
+      "derivation": "Existing f16 cell carried forward. The remeasure changes KV to u8. First miss n=18875, prefill_s 10.40377832, 10.082157226, 10.028511718. Passing n=18687 prefill_s 9.831558593, 9.830370117, 9.825052734.",
+      "existing_generation_wall_s": 259.770550,
+      "estimated_wall_s": 519.541
+    },
+    {
+      "boot": "T2S-1",
+      "cell": "8B-int4 GPU",
+      "model_dir": "Qwen3-8B-int4-ov",
+      "device": "GPU",
+      "arm_id": "gpu_only_u8",
+      "existing_run": "051d2681-4bb8-4f50-b9fc-b14441359ba6",
+      "existing_kv": "f16",
+      "predicted_limit_n": 16437,
+      "predicted_limit_kind": "SLO",
+      "derivation": "Existing f16 cell carried forward. The remeasure changes KV to u8. First miss n=16625, prefill_s 10.000859375, 10.030049804, 10.026167968. Passing n=16437 prefill_s 9.816846679, 9.903216796, 9.839335937.",
+      "existing_generation_wall_s": 285.005001,
+      "estimated_wall_s": 570.010
+    }
+  ],
+  "wall_estimate_rule": "estimated_wall_s is 2x the summed generation.wall_s of the existing cell. The factor covers model load and canary probes. The 9750 anchor never armed its canary.",
+  "schedule": {
+    "window_min": 120,
+    "XPS-1": {
+      "cells": [
+        "DET-PROBE (~20 min)",
+        "4B-int4 GPU (367.857 s)",
+        "4B-int8 GPU (138.970 s)",
+        "8B-int4 GPU (56.466 s)",
+        "4B-int4 CPU (2010.218 s)"
+      ],
+      "estimated_min": 62.9
+    },
+    "T2S-1": {
+      "cells": [
+        "4B-int4 GPU (519.541 s)",
+        "8B-int4 GPU (570.010 s)"
+      ],
+      "estimated_min": 18.2
+    }
+  }
+}
