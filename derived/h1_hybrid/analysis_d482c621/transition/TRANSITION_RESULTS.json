@@ -1,0 +1,592 @@
+{
+  "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+  "prereg_commit": "2f1b8047652e4388878076ebc09a8551d837e888",
+  "assert_pass_intersect_instance_state_mismatch": {
+    "empty": true,
+    "n": 0
+  },
+  "class_counts": {
+    "slo_escalate": {
+      "PASS": 21,
+      "MISMATCH": 98,
+      "OTHER": 81
+    },
+    "emission_escalate": {
+      "PASS": 46,
+      "MISMATCH": 113,
+      "OTHER": 41
+    },
+    "full_signal_bounceback": {
+      "PASS": 30,
+      "MISMATCH": 128,
+      "OTHER": 42
+    }
+  },
+  "other_failure_buckets": {
+    "slo_escalate": {
+      "multi_turn:empty_turn_model_response": 46,
+      "multi_turn:execution_response_mismatch": 35
+    },
+    "emission_escalate": {
+      "multi_turn:execution_response_mismatch": 38,
+      "multi_turn:empty_turn_model_response": 3
+    },
+    "full_signal_bounceback": {
+      "multi_turn:execution_response_mismatch": 41,
+      "multi_turn:empty_turn_model_response": 1
+    }
+  },
+  "matrices": {
+    "slo_escalate->emission_escalate": {
+      "PASS": {
+        "PASS": 17,
+        "MISMATCH": 4,
+        "OTHER": 0
+      },
+      "MISMATCH": {
+        "PASS": 3,
+        "MISMATCH": 94,
+        "OTHER": 1
+      },
+      "OTHER": {
+        "PASS": 26,
+        "MISMATCH": 15,
+        "OTHER": 40
+      }
+    },
+    "slo_escalate->full_signal_bounceback": {
+      "PASS": {
+        "PASS": 16,
+        "MISMATCH": 5,
+        "OTHER": 0
+      },
+      "MISMATCH": {
+        "PASS": 3,
+        "MISMATCH": 94,
+        "OTHER": 1
+      },
+      "OTHER": {
+        "PASS": 11,
+        "MISMATCH": 29,
+        "OTHER": 41
+      }
+    },
+    "emission_escalate->full_signal_bounceback": {
+      "PASS": {
+        "PASS": 25,
+        "MISMATCH": 15,
+        "OTHER": 6
+      },
+      "MISMATCH": {
+        "PASS": 3,
+        "MISMATCH": 110,
+        "OTHER": 0
+      },
+      "OTHER": {
+        "PASS": 2,
+        "MISMATCH": 3,
+        "OTHER": 36
+      }
+    }
+  },
+  "matrices_by_second_policy_escalation": {
+    "slo_escalate->emission_escalate": {
+      "escalated_under_second": {
+        "PASS": {
+          "PASS": 0,
+          "MISMATCH": 1,
+          "OTHER": 0
+        },
+        "MISMATCH": {
+          "PASS": 3,
+          "MISMATCH": 11,
+          "OTHER": 0
+        },
+        "OTHER": {
+          "PASS": 26,
+          "MISMATCH": 8,
+          "OTHER": 10
+        }
+      },
+      "not_escalated_under_second": {
+        "PASS": {
+          "PASS": 17,
+          "MISMATCH": 3,
+          "OTHER": 0
+        },
+        "MISMATCH": {
+          "PASS": 0,
+          "MISMATCH": 83,
+          "OTHER": 1
+        },
+        "OTHER": {
+          "PASS": 0,
+          "MISMATCH": 7,
+          "OTHER": 30
+        }
+      },
+      "n_escalated_under_second": 59,
+      "n_not_escalated_under_second": 141
+    },
+    "slo_escalate->full_signal_bounceback": {
+      "escalated_under_second": {
+        "PASS": {
+          "PASS": 1,
+          "MISMATCH": 2,
+          "OTHER": 0
+        },
+        "MISMATCH": {
+          "PASS": 3,
+          "MISMATCH": 11,
+          "OTHER": 1
+        },
+        "OTHER": {
+          "PASS": 11,
+          "MISMATCH": 24,
+          "OTHER": 13
+        }
+      },
+      "not_escalated_under_second": {
+        "PASS": {
+          "PASS": 15,
+          "MISMATCH": 3,
+          "OTHER": 0
+        },
+        "MISMATCH": {
+          "PASS": 0,
+          "MISMATCH": 83,
+          "OTHER": 0
+        },
+        "OTHER": {
+          "PASS": 0,
+          "MISMATCH": 5,
+          "OTHER": 28
+        }
+      },
+      "n_escalated_under_second": 66,
+      "n_not_escalated_under_second": 134
+    },
+    "emission_escalate->full_signal_bounceback": {
+      "escalated_under_second": {
+        "PASS": {
+          "PASS": 10,
+          "MISMATCH": 15,
+          "OTHER": 6
+        },
+        "MISMATCH": {
+          "PASS": 3,
+          "MISMATCH": 20,
+          "OTHER": 0
+        },
+        "OTHER": {
+          "PASS": 2,
+          "MISMATCH": 2,
+          "OTHER": 8
+        }
+      },
+      "not_escalated_under_second": {
+        "PASS": {
+          "PASS": 15,
+          "MISMATCH": 0,
+          "OTHER": 0
+        },
+        "MISMATCH": {
+          "PASS": 0,
+          "MISMATCH": 90,
+          "OTHER": 0
+        },
+        "OTHER": {
+          "PASS": 0,
+          "MISMATCH": 1,
+          "OTHER": 28
+        }
+      },
+      "n_escalated_under_second": 66,
+      "n_not_escalated_under_second": 134
+    }
+  },
+  "escalation": {
+    "slo_escalate": {
+      "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+      "n_escalated_entries": 0,
+      "escalated_turns_per_entry": {},
+      "first_escalation_turn": {}
+    },
+    "emission_escalate": {
+      "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+      "n_escalated_entries": 59,
+      "escalated_turns_per_entry": {
+        "1": 13,
+        "2": 10,
+        "3": 11,
+        "4": 11,
+        "5": 11,
+        "6": 3
+      },
+      "first_escalation_turn": {
+        "0": 32,
+        "1": 15,
+        "2": 5,
+        "3": 4,
+        "4": 3
+      }
+    },
+    "full_signal_bounceback": {
+      "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+      "n_escalated_entries": 66,
+      "escalated_turns_per_entry": {
+        "1": 44,
+        "2": 18,
+        "3": 4
+      },
+      "first_escalation_turn": {
+        "0": 38,
+        "1": 14,
+        "2": 7,
+        "3": 5,
+        "4": 2
+      }
+    }
+  },
+  "bounceback": {
+    "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+    "bounces_per_entry": {
+      "0": 134,
+      "1": 44,
+      "2": 18,
+      "3": 4
+    },
+    "outcome_by_bounce_count": {
+      "0": {
+        "PASS": 15,
+        "MISMATCH": 91,
+        "OTHER": 28
+      },
+      "1": {
+        "PASS": 8,
+        "MISMATCH": 26,
+        "OTHER": 10
+      },
+      "2": {
+        "PASS": 5,
+        "MISMATCH": 9,
+        "OTHER": 4
+      },
+      "3": {
+        "PASS": 2,
+        "MISMATCH": 2,
+        "OTHER": 0
+      }
+    },
+    "n_entries_bounces_ne_escalated_turns": 0
+  },
+  "regressions": {
+    "emission_escalate": [
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "entry_id": "multi_turn_base_135",
+        "policy": "emission_escalate",
+        "escalated": true,
+        "n_escalated_turns": 1,
+        "outcome": "MISMATCH"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "entry_id": "multi_turn_base_179",
+        "policy": "emission_escalate",
+        "escalated": false,
+        "n_escalated_turns": 0,
+        "outcome": "MISMATCH"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "entry_id": "multi_turn_base_21",
+        "policy": "emission_escalate",
+        "escalated": false,
+        "n_escalated_turns": 0,
+        "outcome": "MISMATCH"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "entry_id": "multi_turn_base_88",
+        "policy": "emission_escalate",
+        "escalated": false,
+        "n_escalated_turns": 0,
+        "outcome": "MISMATCH"
+      }
+    ],
+    "full_signal_bounceback": [
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "entry_id": "multi_turn_base_135",
+        "policy": "full_signal_bounceback",
+        "escalated": true,
+        "n_escalated_turns": 1,
+        "outcome": "MISMATCH"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "entry_id": "multi_turn_base_179",
+        "policy": "full_signal_bounceback",
+        "escalated": false,
+        "n_escalated_turns": 0,
+        "outcome": "MISMATCH"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "entry_id": "multi_turn_base_21",
+        "policy": "full_signal_bounceback",
+        "escalated": false,
+        "n_escalated_turns": 0,
+        "outcome": "MISMATCH"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "entry_id": "multi_turn_base_60",
+        "policy": "full_signal_bounceback",
+        "escalated": true,
+        "n_escalated_turns": 1,
+        "outcome": "MISMATCH"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "entry_id": "multi_turn_base_88",
+        "policy": "full_signal_bounceback",
+        "escalated": false,
+        "n_escalated_turns": 0,
+        "outcome": "MISMATCH"
+      }
+    ]
+  },
+  "always_mismatch": {
+    "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+    "n": 91,
+    "n_escalated_emission": 10,
+    "n_escalated_bounceback": 9,
+    "entry_ids": [
+      "multi_turn_base_0",
+      "multi_turn_base_1",
+      "multi_turn_base_10",
+      "multi_turn_base_100",
+      "multi_turn_base_102",
+      "multi_turn_base_106",
+      "multi_turn_base_109",
+      "multi_turn_base_110",
+      "multi_turn_base_111",
+      "multi_turn_base_117",
+      "multi_turn_base_118",
+      "multi_turn_base_121",
+      "multi_turn_base_123",
+      "multi_turn_base_124",
+      "multi_turn_base_126",
+      "multi_turn_base_127",
+      "multi_turn_base_128",
+      "multi_turn_base_134",
+      "multi_turn_base_136",
+      "multi_turn_base_14",
+      "multi_turn_base_140",
+      "multi_turn_base_141",
+      "multi_turn_base_146",
+      "multi_turn_base_147",
+      "multi_turn_base_149",
+      "multi_turn_base_151",
+      "multi_turn_base_152",
+      "multi_turn_base_156",
+      "multi_turn_base_16",
+      "multi_turn_base_163",
+      "multi_turn_base_165",
+      "multi_turn_base_170",
+      "multi_turn_base_171",
+      "multi_turn_base_172",
+      "multi_turn_base_174",
+      "multi_turn_base_175",
+      "multi_turn_base_177",
+      "multi_turn_base_178",
+      "multi_turn_base_18",
+      "multi_turn_base_181",
+      "multi_turn_base_183",
+      "multi_turn_base_184",
+      "multi_turn_base_19",
+      "multi_turn_base_190",
+      "multi_turn_base_195",
+      "multi_turn_base_196",
+      "multi_turn_base_197",
+      "multi_turn_base_198",
+      "multi_turn_base_199",
+      "multi_turn_base_2",
+      "multi_turn_base_27",
+      "multi_turn_base_28",
+      "multi_turn_base_29",
+      "multi_turn_base_3",
+      "multi_turn_base_31",
+      "multi_turn_base_32",
+      "multi_turn_base_33",
+      "multi_turn_base_34",
+      "multi_turn_base_36",
+      "multi_turn_base_38",
+      "multi_turn_base_4",
+      "multi_turn_base_40",
+      "multi_turn_base_44",
+      "multi_turn_base_45",
+      "multi_turn_base_46",
+      "multi_turn_base_5",
+      "multi_turn_base_50",
+      "multi_turn_base_51",
+      "multi_turn_base_54",
+      "multi_turn_base_58",
+      "multi_turn_base_6",
+      "multi_turn_base_63",
+      "multi_turn_base_64",
+      "multi_turn_base_65",
+      "multi_turn_base_66",
+      "multi_turn_base_68",
+      "multi_turn_base_69",
+      "multi_turn_base_70",
+      "multi_turn_base_73",
+      "multi_turn_base_74",
+      "multi_turn_base_75",
+      "multi_turn_base_76",
+      "multi_turn_base_79",
+      "multi_turn_base_8",
+      "multi_turn_base_81",
+      "multi_turn_base_83",
+      "multi_turn_base_84",
+      "multi_turn_base_86",
+      "multi_turn_base_87",
+      "multi_turn_base_93",
+      "multi_turn_base_95"
+    ]
+  },
+  "step4_escalated_payload": {
+    "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+    "status": "STOPPED",
+    "reason": "Sealed artifacts have no cloud request or response bodies. The only key matching a request hint is plan.json openvino kv_cache_precision.requested (value u8), which is the KV setting, not an API payload. Token counts were not decomposed.",
+    "files_scanned": [
+      "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/checkpoint.json",
+      "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/plan.json",
+      "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/summary.json",
+      "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/emission_escalate/checkpoint.json",
+      "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/emission_escalate/entry_quality.json",
+      "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/emission_escalate/summary.json",
+      "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/emission_escalate/turn_ledger.json",
+      "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/full_signal_bounceback/checkpoint.json",
+      "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/full_signal_bounceback/entry_quality.json",
+      "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/full_signal_bounceback/summary.json",
+      "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/full_signal_bounceback/turn_ledger.json",
+      "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/slo_escalate/checkpoint.json",
+      "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/slo_escalate/entry_quality.json",
+      "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/slo_escalate/summary.json",
+      "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/slo_escalate/turn_ledger.json"
+    ],
+    "keys_matching_request_hints": [
+      "requested"
+    ],
+    "cloud_turn_fields_present": [
+      "cloud_tokens_in",
+      "cloud_tokens_out",
+      "cloud_usd",
+      "decoded_steps",
+      "n_ctx",
+      "placement"
+    ]
+  },
+  "kill_operationalization": "OTHER-row flows are the slo OTHER -> {PASS, MISMATCH} cells on slo->bounceback and slo->emission. Mostly non-escalated means not-escalated count under the destination policy exceeds escalated count in that pooled set.",
+  "other_row_flows": [
+    {
+      "destination": "full_signal_bounceback",
+      "flow": "OTHER->MISMATCH",
+      "n": 29,
+      "n_not_escalated": 5,
+      "n_escalated": 24
+    },
+    {
+      "destination": "full_signal_bounceback",
+      "flow": "OTHER->PASS",
+      "n": 11,
+      "n_not_escalated": 0,
+      "n_escalated": 11
+    },
+    {
+      "destination": "emission_escalate",
+      "flow": "OTHER->MISMATCH",
+      "n": 15,
+      "n_not_escalated": 7,
+      "n_escalated": 8
+    },
+    {
+      "destination": "emission_escalate",
+      "flow": "OTHER->PASS",
+      "n": 26,
+      "n_not_escalated": 0,
+      "n_escalated": 26
+    }
+  ],
+  "other_row_flows_mostly_non_escalated": false,
+  "kill_fired": false,
+  "h_gran": "NOT_REJECTED",
+  "verdicts": [
+    {
+      "prediction": "P1",
+      "predicted": "slo->bounceback OTHER->MISMATCH >= 2 x OTHER->PASS",
+      "measured": {
+        "OTHER->MISMATCH": 29,
+        "OTHER->PASS": 11,
+        "ratio": 2.6363636363636362
+      },
+      "verdict": "HIT",
+      "measured_text": "29 vs 2 x 11"
+    },
+    {
+      "prediction": "P2",
+      "predicted": "slo->emission OTHER->PASS > OTHER->MISMATCH",
+      "measured": {
+        "OTHER->PASS": 26,
+        "OTHER->MISMATCH": 15
+      },
+      "verdict": "HIT",
+      "measured_text": "OTHER->PASS 26, OTHER->MISMATCH 15"
+    },
+    {
+      "prediction": "P3",
+      "predicted": ">= 30% of bounceback-escalated entries have >= 2 bounces",
+      "measured": {
+        "n_bounceback_escalated": 66,
+        "n_with_ge_2_bounces": 22,
+        "fraction": 0.3333333333333333
+      },
+      "verdict": "HIT",
+      "measured_text": "22/66 = 0.3333333333333333"
+    },
+    {
+      "prediction": "P4",
+      "predicted": "under emission and bounceback, >= half of slo PASS -> non-PASS regressions are on entries that policy did not escalate",
+      "measured": {
+        "emission_escalate": {
+          "n_regressions": 4,
+          "n_not_escalated": 3,
+          "fraction_not_escalated": 0.75,
+          "hit": true
+        },
+        "full_signal_bounceback": {
+          "n_regressions": 5,
+          "n_not_escalated": 3,
+          "fraction_not_escalated": 0.6,
+          "hit": true
+        }
+      },
+      "verdict": "HIT",
+      "measured_text": "emission 3/4; bounceback 3/5"
+    },
+    {
+      "prediction": "P5",
+      "predicted": "< 25% of the 91 always-MISMATCH entries escalated under emission",
+      "measured": {
+        "n_always_mismatch": 91,
+        "n_escalated_emission": 10,
+        "fraction_of_91": 0.10989010989010989
+      },
+      "verdict": "HIT",
+      "measured_text": "10/91"
+    }
+  ]
+}
