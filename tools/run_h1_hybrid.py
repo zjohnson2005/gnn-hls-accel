@@ -2523,8 +2523,6 @@ def run_session(
         (out_dir / ".sealed").write_text(
             json.dumps(seal_doc, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
-        summary["tree_sha256"] = tree
-        _write_json(out_dir / "summary.json", summary)
     elif seal and status != "complete":
         # Still allow sealing aborted/partial sessions with an explicit status.
         tree = _sha256_tree(out_dir, exclude={".sealed"})
@@ -2542,8 +2540,6 @@ def run_session(
         (out_dir / ".sealed").write_text(
             json.dumps(seal_doc, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
-        summary["tree_sha256"] = tree
-        _write_json(out_dir / "summary.json", summary)
 
     return summary
 
@@ -2947,8 +2943,6 @@ def run_interleaved_session(
             (out_dir / ".sealed").write_text(
                 json.dumps(seal_doc, indent=2, sort_keys=True) + "\n", encoding="utf-8"
             )
-            summary["tree_sha256"] = tree
-            _write_json(out_dir / "summary.json", summary)
         else:
             # Still record a seal marker for partial with explicit status.
             (out_dir / ".sealed").write_text(
@@ -2956,8 +2950,6 @@ def run_interleaved_session(
                 + "\n",
                 encoding="utf-8",
             )
-            summary["tree_sha256"] = tree
-            _write_json(out_dir / "summary.json", summary)
 
     return summary
 
@@ -3104,8 +3096,6 @@ def derive_r1_from_cb781(
     (out_dir / ".sealed").write_text(
         json.dumps(seal_doc, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-    doc["tree_sha256"] = tree
-    _write_json(out_dir / "summary.json", doc)
     return doc
 
 
