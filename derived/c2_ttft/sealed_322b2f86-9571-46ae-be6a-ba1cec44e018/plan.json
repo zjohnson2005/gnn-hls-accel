@@ -1,0 +1,641 @@
+{
+  "abort_reason": null,
+  "allow_unguarded": false,
+  "arm_results": [
+    {
+      "arm_id": "gpu_only_f16",
+      "ceiling_n_cached": 3156,
+      "failure_kind_at_wall": "memory_wall",
+      "first_fail": {
+        "decode_slo_ok": true,
+        "decode_tok_s_median": 14.527855970348583,
+        "failure_classification": {
+          "base": {
+            "class": "exception_at_generate",
+            "detail": "exception:RuntimeError",
+            "exception_message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of syst",
+            "exception_type": "RuntimeError",
+            "failure_mode_raw": "exception:RuntimeError",
+            "phase": "failed"
+          },
+          "class": "exception_at_generate",
+          "exception_message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.\n\n\n",
+          "exception_type": "RuntimeError",
+          "failure_kind": "memory_wall",
+          "failure_mode_raw": "exception:RuntimeError",
+          "verbatim": "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version."
+        },
+        "failure_kind": "memory_wall",
+        "generate_ok": false,
+        "n_tokens": 3312,
+        "pass": false,
+        "prefill_s_median": null,
+        "repeats": [
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_f16",
+            "completed": true,
+            "decode_tok_s": 14.47889881587468,
+            "ended_utc": "2026-09-20T17:50:02.610174+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 3312,
+            "outcome": "pass",
+            "prefill_s": 3.194305419,
+            "r_prefill_tok_s": 1036.8451245456813,
+            "repeat_index": 0,
+            "started_utc": "2026-09-20T17:49:41.501182+00:00",
+            "verbatim_error": null,
+            "wall_s": 3.6777675999999246
+          },
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_f16",
+            "completed": false,
+            "decode_tok_s": null,
+            "ended_utc": "2026-09-20T17:50:48.282015+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "exception_at_generate",
+                "detail": "exception:RuntimeError",
+                "exception_message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of syst",
+                "exception_type": "RuntimeError",
+                "failure_mode_raw": "exception:RuntimeError",
+                "phase": "failed"
+              },
+              "class": "exception_at_generate",
+              "exception_message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.\n\n\n",
+              "exception_type": "RuntimeError",
+              "failure_kind": "memory_wall",
+              "failure_mode_raw": "exception:RuntimeError",
+              "verbatim": "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version."
+            },
+            "failure_kind": "memory_wall",
+            "n_tokens": 3312,
+            "outcome": "fail",
+            "prefill_s": null,
+            "r_prefill_tok_s": null,
+            "repeat_index": 1,
+            "started_utc": "2026-09-20T17:50:24.928423+00:00",
+            "verbatim_error": "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.",
+            "wall_s": null
+          },
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_f16",
+            "completed": true,
+            "decode_tok_s": 14.576813124822486,
+            "ended_utc": "2026-09-20T17:51:31.554275+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 3312,
+            "outcome": "pass",
+            "prefill_s": 3.208868896,
+            "r_prefill_tok_s": 1032.1393947033978,
+            "repeat_index": 2,
+            "started_utc": "2026-09-20T17:51:10.566371+00:00",
+            "verbatim_error": null,
+            "wall_s": 3.6890836000000036
+          }
+        ],
+        "verbatim_error": "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version."
+      },
+      "first_slo_fail": {
+        "decode_slo_ok": true,
+        "decode_tok_s_median": 14.527855970348583,
+        "failure_classification": {
+          "base": {
+            "class": "exception_at_generate",
+            "detail": "exception:RuntimeError",
+            "exception_message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of syst",
+            "exception_type": "RuntimeError",
+            "failure_mode_raw": "exception:RuntimeError",
+            "phase": "failed"
+          },
+          "class": "exception_at_generate",
+          "exception_message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.\n\n\n",
+          "exception_type": "RuntimeError",
+          "failure_kind": "memory_wall",
+          "failure_mode_raw": "exception:RuntimeError",
+          "verbatim": "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version."
+        },
+        "failure_kind": "memory_wall",
+        "generate_ok": false,
+        "n_tokens": 3312,
+        "pass": false,
+        "prefill_s_median": null,
+        "repeats": [
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_f16",
+            "completed": true,
+            "decode_tok_s": 14.47889881587468,
+            "ended_utc": "2026-09-20T17:50:02.610174+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 3312,
+            "outcome": "pass",
+            "prefill_s": 3.194305419,
+            "r_prefill_tok_s": 1036.8451245456813,
+            "repeat_index": 0,
+            "started_utc": "2026-09-20T17:49:41.501182+00:00",
+            "verbatim_error": null,
+            "wall_s": 3.6777675999999246
+          },
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_f16",
+            "completed": false,
+            "decode_tok_s": null,
+            "ended_utc": "2026-09-20T17:50:48.282015+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "exception_at_generate",
+                "detail": "exception:RuntimeError",
+                "exception_message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of syst",
+                "exception_type": "RuntimeError",
+                "failure_mode_raw": "exception:RuntimeError",
+                "phase": "failed"
+              },
+              "class": "exception_at_generate",
+              "exception_message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.\n\n\n",
+              "exception_type": "RuntimeError",
+              "failure_kind": "memory_wall",
+              "failure_mode_raw": "exception:RuntimeError",
+              "verbatim": "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version."
+            },
+            "failure_kind": "memory_wall",
+            "n_tokens": 3312,
+            "outcome": "fail",
+            "prefill_s": null,
+            "r_prefill_tok_s": null,
+            "repeat_index": 1,
+            "started_utc": "2026-09-20T17:50:24.928423+00:00",
+            "verbatim_error": "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.",
+            "wall_s": null
+          },
+          {
+            "admissible": true,
+            "arm_id": "gpu_only_f16",
+            "completed": true,
+            "decode_tok_s": 14.576813124822486,
+            "ended_utc": "2026-09-20T17:51:31.554275+00:00",
+            "failure_classification": {
+              "base": {
+                "class": "pass",
+                "detail": null,
+                "failure_mode_raw": null,
+                "phase": "done"
+              },
+              "class": "pass",
+              "failure_kind": null,
+              "verbatim": null
+            },
+            "failure_kind": null,
+            "n_tokens": 3312,
+            "outcome": "pass",
+            "prefill_s": 3.208868896,
+            "r_prefill_tok_s": 1032.1393947033978,
+            "repeat_index": 2,
+            "started_utc": "2026-09-20T17:51:10.566371+00:00",
+            "verbatim_error": null,
+            "wall_s": 3.6890836000000036
+          }
+        ],
+        "verbatim_error": "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version."
+      },
+      "first_slo_fail_n": 3312,
+      "highest_slo_ok_n": 3156,
+      "search": {
+        "high_init": 5500,
+        "low_init": 3000,
+        "resolution": 250
+      },
+      "status": "complete",
+      "ttft_limit_n": 3156,
+      "verbatim_at_wall": "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version."
+    }
+  ],
+  "arms": [
+    "gpu_only_f16"
+  ],
+  "canaries": [
+    {
+      "after_probe_count": -1,
+      "arm_id": "gpu_only_f16",
+      "available_mb_start": 5534.0,
+      "canary_index": 0,
+      "classification": "OK",
+      "delta": 400,
+      "drift_tripped": false,
+      "execute_error": null,
+      "execute_ok": true,
+      "gate_armed": false,
+      "is_canary": true,
+      "mode": "RESIDENT",
+      "n_cached": 4000,
+      "power": {
+        "battery_present": true,
+        "battery_status_values": [
+          2
+        ],
+        "estimated_charge_remaining_pct": 100,
+        "estimated_charge_remaining_pct_all": [
+          100
+        ],
+        "note": "ac_ok",
+        "on_ac": true,
+        "probe_error": null
+      },
+      "power_transition": {
+        "action": "baseline",
+        "current_on_ac": true,
+        "note": "first canary power snapshot; no prior transition to compare",
+        "ok": true,
+        "previous_on_ac": null
+      },
+      "raw_classification": "OK",
+      "rel_drift_t1": null,
+      "rel_drift_t2": null,
+      "threshold_t1": null,
+      "threshold_t2": null,
+      "trip_detail": null,
+      "turn1_prefill_s": 4.424046875,
+      "turn2_prefill_s": 1.107439575,
+      "utc": "2026-09-20T17:39:14.769631+00:00"
+    },
+    {
+      "after_probe_count": 3,
+      "arm_id": "gpu_only_f16",
+      "available_mb_start": 6193.0,
+      "canary_index": 1,
+      "classification": "OK",
+      "delta": 400,
+      "drift_tripped": false,
+      "execute_error": null,
+      "execute_ok": true,
+      "gate_armed": false,
+      "is_canary": true,
+      "mode": "RESIDENT",
+      "n_cached": 4000,
+      "power": {
+        "battery_present": true,
+        "battery_status_values": [
+          2
+        ],
+        "estimated_charge_remaining_pct": 100,
+        "estimated_charge_remaining_pct_all": [
+          100
+        ],
+        "note": "ac_ok",
+        "on_ac": true,
+        "probe_error": null
+      },
+      "power_transition": {
+        "action": "pass_stable",
+        "current_on_ac": true,
+        "note": "on_ac unchanged since previous canary",
+        "ok": true,
+        "previous_on_ac": true
+      },
+      "raw_classification": "OK",
+      "rel_drift_t1": null,
+      "rel_drift_t2": null,
+      "threshold_t1": null,
+      "threshold_t2": null,
+      "trip_detail": null,
+      "turn1_prefill_s": 4.765116699,
+      "turn2_prefill_s": 1.116840454,
+      "utc": "2026-09-20T17:42:40.390133+00:00"
+    },
+    {
+      "after_probe_count": 7,
+      "arm_id": "gpu_only_f16",
+      "available_mb_start": 6359.0,
+      "canary_index": 2,
+      "classification": "OK",
+      "delta": 400,
+      "drift_tripped": false,
+      "execute_error": null,
+      "execute_ok": true,
+      "gate_armed": true,
+      "is_canary": true,
+      "mode": "RESIDENT",
+      "n_cached": 4000,
+      "power": {
+        "battery_present": true,
+        "battery_status_values": [
+          2
+        ],
+        "estimated_charge_remaining_pct": 100,
+        "estimated_charge_remaining_pct_all": [
+          100
+        ],
+        "note": "ac_ok",
+        "on_ac": true,
+        "probe_error": null
+      },
+      "power_transition": {
+        "action": "pass_stable",
+        "current_on_ac": true,
+        "note": "on_ac unchanged since previous canary",
+        "ok": true,
+        "previous_on_ac": true
+      },
+      "raw_classification": "OK",
+      "rel_drift_t1": null,
+      "rel_drift_t2": null,
+      "threshold_t1": 0.15418906428291398,
+      "threshold_t2": 0.20789372277941204,
+      "trip_detail": null,
+      "turn1_prefill_s": 4.344520019,
+      "turn2_prefill_s": 0.992324707,
+      "utc": "2026-09-20T17:46:01.884830+00:00"
+    },
+    {
+      "after_probe_count": 11,
+      "arm_id": "gpu_only_f16",
+      "available_mb_start": 6390.0,
+      "canary_index": 3,
+      "classification": "OK",
+      "delta": 400,
+      "drift_tripped": false,
+      "execute_error": null,
+      "execute_ok": true,
+      "gate_armed": true,
+      "is_canary": true,
+      "mode": "RESIDENT",
+      "n_cached": 4000,
+      "power": {
+        "battery_present": true,
+        "battery_status_values": [
+          2
+        ],
+        "estimated_charge_remaining_pct": 100,
+        "estimated_charge_remaining_pct_all": [
+          100
+        ],
+        "note": "ac_ok",
+        "on_ac": true,
+        "probe_error": null
+      },
+      "power_transition": {
+        "action": "pass_stable",
+        "current_on_ac": true,
+        "note": "on_ac unchanged since previous canary",
+        "ok": true,
+        "previous_on_ac": true
+      },
+      "raw_classification": "OK",
+      "rel_drift_t1": 0.05990774385725741,
+      "rel_drift_t2": 0.053174194176689005,
+      "threshold_t1": 0.15418906428291398,
+      "threshold_t2": 0.20789372277941204,
+      "trip_detail": null,
+      "turn1_prefill_s": 4.689081542,
+      "turn2_prefill_s": 1.048552368,
+      "utc": "2026-09-20T17:49:21.429979+00:00"
+    },
+    {
+      "after_probe_count": 15,
+      "arm_id": "gpu_only_f16",
+      "available_mb_start": 6409.0,
+      "canary_index": 4,
+      "classification": "OK",
+      "delta": 400,
+      "drift_tripped": false,
+      "execute_error": null,
+      "execute_ok": true,
+      "gate_armed": true,
+      "is_canary": true,
+      "mode": "RESIDENT",
+      "n_cached": 4000,
+      "power": {
+        "battery_present": true,
+        "battery_status_values": [
+          2
+        ],
+        "estimated_charge_remaining_pct": 100,
+        "estimated_charge_remaining_pct_all": [
+          100
+        ],
+        "note": "ac_ok",
+        "on_ac": true,
+        "probe_error": null
+      },
+      "power_transition": {
+        "action": "pass_stable",
+        "current_on_ac": true,
+        "note": "on_ac unchanged since previous canary",
+        "ok": true,
+        "previous_on_ac": true
+      },
+      "raw_classification": "OK",
+      "rel_drift_t1": 0.02192143273798382,
+      "rel_drift_t2": 0.1642942216508742,
+      "threshold_t1": 0.15418906428291398,
+      "threshold_t2": 0.20789372277941204,
+      "trip_detail": null,
+      "turn1_prefill_s": 4.327065429,
+      "turn2_prefill_s": 0.925493652,
+      "utc": "2026-09-20T17:52:39.285862+00:00"
+    }
+  ],
+  "canary": {
+    "abort_on_trip": "FAIL_CANARY_DRIFT",
+    "allow_unguarded": false,
+    "budget_preflight": {
+      "calibration_c": 3,
+      "min_canaries_required": 4,
+      "n_budget": 4,
+      "ok": true,
+      "planned_probe_count": 18
+    },
+    "calibration_c": 3,
+    "canary_every_n": 4,
+    "canary_gate": {
+      "armed": true,
+      "calibration_c": 3,
+      "calibration_complete": true,
+      "derivation_applied": "calib_n=3; ref_t1=4.424047 ref_t2=1.107440; early_max_rel_t1=0.077095 early_max_rel_t2=0.103947; threshold_t1=max(2*early_max_t1,floor=0.05)=0.154189; threshold_t2=0.207894",
+      "early_max_rel_t1": 0.07709453214145699,
+      "early_max_rel_t2": 0.10394686138970602,
+      "fixed_cell": {
+        "arm": "gpu_only_f16",
+        "delta": 400,
+        "mode": "RESIDENT",
+        "n_cached": 4000
+      },
+      "onset_s": 657.0,
+      "protocol": "docs/CANARY_PROTOCOL.md",
+      "ref_turn1_prefill_s": 4.424046875,
+      "ref_turn2_prefill_s": 1.107439575,
+      "rel_drift_floor": 0.05,
+      "threshold_t1": 0.15418906428291398,
+      "threshold_t2": 0.20789372277941204
+    },
+    "criterion_path": "ttft_slo",
+    "enabled": true,
+    "enforcement": "CanaryDriftAbort exception; session status FAIL_CANARY_DRIFT. Does not return a soft bool that a caller can ignore (Invoke-DriftCanary Write-Output bug class). INF-1b: refuse start if budget < C+1 canaries; refuse seal with armed==false unless AllowUnguarded writes UNGUARDED.",
+    "fixed_cell": {
+      "arm": "gpu_only_f16",
+      "delta": 400,
+      "mode": "RESIDENT",
+      "n_cached": 4000
+    },
+    "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-8B-int4-ov.yaml",
+    "n_canaries": 5,
+    "n_derivation": {
+      "binding_bound": "budget",
+      "calibration_c": 3,
+      "derivable": true,
+      "derivation": "N=min(floor(onset_s/mean_probe_wall_s), floor(planned/(C+1)))=min(186,4)=4 (binding=budget); onset_s=657.0; mean_probe_wall_s=3.5291 from THIS run (8 probes); planned_probe_count=18; C=3.",
+      "mean_probe_wall_s": 3.5291121875000044,
+      "n": 4,
+      "n_budget": 4,
+      "n_onset": 186,
+      "n_probes_in_mean": 8,
+      "onset_s": 657.0,
+      "planned_probe_count": 18,
+      "refuse": false
+    },
+    "onset_s": 657.0,
+    "planned_probe_count": 18,
+    "power_transition_refuse": "INF-6: capture Win32_Battery BatteryStatus + EstimatedChargeRemaining at every canary; refuse on AC on_ac transition. No-battery hosts pass trivially.",
+    "rel_drift_floor": 0.05
+  },
+  "criterion": "ttft_slo",
+  "ended_utc": "2026-09-20T17:54:04.953689+00:00",
+  "gpu_only_f16_pin_note": "gpu_only_f16 requests KV_CACHE_PRECISION=f16 and has matched readback=f16 on prior cells (not the old bare gpu_only that read back dynamic).",
+  "ir_bytes": 4882865352,
+  "ir_sha256": "cd97874b28acfc95cca83801636396c2673703ec800f6675a1b123c3eebb50fe",
+  "kind": "c2_ttft_bound_limit",
+  "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-8B-int4-ov.yaml",
+  "planned_probe_count": 18,
+  "pre_registered_predictions": {
+    "arm_key": "arm1_8b_int4",
+    "c2_am038_not_applicable": true,
+    "experiment": "CAP-3",
+    "model_spec": "configs/models/Qwen3-8B-int4-ov.yaml",
+    "note": "CAP-3 arm predictions apply for this -ModelSpec. C-2 three-arm KV agreement claim (AM-038) does not apply to a single-arm capability run.",
+    "predictions": {
+      "P1_limit_band": {
+        "basis": [
+          "8B ~2\u00d7 parameters of 4B \u2192 prefill cost per token roughly proportional under compute-bound prefill.",
+          "4B-int4 gpu_only TTFT limit 9750 (c647f0c7) \u2192 half-ish scaling centers near ~4875\u20135500; band [4000, 7000] admits moderate non-linearity / recipe confound (8B is INT4_ASYM vs 4B INT4_SYM)."
+        ],
+        "claim": "8B-int4 gpu_only_f16 cold-start TTFT limit (ttft_limit_n) lands in [4000, 7000] tokens; point estimate ~5500.",
+        "falsified_if": [
+          "ttft_limit_n < 4000",
+          "ttft_limit_n > 7000 (band miss; see also P2 / P3 for claim-level falsifiers)"
+        ],
+        "predicted_ttft_limit_n_band": [
+          4000,
+          7000
+        ],
+        "predicted_ttft_limit_n_point": 5500
+      },
+      "P2_below_workload_7743": {
+        "basis": [
+          "Predicted band [4000, 7000] lies entirely below 7743.",
+          "Workload max mid-session prompt size 7743 tokens (same operating point cited in CAP-1b / BFCL feasibility)."
+        ],
+        "claim": "8B TTFT limit is strictly below workload max 7743 tokens. If held, 8B cannot serve the deepest BFCL-style entries inside the TTFT SLO \u2192 capacity gates tier choice (alongside quality relevance from 72d270e2).",
+        "falsified_if": [
+          "ttft_limit_n >= 7743",
+          "no_slo_crossing_in_range with highest_slo_ok_n >= 7743",
+          "any median prefill_s <= 10 s at n >= 7743"
+        ],
+        "predicted_ttft_limit_n_upper_bound_exclusive": 7743
+      },
+      "P3_scaling_vs_4b": {
+        "claim": "8B is slower at prefill than 4B-int4 on the same placement: limit does not reach or exceed the 4B gpu_only limit 9750.",
+        "falsified_if": [
+          "ttft_limit_n > 9750",
+          "no_slo_crossing_in_range with highest_slo_ok_n > 9750"
+        ]
+      }
+    },
+    "predictions_path": "derived/cap3/CAP3_PREDICTIONS.json",
+    "registered_utc": "2026-09-17T01:21:47+00:00",
+    "search": {
+      "basis": [
+        "Resolution 250 / repeats 3 match launch_c2.ps1 C-2 defaults (same chain as CAP-1b).",
+        "Low=3000 sits below the predicted limit band [4000, 7000] so bisect expects a known-good at the bottom if the point estimate ~5500 holds.",
+        "High=10000 sits above workload max 7743 and above the scaling falsifier bound 9750 (4B-int4 gpu_only limit from c647f0c7)."
+      ],
+      "high": 10000,
+      "low": 3000,
+      "repeats_per_probe": 3,
+      "resolution_tokens": 250
+    },
+    "source": "cap3_predictions_file"
+  },
+  "primary_claim_eval": {
+    "active_claim": "turn1_limits_agree_within_resolution",
+    "evaluable": false,
+    "limits": {
+      "gpu_only_f16": 3156
+    },
+    "reason": "one or more arms did not complete with a TTFT limit"
+  },
+  "probe_timeout_derivation": {
+    "basis": "INF-6: against a 10 s TTFT SLO a probe still running at 30 s has failed; 1800 s parent timeout cost >1 h across CAP-3 arm-1 sessions.",
+    "config_timeout_s_not_used": 1800.0,
+    "criterion": "ttft_slo",
+    "derivation": "criterion=ttft_slo; timeout_s = slo_s * 3 = 10 * 3 = 30. A probe still running at 3x the TTFT SLO has definitively failed the criterion; configs/delta_n.yaml generation.timeout_s is not used.",
+    "formula": "timeout_s = slo_s * 3",
+    "multiplier": 3.0,
+    "slo_s": 10.0,
+    "timeout_s": 30.0
+  },
+  "search": {
+    "criterion": "ttft_slo",
+    "high": 5500,
+    "low": 3000,
+    "pass_requires_all_repeats": true,
+    "repeats_per_probe": 3,
+    "resolution_tokens": 250,
+    "slo_s": 10.0
+  },
+  "session_id": "322b2f86-9571-46ae-be6a-ba1cec44e018",
+  "slo_s": 10.0,
+  "started_utc": "2026-09-20T17:38:43.884019+00:00",
+  "status": "complete",
+  "watchdog": {
+    "interval_s": 60,
+    "kill_log": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\c2_ttft\\322b2f86-9571-46ae-be6a-ba1cec44e018\\watchdog_kills.jsonl",
+    "mechanism": "Popen_CREATE_NEW_PROCESS_GROUP",
+    "pid": 18652
+  }
+}
