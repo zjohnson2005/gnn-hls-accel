@@ -1,0 +1,71 @@
+{
+  "title": "Operating limits inside the 10 s TTFT SLO",
+  "criterion": "ttft_slo",
+  "slo_s": 10.0,
+  "workload_max_tokens": 7743,
+  "bfcl_tool_schema_tokens": 2598,
+  "points": [
+    {
+      "platform_id": "aipc-c1",
+      "placement": "cpu-p",
+      "model": "4B-int4",
+      "ttft_limit_n": 500,
+      "run_id": "d3dcbd3b-5107-4b5e-a0dd-402f99f6f90c",
+      "binding": "latency",
+      "evidence": "highest_slo_ok_n=500; first SLO miss n=734 median prefill 10.86 s; failure_kind null"
+    },
+    {
+      "platform_id": "aipc-c1",
+      "placement": "gpu_only",
+      "model": "8B-int4",
+      "ttft_limit_n": 3156,
+      "run_id": "322b2f86-9571-46ae-be6a-ba1cec44e018",
+      "binding": "gpu_allocation",
+      "evidence": "failure_kind_at_wall=memory_wall; CL_OUT_OF_RESOURCES at n=3312; passing repeats at that n prefill ~3.2 s"
+    },
+    {
+      "platform_id": "aipc-c1",
+      "placement": "gpu_only",
+      "model": "4B-int8",
+      "ttft_limit_n": 7781,
+      "run_id": "fea55e0c-b9f8-4ba9-b5ea-558401910d74",
+      "binding": "gpu_allocation",
+      "evidence": "failure_kind_at_wall=memory_wall; CL_OUT_OF_RESOURCES at n=7937, all 3 repeats"
+    },
+    {
+      "platform_id": "aipc-c1",
+      "placement": "gpu_only",
+      "model": "4B-int4",
+      "ttft_limit_n": 9750,
+      "run_id": "c647f0c7-5cc9-47bb-a491-3450533c34d1",
+      "binding": "latency",
+      "evidence": "u8 and u4 ttft_limit_n=9750; first SLO miss n=10000 median prefill ~10.08 s. f16 REFUSED_LOW_OVER_SLO at n=8000 with one CL_OUT_OF_RESOURCES repeat. KV is null for the two arms that completed, not for f16."
+    },
+    {
+      "platform_id": "evo-t2",
+      "placement": "gpu_only",
+      "model": "8B-int4",
+      "ttft_limit_n": 16437,
+      "run_id_prefix": "051d2681",
+      "binding": "not_verified_on_this_host",
+      "evidence": "operator-cited sealed limit; tree absent from aipc-c1"
+    },
+    {
+      "platform_id": "evo-t2",
+      "placement": "gpu_only",
+      "model": "4B-int4",
+      "ttft_limit_n": 18687,
+      "run_id_prefix": "5c714535",
+      "binding": "not_verified_on_this_host",
+      "evidence": "operator-cited sealed limit; tree absent from aipc-c1"
+    }
+  ],
+  "ratios": {
+    "placement_aipc_c1": {"value": 19.5, "arithmetic": "9750/500", "runs": ["c647f0c7", "d3dcbd3b"]},
+    "tier_aipc_c1": {"value": 3.09, "arithmetic": "9750/3156", "runs": ["c647f0c7", "322b2f86"]},
+    "tier_evo_t2": {"value": 1.14, "arithmetic": "18687/16437", "runs": ["5c714535", "051d2681"]},
+    "weight_precision_aipc_c1": {"value": 1.25, "arithmetic": "9750/7781", "runs": ["c647f0c7", "fea55e0c"]}
+  },
+  "below_workload_max_7743": ["d3dcbd3b", "322b2f86"],
+  "schema_share_of_aipc_8b": {"schema_tokens": 2598, "limit_tokens": 3156, "fraction": 0.823}
+}

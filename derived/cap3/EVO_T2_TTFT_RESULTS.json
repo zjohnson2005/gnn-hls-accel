@@ -1,0 +1,45 @@
+{
+  "experiment": "CAP-3",
+  "title": "evo-t2 gpu_only TTFT operating limits (8B-int4, 4B-int4)",
+  "status": "conversation_stated_not_file_preregistered",
+  "filed_utc": "2026-09-22T20:50:00+00:00",
+  "filed_on_host": "aipc-c1",
+  "prediction_provenance": {
+    "kind": "conversation_before_launch",
+    "file_preregistered": false,
+    "reason": "Predictions were stated in conversation before each launch rather than written to a predictions file, because the XPS (aipc-c1) was unavailable. Do not cite these as file-pre-registered.",
+    "prediction_text_on_this_host": "not recovered. The launch conversations are not in this workspace transcript, and the seal trees are not under derived/."
+  },
+  "seal_trees_on_aipc_c1": false,
+  "note": "Limits below are the operator-cited sealed operating limits used for OPLIMIT-FIG. Binding class was not re-derived here because the seal trees are absent from this host.",
+  "results": [
+    {
+      "platform_id": "evo-t2",
+      "placement": "gpu_only",
+      "model": "Qwen3-8B-int4-ov",
+      "weight_precision": "int4",
+      "kv": "f16",
+      "criterion": "ttft_slo",
+      "ttft_limit_n": 16437,
+      "run_id_prefix": "051d2681",
+      "binding_constraint": "not_verified_on_this_host"
+    },
+    {
+      "platform_id": "evo-t2",
+      "placement": "gpu_only",
+      "model": "Qwen3-4B-int4-ov",
+      "weight_precision": "int4",
+      "kv": "f16",
+      "criterion": "ttft_slo",
+      "ttft_limit_n": 18687,
+      "run_id_prefix": "5c714535",
+      "binding_constraint": "not_verified_on_this_host"
+    }
+  ],
+  "ratios_using_these_limits": {
+    "tier_4b_over_8b": 1.1369,
+    "stated_as": "1.14x",
+    "arithmetic": "18687 / 16437",
+    "aipc_c1_tier_contrast": "9750 / 3156 = 3.09x (c647f0c7 / 322b2f86)"
+  }
+}
