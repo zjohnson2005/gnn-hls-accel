@@ -1,0 +1,1706 @@
+{
+  "method": "HF AutoTokenizer on models/Qwen3-4B-int4-ov, render_bfcl_tools_style, BFCL_v4_multi_turn_base first 200 entries. No generate call. workload_max is the longest user-turn stack plus the tool schema. It does not include model-written mid-turn steps.",
+  "cited": {
+    "workload_max_tokens": 7743,
+    "bfcl_tool_schema_tokens": 2598
+  },
+  "workload_max_tokens": 5036,
+  "bfcl_tool_schema_tokens": 2598,
+  "turn0_prompt_tokens": {
+    "min": 2152,
+    "max": 4895,
+    "n": 200
+  },
+  "multi_turn_base_10_turn0_prompt_tokens": 2598,
+  "multi_turn_base_10_tools_delta_tokens": 2568,
+  "multi_turn_base_2_turn0_prompt_tokens": 3819,
+  "multi_turn_base_2_user_turns_only_max_tokens": 4008,
+  "mismatch_vs_cited": {
+    "workload_max_tokens": true,
+    "bfcl_tool_schema_tokens": false
+  },
+  "inputs_sha256": [
+    {
+      "path": "models/Qwen3-4B-int4-ov/tokenizer.json",
+      "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4"
+    },
+    {
+      "path": "models/Qwen3-4B-int4-ov/tokenizer_config.json",
+      "sha256": "443bfa629eb16387a12edbf92a76f6a6f10b2af3b53d87ba1550adfcf45f7fa0"
+    },
+    {
+      "path": "models/Qwen3-4B-int4-ov/vocab.json",
+      "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+    },
+    {
+      "path": "models/Qwen3-4B-int4-ov/merges.txt",
+      "sha256": "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5"
+    },
+    {
+      "path": "models/Qwen3-4B-int4-ov/chat_template.jinja",
+      "sha256": "a55ee1b1660128b7098723e0abcd92caa0788061051c62d51cbe87d9cf1974d8"
+    },
+    {
+      "path": "models/Qwen3-4B-int4-ov/special_tokens_map.json",
+      "sha256": "76862e765266b85aa9459767e33cbaf13970f327a0e88d1c65846c2ddd3a1ecd"
+    },
+    {
+      "path": "models/Qwen3-4B-int4-ov/added_tokens.json",
+      "sha256": "c0284b582e14987fbd3d5a2cb2bd139084371ed9acbae488829a1c900833c680"
+    },
+    {
+      "path": "apu_characterization/out/cap01/live_sources/bfcl-wheel/unpacked/bfcl_eval/data/BFCL_v4_multi_turn_base.json",
+      "sha256": "1a21a995d06fd6f20ba55de7bced30ef953ec35e998f502ec2ecf4d66ef1c43a"
+    },
+    {
+      "path": "apu_characterization/out/cap01/live_sources/bfcl-wheel/unpacked/bfcl_eval/data/multi_turn_func_doc/gorilla_file_system.json",
+      "sha256": "c4c1b741c71e2a17c97a5dc9c4a91d89978c4eaece56494d14272d5df6c650e9"
+    },
+    {
+      "path": "apu_characterization/out/cap01/live_sources/bfcl-wheel/unpacked/bfcl_eval/data/multi_turn_func_doc/math_api.json",
+      "sha256": "83fa31708c89442bdcf12ac4dfbe3be8663ec9183a1b1524a9fda98164bc7e0b"
+    },
+    {
+      "path": "apu_characterization/out/cap01/live_sources/bfcl-wheel/unpacked/bfcl_eval/data/multi_turn_func_doc/memory_kv.json",
+      "sha256": "96480cd9cbd3d4a34cd8f78879bc6622731768a26e080f7a34782e36e3402287"
+    },
+    {
+      "path": "apu_characterization/out/cap01/live_sources/bfcl-wheel/unpacked/bfcl_eval/data/multi_turn_func_doc/memory_rec_sum.json",
+      "sha256": "4ceff946df00983c7f0b95d1b70ae402247f3312fb898bac9ecfa1de52f5a783"
+    },
+    {
+      "path": "apu_characterization/out/cap01/live_sources/bfcl-wheel/unpacked/bfcl_eval/data/multi_turn_func_doc/memory_vector.json",
+      "sha256": "917908ca99fdd01e203274b7ec6eb2347fa91d57f3c6341e20945cc9c9d746cf"
+    },
+    {
+      "path": "apu_characterization/out/cap01/live_sources/bfcl-wheel/unpacked/bfcl_eval/data/multi_turn_func_doc/message_api.json",
+      "sha256": "4d58ea933a5d2b280d7a52366617fb47fecd333d7b0e08e724db6fa12fb5f847"
+    },
+    {
+      "path": "apu_characterization/out/cap01/live_sources/bfcl-wheel/unpacked/bfcl_eval/data/multi_turn_func_doc/posting_api.json",
+      "sha256": "87f9fc404a06e4107d7c366f1399c596440e84c16cb119faf374b2f532d86e8b"
+    },
+    {
+      "path": "apu_characterization/out/cap01/live_sources/bfcl-wheel/unpacked/bfcl_eval/data/multi_turn_func_doc/ticket_api.json",
+      "sha256": "31324e0380782664fe82ba05bd23517808ad55692b45a5fe7c3d4d395fe4f0f8"
+    },
+    {
+      "path": "apu_characterization/out/cap01/live_sources/bfcl-wheel/unpacked/bfcl_eval/data/multi_turn_func_doc/trading_bot.json",
+      "sha256": "1a7933fd8f0cb8fbec38aeae05cb8c24132747cad4904fe1c13ac3d01fc22c2d"
+    },
+    {
+      "path": "apu_characterization/out/cap01/live_sources/bfcl-wheel/unpacked/bfcl_eval/data/multi_turn_func_doc/travel_booking.json",
+      "sha256": "f17b950c13adddf41d0848077df58788252e4c2e7cad5cfa71c8c4bf04f57b26"
+    },
+    {
+      "path": "apu_characterization/out/cap01/live_sources/bfcl-wheel/unpacked/bfcl_eval/data/multi_turn_func_doc/vehicle_control.json",
+      "sha256": "0c8a66292844874ef7b168f343bc394d8615d2d9e1f4387999a9ee23011eac78"
+    },
+    {
+      "path": "apu_characterization/out/cap01/live_sources/bfcl-wheel/unpacked/bfcl_eval/data/multi_turn_func_doc/web_search.json",
+      "sha256": "61fcee411e35f7ff67415e18cd67276615cf06e1c8841a683d2d997dbb46eac5"
+    }
+  ],
+  "per_entry": [
+    {
+      "id": "multi_turn_base_0",
+      "turn0_prompt_tokens": 4193,
+      "turn0_without_tools_tokens": 35,
+      "turn0_tools_delta_tokens": 4158,
+      "user_turns_only_max_tokens": 4288,
+      "n_tools": 31
+    },
+    {
+      "id": "multi_turn_base_1",
+      "turn0_prompt_tokens": 2609,
+      "turn0_without_tools_tokens": 41,
+      "turn0_tools_delta_tokens": 2568,
+      "user_turns_only_max_tokens": 2673,
+      "n_tools": 17
+    },
+    {
+      "id": "multi_turn_base_2",
+      "turn0_prompt_tokens": 3819,
+      "turn0_without_tools_tokens": 40,
+      "turn0_tools_delta_tokens": 3779,
+      "user_turns_only_max_tokens": 4008,
+      "n_tools": 26
+    },
+    {
+      "id": "multi_turn_base_3",
+      "turn0_prompt_tokens": 2629,
+      "turn0_without_tools_tokens": 48,
+      "turn0_tools_delta_tokens": 2581,
+      "user_turns_only_max_tokens": 2670,
+      "n_tools": 17
+    },
+    {
+      "id": "multi_turn_base_4",
+      "turn0_prompt_tokens": 4394,
+      "turn0_without_tools_tokens": 33,
+      "turn0_tools_delta_tokens": 4361,
+      "user_turns_only_max_tokens": 4468,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_5",
+      "turn0_prompt_tokens": 4200,
+      "turn0_without_tools_tokens": 42,
+      "turn0_tools_delta_tokens": 4158,
+      "user_turns_only_max_tokens": 4326,
+      "n_tools": 31
+    },
+    {
+      "id": "multi_turn_base_6",
+      "turn0_prompt_tokens": 2824,
+      "turn0_without_tools_tokens": 53,
+      "turn0_tools_delta_tokens": 2771,
+      "user_turns_only_max_tokens": 2954,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_7",
+      "turn0_prompt_tokens": 4413,
+      "turn0_without_tools_tokens": 52,
+      "turn0_tools_delta_tokens": 4361,
+      "user_turns_only_max_tokens": 4461,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_8",
+      "turn0_prompt_tokens": 4427,
+      "turn0_without_tools_tokens": 66,
+      "turn0_tools_delta_tokens": 4361,
+      "user_turns_only_max_tokens": 4541,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_9",
+      "turn0_prompt_tokens": 2687,
+      "turn0_without_tools_tokens": 33,
+      "turn0_tools_delta_tokens": 2654,
+      "user_turns_only_max_tokens": 2770,
+      "n_tools": 17
+    },
+    {
+      "id": "multi_turn_base_10",
+      "turn0_prompt_tokens": 2598,
+      "turn0_without_tools_tokens": 30,
+      "turn0_tools_delta_tokens": 2568,
+      "user_turns_only_max_tokens": 2732,
+      "n_tools": 17
+    },
+    {
+      "id": "multi_turn_base_11",
+      "turn0_prompt_tokens": 4393,
+      "turn0_without_tools_tokens": 32,
+      "turn0_tools_delta_tokens": 4361,
+      "user_turns_only_max_tokens": 4438,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_12",
+      "turn0_prompt_tokens": 2813,
+      "turn0_without_tools_tokens": 42,
+      "turn0_tools_delta_tokens": 2771,
+      "user_turns_only_max_tokens": 2892,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_13",
+      "turn0_prompt_tokens": 4412,
+      "turn0_without_tools_tokens": 51,
+      "turn0_tools_delta_tokens": 4361,
+      "user_turns_only_max_tokens": 4443,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_14",
+      "turn0_prompt_tokens": 3680,
+      "turn0_without_tools_tokens": 31,
+      "turn0_tools_delta_tokens": 3649,
+      "user_turns_only_max_tokens": 3798,
+      "n_tools": 28
+    },
+    {
+      "id": "multi_turn_base_15",
+      "turn0_prompt_tokens": 4687,
+      "turn0_without_tools_tokens": 56,
+      "turn0_tools_delta_tokens": 4631,
+      "user_turns_only_max_tokens": 4857,
+      "n_tools": 35
+    },
+    {
+      "id": "multi_turn_base_16",
+      "turn0_prompt_tokens": 2717,
+      "turn0_without_tools_tokens": 63,
+      "turn0_tools_delta_tokens": 2654,
+      "user_turns_only_max_tokens": 2781,
+      "n_tools": 17
+    },
+    {
+      "id": "multi_turn_base_17",
+      "turn0_prompt_tokens": 3687,
+      "turn0_without_tools_tokens": 38,
+      "turn0_tools_delta_tokens": 3649,
+      "user_turns_only_max_tokens": 3763,
+      "n_tools": 28
+    },
+    {
+      "id": "multi_turn_base_18",
+      "turn0_prompt_tokens": 4213,
+      "turn0_without_tools_tokens": 42,
+      "turn0_tools_delta_tokens": 4171,
+      "user_turns_only_max_tokens": 4287,
+      "n_tools": 31
+    },
+    {
+      "id": "multi_turn_base_19",
+      "turn0_prompt_tokens": 3561,
+      "turn0_without_tools_tokens": 29,
+      "turn0_tools_delta_tokens": 3532,
+      "user_turns_only_max_tokens": 3608,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_20",
+      "turn0_prompt_tokens": 4399,
+      "turn0_without_tools_tokens": 38,
+      "turn0_tools_delta_tokens": 4361,
+      "user_turns_only_max_tokens": 4421,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_21",
+      "turn0_prompt_tokens": 4430,
+      "turn0_without_tools_tokens": 69,
+      "turn0_tools_delta_tokens": 4361,
+      "user_turns_only_max_tokens": 4536,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_22",
+      "turn0_prompt_tokens": 4228,
+      "turn0_without_tools_tokens": 57,
+      "turn0_tools_delta_tokens": 4171,
+      "user_turns_only_max_tokens": 4413,
+      "n_tools": 31
+    },
+    {
+      "id": "multi_turn_base_23",
+      "turn0_prompt_tokens": 3947,
+      "turn0_without_tools_tokens": 51,
+      "turn0_tools_delta_tokens": 3896,
+      "user_turns_only_max_tokens": 4019,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_24",
+      "turn0_prompt_tokens": 3723,
+      "turn0_without_tools_tokens": 30,
+      "turn0_tools_delta_tokens": 3693,
+      "user_turns_only_max_tokens": 3849,
+      "n_tools": 26
+    },
+    {
+      "id": "multi_turn_base_25",
+      "turn0_prompt_tokens": 2617,
+      "turn0_without_tools_tokens": 36,
+      "turn0_tools_delta_tokens": 2581,
+      "user_turns_only_max_tokens": 2678,
+      "n_tools": 17
+    },
+    {
+      "id": "multi_turn_base_26",
+      "turn0_prompt_tokens": 2819,
+      "turn0_without_tools_tokens": 48,
+      "turn0_tools_delta_tokens": 2771,
+      "user_turns_only_max_tokens": 2865,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_27",
+      "turn0_prompt_tokens": 3741,
+      "turn0_without_tools_tokens": 48,
+      "turn0_tools_delta_tokens": 3693,
+      "user_turns_only_max_tokens": 3883,
+      "n_tools": 26
+    },
+    {
+      "id": "multi_turn_base_28",
+      "turn0_prompt_tokens": 4656,
+      "turn0_without_tools_tokens": 25,
+      "turn0_tools_delta_tokens": 4631,
+      "user_turns_only_max_tokens": 4732,
+      "n_tools": 35
+    },
+    {
+      "id": "multi_turn_base_29",
+      "turn0_prompt_tokens": 2803,
+      "turn0_without_tools_tokens": 32,
+      "turn0_tools_delta_tokens": 2771,
+      "user_turns_only_max_tokens": 2848,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_30",
+      "turn0_prompt_tokens": 4415,
+      "turn0_without_tools_tokens": 54,
+      "turn0_tools_delta_tokens": 4361,
+      "user_turns_only_max_tokens": 4464,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_31",
+      "turn0_prompt_tokens": 4540,
+      "turn0_without_tools_tokens": 112,
+      "turn0_tools_delta_tokens": 4428,
+      "user_turns_only_max_tokens": 4565,
+      "n_tools": 34
+    },
+    {
+      "id": "multi_turn_base_32",
+      "turn0_prompt_tokens": 4679,
+      "turn0_without_tools_tokens": 48,
+      "turn0_tools_delta_tokens": 4631,
+      "user_turns_only_max_tokens": 4725,
+      "n_tools": 35
+    },
+    {
+      "id": "multi_turn_base_33",
+      "turn0_prompt_tokens": 3687,
+      "turn0_without_tools_tokens": 38,
+      "turn0_tools_delta_tokens": 3649,
+      "user_turns_only_max_tokens": 3796,
+      "n_tools": 28
+    },
+    {
+      "id": "multi_turn_base_34",
+      "turn0_prompt_tokens": 4667,
+      "turn0_without_tools_tokens": 36,
+      "turn0_tools_delta_tokens": 4631,
+      "user_turns_only_max_tokens": 4718,
+      "n_tools": 35
+    },
+    {
+      "id": "multi_turn_base_35",
+      "turn0_prompt_tokens": 4675,
+      "turn0_without_tools_tokens": 44,
+      "turn0_tools_delta_tokens": 4631,
+      "user_turns_only_max_tokens": 4720,
+      "n_tools": 35
+    },
+    {
+      "id": "multi_turn_base_36",
+      "turn0_prompt_tokens": 4551,
+      "turn0_without_tools_tokens": 37,
+      "turn0_tools_delta_tokens": 4514,
+      "user_turns_only_max_tokens": 4613,
+      "n_tools": 34
+    },
+    {
+      "id": "multi_turn_base_37",
+      "turn0_prompt_tokens": 2803,
+      "turn0_without_tools_tokens": 32,
+      "turn0_tools_delta_tokens": 2771,
+      "user_turns_only_max_tokens": 2864,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_38",
+      "turn0_prompt_tokens": 2819,
+      "turn0_without_tools_tokens": 48,
+      "turn0_tools_delta_tokens": 2771,
+      "user_turns_only_max_tokens": 2836,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_39",
+      "turn0_prompt_tokens": 2804,
+      "turn0_without_tools_tokens": 33,
+      "turn0_tools_delta_tokens": 2771,
+      "user_turns_only_max_tokens": 2898,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_40",
+      "turn0_prompt_tokens": 3495,
+      "turn0_without_tools_tokens": 36,
+      "turn0_tools_delta_tokens": 3459,
+      "user_turns_only_max_tokens": 3609,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_41",
+      "turn0_prompt_tokens": 3681,
+      "turn0_without_tools_tokens": 32,
+      "turn0_tools_delta_tokens": 3649,
+      "user_turns_only_max_tokens": 3704,
+      "n_tools": 28
+    },
+    {
+      "id": "multi_turn_base_42",
+      "turn0_prompt_tokens": 4671,
+      "turn0_without_tools_tokens": 40,
+      "turn0_tools_delta_tokens": 4631,
+      "user_turns_only_max_tokens": 4733,
+      "n_tools": 35
+    },
+    {
+      "id": "multi_turn_base_43",
+      "turn0_prompt_tokens": 3685,
+      "turn0_without_tools_tokens": 36,
+      "turn0_tools_delta_tokens": 3649,
+      "user_turns_only_max_tokens": 3765,
+      "n_tools": 28
+    },
+    {
+      "id": "multi_turn_base_44",
+      "turn0_prompt_tokens": 4717,
+      "turn0_without_tools_tokens": 86,
+      "turn0_tools_delta_tokens": 4631,
+      "user_turns_only_max_tokens": 4760,
+      "n_tools": 35
+    },
+    {
+      "id": "multi_turn_base_45",
+      "turn0_prompt_tokens": 4472,
+      "turn0_without_tools_tokens": 31,
+      "turn0_tools_delta_tokens": 4441,
+      "user_turns_only_max_tokens": 4499,
+      "n_tools": 34
+    },
+    {
+      "id": "multi_turn_base_46",
+      "turn0_prompt_tokens": 3676,
+      "turn0_without_tools_tokens": 27,
+      "turn0_tools_delta_tokens": 3649,
+      "user_turns_only_max_tokens": 3676,
+      "n_tools": 28
+    },
+    {
+      "id": "multi_turn_base_47",
+      "turn0_prompt_tokens": 4671,
+      "turn0_without_tools_tokens": 40,
+      "turn0_tools_delta_tokens": 4631,
+      "user_turns_only_max_tokens": 4700,
+      "n_tools": 35
+    },
+    {
+      "id": "multi_turn_base_48",
+      "turn0_prompt_tokens": 3973,
+      "turn0_without_tools_tokens": 77,
+      "turn0_tools_delta_tokens": 3896,
+      "user_turns_only_max_tokens": 4039,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_49",
+      "turn0_prompt_tokens": 4683,
+      "turn0_without_tools_tokens": 52,
+      "turn0_tools_delta_tokens": 4631,
+      "user_turns_only_max_tokens": 4775,
+      "n_tools": 35
+    },
+    {
+      "id": "multi_turn_base_50",
+      "turn0_prompt_tokens": 2832,
+      "turn0_without_tools_tokens": 88,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2832,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_51",
+      "turn0_prompt_tokens": 3672,
+      "turn0_without_tools_tokens": 50,
+      "turn0_tools_delta_tokens": 3622,
+      "user_turns_only_max_tokens": 3804,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_52",
+      "turn0_prompt_tokens": 4384,
+      "turn0_without_tools_tokens": 50,
+      "turn0_tools_delta_tokens": 4334,
+      "user_turns_only_max_tokens": 4507,
+      "n_tools": 36
+    },
+    {
+      "id": "multi_turn_base_53",
+      "turn0_prompt_tokens": 4388,
+      "turn0_without_tools_tokens": 54,
+      "turn0_tools_delta_tokens": 4334,
+      "user_turns_only_max_tokens": 4489,
+      "n_tools": 36
+    },
+    {
+      "id": "multi_turn_base_54",
+      "turn0_prompt_tokens": 4377,
+      "turn0_without_tools_tokens": 43,
+      "turn0_tools_delta_tokens": 4334,
+      "user_turns_only_max_tokens": 4493,
+      "n_tools": 36
+    },
+    {
+      "id": "multi_turn_base_55",
+      "turn0_prompt_tokens": 3924,
+      "turn0_without_tools_tokens": 55,
+      "turn0_tools_delta_tokens": 3869,
+      "user_turns_only_max_tokens": 4085,
+      "n_tools": 31
+    },
+    {
+      "id": "multi_turn_base_56",
+      "turn0_prompt_tokens": 2792,
+      "turn0_without_tools_tokens": 48,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2849,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_57",
+      "turn0_prompt_tokens": 4659,
+      "turn0_without_tools_tokens": 55,
+      "turn0_tools_delta_tokens": 4604,
+      "user_turns_only_max_tokens": 4721,
+      "n_tools": 39
+    },
+    {
+      "id": "multi_turn_base_58",
+      "turn0_prompt_tokens": 4386,
+      "turn0_without_tools_tokens": 52,
+      "turn0_tools_delta_tokens": 4334,
+      "user_turns_only_max_tokens": 4531,
+      "n_tools": 36
+    },
+    {
+      "id": "multi_turn_base_59",
+      "turn0_prompt_tokens": 4653,
+      "turn0_without_tools_tokens": 49,
+      "turn0_tools_delta_tokens": 4604,
+      "user_turns_only_max_tokens": 4818,
+      "n_tools": 39
+    },
+    {
+      "id": "multi_turn_base_60",
+      "turn0_prompt_tokens": 3932,
+      "turn0_without_tools_tokens": 63,
+      "turn0_tools_delta_tokens": 3869,
+      "user_turns_only_max_tokens": 4074,
+      "n_tools": 31
+    },
+    {
+      "id": "multi_turn_base_61",
+      "turn0_prompt_tokens": 3664,
+      "turn0_without_tools_tokens": 42,
+      "turn0_tools_delta_tokens": 3622,
+      "user_turns_only_max_tokens": 3768,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_62",
+      "turn0_prompt_tokens": 3696,
+      "turn0_without_tools_tokens": 74,
+      "turn0_tools_delta_tokens": 3622,
+      "user_turns_only_max_tokens": 3778,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_63",
+      "turn0_prompt_tokens": 3669,
+      "turn0_without_tools_tokens": 47,
+      "turn0_tools_delta_tokens": 3622,
+      "user_turns_only_max_tokens": 3766,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_64",
+      "turn0_prompt_tokens": 2790,
+      "turn0_without_tools_tokens": 46,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2840,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_65",
+      "turn0_prompt_tokens": 4477,
+      "turn0_without_tools_tokens": 143,
+      "turn0_tools_delta_tokens": 4334,
+      "user_turns_only_max_tokens": 4545,
+      "n_tools": 36
+    },
+    {
+      "id": "multi_turn_base_66",
+      "turn0_prompt_tokens": 2853,
+      "turn0_without_tools_tokens": 109,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 3009,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_67",
+      "turn0_prompt_tokens": 3648,
+      "turn0_without_tools_tokens": 26,
+      "turn0_tools_delta_tokens": 3622,
+      "user_turns_only_max_tokens": 3706,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_68",
+      "turn0_prompt_tokens": 4400,
+      "turn0_without_tools_tokens": 66,
+      "turn0_tools_delta_tokens": 4334,
+      "user_turns_only_max_tokens": 4600,
+      "n_tools": 36
+    },
+    {
+      "id": "multi_turn_base_69",
+      "turn0_prompt_tokens": 4383,
+      "turn0_without_tools_tokens": 49,
+      "turn0_tools_delta_tokens": 4334,
+      "user_turns_only_max_tokens": 4424,
+      "n_tools": 36
+    },
+    {
+      "id": "multi_turn_base_70",
+      "turn0_prompt_tokens": 2834,
+      "turn0_without_tools_tokens": 90,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2888,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_71",
+      "turn0_prompt_tokens": 2772,
+      "turn0_without_tools_tokens": 28,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2860,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_72",
+      "turn0_prompt_tokens": 3649,
+      "turn0_without_tools_tokens": 27,
+      "turn0_tools_delta_tokens": 3622,
+      "user_turns_only_max_tokens": 3778,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_73",
+      "turn0_prompt_tokens": 2804,
+      "turn0_without_tools_tokens": 60,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2910,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_74",
+      "turn0_prompt_tokens": 4654,
+      "turn0_without_tools_tokens": 50,
+      "turn0_tools_delta_tokens": 4604,
+      "user_turns_only_max_tokens": 4707,
+      "n_tools": 39
+    },
+    {
+      "id": "multi_turn_base_75",
+      "turn0_prompt_tokens": 4395,
+      "turn0_without_tools_tokens": 61,
+      "turn0_tools_delta_tokens": 4334,
+      "user_turns_only_max_tokens": 4555,
+      "n_tools": 36
+    },
+    {
+      "id": "multi_turn_base_76",
+      "turn0_prompt_tokens": 4399,
+      "turn0_without_tools_tokens": 65,
+      "turn0_tools_delta_tokens": 4334,
+      "user_turns_only_max_tokens": 4477,
+      "n_tools": 36
+    },
+    {
+      "id": "multi_turn_base_77",
+      "turn0_prompt_tokens": 4377,
+      "turn0_without_tools_tokens": 43,
+      "turn0_tools_delta_tokens": 4334,
+      "user_turns_only_max_tokens": 4455,
+      "n_tools": 36
+    },
+    {
+      "id": "multi_turn_base_78",
+      "turn0_prompt_tokens": 4397,
+      "turn0_without_tools_tokens": 63,
+      "turn0_tools_delta_tokens": 4334,
+      "user_turns_only_max_tokens": 4460,
+      "n_tools": 36
+    },
+    {
+      "id": "multi_turn_base_79",
+      "turn0_prompt_tokens": 2787,
+      "turn0_without_tools_tokens": 43,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2872,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_80",
+      "turn0_prompt_tokens": 4642,
+      "turn0_without_tools_tokens": 38,
+      "turn0_tools_delta_tokens": 4604,
+      "user_turns_only_max_tokens": 4805,
+      "n_tools": 39
+    },
+    {
+      "id": "multi_turn_base_81",
+      "turn0_prompt_tokens": 4675,
+      "turn0_without_tools_tokens": 71,
+      "turn0_tools_delta_tokens": 4604,
+      "user_turns_only_max_tokens": 4794,
+      "n_tools": 39
+    },
+    {
+      "id": "multi_turn_base_82",
+      "turn0_prompt_tokens": 2822,
+      "turn0_without_tools_tokens": 78,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2910,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_83",
+      "turn0_prompt_tokens": 2808,
+      "turn0_without_tools_tokens": 64,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2886,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_84",
+      "turn0_prompt_tokens": 2801,
+      "turn0_without_tools_tokens": 57,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2853,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_85",
+      "turn0_prompt_tokens": 2790,
+      "turn0_without_tools_tokens": 46,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2818,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_86",
+      "turn0_prompt_tokens": 4381,
+      "turn0_without_tools_tokens": 47,
+      "turn0_tools_delta_tokens": 4334,
+      "user_turns_only_max_tokens": 4478,
+      "n_tools": 36
+    },
+    {
+      "id": "multi_turn_base_87",
+      "turn0_prompt_tokens": 2801,
+      "turn0_without_tools_tokens": 57,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2941,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_88",
+      "turn0_prompt_tokens": 4372,
+      "turn0_without_tools_tokens": 38,
+      "turn0_tools_delta_tokens": 4334,
+      "user_turns_only_max_tokens": 4501,
+      "n_tools": 36
+    },
+    {
+      "id": "multi_turn_base_89",
+      "turn0_prompt_tokens": 2782,
+      "turn0_without_tools_tokens": 38,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2880,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_90",
+      "turn0_prompt_tokens": 4400,
+      "turn0_without_tools_tokens": 66,
+      "turn0_tools_delta_tokens": 4334,
+      "user_turns_only_max_tokens": 4514,
+      "n_tools": 36
+    },
+    {
+      "id": "multi_turn_base_91",
+      "turn0_prompt_tokens": 3687,
+      "turn0_without_tools_tokens": 65,
+      "turn0_tools_delta_tokens": 3622,
+      "user_turns_only_max_tokens": 3704,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_92",
+      "turn0_prompt_tokens": 2803,
+      "turn0_without_tools_tokens": 59,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2943,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_93",
+      "turn0_prompt_tokens": 2764,
+      "turn0_without_tools_tokens": 20,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2840,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_94",
+      "turn0_prompt_tokens": 2832,
+      "turn0_without_tools_tokens": 88,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2914,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_95",
+      "turn0_prompt_tokens": 3660,
+      "turn0_without_tools_tokens": 38,
+      "turn0_tools_delta_tokens": 3622,
+      "user_turns_only_max_tokens": 3784,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_96",
+      "turn0_prompt_tokens": 2817,
+      "turn0_without_tools_tokens": 73,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2867,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_97",
+      "turn0_prompt_tokens": 3678,
+      "turn0_without_tools_tokens": 56,
+      "turn0_tools_delta_tokens": 3622,
+      "user_turns_only_max_tokens": 3899,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_98",
+      "turn0_prompt_tokens": 4667,
+      "turn0_without_tools_tokens": 63,
+      "turn0_tools_delta_tokens": 4604,
+      "user_turns_only_max_tokens": 4738,
+      "n_tools": 39
+    },
+    {
+      "id": "multi_turn_base_99",
+      "turn0_prompt_tokens": 2809,
+      "turn0_without_tools_tokens": 65,
+      "turn0_tools_delta_tokens": 2744,
+      "user_turns_only_max_tokens": 2942,
+      "n_tools": 22
+    },
+    {
+      "id": "multi_turn_base_100",
+      "turn0_prompt_tokens": 2184,
+      "turn0_without_tools_tokens": 56,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2264,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_101",
+      "turn0_prompt_tokens": 3062,
+      "turn0_without_tools_tokens": 56,
+      "turn0_tools_delta_tokens": 3006,
+      "user_turns_only_max_tokens": 3150,
+      "n_tools": 30
+    },
+    {
+      "id": "multi_turn_base_102",
+      "turn0_prompt_tokens": 3305,
+      "turn0_without_tools_tokens": 52,
+      "turn0_tools_delta_tokens": 3253,
+      "user_turns_only_max_tokens": 3479,
+      "n_tools": 29
+    },
+    {
+      "id": "multi_turn_base_103",
+      "turn0_prompt_tokens": 3032,
+      "turn0_without_tools_tokens": 26,
+      "turn0_tools_delta_tokens": 3006,
+      "user_turns_only_max_tokens": 3211,
+      "n_tools": 30
+    },
+    {
+      "id": "multi_turn_base_104",
+      "turn0_prompt_tokens": 2232,
+      "turn0_without_tools_tokens": 104,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2317,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_105",
+      "turn0_prompt_tokens": 2152,
+      "turn0_without_tools_tokens": 24,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2194,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_106",
+      "turn0_prompt_tokens": 3310,
+      "turn0_without_tools_tokens": 57,
+      "turn0_tools_delta_tokens": 3253,
+      "user_turns_only_max_tokens": 3457,
+      "n_tools": 29
+    },
+    {
+      "id": "multi_turn_base_107",
+      "turn0_prompt_tokens": 2169,
+      "turn0_without_tools_tokens": 41,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2307,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_108",
+      "turn0_prompt_tokens": 3068,
+      "turn0_without_tools_tokens": 62,
+      "turn0_tools_delta_tokens": 3006,
+      "user_turns_only_max_tokens": 3232,
+      "n_tools": 30
+    },
+    {
+      "id": "multi_turn_base_109",
+      "turn0_prompt_tokens": 3754,
+      "turn0_without_tools_tokens": 36,
+      "turn0_tools_delta_tokens": 3718,
+      "user_turns_only_max_tokens": 3966,
+      "n_tools": 34
+    },
+    {
+      "id": "multi_turn_base_110",
+      "turn0_prompt_tokens": 3304,
+      "turn0_without_tools_tokens": 51,
+      "turn0_tools_delta_tokens": 3253,
+      "user_turns_only_max_tokens": 3585,
+      "n_tools": 29
+    },
+    {
+      "id": "multi_turn_base_111",
+      "turn0_prompt_tokens": 3046,
+      "turn0_without_tools_tokens": 40,
+      "turn0_tools_delta_tokens": 3006,
+      "user_turns_only_max_tokens": 3197,
+      "n_tools": 30
+    },
+    {
+      "id": "multi_turn_base_112",
+      "turn0_prompt_tokens": 4034,
+      "turn0_without_tools_tokens": 46,
+      "turn0_tools_delta_tokens": 3988,
+      "user_turns_only_max_tokens": 4136,
+      "n_tools": 37
+    },
+    {
+      "id": "multi_turn_base_113",
+      "turn0_prompt_tokens": 3059,
+      "turn0_without_tools_tokens": 53,
+      "turn0_tools_delta_tokens": 3006,
+      "user_turns_only_max_tokens": 3094,
+      "n_tools": 30
+    },
+    {
+      "id": "multi_turn_base_114",
+      "turn0_prompt_tokens": 3038,
+      "turn0_without_tools_tokens": 32,
+      "turn0_tools_delta_tokens": 3006,
+      "user_turns_only_max_tokens": 3148,
+      "n_tools": 30
+    },
+    {
+      "id": "multi_turn_base_115",
+      "turn0_prompt_tokens": 2160,
+      "turn0_without_tools_tokens": 32,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2229,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_116",
+      "turn0_prompt_tokens": 2160,
+      "turn0_without_tools_tokens": 32,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2335,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_117",
+      "turn0_prompt_tokens": 2180,
+      "turn0_without_tools_tokens": 52,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2356,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_118",
+      "turn0_prompt_tokens": 2170,
+      "turn0_without_tools_tokens": 42,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2308,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_119",
+      "turn0_prompt_tokens": 3288,
+      "turn0_without_tools_tokens": 35,
+      "turn0_tools_delta_tokens": 3253,
+      "user_turns_only_max_tokens": 3392,
+      "n_tools": 29
+    },
+    {
+      "id": "multi_turn_base_120",
+      "turn0_prompt_tokens": 2163,
+      "turn0_without_tools_tokens": 35,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2202,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_121",
+      "turn0_prompt_tokens": 2176,
+      "turn0_without_tools_tokens": 48,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2260,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_122",
+      "turn0_prompt_tokens": 2183,
+      "turn0_without_tools_tokens": 55,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2284,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_123",
+      "turn0_prompt_tokens": 2189,
+      "turn0_without_tools_tokens": 61,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2243,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_124",
+      "turn0_prompt_tokens": 4075,
+      "turn0_without_tools_tokens": 87,
+      "turn0_tools_delta_tokens": 3988,
+      "user_turns_only_max_tokens": 4184,
+      "n_tools": 37
+    },
+    {
+      "id": "multi_turn_base_125",
+      "turn0_prompt_tokens": 3302,
+      "turn0_without_tools_tokens": 49,
+      "turn0_tools_delta_tokens": 3253,
+      "user_turns_only_max_tokens": 3476,
+      "n_tools": 29
+    },
+    {
+      "id": "multi_turn_base_126",
+      "turn0_prompt_tokens": 2186,
+      "turn0_without_tools_tokens": 58,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2319,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_127",
+      "turn0_prompt_tokens": 2167,
+      "turn0_without_tools_tokens": 39,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2249,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_128",
+      "turn0_prompt_tokens": 2179,
+      "turn0_without_tools_tokens": 51,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2300,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_129",
+      "turn0_prompt_tokens": 3302,
+      "turn0_without_tools_tokens": 49,
+      "turn0_tools_delta_tokens": 3253,
+      "user_turns_only_max_tokens": 3449,
+      "n_tools": 29
+    },
+    {
+      "id": "multi_turn_base_130",
+      "turn0_prompt_tokens": 2185,
+      "turn0_without_tools_tokens": 57,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2320,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_131",
+      "turn0_prompt_tokens": 3036,
+      "turn0_without_tools_tokens": 30,
+      "turn0_tools_delta_tokens": 3006,
+      "user_turns_only_max_tokens": 3204,
+      "n_tools": 30
+    },
+    {
+      "id": "multi_turn_base_132",
+      "turn0_prompt_tokens": 2173,
+      "turn0_without_tools_tokens": 45,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2201,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_133",
+      "turn0_prompt_tokens": 3292,
+      "turn0_without_tools_tokens": 39,
+      "turn0_tools_delta_tokens": 3253,
+      "user_turns_only_max_tokens": 3310,
+      "n_tools": 29
+    },
+    {
+      "id": "multi_turn_base_134",
+      "turn0_prompt_tokens": 4061,
+      "turn0_without_tools_tokens": 73,
+      "turn0_tools_delta_tokens": 3988,
+      "user_turns_only_max_tokens": 4164,
+      "n_tools": 37
+    },
+    {
+      "id": "multi_turn_base_135",
+      "turn0_prompt_tokens": 2162,
+      "turn0_without_tools_tokens": 34,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2242,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_136",
+      "turn0_prompt_tokens": 4027,
+      "turn0_without_tools_tokens": 39,
+      "turn0_tools_delta_tokens": 3988,
+      "user_turns_only_max_tokens": 4107,
+      "n_tools": 37
+    },
+    {
+      "id": "multi_turn_base_137",
+      "turn0_prompt_tokens": 3051,
+      "turn0_without_tools_tokens": 45,
+      "turn0_tools_delta_tokens": 3006,
+      "user_turns_only_max_tokens": 3209,
+      "n_tools": 30
+    },
+    {
+      "id": "multi_turn_base_138",
+      "turn0_prompt_tokens": 3054,
+      "turn0_without_tools_tokens": 48,
+      "turn0_tools_delta_tokens": 3006,
+      "user_turns_only_max_tokens": 3207,
+      "n_tools": 30
+    },
+    {
+      "id": "multi_turn_base_139",
+      "turn0_prompt_tokens": 3765,
+      "turn0_without_tools_tokens": 47,
+      "turn0_tools_delta_tokens": 3718,
+      "user_turns_only_max_tokens": 3811,
+      "n_tools": 34
+    },
+    {
+      "id": "multi_turn_base_140",
+      "turn0_prompt_tokens": 3304,
+      "turn0_without_tools_tokens": 51,
+      "turn0_tools_delta_tokens": 3253,
+      "user_turns_only_max_tokens": 3445,
+      "n_tools": 29
+    },
+    {
+      "id": "multi_turn_base_141",
+      "turn0_prompt_tokens": 3055,
+      "turn0_without_tools_tokens": 49,
+      "turn0_tools_delta_tokens": 3006,
+      "user_turns_only_max_tokens": 3241,
+      "n_tools": 30
+    },
+    {
+      "id": "multi_turn_base_142",
+      "turn0_prompt_tokens": 2163,
+      "turn0_without_tools_tokens": 35,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2279,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_143",
+      "turn0_prompt_tokens": 3050,
+      "turn0_without_tools_tokens": 44,
+      "turn0_tools_delta_tokens": 3006,
+      "user_turns_only_max_tokens": 3228,
+      "n_tools": 30
+    },
+    {
+      "id": "multi_turn_base_144",
+      "turn0_prompt_tokens": 4028,
+      "turn0_without_tools_tokens": 40,
+      "turn0_tools_delta_tokens": 3988,
+      "user_turns_only_max_tokens": 4062,
+      "n_tools": 37
+    },
+    {
+      "id": "multi_turn_base_145",
+      "turn0_prompt_tokens": 3055,
+      "turn0_without_tools_tokens": 49,
+      "turn0_tools_delta_tokens": 3006,
+      "user_turns_only_max_tokens": 3205,
+      "n_tools": 30
+    },
+    {
+      "id": "multi_turn_base_146",
+      "turn0_prompt_tokens": 2158,
+      "turn0_without_tools_tokens": 30,
+      "turn0_tools_delta_tokens": 2128,
+      "user_turns_only_max_tokens": 2231,
+      "n_tools": 20
+    },
+    {
+      "id": "multi_turn_base_147",
+      "turn0_prompt_tokens": 3826,
+      "turn0_without_tools_tokens": 108,
+      "turn0_tools_delta_tokens": 3718,
+      "user_turns_only_max_tokens": 3872,
+      "n_tools": 34
+    },
+    {
+      "id": "multi_turn_base_148",
+      "turn0_prompt_tokens": 3305,
+      "turn0_without_tools_tokens": 52,
+      "turn0_tools_delta_tokens": 3253,
+      "user_turns_only_max_tokens": 3480,
+      "n_tools": 29
+    },
+    {
+      "id": "multi_turn_base_149",
+      "turn0_prompt_tokens": 3065,
+      "turn0_without_tools_tokens": 59,
+      "turn0_tools_delta_tokens": 3006,
+      "user_turns_only_max_tokens": 3220,
+      "n_tools": 30
+    },
+    {
+      "id": "multi_turn_base_150",
+      "turn0_prompt_tokens": 3025,
+      "turn0_without_tools_tokens": 79,
+      "turn0_tools_delta_tokens": 2946,
+      "user_turns_only_max_tokens": 3080,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_151",
+      "turn0_prompt_tokens": 4673,
+      "turn0_without_tools_tokens": 137,
+      "turn0_tools_delta_tokens": 4536,
+      "user_turns_only_max_tokens": 4798,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_152",
+      "turn0_prompt_tokens": 4197,
+      "turn0_without_tools_tokens": 126,
+      "turn0_tools_delta_tokens": 4071,
+      "user_turns_only_max_tokens": 4294,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_153",
+      "turn0_prompt_tokens": 3053,
+      "turn0_without_tools_tokens": 107,
+      "turn0_tools_delta_tokens": 2946,
+      "user_turns_only_max_tokens": 3270,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_154",
+      "turn0_prompt_tokens": 3912,
+      "turn0_without_tools_tokens": 88,
+      "turn0_tools_delta_tokens": 3824,
+      "user_turns_only_max_tokens": 4081,
+      "n_tools": 28
+    },
+    {
+      "id": "multi_turn_base_155",
+      "turn0_prompt_tokens": 3036,
+      "turn0_without_tools_tokens": 90,
+      "turn0_tools_delta_tokens": 2946,
+      "user_turns_only_max_tokens": 3091,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_156",
+      "turn0_prompt_tokens": 4178,
+      "turn0_without_tools_tokens": 107,
+      "turn0_tools_delta_tokens": 4071,
+      "user_turns_only_max_tokens": 4330,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_157",
+      "turn0_prompt_tokens": 4827,
+      "turn0_without_tools_tokens": 21,
+      "turn0_tools_delta_tokens": 4806,
+      "user_turns_only_max_tokens": 4892,
+      "n_tools": 35
+    },
+    {
+      "id": "multi_turn_base_158",
+      "turn0_prompt_tokens": 3024,
+      "turn0_without_tools_tokens": 78,
+      "turn0_tools_delta_tokens": 2946,
+      "user_turns_only_max_tokens": 3176,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_159",
+      "turn0_prompt_tokens": 3017,
+      "turn0_without_tools_tokens": 71,
+      "turn0_tools_delta_tokens": 2946,
+      "user_turns_only_max_tokens": 3154,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_160",
+      "turn0_prompt_tokens": 4164,
+      "turn0_without_tools_tokens": 93,
+      "turn0_tools_delta_tokens": 4071,
+      "user_turns_only_max_tokens": 4296,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_161",
+      "turn0_prompt_tokens": 4895,
+      "turn0_without_tools_tokens": 89,
+      "turn0_tools_delta_tokens": 4806,
+      "user_turns_only_max_tokens": 5036,
+      "n_tools": 35
+    },
+    {
+      "id": "multi_turn_base_162",
+      "turn0_prompt_tokens": 4106,
+      "turn0_without_tools_tokens": 35,
+      "turn0_tools_delta_tokens": 4071,
+      "user_turns_only_max_tokens": 4343,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_163",
+      "turn0_prompt_tokens": 3078,
+      "turn0_without_tools_tokens": 132,
+      "turn0_tools_delta_tokens": 2946,
+      "user_turns_only_max_tokens": 3114,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_164",
+      "turn0_prompt_tokens": 3018,
+      "turn0_without_tools_tokens": 72,
+      "turn0_tools_delta_tokens": 2946,
+      "user_turns_only_max_tokens": 3200,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_165",
+      "turn0_prompt_tokens": 4125,
+      "turn0_without_tools_tokens": 54,
+      "turn0_tools_delta_tokens": 4071,
+      "user_turns_only_max_tokens": 4275,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_166",
+      "turn0_prompt_tokens": 3895,
+      "turn0_without_tools_tokens": 71,
+      "turn0_tools_delta_tokens": 3824,
+      "user_turns_only_max_tokens": 4074,
+      "n_tools": 28
+    },
+    {
+      "id": "multi_turn_base_167",
+      "turn0_prompt_tokens": 3011,
+      "turn0_without_tools_tokens": 65,
+      "turn0_tools_delta_tokens": 2946,
+      "user_turns_only_max_tokens": 3194,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_168",
+      "turn0_prompt_tokens": 3860,
+      "turn0_without_tools_tokens": 36,
+      "turn0_tools_delta_tokens": 3824,
+      "user_turns_only_max_tokens": 4070,
+      "n_tools": 28
+    },
+    {
+      "id": "multi_turn_base_169",
+      "turn0_prompt_tokens": 3968,
+      "turn0_without_tools_tokens": 144,
+      "turn0_tools_delta_tokens": 3824,
+      "user_turns_only_max_tokens": 4025,
+      "n_tools": 28
+    },
+    {
+      "id": "multi_turn_base_170",
+      "turn0_prompt_tokens": 4656,
+      "turn0_without_tools_tokens": 120,
+      "turn0_tools_delta_tokens": 4536,
+      "user_turns_only_max_tokens": 4908,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_171",
+      "turn0_prompt_tokens": 3948,
+      "turn0_without_tools_tokens": 124,
+      "turn0_tools_delta_tokens": 3824,
+      "user_turns_only_max_tokens": 4103,
+      "n_tools": 28
+    },
+    {
+      "id": "multi_turn_base_172",
+      "turn0_prompt_tokens": 3939,
+      "turn0_without_tools_tokens": 115,
+      "turn0_tools_delta_tokens": 3824,
+      "user_turns_only_max_tokens": 4156,
+      "n_tools": 28
+    },
+    {
+      "id": "multi_turn_base_173",
+      "turn0_prompt_tokens": 4128,
+      "turn0_without_tools_tokens": 57,
+      "turn0_tools_delta_tokens": 4071,
+      "user_turns_only_max_tokens": 4252,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_174",
+      "turn0_prompt_tokens": 4623,
+      "turn0_without_tools_tokens": 87,
+      "turn0_tools_delta_tokens": 4536,
+      "user_turns_only_max_tokens": 4804,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_175",
+      "turn0_prompt_tokens": 4648,
+      "turn0_without_tools_tokens": 112,
+      "turn0_tools_delta_tokens": 4536,
+      "user_turns_only_max_tokens": 4734,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_176",
+      "turn0_prompt_tokens": 4164,
+      "turn0_without_tools_tokens": 93,
+      "turn0_tools_delta_tokens": 4071,
+      "user_turns_only_max_tokens": 4258,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_177",
+      "turn0_prompt_tokens": 4178,
+      "turn0_without_tools_tokens": 107,
+      "turn0_tools_delta_tokens": 4071,
+      "user_turns_only_max_tokens": 4204,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_178",
+      "turn0_prompt_tokens": 4208,
+      "turn0_without_tools_tokens": 137,
+      "turn0_tools_delta_tokens": 4071,
+      "user_turns_only_max_tokens": 4406,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_179",
+      "turn0_prompt_tokens": 3043,
+      "turn0_without_tools_tokens": 97,
+      "turn0_tools_delta_tokens": 2946,
+      "user_turns_only_max_tokens": 3150,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_180",
+      "turn0_prompt_tokens": 4148,
+      "turn0_without_tools_tokens": 77,
+      "turn0_tools_delta_tokens": 4071,
+      "user_turns_only_max_tokens": 4368,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_181",
+      "turn0_prompt_tokens": 4163,
+      "turn0_without_tools_tokens": 92,
+      "turn0_tools_delta_tokens": 4071,
+      "user_turns_only_max_tokens": 4367,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_182",
+      "turn0_prompt_tokens": 3031,
+      "turn0_without_tools_tokens": 85,
+      "turn0_tools_delta_tokens": 2946,
+      "user_turns_only_max_tokens": 3091,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_183",
+      "turn0_prompt_tokens": 4607,
+      "turn0_without_tools_tokens": 71,
+      "turn0_tools_delta_tokens": 4536,
+      "user_turns_only_max_tokens": 4899,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_184",
+      "turn0_prompt_tokens": 3930,
+      "turn0_without_tools_tokens": 106,
+      "turn0_tools_delta_tokens": 3824,
+      "user_turns_only_max_tokens": 4104,
+      "n_tools": 28
+    },
+    {
+      "id": "multi_turn_base_185",
+      "turn0_prompt_tokens": 3926,
+      "turn0_without_tools_tokens": 102,
+      "turn0_tools_delta_tokens": 3824,
+      "user_turns_only_max_tokens": 4078,
+      "n_tools": 28
+    },
+    {
+      "id": "multi_turn_base_186",
+      "turn0_prompt_tokens": 4612,
+      "turn0_without_tools_tokens": 76,
+      "turn0_tools_delta_tokens": 4536,
+      "user_turns_only_max_tokens": 4855,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_187",
+      "turn0_prompt_tokens": 4210,
+      "turn0_without_tools_tokens": 139,
+      "turn0_tools_delta_tokens": 4071,
+      "user_turns_only_max_tokens": 4393,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_188",
+      "turn0_prompt_tokens": 4615,
+      "turn0_without_tools_tokens": 79,
+      "turn0_tools_delta_tokens": 4536,
+      "user_turns_only_max_tokens": 4931,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_189",
+      "turn0_prompt_tokens": 4658,
+      "turn0_without_tools_tokens": 122,
+      "turn0_tools_delta_tokens": 4536,
+      "user_turns_only_max_tokens": 4785,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_190",
+      "turn0_prompt_tokens": 4183,
+      "turn0_without_tools_tokens": 112,
+      "turn0_tools_delta_tokens": 4071,
+      "user_turns_only_max_tokens": 4401,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_191",
+      "turn0_prompt_tokens": 3033,
+      "turn0_without_tools_tokens": 87,
+      "turn0_tools_delta_tokens": 2946,
+      "user_turns_only_max_tokens": 3223,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_192",
+      "turn0_prompt_tokens": 2993,
+      "turn0_without_tools_tokens": 47,
+      "turn0_tools_delta_tokens": 2946,
+      "user_turns_only_max_tokens": 3220,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_193",
+      "turn0_prompt_tokens": 4183,
+      "turn0_without_tools_tokens": 112,
+      "turn0_tools_delta_tokens": 4071,
+      "user_turns_only_max_tokens": 4393,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_194",
+      "turn0_prompt_tokens": 3026,
+      "turn0_without_tools_tokens": 80,
+      "turn0_tools_delta_tokens": 2946,
+      "user_turns_only_max_tokens": 3193,
+      "n_tools": 18
+    },
+    {
+      "id": "multi_turn_base_195",
+      "turn0_prompt_tokens": 4624,
+      "turn0_without_tools_tokens": 88,
+      "turn0_tools_delta_tokens": 4536,
+      "user_turns_only_max_tokens": 4714,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_196",
+      "turn0_prompt_tokens": 4152,
+      "turn0_without_tools_tokens": 81,
+      "turn0_tools_delta_tokens": 4071,
+      "user_turns_only_max_tokens": 4381,
+      "n_tools": 27
+    },
+    {
+      "id": "multi_turn_base_197",
+      "turn0_prompt_tokens": 3999,
+      "turn0_without_tools_tokens": 175,
+      "turn0_tools_delta_tokens": 3824,
+      "user_turns_only_max_tokens": 4078,
+      "n_tools": 28
+    },
+    {
+      "id": "multi_turn_base_198",
+      "turn0_prompt_tokens": 4764,
+      "turn0_without_tools_tokens": 228,
+      "turn0_tools_delta_tokens": 4536,
+      "user_turns_only_max_tokens": 4764,
+      "n_tools": 32
+    },
+    {
+      "id": "multi_turn_base_199",
+      "turn0_prompt_tokens": 3909,
+      "turn0_without_tools_tokens": 85,
+      "turn0_tools_delta_tokens": 3824,
+      "user_turns_only_max_tokens": 4052,
+      "n_tools": 28
+    }
+  ]
+}
