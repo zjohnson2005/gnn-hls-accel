@@ -6,6 +6,7 @@ a sealed evidence directory in HEAD. New sealed run directories may be added.
 Sealed roots:
   - raw/<run_id>/
   - derived/**/sealed_<run_id>/
+  - any directory that contains a tracked .sealed file, and every descendant
 
 Exit 0 = clean, 1 = blocked.
 """
@@ -37,11 +38,23 @@ def _in_head(rel: str) -> bool:
     return proc.returncode == 0
 
 
+def _ancestor_has_tracked_seal(rel: str) -> bool:
+    """True when this path sits in a directory, or under one, that has .sealed in HEAD."""
+    parts = rel.split("/")
+    for i in range(len(parts) - 1, 0, -1):
+        marker = "/".join(parts[:i]) + "/.sealed"
+        if _in_head(marker):
+            return True
+    return False
+
+
 def _is_sealed_path(rel: str) -> bool:
     if RAW_FILE.match(rel):
         # raw/_blinding/ is excluded from commits; still treat as protected if present.
         return True
-    return bool(SEALED_DERIVED.match(rel))
+    if SEALED_DERIVED.match(rel):
+        return True
+    return _ancestor_has_tracked_seal(rel)
 
 
 def _staged_paths() -> list[str]:
@@ -58,7 +71,7 @@ def _staged_paths() -> list[str]:
 
 
 def scan(paths: list[str]) -> int:
-    # No HEAD yet (orphan / empty) — nothing previously sealed in git.
+    # No HEAD yet (orphan / empty): nothing previously sealed in git.
     head = subprocess.run(
         ["git", "rev-parse", "--verify", "HEAD"],
         cwd=REPO_ROOT,
@@ -88,17 +101,18 @@ def scan(paths: list[str]) -> int:
         if not _is_sealed_path(rel):
             continue
         if not _in_head(rel):
-            # New evidence file — allowed.
+            # New evidence file: allowed.
             continue
         # Exists in HEAD: any staged change is a sealed-tree mutation.
         violations.append(rel)
 
     if violations:
-        sys.stderr.write("\nBLOCKED — sealed evidence must not be modified after seal:\n")
+        sys.stderr.write("\nBLOCKED: sealed evidence must not be modified after seal:\n")
         for v in violations:
             sys.stderr.write(f"  {v}\n")
         sys.stderr.write(
-            "\nraw/<run_id>/ and derived/**/sealed_*/ are write-once once tracked.\n"
+            "\nraw/<run_id>/, derived/**/sealed_*/, and any tree whose directory\n"
+            "or ancestor contains a tracked .sealed file are write-once.\n"
             "Add a new run_id / sealed_* tree instead of editing an existing one.\n\n"
         )
         return 1
