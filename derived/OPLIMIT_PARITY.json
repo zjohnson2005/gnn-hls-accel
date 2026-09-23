@@ -1,0 +1,371 @@
+{
+  "model_dir_compare": "Directory basename. Absolute paths differ by host username (zjohn vs zach) for the same model name and are not a confound.",
+  "wslock_match": {"mode": "request", "minimum_bytes": 4294967296, "maximum_bytes": 12884901888},
+  "affinity_match": [0, 1, 2, 3],
+  "runs": [
+    {
+      "run_id": "c647f0c7-5cc9-47bb-a491-3450533c34d1",
+      "arms": [
+        {
+          "arm_id": "gpu_only_u8",
+          "KV_CACHE_PRECISION": "u8",
+          "kv_source": "spec and GPU readback normalized u8",
+          "model_dir": "Qwen3-4B-int4-ov",
+          "device": "GPU",
+          "affinity": [0, 1, 2, 3],
+          "wslock": "request 4294967296..12884901888",
+          "max_new_tokens": 8,
+          "limit_kind": "SLO",
+          "limit_n": 9750,
+          "first_fail": "n=10000, prefill_s 10.103576171, 10.078882812, 9.868484375 (median over 10 s). Passing n=9750 prefill_s 9.674988281, 9.731766601, 14.13602246."
+        },
+        {
+          "arm_id": "gpu_only_u4",
+          "KV_CACHE_PRECISION": "u4",
+          "kv_source": "spec",
+          "model_dir": "Qwen3-4B-int4-ov",
+          "device": "GPU",
+          "affinity": [0, 1, 2, 3],
+          "wslock": "request 4294967296..12884901888",
+          "max_new_tokens": 8,
+          "limit_kind": "SLO",
+          "limit_n": 9750,
+          "first_fail": "same operating limit as u8 in summary ttft_limits"
+        },
+        {
+          "arm_id": "gpu_only_f16",
+          "KV_CACHE_PRECISION": "f16",
+          "kv_source": "spec and GPU readback",
+          "model_dir": "Qwen3-4B-int4-ov",
+          "device": "GPU",
+          "affinity": [0, 1, 2, 3],
+          "wslock": "request 4294967296..12884901888",
+          "max_new_tokens": 8,
+          "limit_kind": "REFUSED_LOW_OVER_SLO",
+          "limit_n": null,
+          "first_fail": "not the 9750 anchor"
+        }
+      ]
+    },
+    {
+      "run_id": "d3dcbd3b-5107-4b5e-a0dd-402f99f6f90c",
+      "arms": [
+        {
+          "arm_id": "A",
+          "KV_CACHE_PRECISION": "u8",
+          "kv_source": "CPU readback normalized u8; requested null",
+          "model_dir": "Qwen3-4B-int4-ov",
+          "device": "CPU",
+          "affinity": [0, 1, 2, 3],
+          "wslock": "request 4294967296..12884901888",
+          "max_new_tokens": 8,
+          "limit_kind": "SLO",
+          "limit_n": 500,
+          "first_fail": "n=734, prefill_s 10.865801757, 10.855466796, 10.847664062. Passing n=500 prefill_s 8.765566406, 9.038981445, 9.028679687."
+        }
+      ]
+    },
+    {
+      "run_id": "322b2f86-9571-46ae-be6a-ba1cec44e018",
+      "arms": [
+        {
+          "arm_id": "gpu_only_f16",
+          "KV_CACHE_PRECISION": "f16",
+          "kv_source": "spec and GPU readback",
+          "model_dir": "Qwen3-8B-int4-ov",
+          "device": "GPU",
+          "affinity": [0, 1, 2, 3],
+          "wslock": "request 4294967296..12884901888",
+          "max_new_tokens": 8,
+          "limit_kind": "memory_wall",
+          "limit_n": 3156,
+          "first_fail": "highest_slo_ok_n 3156 (prefill about 3.1 s). first_slo_fail_n 3312 failure_kind memory_wall: r1 RuntimeError, r0 and r2 completed with prefill_s 3.194305419 and 3.208868896. All three repeats fail at n=3625."
+        }
+      ]
+    },
+    {
+      "run_id": "fea55e0c-b9f8-4ba9-b5ea-558401910d74",
+      "arms": [
+        {
+          "arm_id": "gpu_only_f16",
+          "KV_CACHE_PRECISION": "f16",
+          "kv_source": "spec and GPU readback",
+          "model_dir": "Qwen3-4B-int8-ov",
+          "device": "GPU",
+          "affinity": [0, 1, 2, 3],
+          "wslock": "request 4294967296..12884901888",
+          "max_new_tokens": 8,
+          "limit_kind": "memory_wall",
+          "limit_n": 7781,
+          "first_fail": "n=7781 prefill_s 6.8355708, 6.720876464, 6.719874023 (under the 10 s SLO). n=7937 all three RuntimeError."
+        }
+      ]
+    },
+    {
+      "run_id": "5c714535-9f36-4614-a594-698b6cd09296",
+      "arms": [
+        {
+          "arm_id": "gpu_only_f16",
+          "KV_CACHE_PRECISION": "f16",
+          "kv_source": "spec and GPU readback",
+          "model_dir": "Qwen3-4B-int4-ov",
+          "device": "GPU",
+          "affinity": [0, 1, 2, 3],
+          "wslock": "request 4294967296..12884901888",
+          "max_new_tokens": 8,
+          "limit_kind": "SLO",
+          "limit_n": 18687,
+          "first_fail": "n=18875, prefill_s 10.40377832, 10.082157226, 10.028511718. Passing n=18687 prefill_s 9.831558593, 9.830370117, 9.825052734. failure_kind_at_wall null."
+        }
+      ]
+    },
+    {
+      "run_id": "051d2681-4bb8-4f50-b9fc-b14441359ba6",
+      "arms": [
+        {
+          "arm_id": "gpu_only_f16",
+          "KV_CACHE_PRECISION": "f16",
+          "kv_source": "spec and GPU readback",
+          "model_dir": "Qwen3-8B-int4-ov",
+          "device": "GPU",
+          "affinity": [0, 1, 2, 3],
+          "wslock": "request 4294967296..12884901888",
+          "max_new_tokens": 8,
+          "limit_kind": "SLO",
+          "limit_n": 16437,
+          "first_fail": "n=16625, prefill_s 10.000859375, 10.030049804, 10.026167968. Passing n=16437 prefill_s 9.816846679, 9.903216796, 9.839335937. failure_kind_at_wall null."
+        }
+      ]
+    },
+    {
+      "run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+      "arms": [
+        {
+          "arm_id": "gpu_only_f16",
+          "KV_CACHE_PRECISION": "f16",
+          "model_dir": "Qwen3-4B-int4-ov",
+          "device": "GPU",
+          "affinity": [0, 1, 2, 3],
+          "wslock": "request 4294967296..12884901888",
+          "max_new_tokens": 8,
+          "limit_kind": "prefill_curve",
+          "limit_n": null,
+          "first_fail": "status aborted. quiescence_refusal under paging pressure. No ALLOC_FAILURE. Not an SLO bisection."
+        },
+        {
+          "arm_id": "gpu_only_u8",
+          "KV_CACHE_PRECISION": "u8",
+          "model_dir": "Qwen3-4B-int4-ov",
+          "device": "GPU",
+          "affinity": [0, 1, 2, 3],
+          "wslock": "request 4294967296..12884901888",
+          "max_new_tokens": 8,
+          "limit_kind": "prefill_curve",
+          "limit_n": null,
+          "first_fail": "same session abort"
+        },
+        {
+          "arm_id": "gpu_only_u4",
+          "KV_CACHE_PRECISION": "u4",
+          "model_dir": "Qwen3-4B-int4-ov",
+          "device": "GPU",
+          "affinity": [0, 1, 2, 3],
+          "wslock": "request 4294967296..12884901888",
+          "max_new_tokens": 8,
+          "limit_kind": "prefill_curve",
+          "limit_n": null,
+          "first_fail": "abort class quiescence_refusal_under_paging_pressure on this arm at n=82000"
+        }
+      ]
+    },
+    {
+      "run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+      "arms": [
+        {
+          "arm_id": "gpu_only_f16",
+          "KV_CACHE_PRECISION": "f16",
+          "model_dir": "Qwen3-4B-int4-ov",
+          "device": "GPU",
+          "affinity": [0, 1, 2, 3],
+          "wslock": "request 4294967296..12884901888",
+          "max_new_tokens": 8,
+          "limit_kind": "prefill_curve",
+          "limit_n": null,
+          "first_fail": "status aborted, class force_killed_no_summary. Not an allocation ceiling."
+        },
+        {
+          "arm_id": "gpu_only_u8",
+          "KV_CACHE_PRECISION": "u8",
+          "model_dir": "Qwen3-4B-int4-ov",
+          "device": "GPU",
+          "affinity": [0, 1, 2, 3],
+          "wslock": "request 4294967296..12884901888",
+          "max_new_tokens": 8,
+          "limit_kind": "prefill_curve",
+          "limit_n": null,
+          "first_fail": "same session abort"
+        },
+        {
+          "arm_id": "gpu_only_u4",
+          "KV_CACHE_PRECISION": "u4",
+          "model_dir": "Qwen3-4B-int4-ov",
+          "device": "GPU",
+          "affinity": [0, 1, 2, 3],
+          "wslock": "request 4294967296..12884901888",
+          "max_new_tokens": 8,
+          "limit_kind": "prefill_curve",
+          "limit_n": null,
+          "first_fail": "same session abort"
+        }
+      ]
+    },
+    {
+      "run_id": "cb781dbf-3486-4fbc-a69a-34026f801abe",
+      "arms": [
+        {
+          "arm_id": "A",
+          "KV_CACHE_PRECISION": "u8",
+          "kv_source": "CPU readback normalized u8; requested null",
+          "model_dir": "Qwen3-4B-int4-ov",
+          "device": "CPU",
+          "affinity": "UNKNOWN",
+          "wslock": "UNKNOWN",
+          "max_new_tokens": 512,
+          "limit_kind": "not_a_ttft_bisection",
+          "limit_n": null,
+          "first_fail": "NON_RESIDENT residency session. No affinity_cpus and no wslock in the plan. Properties ENABLE_CPU_PINNING, INFERENCE_NUM_THREADS 4, SCHEDULING_CORE_TYPE PCORE_ONLY."
+        }
+      ]
+    },
+    {
+      "run_id": "9fdedb46-3318-4abc-a56f-50b7d23d25ca",
+      "arms": [
+        {
+          "arm_id": "A",
+          "KV_CACHE_PRECISION": "u8",
+          "kv_source": "CPU readback normalized u8; requested null",
+          "model_dir": "Qwen3-4B-int4-ov",
+          "device": "CPU",
+          "affinity": "UNKNOWN",
+          "wslock": "UNKNOWN",
+          "max_new_tokens": 512,
+          "limit_kind": "not_a_ttft_bisection",
+          "limit_n": null,
+          "first_fail": "RESIDENT residency session. No affinity_cpus and no wslock in the plan."
+        }
+      ]
+    }
+  ],
+  "ratios": [
+    {
+      "name": "placement_19.5x",
+      "pair": "c647f0c7 gpu_only_u8 and gpu_only_u4 (9750) vs d3dcbd3b A (500)",
+      "flags": ["CONFOUNDED(arm_id)", "CONFOUNDED(device)", "CONFOUNDED(KV_CACHE_PRECISION)"],
+      "note": "u8 vs A matches KV (both u8), model, affinity, wslock, and max_new_tokens. u4 vs A also differs in KV. device is the placement factor."
+    },
+    {
+      "name": "tier_3.09x",
+      "pair": "c647f0c7 u8/u4 4B-int4 (9750) vs 322b2f86 f16 8B-int4 (3156)",
+      "flags": ["CONFOUNDED(arm_id)", "CONFOUNDED(KV_CACHE_PRECISION)", "CONFOUNDED(model_dir)"],
+      "note": "device, affinity, wslock, and max_new_tokens match. model_dir is the tier factor."
+    },
+    {
+      "name": "weight_1.25x",
+      "pair": "c647f0c7 u8/u4 4B-int4 (9750) vs fea55e0c f16 4B-int8 (7781)",
+      "flags": ["CONFOUNDED(arm_id)", "CONFOUNDED(KV_CACHE_PRECISION)", "CONFOUNDED(model_dir)"],
+      "note": "device, affinity, wslock, and max_new_tokens match. model_dir is the weight factor."
+    },
+    {
+      "name": "t2s_tier_1.14x",
+      "pair": "5c714535 4B-int4 f16 (18687) vs 051d2681 8B-int4 f16 (16437)",
+      "flags": ["CONFOUNDED(model_dir)"],
+      "note": "arm_id, KV, device, affinity, wslock, and max_new_tokens match. model_dir is the tier factor."
+    },
+    {
+      "name": "cross_4b_9750_vs_18687",
+      "pair": "c647f0c7 u8/u4 (9750) vs 5c714535 f16 (18687)",
+      "flags": ["CONFOUNDED(arm_id)", "CONFOUNDED(KV_CACHE_PRECISION)"],
+      "note": "model basename, device, affinity, wslock, and max_new_tokens match."
+    },
+    {
+      "name": "cross_8b_3156_vs_16437",
+      "pair": "322b2f86 f16 (3156) vs 051d2681 f16 (16437)",
+      "flags": [],
+      "note": "arm_id, KV, model basename, device, affinity, wslock, and max_new_tokens match."
+    },
+    {
+      "name": "headline_9750_vs_2b3316b6",
+      "pair": "c647f0c7 u8/u4 anchor 9750 vs 2b3316b6 46k prefill curve",
+      "flags": ["CONFOUNDED(KV_CACHE_PRECISION)"],
+      "note": "Same-precision pairs u8-u8 and u4-u4 match on every listed field. The published 46k band also includes the f16 arm. The c647 f16 arm did not produce 9750."
+    },
+    {
+      "name": "exponent_2b3316b6_vs_65e33de8",
+      "pair": "2b3316b6 vs 65e33de8, arms f16 u8 u4",
+      "flags": [],
+      "note": "arm_id, KV, model basename, device, affinity, wslock, and max_new_tokens match on each arm. Hosts differ. Host is not one of the listed fields."
+    }
+  ],
+  "seal_census_mismatch": [
+    {
+      "path": "derived/delta_prefill/sealed_9f38eb15-6fe6-40b4-871b-a02ec5629bb1",
+      "recorded_tree_sha256": "5d2115f544e0ac95107467fcc582db7e2c71e99f204865986e6446e686f683a0",
+      "recomputed_tree_sha256": "3690bc35c8936af9d1c32819fa369e2af1abdff290e3dc2981567d4f53ba0f75",
+      "seal_utc": "2026-08-10T12:35:30.446636+00:00",
+      "newest_file": "SUPERSEDED.json",
+      "newest_mtime_local": "2026-08-17T12:11:57.790867-04:00",
+      "cited_by_paper_number": false,
+      "other_citation": "docs/PROJECT_STATE.md delta-prefill cell, not an operating-limit figure"
+    },
+    {
+      "path": "derived/delta_prefill/sealed_d5c98342-a0b2-41a9-b6e2-93ac7a39c3ba",
+      "recorded_tree_sha256": "89ecf2be579c8f09bf13cb361089586f958da077876aa57b8592f4109635154f",
+      "recomputed_tree_sha256": "d6c3cccd50ee4dee517c9aeb673979a36cab9671826a9b267b12999bcc775416",
+      "seal_utc": "2026-08-10T02:46:22.287106+00:00",
+      "newest_file": "SUPERSEDED.json",
+      "newest_mtime_local": "2026-08-17T12:11:57.980527-04:00",
+      "cited_by_paper_number": false,
+      "other_citation": "docs/PROJECT_STATE.md delta-prefill cell, not an operating-limit figure"
+    },
+    {
+      "path": "derived/h1_hybrid/interleaved_6c7f88f1-0642-413e-bf72-f45c4f8f8a1e",
+      "recorded_tree_sha256": "b6877a241bafc12aa34d17a4c03b21e3f584cf32d03b899925c7dfb664477ca3",
+      "recomputed_tree_sha256": "3d6b0775239ad83a9d3198f794dbc36a1922294540349eeb6a679a6f19b7efa3",
+      "seal_utc": "2026-09-21T01:23:49.884805+00:00",
+      "newest_file": "summary.json",
+      "newest_mtime_local": "2026-09-22T16:23:32.277569-04:00",
+      "cited_by_paper_number": false,
+      "other_citation": "H1 session void. Not one of the ten operating-limit runs."
+    },
+    {
+      "path": "derived/q8b/q8b_72d270e2-1a87-40b6-860a-fb709ffcbe22",
+      "recorded_tree_sha256": "e51811f169e2ac90f9d00be7e79293ccd24f3a89dbdaf877fa739420efd2ce71",
+      "recomputed_tree_sha256": "b3d745e4fe826925093bf13eed307bbfbc2e454c683cea75abff457013f1556b",
+      "seal_utc": "2026-09-17T00:48:15.435281+00:00",
+      "newest_file": "Q8B_RESULTS.md",
+      "newest_mtime_local": "2026-09-16T20:48:16.059089-04:00",
+      "cited_by_paper_number": false,
+      "other_citation": "CAP3_PREDICTIONS cites 72d270e2 as 8B quality relevance, not as an operating-limit token figure. Newest file is about 0.6 s after the seal."
+    },
+    {
+      "path": "derived/q_kv/q_kv_137f6f46-cd3a-42d5-8479-4ff46a1074f1",
+      "recorded_tree_sha256": "485b6ef08121117ae2758ee0e779a36b9c38069fc7fe08c860549541b597ced4",
+      "recomputed_tree_sha256": "b926e54a7ad4e577f565b62318c96d8da0692ed4ce72cc2b49501d413977fc26",
+      "seal_utc": "2026-09-15T20:56:12.672415+00:00",
+      "newest_file": "Q_KV_RESULTS.md",
+      "newest_mtime_local": "2026-09-15T16:56:13.398006-04:00",
+      "cited_by_paper_number": false,
+      "other_citation": "Not one of the ten operating-limit runs. Newest file is under 1 s after the seal."
+    },
+    {
+      "path": "derived/q_repro/q_repro_6dd387aa-7575-401f-a4ed-ed53ca1bf1ef",
+      "recorded_tree_sha256": "ca30dba6f8159daa0d372ae198b1c0887b9ef0fffe053322cac470730f98d6df",
+      "recomputed_tree_sha256": "bc772849d5da52102722d959a51663cbb9fe9bf2211b5a55c63964984ba0d941",
+      "seal_utc": "2026-09-16T00:12:15.183822+00:00",
+      "newest_file": "Q_REPRO_RESULTS.md",
+      "newest_mtime_local": "2026-09-15T20:12:15.186239-04:00",
+      "cited_by_paper_number": false,
+      "other_citation": "Not one of the ten operating-limit runs. Newest file is about 0.002 s after the seal."
+    }
+  ]
+}
