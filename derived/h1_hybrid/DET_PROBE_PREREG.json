@@ -1,0 +1,39 @@
+{
+  "id": "DET-PROBE",
+  "registered_before_generate": true,
+  "run_id_rule": "A new local run_id is assigned at launch and written with the results. This file does not contain measured TTFT or hashes.",
+  "host": "local XPS only",
+  "cloud": false,
+  "parent_seal": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+  "entries": "First 20 entries in the W3 pin file order used by d482c621 (multi_turn_probe_entries.json under sealed_6225d6e1).",
+  "scope": "Turn 0 only. One generate of the tools-plus-first-user-message ChatHistory. Not the tool-step loop.",
+  "model": {
+    "spec": "configs/models/Qwen3-4B-int4-ov.yaml",
+    "placement": "gpu_only",
+    "residency": "RESIDENT",
+    "kv": "u8",
+    "max_new_tokens": 512
+  },
+  "calls_per_entry_per_condition": 3,
+  "conditions": [
+    "greedy_flush",
+    "greedy_noflush",
+    "harness_default_flush",
+    "harness_default_noflush"
+  ],
+  "flush_definition": "Pipeline built with SchedulerConfig enable_prefix_caching false. finish_chat before every generate.",
+  "noflush_definition": "One pipeline with SchedulerConfig omitted (ContinuousBatching default prefix caching on, the d482c621 plan source LLMPipeline_default_CB_prefix_caching_on). No finish_chat inside a triple. Both no-flush conditions share that pipeline. greedy_noflush runs first. finish_chat is called once between the two no-flush conditions and does not clear prefix blocks, so harness_default_noflush call 1 may already be warm. Later entries on the same pipeline may also be warm at call 1 because the tools prefix can remain.",
+  "decoding": {
+    "greedy": "GenerationConfig max_new_tokens 512, do_sample false, apply_chat_template true. temperature, top_p, top_k, and seed unset.",
+    "harness_default": "tools.bfcl_feasibility_probe._generation_cfg with max_new_tokens 512 and apply_chat_template true."
+  },
+  "output_token_sha256": "SHA-256 of the UTF-8 JSON array of output token ids. Prefer ids on the generate result when that attribute exists; otherwise HF tokenizer encode of the generated text with add_special_tokens false. The source is recorded per call.",
+  "gates": "Five measurement gates must pass before the first generate.",
+  "B1_finding": "The harness generate path is greedy. _generation_cfg and OpenVinoLocalBackend set do_sample false and do not set temperature, top_p, top_k, or seed. models/Qwen3-4B-int4-ov/generation_config.json has do_sample true, temperature 0.6, top_k 20, top_p 0.95, and no seed. That file is not the object passed to generate. The sampling branch of the task statement does not apply.",
+  "predictions": [
+    "Output-token hashes are identical across the 3 calls in greedy_flush and in harness_default_flush.",
+    "greedy_flush and harness_default_flush agree with each other on each entry, because harness-default decoding is the same greedy GenerationConfig.",
+    "Because the no-flush pipeline leaves prefix caching on: greedy_noflush calls 2 and 3 have lower TTFT than call 1, and their output hashes may differ from call 1. The strongest cold call 1 is the first entry. Later entries, and harness_default_noflush call 1, may already be warm, so their within-triple TTFT gap can be smaller.",
+    "The same hash and TTFT prediction applies to harness_default_noflush, with the warm-call-1 caveat above."
+  ]
+}
