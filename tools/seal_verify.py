@@ -24,13 +24,20 @@ _SEAL_EXCLUDE = frozenset({".sealed"})
 _TREE_LINE = re.compile(rb'^(\s*)"tree_sha256"\s*:')
 
 
-def tree_sha256(root: Path, *, file_bytes: dict[str, bytes] | None = None) -> str:
+def tree_sha256(
+    root: Path,
+    *,
+    file_bytes: dict[str, bytes] | None = None,
+    skip_rel: frozenset[str] | None = None,
+) -> str:
     """Hash a run tree the way the sealers do. Files named ``.sealed`` are excluded.
 
     ``file_bytes`` substitutes in-memory contents by relative posix path. The
-    files on disk are not modified.
+    files on disk are not modified. ``skip_rel`` drops additional relative
+    posix paths from the hash, also without modifying the tree.
     """
     root = root.resolve()
+    skipped = skip_rel or frozenset()
     files = sorted(
         (p for p in root.rglob("*") if p.is_file() and p.name not in _SEAL_EXCLUDE),
         key=lambda p: p.relative_to(root).as_posix(),
@@ -38,6 +45,8 @@ def tree_sha256(root: Path, *, file_bytes: dict[str, bytes] | None = None) -> st
     digest = hashlib.sha256()
     for path in files:
         rel = path.relative_to(root).as_posix()
+        if rel in skipped:
+            continue
         if file_bytes is not None and rel in file_bytes:
             blob = file_bytes[rel]
         else:

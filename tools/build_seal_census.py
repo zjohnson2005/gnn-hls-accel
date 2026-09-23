@@ -17,7 +17,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools.seal_verify import verify_seal  # noqa: E402
+from tools.seal_verify import tree_sha256, verify_seal  # noqa: E402
+
 UUID_RE = re.compile(
     r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
 )
@@ -123,6 +124,48 @@ def _is_run_dir(path: Path) -> bool:
     return (path / ".sealed").is_file()
 
 
+_POSTSEAL_NAMES = frozenset(
+    {
+        "Q8B_RESULTS.md",
+        "Q_KV_RESULTS.md",
+        "Q_REPRO_RESULTS.md",
+        "SUPERSEDED.json",
+    }
+)
+
+
+def _postseal_status(path: Path) -> str | None:
+    """MATCH_LEGACY_POSTSEAL_FILE when dropping one named file restores the seal hash.
+
+    Reads the tree. Does not write inside the run directory.
+    """
+    marker_path = path / ".sealed"
+    if not marker_path.is_file():
+        return None
+    try:
+        marker = json.loads(marker_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    recorded = marker.get("tree_sha256")
+    if not isinstance(recorded, str) or not recorded:
+        return None
+    for name in sorted(_POSTSEAL_NAMES):
+        hits = [item for item in path.rglob(name) if item.is_file()]
+        if len(hits) != 1:
+            continue
+        rel = hits[0].relative_to(path.resolve()).as_posix()
+        if tree_sha256(path, skip_rel=frozenset({rel})) == recorded:
+            return f"MATCH_LEGACY_POSTSEAL_FILE({name})"
+    return None
+
+
+def _verify(path: Path) -> str:
+    status = verify_seal(path)
+    if status != "MISMATCH":
+        return status
+    return _postseal_status(path) or status
+
+
 def discover_runs() -> list[dict[str, Any]]:
     tracked = _tracked_paths()
     found: list[Path] = []
@@ -142,7 +185,7 @@ def discover_runs() -> list[dict[str, Any]]:
                 "run_id": _run_id_of(path),
                 "path": rel,
                 "tracked": "y" if is_tracked else "n",
-                "verify_seal": verify_seal(path),
+                "verify_seal": _verify(path),
                 "newest_file_mtime_utc": _newest_mtime(path),
                 "recorded_finish_time": _finish_time(path),
             }
@@ -157,9 +200,20 @@ def _status_for(run_id: str, runs: list[dict[str, Any]]) -> str:
         matches = [row for row in runs if str(row["run_id"]).startswith(prefix)]
     if not matches:
         return "NOT_IN_TREE"
+
     # Prefer a matching seal over an unsealed source copy.
-    rank = {"MATCH": 0, "MATCH_LEGACY_SELF_REF": 1, "MISMATCH": 2, "UNSEALED": 3}
-    matches.sort(key=lambda row: rank.get(row["verify_seal"], 9))
+    def _rank(status: str) -> int:
+        if status == "MATCH":
+            return 0
+        if status == "MATCH_LEGACY_SELF_REF" or status.startswith("MATCH_LEGACY_POSTSEAL_FILE"):
+            return 1
+        if status == "MISMATCH":
+            return 2
+        if status == "UNSEALED":
+            return 3
+        return 9
+
+    matches.sort(key=lambda row: _rank(str(row["verify_seal"])))
     best = matches[0]
     if len(matches) == 1:
         return best["verify_seal"]
@@ -527,7 +581,9 @@ def _markdown(doc: dict[str, Any]) -> str:
         "| status | n |",
         "|---|---:|",
     ]
-    for key in ("MATCH", "MATCH_LEGACY_SELF_REF", "MISMATCH", "UNSEALED"):
+    fixed = ("MATCH", "MATCH_LEGACY_SELF_REF", "MISMATCH", "UNSEALED")
+    extra = sorted(key for key in counts if key not in fixed)
+    for key in (*fixed, *extra):
         lines.append(f"| {key} | {counts.get(key, 0)} |")
     lines.extend(["", "## 4c paper numbers", "", "| claim | run_id | status |", "|---|---|---|"])
     for claim in doc["paper_numbers"]:
