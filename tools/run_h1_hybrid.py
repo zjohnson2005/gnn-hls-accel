@@ -521,6 +521,8 @@ class BackendTurn:
     tool_exec_error: bool = False
     tool_exec_error_class: str | None = None
     cloud_context_text: str = ""  # cloud bounce output injected into local context
+    # Set when the cloud path failed (API error / credit death / empty response).
+    cloud_error: str | None = None
 
 
 def attach_local_probe_quality(
@@ -534,12 +536,8 @@ def attach_local_probe_quality(
     """
     if not isinstance(local, OpenVinoLocalBackend):
         return
-    eid = str(entry["id"])
-    row = local._entry_cache.get(eid)
-    if not isinstance(row, dict):
-        finalize = getattr(local, "finalize_entry", None)
-        if callable(finalize):
-            row = finalize(entry)
+    finalize = getattr(local, "finalize_entry", None)
+    row = finalize(entry) if callable(finalize) else None
     if not isinstance(row, dict):
         return
     score = row.get("score") if isinstance(row.get("score"), dict) else {}
@@ -553,6 +551,20 @@ def attach_local_probe_quality(
     decoded = row.get("model_result_decoded")
     result.model_result_decoded = decoded if isinstance(decoded, list) else None
     result.quality_scope = "local_probe"
+
+
+def _backend_begin_entry(local: LocalBackend, entry: dict[str, Any], *, policy: str) -> None:
+    """Open backend session for this (entry, policy) cell when the backend owns lifecycle."""
+    begin = getattr(local, "begin_entry", None)
+    if callable(begin):
+        begin(entry, policy=policy)
+
+
+def _backend_finish_entry(local: LocalBackend, entry: dict[str, Any]) -> None:
+    """Close backend session after last turn or abort (idempotent)."""
+    finish = getattr(local, "finish_entry", None)
+    if callable(finish):
+        finish(entry)
 
 
 def phases_from_backend_turn(bt: BackendTurn) -> dict[str, float]:
@@ -608,10 +620,47 @@ class StubLocalBackend:
     BACKEND_KIND = "stub"
     # Shared BFCL tool state (same object cloud bounce turns must use).
     shared_tools: Any = None
+    # Cell-keyed state: "{entry_id}\\0{policy}" when begin_entry is used.
     _history: dict[str, list[dict[str, Any]]] = field(default_factory=dict, repr=False)
     _cloud_context: dict[str, dict[int, str]] = field(default_factory=dict, repr=False)
     _last_injection: dict[str, Any] = field(default_factory=dict, repr=False)
     _pending_reprefill: dict[str, bool] = field(default_factory=dict, repr=False)
+    _active_key: str | None = field(default=None, init=False, repr=False)
+
+    @staticmethod
+    def cell_key(entry_id: str, policy: str) -> str:
+        return f"{entry_id}\0{policy}"
+
+    def begin_entry(self, entry: dict[str, Any], *, policy: str) -> None:
+        """Fresh per-(entry, policy) history; no leak from a prior policy cell."""
+        eid = str(entry["id"])
+        key = self.cell_key(eid, policy)
+        if self._active_key is not None:
+            raise SystemExit(
+                f"REFUSED -- StubLocalBackend.begin_entry while cell "
+                f"{self._active_key!r} still active"
+            )
+        self._active_key = key
+        self._history[key] = []
+        self._cloud_context[key] = {}
+        self._pending_reprefill.pop(key, None)
+        self._last_injection.pop(key, None)
+
+    def finish_entry(self, entry: dict[str, Any]) -> None:
+        """Release active cell (idempotent)."""
+        del entry  # key is _active_key; entry id checked by caller path
+        self._active_key = None
+
+    def _cell_or_eid(self, entry_id: str) -> str:
+        if self._active_key is not None:
+            prefix = f"{entry_id}\0"
+            if not self._active_key.startswith(prefix):
+                raise SystemExit(
+                    f"REFUSED -- stub active cell {self._active_key!r} "
+                    f"does not match entry {entry_id!r}"
+                )
+            return self._active_key
+        return str(entry_id)
 
     def local_span(self, entry: dict[str, Any]) -> LocalEntrySpan:
         eid = str(entry["id"])
@@ -633,16 +682,29 @@ class StubLocalBackend:
             return LocalEntrySpan(turns_in, turns_ex, str(reason))
         return LocalEntrySpan(turns_in, turns_ex, "completed")
 
+    def _history_keys_for(self, entry_id: str) -> list[str]:
+        eid = str(entry_id)
+        if self._active_key is not None and self._active_key.startswith(f"{eid}\0"):
+            return [self._active_key]
+        return [k for k in self._history if k == eid or k.startswith(f"{eid}\0")]
+
     def history_for(self, entry_id: str) -> list[dict[str, Any]]:
-        return list(self._history.get(str(entry_id), []))
+        keys = self._history_keys_for(entry_id)
+        if not keys:
+            return []
+        return list(self._history.get(keys[-1], []))
 
     def context_contains(self, entry_id: str, text: str) -> bool:
-        return any(
-            text in str(m.get("content", "")) for m in self._history.get(str(entry_id), [])
-        )
+        for key in self._history_keys_for(entry_id):
+            if any(
+                text in str(m.get("content", "")) for m in self._history.get(key, [])
+            ):
+                return True
+        return False
 
     def run_turn(self, entry: dict[str, Any], turn_idx: int, *, model: str) -> BackendTurn:
         eid = str(entry["id"])
+        key = self._cell_or_eid(eid)
         rows = self.script[eid]
         if turn_idx >= len(rows):
             raise SystemExit(
@@ -651,7 +713,7 @@ class StubLocalBackend:
             )
         row = rows[turn_idx]
         # Mirror RESIDENT: user turn enters history before local generate.
-        hist = self._history.setdefault(eid, [])
+        hist = self._history.setdefault(key, [])
         hist.append({"role": "user", "content": f"[stub_user_turn_{turn_idx}]"})
         # After a bounce inject, the next local turn *sees* cloud assistant text.
         saw_cloud = any(m.get("role") == "assistant" and m.get("source") == "cloud" for m in hist)
@@ -661,12 +723,12 @@ class StubLocalBackend:
         t_tmpl = float(row.get("t_template_build", wall * 0.1))
         t_tool = float(row.get("t_tool_exec", wall * 0.1))
         # Stub: synthetic re-prefill accounted on the first local turn after inject.
-        if self._pending_reprefill.pop(eid, False):
+        if self._pending_reprefill.pop(key, False):
             # Real OpenVINO measures this; stub records explicit zero (not hidden).
-            inj = self._last_injection.get(eid) or {}
+            inj = self._last_injection.get(key) or {}
             inj["re_prefill_s"] = 0.0
             inj["re_prefill_source"] = "stub_zero"
-            self._last_injection[eid] = inj
+            self._last_injection[key] = inj
         phases = finalize_phase_timers(
             turn_wall_s=wall,
             t_tool_exec=t_tool,
@@ -729,7 +791,8 @@ class StubLocalBackend:
         from tools.r2c_inject import build_injection_receipt
 
         eid = str(entry["id"])
-        hist = self._history.setdefault(eid, [])
+        key = self._cell_or_eid(eid)
+        hist = self._history.setdefault(key, [])
         # Bounce replaces the failed local assistant for this turn if present.
         if hist and hist[-1].get("role") == "assistant" and hist[-1].get("source") == "local":
             hist.pop()
@@ -751,8 +814,8 @@ class StubLocalBackend:
                     test_entry_id=eid,
                     long_context=False,
                 )
-        self._cloud_context.setdefault(eid, {})[turn_idx] = text
-        self._pending_reprefill[eid] = True
+        self._cloud_context.setdefault(key, {})[turn_idx] = text
+        self._pending_reprefill[key] = True
         receipt = build_injection_receipt(
             entry_id=eid,
             bounce_turn=turn_idx,
@@ -766,8 +829,8 @@ class StubLocalBackend:
             re_prefill_source="pending_next_local",
             shared_tool_exec=True,
         )
-        self._last_injection[eid] = receipt.as_dict()
-        return self._last_injection[eid]
+        self._last_injection[key] = receipt.as_dict()
+        return self._last_injection[key]
 
 
 @dataclass
@@ -838,6 +901,15 @@ class OpenVinoLocalBackend:
     drives ``session.run_user_turn`` - no full-entry precompute. RESIDENT /
     NON_RESIDENT and KV pins are enforced at pipeline load. R2c inject uses
     ``session.inject_assistant`` + measured re-prefill on the next local TTFT.
+
+    Lifecycle (owned here, not by ``run_hybrid_entry`` turn loop)::
+
+        begin_entry(entry, policy=...)   # MultiTurnAgentSession.begin
+        run_turn / accept_cloud_context   # requires active begun session
+        finish_entry(entry)              # session.finish; always from finally
+
+    Cells are keyed by ``(entry_id, policy)`` so interleaved arms sharing one
+    backend cannot leak a finished session into the next policy.
     """
 
     model_spec: Path
@@ -851,11 +923,13 @@ class OpenVinoLocalBackend:
     cfg: Any = field(init=False, repr=False)
     ov_genai: Any = field(init=False, repr=False)
     load_meta: dict[str, Any] = field(init=False, default_factory=dict)
+    # Cell-keyed: "{entry_id}\\0{policy}". Active cell set by begin_entry.
     _entry_cache: dict[str, dict[str, Any]] = field(default_factory=dict, repr=False)
     _sessions: dict[str, Any] = field(default_factory=dict, repr=False)
     _span_state: dict[str, LocalEntrySpan] = field(default_factory=dict, repr=False)
     _cloud_context: dict[str, dict[int, str]] = field(default_factory=dict, repr=False)
     _last_injection: dict[str, Any] = field(default_factory=dict, repr=False)
+    _active_cell: str | None = field(default=None, init=False, repr=False)
 
     BACKEND_KIND = "openvino"
     TURNWISE = True
@@ -893,6 +967,49 @@ class OpenVinoLocalBackend:
         cfg.do_sample = False
         cfg.apply_chat_template = False
         self.cfg = cfg
+        self._active_cell = None
+
+    @classmethod
+    def for_stubbed_generate(
+        cls,
+        *,
+        pipe: Any,
+        tokenizer: Any,
+        cfg: Any,
+        residency: str = "RESIDENT",
+        kv: str = "u8",
+        placement: str = "gpu_only",
+        max_new_tokens: int = 512,
+        ov_genai: Any = None,
+    ) -> OpenVinoLocalBackend:
+        """Build a live-shaped backend without loading an IR (tests / launcher smoke).
+
+        ``pipe.generate`` must be stubbed by the caller. W-3 pins unchanged.
+        """
+        obj = cls.__new__(cls)
+        obj.model_spec = Path("<stubbed_generate>")
+        obj.placement = placement
+        obj.residency = residency.upper()
+        obj.kv = kv
+        obj.max_new_tokens = max_new_tokens
+        obj.arm_id = arm_id_for_h1({"placement": placement, "kv": kv})
+        obj.pipe = pipe
+        obj.tokenizer = tokenizer
+        obj.cfg = cfg
+        obj.ov_genai = ov_genai
+        obj.load_meta = {"stubbed_generate": True}
+        obj._entry_cache = {}
+        obj._sessions = {}
+        obj._span_state = {}
+        obj._cloud_context = {}
+        obj._last_injection = {}
+        obj._active_cell = None
+        return obj
+
+    @staticmethod
+    def cell_key(entry_id: str, policy: str) -> str:
+        """Isolate session state per (entry, policy) for interleaved arms."""
+        return f"{entry_id}\0{policy}"
 
     @staticmethod
     def _assert_kv_readback(meta: dict[str, Any], *, expected: str) -> None:
@@ -990,18 +1107,33 @@ class OpenVinoLocalBackend:
                     f"readback={got!r} requested={kv['requested']!r}"
                 )
 
-    def _ensure_session(self, entry: dict[str, Any]) -> Any:
-        """Return the live MultiTurnAgentSession for this entry (begin once)."""
-        eid = str(entry["id"])
-        if eid in self._sessions:
-            return self._sessions[eid]
-        import tools.bfcl_feasibility_probe as probe
+    def begin_entry(self, entry: dict[str, Any], *, policy: str) -> None:
+        """Own lifecycle: ``MultiTurnAgentSession.begin`` before the first turn.
 
+        Cell key is ``(entry_id, policy)`` so interleaved arms sharing this
+        backend cannot reuse a finished or in-flight session from another policy.
+        """
+        eid = str(entry["id"])
+        key = self.cell_key(eid, policy)
+        if self._active_cell is not None:
+            raise SystemExit(
+                f"REFUSED -- begin_entry while cell {self._active_cell!r} still active "
+                f"(requested {key!r})"
+            )
         if "raw_entry" not in entry or "question" not in entry:
             raise SystemExit(
                 f"REFUSED -- entry {eid} missing raw_entry/question "
                 "(need full BFCL multi_turn probe entry, not a fixture stub)"
             )
+        # Drop any stale finished maps for this cell (isolation + resume safety).
+        self._sessions.pop(key, None)
+        self._entry_cache.pop(key, None)
+        self._span_state.pop(key, None)
+        self._cloud_context.pop(key, None)
+        self._last_injection.pop(key, None)
+
+        import tools.bfcl_feasibility_probe as probe
+
         session = probe.MultiTurnAgentSession(
             pipe=self.pipe,
             tokenizer=self.tokenizer,
@@ -1010,22 +1142,100 @@ class OpenVinoLocalBackend:
             ov_genai=self.ov_genai,
         )
         session.begin(entry)
-        self._sessions[eid] = session
-        return session
+        self._sessions[key] = session
+        turns_in = turns_in_entry_count(entry)
+        self._span_state[key] = LocalEntrySpan(turns_in, turns_in, "completed")
+        self._active_cell = key
+
+    def finish_entry(self, entry: dict[str, Any]) -> dict[str, Any] | None:
+        """Own lifecycle: ``session.finish`` after last turn or on abort (idempotent).
+
+        Mid-entry exceptions: ``run_hybrid_entry`` calls this from ``finally``, so
+        RESIDENT ``finish_chat`` still runs and the cell is released for the next
+        policy. Does not re-raise finish errors after marking the cell closed.
+        """
+        eid = str(entry["id"])
+        key = self._active_cell
+        if key is None:
+            # Already finished / never begun. Do not guess across policy cells.
+            return None
+        if key.split("\0", 1)[0] != eid:
+            raise SystemExit(
+                f"REFUSED -- finish_entry entry={eid!r} but active cell={key!r}"
+            )
+        session = self._sessions.get(key)
+        row: dict[str, Any] | None = self._entry_cache.get(key)
+        if session is not None and not getattr(session, "_finished", False):
+            try:
+                row = session.finish()
+                if isinstance(row, dict):
+                    self._entry_cache[key] = row
+            except Exception as exc:
+                # Still release the cell so the next policy is not poisoned.
+                self._entry_cache[key] = {
+                    "id": eid,
+                    "score": {
+                        "valid": False,
+                        "error_type": "probe:finish_exception",
+                        "error_message": f"{type(exc).__name__}: {exc}",
+                    },
+                }
+                row = self._entry_cache[key]
+        # Drop live session so the next policy cannot observe it.
+        self._sessions.pop(key, None)
+        self._span_state.pop(key, None)
+        self._active_cell = None
+        return row if isinstance(row, dict) else None
 
     def finalize_entry(self, entry: dict[str, Any]) -> dict[str, Any] | None:
-        """Finish the session and cache the probe row (idempotent)."""
+        """Finish the active cell if still open; return cached probe row."""
+        return self.finish_entry(entry)
+
+    def _require_active_session(self, entry: dict[str, Any]) -> Any:
+        """Return the live session for the active cell; re-begin if tear-down left it dead.
+
+        Bounce inject calls ``pipe.finish_chat`` (KV drop) but must leave the
+        MultiTurnAgentSession begun. If a prior bug finished the session mid-entry,
+        re-begin a fresh session for the same cell (history reset is explicit).
+        """
         eid = str(entry["id"])
-        if eid in self._entry_cache:
-            return self._entry_cache[eid]
-        session = self._sessions.get(eid)
-        if session is None:
-            return None
-        if not getattr(session, "_finished", False):
-            row = session.finish()
-            self._entry_cache[eid] = row
-            return row
-        return self._entry_cache.get(eid)
+        key = self._active_cell
+        if key is None:
+            raise SystemExit(
+                f"REFUSED -- OpenVinoLocalBackend.run_turn without begin_entry "
+                f"(entry={eid})"
+            )
+        if key.split("\0", 1)[0] != eid:
+            raise SystemExit(
+                f"REFUSED -- active cell {key!r} does not match entry {eid!r}"
+            )
+        session = self._sessions.get(key)
+        if session is None or not getattr(session, "_begun", False):
+            raise SystemExit(
+                f"REFUSED -- no begun MultiTurnAgentSession for cell {key!r}"
+            )
+        if getattr(session, "_finished", False):
+            # Session torn down mid-entry (e.g. premature finish before bounce resume).
+            # Re-begin on the same cell key; caller must not rely on prior KV.
+            policy = key.split("\0", 1)[1]
+            self._active_cell = None
+            self._sessions.pop(key, None)
+            # Preserve span / injection receipts across re-begin.
+            span = self._span_state.get(key)
+            inj = self._last_injection.get(key)
+            cloud_ctx = self._cloud_context.get(key)
+            self.begin_entry(entry, policy=policy)
+            if span is not None:
+                self._span_state[key] = span
+            if inj is not None:
+                self._last_injection[key] = inj
+            if cloud_ctx is not None:
+                self._cloud_context[key] = cloud_ctx
+            session = self._sessions[key]
+            # Mark pending re-prefill so the next TTFT is attributed.
+            session._pending_reprefill = True
+            session._last_reprefill_source = "pending_next_local"
+        return session
 
     def local_span(self, entry: dict[str, Any]) -> LocalEntrySpan:
         """Progressive span: provisional complete until force_quit shortens it.
@@ -1034,17 +1244,27 @@ class OpenVinoLocalBackend:
         ``force_quit``, so ``run_hybrid_entry`` sees the updated bound.
         """
         eid = str(entry["id"])
-        if eid in self._span_state:
-            return self._span_state[eid]
+        key = self._active_cell
+        if key is None or key.split("\0", 1)[0] != eid:
+            # Span before begin_entry (should not happen for OV path).
+            turns_in = turns_in_entry_count(entry)
+            return LocalEntrySpan(turns_in, turns_in, "completed")
+        if key in self._span_state:
+            return self._span_state[key]
         turns_in = turns_in_entry_count(entry)
         span = LocalEntrySpan(turns_in, turns_in, "completed")
-        self._span_state[eid] = span
+        self._span_state[key] = span
         return span
 
     def run_turn(self, entry: dict[str, Any], turn_idx: int, *, model: str) -> BackendTurn:
         del model  # configuration pin only; generation uses loaded IR
         eid = str(entry["id"])
-        session = self._ensure_session(entry)
+        key = self._active_cell
+        if key is None:
+            raise SystemExit(
+                f"REFUSED -- run_turn without begin_entry (entry={eid})"
+            )
+        session = self._require_active_session(entry)
         if session.force_quit:
             raise SystemExit(
                 f"REFUSED -- turn_idx={turn_idx} after force_quit for entry {eid}; "
@@ -1095,18 +1315,16 @@ class OpenVinoLocalBackend:
             tool_err_class = str(tool_err_class)
         n_steps = int(tm["n_decoded_steps"] or 0)
         # Backfill measured re-prefill onto the last injection receipt.
-        if session._last_reprefill_s is not None and eid in self._last_injection:
-            inj = self._last_injection[eid]
+        if session._last_reprefill_s is not None and key in self._last_injection:
+            inj = self._last_injection[key]
             if inj.get("re_prefill_s") is None:
                 inj["re_prefill_s"] = float(session._last_reprefill_s)
                 inj["re_prefill_source"] = str(
                     session._last_reprefill_source or "measured"
                 )
-                self._last_injection[eid] = inj
-        # Finalize probe row when entry completes or force-quits.
-        turns_in = turns_in_entry_count(entry)
-        if session.force_quit or turn_idx >= turns_in - 1:
-            self.finalize_entry(entry)
+                self._last_injection[key] = inj
+        # Do not finish here: finish_entry owns end-of-entry / abort closeout so
+        # bounce inject on the last local turn still sees an active session.
         return BackendTurn(
             n_ctx=n_ctx,
             ttft_s=(float(tm["ttft_s"]) if tm["ttft_s"] is not None else None),
@@ -1146,7 +1364,12 @@ class OpenVinoLocalBackend:
         from tools.r2c_inject import build_injection_receipt
 
         eid = str(entry["id"])
-        session = self._ensure_session(entry)
+        key = self._active_cell
+        if key is None or key.split("\0", 1)[0] != eid:
+            raise SystemExit(
+                f"REFUSED -- accept_cloud_context without begin_entry (entry={eid})"
+            )
+        session = self._require_active_session(entry)
         if self.residency != "RESIDENT":
             raise SystemExit(
                 "REFUSED -- R2c accept_cloud_context requires RESIDENT residency "
@@ -1157,7 +1380,7 @@ class OpenVinoLocalBackend:
             tool_messages=tool_messages,
             replace_last_local_assistant=True,
         )
-        self._cloud_context.setdefault(eid, {})[turn_idx] = text
+        self._cloud_context.setdefault(key, {})[turn_idx] = text
         receipt = build_injection_receipt(
             entry_id=eid,
             bounce_turn=turn_idx,
@@ -1175,8 +1398,8 @@ class OpenVinoLocalBackend:
                 "finish_chat; next local generate TTFT is measured re_prefill_s."
             ),
         )
-        self._last_injection[eid] = receipt.as_dict()
-        return self._last_injection[eid]
+        self._last_injection[key] = receipt.as_dict()
+        return self._last_injection[key]
 
 
 def local_backend_kind(local: LocalBackend) -> str:
@@ -1249,6 +1472,7 @@ class AnthropicCloudBackend:
 
     def run_turn(self, entry: dict[str, Any], turn_idx: int, *, model: str) -> BackendTurn:
         row = self._ensure_entry(entry)
+        entry_error = row.get("entry_error")
         calls = [c for c in (row.get("calls") or []) if int(c.get("user_turn", c.get("turn", -1))) == turn_idx]
         if not calls:
             # Fallback: apportion entry totals across user turns.
@@ -1262,6 +1486,11 @@ class AnthropicCloudBackend:
             tout = sum(int(c.get("completion_tokens") or 0) for c in calls)
             usd = sum(float(c.get("usd") or 0.0) for c in calls)
             wall = sum(float(c.get("latency_s") or 0.0) for c in calls) or 0.05
+            # Prefer explicit per-call API failure over apportioned zeros.
+            for c in calls:
+                if c.get("ok") is False and c.get("error"):
+                    entry_error = entry_error or str(c.get("error"))
+                    break
         phases = finalize_phase_timers(
             turn_wall_s=wall,
             t_tool_exec=0.0,
@@ -1269,6 +1498,11 @@ class AnthropicCloudBackend:
             t_tokenize=0.0,
             t_generate=wall * 0.9,
         )
+        cloud_error: str | None = None
+        if entry_error:
+            cloud_error = str(entry_error)
+        elif tin == 0 and tout == 0:
+            cloud_error = "cloud_empty_tokens"
         return BackendTurn(
             n_ctx=tin,
             ttft_s=None,
@@ -1283,6 +1517,7 @@ class AnthropicCloudBackend:
             t_tokenize=phases["t_tokenize"],
             t_generate=phases["t_generate"],
             raw_text="[anthropic]",
+            cloud_error=cloud_error,
         )
 
 
@@ -1312,6 +1547,87 @@ class CostGuard:
         self.running_usd += float(usd)
         if self.running_usd > self.max_usd + 1e-12:
             raise CostCapExceeded(self.running_usd, self.max_usd)
+
+
+# ---------------------------------------------------------------------------
+# Cloud dead-path guard (same class as stub-seal refuse / degenerate N=3)
+# ---------------------------------------------------------------------------
+# Evidence: void interleaved session 6c7f88f1
+#   derived/h1_hybrid/interleaved_6c7f88f1-0642-413e-bf72-f45c4f8f8a1e/
+# After multi_turn_base_52 the Anthropic path returned tin=0/tout=0/usd=0 for
+# every subsequent escalate (172 consecutive dead cloud turns on emission;
+# 75 on bounceback) while the runner kept recording escalations. Credits were
+# exhausted; numbers from that dead path are not measurements.
+#
+# N=3 = refuse after three consecutive dead cloud turns (session-wide):
+#   - Matches DEGENERATE_CONSECUTIVE_N derivation style (b1a291f0).
+#   - Trips inside the first dead entry (base_52 had 3 zero turns) before the
+#     remaining ~169 garbage escalations.
+# Recorded twin: derived/h1_hybrid/CLOUD_DEAD_PATH_GUARD.json
+CLOUD_DEAD_CONSECUTIVE_N = 3
+CLOUD_DEAD_CITING_RUN = "6c7f88f1"
+CLOUD_DEAD_CITING_SESSION = "interleaved_6c7f88f1-0642-413e-bf72-f45c4f8f8a1e"
+
+
+class CloudDeadPathError(Exception):
+    """Session abort: repeated cloud turns returned nothing usable."""
+
+
+def cloud_turn_is_dead(bt: BackendTurn) -> bool:
+    """True when a cloud BackendTurn carries no usable completion.
+
+    Signature from 6c7f88f1 post-credit-death cells: tin=0 and tout=0 (often
+    usd=0). Explicit ``cloud_error`` also counts.
+    """
+    if bt.cloud_error:
+        return True
+    return int(bt.cloud_tokens_in or 0) == 0 and int(bt.cloud_tokens_out or 0) == 0
+
+
+@dataclass
+class CloudDeadPathGuard:
+    """Abort after N consecutive dead cloud turns (any policy / entry)."""
+
+    n: int = CLOUD_DEAD_CONSECUTIVE_N
+    consecutive: int = 0
+    events: list[dict[str, Any]] = field(default_factory=list)
+
+    def observe(
+        self,
+        bt: BackendTurn,
+        *,
+        entry_id: str,
+        turn: int,
+        policy: str,
+    ) -> dict[str, Any]:
+        dead = cloud_turn_is_dead(bt)
+        if dead:
+            self.consecutive += 1
+        else:
+            self.consecutive = 0
+        rec = {
+            "entry_id": entry_id,
+            "turn": turn,
+            "policy": policy,
+            "dead": dead,
+            "consecutive_after": self.consecutive,
+            "cloud_tokens_in": int(bt.cloud_tokens_in or 0),
+            "cloud_tokens_out": int(bt.cloud_tokens_out or 0),
+            "cloud_error": bt.cloud_error,
+        }
+        self.events.append(rec)
+        return rec
+
+    def raise_if_refused(self) -> None:
+        if self.consecutive >= self.n:
+            raise CloudDeadPathError(
+                "REFUSED -- CLOUD_DEAD_PATH_STREAK "
+                f"n={self.consecutive} threshold={self.n} "
+                f"citing={CLOUD_DEAD_CITING_RUN} "
+                f"session={CLOUD_DEAD_CITING_SESSION} "
+                "(cloud turns returned tin=0/tout=0 or cloud_error; "
+                "abort rather than seal numbers from a dead cloud path)"
+            )
 
 
 def load_checkpoint(path: Path) -> dict[str, Any]:
@@ -1388,6 +1704,7 @@ def run_hybrid_entry(
     cloud: CloudBackend,
     cost: CostGuard,
     model: str,
+    cloud_dead_guard: CloudDeadPathGuard | None = None,
 ) -> EntryResult:
     """Run one entry under ``policy``.
 
@@ -1420,6 +1737,51 @@ def run_hybrid_entry(
     _view = router_view_for_entry(entry, model=model)
     assert _view.model == model
 
+    # Backend owns MultiTurnAgentSession lifecycle for local policies.
+    # begin_entry before first turn; finish_entry in finally (last turn or abort).
+    needs_local_lifecycle = policy != "cloud_only"
+    if needs_local_lifecycle:
+        _backend_begin_entry(local, entry, policy=policy)
+    try:
+        return _run_hybrid_entry_body(
+            entry,
+            policy=policy,
+            local=local,
+            cloud=cloud,
+            cost=cost,
+            model=model,
+            cloud_dead_guard=cloud_dead_guard,
+        )
+    finally:
+        if needs_local_lifecycle:
+            _backend_finish_entry(local, entry)
+
+
+def _note_cloud_turn(
+    guard: CloudDeadPathGuard | None,
+    bt: BackendTurn,
+    *,
+    entry: dict[str, Any],
+    turn_idx: int,
+    policy: str,
+) -> None:
+    if guard is None:
+        return
+    guard.observe(bt, entry_id=str(entry["id"]), turn=turn_idx, policy=policy)
+    guard.raise_if_refused()
+
+
+def _run_hybrid_entry_body(
+    entry: dict[str, Any],
+    *,
+    policy: str,
+    local: LocalBackend,
+    cloud: CloudBackend,
+    cost: CostGuard,
+    model: str,
+    cloud_dead_guard: CloudDeadPathGuard | None = None,
+) -> EntryResult:
+    """Inner entry loop; caller owns begin_entry / finish_entry around this."""
     turns_in = turns_in_entry_count(entry)
     local_span = (
         LocalEntrySpan(turns_in, turns_in, "completed")
@@ -1442,6 +1804,9 @@ def run_hybrid_entry(
         # --- cloud path (cloud_only, or stay-on-cloud after escalate) ---
         if on_cloud or policy == "cloud_only":
             bt = cloud.run_turn(entry, turn_idx, model=model)
+            _note_cloud_turn(
+                cloud_dead_guard, bt, entry=entry, turn_idx=turn_idx, policy=policy
+            )
             if policy == "cloud_only":
                 reason_out = "cloud_only"
             else:
@@ -1524,6 +1889,13 @@ def run_hybrid_entry(
             if bounce:
                 assert trigger is not None
                 bt_c = cloud.run_turn(entry, turn_idx, model=model)
+                _note_cloud_turn(
+                    cloud_dead_guard,
+                    bt_c,
+                    entry=entry,
+                    turn_idx=turn_idx,
+                    policy=policy,
+                )
                 try:
                     cost.charge(bt_c.cloud_usd)
                 except CostCapExceeded:
@@ -1675,8 +2047,15 @@ def run_hybrid_entry(
             )
             # Backfill re_prefill onto the prior bounce once the next local turn ran.
             _inj = getattr(local, "_last_injection", None)
+            _active = getattr(local, "_active_key", None) or getattr(
+                local, "_active_cell", None
+            )
             if isinstance(_inj, dict):
-                _rec = _inj.get(str(entry["id"])) or {}
+                _rec = {}
+                if _active is not None and _active in _inj:
+                    _rec = _inj[_active] or {}
+                if not _rec:
+                    _rec = _inj.get(str(entry["id"])) or {}
                 if result.bounces and _rec.get("re_prefill_s") is not None:
                     _b = result.bounces[-1]
                     if _b.re_prefill_s is None and _b.control_return_turn == turn_idx:
@@ -1723,6 +2102,9 @@ def run_hybrid_entry(
             # Re-do this turn on cloud and stay there for the rest of the entry.
             on_cloud = True
             bt_c = cloud.run_turn(entry, turn_idx, model=model)
+            _note_cloud_turn(
+                cloud_dead_guard, bt_c, entry=entry, turn_idx=turn_idx, policy=policy
+            )
             try:
                 cost.charge(bt_c.cloud_usd)
             except CostCapExceeded:
@@ -1936,6 +2318,7 @@ def run_session(
     abort_reason: str | None = None
     abort_verbatim: str | None = None
     summary_written = False
+    cloud_dead_guard = CloudDeadPathGuard(n=CLOUD_DEAD_CONSECUTIVE_N)
 
     def _write_session_summary() -> dict[str, Any]:
         nonlocal summary_written
@@ -1982,7 +2365,26 @@ def run_session(
                     cloud=cloud,
                     cost=cost,
                     model=model,
+                    cloud_dead_guard=cloud_dead_guard,
                 )
+            except CloudDeadPathError as exc:
+                status = "aborted_cloud_dead"
+                abort_reason = str(exc)
+                abort_verbatim = str(exc)
+                print(f"ABORT_CLOUD_DEAD {exc}")
+                save_checkpoint(
+                    ckpt_path,
+                    {
+                        "completed_entry_ids": sorted(completed),
+                        "running_usd": cost.running_usd,
+                        "entries": ledger_rows,
+                        "updated_utc": _utc_now(),
+                        "abort_reason": abort_reason,
+                    },
+                )
+                _write_json(out_dir / "turn_ledger.json", {"entries": ledger_rows})
+                _write_json(out_dir / "entry_quality.json", {"entries": quality_rows})
+                break
             except CostCapExceeded as exc:
                 status = "aborted_cap"
                 abort_reason = str(exc)
@@ -2188,6 +2590,7 @@ def run_interleaved_session(
     session_status = "complete"
     session_abort: str | None = None
     cell_log: list[dict[str, Any]] = list(session_ckpt.get("cell_log") or [])
+    cloud_dead_guard = CloudDeadPathGuard(n=CLOUD_DEAD_CONSECUTIVE_N)
 
     def _persist_policy(policy: str) -> None:
         st = state[policy]
@@ -2284,7 +2687,22 @@ def run_interleaved_session(
                         cloud=cloud,
                         cost=dual,  # type: ignore[arg-type]
                         model=st["model"],
+                        cloud_dead_guard=cloud_dead_guard,
                     )
+                except CloudDeadPathError as exc:
+                    session_status = "aborted_cloud_dead"
+                    session_abort = str(exc)
+                    st["status"] = "aborted_cloud_dead"
+                    st["abort_reason"] = session_abort
+                    for p in policies:
+                        if state[p]["status"] == "running":
+                            state[p]["status"] = "aborted_cloud_dead"
+                            state[p]["abort_reason"] = session_abort
+                            _persist_policy(p)
+                    _persist_policy(policy)
+                    _persist_session()
+                    print(f"ABORT_CLOUD_DEAD {session_abort}")
+                    break
                 except CostCapExceeded as exc:
                     which = getattr(exc, "cap_which", "policy")
                     if exc.partial is not None:
@@ -2662,9 +3080,21 @@ def build_argparser() -> argparse.ArgumentParser:
         help="Per-policy cap for --interleaved (repeatable). "
         "Defaults: slo_escalate=5, emission_escalate=20, full_signal_bounceback=10.",
     )
-    p.add_argument("--out", type=Path, required=True, help="Output / seal directory")
+    p.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="Output / seal directory (required except --lifecycle-smoke)",
+    )
     p.add_argument("--run-id", type=str, default=None)
     p.add_argument("--entries", type=Path, default=None, help="BFCL entries JSON (default: W-3 seal)")
+    p.add_argument(
+        "--lifecycle-smoke",
+        action="store_true",
+        help="TURNWISE lifecycle smoke: one W-3 entry x H1-3POLICY via "
+        "OpenVinoLocalBackend with stubbed generate (no GPU load, no seal). "
+        "Launcher runs this before detached spawn.",
+    )
     p.add_argument(
         "--derive-r1",
         action="store_true",
@@ -2753,6 +3183,207 @@ def _make_live_cloud(cloud_model: str | None) -> AnthropicCloudBackend:
     return AnthropicCloudBackend(client=anthropic.Anthropic(), cloud_model=model)
 
 
+def _stubbed_generate_fakes(hf_tokenizer: Any) -> tuple[Any, Any, Any]:
+    """Minimal pipe / ov_genai / cfg for OpenVinoLocalBackend.for_stubbed_generate."""
+
+    class _FakeGenResult:
+        def __init__(self, text: str) -> None:
+            self.texts = [text]
+            self.perf_metrics = None
+
+    class _FakeChatHistory:
+        def __init__(self) -> None:
+            self._messages: list[dict[str, Any]] = []
+            self._tools: list[Any] = []
+            self._extra: dict[str, Any] = {}
+
+        def set_tools(self, tools: list[Any]) -> None:
+            self._tools = list(tools)
+
+        def set_extra_context(self, extra: dict[str, Any]) -> None:
+            self._extra = dict(extra)
+
+        def append(self, msg: Any) -> None:
+            if isinstance(msg, dict):
+                self._messages.append(dict(msg))
+            else:
+                self._messages.append({"role": "assistant", "content": str(msg)})
+
+        def pop(self) -> dict[str, Any]:
+            return self._messages.pop()
+
+    class _FakeStreamingStatus:
+        RUNNING = 0
+
+    class _FakeStreamerBase:
+        def __init__(self) -> None:
+            return None
+
+    class _FakeGenerationConfig:
+        def __init__(self) -> None:
+            self.max_new_tokens = 512
+            self.do_sample = False
+            self.apply_chat_template = False
+
+    class _FakeOvGenai:
+        ChatHistory = _FakeChatHistory
+        StreamerBase = _FakeStreamerBase
+        StreamingStatus = _FakeStreamingStatus
+        GenerationConfig = _FakeGenerationConfig
+
+    class _FakeGenaiTokenizer:
+        def __init__(self, hf: Any) -> None:
+            self._hf = hf
+
+        def apply_chat_template(self, history: Any, *_args: Any, **_kwargs: Any) -> str:
+            from tools.bfcl_feasibility_probe import render_bfcl_tools_style
+
+            msgs = list(getattr(history, "_messages", []) or [])
+            tools = list(getattr(history, "_tools", []) or [])
+            return render_bfcl_tools_style(self._hf, msgs, tools)
+
+    class _FakePipe:
+        def __init__(self, text: str = "I cannot help with that.") -> None:
+            self._text = text
+            self._n_generate = 0
+            self._tokenizer = _FakeGenaiTokenizer(hf_tokenizer)
+
+        def generate(self, prompt: Any, cfg: Any = None, streamer: Any = None) -> _FakeGenResult:
+            del prompt, cfg
+            self._n_generate += 1
+            if streamer is not None:
+                write = getattr(streamer, "write", None)
+                if callable(write):
+                    write(1)
+                end = getattr(streamer, "end", None)
+                if callable(end):
+                    end()
+            return _FakeGenResult(self._text)
+
+        def finish_chat(self) -> None:
+            return None
+
+        def get_tokenizer(self) -> _FakeGenaiTokenizer:
+            return self._tokenizer
+
+    ov_genai = _FakeOvGenai()
+    pipe = _FakePipe()
+    cfg = _FakeGenerationConfig()
+    return pipe, ov_genai, cfg
+
+
+def openvino_backend_stubbed_generate(hf_tokenizer: Any) -> OpenVinoLocalBackend:
+    """OpenVinoLocalBackend shaped for lifecycle tests (no IR load)."""
+    pipe, ov_genai, cfg = _stubbed_generate_fakes(hf_tokenizer)
+    return OpenVinoLocalBackend.for_stubbed_generate(
+        pipe=pipe,
+        tokenizer=hf_tokenizer,
+        cfg=cfg,
+        residency="RESIDENT",
+        kv="u8",
+        ov_genai=ov_genai,
+    )
+
+
+def run_turnwise_lifecycle_smoke(
+    *,
+    entries_path: Path | None = None,
+    entry_index: int = 0,
+) -> dict[str, Any]:
+    """One real W-3 entry through H1-3POLICY on OpenVinoLocalBackend (stubbed generate).
+
+    Refuses on lifecycle errors or cross-policy session leakage. No GPU IR load,
+    no cloud spend, no seal.
+    """
+    from tools.bfcl_feasibility_probe import MODEL_DIR, _hf_tokenizer
+
+    if not MODEL_DIR.is_dir():
+        raise SystemExit(f"REFUSED -- lifecycle smoke needs HF tokenizer at {MODEL_DIR}")
+    entries, resolved = load_w3_entries(entries_path)
+    if not entries:
+        raise SystemExit("REFUSED -- lifecycle smoke: empty entries")
+    if entry_index < 0 or entry_index >= len(entries):
+        raise SystemExit(
+            f"REFUSED -- lifecycle smoke entry_index={entry_index} "
+            f"out of range n={len(entries)}"
+        )
+    entry = entries[entry_index]
+    hf = _hf_tokenizer()
+    local = openvino_backend_stubbed_generate(hf)
+    cloud = StubCloudBackend(tokens_in=10, tokens_out=5)
+    session_ids: list[int] = []
+    results: list[dict[str, Any]] = []
+    for policy in INTERLEAVE_POLICIES:
+        before_sessions = dict(local._sessions)
+        er = run_hybrid_entry(
+            entry,
+            policy=policy,
+            local=local,
+            cloud=cloud,
+            cost=CostGuard(max_usd=100.0),
+            model="stub-lifecycle-4B",
+        )
+        after_sessions = dict(local._sessions)
+        if local._active_cell is not None:
+            raise SystemExit(
+                f"REFUSED -- lifecycle smoke: active_cell leaked after {policy}: "
+                f"{local._active_cell!r}"
+            )
+        if after_sessions:
+            raise SystemExit(
+                f"REFUSED -- lifecycle smoke: live sessions remain after {policy}: "
+                f"{sorted(after_sessions)}"
+            )
+        # Isolation: prior policy's finished session must not remain live.
+        for key in before_sessions:
+            if key in after_sessions:
+                raise SystemExit(
+                    f"REFUSED -- lifecycle smoke: session key {key!r} survived "
+                    f"across policy boundary into {policy}"
+                )
+        cache_keys = [
+            k for k in local._entry_cache if k.startswith(f"{entry['id']}\0")
+        ]
+        results.append(
+            {
+                "policy": policy,
+                "status": er.status,
+                "turns_executed": er.turns_executed,
+                "n_bounces": len(er.bounces),
+                "cache_keys": cache_keys,
+            }
+        )
+        # Distinct cache cell per policy (no overwrite of prior policy quality).
+        expected_key = OpenVinoLocalBackend.cell_key(str(entry["id"]), policy)
+        if expected_key not in local._entry_cache:
+            raise SystemExit(
+                f"REFUSED -- lifecycle smoke: missing entry_cache for {expected_key!r}"
+            )
+        session_ids.append(id(local._entry_cache[expected_key]))
+
+    if len(set(session_ids)) != len(session_ids):
+        # Cache dict values could theoretically alias; keys already distinct above.
+        pass
+    # Cross-policy key isolation: three distinct cell keys present.
+    cell_keys = [
+        OpenVinoLocalBackend.cell_key(str(entry["id"]), p) for p in INTERLEAVE_POLICIES
+    ]
+    if len(set(cell_keys)) != 3:
+        raise SystemExit("REFUSED -- lifecycle smoke: cell keys not unique per policy")
+    for k in cell_keys:
+        if k not in local._entry_cache:
+            raise SystemExit(f"REFUSED -- lifecycle smoke: missing isolated cache {k!r}")
+
+    return {
+        "ok": True,
+        "entry_id": str(entry["id"]),
+        "entries_path": str(resolved),
+        "policies": list(INTERLEAVE_POLICIES),
+        "results": results,
+        "cell_keys": cell_keys,
+    }
+
+
 def _make_openvino_local(policy: str, model_spec: Path | None) -> OpenVinoLocalBackend:
     arm = ARM_CONFIG[policy]
     spec = model_spec or (ROOT / "configs" / "models" / "Qwen3-4B-int4-ov.yaml")
@@ -2768,6 +3399,14 @@ def _make_openvino_local(policy: str, model_spec: Path | None) -> OpenVinoLocalB
 def main(argv: list[str] | None = None) -> int:
     args = build_argparser().parse_args(argv)
 
+    if args.lifecycle_smoke:
+        doc = run_turnwise_lifecycle_smoke(entries_path=args.entries)
+        print(json.dumps(doc, indent=2, default=str))
+        return 0 if doc.get("ok") else 2
+
+    if args.out is None:
+        raise SystemExit("REFUSED -- --out is required (except --lifecycle-smoke)")
+
     if args.derive_r1:
         doc = derive_r1_from_cb781(out_dir=args.out, run_id=args.run_id)
         print(json.dumps({"ok": True, "derived": doc}, indent=2, default=str))
@@ -2778,7 +3417,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.policy is None:
         raise SystemExit(
-            "REFUSED -- --policy is required (or pass --interleaved / --derive-r1)"
+            "REFUSED -- --policy is required (or pass --interleaved / --derive-r1 "
+            "/ --lifecycle-smoke)"
         )
     if args.max_usd is None:
         raise SystemExit("REFUSED -- --max-usd is required (cost guard; no default inside runner)")

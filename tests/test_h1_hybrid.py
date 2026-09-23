@@ -14,11 +14,16 @@ if str(ROOT) not in sys.path:
 
 from tools.phase_timers import phases_sum_to_wall  # noqa: E402
 from tools.run_h1_hybrid import (  # noqa: E402
+    CLOUD_DEAD_CONSECUTIVE_N,
+    BackendTurn,
+    CloudDeadPathError,
+    CloudDeadPathGuard,
     CostCapExceeded,
     CostGuard,
     StubCloudBackend,
     StubLocalBackend,
     assert_seal_allowed,
+    cloud_turn_is_dead,
     cloud_usd,
     decide_bounceback,
     decide_emission_escalate,
@@ -32,6 +37,64 @@ FIXTURE = ROOT / "tests" / "fixtures" / "h1_hybrid_3entries.json"
 
 def _load_fix() -> dict:
     return json.loads(FIXTURE.read_text(encoding="utf-8"))
+
+
+def test_cloud_dead_path_guard_n_from_6c7f88f1() -> None:
+    assert CLOUD_DEAD_CONSECUTIVE_N == 3
+    dead = BackendTurn(
+        n_ctx=0,
+        ttft_s=None,
+        decode_tok_s=None,
+        emitted_parseable_tool_call=False,
+        cloud_tokens_in=0,
+        cloud_tokens_out=0,
+        cloud_usd=0.0,
+    )
+    ok = BackendTurn(
+        n_ctx=100,
+        ttft_s=None,
+        decode_tok_s=None,
+        emitted_parseable_tool_call=True,
+        cloud_tokens_in=1000,
+        cloud_tokens_out=50,
+        cloud_usd=0.01,
+    )
+    assert cloud_turn_is_dead(dead)
+    assert not cloud_turn_is_dead(ok)
+    g = CloudDeadPathGuard(n=3)
+    g.observe(dead, entry_id="e1", turn=0, policy="emission_escalate")
+    g.raise_if_refused()
+    g.observe(dead, entry_id="e1", turn=1, policy="emission_escalate")
+    g.raise_if_refused()
+    g.observe(dead, entry_id="e1", turn=2, policy="emission_escalate")
+    with pytest.raises(CloudDeadPathError, match="CLOUD_DEAD_PATH_STREAK"):
+        g.raise_if_refused()
+
+
+def test_cloud_dead_path_guard_resets_on_healthy() -> None:
+    dead = BackendTurn(
+        n_ctx=0,
+        ttft_s=None,
+        decode_tok_s=None,
+        emitted_parseable_tool_call=False,
+        cloud_tokens_in=0,
+        cloud_tokens_out=0,
+    )
+    ok = BackendTurn(
+        n_ctx=10,
+        ttft_s=None,
+        decode_tok_s=None,
+        emitted_parseable_tool_call=True,
+        cloud_tokens_in=10,
+        cloud_tokens_out=5,
+    )
+    g = CloudDeadPathGuard(n=3)
+    g.observe(dead, entry_id="a", turn=0, policy="x")
+    g.observe(dead, entry_id="a", turn=1, policy="x")
+    g.observe(ok, entry_id="b", turn=0, policy="x")
+    assert g.consecutive == 0
+    g.observe(dead, entry_id="c", turn=0, policy="x")
+    g.raise_if_refused()
 
 
 def test_blinding_runner_source_has_no_prediction_paths() -> None:
@@ -437,10 +500,11 @@ def test_r2c_full_signal_bounceback_each_trigger_once() -> None:
     assert er.turns[3].tool_exec_error_class is None
     # Cloud did not stay after bounce - turn 3 is local again.
     assert er.cloud_usd_entry == 3 * cloud_usd(100, 20)
-    # Context injection recorded for each bounce turn.
-    assert local._cloud_context["bounce_all_triggers"][0]
-    assert local._cloud_context["bounce_all_triggers"][1]
-    assert local._cloud_context["bounce_all_triggers"][2]
+    # Context injection recorded for each bounce turn (cell-keyed).
+    cell = StubLocalBackend.cell_key("bounce_all_triggers", "full_signal_bounceback")
+    assert local._cloud_context[cell][0]
+    assert local._cloud_context[cell][1]
+    assert local._cloud_context[cell][2]
 
 
 def test_decide_bounceback_priority() -> None:

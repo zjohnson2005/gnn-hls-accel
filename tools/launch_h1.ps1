@@ -36,7 +36,9 @@
 # via -ModelSpec (default configs/models/Qwen3-4B-int4-ov.yaml). -LocalScript is DEBUG --no-seal only.
 # R2b-on-8B: -ModelSpec configs/models/Qwen3-8B-int4-ov.yaml (derived/h1_hybrid/R2B_8B_PREDICTIONS.*).
 #
-# NOTE: R2C-TURNWISE is landed (MultiTurnAgentSession + inject/re-prefill).
+# NOTE: R2C-TURNWISE lifecycle is owned by OpenVinoLocalBackend (begin_entry /
+# finish_entry per (entry, policy)). Launcher step 5 runs --lifecycle-smoke
+# before spawn so a missing begin fails here, not mid detached run.
 # Live R2c / H1-3POLICY seal still needs a clean host, RESIDENT u8, and a
 # measured re-prefill canary. Stub backends still refuse --seal.
 #
@@ -50,8 +52,8 @@
 #   powershell -NoProfile -File tools/launch_h1.ps1 -Interleaved -DryRun
 #
 # Steps: (1) non-persistent host clean  (2) five gates  (3) INF-1b canary guard
-#        (4) machine-lock / alive-worker check  (5) spawn_detached
-#        (6) print run_id + artifact dir; exit without waiting.
+#        (4) machine-lock / alive-worker check  (5) TURNWISE lifecycle smoke
+#        (6) spawn_detached  (7) print run_id + artifact dir; exit without waiting.
 
 [CmdletBinding()]
 param(
@@ -320,7 +322,24 @@ if ($DryRun) {
 }
 
 # ---------------------------------------------------------------------------
-# 5. Spawn
+# 5. TURNWISE lifecycle smoke (one W-3 entry x interleaved policies; stubbed generate)
+# ---------------------------------------------------------------------------
+Write-Host "=== 5. TURNWISE lifecycle smoke ==="
+Write-Host "OpenVinoLocalBackend begin/finish per (entry, policy); stubbed generate; no GPU IR."
+if (-not (Test-Path -LiteralPath $W3Entries)) { Refuse "W3 entries pin missing: $W3Entries"; exit 2 }
+if (-not (Test-Path -LiteralPath $PythonExe)) { Refuse "PythonExe missing: $PythonExe"; exit 2 }
+if (-not (Test-Path -LiteralPath $WorkerPy)) { Refuse "WorkerPy missing: $WorkerPy"; exit 2 }
+& $PythonExe -u $WorkerPy --lifecycle-smoke --entries $W3Entries
+$lifeRc = $LASTEXITCODE
+if ($lifeRc -ne 0) {
+    Refuse "TURNWISE lifecycle smoke failed (exit $lifeRc); refuse spawn"
+    if (-not $DryRun) { exit $lifeRc }
+}
+Write-Host "Lifecycle smoke PASS."
+Write-Host ""
+
+# ---------------------------------------------------------------------------
+# 6. Spawn
 # ---------------------------------------------------------------------------
 if (-not (Test-Path -LiteralPath $SpawnPs1)) { Refuse "spawn_detached missing: $SpawnPs1"; exit 2 }
 if (-not (Test-Path -LiteralPath $PythonExe)) { Refuse "PythonExe missing: $PythonExe"; exit 2 }
