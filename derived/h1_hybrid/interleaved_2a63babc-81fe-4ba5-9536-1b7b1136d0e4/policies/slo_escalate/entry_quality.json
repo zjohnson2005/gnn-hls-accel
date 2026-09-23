@@ -1,0 +1,40 @@
+{
+  "entries": [
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_base_0",
+      "model_result_decoded": [
+        [
+          [
+            "mkdir(dir_name='temp')",
+            "mv(source='final_report.pdf',destination='temp/final_report.pdf')"
+          ]
+        ],
+        [
+          [
+            "grep(file_name='document.txt',pattern='budget analysis')"
+          ]
+        ],
+        [
+          [
+            "sort(file_name='final_report.pdf')"
+          ]
+        ],
+        [
+          [
+            "mkdir(dir_name='temp')",
+            "mv(source='previous_report.pdf',destination='temp/previous_report.pdf')",
+            "mv(source='final_report.pdf',destination='temp/final_report.pdf')",
+            "diff(file_name1='final_report.pdf',file_name2='previous_report.pdf')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    }
+  ]
+}

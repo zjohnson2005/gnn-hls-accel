@@ -1,0 +1,17 @@
+{
+  "status": "void",
+  "run_id": "2a63babc-81fe-4ba5-9536-1b7b1136d0e4",
+  "kind": "h1_3policy_interleaved",
+  "do_not_cite_as_result": true,
+  "spent_usd": 0.0,
+  "n_entries_completed": 1,
+  "n_entries_planned": 200,
+  "only_cell": {
+    "entry_id": "multi_turn_base_0",
+    "policy": "slo_escalate",
+    "cloud_usd": 0.0,
+    "score_error_type": "multi_turn:instance_state_mismatch"
+  },
+  "diagnosis": "Lifecycle-crash attempt on 2026-09-20. Plan is h1_3policy_interleaved (all three policies), started 2026-09-20T21:47:42Z. Checkpoint at 21:48:00Z has a single completed slo_escalate cell and running_usd 0.0; emission_escalate and full_signal_bounceback never recorded a cell. That is the TURNWISE crash: OpenVinoLocalBackend.run_turn called session.run_user_turn without begin() once the first policy finished the shared backend. Not a three-policy result. Artifacts kept.",
+  "fix": "TURNWISE-FIX (backend owns begin_entry/finish_entry per entry and policy)"
+}
