@@ -13,6 +13,8 @@
 #       -InterleavedPolicies slo_escalate,emission_escalate -SessionMaxUsd 25
 #     Caps: R2a $5, R2b $20, session $25. Seal records r2c_excluded.
 #   KV/model match sealed R2a 86d0f4cf (gpu_only RESIDENT u8 int4-4B).
+#   A dirty tree is refused unless -AllowDirty, which records DIRTY and the
+#   sha256 of git diff HEAD in the plan and the seal.
 #   Resume skips completed entries per policy.
 #
 # Cost guard: --MaxUsd is REQUIRED for single-policy live arms. Defaults below
@@ -69,7 +71,8 @@ param(
     [switch]$DryRun,
     [string]$LocalScript = "",
     [string]$ModelSpec = "",
-    [switch]$AllowUnguarded
+    [switch]$AllowUnguarded,
+    [switch]$AllowDirty
 )
 
 $ErrorActionPreference = "Stop"
@@ -163,19 +166,37 @@ Write-Host ("cwd            : {0}" -f (Get-Location).Path)
 Write-Host ("started_utc    : {0}" -f (Get-Date).ToUniversalTime().ToString("o"))
 Write-Host ""
 
+$porcelain = & git -C $root status --porcelain
+if ($LASTEXITCODE -ne 0) {
+    Refuse "git status failed; refuse launch"
+    exit 2
+}
+$dirtyTree = -not [string]::IsNullOrWhiteSpace(($porcelain | Out-String))
+if ($dirtyTree -and -not $AllowDirty) {
+    Refuse "dirty working tree; commit the changes or pass -AllowDirty (plan and seal record DIRTY and the sha256 of git diff HEAD)"
+    exit 2
+}
+if ($AllowDirty -and $dirtyTree) {
+    Write-Host "NOTE -- -AllowDirty: plan and seal record DIRTY and the sha256 of git diff HEAD"
+    Write-Host ""
+}
+
 if ($DeriveR1) {
     Write-Host "R1 path: DERIVED from sealed cb781dbf (not MEASURED, not live)."
     $sid = [guid]::NewGuid().ToString()
     $artifactDir = Join-Path $SessionRoot ("derived_r1_" + $sid)
     New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
     $cmd = '"' + $PythonExe + '" -u "' + $WorkerPy + '" --derive-r1 --out "' + $artifactDir + '" --run-id ' + $sid
+    if ($AllowDirty) { $cmd = $cmd + ' --allow-dirty' }
     Write-Host "RESOLVED_CMD:"
     Write-Host $cmd
     if ($DryRun) {
         Write-Host "DRY-RUN: derive-r1 spawn suppressed."
         exit 0
     }
-    & $PythonExe -u $WorkerPy --derive-r1 --out $artifactDir --run-id $sid
+    $deriveArgs = @("-u", $WorkerPy, "--derive-r1", "--out", $artifactDir, "--run-id", $sid)
+    if ($AllowDirty) { $deriveArgs += "--allow-dirty" }
+    & $PythonExe @deriveArgs
     exit $LASTEXITCODE
 }
 
@@ -396,6 +417,10 @@ if (-not [string]::IsNullOrWhiteSpace($LocalScript)) {
     }
     $resolvedCmd = $resolvedCmd + ' --model-spec "' + $ModelSpec + '"'
     Write-Host ("ModelSpec      : {0}" -f $ModelSpec)
+}
+
+if ($AllowDirty) {
+    $resolvedCmd = $resolvedCmd + ' --allow-dirty'
 }
 
 Write-Host "RESOLVED_CMD:"

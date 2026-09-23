@@ -43,6 +43,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tools.h1_seal_git import seal_git_record  # noqa: E402
 from tools.phase_timers import finalize_phase_timers, phases_sum_to_wall  # noqa: E402
 
 # ---------------------------------------------------------------------------
@@ -2300,6 +2301,17 @@ def _cloud_usd_invariant(state: dict[str, Any], policies: tuple[str, ...]) -> di
     return cloud_usd_nondecreasing(arms)
 
 
+def _seal_git(seal_git: dict[str, Any] | None) -> dict[str, Any]:
+    """Provenance for a plan and its seals.
+
+    Library callers that omit the record capture with allow_dirty so fixture
+    tests still seal. The CLI refuses a dirty tree before it gets here.
+    """
+    if seal_git is not None:
+        return seal_git
+    return seal_git_record(allow_dirty=True, root=ROOT)
+
+
 def run_session(
     *,
     policy: str,
@@ -2313,6 +2325,7 @@ def run_session(
     seal: bool = True,
     skip_entry_assert: bool = False,
     caching_policy: str = "none",
+    seal_git: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if max_usd is None:
         raise SystemExit("REFUSED -- --max-usd is required (cost guard)")
@@ -2324,6 +2337,7 @@ def run_session(
             "Use --derive-r1 to scale from sealed cb781dbf (DERIVED)."
         )
     assert_seal_allowed(seal=seal, local=local, policy=policy)
+    git_rec = _seal_git(seal_git)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     run_id = run_id or str(uuid.uuid4())
@@ -2355,6 +2369,7 @@ def run_session(
         "scorer": assert_scorer_version(),
         "caching_policy": caching_policy,
         "resume_from_completed": sorted(completed),
+        "git": git_rec,
     }
     if isinstance(local, OpenVinoLocalBackend):
         plan["openvino"] = {
@@ -2503,6 +2518,7 @@ def run_session(
             "tree_sha256": tree,
             "status": status,
             "measurement_kind": "MEASURED",
+            "git": git_rec,
         }
         (out_dir / ".sealed").write_text(
             json.dumps(seal_doc, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -2521,6 +2537,7 @@ def run_session(
             "abort_reason": abort_reason,
             "measurement_kind": "MEASURED",
             "note": "Sealed non-complete H1 session; status is not complete.",
+            "git": git_rec,
         }
         (out_dir / ".sealed").write_text(
             json.dumps(seal_doc, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -2549,6 +2566,7 @@ def run_interleaved_session(
     seal: bool = True,
     skip_entry_assert: bool = False,
     caching_policy: str = "none",
+    seal_git: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Entry-by-entry interleave of selected H1 policy arms (INF-5 session_design=interleaved).
 
@@ -2560,6 +2578,7 @@ def run_interleaved_session(
     plan/summary/seal record ``r2c_excluded`` so the artifact is not mistaken
     for the full three-policy comparison.
     """
+    git_rec = _seal_git(seal_git)
     caps = dict(policy_caps_usd or DEFAULT_POLICY_CAPS_USD)
     for p in policies:
         if p not in caps:
@@ -2630,6 +2649,7 @@ def run_interleaved_session(
         "resume_completed_by_policy": {
             p: sorted(state[p]["completed"]) for p in policies
         },
+        "git": git_rec,
         **excl,
     }
     if isinstance(local, OpenVinoLocalBackend):
@@ -2904,6 +2924,7 @@ def run_interleaved_session(
                 "session_design": "interleaved",
                 "parent_run_id": run_id,
                 "parent_kind": kind,
+                "git": git_rec,
                 **excl,
             }
             (pdir / ".sealed").write_text(
@@ -2919,6 +2940,7 @@ def run_interleaved_session(
             "measurement_kind": "MEASURED",
             "session_design": "interleaved",
             "arm_order": list(policies),
+            "git": git_rec,
             **excl,
         }
         if session_status == "complete":
@@ -2974,11 +2996,13 @@ def derive_r1_from_cb781(
     out_dir: Path,
     seal_dir: Path | None = None,
     run_id: str | None = None,
+    seal_git: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Scale sealed cb781dbf (n=20 cpu-p NON_RESIDENT) -> 200-entry DERIVED R1.
 
     Does not call cloud. Does not read prediction files.
     """
+    git_rec = _seal_git(seal_git)
     seal_dir = seal_dir or (
         ROOT
         / "derived"
@@ -3063,6 +3087,7 @@ def derive_r1_from_cb781(
             f"sealed {CB781_SEAL} (n=20 -> n=200)."
         ),
         "finished_utc": _utc_now(),
+        "git": git_rec,
     }
     _write_json(out_dir / "summary.json", doc)
     _write_json(out_dir / "plan.json", {**doc, "started_utc": _utc_now()})
@@ -3074,6 +3099,7 @@ def derive_r1_from_cb781(
         "tree_sha256": tree,
         "measurement_kind": "DERIVED",
         "status": "complete",
+        "git": git_rec,
     }
     (out_dir / ".sealed").write_text(
         json.dumps(seal_doc, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -3197,6 +3223,11 @@ def build_argparser() -> argparse.ArgumentParser:
         default="none",
         help="Anthropic prompt-cache policy recorded in the seal. "
         "Default none matches d482c621 (no cache_control).",
+    )
+    p.add_argument(
+        "--allow-dirty",
+        action="store_true",
+        help="Permit a dirty tree. Plan and seal record DIRTY and the sha256 of git diff HEAD.",
     )
     return p
 
@@ -3475,11 +3506,19 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(doc, indent=2, default=str))
         return 0 if doc.get("ok") else 2
 
+    from seam.errors import DirtyTreeError
+
+    try:
+        git_rec = seal_git_record(allow_dirty=bool(args.allow_dirty), root=ROOT)
+    except DirtyTreeError as exc:
+        raise SystemExit(f"REFUSED -- {exc}") from exc
+    args.seal_git = git_rec
+
     if args.out is None:
         raise SystemExit("REFUSED -- --out is required (except --lifecycle-smoke)")
 
     if args.derive_r1:
-        doc = derive_r1_from_cb781(out_dir=args.out, run_id=args.run_id)
+        doc = derive_r1_from_cb781(out_dir=args.out, run_id=args.run_id, seal_git=args.seal_git)
         print(json.dumps({"ok": True, "derived": doc}, indent=2, default=str))
         return 0
 
@@ -3518,6 +3557,7 @@ def main(argv: list[str] | None = None) -> int:
             skip_entry_assert=True,
             seal=False,
             caching_policy=args.caching_policy,
+            seal_git=args.seal_git,
         )
         print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
         return 0 if summary["status"] == "complete" else 2
@@ -3554,6 +3594,7 @@ def main(argv: list[str] | None = None) -> int:
         skip_entry_assert=False,
         seal=seal,
         caching_policy=args.caching_policy,
+        seal_git=args.seal_git,
     )
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
     return 0 if summary["status"] == "complete" else 2
@@ -3597,6 +3638,7 @@ def _main_interleaved(args: argparse.Namespace) -> int:
             skip_entry_assert=True,
             seal=False,
             caching_policy=args.caching_policy,
+            seal_git=args.seal_git,
         )
         print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
         ok_statuses = {"complete", "partial_policy_cap"}
@@ -3631,6 +3673,7 @@ def _main_interleaved(args: argparse.Namespace) -> int:
         skip_entry_assert=False,
         seal=seal,
         caching_policy=args.caching_policy,
+        seal_git=args.seal_git,
     )
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
     ok_statuses = {"complete", "partial_policy_cap"}

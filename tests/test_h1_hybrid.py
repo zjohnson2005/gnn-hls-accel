@@ -318,6 +318,7 @@ def test_fixture_cli_refuses_seal(tmp_path: Path) -> None:
                 "--fixture",
                 str(FIXTURE),
                 "--seal",
+                "--allow-dirty",
             ]
         )
 
@@ -649,7 +650,7 @@ def test_interleave_order_entry_by_entry(tmp_path: Path) -> None:
         out_dir=out,
         local=local,
         cloud=cloud,
-        policy_caps_usd={p: 100.0 for p in INTERLEAVE_POLICIES},
+        policy_caps_usd=dict.fromkeys(INTERLEAVE_POLICIES, 100.0),
         session_max_usd=1000.0,
         run_id="intl-order",
         skip_entry_assert=True,
@@ -689,7 +690,7 @@ def test_interleave_resume_per_policy_skips_completed(tmp_path: Path) -> None:
         on_call=_count,
     )
     out = tmp_path / "intl_resume"
-    caps = {p: 100.0 for p in INTERLEAVE_POLICIES}
+    caps = dict.fromkeys(INTERLEAVE_POLICIES, 100.0)
     s1 = run_interleaved_session(
         entries=fix["entries"],
         out_dir=out,
@@ -778,7 +779,7 @@ def test_interleave_2policy_excludes_r2c_in_plan_and_seal(tmp_path: Path) -> Non
         out_dir=out,
         local=local,
         cloud=cloud,
-        policy_caps_usd={p: 100.0 for p in INTERLEAVE_POLICIES_2POLICY},
+        policy_caps_usd=dict.fromkeys(INTERLEAVE_POLICIES_2POLICY, 100.0),
         session_max_usd=25.0,
         policies=INTERLEAVE_POLICIES_2POLICY,
         run_id="intl-2policy",
@@ -913,7 +914,7 @@ def test_r2c_inject_bounce_turn1_then_local_sees_cloud() -> None:
 def test_r2c_inject_stub_still_refuses_seal(tmp_path: Path) -> None:
     fix = json.loads(INJECT_FIXTURE.read_text(encoding="utf-8"))
     local = StubLocalBackend(script=fix["local_script"])
-    with pytest.raises(SystemExit, match="OpenVinoLocalBackend|REFUSED"):
+    with pytest.raises(SystemExit, match=r"OpenVinoLocalBackend|REFUSED"):
         assert_seal_allowed(seal=True, local=local, policy="full_signal_bounceback")
 
 
