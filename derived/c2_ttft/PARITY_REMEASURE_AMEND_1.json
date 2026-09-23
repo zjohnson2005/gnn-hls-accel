@@ -1,0 +1,82 @@
+{
+  "id": "PARITY-REMEASURE-AMEND-1",
+  "amends": "derived/c2_ttft/PARITY_REMEASURE_PREREG.json",
+  "prereg_commit": "91d9005fd13e16f68907807548ce8f1f97ba356e",
+  "registered_before_any_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "does_not_edit_the_prereg": true,
+  "formula": "n_slo = n_ref * (10 / ttft_ref) ** (1 / b)",
+  "b_source": "derived/cap4/sealed_2b3316b6-7f6e-474f-9177-bd5a89aeb58c/analysis.json power_law_fit. Arm identified by the sealed median prefill at n=46000.",
+  "b": {
+    "gpu_only_f16": 2.251598046194737,
+    "gpu_only_u4": 2.151205039771416,
+    "gpu_only_u8": 2.1244217372829084,
+    "used": "gpu_only_u8"
+  },
+  "n_ref_rule": "Highest n on the reference arm whose completed repeats have median prefill_s <= 10 and which is not above an all-fail n. ttft_ref is that median. 8B n_ref is 3312 (two passes at 3.19 s and 3.21 s; one memory_wall). 3625 is the first all-fail, so 3312 is the last measured SLO-ok prefill. highest_slo_ok_n stays 3156 because that is the last n where every repeat passed. 4B-int8 n_ref is 7781. 7937 is an all-fail and the single pass at 8250 sits above that wall, so it is not the reference. 4B-int4 n_ref is highest_slo_ok_n 9750. The median at 10000 is 10.079 s.",
+  "n_wall_rule": "KV-only image of the first memory-fail n: n_fail * (147456 / 73728) = n_fail * 2. A null n_wall means the reference cell never hit a memory wall. predicted = min(n_slo, n_wall) when n_wall is present, else n_slo. kind is whichever number is smaller.",
+  "cells": [
+    {
+      "cell": "XPS 4B-int4 GPU u8",
+      "reference_seal": "derived/c2_ttft/sealed_c647f0c7-5cc9-47bb-a491-3450533c34d1",
+      "n_ref": 9750,
+      "ttft_ref": 9.731766601,
+      "ttft_repeats": [9.674988281, 9.731766601, 14.13602246],
+      "n_slo": 9875.588438243161,
+      "n_wall": null,
+      "predicted_limit_n": 9875.588438243161,
+      "predicted_limit_kind": "SLO",
+      "low": 8000,
+      "high": 12000,
+      "estimated_wall_s": 368
+    },
+    {
+      "cell": "XPS 8B-int4 GPU u8",
+      "reference_seal": "derived/c2_ttft/sealed_322b2f86-9571-46ae-be6a-ba1cec44e018",
+      "n_ref": 3312,
+      "ttft_ref": 3.2015871575,
+      "ttft_repeats": [3.194305419, 3.208868896],
+      "n_slo": 5661.3883152204435,
+      "n_wall": 6624,
+      "n_wall_last_all_pass_scaled": 6312,
+      "predicted_limit_n": 5661.3883152204435,
+      "predicted_limit_kind": "SLO",
+      "low": 2000,
+      "high": 8000,
+      "estimated_wall_s": 315
+    },
+    {
+      "cell": "XPS 4B-int8 GPU u8",
+      "reference_seal": "derived/c2_ttft/sealed_fea55e0c-b9f8-4ba9-b5ea-558401910d74",
+      "n_ref": 7781,
+      "ttft_ref": 6.720876464,
+      "ttft_repeats": [6.8355708, 6.720876464, 6.719874023],
+      "n_slo": 9381.425974154272,
+      "n_wall": 15874,
+      "predicted_limit_n": 9381.425974154272,
+      "predicted_limit_kind": "SLO",
+      "low": 4000,
+      "high": 17000,
+      "estimated_wall_s": 338
+    }
+  ],
+  "implied_ratios_vs_9750": {
+    "anchor_prediction": 9750,
+    "u8_tier": 1.7221924123783328,
+    "u8_tier_pair": "9750 / 8B predicted 5661.3883152204435",
+    "u8_weight": 1.0392876335496486,
+    "u8_weight_pair": "9750 / 4B-int8 predicted 9381.425974154272"
+  },
+  "wall_estimate_rule": "Ceiling cells use max(2x existing generation.wall_s, planned_probes * 10 * 0.75 + 180). planned_probes = 3 * (ceil(log2((high-low)/250)) + 1). The 10 s term is the SLO prefill at n_slo. 180 s covers model load and the canary probes the 9750 anchor never fired. 8B and 4B-int8 use the probe model because their f16 runs died at a memory wall and under-count a higher SLO bisection. 4B-int4 uses the measured 2x (368 s), which is larger than the probe model. DET-PROBE stays 1200 s. CPU stays 2010 s because its predicted limit did not move up.",
+  "boot1_estimates_s": {
+    "DET-PROBE": 1200,
+    "XPS 4B-int4 GPU u8": 368,
+    "XPS 8B-int4 GPU u8": 315,
+    "XPS 4B-int8 GPU u8": 338,
+    "XPS 4B-int4 CPU u8": 2010,
+    "sum_s": 4231,
+    "sum_min": 70.5,
+    "window_s": 7200
+  }
+}

@@ -12,14 +12,19 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-PREREG_NAME = "PARITY_REMEASURE_PREREG.json"
+PREREG_NAMES = (
+    "PARITY_REMEASURE_PREREG.json",
+    "PARITY_REMEASURE_AMEND_1.json",
+)
 RUNNER = ROOT / "tools" / "run_c1_ceiling.py"
 
 
 def test_prereg_exists_and_runner_source_does_not_name_it() -> None:
-    assert (ROOT / "derived" / "c2_ttft" / PREREG_NAME).is_file()
+    for name in PREREG_NAMES:
+        assert (ROOT / "derived" / "c2_ttft" / name).is_file()
     text = RUNNER.read_text(encoding="utf-8")
-    assert PREREG_NAME not in text
+    for name in PREREG_NAMES:
+        assert name not in text
 
 
 def test_ceiling_runner_does_not_open_prereg(monkeypatch) -> None:
@@ -27,7 +32,7 @@ def test_ceiling_runner_does_not_open_prereg(monkeypatch) -> None:
     real_open = builtins.open
 
     def guard(file: object, *args: Any, **kwargs: Any) -> Any:
-        if PREREG_NAME in str(file):
+        if any(name in str(file) for name in PREREG_NAMES):
             opened.append(str(file))
         return real_open(file, *args, **kwargs)
 
