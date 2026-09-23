@@ -93,9 +93,11 @@ $DefaultPolicyCapUsd = @{
     "slo_escalate"           = 5.0
     "emission_escalate"      = 20.0
     "full_signal_bounceback" = 10.0
+    "cloud_only"             = 81.1056
 }
 
-$AllowedInterleave = @("slo_escalate", "emission_escalate", "full_signal_bounceback")
+$DefaultInterleave = @("slo_escalate", "emission_escalate", "full_signal_bounceback")
+$AllowedInterleave = @("slo_escalate", "emission_escalate", "full_signal_bounceback", "cloud_only")
 
 $PythonExe = Join-Path $root ".venv-seam\Scripts\python.exe"
 $WorkerPy = Join-Path $root "tools\run_h1_hybrid.py"
@@ -131,7 +133,7 @@ function Refuse {
 function Resolve-InterleavedPolicyList {
     param([string]$Raw)
     if ([string]::IsNullOrWhiteSpace($Raw)) {
-        return @($AllowedInterleave)
+        return @($DefaultInterleave)
     }
     $parts = @($Raw -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" })
     if ($parts.Count -eq 0) {

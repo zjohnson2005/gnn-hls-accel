@@ -3528,13 +3528,17 @@ def _anthropic_create_kwargs(
     max_tokens: int,
     messages: list[dict[str, Any]],
     tools: list[dict[str, Any]],
+    caching_policy: str = "none",
 ) -> dict[str, Any]:
+    from tools.h1_cloud_accounting import apply_caching_policy
+
     kwargs: dict[str, Any] = {
         "model": model,
         "max_tokens": max_tokens,
         "messages": messages,
         "tools": tools,
     }
+    kwargs = apply_caching_policy(kwargs, caching_policy)
     # claude-sonnet-5 rejects temperature (400 deprecated). Omit for that id;
     # send 0 for any other --model override.
     if model != CLOUD_DEFAULT_MODEL:
@@ -3549,6 +3553,7 @@ def run_cloud_multi_turn_agent_entry(
     max_tokens: int,
     entry: dict[str, Any],
     running_usd: float,
+    caching_policy: str = "none",
 ) -> dict[str, Any]:
     """Same agent loop as run_gpu_multi_turn; model call is Anthropic native tool-use."""
     sys.path.insert(0, str(ROOT))
@@ -3560,6 +3565,8 @@ def run_cloud_multi_turn_agent_entry(
         execute_multi_turn_func_call,
         is_empty_execute_response,
     )
+
+    from tools.h1_cloud_accounting import cloud_request_record, usage_field
 
     raw = entry["raw_entry"]
     tool_pack = anthropic_tools_for_entry(entry)
@@ -3612,6 +3619,7 @@ def run_cloud_multi_turn_agent_entry(
             "n_tools": tool_pack["n_tools"],
             "involved_classes": tool_pack["involved_classes"],
             "calls": call_records,
+            "caching_policy": caching_policy,
             "prompt_tokens_sum": prompt_tokens_sum,
             "completion_tokens_sum": completion_tokens_sum,
             "usd": usd_entry,
@@ -3621,7 +3629,14 @@ def run_cloud_multi_turn_agent_entry(
             "per_turn": scored["per_turn"],
         }
 
+    def _request_parts(cursor: int) -> tuple[str, str, str, str]:
+        tools_text = json.dumps(tools, sort_keys=True, default=str)
+        history_text = json.dumps(messages[:cursor], default=str)
+        new_text = json.dumps(messages[cursor:], default=str)
+        return "", tools_text, history_text, new_text
+
     for turn_idx, turn_msgs in enumerate(entry["question"]):
+        cursor = len(messages)
         for m in turn_msgs:
             if not isinstance(m, dict):
                 continue
@@ -3638,11 +3653,13 @@ def run_cloud_multi_turn_agent_entry(
         turn_decoded_steps: list[list[str]] = []
         step = 0
         while True:
+            system_text, tools_text, history_text, new_text = _request_parts(cursor)
             create_kwargs = _anthropic_create_kwargs(
                 model=model,
                 max_tokens=max_tokens,
                 messages=messages,
                 tools=tools,
+                caching_policy=caching_policy,
             )
             t0 = time.perf_counter()
             try:
@@ -3659,6 +3676,20 @@ def run_cloud_multi_turn_agent_entry(
                         "error": abort_error,
                         "prompt_tokens": None,
                         "completion_tokens": None,
+                        **cloud_request_record(
+                            turn=turn_idx,
+                            request_index_within_turn=step,
+                            ok=False,
+                            system=system_text,
+                            tools=tools_text,
+                            history=history_text,
+                            new=new_text,
+                            input_tokens=None,
+                            output_tokens=None,
+                            cache_creation_input_tokens=None,
+                            cache_read_input_tokens=None,
+                            error=abort_error,
+                        ),
                         "latency_s": latency_s,
                         "latency_s_note": (
                             "network-inclusive; not a timing measurement; "
@@ -3673,8 +3704,25 @@ def run_cloud_multi_turn_agent_entry(
                 return _finish_score()
 
             usage = getattr(response, "usage", None)
-            prompt_n = int(getattr(usage, "input_tokens", 0) or 0) if usage is not None else 0
-            completion_n = int(getattr(usage, "output_tokens", 0) or 0) if usage is not None else 0
+            input_tokens = usage_field(usage, "input_tokens")
+            output_tokens = usage_field(usage, "output_tokens")
+            cache_creation = usage_field(usage, "cache_creation_input_tokens")
+            cache_read = usage_field(usage, "cache_read_input_tokens")
+            prompt_n = int(input_tokens or 0)
+            completion_n = int(output_tokens or 0)
+            account = cloud_request_record(
+                turn=turn_idx,
+                request_index_within_turn=step,
+                ok=True,
+                system=system_text,
+                tools=tools_text,
+                history=history_text,
+                new=new_text,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                cache_creation_input_tokens=cache_creation,
+                cache_read_input_tokens=cache_read,
+            )
             call_usd = _cloud_usd(prompt_n, completion_n)
             usd_entry += call_usd
             prompt_tokens_sum += prompt_n
@@ -3709,8 +3757,10 @@ def run_cloud_multi_turn_agent_entry(
                     "usd": call_usd,
                     "running_usd": running_after,
                     "n_tool_use_blocks": len(tool_uses),
+                    **account,
                 }
             )
+            sent_len = len(messages)
             messages.append({"role": "assistant", "content": content_blocks})
 
             if not tool_uses:
@@ -3744,6 +3794,7 @@ def run_cloud_multi_turn_agent_entry(
                     }
                 )
             messages.append({"role": "user", "content": tool_result_content})
+            cursor = sent_len
             step += 1
             if step > MAXIMUM_STEP_LIMIT:
                 force_quit = True

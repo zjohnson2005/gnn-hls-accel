@@ -82,10 +82,15 @@ INTERLEAVE_POLICIES_2POLICY: tuple[str, ...] = (
     "slo_escalate",
     "emission_escalate",
 )
+# cloud_only is selectable inside the interleaved harness. The default arm
+# order stays the three-policy comparison.
+INTERLEAVE_SELECTABLE: tuple[str, ...] = INTERLEAVE_POLICIES + ("cloud_only",)
 DEFAULT_POLICY_CAPS_USD: dict[str, float] = {
     "slo_escalate": 5.0,
     "emission_escalate": 20.0,
     "full_signal_bounceback": 10.0,
+    # Same single-arm cap as tools/launch_h1.ps1 (1.5 x the registered R0 point).
+    "cloud_only": 81.1056,
 }
 DEFAULT_SESSION_CAP_USD = 35.0
 DEFAULT_SESSION_CAP_USD_2POLICY = 25.0
@@ -266,6 +271,8 @@ class TurnLedger:
     bounce_trigger: str | None = None  # R2c: set when this cloud turn is a bounce
     tool_exec_error: bool = False
     tool_exec_error_class: str | None = None
+    # Per Anthropic request inside this user turn. None on local turns.
+    cloud_requests: list[dict[str, Any]] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -523,6 +530,8 @@ class BackendTurn:
     cloud_context_text: str = ""  # cloud bounce output injected into local context
     # Set when the cloud path failed (API error / credit death / empty response).
     cloud_error: str | None = None
+    # One dict per Anthropic request in this user turn.
+    cloud_requests: list[dict[str, Any]] | None = None
 
 
 def attach_local_probe_quality(
@@ -1453,6 +1462,7 @@ class AnthropicCloudBackend:
     client: Any
     cloud_model: str
     max_tokens: int = 512
+    caching_policy: str = "none"
     _entry_cache: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     def _ensure_entry(self, entry: dict[str, Any]) -> dict[str, Any]:
@@ -1466,6 +1476,7 @@ class AnthropicCloudBackend:
                 max_tokens=self.max_tokens,
                 entry=entry,
                 running_usd=0.0,
+                caching_policy=self.caching_policy,
             )
             self._entry_cache[eid] = row
         return self._entry_cache[eid]
@@ -1518,6 +1529,7 @@ class AnthropicCloudBackend:
             t_generate=phases["t_generate"],
             raw_text="[anthropic]",
             cloud_error=cloud_error,
+            cloud_requests=list(calls),
         )
 
 
@@ -1591,6 +1603,9 @@ class CloudDeadPathGuard:
     n: int = CLOUD_DEAD_CONSECUTIVE_N
     consecutive: int = 0
     events: list[dict[str, Any]] = field(default_factory=list)
+    requests_by_turn: dict[tuple[str, str, int], list[dict[str, Any]]] = field(
+        default_factory=dict
+    )
 
     def observe(
         self,
@@ -1616,6 +1631,8 @@ class CloudDeadPathGuard:
             "cloud_error": bt.cloud_error,
         }
         self.events.append(rec)
+        if bt.cloud_requests is not None:
+            self.requests_by_turn[(policy, entry_id, turn)] = list(bt.cloud_requests)
         return rec
 
     def raise_if_refused(self) -> None:
@@ -2246,6 +2263,43 @@ def _run_hybrid_entry_body(
 # ---------------------------------------------------------------------------
 # Session runner
 # ---------------------------------------------------------------------------
+def _annotate_cloud_requests(
+    rows: list[dict[str, Any]],
+    guard: CloudDeadPathGuard | None,
+    policy: str,
+) -> list[dict[str, Any]]:
+    """Copy per-request cloud logs onto serialized turn rows."""
+    if guard is None:
+        return rows
+    for row in rows:
+        eid = str(row.get("entry_id"))
+        for turn in row.get("turns") or []:
+            key = (policy, eid, int(turn.get("turn", -1)))
+            logged = guard.requests_by_turn.get(key)
+            if logged is not None:
+                turn["cloud_requests"] = logged
+    return rows
+
+
+def _cloud_usd_invariant(state: dict[str, Any], policies: tuple[str, ...]) -> dict[str, Any]:
+    from tools.h1_cloud_accounting import cloud_usd_nondecreasing
+
+    arms: list[dict[str, Any]] = []
+    for policy in policies:
+        for row in state[policy]["ledger_rows"]:
+            turns = row.get("turns") or []
+            n_cloud = sum(1 for t in turns if t.get("placement") == "cloud")
+            arms.append(
+                {
+                    "entry_id": row.get("entry_id"),
+                    "policy": policy,
+                    "n_cloud_turns": n_cloud,
+                    "cloud_usd": float(row.get("cloud_usd_entry") or 0.0),
+                }
+            )
+    return cloud_usd_nondecreasing(arms)
+
+
 def run_session(
     *,
     policy: str,
@@ -2258,6 +2312,7 @@ def run_session(
     model: str | None = None,
     seal: bool = True,
     skip_entry_assert: bool = False,
+    caching_policy: str = "none",
 ) -> dict[str, Any]:
     if max_usd is None:
         raise SystemExit("REFUSED -- --max-usd is required (cost guard)")
@@ -2298,6 +2353,7 @@ def run_session(
         "w3_entry_pin": W3_ENTRIES_SHA256,
         "w3_seal_refs": list(W3_SEAL_REFS),
         "scorer": assert_scorer_version(),
+        "caching_policy": caching_policy,
         "resume_from_completed": sorted(completed),
     }
     if isinstance(local, OpenVinoLocalBackend):
@@ -2345,7 +2401,7 @@ def run_session(
             },
         }
         _write_json(out_dir / "summary.json", doc)
-        _write_json(out_dir / "turn_ledger.json", {"entries": ledger_rows})
+        _write_json(out_dir / "turn_ledger.json", {"entries": _annotate_cloud_requests(ledger_rows, cloud_dead_guard, policy)})
         _write_json(out_dir / "entry_quality.json", {"entries": quality_rows})
         summary_written = True
         return doc
@@ -2382,7 +2438,7 @@ def run_session(
                         "abort_reason": abort_reason,
                     },
                 )
-                _write_json(out_dir / "turn_ledger.json", {"entries": ledger_rows})
+                _write_json(out_dir / "turn_ledger.json", {"entries": _annotate_cloud_requests(ledger_rows, cloud_dead_guard, policy)})
                 _write_json(out_dir / "entry_quality.json", {"entries": quality_rows})
                 break
             except CostCapExceeded as exc:
@@ -2403,7 +2459,7 @@ def run_session(
                         "abort_reason": abort_reason,
                     },
                 )
-                _write_json(out_dir / "turn_ledger.json", {"entries": ledger_rows})
+                _write_json(out_dir / "turn_ledger.json", {"entries": _annotate_cloud_requests(ledger_rows, cloud_dead_guard, policy)})
                 _write_json(out_dir / "entry_quality.json", {"entries": quality_rows})
                 break
 
@@ -2419,7 +2475,7 @@ def run_session(
                     "updated_utc": _utc_now(),
                 },
             )
-            _write_json(out_dir / "turn_ledger.json", {"entries": ledger_rows})
+            _write_json(out_dir / "turn_ledger.json", {"entries": _annotate_cloud_requests(ledger_rows, cloud_dead_guard, policy)})
             _write_json(out_dir / "entry_quality.json", {"entries": quality_rows})
             print(
                 f"ENTRY_DONE id={eid} cloud_usd_entry={er.cloud_usd_entry:.6f} "
@@ -2492,6 +2548,7 @@ def run_interleaved_session(
     model: str | None = None,
     seal: bool = True,
     skip_entry_assert: bool = False,
+    caching_policy: str = "none",
 ) -> dict[str, Any]:
     """Entry-by-entry interleave of selected H1 policy arms (INF-5 session_design=interleaved).
 
@@ -2564,6 +2621,7 @@ def run_interleaved_session(
         "w3_entry_pin": W3_ENTRIES_SHA256,
         "w3_seal_refs": list(W3_SEAL_REFS),
         "scorer": assert_scorer_version(),
+        "caching_policy": caching_policy,
         "kv_match_seal": "86d0f4cf-e8c2-4ce5-96da-04c6a9c129f3",
         "placement": "gpu_only",
         "residency": "RESIDENT",
@@ -2607,7 +2665,7 @@ def run_interleaved_session(
                 "updated_utc": _utc_now(),
             },
         )
-        _write_json(pdir / "turn_ledger.json", {"entries": st["ledger_rows"]})
+        _write_json(pdir / "turn_ledger.json", {"entries": _annotate_cloud_requests(st["ledger_rows"], cloud_dead_guard, policy)})
         _write_json(pdir / "entry_quality.json", {"entries": st["quality_rows"]})
         n_scored = sum(1 for q in st["quality_rows"] if q.get("trajectory_pass") is not None)
         n_pass = sum(1 for q in st["quality_rows"] if q.get("trajectory_pass") is True)
@@ -2822,6 +2880,8 @@ def run_interleaved_session(
             for p in policies
         },
         "finished_utc": _utc_now(),
+        "caching_policy": caching_policy,
+        "cloud_usd_invariant": _cloud_usd_invariant(state, policies),
         **excl,
     }
     _write_json(out_dir / "summary.json", summary)
@@ -3053,10 +3113,10 @@ def build_argparser() -> argparse.ArgumentParser:
         "--interleaved-policy",
         action="append",
         default=[],
-        choices=list(INTERLEAVE_POLICIES),
+        choices=list(INTERLEAVE_SELECTABLE),
         metavar="POLICY",
         help="Select interleaved arms (repeatable; order preserved). "
-        "Omit for full H1-3POLICY. H1-2POLICY: "
+        "Omit for full H1-3POLICY. cloud_only is selectable. H1-2POLICY: "
         "--interleaved-policy slo_escalate --interleaved-policy emission_escalate.",
     )
     p.add_argument(
@@ -3131,6 +3191,13 @@ def build_argparser() -> argparse.ArgumentParser:
         help="Write .sealed tree hash (requires OpenVinoLocalBackend for hybrid; "
         "fixture/scripted refuse). Default: on for live, off for --fixture.",
     )
+    p.add_argument(
+        "--caching-policy",
+        choices=["none", "ephemeral"],
+        default="none",
+        help="Anthropic prompt-cache policy recorded in the seal. "
+        "Default none matches d482c621 (no cache_control).",
+    )
     return p
 
 
@@ -3141,7 +3208,7 @@ def _parse_policy_caps(raw: list[str]) -> dict[str, float]:
             raise SystemExit(f"REFUSED -- --policy-cap must be POLICY=USD, got {item!r}")
         name, val = item.split("=", 1)
         name = name.strip()
-        if name not in INTERLEAVE_POLICIES:
+        if name not in INTERLEAVE_SELECTABLE:
             raise SystemExit(f"REFUSED -- unknown interleaved policy in --policy-cap: {name!r}")
         caps[name] = float(val)
     return caps
@@ -3154,7 +3221,7 @@ def _resolve_interleaved_policies(raw: list[str] | None) -> tuple[str, ...]:
     seen: set[str] = set()
     out: list[str] = []
     for name in raw:
-        if name not in INTERLEAVE_POLICIES:
+        if name not in INTERLEAVE_SELECTABLE:
             raise SystemExit(f"REFUSED -- unknown interleaved policy: {name!r}")
         if name in seen:
             raise SystemExit(f"REFUSED -- duplicate --interleaved-policy {name!r}")
@@ -3165,7 +3232,9 @@ def _resolve_interleaved_policies(raw: list[str] | None) -> tuple[str, ...]:
     return tuple(out)
 
 
-def _make_live_cloud(cloud_model: str | None) -> AnthropicCloudBackend:
+def _make_live_cloud(
+    cloud_model: str | None, *, caching_policy: str = "none"
+) -> AnthropicCloudBackend:
     import os
 
     if not os.environ.get("ANTHROPIC_API_KEY"):
@@ -3180,7 +3249,9 @@ def _make_live_cloud(cloud_model: str | None) -> AnthropicCloudBackend:
     import tools.bfcl_feasibility_probe as probe
 
     model = cloud_model or probe.CLOUD_DEFAULT_MODEL
-    return AnthropicCloudBackend(client=anthropic.Anthropic(), cloud_model=model)
+    return AnthropicCloudBackend(
+        client=anthropic.Anthropic(), cloud_model=model, caching_policy=caching_policy
+    )
 
 
 def _stubbed_generate_fakes(hf_tokenizer: Any) -> tuple[Any, Any, Any]:
@@ -3446,6 +3517,7 @@ def main(argv: list[str] | None = None) -> int:
             run_id=args.run_id,
             skip_entry_assert=True,
             seal=False,
+            caching_policy=args.caching_policy,
         )
         print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
         return 0 if summary["status"] == "complete" else 2
@@ -3455,7 +3527,7 @@ def main(argv: list[str] | None = None) -> int:
     gold = json.loads(gold_path.read_text(encoding="utf-8-sig")) if gold_path.is_file() else None
     assert_scorer_version(gold)
 
-    cloud = _make_live_cloud(args.cloud_model)
+    cloud = _make_live_cloud(args.cloud_model, caching_policy=args.caching_policy)
     seal = True if args.seal is None else bool(args.seal)
 
     if args.policy == "cloud_only":
@@ -3481,6 +3553,7 @@ def main(argv: list[str] | None = None) -> int:
         run_id=args.run_id,
         skip_entry_assert=False,
         seal=seal,
+        caching_policy=args.caching_policy,
     )
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
     return 0 if summary["status"] == "complete" else 2
@@ -3523,6 +3596,7 @@ def _main_interleaved(args: argparse.Namespace) -> int:
             run_id=args.run_id,
             skip_entry_assert=True,
             seal=False,
+            caching_policy=args.caching_policy,
         )
         print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
         ok_statuses = {"complete", "partial_policy_cap"}
@@ -3533,7 +3607,7 @@ def _main_interleaved(args: argparse.Namespace) -> int:
     gold = json.loads(gold_path.read_text(encoding="utf-8-sig")) if gold_path.is_file() else None
     assert_scorer_version(gold)
 
-    cloud = _make_live_cloud(args.cloud_model)
+    cloud = _make_live_cloud(args.cloud_model, caching_policy=args.caching_policy)
     if args.local_script is not None:
         if seal:
             raise SystemExit(
@@ -3556,6 +3630,7 @@ def _main_interleaved(args: argparse.Namespace) -> int:
         run_id=args.run_id,
         skip_entry_assert=False,
         seal=seal,
+        caching_policy=args.caching_policy,
     )
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
     ok_statuses = {"complete", "partial_policy_cap"}
