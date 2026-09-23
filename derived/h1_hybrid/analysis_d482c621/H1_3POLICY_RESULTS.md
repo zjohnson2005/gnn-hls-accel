@@ -4,7 +4,7 @@ Every number below is from run_id `d482c621-4292-4281-b6a1-8635e5eeb6da`.
 
 ## Assertion
 
-200 rows per policy: yes. Pass counts equal policy summaries: True. Pass counts equal summary/3: **FAIL**.
+200 rows per policy, and the pass count equals the count of entry_quality rows with hybrid_pass true: **True**. The summary/3 check is superseded.
 
 | policy | rows | hybrid_pass | local_pass | summary hybrid | summary local |
 |---|---:|---:|---:|---:|---:|

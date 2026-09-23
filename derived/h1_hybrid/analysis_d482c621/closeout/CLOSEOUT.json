@@ -1,0 +1,880 @@
+{
+  "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+  "started_utc": "2026-09-23T14:56:10.766980+00:00",
+  "finished_utc": "2026-09-23T18:24:28.353878+00:00",
+  "provenance": {
+    "seal_recorded_git_sha": null,
+    "seal_recorded_dirty": null,
+    "seal_recorded_dirty_files": null,
+    "seal_tree_sha256": "cd0c5e84c23c27cba6c97a3292fb197c3ce7ba798dd49ad56cf63e23ed40b1e1",
+    "runner_file_dirty_at_launch": "YES_UNRECORDED_LIST: sealed entry_quality has hybrid_pass, which is absent from the git commit that was HEAD at started_utc. The seal does not list dirty files. The uncommitted scoring diff on tools/run_h1_hybrid.py is the implementation that produces hybrid_pass.",
+    "head_at_started_utc": {
+      "sha": "a001b4529c91e490155ba09c13d184fd4b61a2a0",
+      "committed_utc": "2026-09-23T10:23:42-04:00",
+      "subject": "TURNWISE-STATE: reset BFCL tool instances on every session begin."
+    },
+    "predictions": {
+      "h1_3policy_json": {
+        "path": "derived/h1_hybrid/H1_3POLICY_PREDICTIONS.json",
+        "first_commit": "5d290e92f60b1627ba4ea09a68c7c3a174139d8a",
+        "first_commit_utc": "2026-09-20T17:10:14-04:00"
+      },
+      "h1_3policy_md": {
+        "path": "derived/h1_hybrid/H1_3POLICY_PREDICTIONS.md",
+        "first_commit": "5d290e92f60b1627ba4ea09a68c7c3a174139d8a",
+        "first_commit_utc": "2026-09-20T17:10:14-04:00"
+      },
+      "h1_predictions_md": {
+        "requested_path": "derived/h1_hybrid/H1_PREDICTIONS.md",
+        "present_at_requested_path": false,
+        "found_at": "derived/d1_replay/H1_PREDICTIONS.md",
+        "first_commit": "f0f5a8c55c31392def1dbd86c48d044f03ceb361",
+        "first_commit_utc": "2026-09-12T15:34:51-04:00"
+      }
+    },
+    "predictions_committed_before_start": true,
+    "analysis_imports_run_h1_hybrid": false
+  },
+  "assertion": {
+    "slo_escalate": {
+      "n_rows": 200,
+      "n_hybrid_pass_true": 21,
+      "summary_n_hybrid_pass": 21,
+      "pass": true
+    },
+    "emission_escalate": {
+      "n_rows": 200,
+      "n_hybrid_pass_true": 46,
+      "summary_n_hybrid_pass": 46,
+      "pass": true
+    },
+    "full_signal_bounceback": {
+      "n_rows": 200,
+      "n_hybrid_pass_true": 30,
+      "summary_n_hybrid_pass": 30,
+      "pass": true
+    }
+  },
+  "buckets": [
+    {
+      "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+      "policy": "slo_escalate",
+      "first_fail_PASS": 21,
+      "full_trajectory_PASS": 21,
+      "first_fail_MISMATCH": 98,
+      "full_trajectory_MISMATCH": 98,
+      "first_fail_EMPTY": 46,
+      "full_trajectory_EMPTY": 46,
+      "first_fail_EXEC_RESP": 35,
+      "full_trajectory_EXEC_RESP": 35,
+      "first_fail_sum": 200,
+      "full_sum": 200,
+      "columns_equal": true
+    },
+    {
+      "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+      "policy": "emission_escalate",
+      "first_fail_PASS": 46,
+      "full_trajectory_PASS": 46,
+      "first_fail_MISMATCH": 113,
+      "full_trajectory_MISMATCH": 113,
+      "first_fail_EMPTY": 3,
+      "full_trajectory_EMPTY": 3,
+      "first_fail_EXEC_RESP": 38,
+      "full_trajectory_EXEC_RESP": 38,
+      "first_fail_sum": 200,
+      "full_sum": 200,
+      "columns_equal": true
+    },
+    {
+      "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+      "policy": "full_signal_bounceback",
+      "first_fail_PASS": 30,
+      "full_trajectory_PASS": 30,
+      "first_fail_MISMATCH": 128,
+      "full_trajectory_MISMATCH": 128,
+      "first_fail_EMPTY": 1,
+      "full_trajectory_EMPTY": 1,
+      "first_fail_EXEC_RESP": 41,
+      "full_trajectory_EXEC_RESP": 41,
+      "first_fail_sum": 200,
+      "full_sum": 200,
+      "columns_equal": true
+    }
+  ],
+  "recovery": [
+    {
+      "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+      "policy": "slo_escalate",
+      "gross_recovered": 0,
+      "regressions": 0,
+      "net": 0,
+      "cloud_usd": 0.0,
+      "usd_per_net_recovered": null
+    },
+    {
+      "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+      "policy": "emission_escalate",
+      "gross_recovered": 29,
+      "regressions": 4,
+      "net": 25,
+      "cloud_usd": 16.119519,
+      "usd_per_net_recovered": 0.6447807600000001
+    },
+    {
+      "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+      "policy": "full_signal_bounceback",
+      "gross_recovered": 14,
+      "regressions": 5,
+      "net": 9,
+      "cloud_usd": 8.167050000000001,
+      "usd_per_net_recovered": 0.9074500000000002
+    }
+  ],
+  "mcnemar": [
+    {
+      "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+      "left": "emission_escalate",
+      "right": "slo_escalate",
+      "n": 200,
+      "b_left_pass_right_fail": 29,
+      "c_left_fail_right_pass": 4,
+      "p_exact": 1.0928604751825333e-05,
+      "p_holm": 3.2785814255476e-05
+    },
+    {
+      "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+      "left": "full_signal_bounceback",
+      "right": "slo_escalate",
+      "n": 200,
+      "b_left_pass_right_fail": 14,
+      "c_left_fail_right_pass": 5,
+      "p_exact": 0.063568115234375,
+      "p_holm": 0.063568115234375
+    },
+    {
+      "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+      "left": "emission_escalate",
+      "right": "full_signal_bounceback",
+      "n": 200,
+      "b_left_pass_right_fail": 21,
+      "c_left_fail_right_pass": 5,
+      "p_exact": 0.002493917942047119,
+      "p_holm": 0.004987835884094238
+    }
+  ],
+  "divergence": {
+    "n_emission_non_escalated_bucket_diff": 14,
+    "n_bounceback_non_escalated_bucket_diff": 10,
+    "n_controls": 20,
+    "control_rule": "first 20 entry ids, sorted, that are non-escalated under emission and bounceback and share slo's 4-way bucket under both",
+    "prompt_fields_on_turn": [],
+    "prompt_sha256_recorded": false,
+    "classification_counts": {
+      "NOT_IN_SEAL": 44
+    },
+    "generation_config": {
+      "source": "plan.json openvino",
+      "max_new_tokens": 512,
+      "kv": "u8",
+      "residency": "RESIDENT",
+      "placement": "gpu_only",
+      "do_sample": "NOT_IN_SEAL",
+      "temperature": "NOT_IN_SEAL",
+      "same_plan_for_all_policies": true
+    },
+    "rows": [
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "emission_escalate",
+        "entry_id": "multi_turn_base_158",
+        "slo_bucket": "EMPTY",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "emission_escalate",
+        "entry_id": "multi_turn_base_162",
+        "slo_bucket": "EMPTY",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "emission_escalate",
+        "entry_id": "multi_turn_base_17",
+        "slo_bucket": "EMPTY",
+        "policy_bucket": "EXEC_RESP",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "emission_escalate",
+        "entry_id": "multi_turn_base_176",
+        "slo_bucket": "EMPTY",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "emission_escalate",
+        "entry_id": "multi_turn_base_179",
+        "slo_bucket": "PASS",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "emission_escalate",
+        "entry_id": "multi_turn_base_194",
+        "slo_bucket": "EMPTY",
+        "policy_bucket": "EXEC_RESP",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "emission_escalate",
+        "entry_id": "multi_turn_base_20",
+        "slo_bucket": "EMPTY",
+        "policy_bucket": "EXEC_RESP",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "emission_escalate",
+        "entry_id": "multi_turn_base_21",
+        "slo_bucket": "PASS",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 2,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "emission_escalate",
+        "entry_id": "multi_turn_base_37",
+        "slo_bucket": "EXEC_RESP",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "emission_escalate",
+        "entry_id": "multi_turn_base_56",
+        "slo_bucket": "EMPTY",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "emission_escalate",
+        "entry_id": "multi_turn_base_88",
+        "slo_bucket": "PASS",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 1,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "emission_escalate",
+        "entry_id": "multi_turn_base_90",
+        "slo_bucket": "MISMATCH",
+        "policy_bucket": "EXEC_RESP",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "emission_escalate",
+        "entry_id": "multi_turn_base_94",
+        "slo_bucket": "EMPTY",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "emission_escalate",
+        "entry_id": "multi_turn_base_96",
+        "slo_bucket": "EXEC_RESP",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "full_signal_bounceback",
+        "entry_id": "multi_turn_base_158",
+        "slo_bucket": "EMPTY",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "full_signal_bounceback",
+        "entry_id": "multi_turn_base_162",
+        "slo_bucket": "EMPTY",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "full_signal_bounceback",
+        "entry_id": "multi_turn_base_17",
+        "slo_bucket": "EMPTY",
+        "policy_bucket": "EXEC_RESP",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "full_signal_bounceback",
+        "entry_id": "multi_turn_base_176",
+        "slo_bucket": "EMPTY",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "full_signal_bounceback",
+        "entry_id": "multi_turn_base_179",
+        "slo_bucket": "PASS",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "full_signal_bounceback",
+        "entry_id": "multi_turn_base_20",
+        "slo_bucket": "EMPTY",
+        "policy_bucket": "EXEC_RESP",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "full_signal_bounceback",
+        "entry_id": "multi_turn_base_21",
+        "slo_bucket": "PASS",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 2,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "full_signal_bounceback",
+        "entry_id": "multi_turn_base_88",
+        "slo_bucket": "PASS",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 1,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "full_signal_bounceback",
+        "entry_id": "multi_turn_base_94",
+        "slo_bucket": "EMPTY",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "outcome_differs",
+        "policy": "full_signal_bounceback",
+        "entry_id": "multi_turn_base_96",
+        "slo_bucket": "EXEC_RESP",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn": 0,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_0",
+        "slo_bucket": "MISMATCH",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_1",
+        "slo_bucket": "MISMATCH",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_10",
+        "slo_bucket": "MISMATCH",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_100",
+        "slo_bucket": "MISMATCH",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_101",
+        "slo_bucket": "PASS",
+        "policy_bucket": "PASS",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_102",
+        "slo_bucket": "MISMATCH",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_106",
+        "slo_bucket": "MISMATCH",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_109",
+        "slo_bucket": "MISMATCH",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_110",
+        "slo_bucket": "MISMATCH",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_111",
+        "slo_bucket": "MISMATCH",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_114",
+        "slo_bucket": "PASS",
+        "policy_bucket": "PASS",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_116",
+        "slo_bucket": "PASS",
+        "policy_bucket": "PASS",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_117",
+        "slo_bucket": "MISMATCH",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_118",
+        "slo_bucket": "MISMATCH",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_119",
+        "slo_bucket": "EXEC_RESP",
+        "policy_bucket": "EXEC_RESP",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_12",
+        "slo_bucket": "PASS",
+        "policy_bucket": "PASS",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_121",
+        "slo_bucket": "MISMATCH",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_122",
+        "slo_bucket": "PASS",
+        "policy_bucket": "PASS",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_123",
+        "slo_bucket": "MISMATCH",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "role": "matched_control",
+        "policy": "both_non_escalated_same_bucket",
+        "entry_id": "multi_turn_base_124",
+        "slo_bucket": "MISMATCH",
+        "policy_bucket": "MISMATCH",
+        "first_differing_turn_emission": null,
+        "first_differing_turn_bounceback": null,
+        "prompt_sha256": "NOT_IN_SEAL",
+        "classification": "NOT_IN_SEAL"
+      }
+    ]
+  },
+  "ttft": {
+    "new_token_definition": "On local turns, new_tokens is n_ctx at turn 0 and the positive increase in n_ctx versus the previous local turn otherwise. n_ctx on a local turn is the runner's prompt token count.",
+    "per_policy": [
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "policy": "slo_escalate",
+        "n_local_turns": 732,
+        "mean_ttft_s": 0.7536730448360656,
+        "mean_new_tokens": 1129.9248633879781,
+        "intercept": 0.14341214442151806,
+        "slope_per_new_token": 0.0005400898061351927,
+        "r2": 0.6580765187202497
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "policy": "emission_escalate",
+        "n_local_turns": 550,
+        "mean_ttft_s": 0.20090148695636362,
+        "mean_new_tokens": 1255.9381818181819,
+        "intercept": 0.25201493744761994,
+        "slope_per_new_token": -4.0697425423647e-05,
+        "r2": 0.26445780546926856
+      },
+      {
+        "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+        "policy": "full_signal_bounceback",
+        "n_local_turns": 642,
+        "mean_ttft_s": 0.15682686849844235,
+        "mean_new_tokens": 1352.4953271028037,
+        "intercept": 0.17862399028060494,
+        "slope_per_new_token": -1.611622705481323e-05,
+        "r2": 0.07023691266996701
+      }
+    ],
+    "matched_local_under_all_three": {
+      "slo_escalate": 0.818324462237037,
+      "emission_escalate": 0.2016839430425926,
+      "full_signal_bounceback": 0.14673837051296298,
+      "n_pairs": 540
+    },
+    "matched_regression_ttft_on_new_tokens_and_policy": {
+      "coef_names": [
+        "intercept",
+        "new_tokens",
+        "emission",
+        "bounceback"
+      ],
+      "n": 1620,
+      "coef": [
+        0.6201540465726697,
+        0.00016062734359545324,
+        -0.616997468846879,
+        -0.6787991518256415
+      ],
+      "se": [
+        0.02746335819432411,
+        8.886991181839942e-06,
+        0.03560966548868342,
+        0.03561189614825636
+      ],
+      "r2": 0.32138141050887514,
+      "policy_ci_excludes_zero": true
+    },
+    "timestamps_on_turn": [],
+    "wall_clock_proxy": "Per-turn timestamps are absent. Order uses cumulative turn_wall_s in interleaved arm order (slo, emission, bounceback) within entry order.",
+    "matched_regression_with_cumulative_wall": {
+      "coef_names": [
+        "intercept",
+        "new_tokens",
+        "cumulative_turn_wall_s",
+        "emission",
+        "bounceback"
+      ],
+      "n": 1620,
+      "coef": [
+        0.5433733351802685,
+        0.00016241151502931393,
+        1.5578438119828915e-05,
+        -0.6173265039125204,
+        -0.6795021589846244
+      ],
+      "se": [
+        0.03696313075373409,
+        8.882263783603493e-06,
+        5.03579101495388e-06,
+        0.035515775636164836,
+        0.03551856812488043
+      ],
+      "r2": 0.3253790143158568,
+      "policy_ci_excludes_zero": true
+    },
+    "verdict": "UNEXPLAINED"
+  },
+  "cloud_usage": {
+    "input_tokens": "cloud_tokens_in on the turn (sum across calls in the turn)",
+    "output_tokens": "cloud_tokens_out on the turn (sum across calls in the turn)",
+    "cache_creation_input_tokens": "MISSING",
+    "cache_read_input_tokens": "MISSING",
+    "calls_per_escalated_turn": "MISSING"
+  },
+  "r0_cap": {
+    "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+    "formula": "expected_usd = sum_k N_slo(k) * mean_usd(k). k is the user-turn index. N_slo(k) is the number of slo turns at that index (slo ran every turn locally). mean_usd(k) is the mean sealed cloud_usd of cloud turns at index k. Price check uses 3.0 USD/MTok in and 15.0 USD/MTok out on the same mean token depths.",
+    "price_usd_per_mtok_in": 3.0,
+    "price_usd_per_mtok_out": 15.0,
+    "n_cloud_turns_in_fit": 275,
+    "n_slo_turns_covered": 732,
+    "n_slo_turns_uncovered": 0,
+    "expected_usd": 64.82314053260804,
+    "expected_usd_from_price_list": 64.82314053260804,
+    "usd_vs_tokens_in": {
+      "n": 275.0,
+      "intercept": 0.0023459595567948185,
+      "slope": 3.1201826017160805e-06,
+      "r2": 0.9956434998185911
+    },
+    "usd_vs_turn_index": {
+      "n": 275.0,
+      "intercept": 0.09169066564003597,
+      "slope": -0.0020138048828847845,
+      "r2": 0.004408207659288066
+    },
+    "tokens_in_vs_turn_index": {
+      "n": 275.0,
+      "intercept": 28392.7681555015,
+      "slope": -501.2434767091434,
+      "r2": 0.002670428116874346
+    },
+    "tokens_out_vs_turn_index": {
+      "n": 275.0,
+      "intercept": 434.15741156876237,
+      "slope": -34.004963517157506,
+      "r2": 0.04847897271085233
+    },
+    "depth_means": [
+      {
+        "turn": 0,
+        "n_cloud_turns": 70,
+        "mean_tokens_in": 31094.742857142857,
+        "mean_tokens_out": 455.25714285714287,
+        "mean_usd": 0.10011308571428572
+      },
+      {
+        "turn": 1,
+        "n_cloud_turns": 70,
+        "mean_tokens_in": 24217.757142857143,
+        "mean_tokens_out": 387.54285714285714,
+        "mean_usd": 0.07846641428571427
+      },
+      {
+        "turn": 2,
+        "n_cloud_turns": 57,
+        "mean_tokens_in": 26092.21052631579,
+        "mean_tokens_out": 319.05263157894734,
+        "mean_usd": 0.08306242105263159
+      },
+      {
+        "turn": 3,
+        "n_cloud_turns": 44,
+        "mean_tokens_in": 30745.81818181818,
+        "mean_tokens_out": 368.97727272727275,
+        "mean_usd": 0.09777211363636362
+      },
+      {
+        "turn": 4,
+        "n_cloud_turns": 27,
+        "mean_tokens_in": 24757.814814814814,
+        "mean_tokens_out": 324.1111111111111,
+        "mean_usd": 0.07913511111111111
+      },
+      {
+        "turn": 5,
+        "n_cloud_turns": 5,
+        "mean_tokens_in": 31061.2,
+        "mean_tokens_out": 269.0,
+        "mean_usd": 0.0972186
+      },
+      {
+        "turn": 6,
+        "n_cloud_turns": 2,
+        "mean_tokens_in": 20612.0,
+        "mean_tokens_out": 102.0,
+        "mean_usd": 0.063366
+      }
+    ]
+  },
+  "cache_control_in_harness": false
+}

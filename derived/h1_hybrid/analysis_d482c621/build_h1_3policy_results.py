@@ -182,7 +182,8 @@ def main() -> None:
             "summary_n_hybrid_pass": summary_h,
             "summary_n_local_pass": summary_l,
             "equals_summary": n_hybrid == summary_h and n_local == summary_l,
-            "equals_summary_divided_by_3": (n_hybrid == summary_h / 3 and n_local == summary_l / 3),
+            "pass_count_equals_hybrid_pass_true": n_hybrid == summary_h,
+            "n_rows_is_200": len(qrows) == 200,
         }
         for q in qrows:
             eid = str(q["entry_id"])
@@ -216,8 +217,11 @@ def main() -> None:
                 }
             )
 
-    div3_ok = all(v["equals_summary_divided_by_3"] for v in assertion_rows.values())
     summary_ok = all(v["equals_summary"] for v in assertion_rows.values())
+    pass_true_ok = all(
+        v["pass_count_equals_hybrid_pass_true"] and v["n_rows_is_200"]
+        for v in assertion_rows.values()
+    )
     if not summary_ok:
         raise SystemExit("FAIL: entry_quality pass counts do not match policy summaries")
 
@@ -723,12 +727,14 @@ def main() -> None:
             "run_id": RUN_ID,
             "n_rows_per_policy_is_200": True,
             "pass_counts_equal_summary": summary_ok,
-            "pass_counts_equal_summary_divided_by_3": div3_ok,
-            "div3_verdict": "FAIL" if not div3_ok else "PASS",
+            "n_rows_per_policy_is_200_and_pass_count_equals_hybrid_pass_true": pass_true_ok,
+            "div3_check": "SUPERSEDED",
             "per_policy": assertion_rows,
             "reading": (
-                "Entry pass counts equal each policy summary. "
-                "They do not equal those summary counts divided by 3."
+                "200 rows per policy, and the pass count equals the number of "
+                "entry_quality rows with hybrid_pass true (and the policy summary). "
+                "The summary/3 check is superseded; it compared a per-policy count "
+                "to that same count divided by 3."
             ),
         },
         "per_entry": per_entry,
@@ -766,7 +772,9 @@ def main() -> None:
     print(
         json.dumps(
             {
-                "div3": results["assertion"]["div3_verdict"],
+                "pass_true_ok": results["assertion"][
+                    "n_rows_per_policy_is_200_and_pass_count_equals_hybrid_pass_true"
+                ],
                 "hybrid": {p: assertion_rows[p]["n_hybrid_pass"] for p in POLICIES},
                 "local": {p: assertion_rows[p]["n_local_pass"] for p in POLICIES},
                 "mcnemar": mcnemar,
@@ -803,9 +811,10 @@ def _markdown(results: dict[str, Any], frontier: dict[str, Any]) -> str:
     lines.append("")
     a = results["assertion"]
     lines.append(
-        f"200 rows per policy: yes. Pass counts equal policy summaries: "
-        f"{a['pass_counts_equal_summary']}. Pass counts equal summary/3: "
-        f"**{a['div3_verdict']}**."
+        "200 rows per policy, and the pass count equals the count of "
+        "entry_quality rows with hybrid_pass true: "
+        f"**{a['n_rows_per_policy_is_200_and_pass_count_equals_hybrid_pass_true']}**. "
+        "The summary/3 check is superseded."
     )
     lines.append("")
     lines.append("| policy | rows | hybrid_pass | local_pass | summary hybrid | summary local |")
