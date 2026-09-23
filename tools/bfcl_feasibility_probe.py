@@ -852,6 +852,92 @@ def decode_execute_qwen(text: str) -> list[str]:
     return convert_to_function_call(decoded_ast)
 
 
+def encode_execute_calls_as_qwen_tool_text(execute_calls: list[str]) -> str:
+    """Encode BFCL execute strings as Qwen <tool_call> JSON (gate / gold replay)."""
+    parts: list[str] = []
+    for s in execute_calls:
+        node = py_ast.parse(s, mode="eval").body
+        if not isinstance(node, py_ast.Call) or not isinstance(node.func, py_ast.Name):
+            raise ValueError(f"REFUSED -- not a simple Call execute string: {s!r}")
+        args: dict[str, Any] = {}
+        for i, a in enumerate(node.args):
+            args[f"#{i}"] = py_ast.literal_eval(a)
+        for kw in node.keywords:
+            if kw.arg is None:
+                raise ValueError(f"REFUSED -- **kwargs not supported in encode: {s!r}")
+            args[str(kw.arg)] = py_ast.literal_eval(kw.value)
+        body = json.dumps({"name": node.func.id, "arguments": args}, sort_keys=True)
+        parts.append(f"<tool_call>\n{body}\n</tool_call>")
+    return "\n".join(parts)
+
+
+def _evict_bfcl_tool_instances(
+    model_name: str, test_entry_id: str, involved_classes: list[str]
+) -> list[str]:
+    """Drop BFCL globals() instances for this (model_name, entry, classes).
+
+    ``execute_multi_turn_func_call`` only ``_load_scenario`` when the instance
+    name is absent; eviction makes the next empty warmup a true reset.
+    """
+    sys.path.insert(0, str(ROOT))
+    sys.path.insert(0, str(BFCL_UNPACKED))
+    from apu_characterization.cap01.bfcl_shims import install_bfcl_runtime_shims
+
+    install_bfcl_runtime_shims()
+    from bfcl_eval.eval_checker.multi_turn_eval import multi_turn_utils as mtu
+
+    removed: list[str] = []
+    for class_name in involved_classes:
+        instance_name = f"{model_name}_{test_entry_id}_{class_name}_instance"
+        instance_name = re.sub(r"[-./]", "_", instance_name)
+        if instance_name in mtu.__dict__:
+            del mtu.__dict__[instance_name]
+            removed.append(instance_name)
+    return removed
+
+
+def snapshot_bfcl_tool_instances(
+    *,
+    model_name: str,
+    test_entry_id: str,
+    initial_config: dict[str, Any],
+    involved_classes: list[str],
+    test_category: str,
+) -> dict[str, Any]:
+    """Return live BFCL class instances for an agent model_name (no new calls)."""
+    sys.path.insert(0, str(ROOT))
+    sys.path.insert(0, str(BFCL_UNPACKED))
+    from apu_characterization.cap01.bfcl_shims import install_bfcl_runtime_shims
+
+    install_bfcl_runtime_shims()
+    from bfcl_eval.eval_checker.multi_turn_eval.multi_turn_utils import (
+        execute_multi_turn_func_call,
+    )
+
+    _results, instances = execute_multi_turn_func_call(
+        [],
+        initial_config,
+        involved_classes,
+        model_name,
+        test_entry_id,
+        long_context=("long_context" in test_category or "composite" in test_category),
+        is_evaL_run=False,
+    )
+    return instances
+
+
+def compare_bfcl_instance_states(left: dict[str, Any], right: dict[str, Any]) -> dict[str, Any]:
+    """Same comparison the official multi_turn_checker uses for instance matching."""
+    sys.path.insert(0, str(ROOT))
+    sys.path.insert(0, str(BFCL_UNPACKED))
+    from apu_characterization.cap01.bfcl_shims import install_bfcl_runtime_shims
+
+    install_bfcl_runtime_shims()
+    from bfcl_eval.eval_checker.multi_turn_eval.multi_turn_checker import state_checker
+
+    return state_checker(left, right)
+
+
 def score_multi_turn(
     *,
     test_entry: dict[str, Any],
@@ -1739,12 +1825,25 @@ class MultiTurnAgentSession:
         self._involved_classes = raw.get("involved_classes") or []
         self._test_entry_id = str(raw["id"])
         self._test_category = entry["category"]
-        model_name = f"probe_gpu_{self._test_entry_id}".replace("-", "_").replace(".", "_")
+        # Unique model_name per begin: BFCL execute_multi_turn_func_call caches
+        # instances in multi_turn_utils.globals() keyed by
+        # "{model_name}_{test_entry_id}_{class}_instance" and only calls
+        # _load_scenario on first create. A stable per-entry name (pre-TURNWISE
+        # and the first interleaved begin) meant the empty warmup below was a
+        # no-op on re-begin of the same entry_id - interleaved policy 2+
+        # inherited policy 1's mutated GorillaFileSystem (6c7f88f1 void).
+        # Same uniqueness rule as score_multi_turn / bfcl_cap01_multi_turn_checker.
+        nonce = uuid.uuid4().hex[:12]
         if mode:
-            model_name = (
-                f"probe_{mode.lower()}_{self._test_entry_id}".replace("-", "_").replace(".", "_")
+            model_name = f"probe_{mode.lower()}_{self._test_entry_id}_{nonce}".replace(
+                "-", "_"
+            ).replace(".", "_")
+        else:
+            model_name = f"probe_gpu_{self._test_entry_id}_{nonce}".replace("-", "_").replace(
+                ".", "_"
             )
         self.model_name = model_name
+        _evict_bfcl_tool_instances(self.model_name, self._test_entry_id, self._involved_classes)
 
         execute_multi_turn_func_call(
             [],
@@ -1804,9 +1903,7 @@ class MultiTurnAgentSession:
         the next ``run_user_turn`` must re-prefill (measured TTFT).
         """
         if not self._begun or self._finished:
-            raise RuntimeError(
-                "inject_assistant requires an active (begun, not finished) session"
-            )
+            raise RuntimeError("inject_assistant requires an active (begun, not finished) session")
         from tools.r2c_inject import inject_assistant_into_chat_history, invalidate_resident_kv
 
         if replace_last_local_assistant:
@@ -2108,8 +2205,7 @@ class MultiTurnAgentSession:
                     self.model_name,
                     self._test_entry_id,
                     long_context=(
-                        "long_context" in self._test_category
-                        or "composite" in self._test_category
+                        "long_context" in self._test_category or "composite" in self._test_category
                     ),
                     is_evaL_run=False,
                 )
@@ -2152,9 +2248,7 @@ class MultiTurnAgentSession:
 
         per_turn_acc = None
         if turn_idx < len(entry["reference"]):
-            per_turn_acc = structural_turn_correct(
-                turn_decoded_steps, entry["reference"][turn_idx]
-            )
+            per_turn_acc = structural_turn_correct(turn_decoded_steps, entry["reference"][turn_idx])
 
         turn_wall_s = time.perf_counter() - t_turn0
         phases = finalize_phase_timers(
@@ -2193,6 +2287,18 @@ class MultiTurnAgentSession:
         self.turn_metrics.append(turn_metric)
         self._next_turn_idx = turn_idx + 1
         return turn_metric
+
+    def tool_instances(self) -> dict[str, Any]:
+        """Live BFCL tool instances for this session (post-begin; may be mutated)."""
+        if not self._begun:
+            raise RuntimeError("tool_instances requires begin()")
+        return snapshot_bfcl_tool_instances(
+            model_name=self.model_name,
+            test_entry_id=self._test_entry_id,
+            initial_config=self._initial_config,
+            involved_classes=self._involved_classes,
+            test_category=self._test_category,
+        )
 
     def finish(self) -> dict[str, Any]:
         """Close RESIDENT chat mode and emit the entry-level probe row."""
@@ -2278,10 +2384,7 @@ class MultiTurnAgentSession:
             "delta_tokens_vs_prev_turn": deltas_by_turn,
             "context_growth": self.context_growth,
             "context_growth_delta_tokens": (
-                (
-                    self.context_growth[-1]["prompt_tokens"]
-                    - self.context_growth[0]["prompt_tokens"]
-                )
+                (self.context_growth[-1]["prompt_tokens"] - self.context_growth[0]["prompt_tokens"])
                 if len(self.context_growth) >= 2
                 else 0
             ),
@@ -2313,9 +2416,7 @@ class MultiTurnAgentSession:
                 ),
             },
             "model_result_raw": self.all_model_response,
-            "model_result_raw_heads": [
-                [t[:300] for t in turn] for turn in self.all_model_response
-            ],
+            "model_result_raw_heads": [[t[:300] for t in turn] for turn in self.all_model_response],
             "model_result_decoded": self.all_decoded,
             "score": {
                 "valid": score.get("valid"),

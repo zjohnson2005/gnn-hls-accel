@@ -1,0 +1,33 @@
+{
+  "kind": "h1_cloud_dead_path_guard",
+  "consecutive_n": 3,
+  "rule": "Refuse session (CloudDeadPathError) after N consecutive cloud turns that return no usable completion (tin=0 and tout=0, or BackendTurn.cloud_error set), counted session-wide across policies.",
+  "turn_predicate": {
+    "dead": "cloud_tokens_in == 0 AND cloud_tokens_out == 0, OR cloud_error is non-null"
+  },
+  "derivation": {
+    "citing_run_prefix": "6c7f88f1",
+    "citing_session": "interleaved_6c7f88f1-0642-413e-bf72-f45c4f8f8a1e",
+    "observed": {
+      "emission_escalate_cloud_turns_before_dead": 12,
+      "emission_escalate_dead_streak": 172,
+      "full_signal_bounceback_dead_approx": 75,
+      "first_dead_entry": "multi_turn_base_52",
+      "signature": "tin=0 tout=0 usd=0 after API credit exhaustion; runner kept recording escalations"
+    },
+    "why_n_equals_3": [
+      "Same class as DEGENERATE_CONSECUTIVE_N=3 (b1a291f0) and stub-backend seal refuse: a dead instrument must not produce sealed numbers.",
+      "Trips inside the first dead entry (base_52 had three zero-token cloud turns) before the remaining ~169 garbage escalations.",
+      "Distinct from ordinary short cloud completions (pre-death cells had tout in 63..608)."
+    ]
+  },
+  "code": "tools/run_h1_hybrid.py",
+  "constants": {
+    "CLOUD_DEAD_CONSECUTIVE_N": 3,
+    "CLOUD_DEAD_CITING_RUN": "6c7f88f1"
+  },
+  "wired_into": [
+    "tools/run_h1_hybrid.py:run_session",
+    "tools/run_h1_hybrid.py:run_interleaved (via run_hybrid_entry cloud_dead_guard)"
+  ]
+}
