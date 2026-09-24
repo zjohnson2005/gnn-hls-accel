@@ -47,6 +47,31 @@ def test_untracked_derived_alone_does_not_block() -> None:
     assert verdict["untracked_derived"]
 
 
+def test_boot2_estimates_add_measured_canary_overhead() -> None:
+    text = (ROOT / "tools" / "launch_boot1.ps1").read_text(encoding="utf-8")
+    boot2 = text.split("Boot 2: estimate = base_s + canary_overhead_s.", 1)[1]
+    boot2 = boot2.split("} else {", 1)[0]
+    names = [
+        "XPS 8B-int4 GPU u8",
+        "XPS 4B-int8 GPU u8",
+        "DET-PROBE-KV",
+        "XPS 4B-int4 CPU u8",
+    ]
+    positions = [boot2.index(name) for name in names]
+    assert positions == sorted(positions)
+    overhead = 944.242457 - 192.1065557
+    assert overhead == pytest.approx(752.1359013)
+    ceilings = {
+        "XPS 8B-int4 GPU u8": 315 + overhead,
+        "XPS 4B-int8 GPU u8": 338 + overhead,
+        "DET-PROBE-KV": 840.522023,
+        "XPS 4B-int4 CPU u8": 2010 + overhead,
+    }
+    for name, raw in ceilings.items():
+        assert f'Name = "{name}"' in boot2
+        assert f"EstimateS = {int(__import__('math').ceil(raw))}" in boot2
+
+
 def test_shared_extraction_smoke_path_is_refused() -> None:
     from tools.c2_extraction_smoke import main
 

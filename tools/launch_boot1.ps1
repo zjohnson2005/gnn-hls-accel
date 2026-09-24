@@ -55,27 +55,47 @@ if ($Detach) {
     exit 0
 }
 
-# Boot 2 estimates rescale amendment 1 by the anchor wall 944.242457 / 368.
+# Boot 2: estimate = base_s + canary_overhead_s.
+# canary_overhead_s = c2246b1f wall 944.242457 - sum of probes.ndjson wall_s 192.106556 = 752.135901.
+# Ceiling base_s is the amendment-1 estimate. DET-PROBE-KV base is the cb9773be
+# plan.json to SUMMARY.json mtime span 840.522 s, and it adds no canary overhead.
+$script:EstimateDerivation = $null
 if ($Profile -eq "boot2") {
+    $script:EstimateDerivation = [ordered]@{
+        formula = "estimate_s = base_s + canary_overhead_s"
+        anchor_run_id = "c2246b1f-c588-4998-838a-5507da87e9ee"
+        anchor_wall_s = 944.242457
+        anchor_bisection_only_s = 192.1065557
+        canary_overhead_s = 752.1359013
+        det_probe_run_id = "cb9773be-71a7-4cc8-b9ff-f7b18e5231f8"
+        det_probe_wall_s = 840.522023
+        det_probe_wall_source = "plan.json mtime to SUMMARY.json mtime; those files have no internal timestamps"
+        cells = @(
+            [ordered]@{ name = "XPS 8B-int4 GPU u8"; base_s = 315; canary_overhead_s = 752.1359013; estimate_s = 1068 }
+            [ordered]@{ name = "XPS 4B-int8 GPU u8"; base_s = 338; canary_overhead_s = 752.1359013; estimate_s = 1091 }
+            [ordered]@{ name = "DET-PROBE-KV"; base_s = 840.522023; canary_overhead_s = 0; estimate_s = 841 }
+            [ordered]@{ name = "XPS 4B-int4 CPU u8"; base_s = 2010; canary_overhead_s = 752.1359013; estimate_s = 2763 }
+        )
+    }
     $Cells = @(
         @{
-            Name = "XPS 8B-int4 GPU u8"; Kind = "ceiling"; EstimateS = 809
+            Name = "XPS 8B-int4 GPU u8"; Kind = "ceiling"; EstimateS = 1068
             Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-8B-int4-ov.yaml"
             Low = 2000; High = 8000
         },
         @{
-            Name = "XPS 4B-int8 GPU u8"; Kind = "ceiling"; EstimateS = 868
+            Name = "XPS 4B-int8 GPU u8"; Kind = "ceiling"; EstimateS = 1091
             Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int8-ov.yaml"
             Low = 4000; High = 17000
         },
         @{
-            Name = "XPS 4B-int4 CPU u8"; Kind = "ceiling"; EstimateS = 5158
-            Arm = "A"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
-            Low = 250; High = 2000; ExpectKvReadback = "u8"
+            Name = "DET-PROBE-KV"; Kind = "det"; EstimateS = 841
+            Arm = "gpu_only_f16"
         },
         @{
-            Name = "DET-PROBE-KV"; Kind = "det"; EstimateS = 3080
-            Arm = "gpu_only_f16"
+            Name = "XPS 4B-int4 CPU u8"; Kind = "ceiling"; EstimateS = 2763
+            Arm = "A"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+            Low = 250; High = 2000; ExpectKvReadback = "u8"
         }
     )
 } else {
@@ -122,6 +142,7 @@ function Save-BootSummary {
         last_run_id = $script:LastRunId
         window_s = $WindowS
         uptime_s = Get-ColdUptimeSeconds
+        estimate_derivation = $script:EstimateDerivation
         cells = @($script:Rows)
     }
     ($doc | ConvertTo-Json -Depth 6) | Set-Content -LiteralPath $SummaryPath -Encoding utf8
