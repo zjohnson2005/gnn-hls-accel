@@ -52,10 +52,10 @@ def test_boot2_estimates_add_measured_canary_overhead() -> None:
     boot2 = text.split("Boot 2: estimate = base_s + canary_overhead_s.", 1)[1]
     boot2 = boot2.split("} else {", 1)[0]
     names = [
-        "XPS 8B-int4 GPU u8",
-        "XPS 4B-int8 GPU u8",
-        "DET-PROBE-KV",
-        "XPS 4B-int4 CPU u8",
+        'Name = "XPS 8B-int4 GPU u8"',
+        'Name = "XPS 4B-int8 GPU u8"',
+        'Name = "DET-PROBE-KV"',
+        'Name = "XPS 4B-int4 CPU u8"',
     ]
     positions = [boot2.index(name) for name in names]
     assert positions == sorted(positions)
