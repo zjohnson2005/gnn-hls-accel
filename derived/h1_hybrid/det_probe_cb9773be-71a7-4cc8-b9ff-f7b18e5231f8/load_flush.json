@@ -1,0 +1,49 @@
+{
+  "device_config": {
+    "arm_id": "gpu_only_u8",
+    "label": "gpu only (KV_CACHE_PRECISION=u8)",
+    "load_sequence": [
+      {
+        "device": "GPU",
+        "properties": {
+          "KV_CACHE_PRECISION": "u8"
+        }
+      }
+    ],
+    "generate_device": "GPU"
+  },
+  "loads": [
+    {
+      "device": "GPU",
+      "properties": {
+        "KV_CACHE_PRECISION": "u8"
+      },
+      "kv_cache_precision": {
+        "requested": "u8",
+        "readback": {
+          "property": "KV_CACHE_PRECISION",
+          "device": "GPU",
+          "raw": "<Type: 'uint8_t'>",
+          "to_string": "u8",
+          "normalized": "u8",
+          "ok": true,
+          "error": null
+        },
+        "match": true,
+        "enforced": true,
+        "failure_mode": null
+      },
+      "scheduler_config": {
+        "enable_prefix_caching": false,
+        "source": "explicit_SchedulerConfig"
+      }
+    }
+  ],
+  "scheduler_config": {
+    "enable_prefix_caching": false,
+    "source": "explicit_SchedulerConfig"
+  },
+  "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+  "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+  "load_s": 8.009693900000002
+}
