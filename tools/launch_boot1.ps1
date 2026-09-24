@@ -17,7 +17,9 @@
 
 [CmdletBinding()]
 param(
-    [switch]$Detach
+    [switch]$Detach,
+    [ValidateSet("boot1", "boot2")]
+    [string]$Profile = "boot1"
 )
 
 $ErrorActionPreference = "Stop"
@@ -26,11 +28,14 @@ if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 Set-Location $root
 
 . (Join-Path $PSScriptRoot "_assert_machine_lock.ps1")
+. (Join-Path $PSScriptRoot "boot_cell_result.ps1")
 
 $WindowS = 7200
 $LaunchDir = Join-Path $root "derived\c2_ttft\_launches"
-$SummaryPath = Join-Path $LaunchDir "BOOT1_SUMMARY.json"
-$DeferredPath = Join-Path $LaunchDir "DEFERRED_TO_BOOT2.json"
+$SummaryName = if ($Profile -eq "boot2") { "BOOT2_SUMMARY.json" } else { "BOOT1_SUMMARY.json" }
+$DeferredName = if ($Profile -eq "boot2") { "DEFERRED_TO_BOOT3.json" } else { "DEFERRED_TO_BOOT2.json" }
+$SummaryPath = Join-Path $LaunchDir $SummaryName
+$DeferredPath = Join-Path $LaunchDir $DeferredName
 $PythonExe = Join-Path $root ".venv-seam\Scripts\python.exe"
 $WorkerPy = Join-Path $root "tools\run_c1_ceiling.py"
 $DetPy = Join-Path $root "tools\run_det_probe.py"
@@ -40,7 +45,7 @@ New-Item -ItemType Directory -Force -Path $LaunchDir | Out-Null
 
 if ($Detach) {
     $self = "`"$PSCommandPath`""
-    $cmd = "powershell -NoProfile -File $self"
+    $cmd = "powershell -NoProfile -File $self -Profile $Profile"
     $log = Join-Path $LaunchDir "boot1.log"
     $json = & $SpawnPs1 -CommandLine $cmd -LogPath $log -WorkingDirectory $root
     Write-Host $json
@@ -50,7 +55,30 @@ if ($Detach) {
     exit 0
 }
 
-# Estimates copied from PARITY_REMEASURE_AMEND_1.json boot1_estimates_s.
+# Boot 2 estimates rescale amendment 1 by the anchor wall 944.242457 / 368.
+if ($Profile -eq "boot2") {
+    $Cells = @(
+        @{
+            Name = "XPS 8B-int4 GPU u8"; Kind = "ceiling"; EstimateS = 809
+            Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-8B-int4-ov.yaml"
+            Low = 2000; High = 8000
+        },
+        @{
+            Name = "XPS 4B-int8 GPU u8"; Kind = "ceiling"; EstimateS = 868
+            Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int8-ov.yaml"
+            Low = 4000; High = 17000
+        },
+        @{
+            Name = "XPS 4B-int4 CPU u8"; Kind = "ceiling"; EstimateS = 5158
+            Arm = "A"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+            Low = 250; High = 2000; ExpectKvReadback = "u8"
+        },
+        @{
+            Name = "DET-PROBE-KV"; Kind = "det"; EstimateS = 3080
+            Arm = "gpu_only_f16"
+        }
+    )
+} else {
 $Cells = @(
     @{ Name = "DET-PROBE"; Kind = "det"; EstimateS = 1200 },
     @{
@@ -73,9 +101,13 @@ $Cells = @(
         Arm = "A"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
         Low = 250; High = 2000; ExpectKvReadback = "u8"
     }
-)
+    )
+}
 
 $script:Rows = @()
+$script:LastRunId = ""
+$script:FinalState = "crashed"
+$script:FinalReason = "sequencer stopped before the summary was finalized"
 
 function Get-ColdUptimeSeconds {
     $boot = (Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Stop).LastBootUpTime
@@ -83,9 +115,11 @@ function Get-ColdUptimeSeconds {
 }
 
 function Save-BootSummary {
-    param([string]$State)
+    param([string]$State, [string]$Reason = "")
     $doc = [ordered]@{
         state = $State
+        reason = $Reason
+        last_run_id = $script:LastRunId
         window_s = $WindowS
         uptime_s = Get-ColdUptimeSeconds
         cells = @($script:Rows)
@@ -174,7 +208,10 @@ function Invoke-CellPreamble {
 }
 
 function Invoke-DetProbe {
-    $lines = & $PythonExe -u $DetPy 2>&1
+    param($Cell)
+    $detArgs = @("-u", $DetPy)
+    if ($Cell.Arm) { $detArgs += @("--arm", $Cell.Arm) }
+    $lines = & $PythonExe @detArgs 2>&1
     $exit = $LASTEXITCODE
     $lines | ForEach-Object { Write-Host $_ }
     $runId = ""
@@ -189,13 +226,15 @@ function Invoke-CeilingCell {
     param($Cell)
     $model = Join-Path $root $Cell.Model
     if (-not (Test-Path -LiteralPath $model)) { throw "REFUSED -- missing model spec $($Cell.Model)" }
-    & $PythonExe -u $SmokePy --out (Join-Path $root "derived\c2_ttft\_extraction_smoke") `
-        --model-spec $model --n-tokens 64 --arm gpu_only_f16
-    if ($LASTEXITCODE -ne 0) { throw "REFUSED -- extraction smoke failed" }
     $sid = [guid]::NewGuid().ToString()
     $out = Join-Path $root ("derived\c2_ttft\" + $sid)
     New-Item -ItemType Directory -Force -Path $out | Out-Null
+    $smokeOut = Join-Path $out "extraction_smoke"
+    & $PythonExe -u $SmokePy --out $smokeOut `
+        --model-spec $model --n-tokens 64 --arm gpu_only_f16 | Out-Host
+    if ($LASTEXITCODE -ne 0) { throw "REFUSED -- extraction smoke failed" }
     $env:SEAM_LAUNCH_CONTEXT = "ssh_detached"
+    $workerLines = New-Object System.Collections.Generic.List[string]
     & $PythonExe -u $WorkerPy `
         --session-id $sid `
         --out $out `
@@ -207,19 +246,37 @@ function Invoke-CeilingCell {
         --high $Cell.High `
         --resolution 250 `
         --repeats 3 `
-        --watchdog-interval-s 60
+        --watchdog-interval-s 60 2>&1 | ForEach-Object {
+            $workerLines.Add([string]$_)
+            Write-Host $_
+        }
     $exit = $LASTEXITCODE
     $summaryPath = Join-Path $out "summary.json"
-    $status = ""
-    if (Test-Path -LiteralPath $summaryPath) {
-        $summary = Get-Content -LiteralPath $summaryPath -Raw | ConvertFrom-Json
-        $status = [string]$summary.status
+    return Get-BootCeilingResult -SummaryPath $summaryPath -Stdout @($workerLines) -ExitCode $exit -RunId $sid -Out $out
+}
+
+function Assert-BootTree {
+    $raw = & $PythonExe (Join-Path $root "tools\boot_tree_check.py")
+    if ($LASTEXITCODE -ne 0) { throw "REFUSED -- clean-tree check: $raw" }
+    $verdict = $raw | ConvertFrom-Json
+    $paths = @($verdict.untracked_derived)
+    $env:SEAM_UNTRACKED_DERIVED = ($paths -join "`n")
+    return $paths
+}
+
+function Assert-BootAc {
+    $b = @(Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue)
+    if ($b.Count -eq 0) { return }
+    foreach ($one in $b) {
+        if ([int]$one.BatteryStatus -ne 2) {
+            throw "REFUSED -- ac: on battery (BatteryStatus=$($one.BatteryStatus))"
+        }
     }
-    return @{ Exit = $exit; RunId = $sid; Status = $status; Out = $out }
 }
 
 Save-BootSummary -State "started"
 
+try {
 for ($i = 0; $i -lt $Cells.Count; $i++) {
     $cell = $Cells[$i]
     $uptime = Get-ColdUptimeSeconds
@@ -240,31 +297,41 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
             cells = $left
         }
         ($defer | ConvertTo-Json -Depth 5) | Set-Content -LiteralPath $DeferredPath -Encoding utf8
-        Save-BootSummary -State "deferred"
-        Write-Host "DEFERRED_TO_BOOT2"
+        $script:FinalState = "deferred"
+        $script:FinalReason = "remaining cold-window time is below the next cell estimate"
+        Save-BootSummary -State "deferred" -Reason $script:FinalReason
+        Write-Host "DEFERRED"
         exit 0
     }
 
     try {
+        Assert-BootAc
+        Assert-BootTree | Out-Null
         if ($cell.Kind -eq "det") {
             Invoke-CellPreamble -Label $cell.Name -SkipGateFile
         } else {
             Invoke-CellPreamble -Label $cell.Name
         }
     } catch {
-        Add-Row -Cell $cell -Status "REFUSED" -RunId "" -Detail $_.Exception.Message
-        Save-BootSummary -State "refused"
-        Write-Host $_.Exception.Message
+        $script:FinalState = "refused"
+        $script:FinalReason = $_.Exception.Message
+        Add-Row -Cell $cell -Status "REFUSED" -RunId "" -Detail $script:FinalReason
+        Save-BootSummary -State "refused" -Reason $script:FinalReason
+        Write-Host $script:FinalReason
         exit 1
     }
 
     if ($cell.Kind -eq "det") {
-        $ran = Invoke-DetProbe
+        $ran = Invoke-DetProbe -Cell $cell
         if ($ran.Exit -ne 0) {
-            Add-Row -Cell $cell -Status "REFUSED" -RunId $ran.RunId -Detail "exit=$($ran.Exit)"
-            Save-BootSummary -State "refused"
+            $script:LastRunId = $ran.RunId
+            $script:FinalState = "refused"
+            $script:FinalReason = "exit=$($ran.Exit)"
+            Add-Row -Cell $cell -Status "REFUSED" -RunId $ran.RunId -Detail $script:FinalReason
+            Save-BootSummary -State "refused" -Reason $script:FinalReason
             exit $ran.Exit
         }
+        $script:LastRunId = $ran.RunId
         Add-Row -Cell $cell -Status "complete" -RunId $ran.RunId -Detail ""
         continue
     }
@@ -272,15 +339,20 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
     try {
         $ran = Invoke-CeilingCell -Cell $cell
     } catch {
-        Add-Row -Cell $cell -Status "REFUSED" -RunId "" -Detail $_.Exception.Message
-        Save-BootSummary -State "refused"
-        Write-Host $_.Exception.Message
+        $script:FinalState = "refused"
+        $script:FinalReason = $_.Exception.Message
+        Add-Row -Cell $cell -Status "REFUSED" -RunId "" -Detail $script:FinalReason
+        Save-BootSummary -State "refused" -Reason $script:FinalReason
+        Write-Host $script:FinalReason
         exit 1
     }
     $detail = "summary_status=$($ran.Status)"
     if ($ran.Exit -ne 0 -or $ran.Status -match "UNARMED|REFUSED") {
+        $script:LastRunId = $ran.RunId
+        $script:FinalState = "refused"
+        $script:FinalReason = "canary did not arm ($detail)"
         Add-Row -Cell $cell -Status "REFUSED_CANARY" -RunId $ran.RunId -Detail $detail
-        Save-BootSummary -State "refused"
+        Save-BootSummary -State "refused" -Reason $script:FinalReason
         Write-Host ("REFUSED -- canary did not arm for {0} ({1})" -f $cell.Name, $detail)
         exit 1
     }
@@ -297,15 +369,28 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         }
         $detail = "$detail kv_readback=$normalized"
         if ($normalized -ne $cell.ExpectKvReadback) {
+            $script:LastRunId = $ran.RunId
+            $script:FinalState = "refused"
+            $script:FinalReason = "CPU KV readback is not u8"
             Add-Row -Cell $cell -Status "KV_READBACK_NOT_U8" -RunId $ran.RunId -Detail $detail
-            Save-BootSummary -State "refused"
+            Save-BootSummary -State "refused" -Reason $script:FinalReason
             Write-Host "REFUSED -- CPU KV readback is not u8"
             exit 1
         }
     }
+    $script:LastRunId = $ran.RunId
     Add-Row -Cell $cell -Status "complete" -RunId $ran.RunId -Detail $detail
 }
+$script:FinalState = "complete"
+$script:FinalReason = ""
+} catch {
+    $script:FinalState = "crashed"
+    $script:FinalReason = $_.Exception.Message
+    Write-Host $script:FinalReason
+    exit 1
+} finally {
+    Save-BootSummary -State $script:FinalState -Reason $script:FinalReason
+}
 
-Save-BootSummary -State "complete"
-Write-Host "BOOT1_COMPLETE"
+Write-Host "BOOT_COMPLETE"
 exit 0

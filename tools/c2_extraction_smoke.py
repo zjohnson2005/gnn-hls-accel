@@ -21,7 +21,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--out",
         type=Path,
-        default=ROOT / "derived" / "c2_ttft" / "_extraction_smoke",
+        default=None,
     )
     parser.add_argument(
         "--model-spec",
@@ -36,6 +36,15 @@ def main(argv: list[str] | None = None) -> int:
         help="delta_n arm id for the smoke cell (default gpu_only_f16)",
     )
     args = parser.parse_args(argv)
+    shared = (ROOT / "derived" / "c2_ttft" / "_extraction_smoke").resolve()
+    if args.out is None:
+        raise SystemExit("REFUSED -- --out is required and must be the cell run dir")
+    early_out = args.out if args.out.is_absolute() else ROOT / args.out
+    if early_out.resolve() == shared:
+        raise SystemExit(
+            "REFUSED -- extraction smoke must be written under the cell run dir, "
+            "not the shared tracked path"
+        )
 
     from transformers import AutoTokenizer
 
@@ -49,7 +58,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     from tools.run_c1_ceiling import _probe_once
 
-    out_dir: Path = args.out if args.out.is_absolute() else ROOT / args.out
+    out_dir = early_out
     out_dir.mkdir(parents=True, exist_ok=True)
     work_dir = out_dir / "work"
     work_dir.mkdir(exist_ok=True)

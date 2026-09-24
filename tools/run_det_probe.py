@@ -175,14 +175,25 @@ def _generate(pipe: Any, ov_genai: Any, history: Any, cfg: Any, hf_tokenizer: An
     }
 
 
-def _load(enable_prefix_caching: bool | None) -> tuple[Any, Any, Any, dict[str, Any]]:
+def _arm_id() -> str:
+    if "--arm" in sys.argv:
+        index = sys.argv.index("--arm")
+        if index + 1 >= len(sys.argv):
+            raise SystemExit("REFUSED -- --arm needs a value")
+        return sys.argv[index + 1]
+    return "gpu_only_u8"
+
+
+def _load(
+    enable_prefix_caching: bool | None, arm_id: str
+) -> tuple[Any, Any, Any, dict[str, Any]]:
     import openvino_genai as ov_genai
 
     import tools.bfcl_feasibility_probe as probe
 
     probe.apply_model_spec(MODEL_SPEC)
     pipe, meta, load_s = probe.load_arm_pipeline(
-        "gpu_only_u8",
+        arm_id,
         enable_prefix_caching=enable_prefix_caching,
     )
     meta = dict(meta)
@@ -292,14 +303,29 @@ def _summarize(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def capture_run_git(*, allow_dirty: bool = False, root: Path | None = None) -> dict[str, Any]:
-    """HEAD, dirty flag, and sha256 of ``git diff HEAD``. A dirty tree is refused."""
-    from seam.errors import DirtyTreeError
-    from tools.h1_seal_git import seal_git_record
+    """HEAD and diff sha256. Untracked derived/ output is recorded, not a refusal."""
+    import hashlib
 
-    try:
-        return seal_git_record(allow_dirty=allow_dirty, root=root or ROOT)
-    except DirtyTreeError as exc:
-        raise SystemExit(f"REFUSED -- {exc}") from exc
+    from seam.gitinfo import capture_git_state
+    from tools.boot_tree_check import classify_porcelain
+    from tools.h1_seal_git import _git_diff_head
+
+    repo = root or ROOT
+    state = capture_git_state(cwd=repo)
+    verdict = classify_porcelain(list(state.dirty_files))
+    if verdict["blocked"] and not allow_dirty:
+        raise SystemExit(
+            "REFUSED -- clean-tree check blocked: " + "; ".join(verdict["blocked"])
+        )
+    diff = _git_diff_head(repo)
+    blocked = bool(verdict["blocked"])
+    return {
+        "git_head": state.sha,
+        "dirty": blocked,
+        "tree_status": "DIRTY" if blocked else "CLEAN",
+        "git_diff_head_sha256": hashlib.sha256(diff).hexdigest(),
+        "untracked_derived": verdict["untracked_derived"],
+    }
 
 
 def main() -> int:
@@ -326,6 +352,7 @@ def _main_body(git_rec: dict[str, Any]) -> int:
     if len(entries) != N_ENTRIES:
         raise SystemExit(f"REFUSED -- expected {N_ENTRIES} entries, got {len(entries)}")
 
+    arm_id = _arm_id()
     plan = {
         "run_id": run_id,
         "prereg": str(PREREG.relative_to(ROOT)).replace("\\", "/"),
@@ -335,7 +362,10 @@ def _main_body(git_rec: dict[str, Any]) -> int:
         "model_spec": str(MODEL_SPEC.relative_to(ROOT)).replace("\\", "/"),
         "placement": "gpu_only",
         "residency": "RESIDENT",
-        "kv": "u8",
+        "kv": {"gpu_only_f16": "f16", "gpu_only_u8": "u8", "gpu_only_u4": "u4"}.get(
+            arm_id, arm_id
+        ),
+        "arm_id": arm_id,
         "max_new_tokens": MAX_NEW,
         "cloud": False,
         "git": git_rec,
@@ -349,7 +379,7 @@ def _main_body(git_rec: dict[str, Any]) -> int:
     calls_path = out_dir / "calls.jsonl"
     with calls_path.open("w", encoding="utf-8") as sink:
         print("LOAD flush pipeline enable_prefix_caching=False", flush=True)
-        pipe, ov_genai, hf, meta_off = _load(False)
+        pipe, ov_genai, hf, meta_off = _load(False, arm_id)
         (out_dir / "load_flush.json").write_text(
             json.dumps(meta_off, indent=2, default=str) + "\n",
             encoding="utf-8",
@@ -372,7 +402,7 @@ def _main_body(git_rec: dict[str, Any]) -> int:
             )
         del pipe
         print("LOAD noflush pipeline SchedulerConfig omitted", flush=True)
-        pipe, ov_genai, hf, meta_on = _load(None)
+        pipe, ov_genai, hf, meta_on = _load(None, arm_id)
         (out_dir / "load_noflush.json").write_text(
             json.dumps(meta_on, indent=2, default=str) + "\n",
             encoding="utf-8",

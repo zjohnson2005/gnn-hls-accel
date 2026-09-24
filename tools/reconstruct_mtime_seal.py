@@ -28,18 +28,37 @@ COPY_FILES = (
 GATE = timedelta(seconds=120)
 
 
-def _finish(source: Path) -> datetime:
-    summary = json.loads((source / "summary.json").read_text(encoding="utf-8-sig"))
-    for key in ("ended_utc", "finished_utc", "sealed_utc"):
-        value = summary.get(key)
-        if isinstance(value, str) and value.strip():
-            return datetime.fromisoformat(value)
-    raise SystemExit(f"REFUSED -- no recorded finish time in {source / 'summary.json'}")
+def _summary_path(source: Path) -> Path | None:
+    for name in ("summary.json", "SUMMARY.json"):
+        path = source / name
+        if path.is_file():
+            return path
+    return None
+
+
+def _finish(source: Path) -> tuple[datetime, str]:
+    summary_path = _summary_path(source)
+    if summary_path is not None:
+        summary = json.loads(summary_path.read_text(encoding="utf-8-sig"))
+        for key in ("ended_utc", "finished_utc", "sealed_utc"):
+            value = summary.get(key)
+            if isinstance(value, str) and value.strip():
+                return datetime.fromisoformat(value), f"{summary_path.name}:{key}"
+    newest: datetime | None = None
+    for file in source.rglob("*"):
+        if not file.is_file():
+            continue
+        stamp = datetime.fromtimestamp(file.stat().st_mtime, datetime.now().astimezone().tzinfo)
+        if newest is None or stamp > newest:
+            newest = stamp
+    if newest is None:
+        raise SystemExit(f"REFUSED -- no files to seal in {source}")
+    return newest, "newest_source_mtime"
 
 
 def reconstruct(source: Path) -> Path | None:
     source = source.resolve()
-    finish = _finish(source)
+    finish, finish_source = _finish(source)
     deadline = finish + GATE
     late: list[tuple[str, str]] = []
     newest_path = ""
@@ -63,11 +82,12 @@ def reconstruct(source: Path) -> Path | None:
         raise SystemExit(f"REFUSED -- seal already exists: {out}")
     out.mkdir(parents=True)
     copied: list[str] = []
-    for name in COPY_FILES:
-        src = source / name
-        if src.is_file():
-            shutil.copy2(src, out / name)
-            copied.append(name)
+    for src in sorted((p for p in source.rglob("*") if p.is_file()), key=lambda p: p.as_posix()):
+        rel = src.relative_to(source)
+        dest = out / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dest)
+        copied.append(rel.as_posix())
     if not copied:
         raise SystemExit(f"REFUSED -- no seal files in {source}")
     digest = tree_sha256(out)
@@ -77,12 +97,13 @@ def reconstruct(source: Path) -> Path | None:
         "tree_sha256": digest,
         "mtime_gate_s": 120,
         "recorded_finish_time": finish.isoformat(),
+        "finish_source": finish_source,
         "newest_source_file": newest_path,
         "newest_source_mtime_utc": None if newest_stamp is None else newest_stamp.isoformat(),
         "copied_files": copied,
         "source_path": source.relative_to(ROOT).as_posix(),
         "note": (
-            "seal_c2 file set copied out of the source run. "
+            "Full source tree copied out of the run directory. "
             "Source bytes were not modified. tree_sha256 is only in this file."
         ),
     }

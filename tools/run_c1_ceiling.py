@@ -1,4 +1,4 @@
-"""C-1 / C-2 ceiling sweep worker — KV-precision limits on int4 / gpu_only_*.
+"""C-1 / C-2 ceiling sweep worker - KV-precision limits on int4 / gpu_only_*.
 
 Detached payload for tools/launch_c1.ps1 and tools/launch_c2.ps1.
 Binary-searches the largest n_cached per arm (gpu_only_f16, gpu_only_u8,
@@ -10,7 +10,7 @@ gpu_only_u4).
   Drift canary (docs/CANARY_PROTOCOL.md) is mandatory on this path: fixed
   gpu_only_f16 / n=4000 / d=400 / RESIDENT cell; N from THIS run's probe
   wall times; C=3; threshold from early_max with 0.05 floor. A trip aborts
-  with status FAIL_CANARY_DRIFT (CanaryDriftAbort — not a soft return).
+  with status FAIL_CANARY_DRIFT (CanaryDriftAbort - not a soft return).
 
 CRITICAL (completion): every failed probe is classified as memory_wall vs
 position_limit (or other), with the verbatim exception text retained.
@@ -23,6 +23,7 @@ import argparse
 import atexit
 import copy
 import json
+import os
 import statistics
 import subprocess
 import sys
@@ -298,7 +299,7 @@ def _predictions(m_available_mb: float) -> dict[str, Any]:
             "workspace_not_constant": (
                 "Workspace residual ~87,371 B/token (f16) vs ~98,000 (u8/u4), "
                 "a 12% spread. A miss on the secondary is as likely extrapolation "
-                "error as model error — do not conflate them in the artifact."
+                "error as model error - do not conflate them in the artifact."
             ),
         },
         "example_at_M_10200_mb": {
@@ -825,6 +826,11 @@ def main(argv: list[str] | None = None) -> int:
     plan = {
         "kind": kind,
         "session_id": args.session_id,
+        "untracked_derived": [
+            line
+            for line in os.environ.get("SEAM_UNTRACKED_DERIVED", "").splitlines()
+            if line.strip()
+        ],
         "started_utc": _utc(),
         "model_spec": str(model_spec),
         "ir_sha256": spec.get("ir_sha256"),
