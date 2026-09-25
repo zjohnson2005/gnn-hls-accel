@@ -72,6 +72,34 @@ def test_boot2_estimates_add_measured_canary_overhead() -> None:
         assert f"EstimateS = {int(__import__('math').ceil(raw))}" in boot2
 
 
+def test_boot3_dry_run_covers_each_cell_type() -> None:
+    proc = subprocess.run(
+        [
+            "powershell",
+            "-NoProfile",
+            "-File",
+            str(ROOT / "tools" / "launch_boot3.ps1"),
+            "-DryRun",
+        ],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    for name in (
+        "DRY_RUN_OK XPS 4B-int8 GPU u8",
+        "DRY_RUN_OK DET-PROBE-KV",
+        "DRY_RUN_OK XPS 4B-int4 CPU u8",
+    ):
+        assert name in proc.stdout
+    assert "--arms gpu_only_u8" in proc.stdout
+    assert "--arms A" in proc.stdout
+    assert "run_det_probe.py --arm gpu_only_f16" in proc.stdout
+    assert "expect_kv=u8" in proc.stdout
+    assert "expect_kv=" in proc.stdout
+
+
 def test_shared_extraction_smoke_path_is_refused() -> None:
     from tools.c2_extraction_smoke import main
 

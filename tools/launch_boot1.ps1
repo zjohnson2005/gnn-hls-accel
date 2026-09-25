@@ -18,7 +18,8 @@
 [CmdletBinding()]
 param(
     [switch]$Detach,
-    [ValidateSet("boot1", "boot2")]
+    [switch]$DryRun,
+    [ValidateSet("boot1", "boot2", "boot3")]
     [string]$Profile = "boot1"
 )
 
@@ -32,8 +33,16 @@ Set-Location $root
 
 $WindowS = 7200
 $LaunchDir = Join-Path $root "derived\c2_ttft\_launches"
-$SummaryName = if ($Profile -eq "boot2") { "BOOT2_SUMMARY.json" } else { "BOOT1_SUMMARY.json" }
-$DeferredName = if ($Profile -eq "boot2") { "DEFERRED_TO_BOOT3.json" } else { "DEFERRED_TO_BOOT2.json" }
+$SummaryName = switch ($Profile) {
+    "boot2" { "BOOT2_SUMMARY.json" }
+    "boot3" { "BOOT3_SUMMARY.json" }
+    default { "BOOT1_SUMMARY.json" }
+}
+$DeferredName = switch ($Profile) {
+    "boot2" { "DEFERRED_TO_BOOT3.json" }
+    "boot3" { "DEFERRED_TO_BOOT4.json" }
+    default { "DEFERRED_TO_BOOT2.json" }
+}
 $SummaryPath = Join-Path $LaunchDir $SummaryName
 $DeferredPath = Join-Path $LaunchDir $DeferredName
 $PythonExe = Join-Path $root ".venv-seam\Scripts\python.exe"
@@ -46,7 +55,7 @@ New-Item -ItemType Directory -Force -Path $LaunchDir | Out-Null
 if ($Detach) {
     $self = "`"$PSCommandPath`""
     $cmd = "powershell -NoProfile -File $self -Profile $Profile"
-    $log = Join-Path $LaunchDir "boot1.log"
+    $log = Join-Path $LaunchDir "$Profile.log"
     $json = & $SpawnPs1 -CommandLine $cmd -LogPath $log -WorkingDirectory $root
     Write-Host $json
     Write-Host "launched boot1 detached"
@@ -98,6 +107,32 @@ if ($Profile -eq "boot2") {
             Low = 250; High = 2000; ExpectKvReadback = "u8"
         }
     )
+} elseif ($Profile -eq "boot3") {
+    $script:EstimateDerivation = [ordered]@{
+        formula = "estimate_s = base_s + canary_overhead_s"
+        note = "Boot 3 keeps the boot-2 estimates for the three cells that did not run."
+        cells = @(
+            [ordered]@{ name = "XPS 4B-int8 GPU u8"; base_s = 338; canary_overhead_s = 752.1359013; estimate_s = 1091 }
+            [ordered]@{ name = "DET-PROBE-KV"; base_s = 840.522023; canary_overhead_s = 0; estimate_s = 841 }
+            [ordered]@{ name = "XPS 4B-int4 CPU u8"; base_s = 2010; canary_overhead_s = 752.1359013; estimate_s = 2763 }
+        )
+    }
+    $Cells = @(
+        @{
+            Name = "XPS 4B-int8 GPU u8"; Kind = "ceiling"; EstimateS = 1091
+            Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int8-ov.yaml"
+            Low = 4000; High = 17000
+        },
+        @{
+            Name = "DET-PROBE-KV"; Kind = "det"; EstimateS = 841
+            Arm = "gpu_only_f16"
+        },
+        @{
+            Name = "XPS 4B-int4 CPU u8"; Kind = "ceiling"; EstimateS = 2763
+            Arm = "A"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+            Low = 250; High = 2000; ExpectKvReadback = "u8"
+        }
+    )
 } else {
 $Cells = @(
     @{ Name = "DET-PROBE"; Kind = "det"; EstimateS = 1200 },
@@ -129,6 +164,17 @@ $script:LastRunId = ""
 $script:FinalState = "crashed"
 $script:FinalReason = "sequencer stopped before the summary was finalized"
 
+function Get-BootCellField {
+    param($Cell, [string]$Name)
+    if ($Cell -is [System.Collections.IDictionary]) {
+        if ($Cell.Contains($Name)) { return $Cell[$Name] }
+        return $null
+    }
+    $prop = $Cell.PSObject.Properties[$Name]
+    if ($null -eq $prop) { return $null }
+    return $prop.Value
+}
+
 function Get-ColdUptimeSeconds {
     $boot = (Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Stop).LastBootUpTime
     return [int]((Get-Date) - [datetime]$boot).TotalSeconds
@@ -136,6 +182,7 @@ function Get-ColdUptimeSeconds {
 
 function Save-BootSummary {
     param([string]$State, [string]$Reason = "")
+    if ($DryRun) { return }
     $doc = [ordered]@{
         state = $State
         reason = $Reason
@@ -186,7 +233,7 @@ function Assert-BootLockClear {
 }
 
 function Invoke-BootGates {
-    param([string]$Label)
+    param([string]$Label, [switch]$ReportOnly)
     $probeDir = Join-Path $root "derived\_gate_probes"
     New-Item -ItemType Directory -Force -Path $probeDir | Out-Null
     $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
@@ -204,8 +251,12 @@ function Invoke-BootGates {
         $env:PYTHONPATH = $prev
     }
     $text = ($output | ForEach-Object { "$_" }) -join "`n"
-    Set-Content -LiteralPath $outJson -Value $text -Encoding utf8
     Write-Host $text
+    if ($ReportOnly) {
+        Write-Host ("gate_report_only exit={0}" -f $code)
+        return
+    }
+    Set-Content -LiteralPath $outJson -Value $text -Encoding utf8
     if ($code -ne 0) { throw "REFUSED -- measurement gates failed (exit $code)" }
 }
 
@@ -231,7 +282,8 @@ function Invoke-CellPreamble {
 function Invoke-DetProbe {
     param($Cell)
     $detArgs = @("-u", $DetPy)
-    if ($Cell.Arm) { $detArgs += @("--arm", $Cell.Arm) }
+    $arm = Get-BootCellField -Cell $Cell -Name "Arm"
+    if ($arm) { $detArgs += @("--arm", $arm) }
     $lines = & $PythonExe @detArgs 2>&1
     $exit = $LASTEXITCODE
     $lines | ForEach-Object { Write-Host $_ }
@@ -285,6 +337,57 @@ function Assert-BootTree {
     return $paths
 }
 
+function Get-BootCellCommand {
+    param($Cell)
+    $kind = Get-BootCellField -Cell $Cell -Name "Kind"
+    $arm = Get-BootCellField -Cell $Cell -Name "Arm"
+    $model = Get-BootCellField -Cell $Cell -Name "Model"
+    $low = Get-BootCellField -Cell $Cell -Name "Low"
+    $high = Get-BootCellField -Cell $Cell -Name "High"
+    $kv = Get-BootCellField -Cell $Cell -Name "ExpectKvReadback"
+    if ($kind -eq "det") {
+        $args = @($PythonExe, "-u", $DetPy)
+        if ($arm) { $args += @("--arm", $arm) }
+        return [ordered]@{
+            kind = $kind; arm = $arm; model = $model; low = $low; high = $high
+            expect_kv = $kv; command = ($args -join " ")
+        }
+    }
+    $modelPath = Join-Path $root $model
+    $smoke = @(
+        $PythonExe, "-u", $SmokePy, "--out", "<cell>\extraction_smoke",
+        "--model-spec", $modelPath, "--n-tokens", "64", "--arm", "gpu_only_f16"
+    ) -join " "
+    $worker = @(
+        $PythonExe, "-u", $WorkerPy,
+        "--session-id", "<new>", "--out", "<cell>",
+        "--model-spec", $modelPath, "--arms", $arm,
+        "--criterion", "ttft_slo", "--slo-s", "10",
+        "--low", $low, "--high", $high,
+        "--resolution", "250", "--repeats", "3", "--watchdog-interval-s", "60"
+    ) -join " "
+    return [ordered]@{
+        kind = $kind; arm = $arm; model = $model; low = $low; high = $high
+        expect_kv = $kv; command = $worker; smoke = $smoke
+    }
+}
+
+function Invoke-BootDryCell {
+    param($Cell)
+    $name = Get-BootCellField -Cell $Cell -Name "Name"
+    $built = Get-BootCellCommand -Cell $Cell
+    Write-Host ("dry_run {0} kind={1} arm={2} model={3} low={4} high={5} expect_kv={6}" -f `
+        $name, $built.kind, $built.arm, $built.model, $built.low, $built.high, $built.expect_kv)
+    if ($built.kind -eq "det") {
+        Invoke-BootGates -Label $name -ReportOnly
+    } else {
+        Invoke-BootGates -Label $name -ReportOnly
+        Write-Host ("smoke {0}" -f $built.smoke)
+    }
+    Write-Host ("command {0}" -f $built.command)
+    Write-Host ("DRY_RUN_OK {0}" -f $name)
+}
+
 function Assert-BootAc {
     $b = @(Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue)
     if ($b.Count -eq 0) { return }
@@ -304,6 +407,10 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
     $remaining = $WindowS - $uptime
     Write-Host ("time_check {0}: uptime_s={1} remaining_s={2} estimate_s={3}" -f `
         $cell.Name, $uptime, $remaining, $cell.EstimateS)
+    if ($DryRun) {
+        Invoke-BootDryCell -Cell $cell
+        continue
+    }
     if ($remaining -lt [int]$cell.EstimateS) {
         $left = @()
         for ($j = $i; $j -lt $Cells.Count; $j++) {
@@ -377,7 +484,8 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         Write-Host ("REFUSED -- canary did not arm for {0} ({1})" -f $cell.Name, $detail)
         exit 1
     }
-    if ($cell.ExpectKvReadback) {
+    $expectKv = Get-BootCellField -Cell $cell -Name "ExpectKvReadback"
+    if ($expectKv) {
         $hit = Get-ChildItem -Path (Join-Path $ran.Out "work") -Filter "*.result.json" -ErrorAction SilentlyContinue |
             Select-Object -First 1
         $normalized = ""
@@ -389,7 +497,7 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
             }
         }
         $detail = "$detail kv_readback=$normalized"
-        if ($normalized -ne $cell.ExpectKvReadback) {
+        if ($normalized -ne $expectKv) {
             $script:LastRunId = $ran.RunId
             $script:FinalState = "refused"
             $script:FinalReason = "CPU KV readback is not u8"
