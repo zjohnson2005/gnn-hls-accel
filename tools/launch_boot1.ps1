@@ -19,7 +19,7 @@
 param(
     [switch]$Detach,
     [switch]$DryRun,
-    [ValidateSet("boot1", "boot2", "boot3")]
+    [ValidateSet("boot1", "boot2", "boot3", "boot4")]
     [string]$Profile = "boot1"
 )
 
@@ -36,11 +36,13 @@ $LaunchDir = Join-Path $root "derived\c2_ttft\_launches"
 $SummaryName = switch ($Profile) {
     "boot2" { "BOOT2_SUMMARY.json" }
     "boot3" { "BOOT3_SUMMARY.json" }
+    "boot4" { "BOOT4_SUMMARY.json" }
     default { "BOOT1_SUMMARY.json" }
 }
 $DeferredName = switch ($Profile) {
     "boot2" { "DEFERRED_TO_BOOT3.json" }
     "boot3" { "DEFERRED_TO_BOOT4.json" }
+    "boot4" { "DEFERRED_TO_BOOT5.json" }
     default { "DEFERRED_TO_BOOT2.json" }
 }
 $SummaryPath = Join-Path $LaunchDir $SummaryName
@@ -48,6 +50,8 @@ $DeferredPath = Join-Path $LaunchDir $DeferredName
 $PythonExe = Join-Path $root ".venv-seam\Scripts\python.exe"
 $WorkerPy = Join-Path $root "tools\run_c1_ceiling.py"
 $DetPy = Join-Path $root "tools\run_det_probe.py"
+$WarmPy = Join-Path $root "tools\run_warm_kv.py"
+$DecodePy = Join-Path $root "tools\run_decode_match.py"
 $SmokePy = Join-Path $root "tools\c2_extraction_smoke.py"
 $SpawnPs1 = Join-Path $root "tools\spawn_detached.ps1"
 New-Item -ItemType Directory -Force -Path $LaunchDir | Out-Null
@@ -131,6 +135,39 @@ if ($Profile -eq "boot2") {
             Name = "XPS 4B-int4 CPU u8"; Kind = "ceiling"; EstimateS = 2763
             Arm = "A"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
             Low = 250; High = 2000; ExpectKvReadback = "u8"
+        }
+    )
+} elseif ($Profile -eq "boot4") {
+    # Boot 4: estimate_s = base_s + canary_overhead_s.
+    # canary_overhead_s is the boot-2 measured load overhead, 752.1359013.
+    # WARM-KV base_s is the boot-1 4B-int4 GPU generation budget, 368.
+    # DECODE-MATCH base_s is the c2246b1f probe-sum, 192.106556.
+    $script:EstimateDerivation = [ordered]@{
+        formula = "estimate_s = base_s + canary_overhead_s"
+        note = "Boot 4: WARM-KV three arms, then DECODE-MATCH. Ceilings are the next whole second."
+        cells = @(
+            [ordered]@{ name = "WARM-KV f16"; base_s = 368; canary_overhead_s = 752.1359013; estimate_s = 1121 }
+            [ordered]@{ name = "WARM-KV u8"; base_s = 368; canary_overhead_s = 752.1359013; estimate_s = 1121 }
+            [ordered]@{ name = "WARM-KV u4"; base_s = 368; canary_overhead_s = 752.1359013; estimate_s = 1121 }
+            [ordered]@{ name = "DECODE-MATCH"; base_s = 192.106556; canary_overhead_s = 752.1359013; estimate_s = 945 }
+        )
+    }
+    $Cells = @(
+        @{
+            Name = "WARM-KV f16"; Kind = "warm"; EstimateS = 1121
+            Arm = "gpu_only_f16"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+        },
+        @{
+            Name = "WARM-KV u8"; Kind = "warm"; EstimateS = 1121
+            Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+        },
+        @{
+            Name = "WARM-KV u4"; Kind = "warm"; EstimateS = 1121
+            Arm = "gpu_only_u4"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+        },
+        @{
+            Name = "DECODE-MATCH"; Kind = "decode"; EstimateS = 945
+            Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
         }
     )
 } else {
@@ -359,6 +396,17 @@ function Get-BootCellCommand {
             expect_kv = $kv; command = ($args -join " ")
         }
     }
+    if ($kind -eq "warm" -or $kind -eq "decode") {
+        $script = $WarmPy
+        if ($kind -eq "decode") { $script = $DecodePy }
+        $modelPath = Join-Path $root $model
+        $args = @($PythonExe, "-u", $script, "--arm", $arm, "--model-spec", $modelPath)
+        if ($kind -eq "decode") { $args += @("--n", "2000,4000,8000") }
+        return [ordered]@{
+            kind = $kind; arm = $arm; model = $model; low = $low; high = $high
+            expect_kv = $kv; command = ($args -join " "); smoke = $null
+        }
+    }
     $modelPath = Join-Path $root $model
     $smoke = @(
         $PythonExe, "-u", $SmokePy, "--out", "<cell>\extraction_smoke",
@@ -384,7 +432,7 @@ function Invoke-BootDryCell {
     $built = Get-BootCellCommand -Cell $Cell
     Write-Host ("dry_run {0} kind={1} arm={2} model={3} low={4} high={5} expect_kv={6}" -f `
         $name, $built.kind, $built.arm, $built.model, $built.low, $built.high, $built.expect_kv)
-    if ($built.kind -eq "det") {
+    if ($built.kind -eq "det" -or $built.kind -eq "warm" -or $built.kind -eq "decode") {
         Invoke-BootGates -Label $name -ReportOnly
     } else {
         Invoke-BootGates -Label $name -ReportOnly
@@ -441,7 +489,7 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
     try {
         Assert-BootAc
         Assert-BootTree | Out-Null
-        if ($cell.Kind -eq "det") {
+        if ($cell.Kind -eq "det" -or $cell.Kind -eq "warm" -or $cell.Kind -eq "decode") {
             Invoke-CellPreamble -Label $cell.Name -SkipGateFile
         } else {
             Invoke-CellPreamble -Label $cell.Name
@@ -467,6 +515,23 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         }
         $script:LastRunId = $ran.RunId
         Add-Row -Cell $cell -Status "complete" -RunId $ran.RunId -Detail ""
+        continue
+    }
+
+    if ($cell.Kind -eq "warm" -or $cell.Kind -eq "decode") {
+        $built = Get-BootCellCommand -Cell $cell
+        Write-Host $built.command
+        $parts = @($built.command -split " ")
+        & $parts[0] @($parts | Select-Object -Skip 1)
+        $exit = $LASTEXITCODE
+        if ($exit -ne 0) {
+            $script:FinalState = "refused"
+            $script:FinalReason = "exit=$exit"
+            Add-Row -Cell $cell -Status "REFUSED" -RunId "" -Detail $script:FinalReason
+            Save-BootSummary -State "refused" -Reason $script:FinalReason
+            exit $exit
+        }
+        Add-Row -Cell $cell -Status "complete" -RunId "" -Detail ""
         continue
     }
 
