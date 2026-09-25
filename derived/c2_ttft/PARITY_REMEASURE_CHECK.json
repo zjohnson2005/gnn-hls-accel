@@ -41,5 +41,41 @@
       "abs_error": 1599.3883152204435,
       "verdict": "MISS"
     }
+  },
+  "four_b_int8_gpu_u8": {
+    "run_id": "a427233b-df1c-4c4a-87b9-c368bb270b31",
+    "measured_ttft_limit_n": 9890,
+    "verdict_rule": "HIT within resolution when abs(measured - predicted) <= 250. Predictions are the registered numbers, not reinterpreted.",
+    "prereg": {
+      "predicted_limit_n": 15562,
+      "predicted_limit_kind": "memory_wall",
+      "abs_error": 5672,
+      "verdict": "MISS"
+    },
+    "amendment_1": {
+      "predicted_limit_n": 9381.425974154272,
+      "predicted_limit_kind": "SLO",
+      "abs_error": 508.574025845728,
+      "verdict": "MISS"
+    }
+  },
+  "four_b_int4_cpu_u8": {
+    "run_id": "7f232f86-2525-481b-a000-c6b8491bc224",
+    "measured_ttft_limit_n": 468,
+    "predicted_limit_n": 500,
+    "predicted_source": "derived/c2_ttft/PARITY_REMEASURE_PREREG.json cell 4B-int4 CPU",
+    "bisection_resolution": 250,
+    "abs_error": 32,
+    "verdict": "HIT"
+  },
+  "det_probe_kv": {
+    "run_id": "c46d9c94-3928-4e29-98c3-779f19895e25",
+    "compared_with": "cb9773be-71a7-4cc8-b9ff-f7b18e5231f8",
+    "f16_noflush_hash_all_three_equal": "16/20",
+    "prediction": "f16 no-flush 20/20 if u8 quantization caused the cb9773be 16/20",
+    "verdict": "quantization hypothesis falsified",
+    "u8_noflush_disagree_entries": ["multi_turn_base_2", "multi_turn_base_9", "multi_turn_base_11", "multi_turn_base_17"],
+    "f16_noflush_disagree_entries": ["multi_turn_base_1", "multi_turn_base_2", "multi_turn_base_9", "multi_turn_base_15"],
+    "same_four": false
   }
 }

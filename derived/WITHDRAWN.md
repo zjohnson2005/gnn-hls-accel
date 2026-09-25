@@ -18,6 +18,8 @@ Registry of operating-limit claims taken out of the paper line, or held until a 
 
 - 2026-09-24. SUPERSEDED by 10,000 guarded (`c2246b1f-c588-4998-838a-5507da87e9ee`). The 9,750 HELD entry is kept below.
 
+- 2026-09-25. SUPERSEDED. CPU 500 [`d3dcbd3b`] by guarded 468 [`7f232f86-2525-481b-a000-c6b8491bc224`]. Weight 1.25x superseded by 1.01x. Tier 3.09x superseded by 2.46x at matched u8.
+
 - 2026-09-23. 9,750 anchor (`c647f0c7`). Pending guarded re-measure. The canary never armed. The reconstruct seal is labeled RECONSTRUCTED_UNGUARDED.
 
 - 2026-09-23. HELD. Cited workload max 7743. Trajectory-derived, no run_id. `derived/dataset/BFCL_TOKEN_COUNTS.json` keeps `workload_max_tokens_dataset` 5036 and records `workload_max_tokens_observed` 6279 from sealed `d482c621-4292-4281-b6a1-8635e5eeb6da` (policy slo_escalate, entry multi_turn_base_180, turn 5, 1924 local turns).
