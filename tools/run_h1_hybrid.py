@@ -2838,6 +2838,7 @@ def run_interleaved_session(
     session_abort: str | None = None
     cell_log: list[dict[str, Any]] = list(session_ckpt.get("cell_log") or [])
     prefix_cache_control_failures: list[dict[str, Any]] = []
+    n_entries_finished = 0
     cloud_dead_guard = CloudDeadPathGuard(n=CLOUD_DEAD_CONSECUTIVE_N)
 
     def _persist_policy(policy: str) -> None:
@@ -3048,6 +3049,27 @@ def run_interleaved_session(
                         fail["arm_order_this_entry"] = list(order)
                         prefix_cache_control_failures.append(fail)
                         print(f"PREFIX_CACHE_CONTROL_FAIL entry={eid} n={len(fail['below'])}")
+                n_entries_finished += 1
+                from tools.h1_provenance import project_session_cost
+
+                projected = project_session_cost(
+                    running_usd=session_cost.running_usd,
+                    n_done=n_entries_finished,
+                    n_planned=len(entries),
+                )
+                if projected is not None and projected > session_cost.max_usd + 1e-12:
+                    session_status = "aborted_projection"
+                    session_abort = (
+                        f"projection {projected:.6f} > cap {session_cost.max_usd:.6f} "
+                        f"after {n_entries_finished} entries"
+                    )
+                    print(f"PROJECTION_STOP {session_abort}")
+                    for p in policies:
+                        if state[p]["status"] == "running":
+                            state[p]["status"] = "aborted_projection"
+                            state[p]["abort_reason"] = session_abort
+                            _persist_policy(p)
+                    break
                 continue
             break  # session abort broke inner loop
     finally:

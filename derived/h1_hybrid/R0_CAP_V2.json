@@ -1,0 +1,38 @@
+{
+  "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+  "formula": "cap = 99.5th percentile of entry-bootstrap expected cost",
+  "expected_formula": "expected = sum_k N_slo(k) * mean_usd_draw(k)",
+  "resample": "Escalated entries (any policy has a cloud turn) drawn with replacement, 10,000 draws. Each draw's per-depth mean cloud_usd is applied to the fixed full-sample N_slo(k).",
+  "source": "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/*/turn_ledger.json",
+  "v1_cap_usd": 68.26272491121001,
+  "v1_expected_usd": 64.82314053260804,
+  "v1_file": "derived/h1_hybrid/R0_CAP.json",
+  "launch": false,
+  "n_escalated_entries": 68,
+  "n_draws": 10000,
+  "seed": 20260925,
+  "percentile": 0.995,
+  "percentile_method": "linear rank (n-1)*p",
+  "n_depth_fallbacks_to_full_sample_mean": 3937,
+  "fallback": "A draw with no cloud turn at depth k uses the full-sample mean at k. N_slo(k) is not dropped.",
+  "expected_usd_draw_mean": 64.85291603771411,
+  "cap_usd": 72.02903126328212,
+  "N_slo": {
+    "0": 200,
+    "1": 197,
+    "2": 157,
+    "3": 107,
+    "4": 55,
+    "5": 14,
+    "6": 2
+  },
+  "full_sample_mean_usd": {
+    "0": 0.10011308571428573,
+    "1": 0.07846641428571428,
+    "2": 0.0830624210526316,
+    "3": 0.09777211363636364,
+    "4": 0.07913511111111111,
+    "5": 0.0972186,
+    "6": 0.063366
+  }
+}

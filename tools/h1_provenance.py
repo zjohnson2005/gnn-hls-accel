@@ -115,6 +115,24 @@ def prefix_cache_control_failure(
     }
 
 
+def project_session_cost(
+    *,
+    running_usd: float,
+    n_done: int,
+    n_planned: int,
+    min_entries: int = PROJECTION_MIN_ENTRIES,
+) -> float | None:
+    """Linear projection of the session total after ``min_entries`` completed entries.
+
+    None before the guard arms, and once every planned entry has already run.
+    """
+    if n_done < int(min_entries) or n_done <= 0 or n_planned <= 0:
+        return None
+    if n_done >= n_planned:
+        return None
+    return float(running_usd) * float(n_planned) / float(n_done)
+
+
 def stamp_seal(seal_doc: dict[str, Any], plan: dict[str, Any]) -> dict[str, Any]:
     for key in ("cloud_model", "chat_template", "generation_config"):
         if key in plan:
