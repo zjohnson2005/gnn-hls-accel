@@ -70,6 +70,7 @@ POLICIES = (
     "slo_escalate",
     "emission_escalate",
     "full_signal_bounceback",  # R2c
+    "local_only",
 )
 
 # H1-3POLICY interleaved arm order (INF-5 session_design=interleaved).
@@ -85,9 +86,10 @@ INTERLEAVE_POLICIES_2POLICY: tuple[str, ...] = (
 )
 # cloud_only is selectable inside the interleaved harness. The default arm
 # order stays the three-policy comparison.
-INTERLEAVE_SELECTABLE: tuple[str, ...] = INTERLEAVE_POLICIES + ("cloud_only",)
+INTERLEAVE_SELECTABLE: tuple[str, ...] = INTERLEAVE_POLICIES + ("cloud_only", "local_only")
 DEFAULT_POLICY_CAPS_USD: dict[str, float] = {
     "slo_escalate": 5.0,
+    "local_only": 5.0,
     "emission_escalate": 20.0,
     "full_signal_bounceback": 10.0,
     # Same single-arm cap as tools/launch_h1.ps1 (1.5 x the registered R0 point).
@@ -180,6 +182,14 @@ ARM_CONFIG: dict[str, dict[str, str]] = {
         "model": "Qwen3-4B-int4-ov",
     },
     "slo_escalate": {
+        "placement": "gpu_only",
+        "residency": "RESIDENT",
+        "kv": "u8",
+        "weight": "int4",
+        "tier": "4B",
+        "model": "Qwen3-4B-int4-ov",
+    },
+    "local_only": {
         "placement": "gpu_only",
         "residency": "RESIDENT",
         "kv": "u8",
@@ -501,6 +511,11 @@ def decide_slo_escalate(
         reasons.append(f"decode<{DECODE_SLO_TOK_S}")
     if reasons:
         return True, "+".join(reasons)
+    return False, None
+
+
+def decide_local_only() -> tuple[bool, str | None]:
+    """Explicit local-only arm. Never escalates, whatever the local signals are."""
     return False, None
 
 
@@ -2225,6 +2240,8 @@ def _run_hybrid_entry_body(
         reason: str | None = None
         if policy == "agnostic_default":
             escalate, reason = False, None
+        elif policy == "local_only":
+            escalate, reason = decide_local_only()
         elif policy == "slo_escalate":
             escalate, reason = decide_slo_escalate(
                 already_on_cloud=False,
