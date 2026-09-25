@@ -2472,6 +2472,9 @@ def run_session(
         "resume_from_completed": sorted(completed),
         "git": git_rec,
     }
+    from tools.h1_provenance import provenance_block
+
+    plan.update(provenance_block(cloud, local))
     if isinstance(local, OpenVinoLocalBackend):
         plan["openvino"] = {
             "arm_id": local.arm_id,
@@ -2619,6 +2622,8 @@ def run_session(
         else:
             summary = json.loads((out_dir / "summary.json").read_text(encoding="utf-8-sig"))
 
+    from tools.h1_provenance import stamp_seal
+
     if seal and status == "complete":
         tree = _sha256_tree(out_dir, exclude={".sealed"})
         seal_doc = {
@@ -2630,6 +2635,7 @@ def run_session(
             "measurement_kind": "MEASURED",
             "git": git_rec,
         }
+        stamp_seal(seal_doc, plan)
         (out_dir / ".sealed").write_text(
             json.dumps(seal_doc, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
@@ -2647,6 +2653,7 @@ def run_session(
             "note": "Sealed non-complete H1 session; status is not complete.",
             "git": git_rec,
         }
+        stamp_seal(seal_doc, plan)
         (out_dir / ".sealed").write_text(
             json.dumps(seal_doc, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
@@ -2758,6 +2765,9 @@ def run_interleaved_session(
         "git": git_rec,
         **excl,
     }
+    from tools.h1_provenance import provenance_block
+
+    plan.update(provenance_block(cloud, local))
     if isinstance(local, OpenVinoLocalBackend):
         plan["openvino"] = {
             "arm_id": local.arm_id,
@@ -3019,6 +3029,8 @@ def run_interleaved_session(
     _write_json(out_dir / "summary.json", summary)
 
     if seal:
+        from tools.h1_provenance import stamp_seal
+
         # Per-policy seals when that arm completed (R2c may refuse OpenVINO above).
         for policy in policies:
             st = state[policy]
@@ -3039,6 +3051,7 @@ def run_interleaved_session(
                 "git": git_rec,
                 **excl,
             }
+            stamp_seal(seal_doc, plan)
             (pdir / ".sealed").write_text(
                 json.dumps(seal_doc, indent=2, sort_keys=True) + "\n", encoding="utf-8"
             )
@@ -3055,6 +3068,7 @@ def run_interleaved_session(
             "git": git_rec,
             **excl,
         }
+        stamp_seal(seal_doc, plan)
         if session_status == "complete":
             (out_dir / ".sealed").write_text(
                 json.dumps(seal_doc, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -3197,6 +3211,9 @@ def derive_r1_from_cb781(
         "finished_utc": _utc_now(),
         "git": git_rec,
     }
+    from tools.h1_provenance import provenance_block, stamp_seal
+
+    doc.update(provenance_block(None))
     _write_json(out_dir / "summary.json", doc)
     _write_json(out_dir / "plan.json", {**doc, "started_utc": _utc_now()})
     tree = _sha256_tree(out_dir, exclude={".sealed"})
@@ -3209,6 +3226,7 @@ def derive_r1_from_cb781(
         "status": "complete",
         "git": git_rec,
     }
+    stamp_seal(seal_doc, doc)
     (out_dir / ".sealed").write_text(
         json.dumps(seal_doc, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )

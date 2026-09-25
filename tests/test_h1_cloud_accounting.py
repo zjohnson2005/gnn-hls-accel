@@ -19,6 +19,7 @@ FIXTURE = ROOT / "tests" / "fixtures" / "h1_hybrid_3entries.json"
 
 def test_request_record_splits_input_and_preserves_missing_cache() -> None:
     rec = cloud_request_record(
+        model="claude-sonnet-5",
         turn=1,
         request_index_within_turn=0,
         ok=True,
@@ -35,6 +36,7 @@ def test_request_record_splits_input_and_preserves_missing_cache() -> None:
         rec["system_tokens"] + rec["tool_schema_tokens"] + rec["history_tokens"] + rec["new_tokens"]
     )
     assert parts == 10
+    assert rec["model"] == "claude-sonnet-5"
     assert rec["input_tokens"] == 10
     assert rec["output_tokens"] == 2
     assert rec["cache_creation_input_tokens"] is None

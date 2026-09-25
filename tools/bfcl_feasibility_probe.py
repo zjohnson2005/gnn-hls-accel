@@ -3677,6 +3677,7 @@ def run_cloud_multi_turn_agent_entry(
                         "prompt_tokens": None,
                         "completion_tokens": None,
                         **cloud_request_record(
+                            model=model,
                             turn=turn_idx,
                             request_index_within_turn=step,
                             ok=False,
@@ -3711,6 +3712,7 @@ def run_cloud_multi_turn_agent_entry(
             prompt_n = int(input_tokens or 0)
             completion_n = int(output_tokens or 0)
             account = cloud_request_record(
+                model=model,
                 turn=turn_idx,
                 request_index_within_turn=step,
                 ok=True,

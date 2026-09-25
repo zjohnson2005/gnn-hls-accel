@@ -74,6 +74,7 @@ def split_input_tokens(
 
 def cloud_request_record(
     *,
+    model: str,
     turn: int,
     request_index_within_turn: int,
     ok: bool,
@@ -102,6 +103,7 @@ def cloud_request_record(
         )
         method = TOKEN_COUNT_METHOD
     return {
+        "model": model,
         "turn": turn,
         "request_index_within_turn": request_index_within_turn,
         "ok": ok,
