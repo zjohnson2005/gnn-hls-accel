@@ -636,6 +636,7 @@ def test_slo_rule_ignores_ctx_even_when_above_cold_start() -> None:
 
 
 def test_interleave_order_entry_by_entry(tmp_path: Path) -> None:
+    from tools.h1_provenance import latin_square_order
     from tools.run_h1_hybrid import INTERLEAVE_POLICIES, run_interleaved_session
 
     fix = _load_fix()
@@ -663,11 +664,18 @@ def test_interleave_order_entry_by_entry(tmp_path: Path) -> None:
     eids = [e["id"] for e in fix["entries"]]
     expected: list[tuple[str, str]] = []
     for eid in eids:
-        for pol in INTERLEAVE_POLICIES:
+        order = latin_square_order(INTERLEAVE_POLICIES, eid, seed=0)
+        for pol in order:
             expected.append((eid, pol))
     got = [(c["entry_id"], c["policy"]) for c in cell_log]
     assert got == expected
+    for cell in cell_log:
+        assert cell["arm_order_this_entry"] == latin_square_order(
+            INTERLEAVE_POLICIES, cell["entry_id"], seed=0
+        )
     plan = json.loads((out / "plan.json").read_text(encoding="utf-8"))
+    assert plan["arm_order_rule"] == "seeded_latin_square"
+    assert plan["arm_order_seed"] == 0
     assert plan["session_design"] == "interleaved"
     for pol in INTERLEAVE_POLICIES:
         assert (out / "policies" / pol / "entry_quality.json").is_file()
@@ -761,6 +769,7 @@ def test_interleave_policy_cap_does_not_rebill_other_arms(tmp_path: Path) -> Non
 
 def test_interleave_2policy_excludes_r2c_in_plan_and_seal(tmp_path: Path) -> None:
     """H1-2POLICY: subset arms; plan/summary record R2c exclusion (not 3-policy)."""
+    from tools.h1_provenance import latin_square_order
     from tools.run_h1_hybrid import (
         INTERLEAVE_POLICIES_2POLICY,
         R2C_EXCLUSION_REASON,
@@ -800,7 +809,7 @@ def test_interleave_2policy_excludes_r2c_in_plan_and_seal(tmp_path: Path) -> Non
     eids = [e["id"] for e in fix["entries"]]
     expected: list[tuple[str, str]] = []
     for eid in eids:
-        for pol in INTERLEAVE_POLICIES_2POLICY:
+        for pol in latin_square_order(INTERLEAVE_POLICIES_2POLICY, eid, seed=0):
             expected.append((eid, pol))
     got = [(c["entry_id"], c["policy"]) for c in cell_log]
     assert got == expected

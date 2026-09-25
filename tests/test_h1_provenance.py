@@ -77,6 +77,14 @@ def test_plan_and_seal_record_model_and_generation(tmp_path: Path) -> None:
     assert runner.count("stamp_seal(") >= 5
 
 
+def test_latin_square_rotates_every_symbol() -> None:
+    from tools.h1_provenance import latin_square_order
+
+    policies = ("a", "b", "c")
+    orders = {tuple(latin_square_order(policies, f"e{i}", seed=1)) for i in range(24)}
+    assert orders == {("a", "b", "c"), ("b", "c", "a"), ("c", "a", "b")}
+
+
 def test_omitted_cloud_model_resolves_to_runner_default() -> None:
     block = provenance_block(cloud=None)
     assert block["cloud_model"] == CLOUD_DEFAULT_MODEL

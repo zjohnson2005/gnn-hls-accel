@@ -2710,10 +2710,13 @@ def run_interleaved_session(
     skip_entry_assert: bool = False,
     caching_policy: str = "none",
     seal_git: dict[str, Any] | None = None,
+    arm_order_seed: int = 0,
 ) -> dict[str, Any]:
     """Entry-by-entry interleave of selected H1 policy arms (INF-5 session_design=interleaved).
 
-    For each entry, run policies in ``policies`` order. Each policy has its own
+    For each entry, arm order is one row of a seeded Latin square
+    (``latin_square_order``). ``arm_order`` on the plan stays the symbol list.
+    ``arm_order_this_entry`` is recorded on every cell. Each policy has its own
     cost cap and completed-entry set under ``out_dir/policies/<policy>/``.
     A policy-cap abort stops *that* arm only; other arms continue. A session-cap
     abort stops remaining work across all arms. Resume never re-bills a
@@ -2773,6 +2776,8 @@ def run_interleaved_session(
         "kind": kind,
         "session_design": "interleaved",
         "arm_order": list(policies),
+        "arm_order_seed": int(arm_order_seed),
+        "arm_order_rule": "seeded_latin_square",
         "policy_caps_usd": {p: float(caps[p]) for p in policies},
         "session_max_usd": float(session_max_usd),
         "n_entries": len(entries),
@@ -2883,9 +2888,12 @@ def run_interleaved_session(
         )
 
     try:
+        from tools.h1_provenance import latin_square_order
+
         for entry in entries:
             eid = str(entry["id"])
-            for policy in policies:
+            order = latin_square_order(policies, eid, seed=int(arm_order_seed))
+            for policy in order:
                 st = state[policy]
                 if st["status"] in ("aborted_cap", "aborted_session_cap"):
                     continue
@@ -2958,6 +2966,7 @@ def run_interleaved_session(
                             {
                                 "entry_id": eid,
                                 "policy": policy,
+                                "arm_order_this_entry": list(order),
                                 "status": "aborted_session_cap",
                                 "running_usd_policy": st["cost"].running_usd,
                                 "running_usd_session": session_cost.running_usd,
@@ -2974,6 +2983,7 @@ def run_interleaved_session(
                         {
                             "entry_id": eid,
                             "policy": policy,
+                            "arm_order_this_entry": list(order),
                             "status": "aborted_cap",
                             "running_usd_policy": st["cost"].running_usd,
                             "running_usd_session": session_cost.running_usd,
@@ -2990,6 +3000,7 @@ def run_interleaved_session(
                     {
                         "entry_id": eid,
                         "policy": policy,
+                        "arm_order_this_entry": list(order),
                         "status": "complete",
                         "cloud_usd_entry": er.cloud_usd_entry,
                         "running_usd_policy": st["cost"].running_usd,

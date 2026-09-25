@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from typing import Any
 
 CHAT_TEMPLATE_RENDERER = "tools.bfcl_feasibility_probe.render_bfcl_tools_style"
@@ -49,6 +50,22 @@ def provenance_block(cloud: Any, local: Any = None) -> dict[str, Any]:
             "seed": None,
         },
     }
+
+
+def latin_square_order(
+    policies: tuple[str, ...] | list[str],
+    entry_id: str,
+    *,
+    seed: int = DEFAULT_ARM_ORDER_SEED,
+) -> list[str]:
+    """One row of a Latin square. Row index is sha256(f"{seed}:{entry_id}") mod n."""
+    symbols = list(policies)
+    n = len(symbols)
+    if n == 0:
+        return []
+    digest = hashlib.sha256(f"{int(seed)}:{entry_id}".encode()).digest()
+    row = int.from_bytes(digest[:8], "big") % n
+    return [symbols[(row + col) % n] for col in range(n)]
 
 
 def stamp_seal(seal_doc: dict[str, Any], plan: dict[str, Any]) -> dict[str, Any]:
