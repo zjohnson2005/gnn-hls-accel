@@ -26,3 +26,34 @@ function Get-BootCeilingResult {
         Stdout = $stdoutText
     }
 }
+
+function Merge-BootCells {
+    <#
+    Named cells already on disk stay. New rows are appended. A row whose
+    name is already present updates that slot. Objects with no name, such as
+    a KV readback document, are not cells and are not kept.
+    #>
+    param($Prior, $Added)
+    $merged = @()
+    foreach ($item in @($Prior)) {
+        if ($null -eq $item) { continue }
+        $prop = $item.PSObject.Properties["name"]
+        if ($null -eq $prop -or [string]::IsNullOrWhiteSpace([string]$prop.Value)) { continue }
+        $merged += $item
+    }
+    foreach ($row in @($Added)) {
+        if ($null -eq $row) { continue }
+        $nameProp = $row.PSObject.Properties["name"]
+        if ($null -eq $nameProp -or [string]::IsNullOrWhiteSpace([string]$nameProp.Value)) { continue }
+        $name = [string]$nameProp.Value
+        $found = $false
+        for ($i = 0; $i -lt $merged.Count; $i++) {
+            if ([string]$merged[$i].name -eq $name) {
+                $merged[$i] = $row
+                $found = $true
+            }
+        }
+        if (-not $found) { $merged += $row }
+    }
+    return @($merged)
+}

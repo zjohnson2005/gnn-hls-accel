@@ -143,3 +143,30 @@ def test_ceiling_status_from_c2246b1f_summary() -> None:
     lines = [line.strip() for line in proc.stdout.splitlines() if line.strip()]
     assert lines[-2] == "complete"
     assert lines[-1] == "c2246b1f-c588-4998-838a-5507da87e9ee"
+
+
+def test_boot_summary_appends_cells_and_drops_nameless() -> None:
+    script = ROOT / "tools" / "boot_cell_result.ps1"
+    command = (
+        f". '{script}'; "
+        "$prior = @("
+        "  [pscustomobject]@{ name = 'int8'; status = 'complete' }, "
+        "  [pscustomobject]@{ normalized = 'u8' }, "
+        "  [pscustomobject]@{ name = 'det'; status = 'complete' }"
+        "); "
+        "$added = @([pscustomobject]@{ name = 'cpu'; status = 'complete' }); "
+        "$merged = @(Merge-BootCells -Prior $prior -Added $added); "
+        "($merged | ForEach-Object { $_.name }) -join ','"
+    )
+    proc = subprocess.run(
+        ["powershell", "-NoProfile", "-Command", command],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert proc.stdout.strip().splitlines()[-1] == "int8,det,cpu"
+    text = (ROOT / "tools" / "launch_boot1.ps1").read_text(encoding="utf-8")
+    assert "$rows" not in text
+    assert "Merge-BootCells" in text

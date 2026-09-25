@@ -183,6 +183,12 @@ function Get-ColdUptimeSeconds {
 function Save-BootSummary {
     param([string]$State, [string]$Reason = "")
     if ($DryRun) { return }
+    $prior = @()
+    if (Test-Path -LiteralPath $SummaryPath) {
+        $existing = Get-Content -LiteralPath $SummaryPath -Raw -Encoding utf8 | ConvertFrom-Json
+        $cellsProp = $existing.PSObject.Properties["cells"]
+        if ($null -ne $cellsProp) { $prior = @($cellsProp.Value) }
+    }
     $doc = [ordered]@{
         state = $State
         reason = $Reason
@@ -190,7 +196,7 @@ function Save-BootSummary {
         window_s = $WindowS
         uptime_s = Get-ColdUptimeSeconds
         estimate_derivation = $script:EstimateDerivation
-        cells = @($script:Rows)
+        cells = @(Merge-BootCells -Prior $prior -Added $script:Rows)
     }
     ($doc | ConvertTo-Json -Depth 6) | Set-Content -LiteralPath $SummaryPath -Encoding utf8
 }
@@ -491,9 +497,10 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         $normalized = ""
         if ($hit) {
             $doc = Get-Content -LiteralPath $hit.FullName -Raw | ConvertFrom-Json
-            $rows = @($doc.kv_cache_precision_readback)
-            if ($rows.Count -gt 0 -and $rows[0].readback) {
-                $normalized = [string]$rows[0].readback.normalized
+            # Script scope is case-insensitive, so a variable named rows would overwrite script:Rows.
+            $kvReadback = @($doc.kv_cache_precision_readback)
+            if ($kvReadback.Count -gt 0 -and $kvReadback[0].readback) {
+                $normalized = [string]$kvReadback[0].readback.normalized
             }
         }
         $detail = "$detail kv_readback=$normalized"
