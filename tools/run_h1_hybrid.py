@@ -2820,6 +2820,7 @@ def run_interleaved_session(
     session_status = "complete"
     session_abort: str | None = None
     cell_log: list[dict[str, Any]] = list(session_ckpt.get("cell_log") or [])
+    prefix_cache_control_failures: list[dict[str, Any]] = []
     cloud_dead_guard = CloudDeadPathGuard(n=CLOUD_DEAD_CONSECUTIVE_N)
 
     def _persist_policy(policy: str) -> None:
@@ -3014,6 +3015,22 @@ def run_interleaved_session(
                     f"trajectory_pass={er.trajectory_pass}"
                 )
             else:
+                if str(getattr(local, "residency", "")).upper() == "RESIDENT":
+                    from tools.h1_provenance import (
+                        entry_turn0_local_ttft,
+                        prefix_cache_control_failure,
+                    )
+
+                    arms = [
+                        (pol, entry_turn0_local_ttft(state[pol]["ledger_rows"], eid))
+                        for pol in order
+                    ]
+                    fail = prefix_cache_control_failure(arms)
+                    if fail is not None:
+                        fail["entry_id"] = eid
+                        fail["arm_order_this_entry"] = list(order)
+                        prefix_cache_control_failures.append(fail)
+                        print(f"PREFIX_CACHE_CONTROL_FAIL entry={eid} n={len(fail['below'])}")
                 continue
             break  # session abort broke inner loop
     finally:
@@ -3066,6 +3083,8 @@ def run_interleaved_session(
         "finished_utc": _utc_now(),
         "caching_policy": caching_policy,
         "cloud_usd_invariant": _cloud_usd_invariant(state, policies),
+        "prefix_cache_control_failures": len(prefix_cache_control_failures),
+        "prefix_cache_control": prefix_cache_control_failures,
         **excl,
     }
     _write_json(out_dir / "summary.json", summary)
