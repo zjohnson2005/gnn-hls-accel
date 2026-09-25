@@ -1,0 +1,18 @@
+{
+  "id": "WARM-KV",
+  "registered_before_any_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "model": "Qwen3-4B-int4-ov",
+  "placement": "GPU",
+  "residency": "RESIDENT",
+  "arms": [
+    "gpu_only_f16",
+    "gpu_only_u8",
+    "gpu_only_u4"
+  ],
+  "endpoint": "turn-2 delta-prefill TTFT limit",
+  "prediction": "f16 > u8 >= u4 on turn-2 delta-prefill TTFT. f16 advantage 15-27 percent.",
+  "source_run_id": "41e419bd-f3e9-43b1-8364-0ebd89fa086b",
+  "derivation": "Sealed 41e419bd Finding 2. That ordering is for turn-2 delta prefill. It is not a turn-1 bulk-prefill claim."
+}

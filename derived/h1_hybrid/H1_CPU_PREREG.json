@@ -1,0 +1,34 @@
+{
+  "id": "H1-CPU",
+  "registered_before_any_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "policies": [
+    "slo_escalate",
+    "emission_escalate",
+    "full_signal_bounceback",
+    "local_only"
+  ],
+  "placement": "CPU",
+  "source_run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+  "source_cloud_usd_total": 24.286569,
+  "source_mean_cloud_usd": 0.08831479636363636,
+  "source_by_policy": {
+    "slo_escalate": {
+      "cloud_usd": 0.0,
+      "n_cloud_turns": 0
+    },
+    "emission_escalate": {
+      "cloud_usd": 16.119519,
+      "n_cloud_turns": 183
+    },
+    "full_signal_bounceback": {
+      "cloud_usd": 8.167050000000001,
+      "n_cloud_turns": 92
+    }
+  },
+  "source_v1_expected_usd": 64.82314053260804,
+  "prediction_cost": "Three-policy cloud cost above the sealed GPU spend 24.286569 USD and below the cloud-only prediction 64.64643093818181 USD. local_only cloud cost 0.",
+  "prediction_pass": "local_only scores every entry. Predict trajectory passes near the full-local 4B figure 10/200 (q8b_72d270e2), not the 21/200 slo_escalate local_pass count. That 21/200 already drops every escalated entry.",
+  "derivation": "d482c621 sealed cloud_usd summed over placement cloud is the GPU spend. The cloud-only figure prices every slo turn at that mean. CPU prefill crosses the 10 s SLO at a much smaller n than GPU (7f232f86 limit 468 versus the GPU u8 ceiling), so slo_escalate sends more turns to cloud and the session cost sits between those two anchors. local_only never escalates, so its cloud cost is 0 and its pass count is a full-local score."
+}

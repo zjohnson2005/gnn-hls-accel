@@ -1,0 +1,18 @@
+{
+  "id": "LOCAL-QUALITY",
+  "registered_before_any_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "policy": "local_only",
+  "model": "Qwen3-4B-int4-ov",
+  "placement": "GPU",
+  "levers": {
+    "cache_on_vs_off": "TTFT down with cache on. Pass count unchanged.",
+    "check_and_retry": "Pass count up. A second sample can repair a missing tool call.",
+    "best_of_3": "Pass count up. Three samples dominate one.",
+    "thinking_on": "Latency up. Pass count down. Think tokens compete with the tool call under max_new_tokens."
+  },
+  "anchor_full_local_trajectory_pass": "10/200",
+  "anchor_run_id": "72d270e2-1a87-40b6-860a-fb709ffcbe22",
+  "derivation": "Directions only. The anchor is the full-local 4B trajectory count, because local_only scores every entry. Cache does not change greedy tokens. Retry and best-of-3 add samples. Thinking was off in d482c621 via render_bfcl_tools_style enable_thinking=False."
+}

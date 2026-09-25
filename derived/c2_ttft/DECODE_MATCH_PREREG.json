@@ -1,0 +1,20 @@
+{
+  "id": "DECODE-MATCH",
+  "registered_before_any_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "model_pair": [
+    "Qwen3-4B-int4-ov",
+    "Qwen3-4B-int8-ov"
+  ],
+  "kv": "u8",
+  "placement": "GPU",
+  "n": [
+    2000,
+    4000,
+    8000
+  ],
+  "endpoint": "decode tok/s at identical n",
+  "prediction": "int8 decode tok/s is 20-30 percent below int4 at each listed n.",
+  "derivation": "No sealed int4/int8 pair has a decode rate at n=2000, 4000, or 8000. The only shared rung of c2246b1f and a427233b is n=10500, and int8 has no decode there (memory_wall). This prediction is not a ratio computed from those tables."
+}
