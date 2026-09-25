@@ -1,0 +1,258 @@
+{
+  "run_id": "a427233b-df1c-4c4a-87b9-c368bb270b31",
+  "source": "derived/c2_ttft/a427233b-df1c-4c4a-87b9-c368bb270b31",
+  "note": "summary.per_probe_medians is empty. This table is rebuilt from probes.ndjson. slo_pass is median prefill_s <= 10. generate outcome pass means the call completed.",
+  "ttft_limit_n": 9890,
+  "status": "complete",
+  "abort_reason": null,
+  "rungs": [
+    {
+      "n": 4000,
+      "prefill_s": [
+        2.652583496,
+        2.640973144,
+        2.627460205
+      ],
+      "prefill_s_median": 2.640973144,
+      "decode_tok_s": [
+        16.609553372811845,
+        16.682365726093032,
+        16.54145201031207
+      ],
+      "decode_tok_s_median": 16.609553372811845,
+      "generate_outcome": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "slo_pass": true,
+      "failure_kind": [
+        null,
+        null,
+        null
+      ],
+      "verbatim_error": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "n": 7250,
+      "prefill_s": [
+        6.159849609,
+        6.04379541,
+        6.155390625
+      ],
+      "prefill_s_median": 6.155390625,
+      "decode_tok_s": [
+        16.716007105843023,
+        16.80935043650983,
+        16.733446064968316
+      ],
+      "decode_tok_s_median": 16.733446064968316,
+      "generate_outcome": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "slo_pass": true,
+      "failure_kind": [
+        null,
+        null,
+        null
+      ],
+      "verbatim_error": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "n": 8875,
+      "prefill_s": [
+        8.355824218,
+        8.411475585,
+        8.376291992
+      ],
+      "prefill_s_median": 8.376291992,
+      "decode_tok_s": [
+        16.16438227229192,
+        16.116966257853445,
+        16.258840442540816
+      ],
+      "decode_tok_s_median": 16.16438227229192,
+      "generate_outcome": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "slo_pass": true,
+      "failure_kind": [
+        null,
+        null,
+        null
+      ],
+      "verbatim_error": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "n": 9687,
+      "prefill_s": [
+        10.249120117,
+        9.701924804,
+        9.475535156
+      ],
+      "prefill_s_median": 9.701924804,
+      "decode_tok_s": [
+        15.593854651678173,
+        15.74969341646581,
+        15.815208095696823
+      ],
+      "decode_tok_s_median": 15.74969341646581,
+      "generate_outcome": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "slo_pass": true,
+      "failure_kind": [
+        null,
+        null,
+        null
+      ],
+      "verbatim_error": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "n": 9890,
+      "prefill_s": [
+        9.956163085,
+        9.863299804,
+        9.915592773
+      ],
+      "prefill_s_median": 9.915592773,
+      "decode_tok_s": [
+        15.441953734518346,
+        15.581545712309056,
+        15.50965638185352
+      ],
+      "decode_tok_s_median": 15.50965638185352,
+      "generate_outcome": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "slo_pass": true,
+      "failure_kind": [
+        null,
+        null,
+        null
+      ],
+      "verbatim_error": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "n": 10093,
+      "prefill_s": [
+        10.193371093,
+        10.269328125,
+        10.119298828
+      ],
+      "prefill_s_median": 10.193371093,
+      "decode_tok_s": [
+        15.695070537313507,
+        15.589062513314019,
+        15.545835193910062
+      ],
+      "decode_tok_s_median": 15.589062513314019,
+      "generate_outcome": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "slo_pass": false,
+      "failure_kind": [
+        null,
+        null,
+        null
+      ],
+      "verbatim_error": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "n": 10500,
+      "prefill_s": [
+        null,
+        null,
+        null
+      ],
+      "prefill_s_median": null,
+      "decode_tok_s": [
+        null,
+        null,
+        null
+      ],
+      "decode_tok_s_median": null,
+      "generate_outcome": [
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "slo_pass": false,
+      "failure_kind": [
+        "memory_wall",
+        "memory_wall",
+        "memory_wall"
+      ],
+      "verbatim_error": [
+        "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.",
+        "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.",
+        "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version."
+      ]
+    },
+    {
+      "n": 17000,
+      "prefill_s": [
+        null,
+        null,
+        null
+      ],
+      "prefill_s_median": null,
+      "decode_tok_s": [
+        null,
+        null,
+        null
+      ],
+      "decode_tok_s_median": null,
+      "generate_outcome": [
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "slo_pass": false,
+      "failure_kind": [
+        "memory_wall",
+        "memory_wall",
+        "memory_wall"
+      ],
+      "verbatim_error": [
+        "exception:RuntimeError RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.",
+        "timeout:30s@failed RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.",
+        "timeout:30s@failed RuntimeError Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version."
+      ]
+    }
+  ]
+}
