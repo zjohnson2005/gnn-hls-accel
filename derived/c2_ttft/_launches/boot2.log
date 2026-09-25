@@ -1,0 +1,192 @@
+time_check XPS 8B-int4 GPU u8: uptime_s=141 remaining_s=7059 estimate_s=1068
+
+=== preamble XPS 8B-int4 GPU u8 ===
+{
+  "all_passed": true,
+  "gates": [
+    {
+      "detail": {
+        "ac_ok": true,
+        "battery_present": true,
+        "battery_status_values": [
+          2
+        ]
+      },
+      "name": "ac",
+      "passed": true,
+      "reason": "ac_ok"
+    },
+    {
+      "detail": {
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "required_ac_max": 100,
+        "required_ac_min": 100,
+        "scheme_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "scheme_name": "Best Performance",
+        "scheme_text": "Power Scheme GUID: ec87a53a-19a6-4f4a-980f-ab27cc929b25  (Best Performance)"
+      },
+      "name": "processor_ac",
+      "passed": true,
+      "reason": "processor_ac_100_100"
+    },
+    {
+      "detail": {
+        "citation": "2026-08-09 clean session / 7477 MB Available; arm A lowest free_physical_mb_start 6926; floor 7000 (configs/delta_n.yaml isolation.pre_run_available_mb_min).",
+        "floor_mb": 7000.0,
+        "observed_mb": 8851.0
+      },
+      "name": "available_mb",
+      "passed": true,
+      "reason": "available_mb_ok"
+    },
+    {
+      "detail": {
+        "citation": "CHOSEN/PROVISIONAL cold-boot window (< 2 h) used by launch_*.ps1 five-gate block; not yet re-derived from an onset curve denser than the 657 s canary bound.",
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 145.26362299919128
+      },
+      "name": "uptime",
+      "passed": true,
+      "reason": "uptime_ok"
+    },
+    {
+      "detail": {
+        "onset_citation": "Shortest observed degradation onset from session 7f569929 / docs/CANARY_PROTOCOL.md; tools/ttft_slo_canary.py ONSET_S.",
+        "onset_s": 657.0,
+        "onset_status": "measured",
+        "seal_note": null
+      },
+      "name": "onset",
+      "passed": true,
+      "reason": "onset_measured"
+    }
+  ],
+  "platform_id": "aipc-c1",
+  "refusal_reasons": [],
+  "run_environment_fields": {
+    "measurement_gates": {
+      "ac": {
+        "detail": {
+          "ac_ok": true,
+          "battery_present": true,
+          "battery_status_values": [
+            2
+          ]
+        },
+        "passed": true,
+        "reason": "ac_ok"
+      },
+      "all_passed": true,
+      "available_mb": {
+        "citation": "2026-08-09 clean session / 7477 MB Available; arm A lowest free_physical_mb_start 6926; floor 7000 (configs/delta_n.yaml isolation.pre_run_available_mb_min).",
+        "floor_mb": 7000.0,
+        "observed_mb": 8851.0,
+        "passed": true
+      },
+      "onset_citation": "Shortest observed degradation onset from session 7f569929 / docs/CANARY_PROTOCOL.md; tools/ttft_slo_canary.py ONSET_S.",
+      "onset_s": 657.0,
+      "onset_seal_note": null,
+      "onset_status": "measured",
+      "platform_id": "aipc-c1",
+      "processor_ac": {
+        "passed": true,
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "reason": "processor_ac_100_100",
+        "scheme_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+        "scheme_name": "Best Performance"
+      },
+      "uptime": {
+        "citation": "CHOSEN/PROVISIONAL cold-boot window (< 2 h) used by launch_*.ps1 five-gate block; not yet re-derived from an onset curve denser than the 657 s canary bound.",
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 145.26362299919128,
+        "passed": true
+      }
+    }
+  }
+}
+=== machine-lock / alive-worker check ===
+machine.lock: absent
+{"chars": 298, "event": "delta_n.prompt_built", "n_tokens_realized": 64, "n_tokens_requested": 64, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n64.txt", "sha256": "785e8e539e7098def7c7295ad55d526ed1bcf93f9eea2374931a900d6c36ea96", "ts": "2026-09-24T23:32:01.632754+00:00"}
+[c2_smoke] probe arm=gpu_only_f16 n=64 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_f16.n64.r0.a0", "ts": "2026-09-24T23:32:44.518251+00:00", "wall_s": 12.33}
+[c2_smoke] outcome='pass' completed=True prefill_s=0.520942016 decode_tok_s=18.949592470605975 wall_s=0.8903430999999955
+EXTRACTION_SMOKE_OK prefill_s=0.520942016
+{"criterion": "ttft_slo", "event": "c2.plan_written", "session_id": "69234ed5-a716-4274-b851-33509bdb9972"}
+[c2_canary] index=0 after_probes=-1 armed=False every_n=5 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-09-24T23:32:57.663360+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-09-24T23:32:58.529465+00:00"}
+[c2] BEGIN arm=gpu_only_u8
+{"chars": 8995, "event": "delta_n.prompt_built", "n_tokens_realized": 2000, "n_tokens_requested": 2000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n2000.txt", "sha256": "716d1bd22e4b09bd739737eb64581fd410bd2e2be18e67d663f981cf8e8afb21", "ts": "2026-09-24T23:33:24.397077+00:00"}
+[c2] probe arm=gpu_only_u8 n=2000 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n2000.r0.a0", "ts": "2026-09-24T23:34:06.505829+00:00", "wall_s": 11.72}
+[c2] probe arm=gpu_only_u8 n=2000 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n2000.r1.a0", "ts": "2026-09-24T23:34:50.187171+00:00", "wall_s": 10.92}
+[c2] probe arm=gpu_only_u8 n=2000 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n2000.r2.a0", "ts": "2026-09-24T23:35:32.202984+00:00", "wall_s": 9.26}
+{"chars": 35995, "event": "delta_n.prompt_built", "n_tokens_realized": 8000, "n_tokens_requested": 8000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n8000.txt", "sha256": "71c1bb003859754adf5d56bad7032741883c484e97a94c180e8d097fae6bc092", "ts": "2026-09-24T23:35:34.774080+00:00"}
+[c2] probe arm=gpu_only_u8 n=8000 repeat=0
+{"event": "delta_n.repeat", "failure_mode": "exception:RuntimeError", "outcome": "fail", "phase": "failed", "tag": "gpu_only_u8.n8000.r0.a0", "ts": "2026-09-24T23:36:20.784642+00:00", "wall_s": 15.62}
+[c2] probe arm=gpu_only_u8 n=8000 repeat=1
+{"event": "delta_n.repeat", "failure_mode": "exception:RuntimeError", "outcome": "fail", "phase": "failed", "tag": "gpu_only_u8.n8000.r1.a0", "ts": "2026-09-24T23:37:12.579791+00:00", "wall_s": 18.65}
+[c2_canary] index=1 after_probes=4 armed=False every_n=5 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-09-24T23:37:16.881487+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-09-24T23:37:17.768483+00:00"}
+[c2] probe arm=gpu_only_u8 n=8000 repeat=2
+{"event": "delta_n.repeat", "failure_mode": "exception:RuntimeError", "outcome": "fail", "phase": "failed", "tag": "gpu_only_u8.n8000.r2.a0", "ts": "2026-09-24T23:38:30.484692+00:00", "wall_s": 14.57}
+{"chars": 22495, "event": "delta_n.prompt_built", "n_tokens_realized": 5000, "n_tokens_requested": 5000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n5000.txt", "sha256": "0a668039e1dd223e02fd037b3ac07c3a2be7748ef86b6619b839a9589f15294c", "ts": "2026-09-24T23:38:33.281144+00:00"}
+[c2] probe arm=gpu_only_u8 n=5000 repeat=0
+{"event": "delta_n.repeat", "failure_mode": "exception:RuntimeError", "outcome": "fail", "phase": "failed", "tag": "gpu_only_u8.n5000.r0.a0", "ts": "2026-09-24T23:39:18.865768+00:00", "wall_s": 15.2}
+[c2] probe arm=gpu_only_u8 n=5000 repeat=1
+{"event": "delta_n.repeat", "failure_mode": "exception:RuntimeError", "outcome": "fail", "phase": "failed", "tag": "gpu_only_u8.n5000.r1.a0", "ts": "2026-09-24T23:40:02.484988+00:00", "wall_s": 10.95}
+[c2] probe arm=gpu_only_u8 n=5000 repeat=2
+{"event": "delta_n.repeat", "failure_mode": "exception:RuntimeError", "outcome": "fail", "phase": "failed", "tag": "gpu_only_u8.n5000.r2.a0", "ts": "2026-09-24T23:40:45.307593+00:00", "wall_s": 10.33}
+{"chars": 15745, "event": "delta_n.prompt_built", "n_tokens_realized": 3500, "n_tokens_requested": 3500, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n3500.txt", "sha256": "ffc92f66dc96e0db57fba142f197752c69f62218131fc6800c2908d6e4d7487c", "ts": "2026-09-24T23:40:47.636021+00:00"}
+[c2] probe arm=gpu_only_u8 n=3500 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n3500.r0.a0", "ts": "2026-09-24T23:41:29.298157+00:00", "wall_s": 11.34}
+[c2_canary] index=2 after_probes=9 armed=False every_n=5 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-09-24T23:41:32.919241+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-09-24T23:41:33.773951+00:00"}
+[c2_canary] gate ARMED: calib_n=3; ref_t1=4.501259 ref_t2=0.918370; early_max_rel_t1=0.047282 early_max_rel_t2=0.256342; threshold_t1=max(2*early_max_t1,floor=0.05)=0.094563; threshold_t2=0.512683
+[c2] probe arm=gpu_only_u8 n=3500 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n3500.r1.a0", "ts": "2026-09-24T23:42:35.922704+00:00", "wall_s": 11.05}
+[c2] probe arm=gpu_only_u8 n=3500 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n3500.r2.a0", "ts": "2026-09-24T23:43:19.468776+00:00", "wall_s": 11.02}
+{"chars": 19120, "event": "delta_n.prompt_built", "n_tokens_realized": 4250, "n_tokens_requested": 4250, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4250.txt", "sha256": "4906502ae8df6a4dce318cd7b5b3b4099f9f2a60d8e2b8cfc6eda0bb37b2412c", "ts": "2026-09-24T23:43:21.760588+00:00"}
+[c2] probe arm=gpu_only_u8 n=4250 repeat=0
+{"event": "delta_n.repeat", "failure_mode": "exception:RuntimeError", "outcome": "fail", "phase": "failed", "tag": "gpu_only_u8.n4250.r0.a0", "ts": "2026-09-24T23:44:01.179619+00:00", "wall_s": 9.12}
+[c2] probe arm=gpu_only_u8 n=4250 repeat=1
+{"event": "delta_n.repeat", "failure_mode": "exception:RuntimeError", "outcome": "fail", "phase": "failed", "tag": "gpu_only_u8.n4250.r1.a0", "ts": "2026-09-24T23:44:44.218100+00:00", "wall_s": 10.51}
+[c2] probe arm=gpu_only_u8 n=4250 repeat=2
+{"event": "delta_n.repeat", "failure_mode": "exception:RuntimeError", "outcome": "fail", "phase": "failed", "tag": "gpu_only_u8.n4250.r2.a0", "ts": "2026-09-24T23:45:26.586649+00:00", "wall_s": 9.86}
+[c2_canary] index=3 after_probes=14 armed=True every_n=5 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-09-24T23:45:30.453690+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-09-24T23:45:31.600886+00:00"}
+{"chars": 17445, "event": "delta_n.prompt_built", "n_tokens_realized": 3875, "n_tokens_requested": 3875, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n3875.txt", "sha256": "f4f3e81101396e99ce508c317758ee6d108e822ad599256e563964c99e7d6222", "ts": "2026-09-24T23:45:52.935556+00:00"}
+[c2] probe arm=gpu_only_u8 n=3875 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n3875.r0.a0", "ts": "2026-09-24T23:46:34.761961+00:00", "wall_s": 11.52}
+[c2] probe arm=gpu_only_u8 n=3875 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n3875.r1.a0", "ts": "2026-09-24T23:47:18.567795+00:00", "wall_s": 11.3}
+[c2] probe arm=gpu_only_u8 n=3875 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n3875.r2.a0", "ts": "2026-09-24T23:48:02.371193+00:00", "wall_s": 11.28}
+{"chars": 18294, "event": "delta_n.prompt_built", "n_tokens_realized": 4062, "n_tokens_requested": 4062, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4062.txt", "sha256": "192428d75fccbaee6e163c8781f573024836a1d0acf7ac9b8a16099319e997b3", "ts": "2026-09-24T23:48:04.650428+00:00"}
+[c2] probe arm=gpu_only_u8 n=4062 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n4062.r0.a0", "ts": "2026-09-24T23:48:46.345303+00:00", "wall_s": 11.39}
+[c2] probe arm=gpu_only_u8 n=4062 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n4062.r1.a0", "ts": "2026-09-24T23:49:30.363372+00:00", "wall_s": 11.49}
+[c2_canary] index=4 after_probes=19 armed=True every_n=5 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-09-24T23:49:34.125949+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-09-24T23:49:34.964629+00:00"}
+[c2] probe arm=gpu_only_u8 n=4062 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n4062.r2.a0", "ts": "2026-09-24T23:50:37.591727+00:00", "wall_s": 11.67}
+{
+  "ok": true,
+  "status": "complete",
+  "abort_reason": null,
+  "criterion": "ttft_slo",
+  "session_id": "69234ed5-a716-4274-b851-33509bdb9972",
+  "out": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\c2_ttft\\69234ed5-a716-4274-b851-33509bdb9972",
+  "UNGUARDED": false
+}
+The property 'ExpectKvReadback' cannot be found on this object. Verify that the property exists.
