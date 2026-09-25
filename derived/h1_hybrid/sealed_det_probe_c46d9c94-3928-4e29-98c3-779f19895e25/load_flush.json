@@ -1,0 +1,49 @@
+{
+  "device_config": {
+    "arm_id": "gpu_only_f16",
+    "label": "gpu only (KV_CACHE_PRECISION=f16)",
+    "load_sequence": [
+      {
+        "device": "GPU",
+        "properties": {
+          "KV_CACHE_PRECISION": "f16"
+        }
+      }
+    ],
+    "generate_device": "GPU"
+  },
+  "loads": [
+    {
+      "device": "GPU",
+      "properties": {
+        "KV_CACHE_PRECISION": "f16"
+      },
+      "kv_cache_precision": {
+        "requested": "f16",
+        "readback": {
+          "property": "KV_CACHE_PRECISION",
+          "device": "GPU",
+          "raw": "<Type: 'float16'>",
+          "to_string": "f16",
+          "normalized": "f16",
+          "ok": true,
+          "error": null
+        },
+        "match": true,
+        "enforced": true,
+        "failure_mode": null
+      },
+      "scheduler_config": {
+        "enable_prefix_caching": false,
+        "source": "explicit_SchedulerConfig"
+      }
+    }
+  ],
+  "scheduler_config": {
+    "enable_prefix_caching": false,
+    "source": "explicit_SchedulerConfig"
+  },
+  "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+  "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+  "load_s": 6.993133299999954
+}
