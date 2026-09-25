@@ -1090,6 +1090,7 @@ class OpenVinoLocalBackend:
         self.tokenizer = probe._hf_tokenizer()
         self.ov_genai = ov_genai
         self.load_meta = meta
+        self._prefix_reloads = 0
         cfg = ov_genai.GenerationConfig()
         cfg.max_new_tokens = int(self.max_new_tokens)
         cfg.do_sample = False
@@ -1126,6 +1127,7 @@ class OpenVinoLocalBackend:
         obj.cfg = cfg
         obj.ov_genai = ov_genai
         obj.load_meta = {"stubbed_generate": True}
+        obj._prefix_reloads = 0
         obj._entry_cache = {}
         obj._sessions = {}
         obj._span_state = {}
@@ -1234,12 +1236,39 @@ class OpenVinoLocalBackend:
                     f"readback={got!r} requested={kv['requested']!r}"
                 )
 
+    def reload_prefix_cache(self) -> str:
+        """Drop continuous-batching prefix blocks before the next arm.
+
+        ``pipe.finish_chat()`` ends the chat session and leaves CB prefix blocks
+        in place. The clear is a new ``ov_genai.LLMPipeline``, constructed by
+        ``tools.bfcl_feasibility_probe.load_arm_pipeline`` (``_make_llm_pipeline``).
+        Stubbed backends count the request and do not load an IR.
+        """
+        from tools.h1_provenance import PREFIX_BLOCK_CLEAR_CALL
+
+        self._prefix_reloads = int(getattr(self, "_prefix_reloads", 0)) + 1
+        if self.load_meta.get("stubbed_generate"):
+            return PREFIX_BLOCK_CLEAR_CALL
+        import tools.bfcl_feasibility_probe as probe
+
+        enable_pc = False if self.residency == "NON_RESIDENT" else None
+        pipe, meta, _load_s = probe.load_arm_pipeline(
+            self.arm_id, enable_prefix_caching=enable_pc
+        )
+        self._assert_kv_readback(meta, expected=self.kv)
+        self.pipe = pipe
+        self.load_meta = meta
+        return PREFIX_BLOCK_CLEAR_CALL
+
     def begin_entry(self, entry: dict[str, Any], *, policy: str) -> None:
         """Own lifecycle: ``MultiTurnAgentSession.begin`` before the first turn.
 
         Cell key is ``(entry_id, policy)`` so interleaved arms sharing this
         backend cannot reuse a finished or in-flight session from another policy.
+        Each begin constructs a new pipeline so the previous arm's prefix blocks
+        are gone.
         """
+        self.reload_prefix_cache()
         eid = str(entry["id"])
         key = self.cell_key(eid, policy)
         if self._active_cell is not None:
@@ -2483,6 +2512,7 @@ def run_session(
             "kv": local.kv,
             "max_new_tokens": local.max_new_tokens,
             "load_meta": local.load_meta,
+            "prefix_block_clear": "ov_genai.LLMPipeline",
         }
     if not skip_entry_assert:
         # When entries were loaded from the W-3 pin file, hash is checked at load.
@@ -2776,6 +2806,7 @@ def run_interleaved_session(
             "kv": local.kv,
             "max_new_tokens": local.max_new_tokens,
             "load_meta": local.load_meta,
+            "prefix_block_clear": "ov_genai.LLMPipeline",
         }
     if not skip_entry_assert:
         plan["entry_assert"] = {"n": len(entries), "mode": "caller_supplied"}
