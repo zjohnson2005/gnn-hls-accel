@@ -1,0 +1,78 @@
+{
+  "id": "WARM-KV-AMEND-2",
+  "amends": "derived/delta_prefill/WARM_KV_PREREG.json",
+  "prior_amendment": "derived/delta_prefill/WARM_KV_AMEND_1.json",
+  "prior_amendment_sha256": "e945ffa6d91974d21472128b59a01ba8dc832eade0553e400cb52fca5272be39",
+  "prereg_commit": "d70437e89c69e933ed63a248d6bfc32cd49fb835",
+  "registered_before_any_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "does_not_edit_the_prereg": true,
+  "does_not_edit_amend_1": true,
+  "prediction_unchanged": "f16 > u8 >= u4 on turn-2 delta-prefill TTFT. f16 advantage 15-27 percent.",
+  "prediction_unchanged_applies_when": "All three arms produce a turn-2 median at that n_cached.",
+  "n_cached": [12000, 24000, 46000],
+  "n_cached_notes": {
+    "12000": "replication of sealed 41e419bd, all arms. The sealed prior e9264a0a f16 turn-2 median 0.645158569 s is a consistency check, not a substitute for the rerun.",
+    "24000": "intermediate point, all arms. 24000 is not a rung in sealed 2b3316b6; the boot budget bounds this turn-1 by the next sealed rung above it, 26000.",
+    "46000": "paper headline context. Per-arm resident feasibility is itself measured."
+  },
+  "delta_tokens": 183,
+  "turn2_repeats": 3,
+  "residency": "RESIDENT",
+  "rerun": "The next boot runs gpu_only_f16, gpu_only_u8, and gpu_only_u4. e9264a0a-d2f0-46dd-99af-8e4d9e36ad44 stays unmodified as a prior.",
+  "prior_run_id": "e9264a0a-d2f0-46dd-99af-8e4d9e36ad44",
+  "prior_f16_n12000": {
+    "outcome": "pass",
+    "turn2_median_prefill_s": 0.645158569,
+    "turn2_prefill_s": [1.874997924, 0.640768371, 0.645158569],
+    "first_repeat_note": "The first turn-2 repeat is 1.874997924 s. The median of the three repeats is 0.645158569 s."
+  },
+  "failure_taxonomy": {
+    "onednn_primitive_failure": "The exception text contains 'could not execute a primitive' or primitive_onednn_base.",
+    "memory_wall": "CL_OUT_OF_RESOURCES, or an explicit allocation error (out of memory, bad_alloc, cannot allocate, not enough memory, MemoryError, failed to allocate, allocation failure). No other marker, including an access-violation code, is memory_wall.",
+    "record_at_failure": "Every memory_* field present on the result, and the rung (n_cached).",
+    "point_failure_is_data": "A cell whose points end with a failure_kind completes with status partial and the boot continues to the next cell. The boot stops only on a guard failure: a measurement gate, canary drift, an unarmed canary, or a harness exception.",
+    "relabel": "derived/delta_prefill/analysis/e9264a0a_n46000_relabel.json. The point file inside the prior run still says failure_kind other and is not edited."
+  },
+  "canary_warmup": {
+    "rule": "One discarded two-turn call on the fixed canary cell (gpu_only_f16, n_cached 4000, delta 400, RESIDENT) runs before calibration. It is recorded and marked discarded. Calibration uses the next three OK canaries.",
+    "prior_t2_prefill_s": [1.126149536, 0.662402648, 0.719344543],
+    "prior_early_max_rel_t2": 0.5655217613849336,
+    "exclusion": "That early max is the relative deviation of 1.126149536 from the median of the three. The first value is the warm-up and is not a calibration sample."
+  },
+  "resident_46000_feasibility": {
+    "prediction": "f16 fail, u8 fail, u4 fail.",
+    "f16": "fail",
+    "f16_basis": "observed",
+    "u8": "fail",
+    "u8_basis": "predicted",
+    "u4": "fail",
+    "u4_basis": "predicted",
+    "weights_bytes": {
+      "qwen3_4b_int4": 2290768181,
+      "qwen3_4b_int4_source": "configs/models/Qwen3-4B-int4-ov.yaml ir_bytes. All three arms use this IR; only the KV dtype changes.",
+      "qwen3_8b_int4": 4882865352,
+      "qwen3_8b_int4_source": "configs/models/Qwen3-8B-int4-ov.yaml ir_bytes. Run 69234ed5 is this model."
+    },
+    "k_plus_w_B_per_token": {
+      "gpu_only_f16": 234827,
+      "gpu_only_u8": 171532,
+      "gpu_only_u4": 135000,
+      "source": "sealed 2b3316b6-7f6e-474f-9177-bd5a89aeb58c plan P2_ceiling_order, citing 41e419bd"
+    },
+    "device_wall_rss_mb": 6060.1875,
+    "device_wall_rss_source": "e9264a0a n46000 memory_at_failure.rss_mb",
+    "supporting_wall_rss_mb": 5928.0078125,
+    "supporting_wall_source": "69234ed5-a716-4274-b851-33509bdb9972 gpu_only_u8 n=4250 r0 memory_at_failure.rss_mb, failure_kind memory_wall, text CL_OUT_OF_RESOURCES. Host available_mb at that failure was still 5418.65625.",
+    "derivation": [
+      "Host-visible RSS growth during a completed generate tracks k_plus_w. On e9264a0a n=12000 f16, RSS grew from memory_before_generate.rss_mb 2543.57421875 to memory_after_generate.rss_mb 5208.96875, a growth of 2665.39453125 MB. 12000 * 234827 / 1048576 = 2687.381744384766 MB.",
+      "On 69234ed5 the same growth from n=2000 to n=4062 is 760.35546875 - 407.48828125 = 352.8671875 MB over 2062 tokens, 179441.35 B/token, next to the 4B u8 slope 171532. The 8B model is larger, so its slope is higher. n=4062 completed. n=4250 raised CL_OUT_OF_RESOURCES at RSS 5928.0078125. n=5000 and n=8000 raised 'could not execute a primitive' with host available_mb still 5824.39453125 and 4723.82421875. The primitive error is the same class past that allocation wall, not a separate host-OOM class.",
+      "Cold f16 n=46000 in sealed 2b3316b6 completed. That session's available_mb_start_median at 46000 was 12012.92578125. It is not the resident memory state.",
+      "The resident model is rss_end = memory_before_generate.rss_mb + n * k_plus_w / 1048576, using the f16 failure session's pre-generate RSS 2568.234375 because every arm loads the same 2290768181-byte IR. The device wall is the failure RSS 6060.1875. The 8B CL_OUT_OF_RESOURCES RSS 5928.0078125 is lower, so a prediction of fail against 6060.1875 is also a fail against the lower wall.",
+      "f16 at 46000: 2568.234375 + 46000 * 234827 / 1048576 = 12869.864395141602 MB. Above 6060.1875. Fail, and this arm already failed.",
+      "u8 at 46000: 2568.234375 + 46000 * 171532 / 1048576 = 10093.174865722656 MB. Above 6060.1875. Predicted fail.",
+      "u4 at 46000: 2568.234375 + 46000 * 135000 / 1048576 = 8490.551879882812 MB. Above 6060.1875. Predicted fail. Host available_mb before the f16 generate was 6466.6796875 and the u4 growth 5922.3175048828125 would fit in that host figure; the binding constraint is the device RSS wall, which the 8B run hit while 5418.65625 MB was still reported available."
+    ]
+  }
+}
