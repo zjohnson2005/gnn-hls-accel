@@ -19,7 +19,7 @@
 param(
     [switch]$Detach,
     [switch]$DryRun,
-    [ValidateSet("boot1", "boot2", "boot3", "boot4")]
+    [ValidateSet("boot1", "boot2", "boot3", "boot4", "t2s-boot1")]
     [string]$Profile = "boot1"
 )
 
@@ -37,13 +37,19 @@ $SummaryName = switch ($Profile) {
     "boot2" { "BOOT2_SUMMARY.json" }
     "boot3" { "BOOT3_SUMMARY.json" }
     "boot4" { "BOOT4_SUMMARY.json" }
+    "t2s-boot1" { "T2S_BOOT1_SUMMARY.json" }
     default { "BOOT1_SUMMARY.json" }
 }
 $DeferredName = switch ($Profile) {
     "boot2" { "DEFERRED_TO_BOOT3.json" }
     "boot3" { "DEFERRED_TO_BOOT4.json" }
     "boot4" { "DEFERRED_TO_BOOT5.json" }
+    "t2s-boot1" { "DEFERRED_TO_T2S_BOOT2.json" }
     default { "DEFERRED_TO_BOOT2.json" }
+}
+$script:DeferredStatus = switch ($Profile) {
+    "t2s-boot1" { "DEFERRED_TO_T2S_BOOT2" }
+    default { "DEFERRED_TO_BOOT2" }
 }
 $SummaryPath = Join-Path $LaunchDir $SummaryName
 $DeferredPath = Join-Path $LaunchDir $DeferredName
@@ -168,6 +174,54 @@ if ($Profile -eq "boot2") {
         @{
             Name = "DECODE-MATCH"; Kind = "decode"; EstimateS = 945
             Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+        }
+    )
+} elseif ($Profile -eq "t2s-boot1") {
+    # T2S boot 1. PARITY-REMEASURE cells registered in 91d9005. This script
+    # does not open that prereg. estimate_s is the next whole second of
+    # base_s + measured canary overhead.
+    # base_s 520 is the 5c714535 prereg wall 519.541 rounded up.
+    # base_s 570 is the 051d2681 prereg wall 570.010 rounded down to the
+    # stated base. Overhead is c2246b1f wall 944.242457 minus probe-sum
+    # 192.106556 = 752.1359013, stated as 752.136.
+    # Platform onset_s is null (unknown, not measured on evo-t2). The
+    # ceiling canary still uses 657, borrowed from aipc-c1 session 7f569929,
+    # which is the value 5c714535 and 051d2681 recorded.
+    $env:SEAM_PLATFORM_ID = "evo-t2"
+    $script:EstimateDerivation = [ordered]@{
+        formula = "estimate_s = base_s + canary_overhead_s, then the next whole second"
+        platform_id = "evo-t2"
+        platform_config = "configs/platforms/evo-t2.yaml"
+        free_memory_floor_mb = 24000
+        free_memory_floor_provenance = "derived_unmeasured: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate about 36-40 GB leaves about 24-28 GB Available; floor 24000 MB. configs/platforms/evo-t2.yaml measurement_gates.pre_run_available_mb_min."
+        onset_s = $null
+        onset_status = "unknown"
+        onset_provenance = "not measured on evo-t2"
+        canary_onset_s = 657
+        canary_onset_provenance = "borrowed from aipc-c1 session 7f569929 via docs/CANARY_PROTOCOL.md and tools/ttft_slo_canary.py ONSET_S. Same value recorded on 5c714535 and 051d2681. Not an evo-t2 measurement."
+        harness = "tools/run_c1_ceiling.py --criterion ttft_slo --slo-s 10 --resolution 250 --repeats 3"
+        affinity_cpus = "0,1,2,3"
+        wslock = "request minimum_bytes=4294967296 maximum_bytes=12884901888"
+        max_new_tokens = 8
+        harness_source = "5c714535 and 051d2681 work spec.json; configs/delta_n.yaml; aipc-c1 topology.p_cpus pinned by run_c1_ceiling.py"
+        anchor_run_id = "c2246b1f-c588-4998-838a-5507da87e9ee"
+        canary_overhead_s = 752.1359013
+        canary_overhead_stated_s = 752.136
+        cells = @(
+            [ordered]@{ name = "T2S 4B-int4 GPU u8"; base_run_id = "5c714535-9f36-4614-a594-698b6cd09296"; base_s = 520; canary_overhead_s = 752.1359013; estimate_s = 1273 }
+            [ordered]@{ name = "T2S 8B-int4 GPU u8"; base_run_id = "051d2681-4bb8-4f50-b9fc-b14441359ba6"; base_s = 570; canary_overhead_s = 752.1359013; estimate_s = 1323 }
+        )
+    }
+    $Cells = @(
+        @{
+            Name = "T2S 4B-int4 GPU u8"; Kind = "ceiling"; EstimateS = 1273
+            Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+            Low = 14000; High = 26000
+        },
+        @{
+            Name = "T2S 8B-int4 GPU u8"; Kind = "ceiling"; EstimateS = 1323
+            Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-8B-int4-ov.yaml"
+            Low = 14000; High = 26000
         }
     )
 } else {
@@ -443,6 +497,10 @@ function Invoke-BootDryCell {
 }
 
 function Assert-BootAc {
+    if ($Profile -eq "t2s-boot1") {
+        Write-Host "battery_present=false ac=pass reason=platform power.has_battery is false (evo-t2 mains-only)"
+        return
+    }
     $b = @(Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue)
     if ($b.Count -eq 0) { return }
     foreach ($one in $b) {
@@ -450,6 +508,15 @@ function Assert-BootAc {
             throw "REFUSED -- ac: on battery (BatteryStatus=$($one.BatteryStatus))"
         }
     }
+}
+
+if ($Profile -eq "t2s-boot1") {
+    Write-Host "platform_id=evo-t2 config=configs/platforms/evo-t2.yaml"
+    Write-Host "free_memory_floor_mb=24000 provenance=derived_unmeasured CAP-4-class peak on 64 GB; floor keeps Available at or above 24000 MB"
+    Write-Host "onset_s=null onset_status=unknown provenance=not measured on evo-t2"
+    Write-Host "canary_onset_s=657 provenance=borrowed from aipc-c1 session 7f569929; recorded on 5c714535 and 051d2681; not an evo-t2 measurement"
+    Write-Host "harness affinity_cpus=0,1,2,3 wslock=request:4294967296:12884901888 max_new_tokens=8 source=5c714535/051d2681"
+    Assert-BootAc
 }
 
 Save-BootSummary -State "started"
@@ -469,7 +536,7 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         $left = @()
         for ($j = $i; $j -lt $Cells.Count; $j++) {
             $left += $Cells[$j].Name
-            Add-Row -Cell $Cells[$j] -Status "DEFERRED_TO_BOOT2" -RunId "" -Detail "remaining_s=$remaining"
+            Add-Row -Cell $Cells[$j] -Status $script:DeferredStatus -RunId "" -Detail "remaining_s=$remaining"
         }
         $defer = [ordered]@{
             reason = "remaining cold-window time is below the next cell estimate"

@@ -3,7 +3,7 @@
 Gates historically hardcoded for XPS / aipc-c1. Values come from
 ``configs/platforms/<id>.yaml`` ``measurement_gates``; host probes fill observed
 fields. No silent fallbacks: unknown onset is recorded; no battery is AC-pass with
-an explicit reason; power-plan GUID is recorded but not matched — AC processor
+an explicit reason; power-plan GUID is recorded but not matched. AC processor
 throttle 100/100 is the pass criterion.
 """
 
@@ -149,6 +149,14 @@ def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
         timeout=_TIMEOUT_S,
         check=False,
     )
+
+
+def platform_declares_no_battery(repo_root: Path, platform_id: str) -> bool:
+    """True only when the platform YAML sets power.has_battery to false."""
+    path = repo_root / "configs" / "platforms" / f"{platform_id}.yaml"
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    power = data.get("power") or {}
+    return power.get("has_battery") is False
 
 
 def probe_ac_gate() -> GateResult:
@@ -314,7 +322,7 @@ def evaluate_measurement_gates(
     if "onset_s" not in cfg:
         raise RuntimeError(
             f"platform {pid}: measurement_gates.onset_s key is required "
-            "(use null when unknown — do not omit)"
+            "(use null when unknown; do not omit)"
         )
     onset_raw = cfg.get("onset_s")
     onset_s = None if onset_raw is None else float(onset_raw)
@@ -332,6 +340,22 @@ def evaluate_measurement_gates(
 
     if ac_override is not None:
         gates.append(ac_override)
+    elif platform_declares_no_battery(repo_root, pid):
+        gates.append(
+            GateResult(
+                name="ac",
+                passed=True,
+                reason="no_battery_platform_mains_only",
+                detail={
+                    "battery_present": False,
+                    "ac_ok": True,
+                    "recorded_reason": (
+                        "platform power.has_battery is false; mains-only; "
+                        "Win32_Battery was not consulted"
+                    ),
+                },
+            )
+        )
     elif skip_host_probes:
         raise RuntimeError("ac probe required unless ac_override supplied")
     else:

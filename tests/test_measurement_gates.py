@@ -188,6 +188,28 @@ def test_unknown_onset_recorded_in_run_environment_fields() -> None:
     assert onset_gate.reason == "onset_unknown"
 
 
+def test_evo_t2_declared_mains_only_skips_host_battery_probe() -> None:
+    proc = GateResult(
+        name="processor_ac",
+        passed=True,
+        reason="processor_ac_100_100",
+        detail={"procthrottlemin_ac": 100, "procthrottlemax_ac": 100},
+    )
+    report = evaluate_measurement_gates(
+        REPO,
+        platform_id="evo-t2",
+        available_mb=30000.0,
+        uptime_s=10.0,
+        skip_host_probes=True,
+        processor_override=proc,
+    )
+    assert report.all_passed
+    ac_gate = next(g for g in report.gates if g.name == "ac")
+    assert ac_gate.passed
+    assert ac_gate.detail["battery_present"] is False
+    assert ac_gate.detail["ac_ok"] is True
+
+
 def test_evo_t2_yaml_declares_no_battery() -> None:
     data = yaml.safe_load(
         (REPO / "configs" / "platforms" / "evo-t2.yaml").read_text(encoding="utf-8")
