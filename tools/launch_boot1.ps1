@@ -361,7 +361,8 @@ function Add-Row {
         $row.started_utc = $script:CellStartedUtc
         $row.ended_utc = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
     }
-    $script:Rows += $row
+    # An ordered dictionary has no PSObject .name, so Merge-BootCells would drop it.
+    $script:Rows += [pscustomobject]$row
     Save-BootSummary -State "running"
 }
 
