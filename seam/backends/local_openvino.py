@@ -74,7 +74,7 @@ def _template_accepts_thinking(tokenizer: Any) -> bool:
 
 @dataclass(frozen=True, slots=True)
 class OpenVinoRuntimeInfo:
-    """Versions recorded into every manifest's ``drivers`` block (spec §5.2)."""
+    """Versions recorded into every manifest's ``drivers`` block (spec 5.2)."""
 
     openvino: str
     genai: str
@@ -120,7 +120,7 @@ class LocalOpenVinoBackend:
         # manifest. It is applied identically to both targets, so it never differs between arms
         # of the silicon contrast.
         self._enable_thinking = enable_thinking
-        # Process-affinity fallback (spec §4). Used only when SCHEDULING_CORE_TYPE is shown NOT to
+        # Process-affinity fallback (spec 4). Used only when SCHEDULING_CORE_TYPE is shown NOT to
         # confine work to the M1-committed cluster; applied before compilation so the pipeline's
         # worker threads inherit the mask.
         self._affinity_cpus = list(affinity_cpus) if affinity_cpus else None
@@ -243,7 +243,7 @@ class LocalOpenVinoBackend:
         if not self._model_dir.exists():
             raise BackendError(
                 f"OpenVINO IR not found at {self._model_dir}. Export it with "
-                f"seam/tools/export_model.py - models are never hand-converted (spec §5.3)."
+                f"seam/tools/export_model.py - models are never hand-converted (spec 5.3)."
             )
 
         self._process_affinity_before_load = capture_process_affinity()
@@ -396,7 +396,7 @@ class LocalOpenVinoBackend:
                 # OpenVINO GenAI's LLMPipeline.generate() takes a fully rendered prompt and reports
                 # no cache-reuse counters, so `cache_read_input_tokens` is structurally 0 here. That
                 # is NOT the same claim as "no reuse occurred", and the E-FILTER caching fork turns
-                # on the difference - see docs/EXPERIMENT_escalation_filter.md §6.
+                # on the difference - see docs/EXPERIMENT_escalation_filter.md section 6.
                 "cache_instrumented": False,
                 "cache_instrumentation_note": (
                     "openvino_genai LLMPipeline exposes no cache_read/cache_creation counters; "
@@ -438,10 +438,16 @@ def _make_ttft_streamer(ov_genai: Any) -> Any:
             super().__init__()
             self.t0_ns: int | None = None
             self.ttft_ns: int | None = None
+            self.first_token_ns: int | None = None
+            self.last_token_ns: int | None = None
 
         def write(self, _token: Any) -> Any:
-            if self.ttft_ns is None and self.t0_ns is not None:
-                self.ttft_ns = time.perf_counter_ns() - self.t0_ns
+            now = time.perf_counter_ns()
+            if self.first_token_ns is None:
+                self.first_token_ns = now
+                if self.ttft_ns is None and self.t0_ns is not None:
+                    self.ttft_ns = now - self.t0_ns
+            self.last_token_ns = now
             return ov_genai.StreamingStatus.RUNNING
 
         def end(self) -> None:

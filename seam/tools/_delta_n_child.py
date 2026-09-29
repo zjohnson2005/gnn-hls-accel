@@ -1,4 +1,4 @@
-"""One ΔN ladder repeat, isolated in its own process.
+"""One delta-N ladder repeat, isolated in its own process.
 
 Process isolation is the safety property that makes the ceiling search survivable. A rung at
 or past the ceiling exhausts memory, and the failure arrives as an allocation throw, an access
@@ -219,12 +219,28 @@ def _run_with_power(spec: dict[str, Any], writer: _Writer) -> int:
         },
     )
 
-    prompt = Path(spec["prompt_path"]).read_text(encoding="utf-8")
     generate_device = str(spec["generate_device"])
     pipe = pipes[generate_device]
 
+    if spec.get("resident_two_turn"):
+        return _resident_two_turn(spec, writer, pipe, ov_genai)
+
+    if spec.get("build_exact_n") is not None:
+        from seam.tools.boot4_text import rendered_exact_prompt
+
+        prompt = rendered_exact_prompt(
+            pipe.get_tokenizer(),
+            int(spec["build_exact_n"]),
+            unit=str(spec["filler_unit"]),
+            salt=str(spec.get("prompt_salt") or "p"),
+        )
+    else:
+        prompt = Path(spec["prompt_path"]).read_text(encoding="utf-8")
+
     cfg = ov_genai.GenerationConfig()
     cfg.max_new_tokens = int(spec["max_new_tokens"])
+    if spec.get("min_new_tokens") is not None:
+        cfg.min_new_tokens = int(spec["min_new_tokens"])
     cfg.do_sample = False
     cfg.ignore_eos = True
     # The prompt arrives fully rendered so that every arm sees byte-identical input; letting the
@@ -281,6 +297,23 @@ def _run_with_power(spec: dict[str, Any], writer: _Writer) -> int:
         else:
             decode_s = None
 
+    decode_span = None
+    if spec.get("decode_span_rate"):
+        from seam.tools.boot4_text import decode_span_tok_s
+
+        first_ns = getattr(streamer, "first_token_ns", None)
+        last_ns = getattr(streamer, "last_token_ns", None)
+        if first_ns is None or last_ns is None:
+            raise RuntimeError("decode span requires a first and a last token timestamp")
+        r_decode = decode_span_tok_s(t_first_ns=int(first_ns), t_last_ns=int(last_ns))
+        decode_s = (int(last_ns) - int(first_ns)) / 1e9
+        decode_span = {
+            "t_first_ns": int(first_ns),
+            "t_last_ns": int(last_ns),
+            "numerator": 63,
+            "span_s": decode_s,
+        }
+
     writer.update(
         phase="done",
         completed=True,
@@ -292,6 +325,7 @@ def _run_with_power(spec: dict[str, Any], writer: _Writer) -> int:
             "prefill_s": prefill_s,
             "decode_s": decode_s,
             "decode_tok_s": r_decode,
+            "decode_span": decode_span,
             "r_prefill_tok_s": r_prefill,
             "r_decode_tok_s": r_decode,
             "prompt_tokens_reported": prompt_tokens,
@@ -302,6 +336,137 @@ def _run_with_power(spec: dict[str, Any], writer: _Writer) -> int:
         },
         memory_after_generate=_mem(),
         working_set_limits_after=read_working_set_limits(),
+    )
+    return 0
+
+
+def _chat_once(
+    pipe: Any,
+    history: Any,
+    cfg: Any,
+    ov_genai: Any,
+) -> dict[str, Any]:
+    """One ChatHistory generate. TTFT is the turn's prefill."""
+    from seam.backends.local_openvino import _make_ttft_streamer, resolve_ttft_ns
+
+    streamer = _make_ttft_streamer(ov_genai)
+    t0 = time.perf_counter()
+    streamer.t0_ns = time.perf_counter_ns()
+    result = pipe.generate(history, cfg, streamer)
+    wall_s = time.perf_counter() - t0
+    texts = getattr(result, "texts", None)
+    text = str(texts[0]) if texts else str(result)
+    metrics = getattr(result, "perf_metrics", None)
+    prompt_tokens = None
+    completion_tokens = None
+    metrics_ttft_ns = None
+    if metrics is not None:
+        try:
+            prompt_tokens = int(metrics.get_num_input_tokens())
+            completion_tokens = int(metrics.get_num_generated_tokens())
+        except Exception:
+            prompt_tokens = None
+            completion_tokens = None
+        try:
+            ttft_ms = float(metrics.get_ttft().mean)
+            metrics_ttft_ns = int(ttft_ms * 1_000_000) if ttft_ms > 0.0 else None
+        except Exception:
+            metrics_ttft_ns = None
+    ttft_ns, ttft_source = resolve_ttft_ns(metrics_ttft_ns, streamer.ttft_ns)
+    prefill_s = (ttft_ns / 1e9) if ttft_ns else None
+    return {
+        "wall_s": wall_s,
+        "ttft_ns": ttft_ns,
+        "ttft_source": ttft_source,
+        "prefill_s": prefill_s,
+        "prompt_tokens_reported": prompt_tokens,
+        "completion_tokens_reported": completion_tokens,
+        "completion_chars": len(text),
+        "text_head": text[:200],
+    }
+
+
+def _fail_turn(writer: _Writer, turn: str, exc: BaseException) -> int:
+    writer.update(
+        phase="failed",
+        completed=False,
+        failure_mode=f"{turn}:{type(exc).__name__}",
+        exception={
+            "type": type(exc).__name__,
+            "message": str(exc)[:4000],
+            "traceback": traceback.format_exc()[:8000],
+        },
+        memory_at_failure=_mem(),
+    )
+    return 1
+
+
+def _resident_two_turn(spec: dict[str, Any], writer: _Writer, pipe: Any, ov_genai: Any) -> int:
+    """One turn-1 fill, then turn-2 repeats on histories that share only that prefix."""
+    from seam.tools.boot4_text import raw_exact_text, user_content_for_rendered_tokens
+
+    tokenizer = pipe.get_tokenizer()
+    unit = str(spec["filler_unit"])
+    n_cached = int(spec["n_cached"])
+    delta_tokens = int(spec["delta_tokens"])
+    repeats = int(spec["turn2_repeats"])
+    turn1_content = user_content_for_rendered_tokens(tokenizer, n_cached, unit=unit, salt="f")
+    deltas = [
+        raw_exact_text(tokenizer, delta_tokens, unit=unit, salt=f"d{i}") for i in range(repeats)
+    ]
+    if len(set(deltas)) != repeats:
+        raise RuntimeError("turn-2 delta texts are not distinct")
+
+    cfg1 = ov_genai.GenerationConfig()
+    cfg1.max_new_tokens = int(spec.get("turn1_max_new_tokens", 1))
+    cfg1.do_sample = False
+    cfg1.ignore_eos = True
+    cfg2 = ov_genai.GenerationConfig()
+    cfg2.max_new_tokens = int(spec.get("turn2_max_new_tokens", 1))
+    cfg2.do_sample = False
+    cfg2.ignore_eos = True
+
+    history = ov_genai.ChatHistory()
+    history.set_extra_context({"enable_thinking": False})
+    history.append({"role": "user", "content": turn1_content})
+    writer.update(phase="generating", memory_before_generate=_mem())
+    try:
+        turn1 = _chat_once(pipe, history, cfg1, ov_genai)
+    except Exception as exc:
+        return _fail_turn(writer, "turn1", exc)
+    reported = turn1.get("prompt_tokens_reported")
+    if reported is not None and int(reported) != n_cached:
+        return _fail_turn(
+            writer,
+            "turn1",
+            RuntimeError(f"turn-1 prompt tokens {reported} do not equal n_cached {n_cached}"),
+        )
+    base = json.loads(json.dumps(history.get_messages()))
+    turn2s: list[dict[str, Any]] = []
+    for i, delta in enumerate(deltas):
+        branch = ov_genai.ChatHistory()
+        branch.set_extra_context({"enable_thinking": False})
+        branch.set_messages(base)
+        branch.append({"role": "user", "content": delta})
+        try:
+            rec = _chat_once(pipe, branch, cfg2, ov_genai)
+        except Exception as exc:
+            return _fail_turn(writer, "turn2", exc)
+        rec["repeat"] = i
+        rec["delta_tokens"] = delta_tokens
+        turn2s.append(rec)
+    writer.update(
+        phase="done",
+        completed=True,
+        failure_mode=None,
+        generation={
+            "resident_two_turn": True,
+            "n_cached": n_cached,
+            "delta_tokens": delta_tokens,
+            "turn1": turn1,
+            "turn2": turn2s,
+        },
+        memory_after_generate=_mem(),
     )
     return 0
 

@@ -148,36 +148,48 @@ if ($Profile -eq "boot2") {
         }
     )
 } elseif ($Profile -eq "boot4") {
-    # Boot 4: estimate_s = base_s + canary_overhead_s.
+    # Boot 4: estimate_s = base_s + canary_overhead_s, next whole second.
     # canary_overhead_s is the boot-2 measured load overhead, 752.1359013.
-    # WARM-KV base_s is the boot-1 4B-int4 GPU generation budget, 368.
-    # DECODE-MATCH base_s is the c2246b1f probe-sum, 192.106556.
+    # Warm base_s is sealed 2b3316b6-7f6e-474f-9177-bd5a89aeb58c median prefill
+    # at 12000 plus the median at 46000 plus 6 x the 12000 median. The 6 x
+    # term bounds three turn-2 repeats at each of the two points by the
+    # sealed 12000-token prefill (delta is 183 tokens).
+    # f16 12k 13.504825195, 46k 252.707921875, base 347.24169824, estimate 1100.
+    # u8 12k 13.277133789, 46k 230.360359375, base 323.300295898, estimate 1076.
+    # u4 12k 13.550313476, 46k 239.800796875, base 334.652991207, estimate 1087.
+    # Decode base_s is 18 x the sealed int4 f16 12000 prefill 13.504825195
+    # (2 models x 3 n x 3 repeats). Each listed n is below 12000. The int8
+    # weight model is not in that sealed run; the same prefill bounds it.
+    # Decode base 243.08685351, estimate 996.
+    # Sum of ceilings 4259 s. Window is 7200 s, so boot 4 stays one window.
     $script:EstimateDerivation = [ordered]@{
         formula = "estimate_s = base_s + canary_overhead_s"
-        note = "Boot 4: WARM-KV three arms, then DECODE-MATCH. Ceilings are the next whole second."
+        note = "Boot 4 stays one window: estimate sum 4259 s is below 7200 s."
+        source_run_id = "2b3316b6-7f6e-474f-9177-bd5a89aeb58c"
         cells = @(
-            [ordered]@{ name = "WARM-KV f16"; base_s = 368; canary_overhead_s = 752.1359013; estimate_s = 1121 }
-            [ordered]@{ name = "WARM-KV u8"; base_s = 368; canary_overhead_s = 752.1359013; estimate_s = 1121 }
-            [ordered]@{ name = "WARM-KV u4"; base_s = 368; canary_overhead_s = 752.1359013; estimate_s = 1121 }
-            [ordered]@{ name = "DECODE-MATCH"; base_s = 192.106556; canary_overhead_s = 752.1359013; estimate_s = 945 }
+            [ordered]@{ name = "WARM-KV f16"; base_s = 347.24169824; canary_overhead_s = 752.1359013; estimate_s = 1100 }
+            [ordered]@{ name = "WARM-KV u8"; base_s = 323.300295898; canary_overhead_s = 752.1359013; estimate_s = 1076 }
+            [ordered]@{ name = "WARM-KV u4"; base_s = 334.652991207; canary_overhead_s = 752.1359013; estimate_s = 1087 }
+            [ordered]@{ name = "DECODE-MATCH"; base_s = 243.08685351; canary_overhead_s = 752.1359013; estimate_s = 996 }
         )
     }
     $Cells = @(
         @{
-            Name = "WARM-KV f16"; Kind = "warm"; EstimateS = 1121
+            Name = "WARM-KV f16"; Kind = "warm"; EstimateS = 1100
             Arm = "gpu_only_f16"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
         },
         @{
-            Name = "WARM-KV u8"; Kind = "warm"; EstimateS = 1121
+            Name = "WARM-KV u8"; Kind = "warm"; EstimateS = 1076
             Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
         },
         @{
-            Name = "WARM-KV u4"; Kind = "warm"; EstimateS = 1121
+            Name = "WARM-KV u4"; Kind = "warm"; EstimateS = 1087
             Arm = "gpu_only_u4"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
         },
         @{
-            Name = "DECODE-MATCH"; Kind = "decode"; EstimateS = 945
+            Name = "DECODE-MATCH"; Kind = "decode"; EstimateS = 996
             Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+            Model2 = "configs\models\Qwen3-4B-int8-ov.yaml"
         }
     )
 } elseif ($Profile -eq "t2s-boot1") {
@@ -551,10 +563,15 @@ function Get-BootCellCommand {
         if ($kind -eq "decode") { $script = $DecodePy }
         $modelPath = Join-Path $root $model
         $args = @($PythonExe, "-u", $script, "--arm", $arm, "--model-spec", $modelPath)
-        if ($kind -eq "decode") { $args += @("--n", "2000,4000,8000") }
+        if ($kind -eq "decode") {
+            $args += @("--n", "2000,4000,8000")
+            $model2 = Get-BootCellField -Cell $Cell -Name "Model2"
+            if ($model2) { $args += @("--model-spec", (Join-Path $root $model2)) }
+        }
+        $smokeArgs = @($PythonExe, "-u", $script, "--smoke", "--arm", $arm, "--model-spec", $modelPath)
         return [ordered]@{
             kind = $kind; arm = $arm; model = $model; low = $low; high = $high
-            expect_kv = $kv; command = ($args -join " "); smoke = $null
+            expect_kv = $kv; command = ($args -join " "); smoke = ($smokeArgs -join " ")
         }
     }
     $modelPath = Join-Path $root $model
@@ -580,6 +597,46 @@ function Get-BootCellCommand {
     return [ordered]@{
         kind = $kind; arm = $arm; model = $model; low = $low; high = $high
         expect_kv = $kv; command = $worker; smoke = $smoke
+    }
+}
+
+function Assert-Boot4Bodies {
+    $mark = "measurement body is not started"
+    $paths = @($WarmPy, $DecodePy)
+    if ($env:SEAM_BOOT4_STUB_FIXTURE) { $paths += $env:SEAM_BOOT4_STUB_FIXTURE }
+    foreach ($p in $paths) {
+        if (-not (Test-Path -LiteralPath $p)) { throw "REFUSED -- runner missing: $p" }
+        $text = Get-Content -LiteralPath $p -Raw
+        if ($text.Contains($mark)) { throw "REFUSED -- stub measurement body: $p" }
+    }
+}
+
+function Invoke-Boot4Smokes {
+    if ($Profile -ne "boot4") { return }
+    Assert-Boot4Bodies
+    $sum = 0
+    foreach ($cell in $Cells) { $sum += [int]$cell.EstimateS }
+    $fits = "false"
+    if ($sum -le $WindowS) { $fits = "true" }
+    Write-Host ("boot4_estimate_sum_s={0} window_s={1} fits_one_window={2}" -f $sum, $WindowS, $fits)
+    foreach ($cell in $Cells) {
+        $kind = Get-BootCellField -Cell $cell -Name "Kind"
+        if ($kind -ne "warm" -and $kind -ne "decode") { continue }
+        $built = Get-BootCellCommand -Cell $cell
+        if ($DryRun) {
+            Write-Host ("smoke_planned {0} {1}" -f $cell.Name, $built.smoke)
+            continue
+        }
+        Write-Host ("smoke_run {0}" -f $built.smoke)
+        $parts = @($built.smoke -split " ")
+        & $parts[0] @($parts | Select-Object -Skip 1)
+        if ($LASTEXITCODE -ne 0) {
+            $script:FinalState = "refused"
+            $script:FinalReason = "REFUSED -- smoke failed: $($cell.Name) exit=$LASTEXITCODE"
+            Save-BootSummary -State "refused" -Reason $script:FinalReason
+            Write-Host $script:FinalReason
+            exit $LASTEXITCODE
+        }
     }
 }
 
@@ -634,6 +691,11 @@ if ($Profile -eq "t2s-boot1") {
 }
 
 Save-BootSummary -State "started"
+
+# Boot 4 has no reboot step. Smokes run before any measurement cell and a
+# smoke failure refuses the boot. Dry-run checks the stub mark and prints
+# the smoke commands without loading a model.
+Invoke-Boot4Smokes
 
 if ($Profile -eq "t2s-boot1") {
     $script:RunStartedUtc = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")

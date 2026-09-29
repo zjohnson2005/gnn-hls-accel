@@ -12,7 +12,9 @@ if str(ROOT) not in sys.path:
 
 PREREG = (
     ROOT / "derived" / "delta_prefill" / "WARM_KV_PREREG.json",
+    ROOT / "derived" / "delta_prefill" / "WARM_KV_AMEND_1.json",
     ROOT / "derived" / "c2_ttft" / "DECODE_MATCH_PREREG.json",
+    ROOT / "derived" / "c2_ttft" / "DECODE_MATCH_AMEND_1.json",
     ROOT / "derived" / "q8b" / "Q_TIER_CLEAN_PREREG.json",
     ROOT / "derived" / "q8b" / "Q_TIER_CLEAN_AMEND_1.json",
     ROOT / "derived" / "q_kv" / "Q_KV_CLEAN_PREREG.json",
@@ -70,3 +72,8 @@ def test_boot4_dry_run() -> None:
     assert "run_warm_kv.py" in proc.stdout
     assert "run_decode_match.py" in proc.stdout
     assert "--n 2000,4000,8000" in proc.stdout
+    assert "boot4_estimate_sum_s=4259" in proc.stdout
+    assert "fits_one_window=true" in proc.stdout
+    assert "smoke_planned WARM-KV f16" in proc.stdout
+    assert "smoke_planned DECODE-MATCH" in proc.stdout
+    assert "--smoke" in proc.stdout
