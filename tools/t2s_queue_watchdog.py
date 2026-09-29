@@ -1,7 +1,7 @@
 """Read-only evidence from Rithwik's APU queue watchdog log.
 
 Does not create, edit, or reschedule the watchdog task. Callers pass a log
-path. The live path is C:\\apu\\watchdog.log.
+path. The live path on the T2S is C:\\apu\\ovn\\watchdog.log.
 """
 
 from __future__ import annotations
@@ -80,19 +80,21 @@ def is_worker_name(name: str) -> bool:
     return lowered.startswith(_WORKER_PREFIXES)
 
 
-def launch_refusal(log_text: str | None, running_names: list[str]) -> str | None:
+def launch_refusal(
+    log_text: str | None,
+    running_names: list[str],
+    *,
+    log_path: str,
+) -> str | None:
     """(a) last log entry must be empty_flag, and no python or llama-server."""
     if log_text is None:
-        return "REFUSED -- watchdog.log missing"
+        return f"REFUSED -- watchdog.log missing: {log_path}"
     if last_entry(log_text) is None:
-        return "REFUSED -- watchdog.log has no JSON entry"
+        return f"REFUSED -- watchdog.log has no JSON entry: {log_path}"
     entry = last_entry(log_text)
     assert entry is not None
     if entry.get("action") != "empty_flag":
-        return (
-            "REFUSED -- last watchdog action is "
-            f"{entry.get('action')!r}, want empty_flag"
-        )
+        return f"REFUSED -- last watchdog action is {entry.get('action')!r}, want empty_flag"
     busy = [name for name in running_names if is_worker_name(name)]
     if busy:
         return "REFUSED -- python or llama-server is running"
@@ -189,7 +191,12 @@ def seal_exclusion_reason(summary: dict[str, Any], plan: dict[str, Any]) -> str 
     return None
 
 
-def _patch_cell_files(repo_root: Path, cell: dict[str, Any], evidence: list[str]) -> None:
+def _patch_cell_files(
+    repo_root: Path,
+    cell: dict[str, Any],
+    evidence: list[str],
+    log_path: str,
+) -> None:
     run_id = str(cell.get("run_id") or "").strip()
     if not run_id:
         return
@@ -205,6 +212,7 @@ def _patch_cell_files(repo_root: Path, cell: dict[str, Any], evidence: list[str]
         doc = json.loads(path.read_text(encoding="utf-8-sig"))
         if not isinstance(doc, dict):
             continue
+        doc["watchdog_log"] = log_path
         doc["foreign_queue_evidence"] = list(evidence)
         if exclude:
             doc["exclude_from_sealed_results"] = True
@@ -214,26 +222,35 @@ def _patch_cell_files(repo_root: Path, cell: dict[str, Any], evidence: list[str]
 
 def apply_summary(payload: dict[str, Any]) -> dict[str, Any]:
     log_path = Path(str(payload.get("log_path") or ""))
+    log_s = str(log_path)
     started = str(payload.get("started_utc") or "")
     ended = str(payload.get("ended_utc") or "")
     cells = [dict(c) for c in (payload.get("cells") or [])]
+    repo = payload.get("repo_root")
+    root = Path(str(repo)) if repo else None
+
+    def _stamp(rows: list[dict[str, Any]], evidence: list[str]) -> None:
+        if root is None:
+            return
+        for cell in rows:
+            _patch_cell_files(root, cell, evidence, log_s)
+
     if not log_path.is_file() or not started or not ended:
+        _stamp(cells, [])
         return {
             "cells": cells,
             "foreign_queue_evidence": [],
+            "watchdog_log": log_s,
             "watchdog_log_missing": not log_path.is_file(),
         }
     text = log_path.read_text(encoding="utf-8")
     lines = evidence_lines(text, started, ended)
     marked = mark_overlapping_cells(cells, lines)
-    repo = payload.get("repo_root")
-    if repo:
-        root = Path(str(repo))
-        for cell in marked:
-            _patch_cell_files(root, cell, lines)
+    _stamp(marked, lines)
     return {
         "cells": marked,
         "foreign_queue_evidence": lines,
+        "watchdog_log": log_s,
         "watchdog_log_missing": False,
     }
 
@@ -294,7 +311,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "launch-check":
         text = args.log.read_text(encoding="utf-8") if args.log.is_file() else None
-        reason = launch_refusal(text, _running_names_from_args(args.running_json))
+        reason = launch_refusal(
+            text,
+            _running_names_from_args(args.running_json),
+            log_path=str(args.log),
+        )
         if reason:
             print(reason)
             return 1

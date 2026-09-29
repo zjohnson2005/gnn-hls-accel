@@ -20,6 +20,7 @@ param(
     [switch]$Detach,
     [switch]$DryRun,
     [switch]$NoRebootDeviation,
+    [string]$WatchdogLog = "",
     [ValidateSet("boot1", "boot2", "boot3", "boot4", "t2s-boot1")]
     [string]$Profile = "boot1"
 )
@@ -67,6 +68,7 @@ if ($Detach) {
     $self = "`"$PSCommandPath`""
     $cmd = "powershell -NoProfile -File $self -Profile $Profile"
     if ($NoRebootDeviation) { $cmd += " -NoRebootDeviation" }
+    if ($WatchdogLog) { $cmd += " -WatchdogLog `"$WatchdogLog`"" }
     $log = Join-Path $LaunchDir "$Profile.log"
     $json = & $SpawnPs1 -CommandLine $cmd -LogPath $log -WorkingDirectory $root
     Write-Host $json
@@ -311,6 +313,9 @@ function Save-BootSummary {
         $doc.foreign_queue_evidence = @($script:ForeignQueueEvidence)
         $doc.watchdog_log_missing = [bool]$script:WatchdogLogMissing
     }
+    if ($Profile -eq "t2s-boot1" -and $WatchdogLog) {
+        $doc.watchdog_log = [string]$WatchdogLog
+    }
     if ($NoRebootDeviation) {
         $doc.deviation = [ordered]@{
             kind = "UNCOLD_UPTIME"
@@ -354,7 +359,7 @@ function Update-T2sForeignEvidence {
     if (-not $script:RunStartedUtc) { return }
     $ended = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
     $payload = [ordered]@{
-        log_path = "C:\apu\watchdog.log"
+        log_path = [string]$WatchdogLog
         started_utc = $script:RunStartedUtc
         ended_utc = $ended
         repo_root = $root
@@ -609,7 +614,12 @@ function Assert-BootAc {
 }
 
 if ($Profile -eq "t2s-boot1") {
+    if ([string]::IsNullOrWhiteSpace($WatchdogLog)) {
+        $WatchdogLog = "C:\apu\ovn\watchdog.log"
+    }
+    $env:SEAM_WATCHDOG_LOG = [string]$WatchdogLog
     Write-Host "platform_id=evo-t2 config=configs/platforms/evo-t2.yaml"
+    Write-Host ("watchdog_log={0}" -f $WatchdogLog)
     Write-Host "free_memory_floor_mb=24000 provenance=derived_unmeasured CAP-4-class peak on 64 GB; floor keeps Available at or above 24000 MB"
     Write-Host "onset_s=null onset_status=unknown provenance=not measured on evo-t2"
     Write-Host "canary_onset_s=657 provenance=borrowed from aipc-c1 session 7f569929; recorded on 5c714535 and 051d2681; not an evo-t2 measurement"

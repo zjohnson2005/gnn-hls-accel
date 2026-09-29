@@ -54,6 +54,7 @@ def test_t2s_boot1_dry_run() -> None:
         "Qwen3-4B-int4-ov.yaml",
         "Qwen3-8B-int4-ov.yaml",
         "control_band ",
+        r"watchdog_log=C:\apu\ovn\watchdog.log",
     ):
         assert name in out, name
     assert "--allow-unguarded" not in out

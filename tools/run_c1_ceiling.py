@@ -405,6 +405,9 @@ def _stamp_deviation(doc: dict[str, Any]) -> None:
     deviation = noreboot_deviation()
     if deviation is not None:
         doc["deviation"] = deviation
+    log_path = os.environ.get("SEAM_WATCHDOG_LOG", "").strip()
+    if log_path:
+        doc["watchdog_log"] = log_path
 
 
 def _probe_once(

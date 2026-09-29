@@ -1,7 +1,8 @@
 # T2S boot 1. f16 control at n=18687, then 4B-int4 GPU u8, then 8B-int4 GPU u8.
 # Same cell machinery as launch_boot4.ps1. -Detach is launch_boot1.ps1
 # -Detach, which uses tools/spawn_detached.ps1 (Win32_Process.Create).
-# -Detach refuses unless C:\apu\watchdog.log ends in {"action":"empty_flag"},
+# -Detach refuses unless -WatchdogLog (default C:\apu\ovn\watchdog.log) ends in
+# {"action":"empty_flag"},
 # no python or llama-server is running, and free memory is at least 24000 MB.
 # -NoRebootDeviation skips only the uptime gate and records UNCOLD_UPTIME.
 # This script does not register a logon task or a scheduled task.
@@ -11,7 +12,8 @@
 param(
     [switch]$Detach,
     [switch]$DryRun,
-    [switch]$NoRebootDeviation
+    [switch]$NoRebootDeviation,
+    [string]$WatchdogLog = "C:\apu\ovn\watchdog.log"
 )
 
 $ErrorActionPreference = "Stop"
@@ -28,7 +30,7 @@ if ($Detach -and -not $DryRun) {
     } else {
         $running = ConvertTo-Json -InputObject @($names) -Compress
     }
-    & $python $watchdog launch-check --log "C:\apu\watchdog.log" --running-json $running
+    & $python $watchdog launch-check --log $WatchdogLog --running-json $running
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     $freeMb = (Get-Counter '\Memory\Available MBytes').CounterSamples[0].CookedValue
     if ([double]$freeMb -lt $floorMb) {
@@ -39,6 +41,7 @@ if ($Detach -and -not $DryRun) {
 
 $launcher = Join-Path $PSScriptRoot "launch_boot1.ps1"
 $launchArgs = @("-NoProfile", "-File", $launcher, "-Profile", "t2s-boot1")
+$launchArgs += @("-WatchdogLog", $WatchdogLog)
 if ($NoRebootDeviation) { $launchArgs += "-NoRebootDeviation" }
 if ($Detach -and -not $DryRun) { $launchArgs += "-Detach" }
 if ($DryRun) { $launchArgs += "-DryRun" }

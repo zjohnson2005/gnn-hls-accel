@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -14,6 +15,7 @@ if str(ROOT) not in sys.path:
 
 from tools.seal_c2_ttft import seal_session  # noqa: E402
 from tools.t2s_queue_watchdog import (  # noqa: E402
+    apply_summary,
     evidence_lines,
     foreign_workers,
     last_entry,
@@ -30,12 +32,12 @@ def test_launch_accepts_empty_flag_fixture_with_no_workers() -> None:
     text = (FIXTURES / "clean.jsonl").read_text(encoding="utf-8")
     assert last_entry(text) is not None
     assert last_entry(text)["action"] == "empty_flag"
-    assert launch_refusal(text, []) is None
+    assert launch_refusal(text, [], log_path=r"C:\apu\ovn\watchdog.log") is None
 
 
 def test_launch_refuses_when_last_fixture_line_is_not_empty_flag() -> None:
     text = (FIXTURES / "last_not_empty.jsonl").read_text(encoding="utf-8")
-    reason = launch_refusal(text, [])
+    reason = launch_refusal(text, [], log_path=r"C:\apu\ovn\watchdog.log")
     assert reason is not None
     assert "empty_flag" in reason
     assert "queue_nonempty" in reason
@@ -43,9 +45,12 @@ def test_launch_refuses_when_last_fixture_line_is_not_empty_flag() -> None:
 
 def test_launch_refuses_when_python_or_llama_server_is_running() -> None:
     text = (FIXTURES / "clean.jsonl").read_text(encoding="utf-8")
-    assert launch_refusal(text, ["python"]) is not None
-    assert launch_refusal(text, ["llama-server"]) is not None
-    assert launch_refusal(None, []) == "REFUSED -- watchdog.log missing"
+    assert launch_refusal(text, ["python"], log_path=r"C:\apu\ovn\watchdog.log") is not None
+    assert launch_refusal(text, ["llama-server"], log_path=r"C:\apu\ovn\watchdog.log") is not None
+    missing = r"C:\apu\ovn\watchdog.log"
+    assert (
+        launch_refusal(None, [], log_path=missing) == f"REFUSED -- watchdog.log missing: {missing}"
+    )
 
 
 def test_cell_gate_refuses_foreign_python_and_llama_server() -> None:
@@ -109,6 +114,97 @@ def test_empty_flag_lines_do_not_mark_a_cell() -> None:
     assert cells[0]["status"] == "complete"
 
 
+def test_custom_log_path_is_the_refusal_and_the_cell_record(tmp_path: Path) -> None:
+    custom = tmp_path / "ovn" / "watchdog.log"
+    custom.parent.mkdir()
+    custom.write_text((FIXTURES / "clean.jsonl").read_text(encoding="utf-8"), encoding="utf-8")
+    checker = ROOT / "tools" / "t2s_queue_watchdog.py"
+    ok = subprocess.run(
+        [
+            sys.executable,
+            str(checker),
+            "launch-check",
+            "--log",
+            str(custom),
+            "--running-json",
+            "[]",
+        ],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert ok.returncode == 0, ok.stderr
+    missing = tmp_path / "absent" / "watchdog.log"
+    refused = subprocess.run(
+        [
+            sys.executable,
+            str(checker),
+            "launch-check",
+            "--log",
+            str(missing),
+            "--running-json",
+            "[]",
+        ],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert refused.returncode == 1
+    assert f"REFUSED -- watchdog.log missing: {missing}" in refused.stdout
+    session = tmp_path / "repo" / "derived" / "c2_ttft" / "run-1"
+    session.mkdir(parents=True)
+    (session / "plan.json").write_text("{}\n", encoding="utf-8")
+    (session / "summary.json").write_text("{}\n", encoding="utf-8")
+    applied = apply_summary(
+        {
+            "log_path": str(custom),
+            "started_utc": "2026-09-29T16:00:00Z",
+            "ended_utc": "2026-09-29T16:45:00Z",
+            "repo_root": str(tmp_path / "repo"),
+            "cells": [
+                {
+                    "name": "T2S 4B-int4 GPU u8",
+                    "status": "complete",
+                    "run_id": "run-1",
+                    "started_utc": "2026-09-29T16:00:00Z",
+                    "ended_utc": "2026-09-29T16:30:00Z",
+                }
+            ],
+        }
+    )
+    assert applied["watchdog_log"] == str(custom)
+    assert applied["watchdog_log_missing"] is False
+    for name in ("plan.json", "summary.json"):
+        doc = json.loads((session / name).read_text(encoding="utf-8"))
+        assert doc["watchdog_log"] == str(custom)
+
+
+def test_dry_run_prints_a_custom_watchdog_log(tmp_path: Path) -> None:
+    custom = tmp_path / "ovn" / "watchdog.log"
+    custom.parent.mkdir()
+    custom.write_text((FIXTURES / "clean.jsonl").read_text(encoding="utf-8"), encoding="utf-8")
+    proc = subprocess.run(
+        [
+            "powershell",
+            "-NoProfile",
+            "-File",
+            str(LAUNCHER),
+            "-DryRun",
+            "-WatchdogLog",
+            str(custom),
+        ],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert f"watchdog_log={custom}" in proc.stdout
+    assert "DRY_RUN_OK T2S 4B-int4 GPU f16 control" in proc.stdout
+
+
 def test_seal_refuses_foreign_activity(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     session = tmp_path / "abc"
     session.mkdir()
@@ -131,3 +227,8 @@ def test_launcher_has_no_logon_registration() -> None:
     assert "launch-check" in text
     assert "24000" in text
     assert "-Detach" in text
+    assert r"C:\apu\ovn\watchdog.log" in text
+    assert r"C:\apu\watchdog.log" not in text
+    sequencer = (ROOT / "tools" / "launch_boot1.ps1").read_text(encoding="utf-8")
+    assert "-WatchdogLog" in sequencer
+    assert r'log_path = "C:\apu\watchdog.log"' not in sequencer
