@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -499,6 +500,31 @@ def test_r2c_full_signal_bounceback_each_trigger_once() -> None:
     assert er.turns[3].placement == "local" and not er.turns[3].escalated
     assert er.turns[3].tool_exec_error is False
     assert er.turns[3].tool_exec_error_class is None
+    # Cloud row keeps the cloud emission bit. The local attempt is stored beside it.
+    # After a cloud turn the stub fills an empty local raw with the inject marker.
+    empty_hash = hashlib.sha256(b"").hexdigest()
+    inject_hash = hashlib.sha256(b"[local_after_cloud_inject]").hexdigest()
+    for turn, emitted, n_steps, tool_err, raw_hash in (
+        (er.turns[0], False, 1, False, empty_hash),
+        (er.turns[1], True, 5, False, inject_hash),
+        (er.turns[2], True, 2, True, inject_hash),
+    ):
+        attempt = turn.local_attempt
+        assert attempt is not None
+        assert attempt["emitted_parseable_tool_call"] is emitted
+        assert attempt["n_steps"] == n_steps
+        assert attempt["tool_exec_error"] is tool_err
+        assert attempt["stop_reason"] == "completed"
+        assert attempt["raw_text_sha256"] == raw_hash
+        again, reason = decide_bounceback(
+            emitted_parseable_tool_call=attempt["emitted_parseable_tool_call"],
+            n_steps=attempt["n_steps"],
+            tool_exec_error=attempt["tool_exec_error"],
+        )
+        assert again is True
+        assert reason == turn.bounce_trigger
+    assert er.turns[0].emitted_parseable_tool_call is True
+    assert "local_attempt" not in er.turns[3].as_dict()
     # Cloud did not stay after bounce - turn 3 is local again.
     assert er.cloud_usd_entry == 3 * cloud_usd(100, 20)
     # Context injection recorded for each bounce turn (cell-keyed).

@@ -291,9 +291,13 @@ class TurnLedger:
     # Execute strings for this user turn (list of agent steps). Cloud turns
     # are decode_execute_anthropic output; local turns are the probe decode.
     decoded_steps: list[list[str]] | None = None
+    # Local attempt that triggered this bounce. Absent on rows that are not a bounce.
+    local_attempt: dict[str, Any] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         d = asdict(self)
+        if d.get("local_attempt") is None:
+            d.pop("local_attempt", None)
         assert phases_sum_to_wall(
             {
                 "turn_wall_s": self.turn_wall_s,
@@ -551,6 +555,22 @@ def decide_bounceback(
     if not emitted_parseable_tool_call:
         return True, "no_parseable_tool_call"
     return False, None
+
+
+def local_attempt_record(bt: BackendTurn, *, stop_reason: str) -> dict[str, Any]:
+    """Signals from the local attempt that triggered a bounce, before the cloud row.
+
+    The cloud row's own emitted_parseable_tool_call is the cloud result. These
+    fields keep the local decision inputs so decide_bounceback can be re-run.
+    """
+    raw = bt.raw_text if isinstance(bt.raw_text, str) else ""
+    return {
+        "emitted_parseable_tool_call": bool(bt.emitted_parseable_tool_call),
+        "n_steps": None if bt.n_steps is None else int(bt.n_steps),
+        "tool_exec_error": bool(bt.tool_exec_error),
+        "stop_reason": stop_reason,
+        "raw_text_sha256": hashlib.sha256(raw.encode("utf-8")).hexdigest(),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -2102,6 +2122,9 @@ def _run_hybrid_entry_body(
                             bounce_trigger=trigger,
                             tool_exec_error=bool(bt.tool_exec_error),
                             tool_exec_error_class=bt.tool_exec_error_class,
+                            local_attempt=local_attempt_record(
+                                bt, stop_reason=local_span.stop_reason
+                            ),
                         )
                     )
                     result.bounces.append(BounceEvent(turn=turn_idx, trigger=trigger))
@@ -2136,6 +2159,9 @@ def _run_hybrid_entry_body(
                         bounce_trigger=trigger,
                         tool_exec_error=bool(bt.tool_exec_error),
                         tool_exec_error_class=bt.tool_exec_error_class,
+                        local_attempt=local_attempt_record(
+                            bt, stop_reason=local_span.stop_reason
+                        ),
                     )
                 )
                 result.cloud_usd_entry += bt_c.cloud_usd

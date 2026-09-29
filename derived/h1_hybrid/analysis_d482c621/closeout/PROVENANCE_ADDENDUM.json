@@ -1366,5 +1366,15 @@
       "h1_zero": "tools/run_h1_hybrid.py attach_entry_quality: if _entry_escalated (placement cloud or escalated): local_pass = False",
       "h1_arm": "d482c621 policy summary arm_config kv u8, residency RESIDENT, placement gpu_only"
     }
+  },
+  "bounce_signal_addendum": {
+    "bounceback_triggers_recorded": {
+      "no_parseable_tool_call": 81,
+      "step_budget": 11,
+      "tool_exec_error": 0
+    },
+    "rederivable_from_sealed_signals": false,
+    "emission_and_slo_conform": true,
+    "note": "The 92 full_signal_bounceback cloud turns store the trigger on bounce_trigger (81 no_parseable_tool_call, 11 step_budget, 0 tool_exec_error). Those triggers are not re-derivable from the sealed turn signals: the cloud row replaced the local attempt, and decide_bounceback on the stored emitted_parseable_tool_call, decoded_steps, and tool_exec_error does not recover the trigger (88 of 92 cloud rows predict local). emission_escalate and slo_escalate have no nonconforming rows in the 2111/2199 audit. Their decisions conform."
   }
 }
