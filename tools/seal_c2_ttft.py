@@ -223,6 +223,11 @@ def seal_session(*, session_id: str, allow_unguarded: bool = False) -> Path:
         raise SystemExit("REFUSED -- missing plan.json or summary.json")
     summary = _read_json(summary_path)
     plan = _read_json(plan_path)
+    from tools.t2s_queue_watchdog import seal_exclusion_reason
+
+    excluded = seal_exclusion_reason(summary, plan)
+    if excluded:
+        raise SystemExit(excluded)
     if summary.get("status") != "complete":
         raise SystemExit(f"REFUSED -- status={summary.get('status')!r} (want complete)")
 

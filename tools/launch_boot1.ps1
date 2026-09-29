@@ -254,6 +254,10 @@ $script:Rows = @()
 $script:LastRunId = ""
 $script:FinalState = "crashed"
 $script:FinalReason = "sequencer stopped before the summary was finalized"
+$script:ForeignQueueEvidence = $null
+$script:WatchdogLogMissing = $false
+$script:RunStartedUtc = ""
+$script:CellStartedUtc = ""
 
 function Get-BootCellField {
     param($Cell, [string]$Name)
@@ -289,19 +293,68 @@ function Save-BootSummary {
         estimate_derivation = $script:EstimateDerivation
         cells = @(Merge-BootCells -Prior $prior -Added $script:Rows)
     }
+    if ($null -ne $script:ForeignQueueEvidence) {
+        $doc.foreign_queue_evidence = @($script:ForeignQueueEvidence)
+        $doc.watchdog_log_missing = [bool]$script:WatchdogLogMissing
+    }
     ($doc | ConvertTo-Json -Depth 6) | Set-Content -LiteralPath $SummaryPath -Encoding utf8
 }
 
 function Add-Row {
     param($Cell, [string]$Status, [string]$RunId, [string]$Detail)
-    $script:Rows += [ordered]@{
+    $row = [ordered]@{
         name = $Cell.Name
         status = $Status
         run_id = $RunId
         estimate_s = $Cell.EstimateS
         detail = $Detail
     }
+    if ($script:CellStartedUtc) {
+        $row.started_utc = $script:CellStartedUtc
+        $row.ended_utc = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+    }
+    $script:Rows += $row
     Save-BootSummary -State "running"
+}
+
+function Assert-T2sOwnedWorkers {
+    if ($Profile -ne "t2s-boot1") { return }
+    $checker = Join-Path $root "tools\t2s_queue_watchdog.py"
+    $out = & $PythonExe $checker cell-check --root-pid $PID
+    if ($LASTEXITCODE -ne 0) {
+        $text = ($out | ForEach-Object { "$_" }) -join " "
+        if (-not $text) { $text = "REFUSED -- foreign python or llama-server" }
+        throw $text
+    }
+}
+
+function Update-T2sForeignEvidence {
+    if ($Profile -ne "t2s-boot1" -or $DryRun) { return }
+    if (-not $script:RunStartedUtc) { return }
+    $ended = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+    $payload = [ordered]@{
+        log_path = "C:\apu\watchdog.log"
+        started_utc = $script:RunStartedUtc
+        ended_utc = $ended
+        repo_root = $root
+        cells = @($script:Rows)
+    }
+    $checker = Join-Path $root "tools\t2s_queue_watchdog.py"
+    $tmp = Join-Path $env:TEMP "t2s_watchdog_payload.json"
+    ($payload | ConvertTo-Json -Depth 6) | Set-Content -LiteralPath $tmp -Encoding utf8
+    $raw = & $PythonExe $checker apply-summary --payload $tmp
+    if ($LASTEXITCODE -ne 0) {
+        throw "REFUSED -- watchdog evidence apply failed"
+    }
+    $doc = ($raw | Out-String) | ConvertFrom-Json
+    $script:Rows = @($doc.cells)
+    $lines = @()
+    if ($null -ne $doc.foreign_queue_evidence) {
+        $lines = @($doc.foreign_queue_evidence)
+    }
+    $script:ForeignQueueEvidence = $lines
+    $missing = $doc.PSObject.Properties["watchdog_log_missing"]
+    if ($null -ne $missing) { $script:WatchdogLogMissing = [bool]$missing.Value }
 }
 
 function Assert-BootLockClear {
@@ -521,6 +574,10 @@ if ($Profile -eq "t2s-boot1") {
 
 Save-BootSummary -State "started"
 
+if ($Profile -eq "t2s-boot1") {
+    $script:RunStartedUtc = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+}
+
 try {
 for ($i = 0; $i -lt $Cells.Count; $i++) {
     $cell = $Cells[$i]
@@ -533,6 +590,7 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         continue
     }
     if ($remaining -lt [int]$cell.EstimateS) {
+        $script:CellStartedUtc = ""
         $left = @()
         for ($j = $i; $j -lt $Cells.Count; $j++) {
             $left += $Cells[$j].Name
@@ -553,7 +611,9 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         exit 0
     }
 
+    $script:CellStartedUtc = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
     try {
+        Assert-T2sOwnedWorkers
         Assert-BootAc
         Assert-BootTree | Out-Null
         if ($cell.Kind -eq "det" -or $cell.Kind -eq "warm" -or $cell.Kind -eq "decode") {
@@ -657,6 +717,12 @@ $script:FinalReason = ""
     Write-Host $script:FinalReason
     exit 1
 } finally {
+    try {
+        Update-T2sForeignEvidence
+    } catch {
+        $script:FinalReason = $_.Exception.Message
+        Write-Host $script:FinalReason
+    }
     Save-BootSummary -State $script:FinalState -Reason $script:FinalReason
 }
 

@@ -1,40 +1,43 @@
 # T2S boot 1. 4B-int4 GPU u8, then 8B-int4 GPU u8, on platform evo-t2.
-# Same cell machinery as launch_boot4.ps1. Estimates are base_s plus the
-# measured canary overhead. See launch_boot1.ps1 profile t2s-boot1.
+# Same cell machinery as launch_boot4.ps1. -Detach is launch_boot1.ps1
+# -Detach, which uses tools/spawn_detached.ps1 (Win32_Process.Create).
+# -Detach refuses unless C:\apu\watchdog.log ends in {"action":"empty_flag"},
+# no python or llama-server is running, and free memory is at least 24000 MB.
+# This script does not register a logon task or a scheduled task.
 # This script does not open the PARITY-REMEASURE prereg.
 
 [CmdletBinding()]
 param(
     [switch]$Detach,
-    [switch]$DryRun,
-    [switch]$RebootIfClear
+    [switch]$DryRun
 )
 
 $ErrorActionPreference = "Stop"
+$root = Split-Path -Parent $PSScriptRoot
+$python = Join-Path $root ".venv-seam\Scripts\python.exe"
+$watchdog = Join-Path $PSScriptRoot "t2s_queue_watchdog.py"
 
-if ($RebootIfClear) {
-    # Floor matches configs/platforms/evo-t2.yaml measurement_gates.pre_run_available_mb_min.
+if ($Detach -and -not $DryRun) {
     $floorMb = 24000
-    $busy = @(Get-Process -Name python, llama-server -ErrorAction SilentlyContinue)
-    if ($busy.Count -gt 0) {
-        Write-Host "REFUSED -- python or llama-server is running"
-        exit 1
+    $names = @(Get-Process -Name python, llama-server -ErrorAction SilentlyContinue |
+        ForEach-Object { $_.ProcessName })
+    if ($names.Count -eq 0) {
+        $running = "[]"
+    } else {
+        $running = ConvertTo-Json -InputObject @($names) -Compress
     }
+    & $python $watchdog launch-check --log "C:\apu\watchdog.log" --running-json $running
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     $freeMb = (Get-Counter '\Memory\Available MBytes').CounterSamples[0].CookedValue
     if ([double]$freeMb -lt $floorMb) {
         Write-Host ("REFUSED -- free memory {0} MB is below floor {1}" -f [int]$freeMb, $floorMb)
         exit 1
     }
-    $launch = "powershell -NoProfile -File `"$PSCommandPath`" -Detach"
-    New-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce" `
-        -Name "T2SBoot1" -Value $launch -PropertyType String -Force | Out-Null
-    shutdown /r /t 5 /c "T2S-boot-1"
-    exit 0
 }
 
 $launcher = Join-Path $PSScriptRoot "launch_boot1.ps1"
 $launchArgs = @("-NoProfile", "-File", $launcher, "-Profile", "t2s-boot1")
-if ($Detach) { $launchArgs += "-Detach" }
+if ($Detach -and -not $DryRun) { $launchArgs += "-Detach" }
 if ($DryRun) { $launchArgs += "-DryRun" }
 & powershell @launchArgs
 exit $LASTEXITCODE
