@@ -435,9 +435,9 @@ function Assert-PythonReadsJson {
     if ($Path -match "sealed_") { throw "REFUSED -- Python handoff targets a sealed path: $Path" }
     if ($Rehearsal) {
         $full = [System.IO.Path]::GetFullPath($Path)
-        $home = [System.IO.Path]::GetFullPath($LaunchDir)
+        $launchRoot = [System.IO.Path]::GetFullPath($LaunchDir)
         $temp = [System.IO.Path]::GetFullPath($env:TEMP)
-        $underLaunch = $full.StartsWith($home, [System.StringComparison]::OrdinalIgnoreCase)
+        $underLaunch = $full.StartsWith($launchRoot, [System.StringComparison]::OrdinalIgnoreCase)
         $underTemp = $full.StartsWith($temp, [System.StringComparison]::OrdinalIgnoreCase)
         if (-not $underLaunch -and -not $underTemp) {
             throw "REFUSED -- rehearsal JSON is outside _rehearsal: $full"
