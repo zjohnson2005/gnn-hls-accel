@@ -1,0 +1,59 @@
+{
+  "id": "H1-CPU-AMEND-1",
+  "amends": "derived/h1_hybrid/H1_CPU_PREREG.json",
+  "prereg_commit": "d70437e89c69e933ed63a248d6bfc32cd49fb835",
+  "registered_before_any_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "does_not_edit_the_prereg": true,
+  "source_run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+  "prior_range_withdrawn": {
+    "statement": "The H1-CPU prereg bounded the three-policy total between the sealed GPU cloud spend 24.286569 USD and the R0 cloud-only figure 64.64643093818181 USD.",
+    "why_wrong": "That upper bound is one policy's cost. slo_escalate on CPU is about the R0 figure by itself. emission_escalate and full_signal_bounceback still add their GPU costs, because those triggers do not depend on prefill speed. The total is the sum, not a number inside one policy's range."
+  },
+  "bootstrap": {
+    "n_draws": 10000,
+    "seed": 20260925,
+    "percentile": 0.995,
+    "percentile_method": "linear rank (n-1)*p",
+    "formula": "Resample that policy's escalated entries with replacement. Each draw's per-depth mean cloud_usd is applied to a fixed N(k). A draw with no cloud turn at depth k uses the full-sample mean at k. Cap is the 99.5th percentile. Same procedure as R0 cap v2.",
+    "source": "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/*/turn_ledger.json"
+  },
+  "policies": {
+    "slo_escalate": {
+      "expected_usd": 64.64643093818181,
+      "cap_usd": 72.02903126328212,
+      "n_definition": "N(k) is every slo_escalate turn at depth k (732 turns). Every cold turn is treated as cloud because CPU prefill exceeds the 10 s SLO inside the 468-token limit measured on 7f232f86.",
+      "cost_source": "Pooled cloud turns from the three GPU policies. slo_escalate itself has 0 cloud turns on d482c621, so it has no cloud-cost sample of its own.",
+      "expected_formula": "732 * (sealed cloud_usd 24.286569 / 275 cloud turns) = 64.64643093818181. This is the R0 cloud-only prediction.",
+      "cap_source": "R0 cap v2 99.5th percentile, which applies the entry bootstrap's per-depth means to this same N(k). Recorded in derived/h1_hybrid/R0_CAP_V2.json cap_usd."
+    },
+    "emission_escalate": {
+      "expected_usd": 16.119519,
+      "cap_usd": 17.87661862282592,
+      "n_escalated_entries": 59,
+      "n_definition": "N(k) is the sealed emission cloud-turn count at depth k. Triggers are a missing tool call, which does not depend on TTFT, so the CPU session is predicted to match the GPU cloud-turn pattern.",
+      "n_depth_fallbacks_to_full_sample_mean": 3765,
+      "draw_mean_usd": 16.115580084977786
+    },
+    "full_signal_bounceback": {
+      "expected_usd": 8.167050000000001,
+      "cap_usd": 9.33083571159098,
+      "n_escalated_entries": 66,
+      "n_definition": "N(k) is the sealed bounceback cloud-turn count at depth k. Triggers are no parseable tool call, step budget, or a tool error. Those do not depend on TTFT.",
+      "n_depth_fallbacks_to_full_sample_mean": 7357,
+      "draw_mean_usd": 8.163981639750405
+    },
+    "local_only": {
+      "expected_usd": 0.0,
+      "cap_usd": 0.0,
+      "n_definition": "local_only never escalates, so the cloud cost is 0."
+    }
+  },
+  "session": {
+    "expected_usd": 88.93299993818181,
+    "cap_usd": 99.23648559769902,
+    "expected_formula": "64.64643093818181 + 16.119519 + 8.167050000000001 + 0",
+    "cap_formula": "sum of the per-policy caps"
+  }
+}

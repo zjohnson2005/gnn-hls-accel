@@ -37,6 +37,79 @@ def _cloud_pairs(entry: dict[str, Any]) -> list[tuple[int, float]]:
     return pairs
 
 
+def _percentile(draws: list[float], percentile: float) -> float:
+    ordered = sorted(draws)
+    rank = (len(ordered) - 1) * float(percentile)
+    lo = int(rank)
+    hi = min(lo + 1, len(ordered) - 1)
+    frac = rank - lo
+    return ordered[lo] * (1.0 - frac) + ordered[hi] * frac
+
+
+def bootstrap_applied_cost(
+    escalated: list[list[tuple[int, float]]],
+    n_at_depth: dict[int, int],
+    *,
+    n_draws: int = N_DRAWS,
+    seed: int = SEED,
+    percentile: float = PERCENTILE,
+) -> dict[str, Any]:
+    """Entry bootstrap. Each draw's per-depth mean is applied to a fixed N(k).
+
+    A draw with no cloud turn at depth k uses the full-sample mean at k.
+    N(k) is not dropped.
+    """
+    full_vals: dict[int, list[float]] = defaultdict(list)
+    for pairs in escalated:
+        for depth, usd in pairs:
+            full_vals[depth].append(usd)
+    full_mean = {
+        depth: (sum(vals) / len(vals) if vals else 0.0) for depth, vals in full_vals.items()
+    }
+    depths = sorted(set(n_at_depth) | set(full_mean))
+    point = 0.0
+    for depth in depths:
+        n = int(n_at_depth.get(depth, 0))
+        if n == 0:
+            continue
+        point += n * full_mean.get(depth, 0.0)
+    rng = random.Random(seed)
+    draws: list[float] = []
+    n_fallback = 0
+    n_units = len(escalated)
+    for _ in range(int(n_draws)):
+        picked = [escalated[rng.randrange(n_units)] for _ in range(n_units)] if n_units else []
+        pooled: dict[int, list[float]] = defaultdict(list)
+        for pairs in picked:
+            for depth, usd in pairs:
+                pooled[depth].append(usd)
+        expected = 0.0
+        for depth in depths:
+            n = int(n_at_depth.get(depth, 0))
+            if n == 0:
+                continue
+            sample = pooled.get(depth) or []
+            if sample:
+                mean = sum(sample) / len(sample)
+            else:
+                mean = full_mean.get(depth, 0.0)
+                n_fallback += 1
+            expected += n * mean
+        draws.append(expected)
+    return {
+        "n_escalated_entries": n_units,
+        "n_draws": int(n_draws),
+        "seed": int(seed),
+        "percentile": float(percentile),
+        "percentile_method": "linear rank (n-1)*p",
+        "n_depth_fallbacks_to_full_sample_mean": n_fallback,
+        "point_expected_usd": point,
+        "expected_usd_draw_mean": (sum(draws) / len(draws)) if draws else 0.0,
+        "cap_usd": _percentile(draws, percentile) if draws else 0.0,
+        "N": {str(k): int(n_at_depth[k]) for k in sorted(n_at_depth)},
+    }
+
+
 def bootstrap_cap(
     ledgers: dict[str, list[dict[str, Any]]],
     *,
@@ -64,50 +137,26 @@ def bootstrap_cap(
     full_mean = {
         depth: (sum(vals) / len(vals) if vals else 0.0) for depth, vals in cloud_by_depth.items()
     }
-    depths = sorted(set(n_slo) | set(full_mean))
-    rng = random.Random(seed)
-    draws: list[float] = []
-    n_fallback = 0
-    n_units = len(escalated)
-    for _ in range(int(n_draws)):
-        picked = [escalated[rng.randrange(n_units)] for _ in range(n_units)] if n_units else []
-        pooled: dict[int, list[float]] = defaultdict(list)
-        for pairs in picked:
-            for depth, usd in pairs:
-                pooled[depth].append(usd)
-        expected = 0.0
-        for depth in depths:
-            n = n_slo.get(depth, 0)
-            if n == 0:
-                continue
-            sample = pooled.get(depth) or []
-            if sample:
-                mean = sum(sample) / len(sample)
-            else:
-                mean = full_mean.get(depth, 0.0)
-                n_fallback += 1
-            expected += n * mean
-        draws.append(expected)
-
-    ordered = sorted(draws)
-    rank = (len(ordered) - 1) * float(percentile)
-    lo = int(rank)
-    hi = min(lo + 1, len(ordered) - 1)
-    frac = rank - lo
-    cap = ordered[lo] * (1.0 - frac) + ordered[hi] * frac
+    applied = bootstrap_applied_cost(
+        escalated,
+        dict(n_slo),
+        n_draws=n_draws,
+        seed=seed,
+        percentile=percentile,
+    )
     return {
-        "n_escalated_entries": n_units,
-        "n_draws": int(n_draws),
-        "seed": int(seed),
-        "percentile": float(percentile),
-        "percentile_method": "linear rank (n-1)*p",
-        "n_depth_fallbacks_to_full_sample_mean": n_fallback,
+        "n_escalated_entries": applied["n_escalated_entries"],
+        "n_draws": applied["n_draws"],
+        "seed": applied["seed"],
+        "percentile": applied["percentile"],
+        "percentile_method": applied["percentile_method"],
+        "n_depth_fallbacks_to_full_sample_mean": applied["n_depth_fallbacks_to_full_sample_mean"],
         "fallback": (
             "A draw with no cloud turn at depth k uses the full-sample mean at k. "
             "N_slo(k) is not dropped."
         ),
-        "expected_usd_draw_mean": sum(draws) / len(draws),
-        "cap_usd": cap,
+        "expected_usd_draw_mean": applied["expected_usd_draw_mean"],
+        "cap_usd": applied["cap_usd"],
         "N_slo": {str(k): n_slo[k] for k in sorted(n_slo)},
         "full_sample_mean_usd": {str(k): full_mean[k] for k in sorted(full_mean)},
     }

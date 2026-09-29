@@ -1,0 +1,30 @@
+{
+  "id": "Q-TIER-CLEAN-AMEND-1",
+  "amends": "derived/q8b/Q_TIER_CLEAN_PREREG.json",
+  "prereg_commit": "d70437e89c69e933ed63a248d6bfc32cd49fb835",
+  "registered_before_any_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "does_not_edit_the_prereg": true,
+  "harness_both_arms": "turn-wise MultiTurnAgentSession, kv u8, RESIDENT",
+  "harness_note": "Both the 4B arm and the 8B arm use that harness. The clean contrast is the tier, not a second pipeline mode or a second KV pin.",
+  "baseline_4b": {
+    "passes": "21/200",
+    "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+    "field": "slo_escalate summary quality.local_probe.n_local_pass",
+    "kv": "u8",
+    "residency": "RESIDENT",
+    "placement": "gpu_only",
+    "pipeline": "turn-wise"
+  },
+  "withdrawn_4b_baseline": {
+    "passes": "10/200",
+    "run_id": "72d270e2-1a87-40b6-860a-fb709ffcbe22",
+    "why_it_does_not_transfer": "That count is q8b int4_4B trajectory_pass on the older block_interleave_single_pipe harness at kv f16. It is not the current turn-wise u8 RESIDENT harness."
+  },
+  "prediction": "4B trajectory passes 21 +/- 5 (16 to 26 of 200). 8B exceeds 4B by at least 8 passes.",
+  "prediction_4b_center": 21,
+  "prediction_4b_tolerance_passes": 5,
+  "prediction_8b_minus_4b_minimum_passes": 8,
+  "derivation": "The 4B center is the sealed d482c621 local-only completion count, 21/200, on the harness both arms will use. The tolerance is +/- 5 passes. The 8B claim is a direction plus a minimum effect of 8 passes, not the unsealed 29/200 headline from the old harness."
+}
