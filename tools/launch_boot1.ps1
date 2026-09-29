@@ -20,6 +20,7 @@ param(
     [switch]$Detach,
     [switch]$DryRun,
     [switch]$NoRebootDeviation,
+    [switch]$Rehearsal,
     [string]$WatchdogLog = "",
     [ValidateSet("boot1", "boot2", "boot3", "boot4", "t2s-boot1")]
     [string]$Profile = "boot1"
@@ -32,9 +33,15 @@ Set-Location $root
 
 . (Join-Path $PSScriptRoot "_assert_machine_lock.ps1")
 . (Join-Path $PSScriptRoot "boot_cell_result.ps1")
+. (Join-Path $PSScriptRoot "_utf8_nobom.ps1")
 
 $WindowS = 7200
 $LaunchDir = Join-Path $root "derived\c2_ttft\_launches"
+if ($Rehearsal) {
+    $LaunchDir = Join-Path $LaunchDir ("_rehearsal\" + $Profile)
+    $env:SEAM_REHEARSAL = "1"
+    Write-Host ("rehearsal=true writes={0}" -f $LaunchDir)
+}
 $SummaryName = switch ($Profile) {
     "boot2" { "BOOT2_SUMMARY.json" }
     "boot3" { "BOOT3_SUMMARY.json" }
@@ -68,6 +75,7 @@ if ($Detach) {
     $self = "`"$PSCommandPath`""
     $cmd = "powershell -NoProfile -File $self -Profile $Profile"
     if ($NoRebootDeviation) { $cmd += " -NoRebootDeviation" }
+    if ($Rehearsal) { $cmd += " -Rehearsal" }
     if ($WatchdogLog) { $cmd += " -WatchdogLog `"$WatchdogLog`"" }
     $log = Join-Path $LaunchDir "$Profile.log"
     $json = & $SpawnPs1 -CommandLine $cmd -LogPath $log -WorkingDirectory $root
@@ -328,6 +336,7 @@ function Save-BootSummary {
     if ($Profile -eq "t2s-boot1" -and $WatchdogLog) {
         $doc.watchdog_log = [string]$WatchdogLog
     }
+    if ($Rehearsal) { $doc.rehearsal = $true }
     if ($NoRebootDeviation) {
         $doc.deviation = [ordered]@{
             kind = "UNCOLD_UPTIME"
@@ -335,7 +344,8 @@ function Save-BootSummary {
             reason = [string]$script:UncoldReason
         }
     }
-    ($doc | ConvertTo-Json -Depth 6) | Set-Content -LiteralPath $SummaryPath -Encoding utf8
+    Write-Utf8NoBom -Path $SummaryPath -Text ($doc | ConvertTo-Json -Depth 6)
+    Assert-PythonReadsJson -Path $SummaryPath
 }
 
 function Add-Row {
@@ -379,7 +389,7 @@ function Update-T2sForeignEvidence {
     }
     $checker = Join-Path $root "tools\t2s_queue_watchdog.py"
     $tmp = Join-Path $env:TEMP "t2s_watchdog_payload.json"
-    ($payload | ConvertTo-Json -Depth 6) | Set-Content -LiteralPath $tmp -Encoding utf8
+    Write-Utf8NoBom -Path $tmp -Text ($payload | ConvertTo-Json -Depth 6)
     $raw = & $PythonExe $checker apply-summary --payload $tmp
     if ($LASTEXITCODE -ne 0) {
         throw "REFUSED -- watchdog evidence apply failed"
@@ -420,9 +430,30 @@ function Assert-BootLockClear {
     }
 }
 
+function Assert-PythonReadsJson {
+    param([string]$Path)
+    if ($Path -match "sealed_") { throw "REFUSED -- Python handoff targets a sealed path: $Path" }
+    if ($Rehearsal) {
+        $full = [System.IO.Path]::GetFullPath($Path)
+        $home = [System.IO.Path]::GetFullPath($LaunchDir)
+        $temp = [System.IO.Path]::GetFullPath($env:TEMP)
+        $underLaunch = $full.StartsWith($home, [System.StringComparison]::OrdinalIgnoreCase)
+        $underTemp = $full.StartsWith($temp, [System.StringComparison]::OrdinalIgnoreCase)
+        if (-not $underLaunch -and -not $underTemp) {
+            throw "REFUSED -- rehearsal JSON is outside _rehearsal: $full"
+        }
+    }
+    & $PythonExe (Join-Path $root "tools\read_json_utf8.py") $Path
+    if ($LASTEXITCODE -ne 0) { throw "REFUSED -- Python could not read $Path" }
+}
+
 function Invoke-BootGates {
-    param([string]$Label, [switch]$ReportOnly)
-    $probeDir = Join-Path $root "derived\_gate_probes"
+    param([string]$Label, [switch]$ReportOnly, [switch]$UptimeReportOnly)
+    if ($Rehearsal) {
+        $probeDir = Join-Path $LaunchDir "gate_probes"
+    } else {
+        $probeDir = Join-Path $root "derived\_gate_probes"
+    }
     New-Item -ItemType Directory -Force -Path $probeDir | Out-Null
     $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
     $outJson = Join-Path $probeDir ("boot1_" + $Label.Replace(" ", "_") + "_" + $stamp + ".json")
@@ -446,7 +477,27 @@ function Invoke-BootGates {
         Write-Host ("gate_report_only exit={0}" -f $code)
         return
     }
-    Set-Content -LiteralPath $outJson -Value $text -Encoding utf8
+    $jsonText = $text
+    $start = $text.IndexOf("{")
+    $end = $text.LastIndexOf("}")
+    if ($start -ge 0 -and $end -gt $start) {
+        $jsonText = $text.Substring($start, $end - $start + 1)
+    }
+    Write-Utf8NoBom -Path $outJson -Text $jsonText
+    Assert-PythonReadsJson -Path $outJson
+    if ($UptimeReportOnly) {
+        $parsed = Get-Content -LiteralPath $outJson -Raw -Encoding utf8 | ConvertFrom-Json
+        $failed = @($parsed.gates | Where-Object { -not $_.passed })
+        $other = @($failed | Where-Object { $_.name -ne "uptime" })
+        $up = @($parsed.gates | Where-Object { $_.name -eq "uptime" })
+        if ($up.Count -gt 0) {
+            Write-Host ("uptime_gate=report_only passed={0} reason={1}" -f $up[0].passed, $up[0].reason)
+        }
+        if ($other.Count -gt 0) {
+            throw "REFUSED -- measurement gates failed (exit $code)"
+        }
+        return
+    }
     if ($code -ne 0) { throw "REFUSED -- measurement gates failed (exit $code)" }
 }
 
@@ -465,7 +516,12 @@ function Invoke-CellPreamble {
     }
     # DET-PROBE checks a clean tree before it takes .locks/machine.lock.
     # A gate JSON written here would make that check fail.
-    if (-not $SkipGateFile) { Invoke-BootGates -Label $Label }
+    # Rehearsal still runs the gates: uptime is report-only, the others refuse.
+    if ($Rehearsal) {
+        Invoke-BootGates -Label $Label -UptimeReportOnly
+    } elseif (-not $SkipGateFile) {
+        Invoke-BootGates -Label $Label
+    }
     Assert-BootLockClear
 }
 
@@ -716,6 +772,8 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         $env:SEAM_NOREBOOT_DEVIATION = "1"
         $env:SEAM_NOREBOOT_UPTIME_S = [string]$uptime
         Write-Host ("uptime_gate=skipped deviation=UNCOLD_UPTIME uptime_s={0}" -f $uptime)
+    } elseif ($Rehearsal) {
+        Write-Host ("uptime_window=report_only remaining_s={0} estimate_s={1}" -f $remaining, $cell.EstimateS)
     } elseif ($remaining -lt [int]$cell.EstimateS) {
         $script:CellStartedUtc = ""
         $left = @()
@@ -730,7 +788,8 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
             window_s = $WindowS
             cells = $left
         }
-        ($defer | ConvertTo-Json -Depth 5) | Set-Content -LiteralPath $DeferredPath -Encoding utf8
+        Write-Utf8NoBom -Path $DeferredPath -Text ($defer | ConvertTo-Json -Depth 5)
+        Assert-PythonReadsJson -Path $DeferredPath
         $script:FinalState = "deferred"
         $script:FinalReason = "remaining cold-window time is below the next cell estimate"
         Save-BootSummary -State "deferred" -Reason $script:FinalReason
@@ -755,6 +814,24 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         Save-BootSummary -State "refused" -Reason $script:FinalReason
         Write-Host $script:FinalReason
         exit 1
+    }
+
+    if ($Rehearsal) {
+        $built = Get-BootCellCommand -Cell $cell
+        if (-not $built.smoke) { throw "REFUSED -- no rehearsal smoke for $($cell.Name)" }
+        Write-Host ("rehearsal_cell {0}" -f $built.smoke)
+        $parts = @($built.smoke -split " ")
+        & $parts[0] @($parts | Select-Object -Skip 1)
+        $exit = $LASTEXITCODE
+        if ($exit -ne 0) {
+            $script:FinalState = "refused"
+            $script:FinalReason = "exit=$exit"
+            Add-Row -Cell $cell -Status "REFUSED" -RunId "" -Detail $script:FinalReason
+            Save-BootSummary -State "refused" -Reason $script:FinalReason
+            exit $exit
+        }
+        Add-Row -Cell $cell -Status "rehearsal_smoke" -RunId "" -Detail "smoke"
+        continue
     }
 
     if ($cell.Kind -eq "det") {
@@ -853,6 +930,7 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
 }
 $script:FinalState = "complete"
 $script:FinalReason = ""
+if ($Rehearsal) { Write-Host "REHEARSAL_COMPLETE" }
 } catch {
     $script:FinalState = "crashed"
     $script:FinalReason = $_.Exception.Message

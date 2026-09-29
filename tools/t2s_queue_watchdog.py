@@ -14,8 +14,19 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
 _TS_KEYS = ("utc", "timestamp", "ts", "time")
 _WORKER_PREFIXES = ("python", "llama-server")
+
+
+def read_payload(path: Path) -> Any:
+    """Watchdog handoff JSON. PowerShell writes it; accept a UTF-8 BOM."""
+    from seam.json_io import load_json
+
+    return load_json(path)
 
 
 def parse_utc(value: str) -> datetime:
@@ -209,7 +220,7 @@ def _patch_cell_files(
         path = session / name
         if not path.is_file():
             continue
-        doc = json.loads(path.read_text(encoding="utf-8-sig"))
+        doc = read_payload(path)
         if not isinstance(doc, dict):
             continue
         doc["watchdog_log"] = log_path
@@ -331,7 +342,7 @@ def main(argv: list[str] | None = None) -> int:
         print("cell_workers_owned")
         return 0
 
-    payload = json.loads(args.payload.read_text(encoding="utf-8-sig"))
+    payload = read_payload(args.payload)
     json.dump(apply_summary(payload), sys.stdout)
     return 0
 

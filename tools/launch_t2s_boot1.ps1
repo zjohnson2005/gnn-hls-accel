@@ -12,6 +12,7 @@
 param(
     [switch]$Detach,
     [switch]$DryRun,
+    [switch]$Rehearsal,
     [switch]$NoRebootDeviation,
     [string]$WatchdogLog = "C:\apu\ovn\watchdog.log"
 )
@@ -42,6 +43,7 @@ if ($Detach -and -not $DryRun) {
 $launcher = Join-Path $PSScriptRoot "launch_boot1.ps1"
 $launchArgs = @("-NoProfile", "-File", $launcher, "-Profile", "t2s-boot1")
 $launchArgs += @("-WatchdogLog", $WatchdogLog)
+if ($Rehearsal) { $launchArgs += "-Rehearsal" }
 if ($NoRebootDeviation) { $launchArgs += "-NoRebootDeviation" }
 if ($Detach -and -not $DryRun) { $launchArgs += "-Detach" }
 if ($DryRun) { $launchArgs += "-DryRun" }

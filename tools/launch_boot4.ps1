@@ -4,7 +4,8 @@
 [CmdletBinding()]
 param(
     [switch]$Detach,
-    [switch]$DryRun
+    [switch]$DryRun,
+    [switch]$Rehearsal
 )
 
 $root = Split-Path -Parent $PSScriptRoot
@@ -12,5 +13,6 @@ $launcher = Join-Path $PSScriptRoot "launch_boot1.ps1"
 $launchArgs = @("-NoProfile", "-File", $launcher, "-Profile", "boot4")
 if ($Detach) { $launchArgs += "-Detach" }
 if ($DryRun) { $launchArgs += "-DryRun" }
+if ($Rehearsal) { $launchArgs += "-Rehearsal" }
 & powershell @launchArgs
 exit $LASTEXITCODE

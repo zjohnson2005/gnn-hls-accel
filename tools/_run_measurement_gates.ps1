@@ -9,6 +9,8 @@
 
 Set-StrictMode -Version Latest
 
+. (Join-Path $PSScriptRoot "_utf8_nobom.ps1")
+
 function Invoke-SeamMeasurementGates {
     [CmdletBinding()]
     param(
@@ -53,7 +55,7 @@ function Invoke-SeamMeasurementGates {
     }
 
     $text = ($output | ForEach-Object { "$_" }) -join "`n"
-    Set-Content -LiteralPath $outJson -Value $text -Encoding utf8
+    Write-Utf8NoBom -Path $outJson -Text $text
     Write-Host $text
     Write-Host ("gate_json: {0}" -f $outJson)
 

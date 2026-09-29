@@ -35,6 +35,13 @@ def runner_body_is_stub(path: Path) -> bool:
     return STUB_MARK in path.read_text(encoding="utf-8")
 
 
+def read_json(path: Path) -> Any:
+    """JSON written by this process or by PowerShell. Accepts a UTF-8 BOM."""
+    from seam.json_io import load_json
+
+    return load_json(path)
+
+
 def advantage_percent(*, median_f16: float, median_other: float) -> float:
     """(median_other - median_f16) / median_other * 100. Lower TTFT is the advantage."""
     if median_other == 0:
@@ -158,8 +165,12 @@ def _median(values: list[float]) -> float:
 
 def seal_session(session_dir: Path) -> Path:
     """Copy plan, summary, and point files into a write-once sealed_<id> directory."""
+    import os
+
+    if os.environ.get("SEAM_REHEARSAL") == "1":
+        raise SystemExit("REFUSED -- rehearsal does not seal")
     summary_path = session_dir / "summary.json"
-    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    summary = read_json(summary_path)
     sid = str(summary["session_id"])
     dest = session_dir.parent / f"sealed_{sid}"
     if dest.exists():
@@ -305,7 +316,7 @@ def _warm_advantages(out_dir: Path, this_summary: dict[str, Any]) -> dict[str, A
         for path in parent.glob("*/summary.json"):
             if path.parent.name.startswith("sealed_"):
                 continue
-            doc = json.loads(path.read_text(encoding="utf-8"))
+            doc = read_json(path)
             if doc.get("kind") != "warm_kv":
                 continue
             arm = doc.get("arm")
