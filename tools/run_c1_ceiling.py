@@ -179,25 +179,45 @@ def _start_wsh_watchdog(session_dir: Path, interval_s: int) -> dict[str, Any] | 
     }
 
 
+def memory_fields(result: dict[str, Any]) -> dict[str, Any]:
+    """Every memory_* snapshot on the wrapper or the nested child result."""
+    found: dict[str, Any] = {}
+    sources: list[dict[str, Any]] = [result]
+    child = result.get("child")
+    if isinstance(child, dict):
+        sources.append(child)
+    for source in sources:
+        for key, value in source.items():
+            if str(key).startswith("memory_"):
+                found[str(key)] = value
+    return found
+
+
 def classify_c1_failure(result: dict[str, Any]) -> dict[str, Any]:
-    """Distinguish memory_wall vs position_limit; keep verbatim text."""
+    """Label memory_wall, onednn_primitive_failure, or position_limit.
+
+    memory_wall is only CL_OUT_OF_RESOURCES or an explicit allocation error.
+    A oneDNN primitive failure is its own kind. The return carries every
+    memory_* field available on the result.
+    """
     from seam.tools.ceiling_a import classify_failure
 
     base = classify_failure(result)
     child = result.get("child") or {}
-    exc = child.get("exception") or {}
+    exc = child.get("exception") or result.get("exception") or {}
+    if not isinstance(exc, dict):
+        exc = {}
     exc_type = str(exc.get("type") or "")
     exc_msg = str(exc.get("message") or "")
     failure_mode = str(result.get("failure_mode") or "")
     combined = f"{failure_mode} {exc_type} {exc_msg}"
     combined_l = combined.lower()
     verbatim = combined.strip() or None
+    snapshot = memory_fields(result)
 
     memory_markers = (
         "cl_out_of_resources",
-        "out_of_resources",
         "out of memory",
-        "oom",
         "std::bad_alloc",
         "bad_alloc",
         "cannot allocate",
@@ -205,8 +225,10 @@ def classify_c1_failure(result: dict[str, Any]) -> dict[str, Any]:
         "memoryerror",
         "failed to allocate",
         "allocation failure",
-        "c0000005",
-        "0xc0000005",
+    )
+    primitive_markers = (
+        "could not execute a primitive",
+        "primitive_onednn_base",
     )
     position_markers = (
         "max_position_embeddings",
@@ -225,14 +247,18 @@ def classify_c1_failure(result: dict[str, Any]) -> dict[str, Any]:
             "class": "pass",
             "failure_kind": None,
             "verbatim": None,
+            "memory": snapshot,
             "base": base,
         }
 
     is_memory = any(m in combined_l for m in memory_markers)
+    is_primitive = any(m in combined_l for m in primitive_markers)
     is_position = any(m in combined_l for m in position_markers)
 
     if is_memory and not is_position:
         kind = "memory_wall"
+    elif is_primitive and not is_memory:
+        kind = "onednn_primitive_failure"
     elif is_position and not is_memory:
         kind = "position_limit"
     elif is_memory and is_position:
@@ -247,6 +273,7 @@ def classify_c1_failure(result: dict[str, Any]) -> dict[str, Any]:
         "exception_type": exc_type or None,
         "exception_message": (exc_msg[:1200] if exc_msg else None),
         "failure_mode_raw": failure_mode or None,
+        "memory": snapshot,
         "base": base,
     }
 

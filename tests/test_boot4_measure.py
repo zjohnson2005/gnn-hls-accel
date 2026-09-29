@@ -68,7 +68,7 @@ def test_delta_matches_the_sealed_turn_ledger() -> None:
     assert amend["n_turns"] == 532
     assert amend["delta_tokens"] == 183
     assert DELTA_TOKENS == 183
-    assert N_CACHED == (12000, 46000)
+    assert N_CACHED == (12000, 24000, 46000)
     assert amend["prediction_unchanged"].startswith("f16 > u8 >= u4")
 
 

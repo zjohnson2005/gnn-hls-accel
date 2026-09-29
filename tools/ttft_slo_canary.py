@@ -11,7 +11,7 @@ with ONSET_S = 657 from session 7f569929 (protocol). The budget bound ensures
 C calibration canaries plus one armed check can fire inside the planned probe
 count (c647f0c7 failure mode: onset-only N=66 against a 39-probe run).
 
-A trip raises CanaryDriftAbort — it must not return a soft status the caller
+A trip raises CanaryDriftAbort. It must not return a soft status the caller
 can ignore (see tools/test_canary_drift_abort_enforcement.ps1 / Invoke-DriftCanary).
 """
 
@@ -230,7 +230,7 @@ def assert_seal_requires_armed_or_unguarded(
             "ok": True,
             "UNGUARDED": True,
             "armed": False,
-            "note": "armed==false; AllowUnguarded — summary/seal must record UNGUARDED",
+            "note": "armed==false; AllowUnguarded. Summary and seal must record UNGUARDED",
         }
     raise CanaryUnarmedSealRefuse(
         "canary gate armed==false; refuse to seal without -AllowUnguarded / "
@@ -259,12 +259,32 @@ def update_canary_drift_bookkeeping(
     t2 = rec.get("turn2_prefill_s")
     ok = rec.get("classification") == "OK" and t1 is not None and t2 is not None
 
+    if rec.get("warmup"):
+        rec["discarded_from_calibration"] = True
+        rec["counts_toward_calibration"] = False
+        rec["drift_tripped"] = False
+        rec["trip_detail"] = None
+        rec["rel_drift_t1"] = None
+        rec["rel_drift_t2"] = None
+        rec["gate_armed"] = bool(gate.get("armed"))
+        rec["threshold_t1"] = gate.get("threshold_t1")
+        rec["threshold_t2"] = gate.get("threshold_t2")
+        return {
+            "rec": rec,
+            "tripped": False,
+            "trip_detail": None,
+            "just_armed": False,
+            "derivation_applied": gate.get("derivation_applied"),
+        }
+    rec["discarded_from_calibration"] = False
+
     if ok:
         if not gate.get("calibration_complete"):
             ok_cal = [
                 c
                 for c in prior_ok_canaries
-                if c.get("classification") == "OK"
+                if not c.get("warmup")
+                and c.get("classification") == "OK"
                 and c.get("turn1_prefill_s") is not None
                 and c.get("turn2_prefill_s") is not None
             ] + [rec]
@@ -287,6 +307,8 @@ def update_canary_drift_bookkeeping(
                 gate["early_max_rel_t2"] = em2
                 gate["threshold_t1"] = th1
                 gate["threshold_t2"] = th2
+                gate["calibration_turn1_prefill_s"] = t1s
+                gate["calibration_turn2_prefill_s"] = t2s
                 gate["derivation_applied"] = (
                     f"calib_n={calibration_c}; ref_t1={ref1:.6f} ref_t2={ref2:.6f}; "
                     f"early_max_rel_t1={em1:.6f} early_max_rel_t2={em2:.6f}; "
@@ -370,6 +392,7 @@ class TtftSloCanaryGuard:
     plan_path: Path | None = None
     planned_probe_count: int = 0
     allow_unguarded: bool = False
+    discard_warmup: bool = False
     calibration_c: int = CALIBRATION_C
     rel_drift_floor: float = REL_DRIFT_FLOOR
     onset_s: float = ONSET_S
@@ -488,7 +511,7 @@ class TtftSloCanaryGuard:
         )
         return rec
 
-    def run_canary(self, *, after_probe_count: int) -> dict[str, Any]:
+    def run_canary(self, *, after_probe_count: int, warmup: bool = False) -> dict[str, Any]:
         """Run one canary. Raises CanaryDriftAbort / CanaryPowerTransitionAbort."""
         print(
             f"[c2_canary] index={len(self.canaries)} after_probes={after_probe_count} "
@@ -506,10 +529,12 @@ class TtftSloCanaryGuard:
         rec["power"] = power
         rec["power_transition"] = transition
         rec["after_probe_count"] = after_probe_count
+        rec["warmup"] = bool(warmup)
         prior_ok = [
             c
             for c in self.canaries
-            if c.get("classification") == "OK"
+            if not c.get("warmup")
+            and c.get("classification") == "OK"
             and c.get("turn1_prefill_s") is not None
             and c.get("turn2_prefill_s") is not None
         ]
@@ -534,6 +559,8 @@ class TtftSloCanaryGuard:
     def opening(self) -> None:
         if self.opening_done:
             return
+        if self.discard_warmup:
+            self.run_canary(after_probe_count=-1, warmup=True)
         self.run_canary(after_probe_count=-1)
         self.opening_done = True
 

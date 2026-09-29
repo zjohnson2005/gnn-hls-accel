@@ -158,44 +158,51 @@ if ($Profile -eq "boot2") {
 } elseif ($Profile -eq "boot4") {
     # Boot 4: estimate_s = base_s + canary_overhead_s, next whole second.
     # canary_overhead_s is the boot-2 measured load overhead, 752.1359013.
-    # Warm base_s is sealed 2b3316b6-7f6e-474f-9177-bd5a89aeb58c median prefill
-    # at 12000 plus the median at 46000 plus 6 x the 12000 median. The 6 x
-    # term bounds three turn-2 repeats at each of the two points by the
-    # sealed 12000-token prefill (delta is 183 tokens).
-    # f16 12k 13.504825195, 46k 252.707921875, base 347.24169824, estimate 1100.
-    # u8 12k 13.277133789, 46k 230.360359375, base 323.300295898, estimate 1076.
-    # u4 12k 13.550313476, 46k 239.800796875, base 334.652991207, estimate 1087.
+    # Source medians are sealed 2b3316b6-7f6e-474f-9177-bd5a89aeb58c.
+    # Warm base_s is the 12000 median, plus the 26000 median as the bound for
+    # the 24000 point (24000 is not a rung), plus the 46000 median, plus
+    # 9 x the arm's 12000 median (3 points x 3 turn-2 repeats, each bounded
+    # by the 12000 prefill; delta is 183 tokens), plus 2 x the f16 12000
+    # median 13.504825195. The last term bounds the discarded two-turn
+    # canary warm-up. The canary cell is f16.
+    # f16 12k 13.504825195, 26k 51.842308593, 46k 252.707921875,
+    # base 466.608132808, estimate 1219.
+    # u8 12k 13.277133789, 26k 52.298699218, 46k 230.360359375,
+    # base 442.440046873, estimate 1195.
+    # u4 12k 13.550313476, 26k 52.206597656, 46k 239.800796875,
+    # base 454.520179681, estimate 1207.
     # Decode base_s is 18 x the sealed int4 f16 12000 prefill 13.504825195
-    # (2 models x 3 n x 3 repeats). Each listed n is below 12000. The int8
-    # weight model is not in that sealed run; the same prefill bounds it.
-    # Decode base 243.08685351, estimate 996.
-    # Sum of ceilings 4259 s. Window is 7200 s, so boot 4 stays one window.
+    # (2 models x 3 n x 3 repeats) plus the same 2 x 13.504825195 warm-up
+    # bound. Each listed n is below 12000. The int8 weight model is not in
+    # that sealed run; the same prefill bounds it.
+    # Decode base 270.096503900, estimate 1023.
+    # Sum of ceilings 4644 s. Window is 7200 s, so boot 4 stays one window.
     $script:EstimateDerivation = [ordered]@{
         formula = "estimate_s = base_s + canary_overhead_s"
-        note = "Boot 4 stays one window: estimate sum 4259 s is below 7200 s."
+        note = "Boot 4 stays one window: estimate sum 4644 s is below 7200 s."
         source_run_id = "2b3316b6-7f6e-474f-9177-bd5a89aeb58c"
         cells = @(
-            [ordered]@{ name = "WARM-KV f16"; base_s = 347.24169824; canary_overhead_s = 752.1359013; estimate_s = 1100 }
-            [ordered]@{ name = "WARM-KV u8"; base_s = 323.300295898; canary_overhead_s = 752.1359013; estimate_s = 1076 }
-            [ordered]@{ name = "WARM-KV u4"; base_s = 334.652991207; canary_overhead_s = 752.1359013; estimate_s = 1087 }
-            [ordered]@{ name = "DECODE-MATCH"; base_s = 243.08685351; canary_overhead_s = 752.1359013; estimate_s = 996 }
+            [ordered]@{ name = "WARM-KV f16"; base_s = 466.608132808; canary_overhead_s = 752.1359013; estimate_s = 1219 }
+            [ordered]@{ name = "WARM-KV u8"; base_s = 442.440046873; canary_overhead_s = 752.1359013; estimate_s = 1195 }
+            [ordered]@{ name = "WARM-KV u4"; base_s = 454.520179681; canary_overhead_s = 752.1359013; estimate_s = 1207 }
+            [ordered]@{ name = "DECODE-MATCH"; base_s = 270.096503900; canary_overhead_s = 752.1359013; estimate_s = 1023 }
         )
     }
     $Cells = @(
         @{
-            Name = "WARM-KV f16"; Kind = "warm"; EstimateS = 1100
+            Name = "WARM-KV f16"; Kind = "warm"; EstimateS = 1219
             Arm = "gpu_only_f16"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
         },
         @{
-            Name = "WARM-KV u8"; Kind = "warm"; EstimateS = 1076
+            Name = "WARM-KV u8"; Kind = "warm"; EstimateS = 1195
             Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
         },
         @{
-            Name = "WARM-KV u4"; Kind = "warm"; EstimateS = 1087
+            Name = "WARM-KV u4"; Kind = "warm"; EstimateS = 1207
             Arm = "gpu_only_u4"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
         },
         @{
-            Name = "DECODE-MATCH"; Kind = "decode"; EstimateS = 996
+            Name = "DECODE-MATCH"; Kind = "decode"; EstimateS = 1023
             Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
             Model2 = "configs\models\Qwen3-4B-int8-ov.yaml"
         }
@@ -676,6 +683,9 @@ function Invoke-Boot4Smokes {
     $fits = "false"
     if ($sum -le $WindowS) { $fits = "true" }
     Write-Host ("boot4_estimate_sum_s={0} window_s={1} fits_one_window={2}" -f $sum, $WindowS, $fits)
+    if ($fits -eq "false") {
+        throw "REFUSED -- boot4 estimate sum $sum s exceeds window $WindowS s; split the profile before starting"
+    }
     foreach ($cell in $Cells) {
         $kind = Get-BootCellField -Cell $cell -Name "Kind"
         if ($kind -ne "warm" -and $kind -ne "decode") { continue }
@@ -852,10 +862,14 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
 
     if ($cell.Kind -eq "warm" -or $cell.Kind -eq "decode") {
         $built = Get-BootCellCommand -Cell $cell
+        $statusFile = Join-Path $LaunchDir ("cell-status-{0}.txt" -f $i)
+        $env:SEAM_CELL_STATUS_PATH = $statusFile
+        if (Test-Path -LiteralPath $statusFile) { Remove-Item -LiteralPath $statusFile -Force }
         Write-Host $built.command
         $parts = @($built.command -split " ")
         & $parts[0] @($parts | Select-Object -Skip 1)
         $exit = $LASTEXITCODE
+        Remove-Item Env:SEAM_CELL_STATUS_PATH -ErrorAction SilentlyContinue
         if ($exit -ne 0) {
             $script:FinalState = "refused"
             $script:FinalReason = "exit=$exit"
@@ -863,7 +877,11 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
             Save-BootSummary -State "refused" -Reason $script:FinalReason
             exit $exit
         }
-        Add-Row -Cell $cell -Status "complete" -RunId "" -Detail ""
+        $recorded = "complete"
+        if (Test-Path -LiteralPath $statusFile) {
+            $recorded = (Get-Content -LiteralPath $statusFile -Raw).Trim()
+        }
+        Add-Row -Cell $cell -Status $recorded -RunId "" -Detail ""
         continue
     }
 

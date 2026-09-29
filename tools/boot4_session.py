@@ -1,8 +1,8 @@
 """Shared boot-4 measurement session: gates, canary, per-point files, seal.
 
 The runners call this module. It does not open a preregistration or an amendment.
-Warm points are n_cached 12000 and 46000, delta text of 183 tokens, three turn-2
-repeats. Decode length comes from configs/delta_n.yaml acceptance.max_new_tokens.
+Warm points are n_cached 12000, 24000, and 46000, delta text of 183 tokens, three
+turn-2 repeats. Decode length comes from configs/delta_n.yaml acceptance.max_new_tokens.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 
 STUB_MARK = "measurement body is not started"
-N_CACHED = (12000, 46000)
+N_CACHED = (12000, 24000, 46000)
 DELTA_TOKENS = 183
 TURN2_REPEATS = 3
 WARM_PLANNED_PROBES = 4
@@ -144,6 +144,7 @@ def _open_canary(
             plan_path=plan_path,
             planned_probe_count=int(planned),
             allow_unguarded=False,
+            discard_warmup=True,
         )
     except CanaryBudgetRefuse as exc:
         raise SystemExit(f"REFUSED -- {exc.detail}") from exc
@@ -155,6 +156,49 @@ def _point_failure(record: dict[str, Any]) -> dict[str, Any]:
 
     child = record.get("result") or record
     return classify_c1_failure(child)
+
+
+def cell_status(points: list[dict[str, Any]]) -> str:
+    """A recorded failure_kind is data. An unexplained non-pass is a harness failure."""
+    saw_kind = False
+    unexplained = False
+    for point in points:
+        if point.get("failure_kind"):
+            saw_kind = True
+        elif point.get("outcome") not in (None, "pass"):
+            unexplained = True
+        repeats = point.get("repeats")
+        if isinstance(repeats, list):
+            for repeat in repeats:
+                if repeat.get("failure_kind"):
+                    saw_kind = True
+                elif repeat.get("outcome") not in (None, "pass"):
+                    unexplained = True
+            if point.get("median_decode_tok_s") is None and not any(
+                item.get("failure_kind") for item in repeats
+            ):
+                unexplained = True
+    if saw_kind:
+        return "partial"
+    if unexplained:
+        return "failed"
+    return "complete"
+
+
+def cell_exit_code(status: str) -> int:
+    """Point data continues the boot. Guard and harness statuses stop it."""
+    if status in {"complete", "partial"}:
+        return 0
+    return 1
+
+
+def _publish_cell_status(status: str) -> None:
+    import os
+
+    path = os.environ.get("SEAM_CELL_STATUS_PATH")
+    if not path:
+        return
+    Path(path).write_text(status + "\n", encoding="utf-8")
 
 
 def _median(values: list[float]) -> float:
@@ -219,7 +263,8 @@ def _finish(
     _write(out_dir / "plan.json", plan)
     sealed = seal_session(out_dir)
     print(json.dumps({"event": "sealed", "dir": str(sealed)}, sort_keys=True), flush=True)
-    return 0 if summary["status"] in {"complete", "memory_wall"} else 1
+    _publish_cell_status(str(summary["status"]))
+    return cell_exit_code(str(summary["status"]))
 
 
 def run_warm_smoke(*, arm: str, model_spec: Path) -> int:
@@ -419,9 +464,11 @@ def run_warm(*, arm: str, model_spec: Path, session_id: str, out_dir: Path) -> i
             point = {
                 "arm": arm,
                 "n_cached": int(n_cached),
+                "rung": int(n_cached),
                 "outcome": child.get("outcome"),
                 "failure_kind": classified.get("failure_kind"),
                 "failure_mode": child.get("failure_mode"),
+                "memory": classified.get("memory") or {},
                 "turn1_prefill_s": (generation.get("turn1") or {}).get("prefill_s"),
                 "turn2_prefill_s": prefills,
                 "turn2_median_prefill_s": _median(prefills)
@@ -453,11 +500,7 @@ def run_warm(*, arm: str, model_spec: Path, session_id: str, out_dir: Path) -> i
         for point in points
         if point.get("turn2_median_prefill_s") is not None
     }
-    status = "complete"
-    if any(point.get("failure_kind") == "memory_wall" for point in points):
-        status = "memory_wall"
-    elif any(point.get("outcome") != "pass" for point in points):
-        status = "failed"
+    status = cell_status(points)
     summary = {
         "kind": "warm_kv",
         "session_id": session_id,
@@ -584,9 +627,7 @@ def run_decode(
         _write(out_dir / "summary.json", summary)
         raise SystemExit(f"REFUSED -- FAIL_CANARY_DRIFT: {exc.detail}") from exc
 
-    status = "complete"
-    if any(point.get("median_decode_tok_s") is None for point in points):
-        status = "failed"
+    status = cell_status(points)
     summary = {
         "kind": "decode_match",
         "session_id": session_id,
