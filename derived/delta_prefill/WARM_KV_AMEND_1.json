@@ -1,0 +1,31 @@
+{
+  "id": "WARM-KV-AMEND-1",
+  "amends": "derived/delta_prefill/WARM_KV_PREREG.json",
+  "prereg_commit": "d70437e89c69e933ed63a248d6bfc32cd49fb835",
+  "registered_before_any_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "does_not_edit_the_prereg": true,
+  "prediction_unchanged": "f16 > u8 >= u4 on turn-2 delta-prefill TTFT. f16 advantage 15-27 percent.",
+  "replaces": "A bisection on n_cached. The prereg predicts a turn-2 ordering and a 15-27 percent f16 advantage, not a limit.",
+  "n_cached": [12000, 46000],
+  "n_cached_notes": {
+    "12000": "replication of sealed 41e419bd",
+    "46000": "paper headline context"
+  },
+  "delta_median_n_ctx_increase": 182.5,
+  "delta_central_pair": [182, 183],
+  "delta_tokens": 183,
+  "delta_integer_rule": "The median of an even count is the mean of 182 and 183, which is 182.5. A prompt token length is an integer. delta_tokens is the smallest integer greater than or equal to that median.",
+  "n_turns": 532,
+  "n_entries": 200,
+  "n_positive_increases": 532,
+  "source_run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+  "source_ledger": "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/slo_escalate/turn_ledger.json",
+  "query": "For each entry, for each turn with turn >= 1, increase = n_ctx minus the n_ctx of the turn whose index is turn-1. Keep increases that are > 0. The median of those increases is delta_median_n_ctx_increase.",
+  "protocol": "Per (arm, n_cached): one turn 1 fills n_cached under RESIDENT (turn-1 max_new_tokens = 1; the fill is the prompt). Then 3 turn-2 repeats. Each turn-2 is a ChatHistory whose prefix is only the post-turn-1 messages plus one new user message. The three user messages are distinct texts of identical token length delta_tokens, so a prefix-cache hit stops at n_cached. Report the per-arm median turn-2 TTFT and the f16 advantage percent versus u8 and versus u4 at each n_cached. If turn 1 fails allocation, record memory_wall and do not run turn 2.",
+  "turn1_max_new_tokens": 1,
+  "turn2_repeats": 3,
+  "residency": "RESIDENT",
+  "advantage_percent": "(median_other - median_f16) / median_other * 100"
+}

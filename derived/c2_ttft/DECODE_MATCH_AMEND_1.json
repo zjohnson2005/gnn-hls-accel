@@ -1,0 +1,21 @@
+{
+  "id": "DECODE-MATCH-AMEND-1",
+  "amends": "derived/c2_ttft/DECODE_MATCH_PREREG.json",
+  "prereg_commit": "d70437e89c69e933ed63a248d6bfc32cd49fb835",
+  "registered_before_any_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "does_not_edit_the_prereg": true,
+  "prediction_unchanged": "int8 decode tok/s is 20-30 percent below int4 at each listed n.",
+  "max_new_tokens": 64,
+  "min_new_tokens": 64,
+  "ignore_eos": true,
+  "max_new_tokens_source": "configs/delta_n.yaml acceptance.max_new_tokens",
+  "decode_tok_s": "63 / (t_last - t_first)",
+  "decode_tok_s_note": "min_new_tokens and max_new_tokens are both 64 and ignore_eos is true, so every repeat decodes exactly 64 tokens. The rate uses the 63 gaps between the first token and the last token.",
+  "n": [2000, 4000, 8000],
+  "repeats": 3,
+  "kv": "u8",
+  "placement": "GPU",
+  "models": ["Qwen3-4B-int4-ov", "Qwen3-4B-int8-ov"]
+}
