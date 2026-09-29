@@ -1,14 +1,15 @@
-"""T2S f16 control band at n=18687, from sealed run 5c714535.
+"""T2S f16 control band at n=18687.
 
-Pass: the control cell's median prefill_s lies in [min, max] of that run's
-three repeats, widened by their max relative spread.
+Pass: the control median prefill_s lies within the 5c714535 median times
+(1 +/- tol), where tol = b_t2s * (resolution / n_control). b_t2s is the
+sealed T2S prefill exponent from 65e33de8, the gpu_only_f16 fit when
+present, otherwise the mean of the three KV fits. That tolerance is the
+relative prefill drift that shifts a bisected limit by one 250-token step
+under prefill_s = C * n^b.
 
-    max_relative_spread = max(abs(x - median) / median)
-    low = min * (1 - max_relative_spread)
-    high = max * (1 + max_relative_spread)
-
-The cell estimate is 3 * that median plus the c2246b1f canary overhead,
-rounded up to the next whole second.
+The within-session repeat window is recorded on the verdict and is not a gate.
+The cell estimate is 3 * the 5c714535 median plus the c2246b1f canary
+overhead, rounded up to the next whole second.
 """
 
 from __future__ import annotations
@@ -25,14 +26,20 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 
 REFERENCE_RUN_ID = "5c714535-9f36-4614-a594-698b6cd09296"
+EXPONENT_RUN_ID = "65e33de8-ac07-405a-a1f8-53698974afe9"
 CONTROL_N = 18687
 CONTROL_REPEATS = 3
+RESOLUTION = 250
+MATCHING_ARM = "gpu_only_f16"
 CANARY_OVERHEAD_S = 752.1359013
 FORMULA = (
-    "max_relative_spread = max(abs(x - median) / median); "
-    "low = min * (1 - max_relative_spread); "
-    "high = max * (1 + max_relative_spread); "
+    "tol = b_t2s * (resolution / n_control); "
+    "low = reference_median * (1 - tol); "
+    "high = reference_median * (1 + tol); "
     "pass iff the control median prefill_s is inside [low, high]"
+)
+INTERPRETATION = (
+    "drift small enough that it cannot move a bisected limit by more than one 250-token step"
 )
 
 
@@ -95,7 +102,8 @@ def reference_work(repo_root: Path) -> Path:
     return repo_root / "derived" / "c2_ttft" / REFERENCE_RUN_ID / "work"
 
 
-def band_from_prefills(prefills: list[float]) -> dict[str, Any]:
+def within_session_window(prefills: list[float]) -> dict[str, Any]:
+    """Old gate: [min, max] widened by the max relative repeat spread. Report only."""
     if len(prefills) != CONTROL_REPEATS:
         raise ValueError(f"expected {CONTROL_REPEATS} prefills, got {len(prefills)}")
     median = float(statistics.median(prefills))
@@ -112,31 +120,84 @@ def band_from_prefills(prefills: list[float]) -> dict[str, Any]:
         "max": high_raw,
         "median": median,
         "max_relative_spread": spread,
-        "low": low_raw * (1.0 - spread),
-        "high": high_raw * (1.0 + spread),
-        "formula": FORMULA,
+        "within_session_low": low_raw * (1.0 - spread),
+        "within_session_high": high_raw * (1.0 + spread),
+    }
+
+
+def exponent_analysis(repo_root: Path) -> Path:
+    return repo_root / "derived" / "cap4" / f"sealed_{EXPONENT_RUN_ID}" / "analysis.json"
+
+
+def load_exponents(repo_root: Path) -> dict[str, float]:
+    doc = json.loads(exponent_analysis(repo_root).read_text(encoding="utf-8"))
+    per_arm = doc.get("per_arm")
+    if not isinstance(per_arm, dict):
+        raise TypeError(f"{EXPONENT_RUN_ID} analysis.json has no per_arm object")
+    exponents: dict[str, float] = {}
+    for arm, body in per_arm.items():
+        if not isinstance(body, dict):
+            continue
+        fit = body.get("power_law_fit")
+        if isinstance(fit, dict) and fit.get("b") is not None:
+            exponents[str(arm)] = float(fit["b"])
+    if not exponents:
+        raise ValueError(f"{EXPONENT_RUN_ID} analysis.json has no power_law_fit.b")
+    return exponents
+
+
+def select_b_t2s(exponents: dict[str, float], arm: str = MATCHING_ARM) -> dict[str, Any]:
+    """Matching KV exponent, else the mean of the sealed fits."""
+    if not exponents:
+        raise ValueError("no sealed prefill exponents")
+    mean_b = float(statistics.mean(exponents.values()))
+    if arm in exponents:
+        chosen = float(exponents[arm])
+        source = "matching_kv"
+    else:
+        chosen = mean_b
+        source = "mean_of_arms"
+    return {
+        "b_t2s": chosen,
+        "b_t2s_arm": arm if arm in exponents else None,
+        "b_t2s_source": source,
+        "b_t2s_by_arm": dict(exponents),
+        "b_t2s_mean": mean_b,
+        "b_t2s_run_id": EXPONENT_RUN_ID,
     }
 
 
 def reference_band(repo_root: Path | None = None) -> dict[str, Any]:
     root = repo_root or ROOT
-    prefills = load_prefills(reference_work(root))
-    band = band_from_prefills(prefills)
-    base_s = CONTROL_REPEATS * float(band["median"])
+    window = within_session_window(load_prefills(reference_work(root)))
+    chosen = select_b_t2s(load_exponents(root), MATCHING_ARM)
+    median = float(window["median"])
+    tol = float(chosen["b_t2s"]) * (RESOLUTION / CONTROL_N)
+    base_s = CONTROL_REPEATS * median
     raw_estimate = base_s + CANARY_OVERHEAD_S
     if raw_estimate == math.floor(raw_estimate):
         estimate_s = int(raw_estimate)
     else:
         estimate_s = math.ceil(raw_estimate)
-    band["base_s"] = base_s
-    band["noreboot_reason"] = _uncold_reason()
-    band["canary_overhead_s"] = CANARY_OVERHEAD_S
-    band["estimate_s"] = int(estimate_s)
-    band["estimate_formula"] = (
-        "estimate_s = next whole second of (3 * reference median prefill_s "
-        "+ canary overhead 752.1359013 from c2246b1f)"
-    )
-    return band
+    return {
+        **window,
+        **chosen,
+        "resolution": RESOLUTION,
+        "n_control": CONTROL_N,
+        "tol": tol,
+        "low": median * (1.0 - tol),
+        "high": median * (1.0 + tol),
+        "formula": FORMULA,
+        "interpretation": INTERPRETATION,
+        "base_s": base_s,
+        "noreboot_reason": _uncold_reason(),
+        "canary_overhead_s": CANARY_OVERHEAD_S,
+        "estimate_s": int(estimate_s),
+        "estimate_formula": (
+            "estimate_s = next whole second of (3 * reference median prefill_s "
+            "+ canary overhead 752.1359013 from c2246b1f)"
+        ),
+    }
 
 
 def evaluate_control(prefills: list[float], band: dict[str, Any]) -> dict[str, Any]:
@@ -145,23 +206,31 @@ def evaluate_control(prefills: list[float], band: dict[str, Any]) -> dict[str, A
         "n": band["n"],
         "low": band["low"],
         "high": band["high"],
-        "max_relative_spread": band["max_relative_spread"],
-        "reference_min": band["min"],
-        "reference_max": band["max"],
+        "tol": band["tol"],
+        "b_t2s": band["b_t2s"],
+        "b_t2s_source": band["b_t2s_source"],
+        "b_t2s_run_id": band["b_t2s_run_id"],
         "reference_median": band["median"],
+        "within_session_low": band["within_session_low"],
+        "within_session_high": band["within_session_high"],
+        "max_relative_spread": band["max_relative_spread"],
         "control_prefills": list(prefills),
         "formula": band["formula"],
+        "interpretation": band["interpretation"],
     }
     if len(prefills) != CONTROL_REPEATS:
         verdict["pass"] = False
         verdict["median"] = None
+        verdict["old_within_session_pass"] = None
         verdict["reason"] = f"expected {CONTROL_REPEATS} control prefills, got {len(prefills)}"
         return verdict
     median = float(statistics.median(prefills))
     ok = float(band["low"]) <= median <= float(band["high"])
+    old_ok = float(band["within_session_low"]) <= median <= float(band["within_session_high"])
     verdict["pass"] = ok
     verdict["median"] = median
-    verdict["reason"] = "inside_band" if ok else "median_outside_band"
+    verdict["old_within_session_pass"] = old_ok
+    verdict["reason"] = "inside_tol" if ok else "median_outside_tol"
     return verdict
 
 

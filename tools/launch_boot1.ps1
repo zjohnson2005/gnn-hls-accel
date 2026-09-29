@@ -769,7 +769,7 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         if ($verdictCode -ne 0) {
             $script:LastRunId = $ran.RunId
             $script:FinalState = "CONTROL_FAILED"
-            $script:FinalReason = "control median outside the 5c714535 n=18687 band"
+            $script:FinalReason = "control median outside 5c714535 median x (1 +/- tol)"
             Add-Row -Cell $cell -Status "CONTROL_FAILED" -RunId $ran.RunId -Detail $verdictRaw
             Save-BootSummary -State "CONTROL_FAILED" -Reason $script:FinalReason
             Write-Host "CONTROL_FAILED"
