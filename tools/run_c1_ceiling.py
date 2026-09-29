@@ -399,6 +399,14 @@ def _available_mb() -> float:
     return float(memory_now()["available_mb"])
 
 
+def _stamp_deviation(doc: dict[str, Any]) -> None:
+    from tools.t2s_control_band import noreboot_deviation
+
+    deviation = noreboot_deviation()
+    if deviation is not None:
+        doc["deviation"] = deviation
+
+
 def _probe_once(
     *,
     root: Path,
@@ -531,6 +539,7 @@ def bisect_arm(
     slo_s: float = SLO_S_DEFAULT,
     label_prefix: str = "c1",
     canary_guard: Any | None = None,
+    fixed_n: int | None = None,
 ) -> dict[str, Any]:
     from transformers import AutoTokenizer
 
@@ -606,6 +615,21 @@ def bisect_arm(
             "failure_classification": fail_cls,
             "failure_kind": (fail_cls or {}).get("failure_kind"),
             "verbatim_error": (fail_cls or {}).get("verbatim"),
+        }
+
+    if fixed_n is not None:
+        probe = probe_n(int(fixed_n))
+        return {
+            "arm_id": arm["id"],
+            "status": "complete",
+            "fixed_n": int(fixed_n),
+            "probes": [probe],
+            "fixed_probe": probe,
+            "ttft_limit_n": int(fixed_n) if probe.get("pass") else None,
+            "note": (
+                "fixed-n probe; the T2S control band is applied by the "
+                "sequencer after this cell, not by the SLO bisection"
+            ),
         }
 
     low_probe = probe_n(lo)
@@ -716,6 +740,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--model-spec", type=Path, default=DEFAULT_MODEL_SPEC)
     parser.add_argument("--low", type=int, default=LOW_DEFAULT)
     parser.add_argument("--high", type=int, default=HIGH_DEFAULT)
+    parser.add_argument(
+        "--fixed-n",
+        type=int,
+        default=None,
+        help="Probe this n only (repeats times). Skips the low/high bisection.",
+    )
     parser.add_argument("--resolution", type=int, default=RESOLUTION)
     parser.add_argument("--repeats", type=int, default=REPEATS)
     parser.add_argument("--watchdog-interval-s", type=int, default=60)
@@ -845,6 +875,7 @@ def main(argv: list[str] | None = None) -> int:
             "high": int(args.high),
             "resolution_tokens": int(args.resolution),
             "repeats_per_probe": int(args.repeats),
+            "fixed_n": None if args.fixed_n is None else int(args.fixed_n),
             "pass_requires_all_repeats": True,
             "criterion": criterion,
             "slo_s": slo_s if criterion == CRITERION_TTFT_SLO else None,
@@ -859,6 +890,7 @@ def main(argv: list[str] | None = None) -> int:
         "watchdog": watch,
         "status": "running",
     }
+    _stamp_deviation(plan)
     (out_dir / "plan.json").write_text(
         json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
@@ -897,7 +929,20 @@ def main(argv: list[str] | None = None) -> int:
         )
 
         planned = args.planned_probe_count
-        if planned is None:
+        if planned is None and args.fixed_n is not None:
+            # repeats probes is below C+1 (C=3), so the guard would refuse
+            # before any probe. Budget repeats+1; the cell still runs repeats.
+            planned = int(args.repeats) + 1
+            plan["fixed_n"] = int(args.fixed_n)
+            plan["fixed_n_canary_budget"] = {
+                "executed_probes": int(args.repeats),
+                "planned_probe_count": int(planned),
+                "note": (
+                    "planned_probe_count is repeats+1 so floor(planned/(C+1)) "
+                    ">= 1 with C=3. The cell executes repeats probes at fixed_n."
+                ),
+            }
+        elif planned is None:
             planned = estimate_bisect_planned_probes(
                 n_arms=len(arm_ids),
                 low=int(args.low),
@@ -942,6 +987,7 @@ def main(argv: list[str] | None = None) -> int:
                 "primary_claim_eval": None,
                 "n_probes": 0,
             }
+            _stamp_deviation(summary)
             (out_dir / "summary.json").write_text(
                 json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
             )
@@ -986,6 +1032,7 @@ def main(argv: list[str] | None = None) -> int:
                 "primary_claim_eval": None,
                 "n_probes": 0,
             }
+            _stamp_deviation(summary)
             (out_dir / "summary.json").write_text(
                 json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
             )
@@ -1038,6 +1085,7 @@ def main(argv: list[str] | None = None) -> int:
                 slo_s=slo_s,
                 label_prefix=label_prefix,
                 canary_guard=canary_guard,
+                fixed_n=None if args.fixed_n is None else int(args.fixed_n),
             )
             arm_results.append(res)
             (out_dir / "probes.ndjson").write_text(
@@ -1077,6 +1125,7 @@ def main(argv: list[str] | None = None) -> int:
                 "primary_claim_eval": None,
                 "n_probes": len(probes_log),
             }
+            _stamp_deviation(summary)
             (out_dir / "summary.json").write_text(
                 json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
             )
@@ -1124,6 +1173,7 @@ def main(argv: list[str] | None = None) -> int:
                 "primary_claim_eval": None,
                 "n_probes": len(probes_log),
             }
+            _stamp_deviation(summary)
             (out_dir / "summary.json").write_text(
                 json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
             )
@@ -1181,6 +1231,7 @@ def main(argv: list[str] | None = None) -> int:
             "primary_claim_eval": None,
             "n_probes": len(probes_log),
         }
+        _stamp_deviation(summary)
         (out_dir / "summary.json").write_text(
             json.dumps(summary, indent=2, sort_keys=True, default=str) + "\n",
             encoding="utf-8",
@@ -1302,6 +1353,7 @@ def main(argv: list[str] | None = None) -> int:
             ]
             for r in arm_results
         }
+    _stamp_deviation(summary)
     (out_dir / "summary.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )

@@ -25,6 +25,7 @@ from typing import Any, Final
 import yaml
 
 __all__ = [
+    "UNCOLD_UPTIME_REASON",
     "GateResult",
     "MeasurementGateReport",
     "evaluate_measurement_gates",
@@ -32,6 +33,12 @@ __all__ = [
     "resolve_platform_id",
     "run_environment_gate_fields",
 ]
+
+# Recorded when the sequencer skips only the uptime gate (-NoRebootDeviation).
+UNCOLD_UPTIME_REASON: Final = (
+    "remote host; Tailscale unattended mode not confirmed; "
+    "AutoAdminLogon=0; reboot would risk losing access"
+)
 
 _GUID_RE: Final = re.compile(
     r"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"
@@ -135,8 +142,7 @@ def load_platform_measurement_gates(repo_root: Path, platform_id: str) -> dict[s
         )
     if not isinstance(gates, dict):
         raise TypeError(
-            f"platform {platform_id}: measurement_gates must be a dict, "
-            f"got {type(gates).__name__}"
+            f"platform {platform_id}: measurement_gates must be a dict, got {type(gates).__name__}"
         )
     return gates
 
@@ -302,6 +308,7 @@ def evaluate_measurement_gates(
     available_mb: float | None = None,
     uptime_s: float | None = None,
     skip_host_probes: bool = False,
+    skip_uptime: bool = False,
     ac_override: GateResult | None = None,
     processor_override: GateResult | None = None,
 ) -> MeasurementGateReport:
@@ -399,7 +406,24 @@ def evaluate_measurement_gates(
     obs_up = uptime_s
     if obs_up is None and not skip_host_probes:
         obs_up = probe_uptime_s()
-    if obs_up is None:
+    observed = None if obs_up is None else float(obs_up)
+    if skip_uptime:
+        up_gate = GateResult(
+            name="uptime",
+            passed=True,
+            reason="uptime_skipped_noreboot_deviation",
+            detail={
+                "max_uptime_s": max_uptime_f,
+                "observed_uptime_s": observed,
+                "citation": max_uptime_cite,
+                "deviation": {
+                    "kind": "UNCOLD_UPTIME",
+                    "uptime_s": observed,
+                    "reason": UNCOLD_UPTIME_REASON,
+                },
+            },
+        )
+    elif obs_up is None:
         up_gate = GateResult(
             name="uptime",
             passed=False,
@@ -510,9 +534,18 @@ def _main(argv: list[str] | None = None) -> int:
     parser.add_argument("--repo-root", type=Path, default=None)
     parser.add_argument("--platform-id", default=None)
     parser.add_argument("--json", action="store_true")
+    parser.add_argument(
+        "--skip-uptime",
+        action="store_true",
+        help="Skip only the uptime gate and record an UNCOLD_UPTIME deviation.",
+    )
     args = parser.parse_args(argv)
     root = (args.repo_root or Path(__file__).resolve().parents[1]).resolve()
-    report = evaluate_measurement_gates(root, platform_id=args.platform_id)
+    report = evaluate_measurement_gates(
+        root,
+        platform_id=args.platform_id,
+        skip_uptime=bool(args.skip_uptime),
+    )
     payload = report.to_dict()
     payload["run_environment_fields"] = run_environment_gate_fields(report)
     if args.json:

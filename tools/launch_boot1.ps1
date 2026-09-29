@@ -19,6 +19,7 @@
 param(
     [switch]$Detach,
     [switch]$DryRun,
+    [switch]$NoRebootDeviation,
     [ValidateSet("boot1", "boot2", "boot3", "boot4", "t2s-boot1")]
     [string]$Profile = "boot1"
 )
@@ -65,6 +66,7 @@ New-Item -ItemType Directory -Force -Path $LaunchDir | Out-Null
 if ($Detach) {
     $self = "`"$PSCommandPath`""
     $cmd = "powershell -NoProfile -File $self -Profile $Profile"
+    if ($NoRebootDeviation) { $cmd += " -NoRebootDeviation" }
     $log = Join-Path $LaunchDir "$Profile.log"
     $json = & $SpawnPs1 -CommandLine $cmd -LogPath $log -WorkingDirectory $root
     Write-Host $json
@@ -188,6 +190,12 @@ if ($Profile -eq "boot2") {
     # ceiling canary still uses 657, borrowed from aipc-c1 session 7f569929,
     # which is the value 5c714535 and 051d2681 recorded.
     $env:SEAM_PLATFORM_ID = "evo-t2"
+    $bandPy = Join-Path $root "tools\t2s_control_band.py"
+    $bandJson = & $PythonExe $bandPy --print-band
+    if ($LASTEXITCODE -ne 0) { throw "REFUSED -- control band derivation failed" }
+    $script:ControlBand = $bandJson | ConvertFrom-Json
+    $controlEstimate = [int]$script:ControlBand.estimate_s
+    $script:UncoldReason = [string]$script:ControlBand.noreboot_reason
     $script:EstimateDerivation = [ordered]@{
         formula = "estimate_s = base_s + canary_overhead_s, then the next whole second"
         platform_id = "evo-t2"
@@ -208,11 +216,17 @@ if ($Profile -eq "boot2") {
         canary_overhead_s = 752.1359013
         canary_overhead_stated_s = 752.136
         cells = @(
+            [ordered]@{ name = "T2S 4B-int4 GPU f16 control"; reference_run_id = [string]$script:ControlBand.reference_run_id; n = 18687; repeats = 3; base_s = $script:ControlBand.base_s; canary_overhead_s = $script:ControlBand.canary_overhead_s; estimate_s = $controlEstimate; formula = [string]$script:ControlBand.estimate_formula }
             [ordered]@{ name = "T2S 4B-int4 GPU u8"; base_run_id = "5c714535-9f36-4614-a594-698b6cd09296"; base_s = 520; canary_overhead_s = 752.1359013; estimate_s = 1273 }
             [ordered]@{ name = "T2S 8B-int4 GPU u8"; base_run_id = "051d2681-4bb8-4f50-b9fc-b14441359ba6"; base_s = 570; canary_overhead_s = 752.1359013; estimate_s = 1323 }
         )
     }
     $Cells = @(
+        @{
+            Name = "T2S 4B-int4 GPU f16 control"; Kind = "control"; EstimateS = $controlEstimate
+            Arm = "gpu_only_f16"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+            FixedN = 18687
+        },
         @{
             Name = "T2S 4B-int4 GPU u8"; Kind = "ceiling"; EstimateS = 1273
             Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
@@ -296,6 +310,13 @@ function Save-BootSummary {
     if ($null -ne $script:ForeignQueueEvidence) {
         $doc.foreign_queue_evidence = @($script:ForeignQueueEvidence)
         $doc.watchdog_log_missing = [bool]$script:WatchdogLogMissing
+    }
+    if ($NoRebootDeviation) {
+        $doc.deviation = [ordered]@{
+            kind = "UNCOLD_UPTIME"
+            uptime_s = Get-ColdUptimeSeconds
+            reason = [string]$script:UncoldReason
+        }
     }
     ($doc | ConvertTo-Json -Depth 6) | Set-Content -LiteralPath $SummaryPath -Encoding utf8
 }
@@ -395,7 +416,9 @@ function Invoke-BootGates {
         } elseif ($env:PYTHONPATH -notlike "*$root*") {
             $env:PYTHONPATH = "$root;$env:PYTHONPATH"
         }
-        $output = & $PythonExe -m seam.measurement_gates --repo-root $root --json 2>&1
+        $gateArgs = @("-m", "seam.measurement_gates", "--repo-root", $root, "--json")
+        if ($NoRebootDeviation) { $gateArgs += "--skip-uptime" }
+        $output = & $PythonExe @gateArgs 2>&1
         $code = $LASTEXITCODE
     } finally {
         $env:PYTHONPATH = $prev
@@ -457,19 +480,33 @@ function Invoke-CeilingCell {
         --model-spec $model --n-tokens 64 --arm gpu_only_f16 | Out-Host
     if ($LASTEXITCODE -ne 0) { throw "REFUSED -- extraction smoke failed" }
     $env:SEAM_LAUNCH_CONTEXT = "ssh_detached"
+    if ($NoRebootDeviation) {
+        $env:SEAM_NOREBOOT_DEVIATION = "1"
+        $env:SEAM_NOREBOOT_UPTIME_S = [string](Get-ColdUptimeSeconds)
+    }
+    $fixed = Get-BootCellField -Cell $Cell -Name "FixedN"
+    $workerArgs = @(
+        "-u", $WorkerPy,
+        "--session-id", $sid,
+        "--out", $out,
+        "--model-spec", $model,
+        "--arms", $Cell.Arm,
+        "--criterion", "ttft_slo",
+        "--slo-s", "10",
+        "--repeats", "3",
+        "--watchdog-interval-s", "60"
+    )
+    if ($fixed) {
+        $workerArgs += @("--fixed-n", [string]$fixed)
+    } else {
+        $workerArgs += @(
+            "--low", [string]$Cell.Low,
+            "--high", [string]$Cell.High,
+            "--resolution", "250"
+        )
+    }
     $workerLines = New-Object System.Collections.Generic.List[string]
-    & $PythonExe -u $WorkerPy `
-        --session-id $sid `
-        --out $out `
-        --model-spec $model `
-        --arms $Cell.Arm `
-        --criterion ttft_slo `
-        --slo-s 10 `
-        --low $Cell.Low `
-        --high $Cell.High `
-        --resolution 250 `
-        --repeats 3 `
-        --watchdog-interval-s 60 2>&1 | ForEach-Object {
+    & $PythonExe @workerArgs 2>&1 | ForEach-Object {
             $workerLines.Add([string]$_)
             Write-Host $_
         }
@@ -494,6 +531,7 @@ function Get-BootCellCommand {
     $model = Get-BootCellField -Cell $Cell -Name "Model"
     $low = Get-BootCellField -Cell $Cell -Name "Low"
     $high = Get-BootCellField -Cell $Cell -Name "High"
+    $fixed = Get-BootCellField -Cell $Cell -Name "FixedN"
     $kv = Get-BootCellField -Cell $Cell -Name "ExpectKvReadback"
     if ($kind -eq "det") {
         $args = @($PythonExe, "-u", $DetPy)
@@ -519,14 +557,21 @@ function Get-BootCellCommand {
         $PythonExe, "-u", $SmokePy, "--out", "<cell>\extraction_smoke",
         "--model-spec", $modelPath, "--n-tokens", "64", "--arm", "gpu_only_f16"
     ) -join " "
-    $worker = @(
+    $workerParts = @(
         $PythonExe, "-u", $WorkerPy,
         "--session-id", "<new>", "--out", "<cell>",
         "--model-spec", $modelPath, "--arms", $arm,
-        "--criterion", "ttft_slo", "--slo-s", "10",
-        "--low", $low, "--high", $high,
-        "--resolution", "250", "--repeats", "3", "--watchdog-interval-s", "60"
-    ) -join " "
+        "--criterion", "ttft_slo", "--slo-s", "10"
+    )
+    if ($fixed) {
+        $workerParts += @("--fixed-n", [string]$fixed, "--repeats", "3", "--watchdog-interval-s", "60")
+    } else {
+        $workerParts += @(
+            "--low", $low, "--high", $high,
+            "--resolution", "250", "--repeats", "3", "--watchdog-interval-s", "60"
+        )
+    }
+    $worker = $workerParts -join " "
     return [ordered]@{
         kind = $kind; arm = $arm; model = $model; low = $low; high = $high
         expect_kv = $kv; command = $worker; smoke = $smoke
@@ -569,6 +614,12 @@ if ($Profile -eq "t2s-boot1") {
     Write-Host "onset_s=null onset_status=unknown provenance=not measured on evo-t2"
     Write-Host "canary_onset_s=657 provenance=borrowed from aipc-c1 session 7f569929; recorded on 5c714535 and 051d2681; not an evo-t2 measurement"
     Write-Host "harness affinity_cpus=0,1,2,3 wslock=request:4294967296:12884901888 max_new_tokens=8 source=5c714535/051d2681"
+    Write-Host ("control_band {0}" -f $bandJson)
+    if ($NoRebootDeviation) {
+        $upNow = Get-ColdUptimeSeconds
+        Write-Host ("deviation kind=UNCOLD_UPTIME uptime_s={0} reason={1}" -f $upNow, $script:UncoldReason)
+        Write-Host "uptime_gate=skipped other_gates=enforced watchdog=enforced machine_lock=enforced canary=must_arm"
+    }
     Assert-BootAc
 }
 
@@ -589,7 +640,11 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         Invoke-BootDryCell -Cell $cell
         continue
     }
-    if ($remaining -lt [int]$cell.EstimateS) {
+    if ($NoRebootDeviation) {
+        $env:SEAM_NOREBOOT_DEVIATION = "1"
+        $env:SEAM_NOREBOOT_UPTIME_S = [string]$uptime
+        Write-Host ("uptime_gate=skipped deviation=UNCOLD_UPTIME uptime_s={0}" -f $uptime)
+    } elseif ($remaining -lt [int]$cell.EstimateS) {
         $script:CellStartedUtc = ""
         $left = @()
         for ($j = $i; $j -lt $Cells.Count; $j++) {
@@ -703,6 +758,21 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
             Add-Row -Cell $cell -Status "KV_READBACK_NOT_U8" -RunId $ran.RunId -Detail $detail
             Save-BootSummary -State "refused" -Reason $script:FinalReason
             Write-Host "REFUSED -- CPU KV readback is not u8"
+            exit 1
+        }
+    }
+    if ($cell.Kind -eq "control") {
+        $bandPy = Join-Path $root "tools\t2s_control_band.py"
+        $verdictRaw = & $PythonExe $bandPy --check-work (Join-Path $ran.Out "work")
+        $verdictCode = $LASTEXITCODE
+        Write-Host $verdictRaw
+        if ($verdictCode -ne 0) {
+            $script:LastRunId = $ran.RunId
+            $script:FinalState = "CONTROL_FAILED"
+            $script:FinalReason = "control median outside the 5c714535 n=18687 band"
+            Add-Row -Cell $cell -Status "CONTROL_FAILED" -RunId $ran.RunId -Detail $verdictRaw
+            Save-BootSummary -State "CONTROL_FAILED" -Reason $script:FinalReason
+            Write-Host "CONTROL_FAILED"
             exit 1
         }
     }

@@ -1,15 +1,17 @@
-# T2S boot 1. 4B-int4 GPU u8, then 8B-int4 GPU u8, on platform evo-t2.
+# T2S boot 1. f16 control at n=18687, then 4B-int4 GPU u8, then 8B-int4 GPU u8.
 # Same cell machinery as launch_boot4.ps1. -Detach is launch_boot1.ps1
 # -Detach, which uses tools/spawn_detached.ps1 (Win32_Process.Create).
 # -Detach refuses unless C:\apu\watchdog.log ends in {"action":"empty_flag"},
 # no python or llama-server is running, and free memory is at least 24000 MB.
+# -NoRebootDeviation skips only the uptime gate and records UNCOLD_UPTIME.
 # This script does not register a logon task or a scheduled task.
 # This script does not open the PARITY-REMEASURE prereg.
 
 [CmdletBinding()]
 param(
     [switch]$Detach,
-    [switch]$DryRun
+    [switch]$DryRun,
+    [switch]$NoRebootDeviation
 )
 
 $ErrorActionPreference = "Stop"
@@ -37,6 +39,7 @@ if ($Detach -and -not $DryRun) {
 
 $launcher = Join-Path $PSScriptRoot "launch_boot1.ps1"
 $launchArgs = @("-NoProfile", "-File", $launcher, "-Profile", "t2s-boot1")
+if ($NoRebootDeviation) { $launchArgs += "-NoRebootDeviation" }
 if ($Detach -and -not $DryRun) { $launchArgs += "-Detach" }
 if ($DryRun) { $launchArgs += "-DryRun" }
 & powershell @launchArgs

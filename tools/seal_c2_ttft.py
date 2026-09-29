@@ -30,6 +30,15 @@ WORKLOAD_KIND = "c2_ttft_bound_limit"
 IR_PIN = "c1821f29332faa48871c7f16426a21443fbc701fa4e4c8a581a8c51ab7bf2cb2"
 BIN_PIN = "074214fa29ab1b479536fc7184ef3036e7b355a5835e8590b61b70a8de1df2f9"
 
+
+def deviation_for_seal(summary: dict[str, Any], plan: dict[str, Any]) -> dict[str, Any] | None:
+    """Copy an UNCOLD_UPTIME deviation from the session summary or plan."""
+    raw = summary.get("deviation") or plan.get("deviation")
+    if isinstance(raw, dict):
+        return dict(raw)
+    return None
+
+
 COPY_FILES = (
     "plan.json",
     "summary.json",
@@ -300,6 +309,7 @@ def seal_session(*, session_id: str, allow_unguarded: bool = False) -> Path:
 
     sealed_utc = _utc_now()
     primary = summary.get("primary_claim_eval") or plan.get("primary_claim_eval") or {}
+    deviation = deviation_for_seal(summary, plan)
     manifest: dict[str, Any] = {
         "run_id": session_id,
         "session_id": session_id,
@@ -321,6 +331,8 @@ def seal_session(*, session_id: str, allow_unguarded: bool = False) -> Path:
             "reason": ("derived_diagnostic seal only; raw/ promote not requested for C-2.")
         },
     }
+    if deviation is not None:
+        manifest["deviation"] = deviation
     sealed_summary: dict[str, Any] = {
         "run_id": session_id,
         "session_id": session_id,
@@ -334,6 +346,8 @@ def seal_session(*, session_id: str, allow_unguarded: bool = False) -> Path:
         "sealed_utc": sealed_utc,
         "UNGUARDED": bool(summary.get("UNGUARDED")),
     }
+    if deviation is not None:
+        sealed_summary["deviation"] = deviation
 
     (out / "manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"

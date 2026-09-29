@@ -8,6 +8,7 @@ import pytest
 import yaml
 
 from seam.measurement_gates import (
+    UNCOLD_UPTIME_REASON,
     GateResult,
     evaluate_measurement_gates,
     load_platform_measurement_gates,
@@ -224,6 +225,68 @@ def test_missing_measurement_gates_raises_runtime_error(tmp_path: Path) -> None:
     (cfg / f"{platform_id}.yaml").write_text(f"platform_id: {platform_id}\n", encoding="utf-8")
     with pytest.raises(RuntimeError, match="measurement_gates block missing"):
         load_platform_measurement_gates(tmp_path, platform_id)
+
+
+def _evo_overrides() -> tuple[GateResult, GateResult]:
+    ac = GateResult(
+        name="ac",
+        passed=True,
+        reason="no_battery_platform_mains_only",
+        detail={"battery_present": False, "ac_ok": True},
+    )
+    proc = GateResult(
+        name="processor_ac",
+        passed=True,
+        reason="processor_ac_100_100",
+        detail={"procthrottlemin_ac": 100, "procthrottlemax_ac": 100},
+    )
+    return ac, proc
+
+
+def test_skip_uptime_records_uncold_and_keeps_memory_floor() -> None:
+    ac, proc = _evo_overrides()
+    skipped = evaluate_measurement_gates(
+        REPO,
+        platform_id="evo-t2",
+        available_mb=25000.0,
+        uptime_s=90000.0,
+        skip_host_probes=True,
+        skip_uptime=True,
+        ac_override=ac,
+        processor_override=proc,
+    )
+    assert skipped.all_passed
+    up = next(g for g in skipped.gates if g.name == "uptime")
+    assert up.passed
+    assert up.reason == "uptime_skipped_noreboot_deviation"
+    assert up.detail["deviation"]["kind"] == "UNCOLD_UPTIME"
+    assert up.detail["deviation"]["uptime_s"] == 90000.0
+    assert up.detail["deviation"]["reason"] == UNCOLD_UPTIME_REASON
+    low = evaluate_measurement_gates(
+        REPO,
+        platform_id="evo-t2",
+        available_mb=1000.0,
+        uptime_s=90000.0,
+        skip_host_probes=True,
+        skip_uptime=True,
+        ac_override=ac,
+        processor_override=proc,
+    )
+    assert not low.all_passed
+    assert any(r.startswith("available_mb:") for r in low.refusal_reasons)
+    assert not any(r.startswith("uptime:") for r in low.refusal_reasons)
+    warm = evaluate_measurement_gates(
+        REPO,
+        platform_id="evo-t2",
+        available_mb=25000.0,
+        uptime_s=90000.0,
+        skip_host_probes=True,
+        skip_uptime=False,
+        ac_override=ac,
+        processor_override=proc,
+    )
+    assert not warm.all_passed
+    assert any(r.startswith("uptime:") for r in warm.refusal_reasons)
 
 
 def test_wrong_type_measurement_gates_raises_type_error(tmp_path: Path) -> None:
