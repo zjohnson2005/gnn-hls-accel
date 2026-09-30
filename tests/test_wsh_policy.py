@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -118,6 +119,8 @@ def test_failed_kill_refusal_keeps_the_exception_text() -> None:
 
 
 def test_rehearsal_refuses_the_cursor_terminal() -> None:
+    env = os.environ.copy()
+    env.pop("SEAM_BOOT_SMOKE_STUB", None)
     proc = subprocess.run(
         [
             "powershell",
@@ -127,6 +130,7 @@ def test_rehearsal_refuses_the_cursor_terminal() -> None:
             "-Rehearsal",
         ],
         cwd=ROOT,
+        env=env,
         check=False,
         capture_output=True,
         text=True,

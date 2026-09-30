@@ -32,6 +32,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+Set-StrictMode -Version Latest
 $root = Split-Path -Parent $PSScriptRoot
 if (-not $root) { $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path }
 Set-Location $root
@@ -40,6 +41,22 @@ Set-Location $root
 . (Join-Path $PSScriptRoot "boot_cell_result.ps1")
 . (Join-Path $PSScriptRoot "_utf8_nobom.ps1")
 . (Join-Path $PSScriptRoot "wsh_policy.ps1")
+
+# Every script variable the summary and WSH code reads. Strict mode throws
+# on a read before the first assignment. Profile blocks below may overwrite
+# UncoldReason, ControlBand, and EstimateDerivation.
+$script:LastWshClear = $null
+$script:UncoldReason = ""
+$script:ControlBand = $null
+$script:EstimateDerivation = $null
+$script:Rows = @()
+$script:LastRunId = ""
+$script:FinalState = "crashed"
+$script:FinalReason = "sequencer stopped before the summary was finalized"
+$script:ForeignQueueEvidence = $null
+$script:WatchdogLogMissing = $false
+$script:RunStartedUtc = ""
+$script:CellStartedUtc = ""
 
 $WindowS = 7200
 $LaunchDir = Join-Path $root "derived\c2_ttft\_launches"
@@ -103,11 +120,15 @@ if ($Detach) {
 }
 
 if ($Rehearsal -and -not $DryRun) {
-    $wmiChild = Test-SeamProcessAncestor -Names @("WmiPrvSE.exe") -Depth 4
-    if (-not $wmiChild) {
-        Write-Host "REFUSED -- rehearsal must run as the WMI-detached child of an ssh launch."
-        Write-Host ("From the Mac: {0}" -f $script:RehearsalMac)
-        exit 1
+    if ($env:SEAM_BOOT_SMOKE_STUB -eq "1") {
+        Write-Host "rehearsal_context=strict_harness smoke_stub=1"
+    } else {
+        $wmiChild = Test-SeamProcessAncestor -Names @("WmiPrvSE.exe") -Depth 4
+        if (-not $wmiChild) {
+            Write-Host "REFUSED -- rehearsal must run as the WMI-detached child of an ssh launch."
+            Write-Host ("From the Mac: {0}" -f $script:RehearsalMac)
+            exit 1
+        }
     }
 }
 
@@ -115,7 +136,6 @@ if ($Rehearsal -and -not $DryRun) {
 # canary_overhead_s = c2246b1f wall 944.242457 - sum of probes.ndjson wall_s 192.106556 = 752.135901.
 # Ceiling base_s is the amendment-1 estimate. DET-PROBE-KV base is the cb9773be
 # plan.json to SUMMARY.json mtime span 840.522 s, and it adds no canary overhead.
-$script:EstimateDerivation = $null
 if ($Profile -eq "boot2") {
     $script:EstimateDerivation = [ordered]@{
         formula = "estimate_s = base_s + canary_overhead_s"
@@ -317,15 +337,6 @@ $Cells = @(
     }
     )
 }
-
-$script:Rows = @()
-$script:LastRunId = ""
-$script:FinalState = "crashed"
-$script:FinalReason = "sequencer stopped before the summary was finalized"
-$script:ForeignQueueEvidence = $null
-$script:WatchdogLogMissing = $false
-$script:RunStartedUtc = ""
-$script:CellStartedUtc = ""
 
 function Get-BootCellField {
     param($Cell, [string]$Name)
@@ -698,6 +709,17 @@ function Assert-Boot4Bodies {
     }
 }
 
+function Invoke-BootCommandLine {
+    param([string]$CommandLine)
+    if ($env:SEAM_BOOT_SMOKE_STUB -eq "1") {
+        Write-Host ("smoke_stub {0}" -f $CommandLine)
+        $global:LASTEXITCODE = 0
+        return
+    }
+    $parts = @($CommandLine -split " ")
+    & $parts[0] @($parts | Select-Object -Skip 1)
+}
+
 function Invoke-Boot4Smokes {
     if ($Profile -ne "boot4") { return }
     Assert-Boot4Bodies
@@ -718,8 +740,7 @@ function Invoke-Boot4Smokes {
             continue
         }
         Write-Host ("smoke_run {0}" -f $built.smoke)
-        $parts = @($built.smoke -split " ")
-        & $parts[0] @($parts | Select-Object -Skip 1)
+        Invoke-BootCommandLine -CommandLine $built.smoke
         if ($LASTEXITCODE -ne 0) {
             $script:FinalState = "refused"
             $script:FinalReason = "REFUSED -- smoke failed: $($cell.Name) exit=$LASTEXITCODE"
@@ -854,8 +875,7 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         $built = Get-BootCellCommand -Cell $cell
         if (-not $built.smoke) { throw "REFUSED -- no rehearsal smoke for $($cell.Name)" }
         Write-Host ("rehearsal_cell {0}" -f $built.smoke)
-        $parts = @($built.smoke -split " ")
-        & $parts[0] @($parts | Select-Object -Skip 1)
+        Invoke-BootCommandLine -CommandLine $built.smoke
         $exit = $LASTEXITCODE
         if ($exit -ne 0) {
             $script:FinalState = "refused"
