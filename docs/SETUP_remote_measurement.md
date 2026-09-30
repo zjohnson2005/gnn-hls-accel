@@ -164,6 +164,13 @@ ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File t
 ssh xps "powershell -NoProfile -Command Get-Content -Tail 50 C:/Users/zjohn/Projects/gnn-hls-accel/derived/c2_ttft/_launches/_rehearsal/boot4/boot4.log"
 ```
 
+Resident-limit rehearsal uses the same path:
+
+```bash
+ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_resident_limit.ps1 -Detach -Rehearsal"
+ssh xps "powershell -NoProfile -Command Get-Content -Tail 50 C:/Users/zjohn/Projects/gnn-hls-accel/derived/c2_ttft/_launches/_rehearsal/resident-limit/resident-limit.log"
+```
+
 `REHEARSAL_COMPLETE` in that log is the success line. `-Detach` returns as soon as `Win32_Process.Create` has spawned the sequencer.
 
 **Use `tools/spawn_detached.ps1`, never `Start-Process`.** See "Detachment" below — this is

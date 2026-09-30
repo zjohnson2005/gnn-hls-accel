@@ -14,6 +14,7 @@ PREREG = (
     ROOT / "derived" / "delta_prefill" / "WARM_KV_PREREG.json",
     ROOT / "derived" / "delta_prefill" / "WARM_KV_AMEND_1.json",
     ROOT / "derived" / "delta_prefill" / "WARM_KV_AMEND_2.json",
+    ROOT / "derived" / "delta_prefill" / "RESIDENT_LIMIT_PREREG.json",
     ROOT / "derived" / "c2_ttft" / "DECODE_MATCH_PREREG.json",
     ROOT / "derived" / "c2_ttft" / "DECODE_MATCH_AMEND_1.json",
     ROOT / "derived" / "q8b" / "Q_TIER_CLEAN_PREREG.json",
@@ -33,6 +34,7 @@ RUNNERS = (
     "tools/run_q_kv_quality.py",
     "tools/run_warm_kv.py",
     "tools/run_decode_match.py",
+    "tools/run_resident_limit.py",
 )
 
 

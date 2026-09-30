@@ -27,7 +27,7 @@ param(
     [switch]$NoRebootDeviation,
     [switch]$Rehearsal,
     [string]$WatchdogLog = "",
-    [ValidateSet("boot1", "boot2", "boot3", "boot4", "t2s-boot1")]
+    [ValidateSet("boot1", "boot2", "boot3", "boot4", "resident-limit", "t2s-boot1")]
     [string]$Profile = "boot1"
 )
 
@@ -57,6 +57,7 @@ $script:ForeignQueueEvidence = $null
 $script:WatchdogLogMissing = $false
 $script:RunStartedUtc = ""
 $script:CellStartedUtc = ""
+$script:BootId = [guid]::NewGuid().ToString()
 
 $WindowS = 7200
 $LaunchDir = Join-Path $root "derived\c2_ttft\_launches"
@@ -69,6 +70,7 @@ $SummaryName = switch ($Profile) {
     "boot2" { "BOOT2_SUMMARY.json" }
     "boot3" { "BOOT3_SUMMARY.json" }
     "boot4" { "BOOT4_SUMMARY.json" }
+    "resident-limit" { "RESIDENT_LIMIT_SUMMARY.json" }
     "t2s-boot1" { "T2S_BOOT1_SUMMARY.json" }
     default { "BOOT1_SUMMARY.json" }
 }
@@ -76,11 +78,13 @@ $DeferredName = switch ($Profile) {
     "boot2" { "DEFERRED_TO_BOOT3.json" }
     "boot3" { "DEFERRED_TO_BOOT4.json" }
     "boot4" { "DEFERRED_TO_BOOT5.json" }
+    "resident-limit" { "DEFERRED_TO_RESIDENT_LIMIT_2.json" }
     "t2s-boot1" { "DEFERRED_TO_T2S_BOOT2.json" }
     default { "DEFERRED_TO_BOOT2.json" }
 }
 $script:DeferredStatus = switch ($Profile) {
     "t2s-boot1" { "DEFERRED_TO_T2S_BOOT2" }
+    "resident-limit" { "DEFERRED_TO_RESIDENT_LIMIT_2" }
     default { "DEFERRED_TO_BOOT2" }
 }
 $SummaryPath = Join-Path $LaunchDir $SummaryName
@@ -90,11 +94,15 @@ $WorkerPy = Join-Path $root "tools\run_c1_ceiling.py"
 $DetPy = Join-Path $root "tools\run_det_probe.py"
 $WarmPy = Join-Path $root "tools\run_warm_kv.py"
 $DecodePy = Join-Path $root "tools\run_decode_match.py"
+$ResidentPy = Join-Path $root "tools\run_resident_limit.py"
 $SmokePy = Join-Path $root "tools\c2_extraction_smoke.py"
 $SpawnPs1 = Join-Path $root "tools\spawn_detached.ps1"
 New-Item -ItemType Directory -Force -Path $LaunchDir | Out-Null
 
-$script:RehearsalMac = 'ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_boot4.ps1 -Detach -Rehearsal"'
+$script:RehearsalMac = switch ($Profile) {
+    "resident-limit" { 'ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_resident_limit.ps1 -Detach -Rehearsal"' }
+    default { 'ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_boot4.ps1 -Detach -Rehearsal"' }
+}
 
 if ($Detach) {
     if ($Rehearsal -and -not $DryRun) {
@@ -252,6 +260,42 @@ if ($Profile -eq "boot2") {
             Model2 = "configs\models\Qwen3-4B-int8-ov.yaml"
         }
     )
+} elseif ($Profile -eq "resident-limit") {
+    # Resident-limit: one cell per KV arm. Search is low 12000, high 30000,
+    # resolution 500, one attempt per rung. Probe upper bound per arm is
+    # 2 + ceil(log2((30000-12000)/500)) = 8.
+    # Probe bound is the largest sealed RESIDENT pass in dd2b0779:
+    # u4 n=24000 turn1 44.904558593 + turn2 2.535339599 = 47.439898192.
+    # base_s = 8 * 47.439898192 = 379.519185536.
+    # canary_overhead_s is the boot-2 measured load overhead, 752.1359013.
+    # estimate_s is the next whole second of that sum: 1132.
+    # Three arms sum to 3396 s. Window is 7200 s, so this stays one window.
+    $script:EstimateDerivation = [ordered]@{
+        formula = "estimate_s = base_s + canary_overhead_s"
+        note = "Resident-limit stays one window: estimate sum 3396 s is below 7200 s."
+        source_run_id = "dd2b0779-48c1-4ad6-9567-ed38e8e1fec9"
+        probe_bound_s = 47.439898192
+        probes_per_arm = 8
+        cells = @(
+            [ordered]@{ name = "RESIDENT-LIMIT f16"; base_s = 379.519185536; canary_overhead_s = 752.1359013; estimate_s = 1132 }
+            [ordered]@{ name = "RESIDENT-LIMIT u8"; base_s = 379.519185536; canary_overhead_s = 752.1359013; estimate_s = 1132 }
+            [ordered]@{ name = "RESIDENT-LIMIT u4"; base_s = 379.519185536; canary_overhead_s = 752.1359013; estimate_s = 1132 }
+        )
+    }
+    $Cells = @(
+        @{
+            Name = "RESIDENT-LIMIT f16"; Kind = "resident"; EstimateS = 1132
+            Arm = "gpu_only_f16"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+        },
+        @{
+            Name = "RESIDENT-LIMIT u8"; Kind = "resident"; EstimateS = 1132
+            Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+        },
+        @{
+            Name = "RESIDENT-LIMIT u4"; Kind = "resident"; EstimateS = 1132
+            Arm = "gpu_only_u4"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+        }
+    )
 } elseif ($Profile -eq "t2s-boot1") {
     # T2S boot 1. PARITY-REMEASURE cells registered in 91d9005. This script
     # does not open that prereg. estimate_s is the next whole second of
@@ -360,10 +404,10 @@ function Save-BootSummary {
     $prior = @()
     if (Test-Path -LiteralPath $SummaryPath) {
         $existing = Get-Content -LiteralPath $SummaryPath -Raw -Encoding utf8 | ConvertFrom-Json
-        $cellsProp = $existing.PSObject.Properties["cells"]
-        if ($null -ne $cellsProp) { $prior = @($cellsProp.Value) }
+        $prior = @(Select-BootPriorCells -Existing $existing -BootId $script:BootId)
     }
     $doc = [ordered]@{
+        boot_id = $script:BootId
         state = $State
         reason = $Reason
         last_run_id = $script:LastRunId
@@ -656,9 +700,10 @@ function Get-BootCellCommand {
             expect_kv = $kv; command = ($args -join " ")
         }
     }
-    if ($kind -eq "warm" -or $kind -eq "decode") {
+    if ($kind -eq "warm" -or $kind -eq "decode" -or $kind -eq "resident") {
         $script = $WarmPy
         if ($kind -eq "decode") { $script = $DecodePy }
+        if ($kind -eq "resident") { $script = $ResidentPy }
         $modelPath = Join-Path $root $model
         $args = @($PythonExe, "-u", $script, "--arm", $arm, "--model-spec", $modelPath)
         if ($kind -eq "decode") {
@@ -720,6 +765,38 @@ function Invoke-BootCommandLine {
     & $parts[0] @($parts | Select-Object -Skip 1)
 }
 
+function Invoke-ResidentLimitSmokes {
+    if ($Profile -ne "resident-limit") { return }
+    $mark = "measurement body is not started"
+    if (-not (Test-Path -LiteralPath $ResidentPy)) { throw "REFUSED -- runner missing: $ResidentPy" }
+    $text = Get-Content -LiteralPath $ResidentPy -Raw
+    if ($text.Contains($mark)) { throw "REFUSED -- stub measurement body: $ResidentPy" }
+    $sum = 0
+    foreach ($cell in $Cells) { $sum += [int]$cell.EstimateS }
+    $fits = "false"
+    if ($sum -le $WindowS) { $fits = "true" }
+    Write-Host ("resident_limit_estimate_sum_s={0} window_s={1} fits_one_window={2}" -f $sum, $WindowS, $fits)
+    if ($fits -eq "false") {
+        throw "REFUSED -- resident-limit estimate sum $sum s exceeds window $WindowS s; split the profile before starting"
+    }
+    foreach ($cell in $Cells) {
+        $built = Get-BootCellCommand -Cell $cell
+        if ($DryRun) {
+            Write-Host ("smoke_planned {0} {1}" -f $cell.Name, $built.smoke)
+            continue
+        }
+        Write-Host ("smoke_run {0}" -f $built.smoke)
+        Invoke-BootCommandLine -CommandLine $built.smoke
+        if ($LASTEXITCODE -ne 0) {
+            $script:FinalState = "refused"
+            $script:FinalReason = "REFUSED -- smoke failed: $($cell.Name) exit=$LASTEXITCODE"
+            Save-BootSummary -State "refused" -Reason $script:FinalReason
+            Write-Host $script:FinalReason
+            exit $LASTEXITCODE
+        }
+    }
+}
+
 function Invoke-Boot4Smokes {
     if ($Profile -ne "boot4") { return }
     Assert-Boot4Bodies
@@ -757,7 +834,7 @@ function Invoke-BootDryCell {
     $built = Get-BootCellCommand -Cell $Cell
     Write-Host ("dry_run {0} kind={1} arm={2} model={3} low={4} high={5} expect_kv={6}" -f `
         $name, $built.kind, $built.arm, $built.model, $built.low, $built.high, $built.expect_kv)
-    if ($built.kind -eq "det" -or $built.kind -eq "warm" -or $built.kind -eq "decode") {
+    if ($built.kind -eq "det" -or $built.kind -eq "warm" -or $built.kind -eq "decode" -or $built.kind -eq "resident") {
         Invoke-BootGates -Label $name -ReportOnly
     } else {
         Invoke-BootGates -Label $name -ReportOnly
@@ -807,6 +884,7 @@ Save-BootSummary -State "started"
 # smoke failure refuses the boot. Dry-run checks the stub mark and prints
 # the smoke commands without loading a model.
 Invoke-Boot4Smokes
+Invoke-ResidentLimitSmokes
 
 if ($Profile -eq "t2s-boot1") {
     $script:RunStartedUtc = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
@@ -857,7 +935,7 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         Assert-T2sOwnedWorkers
         Assert-BootAc
         Assert-BootTree | Out-Null
-        if ($cell.Kind -eq "det" -or $cell.Kind -eq "warm" -or $cell.Kind -eq "decode") {
+        if ($cell.Kind -eq "det" -or $cell.Kind -eq "warm" -or $cell.Kind -eq "decode" -or $cell.Kind -eq "resident") {
             Invoke-CellPreamble -Label $cell.Name -SkipGateFile
         } else {
             Invoke-CellPreamble -Label $cell.Name
@@ -903,7 +981,7 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         continue
     }
 
-    if ($cell.Kind -eq "warm" -or $cell.Kind -eq "decode") {
+    if ($cell.Kind -eq "warm" -or $cell.Kind -eq "decode" -or $cell.Kind -eq "resident") {
         $built = Get-BootCellCommand -Cell $cell
         $statusFile = Join-Path $LaunchDir ("cell-status-{0}.txt" -f $i)
         $env:SEAM_CELL_STATUS_PATH = $statusFile
@@ -913,18 +991,17 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         & $parts[0] @($parts | Select-Object -Skip 1)
         $exit = $LASTEXITCODE
         Remove-Item Env:SEAM_CELL_STATUS_PATH -ErrorAction SilentlyContinue
+        $recorded = Read-CellStatusFile -Path $statusFile
         if ($exit -ne 0) {
             $script:FinalState = "refused"
             $script:FinalReason = "exit=$exit"
-            Add-Row -Cell $cell -Status "REFUSED" -RunId "" -Detail $script:FinalReason
+            if ($recorded.RunId) { $script:LastRunId = $recorded.RunId }
+            Add-Row -Cell $cell -Status "REFUSED" -RunId $recorded.RunId -Detail $script:FinalReason
             Save-BootSummary -State "refused" -Reason $script:FinalReason
             exit $exit
         }
-        $recorded = "complete"
-        if (Test-Path -LiteralPath $statusFile) {
-            $recorded = (Get-Content -LiteralPath $statusFile -Raw).Trim()
-        }
-        Add-Row -Cell $cell -Status $recorded -RunId "" -Detail ""
+        if ($recorded.RunId) { $script:LastRunId = $recorded.RunId }
+        Add-Row -Cell $cell -Status $recorded.Status -RunId $recorded.RunId -Detail ""
         continue
     }
 

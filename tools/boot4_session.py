@@ -29,6 +29,12 @@ SMOKE_DELTA_TOKENS = 8
 DECODE_N = (2000, 4000, 8000)
 DECODE_REPEATS = 3
 SMOKE_DECODE_N = 32
+RESIDENT_LOW = 12000
+RESIDENT_HIGH = 30000
+RESIDENT_RESOLUTION = 500
+# floor(4 / (C + 1)) is 1, so a canary follows every probe. The search
+# itself visits at most low, high, and ceil(log2((high-low)/resolution)) mids.
+RESIDENT_PLANNED_PROBES = 4
 
 
 def runner_body_is_stub(path: Path) -> bool:
@@ -47,6 +53,95 @@ def advantage_percent(*, median_f16: float, median_other: float) -> float:
     if median_other == 0:
         raise ValueError("median_other is 0")
     return (float(median_other) - float(median_f16)) / float(median_other) * 100.0
+
+
+def grid_mid(lo: int, hi: int, resolution: int) -> int | None:
+    """Next rung strictly between lo and hi, snapped down onto the resolution grid."""
+    if resolution <= 0:
+        raise ValueError("resolution must be > 0")
+    if hi - lo <= resolution:
+        return None
+    snapped = ((lo + hi) // 2 // resolution) * resolution
+    if snapped <= lo:
+        snapped = lo + resolution
+    if snapped >= hi:
+        return None
+    return snapped
+
+
+def _passing_turn2(points: list[dict[str, Any]]) -> dict[str, float]:
+    out: dict[str, float] = {}
+    for point in points:
+        if not point.get("holds"):
+            continue
+        ttft = point.get("turn2_ttft_s")
+        if ttft is None:
+            continue
+        out[str(point["n_cached"])] = float(ttft)
+    return out
+
+
+def bisect_holds(
+    *,
+    low: int,
+    high: int,
+    resolution: int,
+    attempt: Any,
+) -> dict[str, Any]:
+    """Largest n on the grid that holds. Each rung is attempted once."""
+    if (high - low) % resolution != 0:
+        raise ValueError("high - low must be a multiple of resolution")
+    seen: set[int] = set()
+    points: list[dict[str, Any]] = []
+
+    def once(n: int) -> dict[str, Any]:
+        if n in seen:
+            raise RuntimeError(f"rung {n} already attempted")
+        if (n - low) % resolution != 0:
+            raise RuntimeError(f"rung {n} is off the {resolution} grid")
+        seen.add(n)
+        point = attempt(n)
+        points.append(point)
+        return point
+
+    low_point = once(low)
+    if not low_point["holds"]:
+        return {
+            "status": "complete",
+            "largest_n_cached": None,
+            "failure_in_range": True,
+            "points": points,
+            "passing_turn2_ttft_s": {},
+        }
+    high_point = once(high)
+    lo = low
+    hi = high
+    if high_point["holds"]:
+        return {
+            "status": "complete",
+            "largest_n_cached": high,
+            "failure_in_range": False,
+            "note": "high held; the limit is above the search range",
+            "points": points,
+            "passing_turn2_ttft_s": _passing_turn2(points),
+        }
+    while True:
+        mid = grid_mid(lo, hi, resolution)
+        if mid is None:
+            break
+        point = once(mid)
+        if point["holds"]:
+            lo = mid
+        else:
+            hi = mid
+    return {
+        "status": "complete",
+        "largest_n_cached": lo,
+        "first_fail_n_cached": hi,
+        "failure_in_range": True,
+        "points": points,
+        "passing_turn2_ttft_s": _passing_turn2(points),
+    }
 
 
 def _utc() -> str:
@@ -192,13 +287,16 @@ def cell_exit_code(status: str) -> int:
     return 1
 
 
-def _publish_cell_status(status: str) -> None:
+def _publish_cell_status(status: str, session_id: str | None = None) -> None:
     import os
 
     path = os.environ.get("SEAM_CELL_STATUS_PATH")
     if not path:
         return
-    Path(path).write_text(status + "\n", encoding="utf-8")
+    lines = [status]
+    if session_id:
+        lines.append(session_id)
+    Path(path).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def _median(values: list[float]) -> float:
@@ -263,7 +361,7 @@ def _finish(
     _write(out_dir / "plan.json", plan)
     sealed = seal_session(out_dir)
     print(json.dumps({"event": "sealed", "dir": str(sealed)}, sort_keys=True), flush=True)
-    _publish_cell_status(str(summary["status"]))
+    _publish_cell_status(str(summary["status"]), str(summary["session_id"]))
     return cell_exit_code(str(summary["status"]))
 
 
@@ -400,6 +498,7 @@ def run_warm(*, arm: str, model_spec: Path, session_id: str, out_dir: Path) -> i
     gates = require_gates()
     harness = load_harness(model_spec)
     out_dir.mkdir(parents=True, exist_ok=True)
+    _publish_cell_status("running", session_id)
     plan: dict[str, Any] = {
         "kind": "warm_kv",
         "session_id": session_id,
@@ -531,6 +630,7 @@ def run_decode(
     gates = require_gates()
     loaded = [load_harness(spec) for spec in model_specs]
     out_dir.mkdir(parents=True, exist_ok=True)
+    _publish_cell_status("running", session_id)
     planned = len(loaded) * len(DECODE_N) * DECODE_REPEATS
     plan: dict[str, Any] = {
         "kind": "decode_match",
@@ -641,6 +741,178 @@ def run_decode(
             f"{point['model']}:{point['n']}": point.get("median_decode_tok_s") for point in points
         },
     }
+    return _finish(guard=guard, out_dir=out_dir, summary=summary, plan=plan)
+
+
+def run_resident_limit_smoke(*, arm: str, model_spec: Path) -> int:
+    from seam.tools.delta_n import run_child
+
+    harness = load_harness(model_spec)
+    with tempfile.TemporaryDirectory(prefix="resident-limit-smoke-") as tmp:
+        work = Path(tmp)
+        spec = _child_spec(harness, arm, work)
+        spec["resident_two_turn"] = True
+        spec["n_cached"] = SMOKE_N_CACHED
+        spec["delta_tokens"] = SMOKE_DELTA_TOKENS
+        spec["turn2_repeats"] = 1
+        spec["turn1_max_new_tokens"] = 1
+        spec["turn2_max_new_tokens"] = 1
+        record = run_child(
+            root=ROOT,
+            work_dir=work,
+            spec=spec,
+            timeout_s=float(harness["cfg"]["generation"]["timeout_s"]),
+            tag="smoke",
+        )
+    generation = (record.get("child") or {}).get("generation") or {}
+    turn2 = generation.get("turn2") or []
+    print(
+        json.dumps(
+            {
+                "event": "resident_limit_smoke",
+                "arm": arm,
+                "outcome": record.get("outcome"),
+                "n_cached": SMOKE_N_CACHED,
+                "delta_tokens": SMOKE_DELTA_TOKENS,
+                "turn1_prefill_s": (generation.get("turn1") or {}).get("prefill_s"),
+                "turn2_prefill_s": (turn2[0].get("prefill_s") if turn2 else None),
+                "failure_mode": record.get("failure_mode"),
+            },
+            sort_keys=True,
+        ),
+        flush=True,
+    )
+    return 0 if record.get("outcome") == "pass" else 1
+
+
+def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: Path) -> int:
+    """Bisect the largest n_cached a resident session holds. One attempt per rung."""
+    from seam.tools.delta_n import measured_repeat
+    from tools.ttft_slo_canary import CanaryDriftAbort
+
+    gates = require_gates()
+    harness = load_harness(model_spec)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    _publish_cell_status("running", session_id)
+    plan: dict[str, Any] = {
+        "kind": "resident_limit",
+        "session_id": session_id,
+        "started_utc": _utc(),
+        "arm": arm,
+        "model_spec": str(harness["model_spec"]),
+        "model_name": harness["model_name"],
+        "low": RESIDENT_LOW,
+        "high": RESIDENT_HIGH,
+        "resolution": RESIDENT_RESOLUTION,
+        "one_attempt_per_rung": True,
+        "pass": "turn 1 completes and turn 2 runs",
+        "delta_tokens": DELTA_TOKENS,
+        "turn2_repeats": 1,
+        "residency": "RESIDENT",
+        "planned_probe_count": RESIDENT_PLANNED_PROBES,
+        "gates": gates,
+        "status": "running",
+    }
+    plan_path = out_dir / "plan.json"
+    _write(plan_path, plan)
+    guard = _open_canary(
+        model_spec=_canary_model([harness["model_spec"]]),
+        work=out_dir / "work",
+        plan_path=plan_path,
+        planned=RESIDENT_PLANNED_PROBES,
+    )
+    plan["canary"] = guard.plan_fragment()
+    _write(plan_path, plan)
+    probes_log: list[dict[str, Any]] = []
+    recorded: list[dict[str, Any]] = []
+
+    def attempt(n_cached: int) -> dict[str, Any]:
+        work = out_dir / "work"
+        spec = _child_spec(harness, arm, work)
+        spec["resident_two_turn"] = True
+        spec["n_cached"] = int(n_cached)
+        spec["delta_tokens"] = DELTA_TOKENS
+        spec["turn2_repeats"] = 1
+        spec["turn1_max_new_tokens"] = 1
+        spec["turn2_max_new_tokens"] = 1
+        measured = measured_repeat(
+            root=ROOT,
+            cfg=harness["cfg"],
+            p_cpus=harness["p_cpus"],
+            work_dir=work,
+            child_spec=spec,
+            label=f"resident-{arm}-n{n_cached}",
+            tag=f"n{n_cached}",
+        )
+        child = measured["result"]
+        classified = _point_failure(child)
+        generation = (child.get("child") or {}).get("generation") or {}
+        turn1 = generation.get("turn1") or {}
+        turn2 = list(generation.get("turn2") or [])
+        prefills = [float(item["prefill_s"]) for item in turn2 if item.get("prefill_s") is not None]
+        turn1_s = turn1.get("prefill_s")
+        holds = turn1_s is not None and len(prefills) >= 1
+        point = {
+            "arm": arm,
+            "n_cached": int(n_cached),
+            "rung": int(n_cached),
+            "holds": holds,
+            "outcome": child.get("outcome"),
+            "failure_kind": classified.get("failure_kind"),
+            "failure_mode": child.get("failure_mode"),
+            "memory": classified.get("memory") or {},
+            "turn1_prefill_s": turn1_s,
+            "turn2_prefill_s": prefills,
+            "turn2_ttft_s": prefills[0] if prefills else None,
+        }
+        _write(out_dir / "points" / f"n{n_cached}.json", point)
+        recorded.append(point)
+        probes_log.append({"wall_s": child.get("parent_wall_s")})
+        guard.after_probe(probes_log)
+        return point
+
+    try:
+        guard.opening()
+        found = bisect_holds(
+            low=RESIDENT_LOW,
+            high=RESIDENT_HIGH,
+            resolution=RESIDENT_RESOLUTION,
+            attempt=attempt,
+        )
+    except CanaryDriftAbort as exc:
+        summary = {
+            "kind": "resident_limit",
+            "session_id": session_id,
+            "arm": arm,
+            "status": "FAIL_CANARY_DRIFT",
+            "abort_reason": str(exc.detail),
+            "points": recorded,
+            "canaries": list(guard.canaries),
+        }
+        _write(out_dir / "summary.json", summary)
+        raise SystemExit(f"REFUSED -- FAIL_CANARY_DRIFT: {exc.detail}") from exc
+
+    summary = {
+        "kind": "resident_limit",
+        "session_id": session_id,
+        "arm": arm,
+        "model_name": harness["model_name"],
+        "status": "complete",
+        "largest_n_cached": found["largest_n_cached"],
+        "failure_in_range": found["failure_in_range"],
+        "passing_turn2_ttft_s": found["passing_turn2_ttft_s"],
+        "points": found["points"],
+        "search": {
+            "low": RESIDENT_LOW,
+            "high": RESIDENT_HIGH,
+            "resolution": RESIDENT_RESOLUTION,
+            "one_attempt": True,
+        },
+    }
+    if found.get("note"):
+        summary["note"] = found["note"]
+    if "first_fail_n_cached" in found:
+        summary["first_fail_n_cached"] = found["first_fail_n_cached"]
     return _finish(guard=guard, out_dir=out_dir, summary=summary, plan=plan)
 
 

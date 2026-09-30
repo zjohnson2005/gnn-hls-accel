@@ -27,6 +27,43 @@ function Get-BootCeilingResult {
     }
 }
 
+function Select-BootPriorCells {
+    <#
+    A boot summary keeps cells only from the same boot id. A previous boot's
+    rows, including a stale REFUSED row, are not merged into the new document.
+    #>
+    param($Existing, [string]$BootId)
+    if ($null -eq $Existing) { return @() }
+    $bootProp = $Existing.PSObject.Properties["boot_id"]
+    if ($null -eq $bootProp -or [string]$bootProp.Value -ne [string]$BootId) {
+        return @()
+    }
+    $cellsProp = $Existing.PSObject.Properties["cells"]
+    if ($null -eq $cellsProp -or $null -eq $cellsProp.Value) { return @() }
+    return @($cellsProp.Value)
+}
+
+function Read-CellStatusFile {
+    <#
+    Line 1 is the cell status. Line 2, when present, is the session run id.
+    A status-only file leaves the run id empty.
+    #>
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return [pscustomobject]@{ Status = "complete"; RunId = "" }
+    }
+    $lines = @(Get-Content -LiteralPath $Path)
+    $status = "complete"
+    $runId = ""
+    if ($lines.Count -ge 1 -and -not [string]::IsNullOrWhiteSpace([string]$lines[0])) {
+        $status = ([string]$lines[0]).Trim()
+    }
+    if ($lines.Count -ge 2) {
+        $runId = ([string]$lines[1]).Trim()
+    }
+    return [pscustomobject]@{ Status = $status; RunId = $runId }
+}
+
 function Merge-BootCells {
     <#
     Named cells already on disk stay. New rows are appended. A row whose
