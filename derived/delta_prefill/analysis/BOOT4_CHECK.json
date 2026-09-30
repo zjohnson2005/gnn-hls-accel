@@ -1,0 +1,205 @@
+{
+  "id": "BOOT4_CHECK",
+  "seal": {
+    "scheme": "boot4 manifest.sha256.json plus .sealed text 'sealed'. tools/seal_verify.py expects a tree_sha256 document and does not apply.",
+    "rewritten": false,
+    "sessions": [
+      {
+        "run_id": "72776603-7ea0-4279-a425-941d73a0bf57",
+        "manifest_files": 5,
+        "manifest_matches_bytes": true,
+        "live_matches_sealed": true
+      },
+      {
+        "run_id": "1587d2f4-b30f-4be9-9c1d-6d0d04690c4b",
+        "manifest_files": 5,
+        "manifest_matches_bytes": true,
+        "live_matches_sealed": true
+      },
+      {
+        "run_id": "dd2b0779-48c1-4ad6-9567-ed38e8e1fec9",
+        "manifest_files": 5,
+        "manifest_matches_bytes": true,
+        "live_matches_sealed": true
+      },
+      {
+        "run_id": "180dfbb9-5ad6-446e-a3f2-0d6fa8eea196",
+        "manifest_files": 8,
+        "manifest_matches_bytes": true,
+        "live_matches_sealed": true
+      }
+    ]
+  },
+  "excluded": {
+    "run_id": "718776fe-d8ec-4a72-ac96-79f456ea20b5",
+    "status": "FAIL_CANARY_DRIFT",
+    "role": "consistency only; not a data point in any score below"
+  },
+  "points": {
+    "warm_kv": [
+      {
+        "run_id": "72776603-7ea0-4279-a425-941d73a0bf57",
+        "arm": "gpu_only_f16",
+        "session_status": "partial",
+        "rows": [
+          {
+            "n_cached": 12000,
+            "outcome": "pass",
+            "failure_kind": null,
+            "turn1_prefill_s": 13.747505859,
+            "turn2_prefill_s": [1.936266845, 0.629362792, 0.639231628],
+            "turn2_median_prefill_s": 0.639231628
+          },
+          {
+            "n_cached": 24000,
+            "outcome": "fail",
+            "failure_kind": "onednn_primitive_failure",
+            "turn1_prefill_s": null,
+            "turn2_prefill_s": [],
+            "turn2_median_prefill_s": null
+          },
+          {
+            "n_cached": 46000,
+            "outcome": "fail",
+            "failure_kind": "onednn_primitive_failure",
+            "turn1_prefill_s": null,
+            "turn2_prefill_s": [],
+            "turn2_median_prefill_s": null
+          }
+        ]
+      },
+      {
+        "run_id": "1587d2f4-b30f-4be9-9c1d-6d0d04690c4b",
+        "arm": "gpu_only_u8",
+        "session_status": "partial",
+        "rows": [
+          {
+            "n_cached": 12000,
+            "outcome": "pass",
+            "failure_kind": null,
+            "turn1_prefill_s": 13.083643554,
+            "turn2_prefill_s": [1.366991333, 1.003406921, 1.000138122],
+            "turn2_median_prefill_s": 1.003406921
+          },
+          {
+            "n_cached": 24000,
+            "outcome": "fail",
+            "failure_kind": "memory_wall",
+            "turn1_prefill_s": null,
+            "turn2_prefill_s": [],
+            "turn2_median_prefill_s": null
+          },
+          {
+            "n_cached": 46000,
+            "outcome": "fail",
+            "failure_kind": "onednn_primitive_failure",
+            "turn1_prefill_s": null,
+            "turn2_prefill_s": [],
+            "turn2_median_prefill_s": null
+          }
+        ]
+      },
+      {
+        "run_id": "dd2b0779-48c1-4ad6-9567-ed38e8e1fec9",
+        "arm": "gpu_only_u4",
+        "session_status": "partial",
+        "rows": [
+          {
+            "n_cached": 12000,
+            "outcome": "pass",
+            "failure_kind": null,
+            "turn1_prefill_s": 13.211105468,
+            "turn2_prefill_s": [1.112252197, 0.945232482, 0.946010803],
+            "turn2_median_prefill_s": 0.946010803
+          },
+          {
+            "n_cached": 24000,
+            "outcome": "pass",
+            "failure_kind": null,
+            "turn1_prefill_s": 44.904558593,
+            "turn2_prefill_s": [2.535339599, 2.080132812, 2.084860595],
+            "turn2_median_prefill_s": 2.084860595
+          },
+          {
+            "n_cached": 46000,
+            "outcome": "fail",
+            "failure_kind": "onednn_primitive_failure",
+            "turn1_prefill_s": null,
+            "turn2_prefill_s": [],
+            "turn2_median_prefill_s": null
+          }
+        ]
+      }
+    ],
+    "decode_match": {
+      "run_id": "180dfbb9-5ad6-446e-a3f2-0d6fa8eea196",
+      "session_status": "complete",
+      "rate": "63 / (t_last - t_first)",
+      "rows": [
+        {"model": "Qwen3-4B-int4-ov", "n": 2000, "median_decode_tok_s": 29.334090990997787},
+        {"model": "Qwen3-4B-int4-ov", "n": 4000, "median_decode_tok_s": 24.868473407312436},
+        {"model": "Qwen3-4B-int4-ov", "n": 8000, "median_decode_tok_s": 25.68468751907241},
+        {"model": "Qwen3-4B-int8-ov", "n": 2000, "median_decode_tok_s": 19.442706002491075},
+        {"model": "Qwen3-4B-int8-ov", "n": 4000, "median_decode_tok_s": 17.309505525949735},
+        {"model": "Qwen3-4B-int8-ov", "n": 8000, "median_decode_tok_s": 17.476487328131924}
+      ]
+    }
+  },
+  "verdicts": {
+    "resident_feasibility": {
+      "definition": "AMEND-2 memory model. rss_end = 2568.234375 + n * k / 1048576. k is 234827 (f16), 171532 (u8), 135000 (u4). Fail when rss_end exceeds the device wall 6060.1875. Pass otherwise. The written 46k sentence is this model at n=46000.",
+      "wall_mb": 6060.1875,
+      "intercept_mb": 2568.234375,
+      "cells": [
+        {"n_cached": 12000, "arm": "f16", "run_id": "72776603-7ea0-4279-a425-941d73a0bf57", "rss_end_mb": 5255.616119384766, "predicted": "pass", "observed": "pass", "hit": true},
+        {"n_cached": 12000, "arm": "u8", "run_id": "1587d2f4-b30f-4be9-9c1d-6d0d04690c4b", "rss_end_mb": 4531.2623291015625, "predicted": "pass", "observed": "pass", "hit": true},
+        {"n_cached": 12000, "arm": "u4", "run_id": "dd2b0779-48c1-4ad6-9567-ed38e8e1fec9", "rss_end_mb": 4113.186767578125, "predicted": "pass", "observed": "pass", "hit": true},
+        {"n_cached": 24000, "arm": "f16", "run_id": "72776603-7ea0-4279-a425-941d73a0bf57", "rss_end_mb": 7942.997863769531, "predicted": "fail", "observed": "fail", "hit": true},
+        {"n_cached": 24000, "arm": "u8", "run_id": "1587d2f4-b30f-4be9-9c1d-6d0d04690c4b", "rss_end_mb": 6494.290283203125, "predicted": "fail", "observed": "fail", "hit": true},
+        {"n_cached": 24000, "arm": "u4", "run_id": "dd2b0779-48c1-4ad6-9567-ed38e8e1fec9", "rss_end_mb": 5658.13916015625, "predicted": "pass", "observed": "pass", "hit": true},
+        {"n_cached": 46000, "arm": "f16", "run_id": "72776603-7ea0-4279-a425-941d73a0bf57", "rss_end_mb": 12869.864395141602, "predicted": "fail", "observed": "fail", "hit": true},
+        {"n_cached": 46000, "arm": "u8", "run_id": "1587d2f4-b30f-4be9-9c1d-6d0d04690c4b", "rss_end_mb": 10093.174865722656, "predicted": "fail", "observed": "fail", "hit": true},
+        {"n_cached": 46000, "arm": "u4", "run_id": "dd2b0779-48c1-4ad6-9567-ed38e8e1fec9", "rss_end_mb": 8490.551879882812, "predicted": "fail", "observed": "fail", "hit": true}
+      ],
+      "hits": 9,
+      "n": 9
+    },
+    "turn2_advantage_12k": {
+      "definition": "WARM-KV advantage is (median_other - median_f16) / median_other * 100. Lower turn-2 TTFT is the advantage. Band is 15 to 27 percent, inclusive. Ordering f16 > u8 >= u4 means f16 is strictly faster than u8 and u8 is at least as fast as u4: t_f16 < t_u8 and t_u8 <= t_u4. Scored only at n_cached 12000, the only point where all three arms produced a turn-2 median.",
+      "n_cached": 12000,
+      "median_f16_s": 0.639231628,
+      "median_u8_s": 1.003406921,
+      "median_u4_s": 0.946010803,
+      "run_id_f16": "72776603-7ea0-4279-a425-941d73a0bf57",
+      "run_id_u8": "1587d2f4-b30f-4be9-9c1d-6d0d04690c4b",
+      "run_id_u4": "dd2b0779-48c1-4ad6-9567-ed38e8e1fec9",
+      "advantage_vs_u8_percent": 36.293878921730105,
+      "advantage_vs_u4_percent": 32.428717941395426,
+      "band_percent": [15, 27],
+      "vs_u8_in_band": false,
+      "vs_u4_in_band": false,
+      "f16_faster_than_u8": true,
+      "u8_at_least_as_fast_as_u4": false,
+      "ordering_holds": false
+    },
+    "decode_match": {
+      "definition": "int8 decode tok/s is 20-30 percent below int4 at each n. below_percent = (int4 - int8) / int4 * 100. Band is 20 to 30 inclusive.",
+      "run_id": "180dfbb9-5ad6-446e-a3f2-0d6fa8eea196",
+      "band_percent": [20, 30],
+      "cells": [
+        {"n": 2000, "int4_tok_s": 29.334090990997787, "int8_tok_s": 19.442706002491075, "int8_below_int4_percent": 33.719759686919346, "in_band": false},
+        {"n": 4000, "int4_tok_s": 24.868473407312436, "int8_tok_s": 17.309505525949735, "int8_below_int4_percent": 30.395785690407635, "in_band": false},
+        {"n": 8000, "int4_tok_s": 25.68468751907241, "int8_tok_s": 17.476487328131924, "int8_below_int4_percent": 31.957562983179795, "in_band": false}
+      ]
+    },
+    "cross_session_f16_12k_turn2": {
+      "definition": "Absolute and relative spread of the two f16 n_cached 12000 turn-2 medians. Relative is |a-b| / prior.",
+      "prior_run_id": "e9264a0a-d2f0-46dd-99af-8e4d9e36ad44",
+      "prior_turn2_median_s": 0.645158569,
+      "this_run_id": "72776603-7ea0-4279-a425-941d73a0bf57",
+      "this_turn2_median_s": 0.639231628,
+      "absolute_spread_s": 0.005926941000000019,
+      "relative_to_prior": 0.009186797300370381
+    }
+  }
+}

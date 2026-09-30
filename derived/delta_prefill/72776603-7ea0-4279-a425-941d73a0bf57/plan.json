@@ -1,0 +1,231 @@
+{
+  "arm": "gpu_only_f16",
+  "canary": {
+    "abort_on_trip": "FAIL_CANARY_DRIFT",
+    "allow_unguarded": false,
+    "budget_preflight": {
+      "calibration_c": 3,
+      "min_canaries_required": 4,
+      "n_budget": 1,
+      "ok": true,
+      "planned_probe_count": 4
+    },
+    "calibration_c": 3,
+    "canary_every_n": 1,
+    "canary_gate": {
+      "armed": true,
+      "calibration_c": 3,
+      "calibration_complete": true,
+      "calibration_turn1_prefill_s": [
+        2.561641357,
+        2.563372802,
+        2.493462158
+      ],
+      "calibration_turn2_prefill_s": [
+        0.80533966,
+        0.674558227,
+        0.709645141
+      ],
+      "derivation_applied": "calib_n=3; ref_t1=2.561641 ref_t2=0.709645; early_max_rel_t1=0.026615 early_max_rel_t2=0.134848; threshold_t1=max(2*early_max_t1,healthy_floor_t1=0.07709453214145699)=0.077095; threshold_t2=max(2*early_max_t2,healthy_floor_t2=0.1642942216508742)=0.269697",
+      "early_max_rel_t1": 0.026615434988075986,
+      "early_max_rel_t2": 0.13484841010135237,
+      "fixed_cell": {
+        "arm": "gpu_only_f16",
+        "delta": 400,
+        "mode": "RESIDENT",
+        "n_cached": 4000
+      },
+      "onset_s": 657.0,
+      "protocol": "docs/CANARY_PROTOCOL.md",
+      "ref_turn1_prefill_s": 2.561641357,
+      "ref_turn2_prefill_s": 0.709645141,
+      "rel_drift_floor_t1": 0.07709453214145699,
+      "rel_drift_floor_t2": 0.1642942216508742,
+      "threshold_derivation": {
+        "analysis": "derived/c2_ttft/analysis/canary_threshold_pool.json",
+        "cell": "gpu_only_f16 RESIDENT n_cached=4000 delta=400",
+        "formula": "threshold = max(2 * early_max_rel, healthy_floor)",
+        "healthy_floor_t1": 0.07709453214145699,
+        "healthy_floor_t2": 0.1642942216508742,
+        "host": "computadora",
+        "n_canaries_current_rule": 31,
+        "p95_method": "statistics.quantiles(data, n=100, method=inclusive)[94]",
+        "platform_id": "aipc-c1",
+        "pool_rule": "Current calibration discards one warm-up canary, then calibrates on the next three. Sessions before WARM_KV_AMEND_2 had no warm-up discard, so each of those sessions contributes every canary except its first. The current-rule pool is the derivation.",
+        "pooled_max_rel_t1": 0.07709453214145699,
+        "pooled_max_rel_t2": 0.1642942216508742,
+        "pooled_p95_rel_t1": 0.062365838022024195,
+        "pooled_p95_rel_t2": 0.10864235515205196,
+        "previous_healthy_floor_t1": 0.07709453214145699,
+        "previous_healthy_floor_t2": 0.5655217613849336,
+        "rationale": "healthy_floor is the largest relative drift, abs(t - session_ref) / session_ref, in the current-rule pool: sealed guarded XPS sessions on this cell that finished without a trip, excluding each pre-WARM_KV_AMEND_2 session's first canary. No accepted session exceeded it, so a larger relative drift is evidence of degradation. The pool rule is not chosen by whether a later check would trip.",
+        "replaced_floor": 0.05,
+        "sessions": [
+          "322b2f86-9571-46ae-be6a-ba1cec44e018",
+          "69234ed5-a716-4274-b851-33509bdb9972",
+          "7f232f86-2525-481b-a000-c6b8491bc224",
+          "a427233b-df1c-4c4a-87b9-c368bb270b31",
+          "c2246b1f-c588-4998-838a-5507da87e9ee",
+          "d3dcbd3b-5107-4b5e-a0dd-402f99f6f90c",
+          "fea55e0c-b9f8-4ba9-b5ea-558401910d74",
+          "e9264a0a-d2f0-46dd-99af-8e4d9e36ad44"
+        ]
+      },
+      "threshold_t1": 0.07709453214145699,
+      "threshold_t2": 0.26969682020270475
+    },
+    "criterion_path": "ttft_slo",
+    "enabled": true,
+    "enforcement": "CanaryDriftAbort exception; session status FAIL_CANARY_DRIFT. Does not return a soft bool that a caller can ignore (Invoke-DriftCanary Write-Output bug class). INF-1b: refuse start if budget < C+1 canaries; refuse seal with armed==false unless AllowUnguarded writes UNGUARDED.",
+    "fixed_cell": {
+      "arm": "gpu_only_f16",
+      "delta": 400,
+      "mode": "RESIDENT",
+      "n_cached": 4000
+    },
+    "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+    "n_canaries": 0,
+    "n_derivation": {
+      "binding_bound": "budget",
+      "calibration_c": 3,
+      "derivable": true,
+      "derivation": "N=min(floor(onset_s/mean_probe_wall_s), floor(planned/(C+1)))=min(None,1)=1 (binding=budget); onset_s=657.0; mean_probe_wall_s=None from THIS run (0 probes); planned_probe_count=4; C=3.",
+      "mean_probe_wall_s": null,
+      "n": 1,
+      "n_budget": 1,
+      "n_onset": null,
+      "n_probes_in_mean": 0,
+      "onset_s": 657.0,
+      "planned_probe_count": 4,
+      "refuse": false
+    },
+    "onset_s": 657.0,
+    "planned_probe_count": 4,
+    "power_transition_refuse": "INF-6: capture Win32_Battery BatteryStatus + EstimatedChargeRemaining at every canary; refuse on AC on_ac transition. No-battery hosts pass trivially.",
+    "rel_drift_floor_t1": 0.07709453214145699,
+    "rel_drift_floor_t2": 0.1642942216508742,
+    "threshold_derivation": {
+      "analysis": "derived/c2_ttft/analysis/canary_threshold_pool.json",
+      "cell": "gpu_only_f16 RESIDENT n_cached=4000 delta=400",
+      "formula": "threshold = max(2 * early_max_rel, healthy_floor)",
+      "healthy_floor_t1": 0.07709453214145699,
+      "healthy_floor_t2": 0.1642942216508742,
+      "host": "computadora",
+      "n_canaries_current_rule": 31,
+      "p95_method": "statistics.quantiles(data, n=100, method=inclusive)[94]",
+      "platform_id": "aipc-c1",
+      "pool_rule": "Current calibration discards one warm-up canary, then calibrates on the next three. Sessions before WARM_KV_AMEND_2 had no warm-up discard, so each of those sessions contributes every canary except its first. The current-rule pool is the derivation.",
+      "pooled_max_rel_t1": 0.07709453214145699,
+      "pooled_max_rel_t2": 0.1642942216508742,
+      "pooled_p95_rel_t1": 0.062365838022024195,
+      "pooled_p95_rel_t2": 0.10864235515205196,
+      "previous_healthy_floor_t1": 0.07709453214145699,
+      "previous_healthy_floor_t2": 0.5655217613849336,
+      "rationale": "healthy_floor is the largest relative drift, abs(t - session_ref) / session_ref, in the current-rule pool: sealed guarded XPS sessions on this cell that finished without a trip, excluding each pre-WARM_KV_AMEND_2 session's first canary. No accepted session exceeded it, so a larger relative drift is evidence of degradation. The pool rule is not chosen by whether a later check would trip.",
+      "replaced_floor": 0.05,
+      "sessions": [
+        "322b2f86-9571-46ae-be6a-ba1cec44e018",
+        "69234ed5-a716-4274-b851-33509bdb9972",
+        "7f232f86-2525-481b-a000-c6b8491bc224",
+        "a427233b-df1c-4c4a-87b9-c368bb270b31",
+        "c2246b1f-c588-4998-838a-5507da87e9ee",
+        "d3dcbd3b-5107-4b5e-a0dd-402f99f6f90c",
+        "fea55e0c-b9f8-4ba9-b5ea-558401910d74",
+        "e9264a0a-d2f0-46dd-99af-8e4d9e36ad44"
+      ]
+    },
+    "workloads_session_host_at_canaries": [],
+    "workloads_session_host_policy": "Kill WorkloadsSessionHost and refuse if it remains. Kill again in every cell preamble; it respawns about 4 min after a kill. Record instance_count, pids, WS_MB, and CPU_s at every gate and every canary. A failed kill records the exception text in the refusal. Record-only would break parity with sealed runs measured with the host cleared."
+  },
+  "canary_budget_note": "planned_probe_count is 4 so floor(planned/(C+1)) >= 1 with C=3. The cell executes the two n_cached points.",
+  "delta_tokens": 183,
+  "executed_points": 3,
+  "gates": {
+    "all_passed": true,
+    "gates": [
+      {
+        "detail": {
+          "ac_ok": true,
+          "battery_present": true,
+          "battery_status_values": [
+            2
+          ]
+        },
+        "name": "ac",
+        "passed": true,
+        "reason": "ac_ok"
+      },
+      {
+        "detail": {
+          "procthrottlemax_ac": 100,
+          "procthrottlemin_ac": 100,
+          "required_ac_max": 100,
+          "required_ac_min": 100,
+          "scheme_guid": "ec87a53a-19a6-4f4a-980f-ab27cc929b25",
+          "scheme_name": "Best Performance",
+          "scheme_text": "Power Scheme GUID: ec87a53a-19a6-4f4a-980f-ab27cc929b25  (Best Performance)"
+        },
+        "name": "processor_ac",
+        "passed": true,
+        "reason": "processor_ac_100_100"
+      },
+      {
+        "detail": {
+          "citation": "2026-08-09 clean session / 7477 MB Available; arm A lowest free_physical_mb_start 6926; floor 7000 (configs/delta_n.yaml isolation.pre_run_available_mb_min).",
+          "floor_mb": 7000.0,
+          "observed_mb": 9515.0
+        },
+        "name": "available_mb",
+        "passed": true,
+        "reason": "available_mb_ok"
+      },
+      {
+        "detail": {
+          "citation": "CHOSEN/PROVISIONAL cold-boot window (< 2 h) used by launch_*.ps1 five-gate block; not yet re-derived from an onset curve denser than the 657 s canary bound.",
+          "max_uptime_s": 7200.0,
+          "observed_uptime_s": 147.25043749809265
+        },
+        "name": "uptime",
+        "passed": true,
+        "reason": "uptime_ok"
+      },
+      {
+        "detail": {
+          "onset_citation": "Shortest observed degradation onset from session 7f569929 / docs/CANARY_PROTOCOL.md; tools/ttft_slo_canary.py ONSET_S.",
+          "onset_s": 657.0,
+          "onset_status": "measured",
+          "seal_note": null
+        },
+        "name": "onset",
+        "passed": true,
+        "reason": "onset_measured"
+      }
+    ],
+    "platform_id": "aipc-c1",
+    "refusal_reasons": [],
+    "workloads_session_host": {
+      "CPU_s": [],
+      "WS_MB": [],
+      "instance_count": 0,
+      "pids": [],
+      "process": "WorkloadsSessionHost",
+      "read_errors": []
+    }
+  },
+  "kind": "warm_kv",
+  "model_name": "Qwen3-4B-int4-ov",
+  "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+  "n_cached": [
+    12000,
+    24000,
+    46000
+  ],
+  "planned_probe_count": 4,
+  "residency": "RESIDENT",
+  "session_id": "72776603-7ea0-4279-a425-941d73a0bf57",
+  "started_utc": "2026-09-30T16:22:22.514902Z",
+  "status": "partial",
+  "turn1_max_new_tokens": 1,
+  "turn2_max_new_tokens": 1,
+  "turn2_repeats": 3
+}
