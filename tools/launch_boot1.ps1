@@ -4,6 +4,11 @@
 # <repo-root> is the checkout on the XPS:
 #   ssh xps "cd <repo-root>; powershell -NoProfile -File tools\launch_boot1.ps1 -Detach"
 #
+# Boot 4 rehearsal uses the same ssh + WMI path. Do not start it from the Cursor terminal.
+#   ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_boot4.ps1 -Detach -Rehearsal"
+# Poll:
+#   ssh xps "powershell -NoProfile -Command Get-Content -Tail 50 C:/Users/zjohn/Projects/gnn-hls-accel/derived/c2_ttft/_launches/_rehearsal/boot4/boot4.log"
+#
 # Poll the summary (run_ids and statuses; rewritten after every cell):
 #   ssh xps "powershell -NoProfile -Command Get-Content -Raw <repo-root>\derived\c2_ttft\_launches\BOOT1_SUMMARY.json"
 #
@@ -34,6 +39,7 @@ Set-Location $root
 . (Join-Path $PSScriptRoot "_assert_machine_lock.ps1")
 . (Join-Path $PSScriptRoot "boot_cell_result.ps1")
 . (Join-Path $PSScriptRoot "_utf8_nobom.ps1")
+. (Join-Path $PSScriptRoot "wsh_policy.ps1")
 
 $WindowS = 7200
 $LaunchDir = Join-Path $root "derived\c2_ttft\_launches"
@@ -71,7 +77,17 @@ $SmokePy = Join-Path $root "tools\c2_extraction_smoke.py"
 $SpawnPs1 = Join-Path $root "tools\spawn_detached.ps1"
 New-Item -ItemType Directory -Force -Path $LaunchDir | Out-Null
 
+$script:RehearsalMac = 'ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_boot4.ps1 -Detach -Rehearsal"'
+
 if ($Detach) {
+    if ($Rehearsal -and -not $DryRun) {
+        $sshParent = Test-SeamProcessAncestor -Names @("sshd.exe") -Depth 4
+        if (-not $sshParent) {
+            Write-Host "REFUSED -- rehearsal -Detach must be started from ssh, not this terminal."
+            Write-Host ("From the Mac: {0}" -f $script:RehearsalMac)
+            exit 1
+        }
+    }
     $self = "`"$PSCommandPath`""
     $cmd = "powershell -NoProfile -File $self -Profile $Profile"
     if ($NoRebootDeviation) { $cmd += " -NoRebootDeviation" }
@@ -84,6 +100,15 @@ if ($Detach) {
     Write-Host ("  log     : {0}" -f $log)
     Write-Host ("  summary : {0}" -f $SummaryPath)
     exit 0
+}
+
+if ($Rehearsal -and -not $DryRun) {
+    $wmiChild = Test-SeamProcessAncestor -Names @("WmiPrvSE.exe") -Depth 4
+    if (-not $wmiChild) {
+        Write-Host "REFUSED -- rehearsal must run as the WMI-detached child of an ssh launch."
+        Write-Host ("From the Mac: {0}" -f $script:RehearsalMac)
+        exit 1
+    }
 }
 
 # Boot 2: estimate = base_s + canary_overhead_s.
@@ -351,7 +376,10 @@ function Save-BootSummary {
             reason = [string]$script:UncoldReason
         }
     }
-    Write-Utf8NoBom -Path $SummaryPath -Text ($doc | ConvertTo-Json -Depth 6)
+    if ($null -ne $script:LastWshClear) {
+        $doc.workloads_session_host = $script:LastWshClear
+    }
+    Write-Utf8NoBom -Path $SummaryPath -Text ($doc | ConvertTo-Json -Depth 8)
     Assert-PythonReadsJson -Path $SummaryPath
 }
 
@@ -367,6 +395,9 @@ function Add-Row {
     if ($script:CellStartedUtc) {
         $row.started_utc = $script:CellStartedUtc
         $row.ended_utc = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+    }
+    if ($null -ne $script:LastWshClear) {
+        $row.workloads_session_host = $script:LastWshClear
     }
     # An ordered dictionary has no PSObject .name, so Merge-BootCells would drop it.
     $script:Rows += [pscustomobject]$row
@@ -513,15 +544,7 @@ function Invoke-CellPreamble {
     param([string]$Label, [switch]$SkipGateFile)
     Write-Host ""
     Write-Host ("=== preamble {0} ===" -f $Label)
-    $wsh = @(Get-Process -Name "WorkloadsSessionHost" -ErrorAction SilentlyContinue)
-    if ($wsh.Count -gt 0) {
-        $wsh | Stop-Process -Force -ErrorAction SilentlyContinue
-        Start-Sleep -Seconds 2
-        $left = @(Get-Process -Name "WorkloadsSessionHost" -ErrorAction SilentlyContinue)
-        if ($left.Count -gt 0) {
-            throw "REFUSED -- WorkloadsSessionHost still resident"
-        }
-    }
+    Clear-WorkloadsSessionHost | Out-Null
     # DET-PROBE checks a clean tree before it takes .locks/machine.lock.
     # A gate JSON written here would make that check fail.
     # Rehearsal still runs the gates: uptime is report-only, the others refuse.

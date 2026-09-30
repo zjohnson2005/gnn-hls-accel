@@ -8,17 +8,17 @@
     "n_cached": 4000,
     "delta": 400
   },
-  "inclusion": "Sealed summary, every canary on the fixed cell, gate armed, allow_unguarded false, no drift trip, hostname computadora. Relative drift is abs(t - session_ref) / session_ref using that session stored calibration reference.",
+  "inclusion": "Sealed summary, every canary on the fixed cell, gate armed, allow_unguarded false, no drift trip, hostname computadora. Relative drift is abs(t - session_ref) / session_ref using that session stored calibration reference. Current-rule pool drops the first canary of each session that predates the warm-up discard.",
   "p95_method": "statistics.quantiles(data, n=100, method=inclusive)[94]",
-  "n_canaries": 39,
+  "n_canaries": 31,
   "pooled_max_rel_t1": 0.07709453214145699,
-  "pooled_max_rel_t2": 0.5655217613849336,
-  "pooled_p95_rel_t1": 0.06087913636442768,
-  "pooled_p95_rel_t2": 0.40164927671144085,
+  "pooled_max_rel_t2": 0.1642942216508742,
+  "pooled_p95_rel_t1": 0.062365838022024195,
+  "pooled_p95_rel_t2": 0.10864235515205196,
   "healthy_floor_t1": 0.07709453214145699,
-  "healthy_floor_t2": 0.5655217613849336,
-  "healthy_floor_rule": "threshold = max(2 * early_max_rel, healthy_floor), with healthy_floor equal to the pooled maximum on that turn. The 0.05 floor is replaced.",
-  "rationale": "No accepted session in this pool exceeded the floor, so a larger relative drift is evidence of degradation.",
+  "healthy_floor_t2": 0.1642942216508742,
+  "healthy_floor_rule": "threshold = max(2 * early_max_rel, healthy_floor), with healthy_floor equal to the current-rule pooled maximum on that turn. The 0.05 floor is replaced. The previous pool included pre-amendment first canaries.",
+  "rationale": "No accepted session exceeded the current-rule floor, so a larger relative drift is evidence of degradation. The rule excludes pre-WARM_KV_AMEND_2 first canaries because those calls are the warm-up the current calibration discards. The floor is not chosen by whether a later refusal would trip.",
   "sessions": [
     {
       "run_id": "322b2f86-9571-46ae-be6a-ba1cec44e018",
@@ -38,7 +38,8 @@
           "turn2_prefill_s": 1.107439575,
           "rel_t1": 0.0,
           "rel_t2": 0.0,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": false
         },
         {
           "canary_index": 1,
@@ -46,7 +47,8 @@
           "turn2_prefill_s": 1.116840454,
           "rel_t1": 0.07709453214145699,
           "rel_t2": 0.008488841479229417,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 2,
@@ -54,7 +56,8 @@
           "turn2_prefill_s": 0.992324707,
           "rel_t1": 0.017976042805830397,
           "rel_t2": 0.10394686138970602,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 3,
@@ -62,7 +65,8 @@
           "turn2_prefill_s": 1.048552368,
           "rel_t1": 0.05990774385725741,
           "rel_t2": 0.053174194176689005,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 4,
@@ -70,9 +74,16 @@
           "turn2_prefill_s": 0.925493652,
           "rel_t1": 0.02192143273798382,
           "rel_t2": 0.1642942216508742,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         }
-      ]
+      ],
+      "calibration_rule": "pre_WARM_KV_AMEND_2",
+      "warmup_discard": false,
+      "excluded_canary_index": 0,
+      "current_rule_n": 4,
+      "current_rule_max_rel_t1": 0.07709453214145699,
+      "current_rule_max_rel_t2": 0.1642942216508742
     },
     {
       "run_id": "69234ed5-a716-4274-b851-33509bdb9972",
@@ -92,7 +103,8 @@
           "turn2_prefill_s": 1.153786254,
           "rel_t1": 0.0,
           "rel_t2": 0.25634165988896845,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": false
         },
         {
           "canary_index": 1,
@@ -100,7 +112,8 @@
           "turn2_prefill_s": 0.87529718,
           "rel_t1": 0.047281690501029025,
           "rel_t2": 0.04690118450888279,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 2,
@@ -108,7 +121,8 @@
           "turn2_prefill_s": 0.918369812,
           "rel_t1": 0.04374741486370055,
           "rel_t2": 0.0,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 3,
@@ -116,7 +130,8 @@
           "turn2_prefill_s": 1.022455871,
           "rel_t1": 0.027769247294572058,
           "rel_t2": 0.11333784891439791,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 4,
@@ -124,9 +139,16 @@
           "turn2_prefill_s": 0.932049438,
           "rel_t1": 0.06422421509401985,
           "rel_t2": 0.014895552773243753,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         }
-      ]
+      ],
+      "calibration_rule": "pre_WARM_KV_AMEND_2",
+      "warmup_discard": false,
+      "excluded_canary_index": 0,
+      "current_rule_n": 4,
+      "current_rule_max_rel_t1": 0.06422421509401985,
+      "current_rule_max_rel_t2": 0.11333784891439791
     },
     {
       "run_id": "7f232f86-2525-481b-a000-c6b8491bc224",
@@ -146,7 +168,8 @@
           "turn2_prefill_s": 0.80981958,
           "rel_t1": 0.008922175338177097,
           "rel_t2": 0.007646843018294344,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": false
         },
         {
           "canary_index": 1,
@@ -154,7 +177,8 @@
           "turn2_prefill_s": 0.803674011,
           "rel_t1": 0.021741579282820524,
           "rel_t2": 0.0,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 2,
@@ -162,7 +186,8 @@
           "turn2_prefill_s": 0.730397705,
           "rel_t1": 0.0,
           "rel_t2": 0.09117665246985324,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 3,
@@ -170,7 +195,8 @@
           "turn2_prefill_s": 0.803105407,
           "rel_t1": 0.034393443544307185,
           "rel_t2": 0.0007075057700230001,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 4,
@@ -178,7 +204,8 @@
           "turn2_prefill_s": 0.779471435,
           "rel_t1": 0.034322736315842525,
           "rel_t2": 0.03011491683037636,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 5,
@@ -186,9 +213,16 @@
           "turn2_prefill_s": 0.76807434,
           "rel_t1": 0.0007856360010636007,
           "rel_t2": 0.04429615803515146,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         }
-      ]
+      ],
+      "calibration_rule": "pre_WARM_KV_AMEND_2",
+      "warmup_discard": false,
+      "excluded_canary_index": 0,
+      "current_rule_n": 5,
+      "current_rule_max_rel_t1": 0.034393443544307185,
+      "current_rule_max_rel_t2": 0.09117665246985324
     },
     {
       "run_id": "a427233b-df1c-4c4a-87b9-c368bb270b31",
@@ -208,7 +242,8 @@
           "turn2_prefill_s": 0.974740478,
           "rel_t1": 0.0,
           "rel_t2": 0.4013291363272649,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": false
         },
         {
           "canary_index": 1,
@@ -216,7 +251,8 @@
           "turn2_prefill_s": 0.695582824,
           "rel_t1": 0.002573679789892107,
           "rel_t2": 0.0,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 2,
@@ -224,7 +260,8 @@
           "turn2_prefill_s": 0.671916503,
           "rel_t1": 0.005848318905244375,
           "rel_t2": 0.03402372827998408,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 3,
@@ -232,7 +269,8 @@
           "turn2_prefill_s": 0.687705017,
           "rel_t1": 0.024386463004448147,
           "rel_t2": 0.011325476604925583,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 4,
@@ -240,9 +278,16 @@
           "turn2_prefill_s": 0.662921508,
           "rel_t1": 0.002722996243813572,
           "rel_t2": 0.04695532274960256,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         }
-      ]
+      ],
+      "calibration_rule": "pre_WARM_KV_AMEND_2",
+      "warmup_discard": false,
+      "excluded_canary_index": 0,
+      "current_rule_n": 4,
+      "current_rule_max_rel_t1": 0.024386463004448147,
+      "current_rule_max_rel_t2": 0.04695532274960256
     },
     {
       "run_id": "c2246b1f-c588-4998-838a-5507da87e9ee",
@@ -262,7 +307,8 @@
           "turn2_prefill_s": 0.906538696,
           "rel_t1": 0.009708403383321474,
           "rel_t2": 0.24140153160992872,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": false
         },
         {
           "canary_index": 1,
@@ -270,7 +316,8 @@
           "turn2_prefill_s": 0.730254211,
           "rel_t1": 0.0,
           "rel_t2": 0.0,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 2,
@@ -278,7 +325,8 @@
           "turn2_prefill_s": 0.682931762,
           "rel_t1": 0.03734732133074768,
           "rel_t2": 0.0648027060812114,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 3,
@@ -286,7 +334,8 @@
           "turn2_prefill_s": 0.711962707,
           "rel_t1": 0.005562730692974898,
           "rel_t2": 0.02504813217708376,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 4,
@@ -294,9 +343,16 @@
           "turn2_prefill_s": 0.700081481,
           "rel_t1": 0.007289118069616305,
           "rel_t2": 0.04131811846546131,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         }
-      ]
+      ],
+      "calibration_rule": "pre_WARM_KV_AMEND_2",
+      "warmup_discard": false,
+      "excluded_canary_index": 0,
+      "current_rule_n": 4,
+      "current_rule_max_rel_t1": 0.03734732133074768,
+      "current_rule_max_rel_t2": 0.0648027060812114
     },
     {
       "run_id": "d3dcbd3b-5107-4b5e-a0dd-402f99f6f90c",
@@ -316,7 +372,8 @@
           "turn2_prefill_s": 1.043962158,
           "rel_t1": 0.03176164832132286,
           "rel_t2": 0.40453054016902423,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": false
         },
         {
           "canary_index": 1,
@@ -324,7 +381,8 @@
           "turn2_prefill_s": 0.735315917,
           "rel_t1": 0.0,
           "rel_t2": 0.010717338569573558,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 2,
@@ -332,7 +390,8 @@
           "turn2_prefill_s": 0.743281921,
           "rel_t1": 0.0003344423657365319,
           "rel_t2": 0.0,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 3,
@@ -340,7 +399,8 @@
           "turn2_prefill_s": 0.722328308,
           "rel_t1": 0.04676037715815459,
           "rel_t2": 0.028190666835820943,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 4,
@@ -348,9 +408,16 @@
           "turn2_prefill_s": 0.734830261,
           "rel_t1": 0.05921365328685131,
           "rel_t2": 0.011370732640219795,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         }
-      ]
+      ],
+      "calibration_rule": "pre_WARM_KV_AMEND_2",
+      "warmup_discard": false,
+      "excluded_canary_index": 0,
+      "current_rule_n": 4,
+      "current_rule_max_rel_t1": 0.05921365328685131,
+      "current_rule_max_rel_t2": 0.028190666835820943
     },
     {
       "run_id": "fea55e0c-b9f8-4ba9-b5ea-558401910d74",
@@ -370,7 +437,8 @@
           "turn2_prefill_s": 0.97867987,
           "rel_t1": 0.01436740880929218,
           "rel_t2": 0.3985504157628514,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": false
         },
         {
           "canary_index": 1,
@@ -378,7 +446,8 @@
           "turn2_prefill_s": 0.672663879,
           "rel_t1": 0.0,
           "rel_t2": 0.038751713934708415,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 2,
@@ -386,7 +455,8 @@
           "turn2_prefill_s": 0.699781616,
           "rel_t1": 0.035120486303591776,
           "rel_t2": 0.0,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 3,
@@ -394,7 +464,8 @@
           "turn2_prefill_s": 0.691931335,
           "rel_t1": 0.04137132783237606,
           "rel_t2": 0.011218186960773143,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 4,
@@ -402,9 +473,16 @@
           "turn2_prefill_s": 0.687809814,
           "rel_t1": 0.045948449120691605,
           "rel_t2": 0.017107911563084034,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         }
-      ]
+      ],
+      "calibration_rule": "pre_WARM_KV_AMEND_2",
+      "warmup_discard": false,
+      "excluded_canary_index": 0,
+      "current_rule_n": 4,
+      "current_rule_max_rel_t1": 0.045948449120691605,
+      "current_rule_max_rel_t2": 0.038751713934708415
     },
     {
       "run_id": "e9264a0a-d2f0-46dd-99af-8e4d9e36ad44",
@@ -424,7 +502,8 @@
           "turn2_prefill_s": 1.126149536,
           "rel_t1": 0.008524784190877696,
           "rel_t2": 0.5655217613849336,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": false
         },
         {
           "canary_index": 1,
@@ -432,7 +511,8 @@
           "turn2_prefill_s": 0.662402648,
           "rel_t1": 0.06050746095002855,
           "rel_t2": 0.07915802733767303,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         },
         {
           "canary_index": 2,
@@ -440,9 +520,16 @@
           "turn2_prefill_s": 0.719344543,
           "rel_t1": 0.0,
           "rel_t2": 0.0,
-          "warmup": false
+          "warmup": false,
+          "in_current_rule_pool": true
         }
-      ]
+      ],
+      "calibration_rule": "pre_WARM_KV_AMEND_2",
+      "warmup_discard": false,
+      "excluded_canary_index": 0,
+      "current_rule_n": 2,
+      "current_rule_max_rel_t1": 0.06050746095002855,
+      "current_rule_max_rel_t2": 0.07915802733767303
     }
   ],
   "excluded": [
@@ -554,5 +641,13 @@
       }
     ],
     "settling": "The three post-warm-up calibration turn-1 samples are 2.499781005, 2.529414306, and 2.489255859. The one later check is 2.658880859, higher than each of them. Turn 2 does not follow that pattern: the first calibration sample, 0.840779479, is higher than the later check, 0.721247436. One later call is not a repeated settling series. The warm-up rule is unchanged."
-  }
+  },
+  "pool_rule_id": "CANARY-POOL-RULE",
+  "pool_rule": "Current calibration discards one warm-up canary, then calibrates on the next three. Sessions before WARM_KV_AMEND_2 had no warm-up discard, so each of those sessions contributes every canary except its first. The current-rule pool is the derivation.",
+  "n_canaries_all": 39,
+  "previous_healthy_floor_t1": 0.07709453214145699,
+  "previous_healthy_floor_t2": 0.5655217613849336,
+  "previous_pooled_p95_rel_t1": 0.06087913636442768,
+  "previous_pooled_p95_rel_t2": 0.40164927671144085,
+  "previous_n_canaries": 39
 }

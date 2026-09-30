@@ -17,6 +17,7 @@ can ignore (see tools/test_canary_drift_abort_enforcement.ps1 / Invoke-DriftCana
 
 from __future__ import annotations
 
+import json
 import math
 import statistics
 from dataclasses import dataclass, field
@@ -32,14 +33,27 @@ from tools.canary_power_gate import (
 # Shortest observed degradation onset (docs/CANARY_PROTOCOL.md / 7f569929).
 ONSET_S = 657.0
 CALIBRATION_C = 3
-# Largest |t - session_ref| / session_ref on the fixed cell in sealed, guarded
-# XPS sessions that finished without a trip. The 0.05 floor is replaced.
+# Current-rule pool: pre-WARM_KV_AMEND_2 sessions had no warm-up discard, so each
+# session's first canary is excluded. The 0.05 floor is replaced.
 # Series: derived/c2_ttft/analysis/canary_threshold_pool.json
 HEALTHY_FLOOR_T1 = 0.07709453214145699
-HEALTHY_FLOOR_T2 = 0.5655217613849336
-HEALTHY_FLOOR_P95_T1 = 0.06087913636442768
-HEALTHY_FLOOR_P95_T2 = 0.40164927671144085
+HEALTHY_FLOOR_T2 = 0.1642942216508742
+HEALTHY_FLOOR_P95_T1 = 0.062365838022024195
+HEALTHY_FLOOR_P95_T2 = 0.10864235515205196
+PREVIOUS_HEALTHY_FLOOR_T1 = 0.07709453214145699
+PREVIOUS_HEALTHY_FLOOR_T2 = 0.5655217613849336
 HEALTHY_FLOOR_ANALYSIS = "derived/c2_ttft/analysis/canary_threshold_pool.json"
+POOL_RULE = (
+    "Current calibration discards one warm-up canary, then calibrates on the next three. "
+    "Sessions before WARM_KV_AMEND_2 had no warm-up discard, so each of those sessions "
+    "contributes every canary except its first. The current-rule pool is the derivation."
+)
+WSH_POLICY = (
+    "Kill WorkloadsSessionHost and refuse if it remains. Kill again in every cell preamble; "
+    "it respawns about 4 min after a kill. Record instance_count, pids, WS_MB, and CPU_s "
+    "at every gate and every canary. A failed kill records the exception text in the refusal. "
+    "Record-only would break parity with sealed runs measured with the host cleared."
+)
 HEALTHY_FLOOR_SESSIONS = (
     "322b2f86-9571-46ae-be6a-ba1cec44e018",
     "69234ed5-a716-4274-b851-33509bdb9972",
@@ -69,6 +83,10 @@ def threshold_derivation() -> dict[str, Any]:
         "pooled_p95_rel_t1": HEALTHY_FLOOR_P95_T1,
         "pooled_p95_rel_t2": HEALTHY_FLOOR_P95_T2,
         "p95_method": "statistics.quantiles(data, n=100, method=inclusive)[94]",
+        "pool_rule": POOL_RULE,
+        "previous_healthy_floor_t1": PREVIOUS_HEALTHY_FLOOR_T1,
+        "previous_healthy_floor_t2": PREVIOUS_HEALTHY_FLOOR_T2,
+        "n_canaries_current_rule": 31,
         "replaced_floor": 0.05,
         "cell": "gpu_only_f16 RESIDENT n_cached=4000 delta=400",
         "host": "computadora",
@@ -77,8 +95,10 @@ def threshold_derivation() -> dict[str, Any]:
         "analysis": HEALTHY_FLOOR_ANALYSIS,
         "rationale": (
             "healthy_floor is the largest relative drift, abs(t - session_ref) / session_ref, "
-            "in any sealed guarded XPS session on this cell that finished without a trip. "
-            "No accepted session exceeded it, so a larger relative drift is evidence of degradation."
+            "in the current-rule pool: sealed guarded XPS sessions on this cell that finished "
+            "without a trip, excluding each pre-WARM_KV_AMEND_2 session's first canary. "
+            "No accepted session exceeded it, so a larger relative drift is evidence of degradation. "
+            "The pool rule is not chosen by whether a later check would trip."
         ),
     }
 
@@ -526,6 +546,14 @@ class TtftSloCanaryGuard:
             "n_derivation": self.n_derivation,
             "canary_gate": self.gate,
             "n_canaries": len(self.canaries),
+            "workloads_session_host_policy": WSH_POLICY,
+            "workloads_session_host_at_canaries": [
+                {
+                    "canary_index": c.get("canary_index"),
+                    "workloads_session_host": c.get("workloads_session_host"),
+                }
+                for c in self.canaries
+            ],
             "abort_on_trip": FAIL_STATUS,
             "power_transition_refuse": (
                 "INF-6: capture Win32_Battery BatteryStatus + EstimatedChargeRemaining "
@@ -597,10 +625,28 @@ class TtftSloCanaryGuard:
         }
         out = self.work_dir / f"canary.{rec['canary_index']}.json"
         out.write_text(
-            __import__("json").dumps({"record": rec, "cell": raw}, indent=2, sort_keys=True) + "\n",
+            json.dumps({"record": rec, "cell": raw}, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
         return rec
+
+    def _write_canary_record(self, rec: dict[str, Any]) -> None:
+        path = self.work_dir / f"canary.{rec['canary_index']}.json"
+        if not path.is_file():
+            return
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        doc["record"] = rec
+        path.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    def _stamp_plan(self) -> None:
+        if self.plan_path is None or not self.plan_path.is_file():
+            return
+        doc = json.loads(self.plan_path.read_text(encoding="utf-8"))
+        doc["canary"] = self.plan_fragment()
+        self.plan_path.write_text(
+            json.dumps(doc, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
 
     def run_canary(self, *, after_probe_count: int, warmup: bool = False) -> dict[str, Any]:
         """Run one canary. Raises CanaryDriftAbort / CanaryPowerTransitionAbort."""
@@ -614,9 +660,13 @@ class TtftSloCanaryGuard:
         power = capture_canary_power_snapshot()
         transition = assert_no_ac_transition(previous=self.last_power_snapshot, current=power)
         self.last_power_snapshot = power
+        from seam.run_environment import snapshot_workloads_session_host
+
+        wsh = snapshot_workloads_session_host()
         rec = self._run_cell()
         rec["power"] = power
         rec["power_transition"] = transition
+        rec["workloads_session_host"] = wsh
         rec["after_probe_count"] = after_probe_count
         rec["warmup"] = bool(warmup)
         prior_ok = [
@@ -636,6 +686,8 @@ class TtftSloCanaryGuard:
         )
         rec = bk["rec"]
         self.canaries.append(rec)
+        self._write_canary_record(rec)
+        self._stamp_plan()
         self.probes_since_canary = 0
         if bk.get("just_armed"):
             print(f"[c2_canary] gate ARMED: {bk.get('derivation_applied')}", flush=True)

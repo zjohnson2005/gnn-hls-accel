@@ -157,6 +157,15 @@ ssh xps "Get-Counter '\Processor(_Total)\% Processor Time' -SampleInterval 2 -Ma
 ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; <launch command>"
 ```
 
+Boot 4 rehearsal is the same ssh session plus WMI detach. Do not start `-Rehearsal` from the Cursor terminal; that process is refused.
+
+```bash
+ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_boot4.ps1 -Detach -Rehearsal"
+ssh xps "powershell -NoProfile -Command Get-Content -Tail 50 C:/Users/zjohn/Projects/gnn-hls-accel/derived/c2_ttft/_launches/_rehearsal/boot4/boot4.log"
+```
+
+`REHEARSAL_COMPLETE` in that log is the success line. `-Detach` returns as soon as `Win32_Process.Create` has spawned the sequencer.
+
 **Use `tools/spawn_detached.ps1`, never `Start-Process`.** See "Detachment" below — this is
 measured, not assumed.
 

@@ -88,15 +88,19 @@ threshold_t1 = max(2 * early_max_t1, healthy_floor_t1)
 threshold_t2 = max(2 * early_max_t2, healthy_floor_t2)
 
 healthy_floor_t1 = 0.07709453214145699
-healthy_floor_t2 = 0.5655217613849336
+healthy_floor_t2 = 0.1642942216508742
 ```
 
 `healthy_floor` is the largest `|t - session_ref| / session_ref` on this fixed
-cell in any sealed, guarded XPS session that finished without a trip (hostname
-`computadora`). Turn 1 and turn 2 have separate floors. No accepted session
-exceeded its floor, so a larger relative drift is evidence of degradation. The
-previous `0.05` floor is replaced. The session list and the per-canary series
-are in `derived/c2_ttft/analysis/canary_threshold_pool.json`. Every plan records
+cell in the current-rule pool (hostname `computadora`). Current calibration
+discards one warm-up canary. Sessions before `WARM_KV_AMEND_2` had no warm-up
+discard, so each of those sessions contributes every canary except its first.
+Turn 1 and turn 2 have separate floors. No accepted session exceeded its floor,
+so a larger relative drift is evidence of degradation. The pool that included
+those first canaries had floors 0.07709453214145699 and 0.5655217613849336.
+The current-rule pool is the derivation. The previous `0.05` floor is replaced.
+The session list and the per-canary series are in
+`derived/c2_ttft/analysis/canary_threshold_pool.json`. Every plan records
 that derivation.
 
 The `2x` allows as much additional deviation as calibration already showed. The
@@ -123,8 +127,11 @@ numbers that look valid and are not.
 
 ## What to record
 
-Per canary: the raw measurements, the index of the matrix cell it followed, and
-available memory at its start.
+Per canary: the raw measurements, the index of the matrix cell it followed,
+available memory at its start, and the WorkloadsSessionHost snapshot
+(`instance_count`, `pids`, `WS_MB`, `CPU_s`). The same snapshot is recorded on
+every measurement-gate report. A failed kill records the exception text in the
+refusal.
 
 Per session: the fixed cell configuration, `N` with its derivation, `C`,
 `healthy_floor_t1` / `healthy_floor_t2` and the session list they were derived

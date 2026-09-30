@@ -64,12 +64,14 @@ class MeasurementGateReport:
     gates: list[GateResult]
     all_passed: bool
     refusal_reasons: list[str]
+    workloads_session_host: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "platform_id": self.platform_id,
             "all_passed": self.all_passed,
             "refusal_reasons": list(self.refusal_reasons),
+            "workloads_session_host": dict(self.workloads_session_host),
             "gates": [
                 {
                     "name": g.name,
@@ -470,11 +472,18 @@ def evaluate_measurement_gates(
     gates.append(onset_gate)
 
     refusals = [f"{g.name}:{g.reason}" for g in gates if (not g.passed) and g.name != "onset"]
+    if skip_host_probes:
+        wsh: dict[str, Any] = {"skipped": True, "reason": "skip_host_probes"}
+    else:
+        from seam.run_environment import snapshot_workloads_session_host
+
+        wsh = snapshot_workloads_session_host()
     return MeasurementGateReport(
         platform_id=pid,
         gates=gates,
         all_passed=len(refusals) == 0,
         refusal_reasons=refusals,
+        workloads_session_host=wsh,
     )
 
 
@@ -525,6 +534,7 @@ def run_environment_gate_fields(report: MeasurementGateReport) -> dict[str, Any]
             "onset_status": None if onset is None else (onset.detail or {}).get("onset_status"),
             "onset_citation": None if onset is None else (onset.detail or {}).get("onset_citation"),
             "onset_seal_note": None if onset is None else (onset.detail or {}).get("seal_note"),
+            "workloads_session_host": dict(report.workloads_session_host),
         }
     }
 

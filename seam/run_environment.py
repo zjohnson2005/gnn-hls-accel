@@ -1,10 +1,10 @@
 """INF-5 run-environment block: host + session fields required on every new seal.
 
-Closes the W-3→Q-KV trajectory-drop blind spot. Fields that can be read from the
+Closes the W-3 to Q-KV trajectory-drop blind spot. Fields that can be read from the
 host at emit time are collected here; session-design / prompt-render /
 available-MB bookends / WSH-during-run must be supplied by the caller (or
-merged from measurement records). Absent or empty values refuse the seal —
-never silently defaulted.
+merged from measurement records). Absent or empty values refuse the seal.
+Never silently defaulted.
 
 Callers should use :class:`RunEnvironmentSession` (begin at session start, feed
 prompt renders, finalize before seal) or stage the session slice on
@@ -40,6 +40,7 @@ __all__ = [
     "require_run_environment",
     "session_fields",
     "sha256_prompt_render",
+    "snapshot_workloads_session_host",
 ]
 
 #: Canonical process name (normalized) for Copilot+ WorkloadsSessionHost.
@@ -81,7 +82,7 @@ _SHA256_RE: Final = re.compile(r"^[0-9a-f]{64}$")
 def sha256_prompt_render(rendered: str | bytes) -> str:
     """SHA-256 of the exact rendered prompt bytes used for the run.
 
-    Callers must pass the same bytes/string the model consumed — do not re-render
+    Callers must pass the same bytes/string the model consumed. Do not re-render
     on a second path. Strings are hashed as UTF-8.
     """
     data = rendered if isinstance(rendered, bytes) else rendered.encode("utf-8")
@@ -99,7 +100,7 @@ def session_fields(
 ) -> dict[str, Any]:
     """Build the caller-supplied INF-5 session slice for staging into emit.
 
-    Does not invent values — every argument is measured. Optional end/WSH keys are
+    Does not invent values. Every argument is measured. Optional end/WSH keys are
     included only when supplied (host capture fills them at seal when omitted).
     """
     out: dict[str, Any] = {
@@ -261,7 +262,7 @@ class RunEnvironmentSession:
         """Return the session slice for ``emit(run_environment=...)`` / summary staging.
 
         Captures ``available_mb_end`` and a final WSH probe. Requires at least one
-        prompt-render update — empty digests are refused (no silent empty-hash).
+        prompt-render update. Empty digests are refused (no silent empty-hash).
         """
         if self._prompt_updates < 1:
             raise ManifestValidationError(
@@ -440,6 +441,73 @@ def _capture_tokenizers_version() -> str | None:
         return None
 
 
+def snapshot_workloads_session_host() -> dict[str, Any]:
+    """Instance count, pids, working set MB, and CPU seconds.
+
+    Lists are aligned with ``pids``. A read failure is recorded and does not
+    drop the pid.
+    """
+    empty: dict[str, Any] = {
+        "process": "WorkloadsSessionHost",
+        "instance_count": 0,
+        "pids": [],
+        "WS_MB": [],
+        "CPU_s": [],
+        "read_errors": [],
+    }
+    try:
+        import psutil
+    except ImportError as exc:
+        empty["read_errors"] = [f"psutil unavailable: {exc}"]
+        return empty
+
+    from seam.isolation import _normalize_process_name
+
+    pids: list[int] = []
+    ws_mb: list[float | None] = []
+    cpu_s: list[float | None] = []
+    errors: list[str] = []
+    try:
+        processes = list(psutil.process_iter(["pid", "name"]))
+    except Exception as exc:  # pragma: no cover - platform-dependent
+        empty["read_errors"] = [f"{type(exc).__name__}: {exc}"]
+        return empty
+    for process in processes:
+        try:
+            name = str(process.info.get("name") or "")
+            if _normalize_process_name(name) != WSH_PROCESS_NAME:
+                continue
+            pid = int(process.info["pid"])
+        except (psutil.Error, TypeError, ValueError) as exc:
+            errors.append(f"{type(exc).__name__}: {exc}")
+            continue
+        pids.append(pid)
+        try:
+            mem = process.memory_info()
+            wset = getattr(mem, "wset", None)
+            if wset is None:
+                wset = getattr(mem, "rss", None)
+            ws_mb.append(None if wset is None else float(wset) / (1024.0 * 1024.0))
+        except psutil.Error as exc:
+            ws_mb.append(None)
+            errors.append(f"pid {pid} WS_MB: {exc}")
+        try:
+            times = process.cpu_times()
+            cpu_s.append(float(times.user) + float(times.system))
+        except psutil.Error as exc:
+            cpu_s.append(None)
+            errors.append(f"pid {pid} CPU_s: {exc}")
+    order = sorted(range(len(pids)), key=lambda i: pids[i])
+    return {
+        "process": "WorkloadsSessionHost",
+        "instance_count": len(pids),
+        "pids": [pids[i] for i in order],
+        "WS_MB": [ws_mb[i] for i in order],
+        "CPU_s": [cpu_s[i] for i in order],
+        "read_errors": errors,
+    }
+
+
 def probe_workloads_session_host() -> dict[str, Any]:
     """One-shot WSH residency probe (psutil)."""
     from seam.isolation import _normalize_process_name
@@ -604,7 +672,7 @@ def require_run_environment(env: dict[str, Any] | None) -> dict[str, Any]:
         raise ManifestValidationError(
             "INF-5 refuse seal: run_environment missing or invalid field(s): "
             + ", ".join(missing)
-            + ". No silent defaults — supply measured values or stop."
+            + ". No silent defaults. Supply measured values or stop."
         )
 
     out = {

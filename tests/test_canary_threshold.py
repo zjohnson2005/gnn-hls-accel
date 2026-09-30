@@ -31,17 +31,35 @@ REFUSED_REL_T1 = 0.06364551681998237
 
 def test_floors_match_the_pooled_series() -> None:
     doc = json.loads(POOL.read_text(encoding="utf-8"))
-    rel_t1 = [row["rel_t1"] for session in doc["sessions"] for row in session["series"]]
-    rel_t2 = [row["rel_t2"] for session in doc["sessions"] for row in session["series"]]
+    rows = [
+        row
+        for session in doc["sessions"]
+        for row in session["series"]
+        if row["in_current_rule_pool"]
+    ]
+    rel_t1 = [row["rel_t1"] for row in rows]
+    rel_t2 = [row["rel_t2"] for row in rows]
     assert max(rel_t1) == HEALTHY_FLOOR_T1
     assert max(rel_t2) == HEALTHY_FLOOR_T2
     assert doc["pooled_max_rel_t1"] == HEALTHY_FLOOR_T1
     assert doc["pooled_max_rel_t2"] == HEALTHY_FLOOR_T2
+    assert doc["previous_healthy_floor_t1"] == 0.07709453214145699
+    assert doc["previous_healthy_floor_t2"] == 0.5655217613849336
+    assert doc["n_canaries"] == 31
+    excluded_t2 = [
+        row["rel_t2"]
+        for session in doc["sessions"]
+        for row in session["series"]
+        if not row["in_current_rule_pool"]
+    ]
+    assert doc["previous_healthy_floor_t2"] in excluded_t2
+    assert doc["previous_healthy_floor_t2"] not in rel_t2
     p95_t1 = statistics.quantiles(rel_t1, n=100, method="inclusive")[94]
     p95_t2 = statistics.quantiles(rel_t2, n=100, method="inclusive")[94]
     assert p95_t1 == HEALTHY_FLOOR_P95_T1
     assert p95_t2 == HEALTHY_FLOOR_P95_T2
     assert [session["run_id"] for session in doc["sessions"]] == list(HEALTHY_FLOOR_SESSIONS)
+    assert REFUSED_REL_T1 < HEALTHY_FLOOR_T1
 
 
 def test_refused_turn1_stays_under_the_new_floor() -> None:
@@ -115,4 +133,7 @@ def test_every_plan_records_the_derivation(tmp_path: Path) -> None:
     assert recorded["sessions"] == list(HEALTHY_FLOOR_SESSIONS)
     assert recorded["healthy_floor_t1"] == HEALTHY_FLOOR_T1
     assert recorded["healthy_floor_t2"] == HEALTHY_FLOOR_T2
+    assert recorded["previous_healthy_floor_t2"] == 0.5655217613849336
+    assert "first" in recorded["pool_rule"]
     assert recorded["replaced_floor"] == 0.05
+    assert "Kill WorkloadsSessionHost" in guard.plan_fragment()["workloads_session_host_policy"]
