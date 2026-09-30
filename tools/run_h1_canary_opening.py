@@ -2,7 +2,7 @@
 
 Fixed cell (docs/CANARY_PROTOCOL.md / tools/ttft_slo_canary.py):
   arm=gpu_only_f16  n_cached=4000  delta=400  mode=RESIDENT
-  C=3  rel_drift_floor=0.05  onset_s=657
+  C=3  healthy-session floor (t1 and t2)  onset_s=657
 
 Runs the opening canary before H-1 spawn. Trip => FAIL_CANARY_DRIFT (exit 2).
 Also runs the dual-bound N / unarmed-seal preflight (no silent unguarded).
@@ -11,6 +11,7 @@ Usage:
   .venv-seam\\Scripts\\python.exe tools/run_h1_canary_opening.py --out DIR
   .venv-seam\\Scripts\\python.exe tools/run_h1_canary_opening.py --logic-only
 """
+
 from __future__ import annotations
 
 import argparse
@@ -28,8 +29,9 @@ from tools.ttft_slo_canary import (
     CANARY_DELTA,
     CANARY_MODE,
     CANARY_N_CACHED,
+    HEALTHY_FLOOR_T1,
+    HEALTHY_FLOOR_T2,
     ONSET_S,
-    REL_DRIFT_FLOOR,
     CanaryBudgetRefuse,
     CanaryDriftAbort,
     CanaryUnarmedSealRefuse,
@@ -44,12 +46,18 @@ from tools.ttft_slo_canary import (
 
 def _logic_preflight(*, mean_wall_s: float = 9.93) -> dict:
     """Dual-bound N + arming schedule + unarmed-seal refuse (no GPU)."""
-    out: dict = {"fixed_cell": {
-        "arm": CANARY_ARM,
-        "n_cached": CANARY_N_CACHED,
-        "delta": CANARY_DELTA,
-        "mode": CANARY_MODE,
-    }, "calibration_c": CALIBRATION_C, "rel_drift_floor": REL_DRIFT_FLOOR, "onset_s": ONSET_S}
+    out: dict = {
+        "fixed_cell": {
+            "arm": CANARY_ARM,
+            "n_cached": CANARY_N_CACHED,
+            "delta": CANARY_DELTA,
+            "mode": CANARY_MODE,
+        },
+        "calibration_c": CALIBRATION_C,
+        "rel_drift_floor_t1": HEALTHY_FLOOR_T1,
+        "rel_drift_floor_t2": HEALTHY_FLOOR_T2,
+        "onset_s": ONSET_S,
+    }
 
     cases = []
     for planned in (39, 300):
@@ -61,7 +69,7 @@ def _logic_preflight(*, mean_wall_s: float = 9.93) -> dict:
             onset_s=ONSET_S,
         )
         n = int(d["n"])
-        gate = new_canary_gate(calibration_c=CALIBRATION_C, rel_drift_floor=REL_DRIFT_FLOOR)
+        gate = new_canary_gate(calibration_c=CALIBRATION_C)
         prior: list[dict] = []
         idx = 0
 
@@ -92,15 +100,17 @@ def _logic_preflight(*, mean_wall_s: float = 9.93) -> dict:
                 f"(n_onset={d.get('n_onset')} n_budget={d.get('n_budget')} "
                 f"bound={d.get('binding_bound')})"
             )
-        cases.append({
-            "planned_probe_count": planned,
-            "n": n,
-            "n_onset": d.get("n_onset"),
-            "n_budget": d.get("n_budget"),
-            "binding_bound": d.get("binding_bound"),
-            "armed": True,
-            "n_canaries": idx,
-        })
+        cases.append(
+            {
+                "planned_probe_count": planned,
+                "n": n,
+                "n_onset": d.get("n_onset"),
+                "n_budget": d.get("n_budget"),
+                "binding_bound": d.get("binding_bound"),
+                "armed": True,
+                "n_canaries": idx,
+            }
+        )
 
     try:
         assert_seal_requires_armed_or_unguarded(armed=False, allow_unguarded=False)
@@ -138,7 +148,7 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"[h1_canary] fixed_cell arm={CANARY_ARM} nc={CANARY_N_CACHED} "
         f"d={CANARY_DELTA} mode={CANARY_MODE} C={CALIBRATION_C} "
-        f"floor={REL_DRIFT_FLOOR} onset_s={ONSET_S}",
+        f"floor_t1={HEALTHY_FLOOR_T1} floor_t2={HEALTHY_FLOOR_T2} onset_s={ONSET_S}",
         flush=True,
     )
 
@@ -188,7 +198,9 @@ def main(argv: list[str] | None = None) -> int:
 
     frag = guard.plan_fragment()
     (out / "opening_plan.json").write_text(
-        json.dumps({"logic": logic, "canary": frag, "canaries": guard.canaries}, indent=2, sort_keys=True)
+        json.dumps(
+            {"logic": logic, "canary": frag, "canaries": guard.canaries}, indent=2, sort_keys=True
+        )
         + "\n",
         encoding="utf-8",
     )

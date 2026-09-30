@@ -1,0 +1,558 @@
+{
+  "id": "CANARY-THRESHOLD-POOL",
+  "host": "computadora",
+  "platform_id": "aipc-c1",
+  "fixed_cell": {
+    "arm": "gpu_only_f16",
+    "mode": "RESIDENT",
+    "n_cached": 4000,
+    "delta": 400
+  },
+  "inclusion": "Sealed summary, every canary on the fixed cell, gate armed, allow_unguarded false, no drift trip, hostname computadora. Relative drift is abs(t - session_ref) / session_ref using that session stored calibration reference.",
+  "p95_method": "statistics.quantiles(data, n=100, method=inclusive)[94]",
+  "n_canaries": 39,
+  "pooled_max_rel_t1": 0.07709453214145699,
+  "pooled_max_rel_t2": 0.5655217613849336,
+  "pooled_p95_rel_t1": 0.06087913636442768,
+  "pooled_p95_rel_t2": 0.40164927671144085,
+  "healthy_floor_t1": 0.07709453214145699,
+  "healthy_floor_t2": 0.5655217613849336,
+  "healthy_floor_rule": "threshold = max(2 * early_max_rel, healthy_floor), with healthy_floor equal to the pooled maximum on that turn. The 0.05 floor is replaced.",
+  "rationale": "No accepted session in this pool exceeded the floor, so a larger relative drift is evidence of degradation.",
+  "sessions": [
+    {
+      "run_id": "322b2f86-9571-46ae-be6a-ba1cec44e018",
+      "sealed_path": "derived/c2_ttft/sealed_322b2f86-9571-46ae-be6a-ba1cec44e018",
+      "status": "complete",
+      "hostname": "computadora",
+      "hostname_source": "322b2f86-9571-46ae-be6a-ba1cec44e018",
+      "ref_turn1_prefill_s": 4.424046875,
+      "ref_turn2_prefill_s": 1.107439575,
+      "n_canaries": 5,
+      "max_rel_t1": 0.07709453214145699,
+      "max_rel_t2": 0.1642942216508742,
+      "series": [
+        {
+          "canary_index": 0,
+          "turn1_prefill_s": 4.424046875,
+          "turn2_prefill_s": 1.107439575,
+          "rel_t1": 0.0,
+          "rel_t2": 0.0,
+          "warmup": false
+        },
+        {
+          "canary_index": 1,
+          "turn1_prefill_s": 4.765116699,
+          "turn2_prefill_s": 1.116840454,
+          "rel_t1": 0.07709453214145699,
+          "rel_t2": 0.008488841479229417,
+          "warmup": false
+        },
+        {
+          "canary_index": 2,
+          "turn1_prefill_s": 4.344520019,
+          "turn2_prefill_s": 0.992324707,
+          "rel_t1": 0.017976042805830397,
+          "rel_t2": 0.10394686138970602,
+          "warmup": false
+        },
+        {
+          "canary_index": 3,
+          "turn1_prefill_s": 4.689081542,
+          "turn2_prefill_s": 1.048552368,
+          "rel_t1": 0.05990774385725741,
+          "rel_t2": 0.053174194176689005,
+          "warmup": false
+        },
+        {
+          "canary_index": 4,
+          "turn1_prefill_s": 4.327065429,
+          "turn2_prefill_s": 0.925493652,
+          "rel_t1": 0.02192143273798382,
+          "rel_t2": 0.1642942216508742,
+          "warmup": false
+        }
+      ]
+    },
+    {
+      "run_id": "69234ed5-a716-4274-b851-33509bdb9972",
+      "sealed_path": "derived/c2_ttft/sealed_69234ed5-a716-4274-b851-33509bdb9972",
+      "status": "complete",
+      "hostname": "computadora",
+      "hostname_source": "sealed_69234ed5-a716-4274-b851-33509bdb9972",
+      "ref_turn1_prefill_s": 4.501259277,
+      "ref_turn2_prefill_s": 0.918369812,
+      "n_canaries": 5,
+      "max_rel_t1": 0.06422421509401985,
+      "max_rel_t2": 0.25634165988896845,
+      "series": [
+        {
+          "canary_index": 0,
+          "turn1_prefill_s": 4.501259277,
+          "turn2_prefill_s": 1.153786254,
+          "rel_t1": 0.0,
+          "rel_t2": 0.25634165988896845,
+          "warmup": false
+        },
+        {
+          "canary_index": 1,
+          "turn1_prefill_s": 4.714086425,
+          "turn2_prefill_s": 0.87529718,
+          "rel_t1": 0.047281690501029025,
+          "rel_t2": 0.04690118450888279,
+          "warmup": false
+        },
+        {
+          "canary_index": 2,
+          "turn1_prefill_s": 4.30434082,
+          "turn2_prefill_s": 0.918369812,
+          "rel_t1": 0.04374741486370055,
+          "rel_t2": 0.0,
+          "warmup": false
+        },
+        {
+          "canary_index": 3,
+          "turn1_prefill_s": 4.626255859,
+          "turn2_prefill_s": 1.022455871,
+          "rel_t1": 0.027769247294572058,
+          "rel_t2": 0.11333784891439791,
+          "warmup": false
+        },
+        {
+          "canary_index": 4,
+          "turn1_prefill_s": 4.212169433,
+          "turn2_prefill_s": 0.932049438,
+          "rel_t1": 0.06422421509401985,
+          "rel_t2": 0.014895552773243753,
+          "warmup": false
+        }
+      ]
+    },
+    {
+      "run_id": "7f232f86-2525-481b-a000-c6b8491bc224",
+      "sealed_path": "derived/c2_ttft/sealed_7f232f86-2525-481b-a000-c6b8491bc224",
+      "status": "complete",
+      "hostname": "computadora",
+      "hostname_source": "sealed_7f232f86-2525-481b-a000-c6b8491bc224",
+      "ref_turn1_prefill_s": 2.579269531,
+      "ref_turn2_prefill_s": 0.803674011,
+      "n_canaries": 6,
+      "max_rel_t1": 0.034393443544307185,
+      "max_rel_t2": 0.09117665246985324,
+      "series": [
+        {
+          "canary_index": 0,
+          "turn1_prefill_s": 2.602282226,
+          "turn2_prefill_s": 0.80981958,
+          "rel_t1": 0.008922175338177097,
+          "rel_t2": 0.007646843018294344,
+          "warmup": false
+        },
+        {
+          "canary_index": 1,
+          "turn1_prefill_s": 2.523192138,
+          "turn2_prefill_s": 0.803674011,
+          "rel_t1": 0.021741579282820524,
+          "rel_t2": 0.0,
+          "warmup": false
+        },
+        {
+          "canary_index": 2,
+          "turn1_prefill_s": 2.579269531,
+          "turn2_prefill_s": 0.730397705,
+          "rel_t1": 0.0,
+          "rel_t2": 0.09117665246985324,
+          "warmup": false
+        },
+        {
+          "canary_index": 3,
+          "turn1_prefill_s": 2.49055957,
+          "turn2_prefill_s": 0.803105407,
+          "rel_t1": 0.034393443544307185,
+          "rel_t2": 0.0007075057700230001,
+          "warmup": false
+        },
+        {
+          "canary_index": 4,
+          "turn1_prefill_s": 2.490741943,
+          "turn2_prefill_s": 0.779471435,
+          "rel_t1": 0.034322736315842525,
+          "rel_t2": 0.03011491683037636,
+          "warmup": false
+        },
+        {
+          "canary_index": 5,
+          "turn1_prefill_s": 2.577243164,
+          "turn2_prefill_s": 0.76807434,
+          "rel_t1": 0.0007856360010636007,
+          "rel_t2": 0.04429615803515146,
+          "warmup": false
+        }
+      ]
+    },
+    {
+      "run_id": "a427233b-df1c-4c4a-87b9-c368bb270b31",
+      "sealed_path": "derived/c2_ttft/sealed_a427233b-df1c-4c4a-87b9-c368bb270b31",
+      "status": "complete",
+      "hostname": "computadora",
+      "hostname_source": "sealed_a427233b-df1c-4c4a-87b9-c368bb270b31",
+      "ref_turn1_prefill_s": 2.745263427,
+      "ref_turn2_prefill_s": 0.695582824,
+      "n_canaries": 5,
+      "max_rel_t1": 0.024386463004448147,
+      "max_rel_t2": 0.4013291363272649,
+      "series": [
+        {
+          "canary_index": 0,
+          "turn1_prefill_s": 2.745263427,
+          "turn2_prefill_s": 0.974740478,
+          "rel_t1": 0.0,
+          "rel_t2": 0.4013291363272649,
+          "warmup": false
+        },
+        {
+          "canary_index": 1,
+          "turn1_prefill_s": 2.738197998,
+          "turn2_prefill_s": 0.695582824,
+          "rel_t1": 0.002573679789892107,
+          "rel_t2": 0.0,
+          "warmup": false
+        },
+        {
+          "canary_index": 2,
+          "turn1_prefill_s": 2.761318603,
+          "turn2_prefill_s": 0.671916503,
+          "rel_t1": 0.005848318905244375,
+          "rel_t2": 0.03402372827998408,
+          "warmup": false
+        },
+        {
+          "canary_index": 3,
+          "turn1_prefill_s": 2.678316162,
+          "turn2_prefill_s": 0.687705017,
+          "rel_t1": 0.024386463004448147,
+          "rel_t2": 0.011325476604925583,
+          "warmup": false
+        },
+        {
+          "canary_index": 4,
+          "turn1_prefill_s": 2.737788085,
+          "turn2_prefill_s": 0.662921508,
+          "rel_t1": 0.002722996243813572,
+          "rel_t2": 0.04695532274960256,
+          "warmup": false
+        }
+      ]
+    },
+    {
+      "run_id": "c2246b1f-c588-4998-838a-5507da87e9ee",
+      "sealed_path": "derived/c2_ttft/sealed_c2246b1f-c588-4998-838a-5507da87e9ee",
+      "status": "complete",
+      "hostname": "computadora",
+      "hostname_source": "sealed_c2246b1f-c588-4998-838a-5507da87e9ee",
+      "ref_turn1_prefill_s": 2.5848208,
+      "ref_turn2_prefill_s": 0.730254211,
+      "n_canaries": 5,
+      "max_rel_t1": 0.03734732133074768,
+      "max_rel_t2": 0.24140153160992872,
+      "series": [
+        {
+          "canary_index": 0,
+          "turn1_prefill_s": 2.609915283,
+          "turn2_prefill_s": 0.906538696,
+          "rel_t1": 0.009708403383321474,
+          "rel_t2": 0.24140153160992872,
+          "warmup": false
+        },
+        {
+          "canary_index": 1,
+          "turn1_prefill_s": 2.5848208,
+          "turn2_prefill_s": 0.730254211,
+          "rel_t1": 0.0,
+          "rel_t2": 0.0,
+          "warmup": false
+        },
+        {
+          "canary_index": 2,
+          "turn1_prefill_s": 2.488284667,
+          "turn2_prefill_s": 0.682931762,
+          "rel_t1": 0.03734732133074768,
+          "rel_t2": 0.0648027060812114,
+          "warmup": false
+        },
+        {
+          "canary_index": 3,
+          "turn1_prefill_s": 2.570442138,
+          "turn2_prefill_s": 0.711962707,
+          "rel_t1": 0.005562730692974898,
+          "rel_t2": 0.02504813217708376,
+          "warmup": false
+        },
+        {
+          "canary_index": 4,
+          "turn1_prefill_s": 2.565979736,
+          "turn2_prefill_s": 0.700081481,
+          "rel_t1": 0.007289118069616305,
+          "rel_t2": 0.04131811846546131,
+          "warmup": false
+        }
+      ]
+    },
+    {
+      "run_id": "d3dcbd3b-5107-4b5e-a0dd-402f99f6f90c",
+      "sealed_path": "derived/c2_ttft/sealed_d3dcbd3b-5107-4b5e-a0dd-402f99f6f90c",
+      "status": "complete",
+      "hostname": "computadora",
+      "hostname_source": "d3dcbd3b-5107-4b5e-a0dd-402f99f6f90c",
+      "ref_turn1_prefill_s": 2.633084472,
+      "ref_turn2_prefill_s": 0.743281921,
+      "n_canaries": 5,
+      "max_rel_t1": 0.05921365328685131,
+      "max_rel_t2": 0.40453054016902423,
+      "series": [
+        {
+          "canary_index": 0,
+          "turn1_prefill_s": 2.549453369,
+          "turn2_prefill_s": 1.043962158,
+          "rel_t1": 0.03176164832132286,
+          "rel_t2": 0.40453054016902423,
+          "warmup": false
+        },
+        {
+          "canary_index": 1,
+          "turn1_prefill_s": 2.633084472,
+          "turn2_prefill_s": 0.735315917,
+          "rel_t1": 0.0,
+          "rel_t2": 0.010717338569573558,
+          "warmup": false
+        },
+        {
+          "canary_index": 2,
+          "turn1_prefill_s": 2.633965087,
+          "turn2_prefill_s": 0.743281921,
+          "rel_t1": 0.0003344423657365319,
+          "rel_t2": 0.0,
+          "warmup": false
+        },
+        {
+          "canary_index": 3,
+          "turn1_prefill_s": 2.509960449,
+          "turn2_prefill_s": 0.722328308,
+          "rel_t1": 0.04676037715815459,
+          "rel_t2": 0.028190666835820943,
+          "warmup": false
+        },
+        {
+          "canary_index": 4,
+          "turn1_prefill_s": 2.477169921,
+          "turn2_prefill_s": 0.734830261,
+          "rel_t1": 0.05921365328685131,
+          "rel_t2": 0.011370732640219795,
+          "warmup": false
+        }
+      ]
+    },
+    {
+      "run_id": "fea55e0c-b9f8-4ba9-b5ea-558401910d74",
+      "sealed_path": "derived/c2_ttft/sealed_fea55e0c-b9f8-4ba9-b5ea-558401910d74",
+      "status": "complete",
+      "hostname": "computadora",
+      "hostname_source": "fea55e0c-b9f8-4ba9-b5ea-558401910d74",
+      "ref_turn1_prefill_s": 2.826611572,
+      "ref_turn2_prefill_s": 0.699781616,
+      "n_canaries": 5,
+      "max_rel_t1": 0.045948449120691605,
+      "max_rel_t2": 0.3985504157628514,
+      "series": [
+        {
+          "canary_index": 0,
+          "turn1_prefill_s": 2.867222656,
+          "turn2_prefill_s": 0.97867987,
+          "rel_t1": 0.01436740880929218,
+          "rel_t2": 0.3985504157628514,
+          "warmup": false
+        },
+        {
+          "canary_index": 1,
+          "turn1_prefill_s": 2.826611572,
+          "turn2_prefill_s": 0.672663879,
+          "rel_t1": 0.0,
+          "rel_t2": 0.038751713934708415,
+          "warmup": false
+        },
+        {
+          "canary_index": 2,
+          "turn1_prefill_s": 2.727339599,
+          "turn2_prefill_s": 0.699781616,
+          "rel_t1": 0.035120486303591776,
+          "rel_t2": 0.0,
+          "warmup": false
+        },
+        {
+          "canary_index": 3,
+          "turn1_prefill_s": 2.709670898,
+          "turn2_prefill_s": 0.691931335,
+          "rel_t1": 0.04137132783237606,
+          "rel_t2": 0.011218186960773143,
+          "warmup": false
+        },
+        {
+          "canary_index": 4,
+          "turn1_prefill_s": 2.696733154,
+          "turn2_prefill_s": 0.687809814,
+          "rel_t1": 0.045948449120691605,
+          "rel_t2": 0.017107911563084034,
+          "warmup": false
+        }
+      ]
+    },
+    {
+      "run_id": "e9264a0a-d2f0-46dd-99af-8e4d9e36ad44",
+      "sealed_path": "derived/delta_prefill/sealed_e9264a0a-d2f0-46dd-99af-8e4d9e36ad44",
+      "status": "failed",
+      "hostname": "computadora",
+      "hostname_source": "e9264a0a-d2f0-46dd-99af-8e4d9e36ad44",
+      "ref_turn1_prefill_s": 2.643773437,
+      "ref_turn2_prefill_s": 0.719344543,
+      "n_canaries": 3,
+      "max_rel_t1": 0.06050746095002855,
+      "max_rel_t2": 0.5655217613849336,
+      "series": [
+        {
+          "canary_index": 0,
+          "turn1_prefill_s": 2.666311035,
+          "turn2_prefill_s": 1.126149536,
+          "rel_t1": 0.008524784190877696,
+          "rel_t2": 0.5655217613849336,
+          "warmup": false
+        },
+        {
+          "canary_index": 1,
+          "turn1_prefill_s": 2.483805419,
+          "turn2_prefill_s": 0.662402648,
+          "rel_t1": 0.06050746095002855,
+          "rel_t2": 0.07915802733767303,
+          "warmup": false
+        },
+        {
+          "canary_index": 2,
+          "turn1_prefill_s": 2.643773437,
+          "turn2_prefill_s": 0.719344543,
+          "rel_t1": 0.0,
+          "rel_t2": 0.0,
+          "warmup": false
+        }
+      ]
+    }
+  ],
+  "excluded": [
+    {
+      "run_id": "c3efd48e-84c5-46c6-bb1f-42d13f7c0a16",
+      "path": "derived/c2_ttft/c3efd48e-84c5-46c6-bb1f-42d13f7c0a16",
+      "status": "FAIL_CANARY_DRIFT",
+      "hostname": "computadora",
+      "reason": "canary tripped"
+    },
+    {
+      "run_id": "051d2681-4bb8-4f50-b9fc-b14441359ba6",
+      "path": "derived/c2_ttft/sealed_051d2681-4bb8-4f50-b9fc-b14441359ba6",
+      "status": "complete",
+      "hostname": "EVO-T2S",
+      "reason": "host is not computadora"
+    },
+    {
+      "run_id": "5c714535-9f36-4614-a594-698b6cd09296",
+      "path": "derived/c2_ttft/sealed_5c714535-9f36-4614-a594-698b6cd09296",
+      "status": "complete",
+      "hostname": "EVO-T2S",
+      "reason": "host is not computadora"
+    },
+    {
+      "run_id": "c647f0c7-5cc9-47bb-a491-3450533c34d1",
+      "path": "derived/c2_ttft/sealed_c647f0c7-5cc9-47bb-a491-3450533c34d1",
+      "status": "complete",
+      "hostname": "computadora",
+      "reason": "canary never armed"
+    },
+    {
+      "run_id": "718776fe-d8ec-4a72-ac96-79f456ea20b5",
+      "path": "derived/delta_prefill/718776fe-d8ec-4a72-ac96-79f456ea20b5",
+      "status": "FAIL_CANARY_DRIFT",
+      "hostname": "computadora",
+      "reason": "FAIL_CANARY_DRIFT; the refusal under study, excluded from the healthy pool"
+    }
+  ],
+  "refused_session": {
+    "run_id": "718776fe-d8ec-4a72-ac96-79f456ea20b5",
+    "status": "FAIL_CANARY_DRIFT",
+    "abort_reason": "turn1 rel_drift=0.063646 > threshold_t1=0.050000 (t1=2.658880859 ref=2.499781005)",
+    "series": [
+      {
+        "canary_index": 0,
+        "warmup": true,
+        "gate_armed": false,
+        "drift_tripped": false,
+        "turn1_prefill_s": 2.52504248,
+        "turn2_prefill_s": 1.018973144,
+        "rel_drift_t1": null,
+        "rel_drift_t2": null,
+        "threshold_t1": null,
+        "threshold_t2": null,
+        "after_probe_count": -1
+      },
+      {
+        "canary_index": 1,
+        "warmup": false,
+        "gate_armed": false,
+        "drift_tripped": false,
+        "turn1_prefill_s": 2.499781005,
+        "turn2_prefill_s": 0.840779479,
+        "rel_drift_t1": null,
+        "rel_drift_t2": null,
+        "threshold_t1": null,
+        "threshold_t2": null,
+        "after_probe_count": -1
+      },
+      {
+        "canary_index": 2,
+        "warmup": false,
+        "gate_armed": false,
+        "drift_tripped": false,
+        "turn1_prefill_s": 2.529414306,
+        "turn2_prefill_s": 0.671709289,
+        "rel_drift_t1": null,
+        "rel_drift_t2": null,
+        "threshold_t1": null,
+        "threshold_t2": null,
+        "after_probe_count": 0
+      },
+      {
+        "canary_index": 3,
+        "warmup": false,
+        "gate_armed": true,
+        "drift_tripped": false,
+        "turn1_prefill_s": 2.489255859,
+        "turn2_prefill_s": 0.688477294,
+        "rel_drift_t1": null,
+        "rel_drift_t2": null,
+        "threshold_t1": 0.05,
+        "threshold_t2": 0.44243197655840205,
+        "after_probe_count": 1
+      },
+      {
+        "canary_index": 4,
+        "warmup": false,
+        "gate_armed": true,
+        "drift_tripped": true,
+        "turn1_prefill_s": 2.658880859,
+        "turn2_prefill_s": 0.721247436,
+        "rel_drift_t1": 0.06364551681998237,
+        "rel_drift_t2": 0.04759799965167762,
+        "threshold_t1": 0.05,
+        "threshold_t2": 0.44243197655840205,
+        "after_probe_count": 2
+      }
+    ],
+    "settling": "The three post-warm-up calibration turn-1 samples are 2.499781005, 2.529414306, and 2.489255859. The one later check is 2.658880859, higher than each of them. Turn 2 does not follow that pattern: the first calibration sample, 0.840779479, is higher than the later check, 0.721247436. One later call is not a repeated settling series. The warm-up rule is unchanged."
+  }
+}

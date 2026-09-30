@@ -306,7 +306,7 @@ Write-Host ""
 # ---------------------------------------------------------------------------
 Write-Host "=== 3. INF-1b canary ==="
 Write-Host "fixed cell: gpu_only_f16 n_cached=4000 delta=400 RESIDENT"
-Write-Host "thresholds: C=3 rel_drift_floor=0.05 onset_s=657 (same as C-2/matrix)"
+Write-Host "thresholds: C=3 healthy-session floor (t1 and t2) onset_s=657"
 $CanaryOpeningPy = Join-Path $root "tools\run_h1_canary_opening.py"
 if (-not (Test-Path -LiteralPath $CanaryOpeningPy)) {
     Refuse "missing INF-1b canary opening: $CanaryOpeningPy"

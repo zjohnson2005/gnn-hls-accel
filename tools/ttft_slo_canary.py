@@ -32,13 +32,79 @@ from tools.canary_power_gate import (
 # Shortest observed degradation onset (docs/CANARY_PROTOCOL.md / 7f569929).
 ONSET_S = 657.0
 CALIBRATION_C = 3
-REL_DRIFT_FLOOR = 0.05
+# Largest |t - session_ref| / session_ref on the fixed cell in sealed, guarded
+# XPS sessions that finished without a trip. The 0.05 floor is replaced.
+# Series: derived/c2_ttft/analysis/canary_threshold_pool.json
+HEALTHY_FLOOR_T1 = 0.07709453214145699
+HEALTHY_FLOOR_T2 = 0.5655217613849336
+HEALTHY_FLOOR_P95_T1 = 0.06087913636442768
+HEALTHY_FLOOR_P95_T2 = 0.40164927671144085
+HEALTHY_FLOOR_ANALYSIS = "derived/c2_ttft/analysis/canary_threshold_pool.json"
+HEALTHY_FLOOR_SESSIONS = (
+    "322b2f86-9571-46ae-be6a-ba1cec44e018",
+    "69234ed5-a716-4274-b851-33509bdb9972",
+    "7f232f86-2525-481b-a000-c6b8491bc224",
+    "a427233b-df1c-4c4a-87b9-c368bb270b31",
+    "c2246b1f-c588-4998-838a-5507da87e9ee",
+    "d3dcbd3b-5107-4b5e-a0dd-402f99f6f90c",
+    "fea55e0c-b9f8-4ba9-b5ea-558401910d74",
+    "e9264a0a-d2f0-46dd-99af-8e4d9e36ad44",
+)
 CANARY_ARM = "gpu_only_f16"
 CANARY_N_CACHED = 4000
 CANARY_DELTA = 400
 CANARY_MODE = "RESIDENT"
 FAIL_STATUS = "FAIL_CANARY_DRIFT"
 UNARMED_REFUSE = "REFUSED_UNARMED_CANARY"
+
+
+def threshold_derivation() -> dict[str, Any]:
+    """Pooled healthy-session floors recorded on every canary plan."""
+    return {
+        "formula": "threshold = max(2 * early_max_rel, healthy_floor)",
+        "healthy_floor_t1": HEALTHY_FLOOR_T1,
+        "healthy_floor_t2": HEALTHY_FLOOR_T2,
+        "pooled_max_rel_t1": HEALTHY_FLOOR_T1,
+        "pooled_max_rel_t2": HEALTHY_FLOOR_T2,
+        "pooled_p95_rel_t1": HEALTHY_FLOOR_P95_T1,
+        "pooled_p95_rel_t2": HEALTHY_FLOOR_P95_T2,
+        "p95_method": "statistics.quantiles(data, n=100, method=inclusive)[94]",
+        "replaced_floor": 0.05,
+        "cell": "gpu_only_f16 RESIDENT n_cached=4000 delta=400",
+        "host": "computadora",
+        "platform_id": "aipc-c1",
+        "sessions": list(HEALTHY_FLOOR_SESSIONS),
+        "analysis": HEALTHY_FLOOR_ANALYSIS,
+        "rationale": (
+            "healthy_floor is the largest relative drift, abs(t - session_ref) / session_ref, "
+            "in any sealed guarded XPS session on this cell that finished without a trip. "
+            "No accepted session exceeded it, so a larger relative drift is evidence of degradation."
+        ),
+    }
+
+
+def drift_threshold(early_max_rel: float, healthy_floor: float) -> float:
+    return max(2.0 * float(early_max_rel), float(healthy_floor))
+
+
+def _active_floors(
+    gate: dict[str, Any],
+    *,
+    rel_drift_floor: float | None,
+    rel_drift_floor_t1: float | None,
+    rel_drift_floor_t2: float | None,
+) -> tuple[float, float]:
+    """A single override applies to both turns. Otherwise use the gate floors."""
+    if rel_drift_floor is not None:
+        floor = float(rel_drift_floor)
+        return floor, floor
+    t1 = rel_drift_floor_t1
+    t2 = rel_drift_floor_t2
+    if t1 is None:
+        t1 = gate.get("rel_drift_floor_t1", HEALTHY_FLOOR_T1)
+    if t2 is None:
+        t2 = gate.get("rel_drift_floor_t2", HEALTHY_FLOOR_T2)
+    return float(t1), float(t2)
 
 
 class CanaryDriftAbort(Exception):
@@ -244,7 +310,9 @@ def update_canary_drift_bookkeeping(
     gate: dict[str, Any],
     prior_ok_canaries: list[dict[str, Any]],
     calibration_c: int = CALIBRATION_C,
-    rel_drift_floor: float = REL_DRIFT_FLOOR,
+    rel_drift_floor: float | None = None,
+    rel_drift_floor_t1: float | None = None,
+    rel_drift_floor_t2: float | None = None,
 ) -> dict[str, Any]:
     """Python port of tools/SeamPsCommon.ps1 Update-CanaryDriftBookkeeping."""
     if calibration_c < 2:
@@ -297,8 +365,14 @@ def update_canary_drift_bookkeeping(
                 early2 = [_rel_drift(v, ref2) or 0.0 for v in t2s]
                 em1 = max(early1)
                 em2 = max(early2)
-                th1 = max(2.0 * em1, float(rel_drift_floor))
-                th2 = max(2.0 * em2, float(rel_drift_floor))
+                floor1, floor2 = _active_floors(
+                    gate,
+                    rel_drift_floor=rel_drift_floor,
+                    rel_drift_floor_t1=rel_drift_floor_t1,
+                    rel_drift_floor_t2=rel_drift_floor_t2,
+                )
+                th1 = drift_threshold(em1, floor1)
+                th2 = drift_threshold(em2, floor2)
                 gate["armed"] = True
                 gate["calibration_complete"] = True
                 gate["ref_turn1_prefill_s"] = ref1
@@ -312,8 +386,8 @@ def update_canary_drift_bookkeeping(
                 gate["derivation_applied"] = (
                     f"calib_n={calibration_c}; ref_t1={ref1:.6f} ref_t2={ref2:.6f}; "
                     f"early_max_rel_t1={em1:.6f} early_max_rel_t2={em2:.6f}; "
-                    f"threshold_t1=max(2*early_max_t1,floor={rel_drift_floor})={th1:.6f}; "
-                    f"threshold_t2={th2:.6f}"
+                    f"threshold_t1=max(2*early_max_t1,healthy_floor_t1={floor1})={th1:.6f}; "
+                    f"threshold_t2=max(2*early_max_t2,healthy_floor_t2={floor2})={th2:.6f}"
                 )
         else:
             rel_t1 = _rel_drift(float(t1), float(gate["ref_turn1_prefill_s"]))
@@ -357,13 +431,26 @@ def update_canary_drift_bookkeeping(
 def new_canary_gate(
     *,
     calibration_c: int = CALIBRATION_C,
-    rel_drift_floor: float = REL_DRIFT_FLOOR,
+    rel_drift_floor: float | None = None,
+    rel_drift_floor_t1: float | None = None,
+    rel_drift_floor_t2: float | None = None,
 ) -> dict[str, Any]:
+    if rel_drift_floor is not None:
+        if rel_drift_floor_t1 is None:
+            rel_drift_floor_t1 = rel_drift_floor
+        if rel_drift_floor_t2 is None:
+            rel_drift_floor_t2 = rel_drift_floor
+    if rel_drift_floor_t1 is None:
+        rel_drift_floor_t1 = HEALTHY_FLOOR_T1
+    if rel_drift_floor_t2 is None:
+        rel_drift_floor_t2 = HEALTHY_FLOOR_T2
     return {
         "armed": False,
         "calibration_complete": False,
         "calibration_c": calibration_c,
-        "rel_drift_floor": rel_drift_floor,
+        "rel_drift_floor_t1": rel_drift_floor_t1,
+        "rel_drift_floor_t2": rel_drift_floor_t2,
+        "threshold_derivation": threshold_derivation(),
         "ref_turn1_prefill_s": None,
         "ref_turn2_prefill_s": None,
         "early_max_rel_t1": None,
@@ -394,7 +481,9 @@ class TtftSloCanaryGuard:
     allow_unguarded: bool = False
     discard_warmup: bool = False
     calibration_c: int = CALIBRATION_C
-    rel_drift_floor: float = REL_DRIFT_FLOOR
+    rel_drift_floor: float | None = None
+    rel_drift_floor_t1: float | None = None
+    rel_drift_floor_t2: float | None = None
     onset_s: float = ONSET_S
     gate: dict[str, Any] = field(default_factory=new_canary_gate)
     canaries: list[dict[str, Any]] = field(default_factory=list)
@@ -409,6 +498,8 @@ class TtftSloCanaryGuard:
         self.gate = new_canary_gate(
             calibration_c=self.calibration_c,
             rel_drift_floor=self.rel_drift_floor,
+            rel_drift_floor_t1=self.rel_drift_floor_t1,
+            rel_drift_floor_t2=self.rel_drift_floor_t2,
         )
         self.gate["onset_s"] = self.onset_s
         self.budget_preflight = assert_canary_budget_fits(
@@ -424,7 +515,9 @@ class TtftSloCanaryGuard:
             "fixed_cell": self.gate["fixed_cell"],
             "model_spec": str(self.model_spec),
             "calibration_c": self.calibration_c,
-            "rel_drift_floor": self.rel_drift_floor,
+            "rel_drift_floor_t1": self.gate["rel_drift_floor_t1"],
+            "rel_drift_floor_t2": self.gate["rel_drift_floor_t2"],
+            "threshold_derivation": self.gate["threshold_derivation"],
             "onset_s": self.onset_s,
             "planned_probe_count": self.planned_probe_count,
             "budget_preflight": self.budget_preflight,
@@ -456,9 +549,7 @@ class TtftSloCanaryGuard:
             calibration_c=self.calibration_c,
         )
         if self.n_derivation.get("refuse"):
-            raise CanaryBudgetRefuse(
-                self.n_derivation.get("note") or "canary budget refuse"
-            )
+            raise CanaryBudgetRefuse(self.n_derivation.get("note") or "canary budget refuse")
         if self.n_derivation.get("derivable"):
             self.n_every = int(self.n_derivation["n"])
 
@@ -521,9 +612,7 @@ class TtftSloCanaryGuard:
         )
         # INF-6: record BatteryStatus + charge; refuse on AC transition.
         power = capture_canary_power_snapshot()
-        transition = assert_no_ac_transition(
-            previous=self.last_power_snapshot, current=power
-        )
+        transition = assert_no_ac_transition(previous=self.last_power_snapshot, current=power)
         self.last_power_snapshot = power
         rec = self._run_cell()
         rec["power"] = power

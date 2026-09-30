@@ -84,15 +84,25 @@ cannot trip it.
 ### 4. Threshold derived from that noise
 
 ```
-threshold_t1 = max(2 * early_max_t1, rel_drift_floor)
-threshold_t2 = max(2 * early_max_t2, rel_drift_floor)
+threshold_t1 = max(2 * early_max_t1, healthy_floor_t1)
+threshold_t2 = max(2 * early_max_t2, healthy_floor_t2)
 
-rel_drift_floor = 0.05
+healthy_floor_t1 = 0.07709453214145699
+healthy_floor_t2 = 0.5655217613849336
 ```
+
+`healthy_floor` is the largest `|t - session_ref| / session_ref` on this fixed
+cell in any sealed, guarded XPS session that finished without a trip (hostname
+`computadora`). Turn 1 and turn 2 have separate floors. No accepted session
+exceeded its floor, so a larger relative drift is evidence of degradation. The
+previous `0.05` floor is replaced. The session list and the per-canary series
+are in `derived/c2_ttft/analysis/canary_threshold_pool.json`. Every plan records
+that derivation.
 
 The `2x` allows as much additional deviation as calibration already showed. The
 floor covers the case where `early_max` comes out near zero and the threshold
-would otherwise collapse to something that trips on rounding.
+would otherwise collapse to something that trips on the spread already seen in
+a healthy session.
 
 **This is the load-bearing part.** The threshold is not 2x, not 5x, not any
 round number picked before the run. It is derived from measurements taken during
@@ -117,9 +127,10 @@ Per canary: the raw measurements, the index of the matrix cell it followed, and
 available memory at its start.
 
 Per session: the fixed cell configuration, `N` with its derivation, `C`,
-`rel_drift_floor`, the computed `ref_t1` / `ref_t2` and `early_max_t1` /
-`early_max_t2`, and the resulting thresholds. If the run aborts, the canary that
-tripped it and by how much.
+`healthy_floor_t1` / `healthy_floor_t2` and the session list they were derived
+from, the computed `ref_t1` / `ref_t2` and `early_max_t1` / `early_max_t2`, and
+the resulting thresholds. If the run aborts, the canary that tripped it and by
+how much.
 
 Recording the derivation alongside the number is the point. A threshold whose
 provenance cannot be named is indistinguishable from one someone made up.

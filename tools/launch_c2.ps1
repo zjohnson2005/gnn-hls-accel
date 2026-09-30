@@ -25,7 +25,7 @@
 #   Search default: low=8000, high=12000; bisect to +/- 250; 3 repeats
 #   Pass: median(prefill_s) <= 10 s
 #   Drift canary (INF-1): fixed gpu_only_f16 nc=4000 d=400 RESIDENT;
-#     N=min(onset, budget) INF-1b; C=3; early_max threshold floor 0.05;
+#     N=min(onset, budget) INF-1b; C=3; early_max threshold with the healthy-session floor;
 #     trip => FAIL_CANARY_DRIFT abort (CanaryDriftAbort).
 #   Pre-registers (ACTIVE, AM-038): turn-1 TTFT limits agree within +/- 250
 #   WITHDRAWN (retained in plan.json): f16 > u8 >= u4 (turn-2 delta claim)

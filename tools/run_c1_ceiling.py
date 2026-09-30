@@ -9,7 +9,7 @@ gpu_only_u4).
 --criterion ttft_slo: pass = median(prefill_s) <= --slo-s (C-2 / AM-038).
   Drift canary (docs/CANARY_PROTOCOL.md) is mandatory on this path: fixed
   gpu_only_f16 / n=4000 / d=400 / RESIDENT cell; N from THIS run's probe
-  wall times; C=3; threshold from early_max with 0.05 floor. A trip aborts
+  wall times; C=3; threshold from early_max with the healthy-session floor. A trip aborts
   with status FAIL_CANARY_DRIFT (CanaryDriftAbort - not a soft return).
 
 CRITICAL (completion): every failed probe is classified as memory_wall vs
