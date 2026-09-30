@@ -1,0 +1,252 @@
+{
+  "arm": "gpu_only_f16",
+  "canaries": [
+    {
+      "after_probe_count": -1,
+      "arm_id": "gpu_only_f16",
+      "available_mb_start": 6915.0,
+      "canary_index": 0,
+      "classification": "OK",
+      "delta": 400,
+      "drift_tripped": false,
+      "execute_error": null,
+      "execute_ok": true,
+      "gate_armed": false,
+      "is_canary": true,
+      "mode": "RESIDENT",
+      "n_cached": 4000,
+      "power": {
+        "battery_present": true,
+        "battery_status_values": [
+          2
+        ],
+        "estimated_charge_remaining_pct": 100,
+        "estimated_charge_remaining_pct_all": [
+          100
+        ],
+        "note": "ac_ok",
+        "on_ac": true,
+        "probe_error": null
+      },
+      "power_transition": {
+        "action": "baseline",
+        "current_on_ac": true,
+        "note": "first canary power snapshot; no prior transition to compare",
+        "ok": true,
+        "previous_on_ac": null
+      },
+      "raw_classification": "OK",
+      "rel_drift_t1": null,
+      "rel_drift_t2": null,
+      "threshold_t1": null,
+      "threshold_t2": null,
+      "trip_detail": null,
+      "turn1_prefill_s": 2.666311035,
+      "turn2_prefill_s": 1.126149536,
+      "utc": "2026-09-29T22:02:32.652215+00:00"
+    },
+    {
+      "after_probe_count": 0,
+      "arm_id": "gpu_only_f16",
+      "available_mb_start": 7146.0,
+      "canary_index": 1,
+      "classification": "OK",
+      "delta": 400,
+      "drift_tripped": false,
+      "execute_error": null,
+      "execute_ok": true,
+      "gate_armed": false,
+      "is_canary": true,
+      "mode": "RESIDENT",
+      "n_cached": 4000,
+      "power": {
+        "battery_present": true,
+        "battery_status_values": [
+          2
+        ],
+        "estimated_charge_remaining_pct": 100,
+        "estimated_charge_remaining_pct_all": [
+          100
+        ],
+        "note": "ac_ok",
+        "on_ac": true,
+        "probe_error": null
+      },
+      "power_transition": {
+        "action": "pass_stable",
+        "current_on_ac": true,
+        "note": "on_ac unchanged since previous canary",
+        "ok": true,
+        "previous_on_ac": true
+      },
+      "raw_classification": "OK",
+      "rel_drift_t1": null,
+      "rel_drift_t2": null,
+      "threshold_t1": null,
+      "threshold_t2": null,
+      "trip_detail": null,
+      "turn1_prefill_s": 2.483805419,
+      "turn2_prefill_s": 0.662402648,
+      "utc": "2026-09-29T22:03:45.293613+00:00"
+    },
+    {
+      "after_probe_count": 1,
+      "arm_id": "gpu_only_f16",
+      "available_mb_start": 9599.0,
+      "canary_index": 2,
+      "classification": "OK",
+      "delta": 400,
+      "drift_tripped": false,
+      "execute_error": null,
+      "execute_ok": true,
+      "gate_armed": true,
+      "is_canary": true,
+      "mode": "RESIDENT",
+      "n_cached": 4000,
+      "power": {
+        "battery_present": true,
+        "battery_status_values": [
+          2
+        ],
+        "estimated_charge_remaining_pct": 100,
+        "estimated_charge_remaining_pct_all": [
+          100
+        ],
+        "note": "ac_ok",
+        "on_ac": true,
+        "probe_error": null
+      },
+      "power_transition": {
+        "action": "pass_stable",
+        "current_on_ac": true,
+        "note": "on_ac unchanged since previous canary",
+        "ok": true,
+        "previous_on_ac": true
+      },
+      "raw_classification": "OK",
+      "rel_drift_t1": null,
+      "rel_drift_t2": null,
+      "threshold_t1": 0.1210149219000571,
+      "threshold_t2": 1.1310435227698672,
+      "trip_detail": null,
+      "turn1_prefill_s": 2.643773437,
+      "turn2_prefill_s": 0.719344543,
+      "utc": "2026-09-29T22:04:52.113599+00:00"
+    }
+  ],
+  "canary": {
+    "abort_on_trip": "FAIL_CANARY_DRIFT",
+    "allow_unguarded": false,
+    "budget_preflight": {
+      "calibration_c": 3,
+      "min_canaries_required": 4,
+      "n_budget": 1,
+      "ok": true,
+      "planned_probe_count": 4
+    },
+    "calibration_c": 3,
+    "canary_every_n": 1,
+    "canary_gate": {
+      "armed": true,
+      "calibration_c": 3,
+      "calibration_complete": true,
+      "derivation_applied": "calib_n=3; ref_t1=2.643773 ref_t2=0.719345; early_max_rel_t1=0.060507 early_max_rel_t2=0.565522; threshold_t1=max(2*early_max_t1,floor=0.05)=0.121015; threshold_t2=1.131044",
+      "early_max_rel_t1": 0.06050746095002855,
+      "early_max_rel_t2": 0.5655217613849336,
+      "fixed_cell": {
+        "arm": "gpu_only_f16",
+        "delta": 400,
+        "mode": "RESIDENT",
+        "n_cached": 4000
+      },
+      "onset_s": 657.0,
+      "protocol": "docs/CANARY_PROTOCOL.md",
+      "ref_turn1_prefill_s": 2.643773437,
+      "ref_turn2_prefill_s": 0.719344543,
+      "rel_drift_floor": 0.05,
+      "threshold_t1": 0.1210149219000571,
+      "threshold_t2": 1.1310435227698672
+    },
+    "criterion_path": "ttft_slo",
+    "enabled": true,
+    "enforcement": "CanaryDriftAbort exception; session status FAIL_CANARY_DRIFT. Does not return a soft bool that a caller can ignore (Invoke-DriftCanary Write-Output bug class). INF-1b: refuse start if budget < C+1 canaries; refuse seal with armed==false unless AllowUnguarded writes UNGUARDED.",
+    "fixed_cell": {
+      "arm": "gpu_only_f16",
+      "delta": 400,
+      "mode": "RESIDENT",
+      "n_cached": 4000
+    },
+    "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+    "n_canaries": 3,
+    "n_derivation": {
+      "binding_bound": "budget",
+      "calibration_c": 3,
+      "derivable": true,
+      "derivation": "N=min(floor(onset_s/mean_probe_wall_s), floor(planned/(C+1)))=min(32,1)=1 (binding=budget); onset_s=657.0; mean_probe_wall_s=20.0839 from THIS run (2 probes); planned_probe_count=4; C=3.",
+      "mean_probe_wall_s": 20.083907350000004,
+      "n": 1,
+      "n_budget": 1,
+      "n_onset": 32,
+      "n_probes_in_mean": 2,
+      "onset_s": 657.0,
+      "planned_probe_count": 4,
+      "refuse": false
+    },
+    "onset_s": 657.0,
+    "planned_probe_count": 4,
+    "power_transition_refuse": "INF-6: capture Win32_Battery BatteryStatus + EstimatedChargeRemaining at every canary; refuse on AC on_ac transition. No-battery hosts pass trivially.",
+    "rel_drift_floor": 0.05
+  },
+  "canary_finalize": {
+    "UNGUARDED": false,
+    "armed": true,
+    "ok": true
+  },
+  "delta_tokens": 183,
+  "ended_utc": "2026-09-29T22:04:52.176985Z",
+  "f16_advantage_percent": null,
+  "kind": "warm_kv",
+  "model_name": "Qwen3-4B-int4-ov",
+  "n_cached": [
+    12000,
+    46000
+  ],
+  "points": [
+    {
+      "arm": "gpu_only_f16",
+      "failure_kind": null,
+      "failure_mode": null,
+      "n_cached": 12000,
+      "outcome": "pass",
+      "turn1_prefill_s": 16.795974609,
+      "turn2_median_prefill_s": 0.645158569,
+      "turn2_prefill_s": [
+        1.874997924,
+        0.640768371,
+        0.645158569
+      ],
+      "turn2_prompt_tokens_reported": [
+        12188,
+        12188,
+        12188
+      ]
+    },
+    {
+      "arm": "gpu_only_f16",
+      "failure_kind": "other",
+      "failure_mode": "turn1:RuntimeError",
+      "n_cached": 46000,
+      "outcome": "fail",
+      "turn1_prefill_s": null,
+      "turn2_median_prefill_s": null,
+      "turn2_prefill_s": [],
+      "turn2_prompt_tokens_reported": []
+    }
+  ],
+  "sealed_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_prefill\\sealed_e9264a0a-d2f0-46dd-99af-8e4d9e36ad44",
+  "session_id": "e9264a0a-d2f0-46dd-99af-8e4d9e36ad44",
+  "status": "failed",
+  "turn2_median_prefill_s": {
+    "12000": 0.645158569
+  }
+}
