@@ -864,6 +864,9 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
             "turn1_prefill_s": turn1_s,
             "turn2_prefill_s": prefills,
             "turn2_ttft_s": prefills[0] if prefills else None,
+            "hung_after_result": bool(child.get("hung_after_result")),
+            "hang_duration_s": child.get("hang_duration_s"),
+            "hang_disposition": child.get("hang_disposition"),
         }
         _write(out_dir / "points" / f"n{n_cached}.json", point)
         recorded.append(point)

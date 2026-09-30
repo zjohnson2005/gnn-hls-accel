@@ -27,7 +27,7 @@ param(
     [switch]$NoRebootDeviation,
     [switch]$Rehearsal,
     [string]$WatchdogLog = "",
-    [ValidateSet("boot1", "boot2", "boot3", "boot4", "resident-limit", "t2s-boot1")]
+    [ValidateSet("boot1", "boot2", "boot3", "boot4", "resident-limit", "resident-limit-2", "t2s-boot1")]
     [string]$Profile = "boot1"
 )
 
@@ -71,6 +71,7 @@ $SummaryName = switch ($Profile) {
     "boot3" { "BOOT3_SUMMARY.json" }
     "boot4" { "BOOT4_SUMMARY.json" }
     "resident-limit" { "RESIDENT_LIMIT_SUMMARY.json" }
+    "resident-limit-2" { "RESIDENT_LIMIT_2_SUMMARY.json" }
     "t2s-boot1" { "T2S_BOOT1_SUMMARY.json" }
     default { "BOOT1_SUMMARY.json" }
 }
@@ -79,12 +80,14 @@ $DeferredName = switch ($Profile) {
     "boot3" { "DEFERRED_TO_BOOT4.json" }
     "boot4" { "DEFERRED_TO_BOOT5.json" }
     "resident-limit" { "DEFERRED_TO_RESIDENT_LIMIT_2.json" }
+    "resident-limit-2" { "DEFERRED_TO_RESIDENT_LIMIT_3.json" }
     "t2s-boot1" { "DEFERRED_TO_T2S_BOOT2.json" }
     default { "DEFERRED_TO_BOOT2.json" }
 }
 $script:DeferredStatus = switch ($Profile) {
     "t2s-boot1" { "DEFERRED_TO_T2S_BOOT2" }
     "resident-limit" { "DEFERRED_TO_RESIDENT_LIMIT_2" }
+    "resident-limit-2" { "DEFERRED_TO_RESIDENT_LIMIT_3" }
     default { "DEFERRED_TO_BOOT2" }
 }
 $SummaryPath = Join-Path $LaunchDir $SummaryName
@@ -101,6 +104,7 @@ New-Item -ItemType Directory -Force -Path $LaunchDir | Out-Null
 
 $script:RehearsalMac = switch ($Profile) {
     "resident-limit" { 'ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_resident_limit.ps1 -Detach -Rehearsal"' }
+    "resident-limit-2" { 'ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_resident_limit_2.ps1 -Detach -Rehearsal"' }
     default { 'ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_boot4.ps1 -Detach -Rehearsal"' }
 }
 
@@ -291,6 +295,30 @@ if ($Profile -eq "boot2") {
             Name = "RESIDENT-LIMIT u8"; Kind = "resident"; EstimateS = 1132
             Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
         },
+        @{
+            Name = "RESIDENT-LIMIT u4"; Kind = "resident"; EstimateS = 1132
+            Arm = "gpu_only_u4"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+        }
+    )
+} elseif ($Profile -eq "resident-limit-2") {
+    # u4 only. f16 and u8 already ran; this window is the deferred arm.
+    # Same per-arm ceiling as resident-limit: 8 probes times the sealed
+    # dd2b0779 u4 n=24000 resident pass 47.439898192 s = 379.519185536,
+    # plus canary overhead 752.1359013, next whole second 1132.
+    # One arm is 1132 s. Window is 7200 s.
+    # A post-result hang is now capped at generation.hang_after_result_s
+    # (30 s), which sits inside the per-probe bound.
+    $script:EstimateDerivation = [ordered]@{
+        formula = "estimate_s = base_s + canary_overhead_s"
+        note = "Resident-limit-2 is u4 alone: 1132 s is below 7200 s."
+        source_run_id = "dd2b0779-48c1-4ad6-9567-ed38e8e1fec9"
+        probe_bound_s = 47.439898192
+        probes_per_arm = 8
+        cells = @(
+            [ordered]@{ name = "RESIDENT-LIMIT u4"; base_s = 379.519185536; canary_overhead_s = 752.1359013; estimate_s = 1132 }
+        )
+    }
+    $Cells = @(
         @{
             Name = "RESIDENT-LIMIT u4"; Kind = "resident"; EstimateS = 1132
             Arm = "gpu_only_u4"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
@@ -765,8 +793,26 @@ function Invoke-BootCommandLine {
     & $parts[0] @($parts | Select-Object -Skip 1)
 }
 
+function Invoke-HangFaultProbe {
+    if ($Profile -ne "resident-limit-2" -or -not $Rehearsal) { return }
+    $cmd = "$PythonExe -u -m seam.tools.hang_fault_injection"
+    if ($DryRun) {
+        Write-Host ("hang_probe_planned {0}" -f $cmd)
+        return
+    }
+    if ($env:SEAM_BOOT_SMOKE_STUB -eq "1") {
+        Write-Host "hang_probe_stub"
+        return
+    }
+    Write-Host ("hang_probe_run {0}" -f $cmd)
+    & $PythonExe -u -m seam.tools.hang_fault_injection
+    if ($LASTEXITCODE -ne 0) {
+        throw "REFUSED -- hang fault injection failed"
+    }
+}
+
 function Invoke-ResidentLimitSmokes {
-    if ($Profile -ne "resident-limit") { return }
+    if ($Profile -ne "resident-limit" -and $Profile -ne "resident-limit-2") { return }
     $mark = "measurement body is not started"
     if (-not (Test-Path -LiteralPath $ResidentPy)) { throw "REFUSED -- runner missing: $ResidentPy" }
     $text = Get-Content -LiteralPath $ResidentPy -Raw
@@ -779,6 +825,7 @@ function Invoke-ResidentLimitSmokes {
     if ($fits -eq "false") {
         throw "REFUSED -- resident-limit estimate sum $sum s exceeds window $WindowS s; split the profile before starting"
     }
+    Invoke-HangFaultProbe
     foreach ($cell in $Cells) {
         $built = Get-BootCellCommand -Cell $cell
         if ($DryRun) {

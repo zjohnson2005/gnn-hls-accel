@@ -135,6 +135,10 @@ acceptance:
 
 generation:
   timeout_s: 1800
+  # After the child rewrites its result as phase done or failed, wait this long
+  # for process exit. CL_OUT_OF_RESOURCES can leave the GPU plugin hung in
+  # teardown after that write. Kill and keep the result-file outcome.
+  hang_after_result_s: 30
 
 recovery:
   settle_s: 20
