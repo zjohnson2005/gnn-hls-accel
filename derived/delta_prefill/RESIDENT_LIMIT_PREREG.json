@@ -1,0 +1,35 @@
+{
+  "id": "RESIDENT-LIMIT",
+  "registered_before_any_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "model": "Qwen3-4B-int4-ov",
+  "placement": "GPU",
+  "residency": "RESIDENT",
+  "arms": ["gpu_only_f16", "gpu_only_u8", "gpu_only_u4"],
+  "endpoint": "largest n_cached a RESIDENT session holds",
+  "pass": "turn 1 completes and turn 2 runs",
+  "one_attempt_per_rung": true,
+  "low": 12000,
+  "high": 30000,
+  "resolution": 500,
+  "record": "turn-2 TTFT at each passing rung",
+  "prediction": {
+    "f16_n": 15592.662853930766,
+    "u8_n": 21346.327449105705,
+    "u4_n": 27122.80177777778,
+    "stated_as": "f16 ~15600, u8 ~21300, u4 ~27100",
+    "largest_passing_rung": {"f16": 15500, "u8": 21000, "u4": 27000}
+  },
+  "band": {
+    "f16": [15002.439208438553, 15702.778164350777],
+    "u8": [20538.312338222604, 21497.075111349484],
+    "u4": [26096.131792592594, 27314.342874074075]
+  },
+  "derivation": "AMEND-2 memory model. rss_end = 2568.234375 + n * k / 1048576, with k = 234827 (f16), 171532 (u8), 135000 (u4), from the sealed 2b3316b6 plan citing 41e419bd. The session holds while rss_end is at or below the device wall 6060.1875 (e9264a0a n=46000 memory_at_failure). Crossing n = (6060.1875 - 2568.234375) * 1048576 / k. That is 15592.66, 21346.33, and 27122.80, stated as ~15600, ~21300, and ~27100. The largest 500-token rung at or below the crossing is 15500, 21000, and 27000. The band uses the model's own alternate inputs and nothing else: wall 5928.0078125 or 6060.1875, intercept 2543.57421875 (e9264a0a memory_before_generate) or 2568.234375. The low end is the smaller wall with the larger intercept. The high end is the larger wall with the smaller intercept.",
+  "source_run_ids": [
+    "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+    "41e419bd-f3e9-43b1-8364-0ebd89fa086b",
+    "e9264a0a-d2f0-46dd-99af-8e4d9e36ad44"
+  ]
+}
