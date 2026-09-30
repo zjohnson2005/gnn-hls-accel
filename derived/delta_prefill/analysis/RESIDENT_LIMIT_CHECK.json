@@ -1,0 +1,142 @@
+{
+  "id": "RESIDENT_LIMIT_CHECK",
+  "prereg": "derived/delta_prefill/RESIDENT_LIMIT_PREREG.json",
+  "prereg_unchanged": true,
+  "seal": {
+    "scheme": "boot4 manifest.sha256.json plus .sealed text 'sealed'",
+    "rewritten": false,
+    "sessions": [
+      {
+        "run_id": "553b3a5c-dd68-4502-bb3f-1b6a10a61eb1",
+        "arm": "gpu_only_f16",
+        "manifest_files": 9,
+        "manifest_matches_bytes": true,
+        "live_matches_sealed": true
+      },
+      {
+        "run_id": "cf3555d5-1361-434f-b1fb-745fc17e6843",
+        "arm": "gpu_only_u8",
+        "manifest_files": 10,
+        "manifest_matches_bytes": true,
+        "live_matches_sealed": true
+      }
+    ]
+  },
+  "u4": {
+    "status": "deferred",
+    "cell": "RESIDENT-LIMIT u4",
+    "reason": "remaining cold-window time is below the next cell estimate",
+    "uptime_s": 7209,
+    "remaining_s": -9,
+    "window_s": 7200,
+    "source": "derived/c2_ttft/_launches/DEFERRED_TO_RESIDENT_LIMIT_2.json"
+  },
+  "verdicts": {
+    "definition_point": "Predicted largest 500-token rung at or below the AMEND-2 crossing. Hit only when the measured largest passing rung equals that prediction.",
+    "definition_band": "Measured crossing interval is (largest passing rung, first failing rung]. The band is the prereg interval from the two walls and two intercepts. Contained means that whole interval sits inside the band. Model error is the signed distance of the predicted crossing outside the measured interval, in tokens and as a percent of the crossing. Zero when the crossing falls inside the interval.",
+    "definition_ratio": "Predicted capacity ratio is k_f16/k_u8 because crossing n is inverse to k. Measured ratio is largest passing u8 over largest passing f16.",
+    "cells": [
+      {
+        "arm": "f16",
+        "run_id": "553b3a5c-dd68-4502-bb3f-1b6a10a61eb1",
+        "predicted_largest_rung": 15500,
+        "measured_largest_rung": 15000,
+        "first_fail_n_cached": 15500,
+        "point_hit": false,
+        "point_error_tokens": -500,
+        "measured_interval": "(15000, 15500]",
+        "predicted_band": [15002.439208438553, 15702.778164350777],
+        "predicted_crossing": 15592.662853930766,
+        "predicted_crossing_inside_interval": false,
+        "interval_overlaps_band": true,
+        "interval_contained_in_band": false,
+        "model_error_tokens": 92.66285393076578,
+        "model_error_percent_of_crossing": 0.594272157352561
+      },
+      {
+        "arm": "u8",
+        "run_id": "cf3555d5-1361-434f-b1fb-745fc17e6843",
+        "predicted_largest_rung": 21000,
+        "measured_largest_rung": 20000,
+        "first_fail_n_cached": 20500,
+        "point_hit": false,
+        "point_error_tokens": -1000,
+        "measured_interval": "(20000, 20500]",
+        "predicted_band": [20538.312338222604, 21497.075111349484],
+        "predicted_crossing": 21346.327449105705,
+        "predicted_crossing_inside_interval": false,
+        "interval_overlaps_band": false,
+        "interval_contained_in_band": false,
+        "model_error_tokens": 846.3274491057055,
+        "model_error_percent_of_crossing": 3.964744994770339
+      }
+    ],
+    "capacity_ratio": {
+      "predicted": 1.3689982044166686,
+      "predicted_stated": 1.369,
+      "predicted_formula": "234827 / 171532",
+      "measured": 1.3333333333333333,
+      "measured_formula": "20000 / 15000",
+      "measured_minus_predicted": -0.03566487108333538
+    }
+  },
+  "passing_turn2_ttft_s": {
+    "label": "single-attempt first-call values, warm-up class, not warm-turn latency",
+    "why": "RESIDENT-LIMIT records one turn-2 prefill per passing rung (turn2_repeats 1). That sample is the first call after turn 1, the same class as the boot-4 warm-up repeat that the three-repeat median discards.",
+    "boot4_citation": {
+      "prior_run_id": "e9264a0a-d2f0-46dd-99af-8e4d9e36ad44",
+      "prior_n_cached": 12000,
+      "prior_first_repeat_s": 1.874997924,
+      "prior_steady_median_s": 0.645158569,
+      "rerun_run_id": "72776603-7ea0-4279-a425-941d73a0bf57",
+      "rerun_first_repeat_s": 1.936266845,
+      "rerun_steady_median_s": 0.639231628
+    },
+    "f16": {
+      "run_id": "553b3a5c-dd68-4502-bb3f-1b6a10a61eb1",
+      "values_s": {
+        "12000": 1.86862207,
+        "14000": 2.300012695,
+        "15000": 2.490314941
+      }
+    },
+    "u8": {
+      "run_id": "cf3555d5-1361-434f-b1fb-745fc17e6843",
+      "values_s": {
+        "12000": 1.515010986,
+        "16500": 2.377908935,
+        "18500": 2.255799804,
+        "19500": 2.305288818,
+        "20000": 2.941160156
+      }
+    }
+  },
+  "manual_kills": {
+    "disposition": "HUNG_AFTER_RESULT",
+    "note": "The result file was already phase failed with turn1:RuntimeError and CL_OUT_OF_RESOURCES. The child stayed alive until it was killed by hand. The parent wall is the delta_n.repeat line in derived/c2_ttft/_launches/resident-limit.log. Hang duration is that log timestamp minus the result-file mtime. The session trees were not edited.",
+    "kills": [
+      {
+        "run_id": "553b3a5c-dd68-4502-bb3f-1b6a10a61eb1",
+        "arm": "gpu_only_f16",
+        "n_cached": 21000,
+        "tag": "n21000.a0",
+        "parent_wall_s": 1467.87,
+        "result_written_utc": "2026-09-30T18:04:57.485741+00:00",
+        "parent_returned_utc": "2026-09-30T18:29:20.229781+00:00",
+        "hang_after_result_s": 1462.74404,
+        "result_failure_mode": "turn1:RuntimeError"
+      },
+      {
+        "run_id": "cf3555d5-1361-434f-b1fb-745fc17e6843",
+        "arm": "gpu_only_u8",
+        "n_cached": 21000,
+        "tag": "n21000.a0",
+        "parent_wall_s": 1107.87,
+        "result_written_utc": "2026-09-30T19:07:18.983794+00:00",
+        "parent_returned_utc": "2026-09-30T19:25:42.007950+00:00",
+        "hang_after_result_s": 1103.024156,
+        "result_failure_mode": "turn1:RuntimeError"
+      }
+    ]
+  }
+}
