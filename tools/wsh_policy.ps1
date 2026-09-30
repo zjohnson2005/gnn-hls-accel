@@ -5,27 +5,28 @@
 
 function Get-WshSnapshot {
     $procs = @(Get-Process -Name "WorkloadsSessionHost" -ErrorAction SilentlyContinue)
-    $pids = New-Object System.Collections.Generic.List[int]
-    $ws = New-Object System.Collections.Generic.List[object]
-    $cpu = New-Object System.Collections.Generic.List[object]
-    $errors = New-Object System.Collections.Generic.List[string]
+    $pids = @()
+    $ws = @()
+    $cpu = @()
+    $errors = @()
     foreach ($proc in $procs) {
-        $pids.Add([int]$proc.Id)
+        $pids += [int]$proc.Id
         try {
-            $ws.Add([math]::Round($proc.WorkingSet64 / 1MB, 6))
+            $mb = [double]$proc.WorkingSet64 / 1MB
+            $ws += [math]::Round($mb, 6)
         } catch {
-            $ws.Add($null)
-            $errors.Add(("pid {0} WS_MB: {1}" -f $proc.Id, $_.Exception.Message))
+            $ws += $null
+            $errors += ("pid {0} WS_MB: {1}" -f $proc.Id, $_.Exception.Message)
         }
         try {
             if ($null -eq $proc.CPU) {
-                $cpu.Add($null)
+                $cpu += $null
             } else {
-                $cpu.Add([math]::Round([double]$proc.CPU, 6))
+                $cpu += [math]::Round([double]$proc.CPU, 6)
             }
         } catch {
-            $cpu.Add($null)
-            $errors.Add(("pid {0} CPU_s: {1}" -f $proc.Id, $_.Exception.Message))
+            $cpu += $null
+            $errors += ("pid {0} CPU_s: {1}" -f $proc.Id, $_.Exception.Message)
         }
     }
     return [ordered]@{
@@ -51,12 +52,12 @@ function Format-WshKillRefusal {
 
 function Clear-WorkloadsSessionHost {
     $before = Get-WshSnapshot
-    $killErrors = New-Object System.Collections.Generic.List[string]
+    $killErrors = @()
     foreach ($proc in @(Get-Process -Name "WorkloadsSessionHost" -ErrorAction SilentlyContinue)) {
         try {
             Stop-Process -Id $proc.Id -Force -ErrorAction Stop
         } catch {
-            $killErrors.Add($_.Exception.Message)
+            $killErrors += $_.Exception.Message
         }
     }
     if ($before.instance_count -gt 0) {
