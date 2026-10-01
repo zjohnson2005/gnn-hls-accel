@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from seam.tools.exchange_rate_table import (
+    cached_retry_pair,
     isolated_probe,
     skip_over_budget,
     streamer_allowed,
@@ -105,3 +106,22 @@ def test_cpu_projection_above_three_budgets_is_skipped() -> None:
     assert (
         skip_over_budget(name="batch-1", projected_wall_s=None, budget_s=10.0, multiple=3.0) is None
     )
+
+
+def test_cached_retry_measures_the_second_call_of_the_same_prompt() -> None:
+    prime, measure = cached_retry_pair("shared-prompt")
+    assert prime == "shared-prompt"
+    assert measure == prime
+    calls: list[str] = []
+
+    def generate(prompt: str) -> dict[str, float]:
+        calls.append(prompt)
+        return {"prefill_s": 2.4 if len(calls) == 1 else 0.08}
+
+    generate(prime)
+    reported = generate(measure)
+    assert calls == ["shared-prompt", "shared-prompt"]
+    assert reported["prefill_s"] == 0.08
+    child = (ROOT / "seam" / "tools" / "_exchange_rate_child.py").read_text(encoding="utf-8")
+    assert "intervening_prompts" in child
+    assert "cached_retry_pair" in child

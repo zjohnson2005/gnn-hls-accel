@@ -78,6 +78,17 @@ def isolated_probe(name: str, fn: Callable[[], dict[str, Any]]) -> dict[str, Any
     return row
 
 
+def cached_retry_pair(prompt: str) -> tuple[str, str]:
+    """Prime, then measure the same prompt with nothing in between.
+
+    The two calls share token ids, enable_thinking stays off (the prompt was
+    rendered that way), and both calls use the pipeline the caller already holds.
+    """
+    if not isinstance(prompt, str) or not prompt:
+        raise ValueError("cached retry needs the primed prompt")
+    return prompt, prompt
+
+
 def skip_over_budget(
     *,
     name: str,

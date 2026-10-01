@@ -6,6 +6,7 @@ Does not open a preregistration or an amendment file.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import time
 import traceback
@@ -14,7 +15,12 @@ from typing import Any
 
 from seam.tools._delta_n_child import _chat_once, _mem, _Writer
 from seam.tools.boot4_text import _exact_body, id_count
-from seam.tools.exchange_rate_table import isolated_probe, skip_over_budget, streamer_allowed
+from seam.tools.exchange_rate_table import (
+    cached_retry_pair,
+    isolated_probe,
+    skip_over_budget,
+    streamer_allowed,
+)
 
 _TOOL = {
     "type": "function",
@@ -351,16 +357,40 @@ def _run_body(spec: dict[str, Any], writer: _Writer) -> int:
     take("thinking", thinking)
 
     def retry() -> dict[str, Any]:
-        return _generate(
+        # batch-2 and batch-4 reuse this string and hit. The thinking prompt
+        # is a different template and, on GPU, evicted that prefix before the
+        # old retry ran, so the measured prefill was a second cold pass.
+        # Prime and measure back to back. Same token ids, thinking off, same pipe.
+        prime_prompt, measure_prompt = cached_retry_pair(shared)
+        token_ids = tokenizer.encode(prime_prompt).input_ids
+        flat = token_ids.tolist() if hasattr(token_ids, "tolist") else list(token_ids)
+        digest = hashlib.sha256(repr(flat).encode("ascii")).hexdigest()
+        prime = _generate(
             pipe,
             ov_genai,
-            [shared],
+            [prime_prompt],
             max_new_tokens=decode_tokens,
             min_new_tokens=decode_tokens,
             ignore_eos=True,
             budget_s=None,
             stop_on_tool=False,
         )
+        row = _generate(
+            pipe,
+            ov_genai,
+            [measure_prompt],
+            max_new_tokens=decode_tokens,
+            min_new_tokens=decode_tokens,
+            ignore_eos=True,
+            budget_s=None,
+            stop_on_tool=False,
+        )
+        row["cache_prime_prefill_s"] = prime.get("prefill_s")
+        row["prompt_token_sha256"] = digest
+        row["enable_thinking"] = False
+        row["pipeline_id"] = id(pipe)
+        row["intervening_prompts"] = 0
+        return row
 
     take("retry", retry)
 

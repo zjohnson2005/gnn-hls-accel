@@ -90,6 +90,20 @@ def test_p0_v2_rehearsal_strict_mode_stubs_smokes() -> None:
     assert "RESIDENT-LIMIT u4" not in combined
 
 
+def test_p1_a0_rehearsal_strict_mode_stubs_smokes() -> None:
+    proc = _run("launch_p1_a0.ps1")
+    _assert_no_strict_fault(proc, "launch_p1_a0.ps1")
+    combined = proc.stdout + proc.stderr
+    assert proc.returncode == 0, combined
+    assert "smoke_stub" in combined
+    assert "REHEARSAL_COMPLETE" in combined
+    assert "BOOT_COMPLETE" in combined
+    assert "p1_a0_estimate_sum_s=4814" in combined
+    assert "fits_one_window=true" in combined
+    assert "P1 A0" in combined
+    assert "--smoke" in combined
+
+
 def test_t2s_rehearsal_strict_mode_stubs_smokes() -> None:
     proc = _run("launch_t2s_boot1.ps1")
     _assert_no_strict_fault(proc, "launch_t2s_boot1.ps1")

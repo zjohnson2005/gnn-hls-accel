@@ -37,8 +37,8 @@ import time
 import uuid
 import warnings
 from collections import Counter
-from pathlib import Path
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 import yaml
@@ -650,11 +650,13 @@ def build_bfcl_chat_history(
     ov_genai: Any,
     messages: list[dict[str, Any]],
     tools: list[dict[str, Any]],
+    *,
+    enable_thinking: bool = False,
 ) -> Any:
-    """Raw-message ChatHistory with tools + enable_thinking=False (single template apply)."""
+    """Raw-message ChatHistory with tools. Thinking defaults off (single template apply)."""
     history = ov_genai.ChatHistory()
     history.set_tools(list(tools))
-    history.set_extra_context({"enable_thinking": False})
+    history.set_extra_context({"enable_thinking": bool(enable_thinking)})
     for msg in messages:
         history.append(_chat_message_for_genai(msg))
     return history
@@ -1773,6 +1775,8 @@ class MultiTurnAgentSession:
     force_quit: bool = field(default=False, init=False)
     stop_reason: str = field(default="completed", init=False)
     session_generated_once: bool = field(default=False, init=False)
+    p1: Any = field(default=None, init=False, repr=False)
+    p1_enable_thinking: bool = field(default=False, init=False)
     first_turn_equiv: dict[str, Any] | None = field(default=None, init=False)
     prev_turn0_prompt_tokens: int | None = field(default=None, init=False)
     t_entry0: float = field(default=0.0, init=False)
@@ -1876,7 +1880,14 @@ class MultiTurnAgentSession:
         self.prompt_render_hasher = hashlib.sha256()
         self.prompt_render_updates = 0
         self.resident_history = (
-            build_bfcl_chat_history(self.ov_genai, [], self.tools) if mode == "RESIDENT" else None
+            build_bfcl_chat_history(
+                self.ov_genai,
+                [],
+                self.tools,
+                enable_thinking=bool(getattr(self, "p1_enable_thinking", False)),
+            )
+            if mode == "RESIDENT"
+            else None
         )
         self._pending_reprefill = False
         self._last_reprefill_s = None
@@ -1884,6 +1895,13 @@ class MultiTurnAgentSession:
         self._next_turn_idx = 0
         self._begun = True
         self._finished = False
+
+    def _undo_assistant(self, history_base: list[dict[str, Any]] | None) -> None:
+        """Drop the assistant turn so a resample continues the same step."""
+        if self.messages and self.messages[-1].get("role") == "assistant":
+            self.messages.pop()
+        if self.resident_history is not None and history_base is not None:
+            self.resident_history.set_messages(history_base)
 
     def _finish_chat_safe(self) -> None:
         with contextlib.suppress(Exception), warnings.catch_warnings():
@@ -2004,7 +2022,7 @@ class MultiTurnAgentSession:
 
             if mode == "RESIDENT":
                 assert self.resident_history is not None and self.genai_tokenizer is not None
-                if not self.session_generated_once:
+                if not self.session_generated_once and not getattr(self, "p1_enable_thinking", False):
                     self.first_turn_equiv = assert_first_turn_token_equivalence(
                         hf_tokenizer=tokenizer,
                         genai_tokenizer=self.genai_tokenizer,
@@ -2033,7 +2051,7 @@ class MultiTurnAgentSession:
                 hist = build_bfcl_chat_history(ov_genai, self.messages, tools)
                 rendered = render_genai_chat_history(self.genai_tokenizer, hist)
                 t_template_build += time.perf_counter() - _t
-                if not self.session_generated_once:
+                if not self.session_generated_once and not getattr(self, "p1_enable_thinking", False):
                     self.first_turn_equiv = assert_first_turn_token_equivalence(
                         hf_tokenizer=tokenizer,
                         genai_tokenizer=self.genai_tokenizer,
@@ -2107,7 +2125,11 @@ class MultiTurnAgentSession:
                 gen_ok = True
                 gen_err = None
             else:
-                timed = _timed_generate(pipe, ov_genai, gen_input, cfg_use)
+                controller = getattr(self, "p1", None)
+                if controller is not None:
+                    timed = controller.generate(pipe, ov_genai, gen_input)
+                else:
+                    timed = _timed_generate(pipe, ov_genai, gen_input, cfg_use)
                 wall_s = float(timed["wall_s"])
                 t_generate += wall_s
                 text = timed.get("text") or ""
@@ -2150,6 +2172,8 @@ class MultiTurnAgentSession:
                 "ok": gen_ok,
                 "error": gen_err,
             }
+            if self.p1 is not None:
+                step_rec["p1"] = self.p1.step_record()
             turn_step_metrics.append(step_rec)
 
             if step == 0:
@@ -2169,12 +2193,15 @@ class MultiTurnAgentSession:
                     and decode_tok_s >= SLO_DECODE_TOK_S
                 )
 
-            if gen_ok:
+            if gen_ok and not getattr(self, "p1_enable_thinking", False):
                 assert_no_think_in_generation(
                     text,
                     where=f"{entry['id']}/turn{turn_idx}/step{step}/{mode}",
                 )
 
+            history_base = None
+            if self.resident_history is not None:
+                history_base = json.loads(json.dumps(self.resident_history.get_messages()))
             self.messages.append({"role": "assistant", "content": text})
             if self.resident_history is not None:
                 self.resident_history.append({"role": "assistant", "content": text})
@@ -2185,12 +2212,19 @@ class MultiTurnAgentSession:
 
             try:
                 decoded = decode_execute_qwen(text)
-                if is_empty_execute_response(decoded):
-                    if not turn_decoded_steps:
-                        self.stop_reason = "empty_execute"
-                    break
+                empty_kind = "empty" if is_empty_execute_response(decoded) else None
             except Exception:
-                self.stop_reason = "no_tool_call"
+                decoded = []
+                empty_kind = "unparseable"
+            if empty_kind is not None:
+                controller = getattr(self, "p1", None)
+                if controller is not None and controller.retry_empty():
+                    self._undo_assistant(history_base)
+                    continue
+                if empty_kind == "unparseable":
+                    self.stop_reason = "no_tool_call"
+                elif not turn_decoded_steps:
+                    self.stop_reason = "empty_execute"
                 break
 
             turn_decoded_steps.append(decoded)
@@ -2222,6 +2256,10 @@ class MultiTurnAgentSession:
                         "error": f"{type(exc).__name__}: {exc}",
                     }
                 )
+                controller = getattr(self, "p1", None)
+                if controller is not None and controller.retry_exec():
+                    self._undo_assistant(history_base)
+                    continue
                 self.stop_reason = "tool_exec_error"
                 break
             t_tool_exec += time.perf_counter() - _t
@@ -2234,11 +2272,16 @@ class MultiTurnAgentSession:
                 self.messages.append(tool_msg)
                 if self.resident_history is not None:
                     self.resident_history.append(_chat_message_for_genai(tool_msg))
+            if self.p1 is not None:
+                self.p1.close_step()
             step += 1
             if step > MAXIMUM_STEP_LIMIT:
                 self.force_quit = True
                 self.stop_reason = "max_steps"
                 break
+
+        if self.p1 is not None:
+            self.p1.close_step()
 
         if turn_prompt_tokens is not None:
             self.prev_turn0_prompt_tokens = turn_prompt_tokens

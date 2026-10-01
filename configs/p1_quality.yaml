@@ -1,0 +1,19 @@
+# P1 local quality. The runner reads this file. It does not open a preregistration.
+# GPU 4B-int4, KV u8, RESIDENT, local_only. One pipeline per arm.
+# thinking_cap_tokens is floor(warm spare seconds * decode tok/s) at the
+# 4000-token band. The spare is 10 s minus the warm median tool-call time.
+
+budget_s: 10
+arm_id: gpu_only_u8
+model_spec: configs/models/Qwen3-4B-int4-ov.yaml
+residency: RESIDENT
+policy: local_only
+max_new_tokens: 512
+thinking_cap_tokens: 141
+max_resamples: 8
+seeds: [20260930, 20261001]
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+  top_k: 20
+arms: [A0, A1, A2, A3, A4]
