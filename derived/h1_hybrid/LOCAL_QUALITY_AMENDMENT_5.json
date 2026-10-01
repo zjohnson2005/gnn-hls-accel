@@ -1,0 +1,90 @@
+{
+  "a1_measurement_status": "not_started",
+  "a1_unbounded": {
+    "entries": "[:100]",
+    "in_budget_passes": 9,
+    "label": "A1-unbounded",
+    "passes": 14,
+    "registered_comparison": false,
+    "run_id": "385cd4f6-47d4-4ed0-8031-87ac7ef21816",
+    "seed": 20260930,
+    "why": "Batched generate ran with num_return_sequences 4 and no streamer, so the anytime cutoff could not fire. k was the offline prediction, not the remaining time. This run is kept. It is not the registered A1 comparison."
+  },
+  "amended_file_sha256": "97fbf23d403e83785b0b572be6e602ca77816fd15e729c7b445c24932b8d827e",
+  "amends": "derived/h1_hybrid/LOCAL_QUALITY_AMENDMENT_4.json",
+  "baseline_rate": "23/200",
+  "baseline_run_id": "8a529053-fc47-486d-8809-6c699d156b06",
+  "budget_s": 10.0,
+  "comparison": "Paired McNemar against A0, computed per seed. Report both seeds. b is A0 pass and this arm fail. c is A0 fail and this arm pass. p is the two-sided exact binomial test on the discordant pairs.",
+  "design_floor": "In-budget passes for each arm are at least the paired A0 count on the same entries. The greedy answer is streamed under the anytime cutoff first. Extras, retries, and thinking tokens use only the remaining time, so they cannot push a step past the budget. When the extras do not finish, the step keeps the greedy answer.",
+  "direction": "greater than A0",
+  "id": "LOCAL-QUALITY-AMENDMENT-5",
+  "predictions": {
+    "A0": {
+      "in_budget_passes": 23,
+      "name": "baseline_greedy",
+      "role": "measured anchor for the later arms",
+      "run_id": "8a529053-fc47-486d-8809-6c699d156b06"
+    },
+    "A1": {
+      "direction": "greater than A0",
+      "falsifier": "The in-budget count is not above the measured A0 count. Collapse to the greedy call puts the count at 23, which is the low end of the range and fails the direction. A count below the paired A0 count falsifies the design floor.",
+      "high_meaning": "Pass@k ceiling, any sample correct: sum over trajectories of 1-(1-23/200)^k with k in {4: 92, 2: 40, 1: 30, 0: 38}. Carried from amendment 4.",
+      "in_budget_passes_per_seed": {
+        "high": 47.68439114249999,
+        "low": 23
+      },
+      "low_meaning": "The samples collapse to the greedy call, so the count is the measured A0 count.",
+      "name": "greedy_then_capped_extras",
+      "procedure": "Stream the greedy answer with the anytime cutoff. Remaining time R = 10 - elapsed. If R > 0, one batch of 3 extra samples with max_new_tokens = floor(R * measured batched tok/s for the table k at this context / k). The table k is the smallest measured k >= 3, which is 4. Vote the finished extras with the greedy answer. If none finish, or the extra wall exceeds R, keep the greedy answer.",
+      "seeds": [
+        20260930,
+        20261001
+      ],
+      "vote": "majority of the finished samples plus the greedy answer; a tie keeps the first sample"
+    },
+    "A2": {
+      "derivation": "Same one-resample fit as amendment 4. Empty trajectories stay the closeout first_fail_EMPTY count, 46. Each contributes the measured A0 rate on one extra sample: 23 + 46 * 23/200. The retry uses only the remaining time.",
+      "eligible": 46,
+      "in_budget_passes_per_seed": 28.29,
+      "name": "retry_on_empty",
+      "seeds": [
+        20260930,
+        20261001
+      ]
+    },
+    "A3": {
+      "derivation": "Same one-resample fit as amendment 4. The class stays closeout first_fail_EXEC_RESP, 35. Each contributes the measured A0 rate on one extra sample: 23 + 35 * 23/200. The retry uses only the remaining time.",
+      "eligible": 35,
+      "in_budget_passes_per_seed": 27.025,
+      "name": "check_and_retry",
+      "seeds": [
+        20260930,
+        20261001
+      ]
+    },
+    "A4": {
+      "derivation": "Carried from amendment 4. The count is the d482c621 local_pass trajectories whose every local step still finishes at or below 10 s after the 141-token cap is added. It is not a function of 23/200. The new procedure caps thinking tokens at the remaining time times the decode rate measured on the previous step of the entry (the P0-v2 table rate on the first step) and strips prior think blocks from history. The carried point estimate is unchanged.",
+      "in_budget_passes_per_seed": 4,
+      "name": "thinking_on",
+      "seeds": [
+        20260930,
+        20261001
+      ],
+      "uses_baseline_rate": false
+    }
+  },
+  "prior_amendments_unchanged": true,
+  "procedure": "A1 streams greedy first, then capped extras. A2 and A3 retries use only the remaining time, with the same token cap. A4 caps thinking tokens at the remaining time times a decode rate measured live after the first step, and strips prior think blocks before the next step. Every run writes entries.jsonl.",
+  "registered_before_any_a1_rerun": true,
+  "runner_must_not_read_this_file": true,
+  "seeds": [
+    20260930,
+    20261001
+  ],
+  "source_run_ids": [
+    "8a529053-fc47-486d-8809-6c699d156b06",
+    "385cd4f6-47d4-4ed0-8031-87ac7ef21816"
+  ],
+  "why": "385cd4f6 requested four samples with no streamer. Fifty-one steps finished after 10 s, so five passing trajectories missed the in-budget count. Amendments 1 through 4 stay on their files. The numeric ranges stay the amendment-4 ranges from the measured A0 rate 23/200. The new procedure adds the design floor: in-budget passes on the paired entries are at least the A0 count, and the direction is greater than A0."
+}

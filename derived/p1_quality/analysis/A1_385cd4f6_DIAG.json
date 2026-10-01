@@ -1,0 +1,159 @@
+{
+  "a0_run_id": "8a529053-fc47-486d-8809-6c699d156b06",
+  "a1_run_id": "385cd4f6-47d4-4ed0-8031-87ac7ef21816",
+  "budget_fail_passes": [
+    {
+      "id": "multi_turn_base_114",
+      "n_steps": 11,
+      "other_max_tta_s": 8.121514700000034,
+      "slow_steps": [
+        {
+          "fallback": true,
+          "met_budget": false,
+          "n_samples": 4,
+          "step_index": 0,
+          "tokens": 896,
+          "tokens_per_sample_even_split": 224,
+          "tta_s": 15.166645900000049
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_144",
+      "n_steps": 4,
+      "other_max_tta_s": 8.761217299999771,
+      "slow_steps": [
+        {
+          "fallback": true,
+          "met_budget": false,
+          "n_samples": 4,
+          "step_index": 2,
+          "tokens": 528,
+          "tokens_per_sample_even_split": 132,
+          "tta_s": 13.963308200000029
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_161",
+      "n_steps": 6,
+      "other_max_tta_s": 6.137513300000137,
+      "slow_steps": [
+        {
+          "fallback": true,
+          "met_budget": false,
+          "n_samples": 4,
+          "step_index": 0,
+          "tokens": 288,
+          "tokens_per_sample_even_split": 72,
+          "tta_s": 10.702720899999804
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_169",
+      "n_steps": 9,
+      "other_max_tta_s": 9.93640809999988,
+      "slow_steps": [
+        {
+          "fallback": true,
+          "met_budget": false,
+          "n_samples": 4,
+          "step_index": 5,
+          "tokens": 556,
+          "tokens_per_sample_even_split": 139,
+          "tta_s": 12.141748300000017
+        }
+      ]
+    },
+    {
+      "id": "multi_turn_base_179",
+      "n_steps": 12,
+      "other_max_tta_s": 9.722020600000178,
+      "slow_steps": [
+        {
+          "fallback": true,
+          "met_budget": false,
+          "n_samples": 4,
+          "step_index": 9,
+          "tokens": 516,
+          "tokens_per_sample_even_split": 129,
+          "tta_s": 10.331929899999977
+        }
+      ]
+    }
+  ],
+  "cause": "ArmController._parallel called pipe.generate with num_return_sequences=4 and no streamer, then set stopped=False. step_account therefore recorded elapsed when it exceeded 10 s. k was the constant 4 from the offline prediction, not remaining time.",
+  "entries": "lexicographic [:100]",
+  "entries_jsonl_written_by_the_run": false,
+  "kind": "p1_a1_unbounded_diag",
+  "label": "A1-unbounded",
+  "lost": [
+    "vote agreement (sample texts were discarded after the vote)",
+    "tool-call strings (only the even-split batch token total was stored)",
+    "a live k decision (every step requested 4; n_samples is 4 on every stored step)",
+    "emitted versus retained thinking tokens (this arm did not strip thinking)",
+    "per-entry lines in derived/c2_ttft/_launches (no entry id matches)"
+  ],
+  "paired": {
+    "a0_in_budget": 14,
+    "a0_passes": 14,
+    "a1_in_budget": 9,
+    "a1_passes": 14,
+    "in_budget": {
+      "b_a0_pass_a1_fail": 6,
+      "b_ids": [
+        "multi_turn_base_114",
+        "multi_turn_base_135",
+        "multi_turn_base_144",
+        "multi_turn_base_161",
+        "multi_turn_base_169",
+        "multi_turn_base_179"
+      ],
+      "c_a0_fail_a1_pass": 1,
+      "c_ids": [
+        "multi_turn_base_129"
+      ],
+      "p_exact": 0.125
+    },
+    "n": 100,
+    "raw_pass": {
+      "b_a0_pass_a1_fail": 1,
+      "b_ids": [
+        "multi_turn_base_135"
+      ],
+      "c_a0_fail_a1_pass": 1,
+      "c_ids": [
+        "multi_turn_base_129"
+      ],
+      "p_exact": 1.0
+    }
+  },
+  "recoverable_from_points": [
+    "id",
+    "passed",
+    "in_budget_pass",
+    "per-step tta_s",
+    "fallback",
+    "met_budget",
+    "n_samples",
+    "tokens",
+    "wall_s",
+    "seed",
+    "arm"
+  ],
+  "registered_comparison": false,
+  "seed": 20260930,
+  "step_tta": {
+    "max": 30.06742889999998,
+    "median": 4.39261445000011,
+    "n_fallback": 51,
+    "n_samples_values": [
+      4
+    ],
+    "n_steps": 822,
+    "n_tta_gt_10": 51,
+    "p90_inclusive_n10": 8.943406450000044
+  },
+  "where_per_entry_lives": "derived/p1_quality/<session_id>/points/<entry_id>.json"
+}
