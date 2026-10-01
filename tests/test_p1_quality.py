@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import inspect
 import json
 import math
@@ -13,11 +14,16 @@ import pytest
 import yaml
 
 from seam.tools.p1_quality import (
+    capped_new_tokens,
+    entry_record,
     in_budget_pass,
     majority_vote,
+    measured_batch_rate,
     normalize_tool_call,
+    recover_entry_record,
     run_smoke,
     should_resample,
+    strip_prior_thinking,
     thinking_token_cap,
 )
 
@@ -61,11 +67,100 @@ def test_thinking_cap_matches_the_warm_spare() -> None:
 def test_smoke_covers_vote_retry_and_fallback() -> None:
     result = run_smoke()
     assert result["ok"] is True
-    assert result["arms"]["A1"][0]["n_samples"] == 4
+    vote, cutoff, backed = result["arms"]["A1"]
+    assert vote["n_samples"] == 4
+    assert vote["source"] == "vote"
+    assert vote["met_budget"] is True
+    assert cutoff["met_budget"] is True
+    assert cutoff["k_used"] == 1
+    assert cutoff["tta_s"] == 10.0
+    assert backed["fallback_to_greedy"] is True
+    assert backed["source"] == "greedy"
+    assert backed["met_budget"] is True
     assert result["arms"]["A2"][0]["retried"] is True
+    assert result["arms"]["A2"][1]["retry_unfinished"] is True
+    assert result["arms"]["A2"][1]["met_budget"] is True
     assert result["arms"]["A3"][0]["retried"] is True
-    assert result["arms"]["A1"][1]["fallback"] is True
-    assert result["arms"]["A4"][0]["tokens"] == 141
+    assert result["arms"]["A3"][1]["met_budget"] is True
+    thinking = result["arms"]["A4"][0]
+    assert thinking["thinking_stripped"] is True
+    assert "<think>" not in thinking["retained_text"]
+    assert thinking["emitted_chars"] > thinking["retained_chars"]
+    assert thinking["token_cap"] == 100
+
+
+def test_extra_cap_uses_the_measured_batch_row() -> None:
+    cfg = yaml.safe_load((ROOT / "configs" / "p1_quality.yaml").read_text(encoding="utf-8"))
+    chosen = measured_batch_rate(
+        cfg["batched_tok_s"],
+        requested_k=int(cfg["extra_batch_k"]),
+        n_ctx=4000,
+        band_threshold=int(cfg["context_band_threshold"]),
+    )
+    assert chosen["band"] == 4000
+    assert chosen["table_k"] == 4
+    assert chosen["rate_tok_s"] == 60.98813887904501
+    assert capped_new_tokens(remaining_s=6.0, rate_tok_s=chosen["rate_tok_s"], batch_k=4) == 91
+    unknown = measured_batch_rate(
+        cfg["batched_tok_s"],
+        requested_k=3,
+        n_ctx=None,
+        band_threshold=int(cfg["context_band_threshold"]),
+    )
+    assert unknown["band"] == 6000
+    wide = measured_batch_rate(
+        cfg["batched_tok_s"],
+        requested_k=1,
+        n_ctx=None,
+        band_threshold=int(cfg["context_band_threshold"]),
+    )
+    assert wide["band"] == 4000
+    assert wide["rate_tok_s"] == 25.269383662886206
+
+
+def test_thinking_strip_drops_the_block_and_keeps_the_answer() -> None:
+    call = '{"name": "get_weather", "arguments": {"city": "Paris"}}'
+    stripped = strip_prior_thinking("<think>\nplan the call\n</think>\n" + call)
+    assert stripped["thinking_stripped"] is True
+    assert "<think>" not in stripped["retained_text"]
+    assert call in stripped["retained_text"]
+    assert stripped["emitted_chars"] > stripped["retained_chars"]
+
+
+def test_entry_record_keeps_missing_fields_null() -> None:
+    point = {
+        "id": "multi_turn_base_0",
+        "passed": True,
+        "in_budget_pass": False,
+        "steps": [
+            {
+                "tta_s": 15.0,
+                "fallback": True,
+                "met_budget": False,
+                "n_samples": 4,
+                "tokens": 896,
+            }
+        ],
+    }
+    row = entry_record(point)
+    assert row["pass"] is True
+    assert row["in_budget"] is False
+    assert row["steps"][0]["vote_agreement"] is None
+    assert row["steps"][0]["k_used"] is None
+    recovered = recover_entry_record(point)
+    assert recovered["steps"][0]["emitted_tokens"] == 896
+    assert recovered["steps"][0]["samples_finished"] == 4
+    assert recovered["steps"][0]["k_used"] is None
+    assert recovered["steps"][0]["vote_agreement"] is None
+    assert recovered["steps"][0]["retained_tokens"] is None
+
+
+def test_runner_writes_entries_jsonl() -> None:
+    from tools.run_p1_quality import run_measurement
+
+    source = inspect.getsource(run_measurement)
+    assert "entries.jsonl" in source
+    assert "_append_entry_jsonl" in source
 
 
 def test_runner_does_not_read_a_preregistration() -> None:
@@ -236,6 +331,43 @@ def test_a1_dry_run_is_the_registered_first_half() -> None:
     assert "--entry-count 100" in combined
     assert "p1_a1_estimate_s=4377" in combined
     assert "fits_one_window=true" in combined
+
+
+def test_amendment_5_keeps_the_measured_ranges_and_labels_the_unbounded_run() -> None:
+    from tools.score_p1_a0 import K_COUNTS, pass_at_k_ceiling, rate_arm
+
+    path = ROOT / "derived" / "h1_hybrid" / "LOCAL_QUALITY_AMENDMENT_5.json"
+    amendment = json.loads(path.read_text(encoding="utf-8"))
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    assert digest == "a98697c9b3ccc819e3a9d687fc137cd68dcf1770e90aacce338ffe2e760d1569"
+    assert amendment["a1_measurement_status"] == "not_started"
+    assert amendment["registered_before_any_a1_rerun"] is True
+    assert amendment["prior_amendments_unchanged"] is True
+    unbounded = amendment["a1_unbounded"]
+    assert unbounded["label"] == "A1-unbounded"
+    assert unbounded["registered_comparison"] is False
+    assert unbounded["run_id"] == "385cd4f6-47d4-4ed0-8031-87ac7ef21816"
+    assert unbounded["passes"] == 14
+    assert unbounded["in_budget_passes"] == 9
+    a1 = amendment["predictions"]["A1"]
+    assert a1["in_budget_passes_per_seed"]["low"] == 23
+    assert a1["in_budget_passes_per_seed"]["high"] == pass_at_k_ceiling(23, K_COUNTS)
+    assert amendment["predictions"]["A2"]["in_budget_passes_per_seed"] == rate_arm(23, 46)
+    assert amendment["predictions"]["A3"]["in_budget_passes_per_seed"] == rate_arm(23, 35)
+    assert amendment["predictions"]["A4"]["in_budget_passes_per_seed"] == 4
+    assert amendment["direction"] == "greater than A0"
+    prior = json.loads(
+        (ROOT / "derived" / "h1_hybrid" / "LOCAL_QUALITY_AMENDMENT_4.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert (
+        amendment["amended_file_sha256"]
+        == hashlib.sha256(
+            (ROOT / "derived" / "h1_hybrid" / "LOCAL_QUALITY_AMENDMENT_4.json").read_bytes()
+        ).hexdigest()
+    )
+    assert prior["id"] == "LOCAL-QUALITY-AMENDMENT-4"
 
 
 def test_a0_score_and_amendment_4_use_the_measured_rate() -> None:

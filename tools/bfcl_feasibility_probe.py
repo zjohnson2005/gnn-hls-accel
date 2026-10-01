@@ -2022,7 +2022,9 @@ class MultiTurnAgentSession:
 
             if mode == "RESIDENT":
                 assert self.resident_history is not None and self.genai_tokenizer is not None
-                if not self.session_generated_once and not getattr(self, "p1_enable_thinking", False):
+                if not self.session_generated_once and not getattr(
+                    self, "p1_enable_thinking", False
+                ):
                     self.first_turn_equiv = assert_first_turn_token_equivalence(
                         hf_tokenizer=tokenizer,
                         genai_tokenizer=self.genai_tokenizer,
@@ -2051,7 +2053,9 @@ class MultiTurnAgentSession:
                 hist = build_bfcl_chat_history(ov_genai, self.messages, tools)
                 rendered = render_genai_chat_history(self.genai_tokenizer, hist)
                 t_template_build += time.perf_counter() - _t
-                if not self.session_generated_once and not getattr(self, "p1_enable_thinking", False):
+                if not self.session_generated_once and not getattr(
+                    self, "p1_enable_thinking", False
+                ):
                     self.first_turn_equiv = assert_first_turn_token_equivalence(
                         hf_tokenizer=tokenizer,
                         genai_tokenizer=self.genai_tokenizer,
@@ -2127,7 +2131,7 @@ class MultiTurnAgentSession:
             else:
                 controller = getattr(self, "p1", None)
                 if controller is not None:
-                    timed = controller.generate(pipe, ov_genai, gen_input)
+                    timed = controller.generate(pipe, ov_genai, gen_input, prompt_tokens=prompt_n)
                 else:
                     timed = _timed_generate(pipe, ov_genai, gen_input, cfg_use)
                 wall_s = float(timed["wall_s"])
@@ -2142,6 +2146,19 @@ class MultiTurnAgentSession:
                 gen_err = timed.get("error")
                 reported = timed.get("prompt_tokens_reported")
                 prompt_tokens_reported = int(reported) if reported is not None else None
+                if controller is not None and getattr(self, "p1_enable_thinking", False):
+                    from seam.tools.p1_quality import strip_prior_thinking
+
+                    stripped = strip_prior_thinking(text)
+                    retained = str(stripped["retained_text"])
+                    retained_tokens = len(tokenizer(retained)["input_ids"]) if retained else 0
+                    controller.record_retention(
+                        emitted_tokens=int(completion_n),
+                        retained_tokens=retained_tokens,
+                        emitted_chars=int(stripped["emitted_chars"]),
+                        retained_chars=int(stripped["retained_chars"]),
+                    )
+                    text = retained
 
             if measure_reprefill and step == 0:
                 # First local generate after inject: TTFT is the re-prefill cost.

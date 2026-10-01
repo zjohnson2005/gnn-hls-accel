@@ -6,12 +6,68 @@ import json
 import math
 from typing import Any
 
+from seam.reasoning import split_reasoning
+
+_ENTRY_STEP_KEYS = (
+    "tta_s",
+    "k_used",
+    "samples_finished",
+    "fallback",
+    "vote_agreement",
+    "emitted_tokens",
+    "retained_tokens",
+    "source",
+    "met_budget",
+)
+
+
+def capped_new_tokens(*, remaining_s: float, rate_tok_s: float, batch_k: int) -> int:
+    """floor(R * measured tok/s / k). Zero when the remaining time cannot buy a token."""
+    if remaining_s <= 0.0 or rate_tok_s <= 0.0 or batch_k <= 0:
+        return 0
+    return math.floor(remaining_s * rate_tok_s / batch_k)
+
 
 def thinking_token_cap(*, spare_s: float, decode_tok_s: float) -> int:
     """Tokens that fit in the spare time at the measured decode rate."""
-    if spare_s <= 0.0 or decode_tok_s <= 0.0:
-        return 0
-    return math.floor(spare_s * decode_tok_s)
+    return capped_new_tokens(remaining_s=spare_s, rate_tok_s=decode_tok_s, batch_k=1)
+
+
+def measured_batch_rate(
+    table: dict[Any, dict[Any, Any]],
+    *,
+    requested_k: int,
+    n_ctx: int | None,
+    band_threshold: int,
+) -> dict[str, Any]:
+    """Smallest measured batch k at least the requested k.
+
+    Unknown context uses the band whose per-sequence rate is slower, so the
+    token cap cannot grow past the tighter measurement.
+    """
+    bands = {
+        int(band): {int(k): float(rate) for k, rate in dict(rates).items()}
+        for band, rates in dict(table).items()
+    }
+
+    def pick(band: int) -> tuple[int, float]:
+        row = bands[band]
+        keys = sorted(row)
+        chosen = next((key for key in keys if key >= requested_k), keys[-1])
+        return chosen, row[chosen]
+
+    if n_ctx is None:
+        ranked: list[tuple[float, int, int, float]] = []
+        for band in sorted(bands):
+            table_k, rate = pick(band)
+            ranked.append((rate / table_k, band, table_k, rate))
+        _per, band, table_k, rate = min(ranked, key=lambda item: item[0])
+        reason = "unknown_context_slower_band"
+    else:
+        band = 4000 if int(n_ctx) <= int(band_threshold) else 6000
+        table_k, rate = pick(band)
+        reason = "context_band"
+    return {"band": band, "table_k": table_k, "rate_tok_s": rate, "reason": reason}
 
 
 def normalize_tool_call(text: str) -> str | None:
@@ -98,6 +154,82 @@ def step_account(
     }
 
 
+def compose_greedy_vote(*, greedy_text: str, extras: list[dict[str, Any]]) -> dict[str, Any]:
+    """Vote finished extras with the greedy answer. Unfinished extras stay out."""
+    finished = [item for item in extras if item.get("finished")]
+    texts = [greedy_text, *[str(item.get("text") or "") for item in finished]]
+    vote = majority_vote(texts)
+    if finished and vote["winner"] is not None:
+        chosen = str(vote["winner"])
+        source = "vote"
+        vote_index = vote["index"]
+    else:
+        chosen = greedy_text
+        source = "greedy"
+        vote_index = 0
+    keys = [normalize_tool_call(text) for text in texts]
+    winner_key = normalize_tool_call(chosen)
+    if winner_key is None or not texts:
+        agreement: float | None = None
+    else:
+        agreement = sum(1 for key in keys if key == winner_key) / len(texts)
+    return {
+        "text": chosen,
+        "source": source,
+        "k_used": 1 + len(finished),
+        "samples_finished": 1 + len(finished),
+        "fallback_to_greedy": bool(extras) and not finished,
+        "vote_agreement": agreement,
+        "vote_index": vote_index,
+        "voted": source == "vote",
+        "tie": bool(vote["tie"]) if source == "vote" else False,
+    }
+
+
+def strip_prior_thinking(text: str) -> dict[str, Any]:
+    """Drop Qwen3 think blocks so the next step's history keeps the answer only."""
+    retained = split_reasoning(text or "").answer
+    return {
+        "retained_text": retained,
+        "emitted_chars": len(text or ""),
+        "retained_chars": len(retained),
+        "thinking_stripped": (text or "") != retained,
+    }
+
+
+def entry_record(point: dict[str, Any]) -> dict[str, Any]:
+    """One entries.jsonl object. Missing step fields stay null."""
+    steps = [
+        {key: step.get(key) for key in _ENTRY_STEP_KEYS} for step in list(point.get("steps") or [])
+    ]
+    return {
+        "id": point.get("id"),
+        "pass": point.get("passed"),
+        "in_budget": point.get("in_budget_pass"),
+        "steps": steps,
+    }
+
+
+def recover_entry_record(point: dict[str, Any]) -> dict[str, Any]:
+    """Rebuild a jsonl row from a point file that predates entries.jsonl.
+
+    Copies per-step TTA, fallback, and the stored token total. Does not invent
+    vote agreement, tool-call text, retained thinking tokens, or a live k choice.
+    ``samples_finished`` is the stored ``n_samples`` (texts the batch returned).
+    """
+    steps: list[dict[str, Any]] = []
+    for step in list(point.get("steps") or []):
+        copied = dict(step)
+        if copied.get("emitted_tokens") is None and copied.get("tokens") is not None:
+            copied["emitted_tokens"] = copied["tokens"]
+        if copied.get("samples_finished") is None and copied.get("n_samples") is not None:
+            copied["samples_finished"] = copied["n_samples"]
+        steps.append(copied)
+    recovered = dict(point)
+    recovered["steps"] = steps
+    return entry_record(recovered)
+
+
 def in_budget_pass(*, passed: bool, steps: list[dict[str, Any]]) -> bool:
     """A trajectory counts only when it passes and every local step met the budget."""
     if not passed or not steps:
@@ -121,24 +253,77 @@ def _outer_object(text: str) -> str | None:
     return None
 
 
-def _play(arm: str, samples: list[dict[str, Any]], *, budget_s: float, cap: int) -> dict[str, Any]:
-    """Walk one scripted step the way the runner will."""
-    if arm == "A1":
-        vote = majority_vote([str(sample["text"]) for sample in samples])
-        elapsed = max(float(sample["elapsed_s"]) for sample in samples)
-        tokens = sum(int(sample["tokens"]) for sample in samples)
+def _play_a1(
+    task: dict[str, Any], *, budget_s: float, rate_tok_s: float, table_k: int
+) -> dict[str, Any]:
+    """Greedy stream first. Extras run only inside the remaining time."""
+    greedy = dict(task["greedy"])
+    stopped = bool(greedy.get("stopped"))
+    account = step_account(
+        elapsed_s=float(greedy["elapsed_s"]),
+        budget_s=budget_s,
+        n_samples=1,
+        tokens=int(greedy["tokens"]),
+        stopped_for_budget=stopped,
+    )
+    remaining = budget_s - float(account["tta_s"])
+    cap = capped_new_tokens(remaining_s=remaining, rate_tok_s=rate_tok_s, batch_k=table_k)
+    considered: list[dict[str, Any]] = []
+    if remaining > 0.0 and cap > 0:
+        for extra in list(task.get("extras") or []):
+            fits = int(extra["tokens"]) <= cap
+            considered.append({**extra, "finished": bool(extra.get("finished")) and fits})
+    decision = compose_greedy_vote(greedy_text=str(greedy["text"]), extras=considered)
+    tokens = int(greedy["tokens"])
+    if decision["source"] == "vote":
+        tokens += sum(int(item["tokens"]) for item in considered if item.get("finished"))
+        total = float(account["tta_s"]) + float(task.get("extra_elapsed_s") or 0.0)
         account = step_account(
-            elapsed_s=elapsed,
+            elapsed_s=total,
             budget_s=budget_s,
-            n_samples=len(samples),
+            n_samples=int(decision["samples_finished"]),
             tokens=tokens,
             stopped_for_budget=False,
         )
-        account["vote_index"] = vote["index"]
-        account["voted"] = vote["winner"] is not None
-        return account
+    account["n_samples"] = int(decision["samples_finished"])
+    account["tokens"] = tokens
+    account["fallback"] = bool(account["fallback"] or decision["fallback_to_greedy"])
+    account["source"] = decision["source"]
+    account["k_used"] = decision["k_used"]
+    account["samples_finished"] = decision["samples_finished"]
+    account["vote_agreement"] = decision["vote_agreement"]
+    account["vote_index"] = decision["vote_index"]
+    account["voted"] = decision["voted"]
+    account["fallback_to_greedy"] = decision["fallback_to_greedy"]
+    account["token_cap"] = cap
+    account["emitted_tokens"] = tokens
+    account["retained_tokens"] = None
+    return account
+
+
+def _play_retry(
+    arm: str,
+    samples: list[dict[str, Any]],
+    *,
+    budget_s: float,
+    rate_tok_s: float,
+) -> dict[str, Any]:
+    """A retry is taken only when the remaining time can finish it."""
     chosen: list[dict[str, Any]] = []
-    for sample in samples:
+    skipped = False
+    for index, sample in enumerate(samples):
+        if index > 0:
+            remaining = budget_s - float(chosen[-1]["elapsed_s"])
+            token_cap = capped_new_tokens(remaining_s=remaining, rate_tok_s=rate_tok_s, batch_k=1)
+            finishes = (
+                remaining > 0.0
+                and float(sample["elapsed_s"]) <= budget_s
+                and int(sample["tokens"]) <= token_cap
+                and bool(sample.get("finished", True))
+            )
+            if not finishes:
+                skipped = True
+                break
         chosen.append(sample)
         elapsed = float(sample["elapsed_s"])
         kind = str(sample["kind"])
@@ -151,78 +336,185 @@ def _play(arm: str, samples: list[dict[str, Any]], *, budget_s: float, cap: int)
         ):
             continue
         break
-    tokens = sum(
-        min(int(sample["tokens"]), cap) if arm == "A4" else int(sample["tokens"])
-        for sample in chosen
-    )
     stopped = any(str(sample["kind"]) == "stopped" for sample in chosen)
     account = step_account(
         elapsed_s=float(chosen[-1]["elapsed_s"]),
         budget_s=budget_s,
         n_samples=len(chosen),
-        tokens=tokens,
+        tokens=sum(int(sample["tokens"]) for sample in chosen),
         stopped_for_budget=stopped,
     )
+    account["fallback"] = bool(account["fallback"] or skipped)
     account["retried"] = len(chosen) > 1
+    account["retry_unfinished"] = skipped
+    account["k_used"] = len(chosen)
+    account["samples_finished"] = len(chosen)
+    account["source"] = "retry" if len(chosen) > 1 else "greedy"
+    account["emitted_tokens"] = account["tokens"]
+    account["vote_agreement"] = None
+    account["retained_tokens"] = None
+    return account
+
+
+def _play_a4(sample: dict[str, Any], *, budget_s: float, decode_tok_s: float) -> dict[str, Any]:
+    """Thinking tokens are capped at the live decode rate, then stripped from history."""
+    cap = capped_new_tokens(remaining_s=budget_s, rate_tok_s=decode_tok_s, batch_k=1)
+    emitted = min(int(sample["tokens"]), cap)
+    stopped = str(sample["kind"]) == "stopped" or float(sample["elapsed_s"]) >= budget_s
+    account = step_account(
+        elapsed_s=float(sample["elapsed_s"]),
+        budget_s=budget_s,
+        n_samples=1,
+        tokens=emitted,
+        stopped_for_budget=stopped,
+    )
+    stripped = strip_prior_thinking(str(sample["text"]))
+    account["source"] = "greedy"
+    account["k_used"] = 1
+    account["samples_finished"] = 1
+    account["token_cap"] = cap
+    account["emitted_tokens"] = int(sample["tokens"])
+    account["retained_tokens"] = sample.get("retained_tokens")
+    account["emitted_chars"] = stripped["emitted_chars"]
+    account["retained_chars"] = stripped["retained_chars"]
+    account["retained_text"] = stripped["retained_text"]
+    account["thinking_stripped"] = stripped["thinking_stripped"]
+    account["vote_agreement"] = None
+    return account
+
+
+def _play_a0(samples: list[dict[str, Any]], *, budget_s: float) -> dict[str, Any]:
+    sample = samples[0]
+    stopped = str(sample["kind"]) == "stopped"
+    account = step_account(
+        elapsed_s=float(sample["elapsed_s"]),
+        budget_s=budget_s,
+        n_samples=1,
+        tokens=int(sample["tokens"]),
+        stopped_for_budget=stopped,
+    )
+    account["source"] = "greedy"
+    account["k_used"] = 1
+    account["samples_finished"] = 1
+    account["emitted_tokens"] = int(sample["tokens"])
+    account["retained_tokens"] = None
+    account["vote_agreement"] = None
     return account
 
 
 def run_smoke() -> dict[str, Any]:
-    """Two tasks per arm. Covers the vote, both retries, and the budget fallback."""
+    """Greedy cutoff, extras that finish, extras that fall back, and thinking strip."""
     budget_s = 10.0
-    cap = 141
+    # Scripted P0-v2 gpu-4000 batch-4 aggregate and batch-1 decode. The runner
+    # reads the same figures from configs/p1_quality.yaml.
+    batch4 = 60.98813887904501
+    decode = 25.269383662886206
+    live_decode = 10.0
     call = {"name": "get_weather", "arguments": {"city": "Paris"}}
     other = {"name": "get_weather", "arguments": {"city": "Lyon"}}
     call_text = json.dumps(call)
     other_text = json.dumps(other)
-    tasks = {
+    think_text = "<think>\nplan the call\n</think>\n" + call_text
+    a1_vote = _play_a1(
+        {
+            "greedy": {"text": call_text, "elapsed_s": 4.0, "tokens": 40, "stopped": False},
+            "extras": [
+                {"text": call_text, "tokens": 40, "finished": True},
+                {"text": other_text, "tokens": 40, "finished": True},
+                {"text": other_text, "tokens": 40, "finished": True},
+            ],
+            "extra_elapsed_s": 2.0,
+        },
+        budget_s=budget_s,
+        rate_tok_s=batch4,
+        table_k=4,
+    )
+    a1_cutoff = _play_a1(
+        {"greedy": {"text": call_text, "elapsed_s": 12.0, "tokens": 80, "stopped": True}},
+        budget_s=budget_s,
+        rate_tok_s=batch4,
+        table_k=4,
+    )
+    a1_fallback = _play_a1(
+        {
+            "greedy": {"text": call_text, "elapsed_s": 4.0, "tokens": 40, "stopped": False},
+            "extras": [
+                {"text": other_text, "tokens": 40, "finished": False},
+                {"text": other_text, "tokens": 40, "finished": False},
+                {"text": other_text, "tokens": 40, "finished": False},
+            ],
+            "extra_elapsed_s": 2.0,
+        },
+        budget_s=budget_s,
+        rate_tok_s=batch4,
+        table_k=4,
+    )
+    played: dict[str, list[dict[str, Any]]] = {
         "A0": [
-            [{"text": call_text, "elapsed_s": 4.0, "tokens": 40, "kind": "call"}],
-            [{"text": call_text, "elapsed_s": 10.0, "tokens": 20, "kind": "stopped"}],
+            _play_a0(
+                [{"text": call_text, "elapsed_s": 4.0, "tokens": 40, "kind": "call"}],
+                budget_s=budget_s,
+            ),
+            _play_a0(
+                [{"text": call_text, "elapsed_s": 10.0, "tokens": 20, "kind": "stopped"}],
+                budget_s=budget_s,
+            ),
         ],
-        "A1": [
-            [
-                {"text": call_text, "elapsed_s": 7.0, "tokens": 40, "kind": "call"},
-                {"text": call_text, "elapsed_s": 7.0, "tokens": 41, "kind": "call"},
-                {"text": other_text, "elapsed_s": 7.0, "tokens": 39, "kind": "call"},
-                {"text": other_text, "elapsed_s": 7.0, "tokens": 42, "kind": "call"},
-            ],
-            [
-                {"text": call_text, "elapsed_s": 12.0, "tokens": 80, "kind": "call"},
-                {"text": call_text, "elapsed_s": 12.0, "tokens": 80, "kind": "call"},
-                {"text": call_text, "elapsed_s": 12.0, "tokens": 80, "kind": "call"},
-                {"text": other_text, "elapsed_s": 12.0, "tokens": 80, "kind": "call"},
-            ],
-        ],
+        "A1": [a1_vote, a1_cutoff, a1_fallback],
         "A2": [
-            [
-                {"text": "", "elapsed_s": 4.0, "tokens": 2, "kind": "empty"},
-                {"text": call_text, "elapsed_s": 8.0, "tokens": 40, "kind": "call"},
-            ],
-            [
-                {"text": "", "elapsed_s": 6.0, "tokens": 2, "kind": "empty"},
-                {"text": call_text, "elapsed_s": 11.0, "tokens": 40, "kind": "call"},
-            ],
+            _play_retry(
+                "A2",
+                [
+                    {"text": "", "elapsed_s": 4.0, "tokens": 2, "kind": "empty"},
+                    {"text": call_text, "elapsed_s": 8.0, "tokens": 40, "kind": "call"},
+                ],
+                budget_s=budget_s,
+                rate_tok_s=decode,
+            ),
+            _play_retry(
+                "A2",
+                [
+                    {"text": "", "elapsed_s": 6.0, "tokens": 2, "kind": "empty"},
+                    {"text": call_text, "elapsed_s": 11.0, "tokens": 40, "kind": "call"},
+                ],
+                budget_s=budget_s,
+                rate_tok_s=decode,
+            ),
         ],
         "A3": [
-            [
-                {"text": call_text, "elapsed_s": 3.0, "tokens": 30, "kind": "exec_error"},
-                {"text": call_text, "elapsed_s": 7.0, "tokens": 30, "kind": "call"},
-            ],
-            [
-                {"text": call_text, "elapsed_s": 9.5, "tokens": 30, "kind": "exec_error"},
-                {"text": call_text, "elapsed_s": 11.0, "tokens": 30, "kind": "call"},
-            ],
+            _play_retry(
+                "A3",
+                [
+                    {"text": call_text, "elapsed_s": 3.0, "tokens": 30, "kind": "exec_error"},
+                    {"text": call_text, "elapsed_s": 7.0, "tokens": 30, "kind": "call"},
+                ],
+                budget_s=budget_s,
+                rate_tok_s=decode,
+            ),
+            _play_retry(
+                "A3",
+                [
+                    {"text": call_text, "elapsed_s": 9.5, "tokens": 30, "kind": "exec_error"},
+                    {"text": call_text, "elapsed_s": 11.0, "tokens": 30, "kind": "call"},
+                ],
+                budget_s=budget_s,
+                rate_tok_s=decode,
+            ),
         ],
         "A4": [
-            [{"text": call_text, "elapsed_s": 8.0, "tokens": 200, "kind": "call"}],
-            [{"text": call_text, "elapsed_s": 10.0, "tokens": 141, "kind": "stopped"}],
+            _play_a4(
+                {"text": think_text, "elapsed_s": 4.0, "tokens": 200, "kind": "call"},
+                budget_s=budget_s,
+                decode_tok_s=live_decode,
+            ),
+            _play_a4(
+                {"text": call_text, "elapsed_s": 10.0, "tokens": 20, "kind": "stopped"},
+                budget_s=budget_s,
+                decode_tok_s=live_decode,
+            ),
         ],
     }
-    played: dict[str, list[dict[str, Any]]] = {}
-    for arm, arm_tasks in tasks.items():
-        played[arm] = [_play(arm, samples, budget_s=budget_s, cap=cap) for samples in arm_tasks]
-    _require_smoke(played, cap=cap)
+    _require_smoke(played)
     for arm, rows in played.items():
         vote = int(any(row.get("voted") for row in rows))
         retry = int(any(row.get("retried") for row in rows))
@@ -235,28 +527,39 @@ def run_smoke() -> dict[str, Any]:
     return {"arms": played, "ok": True}
 
 
-def _require_smoke(played: dict[str, list[dict[str, Any]]], *, cap: int) -> None:
+def _require_smoke(played: dict[str, list[dict[str, Any]]]) -> None:
     a0 = played["A0"]
     if a0[0]["fallback"] or not a0[0]["met_budget"]:
         raise RuntimeError("A0 first task should finish inside the budget")
     if not a0[1]["fallback"] or not a0[1]["met_budget"]:
         raise RuntimeError("A0 second task should stop at the budget and still meet it")
-    a1 = played["A1"]
-    if not a1[0]["voted"] or a1[0]["fallback"] or a1[0]["n_samples"] != 4:
-        raise RuntimeError("A1 first task should vote four samples inside the budget")
-    if a1[0]["vote_index"] != 0:
-        raise RuntimeError("A1 tie between two and two keeps the first sample")
-    if not a1[1]["fallback"] or a1[1]["met_budget"]:
-        raise RuntimeError("A1 second task is the over-budget fallback")
+    vote, cutoff, backed = played["A1"]
+    if not vote["voted"] or vote["fallback"] or vote["n_samples"] != 4 or not vote["met_budget"]:
+        raise RuntimeError("A1 extras that finish are voted inside the budget")
+    if vote["vote_index"] != 0:
+        raise RuntimeError("A1 tie between two and two keeps the greedy sample")
+    if cutoff["source"] != "greedy" or cutoff["k_used"] != 1 or cutoff["token_cap"] != 0:
+        raise RuntimeError("A1 greedy cutoff leaves no remaining time for extras")
+    if not cutoff["fallback"] or not cutoff["met_budget"] or cutoff["tta_s"] != 10.0:
+        raise RuntimeError("A1 greedy cutoff meets the budget")
+    if backed["source"] != "greedy" or not backed["fallback_to_greedy"] or not backed["met_budget"]:
+        raise RuntimeError("A1 unfinished extras fall back to greedy inside the budget")
+    if backed["k_used"] != 1 or backed["fallback"] is not True:
+        raise RuntimeError("A1 fallback keeps only the greedy sample")
     if played["A2"][0]["n_samples"] != 2 or not played["A2"][0]["met_budget"]:
         raise RuntimeError("A2 should resample an empty call while inside the budget")
-    if not played["A2"][1]["fallback"] or played["A2"][1]["met_budget"]:
-        raise RuntimeError("A2 second resample misses the budget")
+    if not played["A2"][1]["retry_unfinished"] or not played["A2"][1]["met_budget"]:
+        raise RuntimeError("A2 does not take a retry that would miss the budget")
     if played["A3"][0]["n_samples"] != 2 or not played["A3"][0]["met_budget"]:
         raise RuntimeError("A3 should resample a tool error while inside the budget")
-    if not played["A3"][1]["fallback"] or played["A3"][1]["met_budget"]:
-        raise RuntimeError("A3 second resample misses the budget")
-    if played["A4"][0]["tokens"] != cap:
-        raise RuntimeError("A4 caps thinking tokens at the spare-time budget")
+    if not played["A3"][1]["retry_unfinished"] or not played["A3"][1]["met_budget"]:
+        raise RuntimeError("A3 does not take a retry that would miss the budget")
+    thinking = played["A4"][0]
+    if thinking["token_cap"] != 100 or thinking["tokens"] != 100:
+        raise RuntimeError("A4 caps thinking tokens at the live decode rate")
+    if not thinking["thinking_stripped"] or "<think>" in str(thinking["retained_text"]):
+        raise RuntimeError("A4 strips the thinking block before the next step")
+    if thinking["emitted_chars"] <= thinking["retained_chars"]:
+        raise RuntimeError("A4 records emitted text longer than the retained answer")
     if not played["A4"][1]["fallback"] or not played["A4"][1]["met_budget"]:
         raise RuntimeError("A4 second task should stop at the budget")

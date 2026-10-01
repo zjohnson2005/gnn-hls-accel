@@ -1,7 +1,16 @@
 # P1 local quality. The runner reads this file. It does not open a preregistration.
 # GPU 4B-int4, KV u8, RESIDENT, local_only. One pipeline per arm.
-# thinking_cap_tokens is floor(warm spare seconds * decode tok/s) at the
-# 4000-token band. The spare is 10 s minus the warm median tool-call time.
+# thinking_cap_tokens is the amendment-3 prior: floor(warm spare * decode tok/s)
+# at the 4000-token band. A4's runtime cap is the remaining time times the
+# decode rate measured on the previous step of this entry (table rate on the
+# first step). extra_batch_k is the capped batch after the greedy stream.
+# batched_tok_s is the P0-v2 median from session ac4e5472
+# (derived/exchange_rate/analysis/EXCHANGE_RATE_V2_CHECK.json).
+# k=1 is decode_tok_s. k=2 and k=4 are aggregate_tok_s, because those probes
+# recorded decode_tok_s null. A requested k between rows uses the next
+# measured row and divides by that row's k. Context band is 4000 at or below
+# context_band_threshold prompt tokens, else 6000. Unknown context uses the
+# slower per-sequence rate.
 
 budget_s: 10
 arm_id: gpu_only_u8
@@ -10,6 +19,17 @@ residency: RESIDENT
 policy: local_only
 max_new_tokens: 512
 thinking_cap_tokens: 141
+extra_batch_k: 3
+context_band_threshold: 5000
+batched_tok_s:
+  "4000":
+    "1": 25.269383662886206
+    "2": 39.92417276724131
+    "4": 60.98813887904501
+  "6000":
+    "1": 27.148621638623577
+    "2": 28.41499325110603
+    "4": 40.09457935382881
 max_resamples: 8
 seeds: [20260930, 20261001]
 sampling:

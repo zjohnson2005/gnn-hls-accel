@@ -25,7 +25,11 @@ if str(ROOT) not in sys.path:
 import yaml  # noqa: E402
 
 from seam.tools.p1_quality import (  # noqa: E402
-    majority_vote,
+    capped_new_tokens,
+    compose_greedy_vote,
+    entry_record,
+    measured_batch_rate,
+    normalize_tool_call,
     run_smoke,
     should_resample,
     step_account,
@@ -52,14 +56,17 @@ class ArmController:
         self.seed = int(seed)
         self.budget_s = float(cfg["budget_s"])
         self.max_new = int(cfg["max_new_tokens"])
-        self.cap = int(cfg["thinking_cap_tokens"])
         self.max_attempts = int(cfg["max_resamples"])
         sampling = dict(cfg["sampling"])
         self.temperature = float(sampling["temperature"])
         self.top_p = float(sampling["top_p"])
         self.top_k = int(sampling["top_k"])
+        self.extra_k = int(cfg["extra_batch_k"])
+        self.band_threshold = int(cfg["context_band_threshold"])
+        self.rate_table = dict(cfg["batched_tok_s"])
         self.log: list[dict[str, Any]] = []
         self._current: dict[str, Any] | None = None
+        self._live_decode: float | None = None
         self._reset_open()
 
     def _reset_open(self) -> None:
@@ -68,6 +75,23 @@ class ArmController:
         self.samples: list[dict[str, Any]] = []
         self.attempts = 0
         self.stopped = False
+        self._emitted: int | None = None
+        self._account_elapsed: float | None = None
+        self._account_stopped: bool | None = None
+        self._k_used: int | None = None
+        self._k_requested: int | None = None
+        self._samples_finished: int | None = None
+        self._vote_agreement: float | None = None
+        self._source: str | None = None
+        self._fallback_to_greedy = False
+        self._token_cap: int | None = None
+        self._rate_tok_s: float | None = None
+        self._table_k: int | None = None
+        self._band: int | None = None
+        self._decode_source: str | None = None
+        self._extra_wall_s: float | None = None
+        self._extras_exceeded = False
+        self._retention: dict[str, Any] = {}
 
     def elapsed(self) -> float:
         if not self.step_open:
@@ -97,16 +121,59 @@ class ArmController:
             budget_s=self.budget_s,
         )
 
+    def record_retention(
+        self,
+        *,
+        emitted_tokens: int,
+        retained_tokens: int,
+        emitted_chars: int,
+        retained_chars: int,
+    ) -> None:
+        """A4: tokens emitted against tokens kept in history after the think strip."""
+        self._retention = {
+            "emitted_tokens": int(emitted_tokens),
+            "retained_tokens": int(retained_tokens),
+            "emitted_chars": int(emitted_chars),
+            "retained_chars": int(retained_chars),
+            "thinking_stripped": int(emitted_chars) != int(retained_chars),
+        }
+        self._emitted = int(emitted_tokens)
+
     def step_record(self) -> dict[str, Any]:
-        tokens = sum(int(sample["tokens"]) for sample in self.samples)
-        account = step_account(
-            elapsed_s=self.elapsed(),
-            budget_s=self.budget_s,
-            n_samples=len(self.samples),
-            tokens=tokens,
-            stopped_for_budget=self.stopped,
+        tokens = (
+            self._emitted
+            if self._emitted is not None
+            else sum(int(sample["tokens"]) for sample in self.samples)
         )
+        elapsed = self.elapsed() if self._account_elapsed is None else self._account_elapsed
+        stopped = self.stopped if self._account_stopped is None else self._account_stopped
+        n_samples = len(self.samples) if self._samples_finished is None else self._samples_finished
+        account = step_account(
+            elapsed_s=elapsed,
+            budget_s=self.budget_s,
+            n_samples=n_samples,
+            tokens=tokens,
+            stopped_for_budget=stopped,
+        )
+        if self._fallback_to_greedy:
+            account["fallback"] = True
         account["arm"] = self.arm
+        account["k_used"] = self._k_used
+        account["k_requested"] = self._k_requested
+        account["samples_finished"] = self._samples_finished
+        account["vote_agreement"] = self._vote_agreement
+        account["source"] = self._source
+        account["fallback_to_greedy"] = self._fallback_to_greedy
+        account["emitted_tokens"] = self._emitted if self._emitted is not None else tokens
+        account["retained_tokens"] = None
+        account["token_cap"] = self._token_cap
+        account["rate_tok_s"] = self._rate_tok_s
+        account["table_k"] = self._table_k
+        account["context_band"] = self._band
+        account["decode_tok_s_source"] = self._decode_source
+        account["extra_wall_s"] = self._extra_wall_s
+        account["extras_exceeded_remaining"] = self._extras_exceeded
+        account.update(self._retention)
         self._current = account
         return account
 
@@ -116,32 +183,137 @@ class ArmController:
             self._current = None
         self._reset_open()
 
-    def generate(self, pipe: Any, ov_genai: Any, prompt: Any) -> dict[str, Any]:
+    def generate(
+        self, pipe: Any, ov_genai: Any, prompt: Any, *, prompt_tokens: int | None = None
+    ) -> dict[str, Any]:
         self._ensure_open()
         self.attempts += 1
         if self.arm == "A1":
-            row, texts = self._parallel(pipe, ov_genai, prompt)
-            share = int(row.get("generated_tokens") or 0)
-            per = share // len(texts) if texts else share
-            for text in texts:
-                self.samples.append({"text": text, "tokens": per, "elapsed_s": self.elapsed()})
-            if not texts:
-                self.samples.append({"text": "", "tokens": 0, "elapsed_s": self.elapsed()})
-            return row
+            return self._greedy_then_extras(pipe, ov_genai, prompt, prompt_tokens=prompt_tokens)
+        if self.arm == "A4":
+            return self._thinking(pipe, ov_genai, prompt, prompt_tokens=prompt_tokens)
         sample = self.arm in {"A2", "A3"} and self.attempts > 1
-        row = self._one(pipe, ov_genai, prompt, sample=sample)
+        max_new: int | None = None
+        if sample:
+            max_new = self._remaining_cap(requested_k=1, n_ctx=prompt_tokens)
+        row = self._one(pipe, ov_genai, prompt, sample=sample, max_new=max_new)
+        tokens = int(row.get("generated_tokens") or 0)
         self.samples.append(
-            {
-                "text": row.get("text") or "",
-                "tokens": int(row.get("generated_tokens") or 0),
-                "elapsed_s": self.elapsed(),
-            }
+            {"text": row.get("text") or "", "tokens": tokens, "elapsed_s": self.elapsed()}
         )
+        self._source = "retry" if sample else "greedy"
+        self._k_used = len(self.samples)
+        self._k_requested = self._k_used
+        self._samples_finished = self._k_used
+        self._emitted = sum(int(item["tokens"]) for item in self.samples)
         return row
 
-    def _config(self, ov_genai: Any, prompt: Any, *, sample: bool, sequences: int) -> Any:
+    def _rate(self, *, requested_k: int, n_ctx: int | None) -> dict[str, Any]:
+        chosen = measured_batch_rate(
+            self.rate_table,
+            requested_k=requested_k,
+            n_ctx=n_ctx,
+            band_threshold=self.band_threshold,
+        )
+        self._rate_tok_s = float(chosen["rate_tok_s"])
+        self._table_k = int(chosen["table_k"])
+        self._band = int(chosen["band"])
+        return chosen
+
+    def _remaining_cap(self, *, requested_k: int, n_ctx: int | None) -> int:
+        remaining = self.budget_s - self.elapsed()
+        chosen = self._rate(requested_k=requested_k, n_ctx=n_ctx)
+        cap = capped_new_tokens(
+            remaining_s=remaining,
+            rate_tok_s=float(chosen["rate_tok_s"]),
+            batch_k=int(chosen["table_k"]),
+        )
+        self._token_cap = cap
+        self._decode_source = "table"
+        return cap
+
+    def _greedy_then_extras(
+        self, pipe: Any, ov_genai: Any, prompt: Any, *, prompt_tokens: int | None
+    ) -> dict[str, Any]:
+        greedy = self._one(pipe, ov_genai, prompt, sample=False, max_new=None)
+        greedy_elapsed = self.elapsed()
+        greedy_stopped = self.stopped
+        greedy_tokens = int(greedy.get("generated_tokens") or 0)
+        self.samples.append(
+            {"text": greedy.get("text") or "", "tokens": greedy_tokens, "elapsed_s": greedy_elapsed}
+        )
+        reported = greedy.get("prompt_tokens_reported")
+        n_ctx = int(reported) if reported is not None else prompt_tokens
+        remaining = self.budget_s - greedy_elapsed
+        extras: list[dict[str, Any]] = []
+        extra_wall = 0.0
+        exceeded = False
+        launched = False
+        if bool(greedy.get("ok")) and remaining > 0.0:
+            cap = self._remaining_cap(requested_k=self.extra_k, n_ctx=n_ctx)
+            if cap > 0:
+                launched = True
+                extras, extra_wall = self._capped_extras(
+                    pipe, ov_genai, prompt, sequences=self.extra_k, max_new=cap
+                )
+                if extra_wall > remaining:
+                    exceeded = True
+                    for item in extras:
+                        item["finished"] = False
+        decision = compose_greedy_vote(greedy_text=str(greedy.get("text") or ""), extras=extras)
+        self._account_elapsed = self.elapsed() if decision["source"] == "vote" else greedy_elapsed
+        self._account_stopped = False if decision["source"] == "vote" else greedy_stopped
+        self._source = str(decision["source"])
+        self._k_used = int(decision["k_used"])
+        self._k_requested = 1 + self.extra_k if launched else 1
+        self._samples_finished = int(decision["samples_finished"])
+        self._vote_agreement = decision["vote_agreement"]
+        self._fallback_to_greedy = bool(decision["fallback_to_greedy"])
+        self._extra_wall_s = extra_wall if extras else None
+        self._extras_exceeded = exceeded
+        used_tokens = greedy_tokens
+        if decision["source"] == "vote":
+            used_tokens += sum(int(item["tokens"]) for item in extras if item.get("finished"))
+        self._emitted = used_tokens
+        out = dict(greedy)
+        out["text"] = decision["text"]
+        return out
+
+    def _thinking(
+        self, pipe: Any, ov_genai: Any, prompt: Any, *, prompt_tokens: int | None
+    ) -> dict[str, Any]:
+        remaining = self.budget_s - self.elapsed()
+        if self._live_decode is not None and self._live_decode > 0.0:
+            rate = self._live_decode
+            self._rate_tok_s = rate
+            self._table_k = 1
+            self._band = None
+            self._decode_source = "live"
+            cap = capped_new_tokens(remaining_s=remaining, rate_tok_s=rate, batch_k=1)
+        else:
+            cap = self._remaining_cap(requested_k=1, n_ctx=prompt_tokens)
+            self._decode_source = "table"
+        self._token_cap = cap
+        row = self._one(pipe, ov_genai, prompt, sample=False, max_new=cap)
+        observed = row.get("decode_tok_s")
+        if observed is not None and float(observed) > 0.0:
+            self._live_decode = float(observed)
+        tokens = int(row.get("generated_tokens") or 0)
+        self.samples.append(
+            {"text": row.get("text") or "", "tokens": tokens, "elapsed_s": self.elapsed()}
+        )
+        self._source = "greedy"
+        self._k_used = 1
+        self._k_requested = 1
+        self._samples_finished = 1
+        self._emitted = tokens
+        return row
+
+    def _config(
+        self, ov_genai: Any, prompt: Any, *, sample: bool, sequences: int, max_new: int | None
+    ) -> Any:
         cfg = ov_genai.GenerationConfig()
-        cfg.max_new_tokens = self.cap if self.arm == "A4" else self.max_new
+        cfg.max_new_tokens = self.max_new if max_new is None else int(max_new)
         cfg.do_sample = bool(sample)
         cfg.apply_chat_template = not isinstance(prompt, str)
         cfg.rng_seed = self.seed
@@ -153,11 +325,25 @@ class ArmController:
             cfg.top_k = self.top_k
         return cfg
 
-    def _one(self, pipe: Any, ov_genai: Any, prompt: Any, *, sample: bool) -> dict[str, Any]:
+    def _one(
+        self, pipe: Any, ov_genai: Any, prompt: Any, *, sample: bool, max_new: int | None
+    ) -> dict[str, Any]:
         from seam.backends.local_openvino import _extract_metrics, resolve_ttft_ns
 
-        cfg = self._config(ov_genai, prompt, sample=sample, sequences=1)
         remaining = self.budget_s - self.elapsed()
+        if max_new is not None and max_new <= 0:
+            self.stopped = True
+            return _timed_row(
+                ok=True,
+                error=None,
+                wall_s=0.0,
+                text="",
+                ttft_ns=None,
+                ttft_source=None,
+                prompt_tokens=0,
+                generated=0,
+            )
+        cfg = self._config(ov_genai, prompt, sample=sample, sequences=1, max_new=max_new)
         streamer = _BudgetStop(ov_genai, remaining if remaining > 0.0 else 0.0)
         streamer.streamer.t0_ns = time.perf_counter_ns()
         t0 = time.perf_counter()
@@ -188,10 +374,12 @@ class ArmController:
             generated=generated,
         )
 
-    def _parallel(self, pipe: Any, ov_genai: Any, prompt: Any) -> tuple[dict[str, Any], list[str]]:
+    def _capped_extras(
+        self, pipe: Any, ov_genai: Any, prompt: Any, *, sequences: int, max_new: int
+    ) -> tuple[list[dict[str, Any]], float]:
         from seam.backends.local_openvino import _extract_metrics
 
-        cfg = self._config(ov_genai, prompt, sample=True, sequences=4)
+        cfg = self._config(ov_genai, prompt, sample=True, sequences=sequences, max_new=max_new)
         t0 = time.perf_counter()
         exc: BaseException | None = None
         result: Any = None
@@ -203,24 +391,21 @@ class ArmController:
         except Exception as err:
             exc = err
         wall_s = time.perf_counter() - t0
-        self.stopped = False
+        if exc is not None or result is None:
+            return [{"text": "", "tokens": 0, "finished": False}], wall_s
         texts = [str(item) for item in list(getattr(result, "texts", []) or [])]
-        vote = majority_vote(texts) if texts else {"winner": None}
-        text = str(vote["winner"] or (texts[0] if texts else ""))
-        _ttft_ns, prompt_tokens, generated = _extract_metrics(getattr(result, "perf_metrics", None))
-        return (
-            _timed_row(
-                ok=exc is None,
-                error=None if exc is None else f"{type(exc).__name__}: {exc}",
-                wall_s=wall_s,
-                text=text,
-                ttft_ns=None,
-                ttft_source=None,
-                prompt_tokens=prompt_tokens,
-                generated=generated,
-            ),
-            texts,
-        )
+        _ttft, _prompt, generated = _extract_metrics(getattr(result, "perf_metrics", None))
+        per = int(generated) // len(texts) if texts else 0
+        rows: list[dict[str, Any]] = []
+        for text in texts:
+            parsed = normalize_tool_call(text) is not None
+            hit_cap = per >= max_new
+            rows.append(
+                {"text": text, "tokens": per, "finished": bool(text) and (parsed or not hit_cap)}
+            )
+        if not rows:
+            rows.append({"text": "", "tokens": 0, "finished": False})
+        return rows, wall_s
 
 
 class _BudgetStop:
@@ -276,6 +461,12 @@ def _timed_row(
         "generated_tokens": generated or None,
         "text": text,
     }
+
+
+def _append_entry_jsonl(path: Path, point: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(entry_record(point), sort_keys=True) + "\n")
 
 
 def _entries(offset: int, count: int) -> list[dict[str, Any]]:
@@ -481,6 +672,7 @@ def run_measurement(cfg: dict[str, Any], *, arm: str, seed: int, offset: int, co
                 json.dumps(point, indent=2, sort_keys=True) + "\n",
                 encoding="utf-8",
             )
+            _append_entry_jsonl(out_dir / "entries.jsonl", point)
             probes_log.append({"wall_s": wall_s})
             guard.after_probe(probes_log)
     except CanaryDriftAbort as exc:
@@ -538,9 +730,7 @@ def run_canary_calibration(cfg: dict[str, Any]) -> int:
     model_spec = ROOT / str(cfg["model_spec"])
     harness = load_harness(model_spec)
     if rehearsal:
-        out_dir = (
-            ROOT / "derived" / "c2_ttft" / "_launches" / "_rehearsal" / "p1-a0" / "canary"
-        )
+        out_dir = ROOT / "derived" / "c2_ttft" / "_launches" / "_rehearsal" / "p1-a0" / "canary"
         session_id = "rehearsal-canary"
     else:
         session_id = str(uuid.uuid4())
