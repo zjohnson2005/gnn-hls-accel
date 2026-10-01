@@ -5,8 +5,11 @@ from __future__ import annotations
 import inspect
 import json
 import math
+import os
+import subprocess
 from pathlib import Path
 
+import pytest
 import yaml
 
 from seam.tools.p1_quality import (
@@ -177,6 +180,104 @@ def test_healthy_calibration_band_is_the_pooled_settled_range() -> None:
     assert calibration_ref_in_healthy_range(0.719)
     assert calibration_ref_in_healthy_range(0.963638488) is False
     assert calibration_ref_in_healthy_range(0.699) is False
+
+
+def test_calibrate_only_skips_the_probe_budget() -> None:
+    import inspect
+
+    from tools.boot4_session import _open_canary
+    from tools.run_p1_quality import run_canary_calibration
+    from tools.ttft_slo_canary import CanaryBudgetRefuse, TtftSloCanaryGuard
+
+    source = inspect.getsource(run_canary_calibration)
+    assert "enforce_probe_budget=False" in source
+    assert "planned=3" in source
+    with pytest.raises(CanaryBudgetRefuse):
+        TtftSloCanaryGuard(
+            root=ROOT,
+            model_spec=ROOT / "configs" / "models" / "Qwen3-4B-int4-ov.yaml",
+            work_dir=ROOT / "derived" / "p1_quality" / "_budget_probe",
+            planned_probe_count=3,
+        )
+    guard = TtftSloCanaryGuard(
+        root=ROOT,
+        model_spec=ROOT / "configs" / "models" / "Qwen3-4B-int4-ov.yaml",
+        work_dir=ROOT / "derived" / "p1_quality" / "_budget_probe",
+        planned_probe_count=3,
+        enforce_probe_budget=False,
+    )
+    assert guard.budget_preflight["skipped"] is True
+    assert guard.n_derivation["refuse"] is False
+    opener = inspect.getsource(_open_canary)
+    assert "enforce_probe_budget=enforce_probe_budget" in opener
+
+
+def test_a1_dry_run_is_the_registered_first_half() -> None:
+    env = os.environ.copy()
+    command = (
+        "Set-StrictMode -Version Latest; "
+        f"& '{ROOT / 'tools' / 'launch_p1_a1.ps1'}' -DryRun; "
+        "exit $LASTEXITCODE"
+    )
+    proc = subprocess.run(
+        ["powershell", "-NoProfile", "-Command", command],
+        cwd=ROOT,
+        env=env,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    combined = proc.stdout + proc.stderr
+    assert proc.returncode == 0, combined
+    assert "DRY_RUN_OK" in combined
+    assert "--arm A1" in combined
+    assert "--seed 20260930" in combined
+    assert "--entry-offset 0" in combined
+    assert "--entry-count 100" in combined
+    assert "p1_a1_estimate_s=4377" in combined
+    assert "fits_one_window=true" in combined
+
+
+def test_a0_score_and_amendment_4_use_the_measured_rate() -> None:
+    from tools.score_p1_a0 import (
+        K_COUNTS,
+        a0_points,
+        paired_local_pass,
+        pass_at_k_ceiling,
+        rate_arm,
+        step_stats,
+    )
+
+    points = a0_points()
+    stats = step_stats(points)
+    paired = paired_local_pass()
+    assert sum(1 for point in points if point["in_budget_pass"]) == 23
+    assert len(points) == 200
+    assert stats["n_tta_gt_10"] == 0
+    assert stats["n_fallback"] == 14
+    assert paired["entries_that_differ"] == 2
+    assert paired["both"] == 21
+    ceiling = pass_at_k_ceiling(23, K_COUNTS)
+    amendment = json.loads(
+        (ROOT / "derived" / "h1_hybrid" / "LOCAL_QUALITY_AMENDMENT_4.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    a1 = amendment["predictions"]["A1"]
+    assert a1["in_budget_passes_per_seed"]["low"] == 23
+    assert a1["in_budget_passes_per_seed"]["high"] == ceiling
+    assert amendment["predictions"]["A2"]["in_budget_passes_per_seed"] == rate_arm(23, 46)
+    assert amendment["predictions"]["A3"]["in_budget_passes_per_seed"] == rate_arm(23, 35)
+    assert amendment["predictions"]["A4"]["uses_baseline_rate"] is False
+    closeout = json.loads(
+        (ROOT / "derived" / "p1_quality" / "analysis" / "A0_8a529053_CLOSEOUT.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert closeout["verdict"] == "MISS_HIGH"
+    assert closeout["observed_in_budget_passes"] == 23
+    assert closeout["steps"]["n_steps"] == stats["n_steps"]
+    assert closeout["verify_seal"] == "MATCH"
 
 
 def test_refused_session_summary_records_the_canary_series() -> None:

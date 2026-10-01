@@ -172,10 +172,14 @@ ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -No
 ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p0_v2.ps1 -Detach"
 ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_preflight.ps1"
 ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a0.ps1 -Detach"
+ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a1.ps1 -Detach"
+ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a1.ps1 -Detach -EntryOffset 100"
+ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a1.ps1 -Detach -Seed 20261001"
+ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a1.ps1 -Detach -Seed 20261001 -EntryOffset 100"
 ssh xps "powershell -NoProfile -Command Get-Content -Tail 50 C:/Users/zjohn/Projects/gnn-hls-accel/derived/c2_ttft/_launches/_rehearsal/resident-limit/resident-limit.log"
 ```
 
-`launch_p1_preflight.ps1` runs the arm smokes before the cold reboot. `launch_p1_a0.ps1 -Detach` is the measurement boot after that reboot. Its first GPU work is canary calibration with no P1 pipeline loaded.
+`launch_p1_preflight.ps1` runs the arm smokes before the cold reboot. `launch_p1_a0.ps1 -Detach` is the measurement boot after that reboot. Its first GPU work is canary calibration with no P1 pipeline loaded. The four `launch_p1_a1.ps1` lines are the registered halves: seed 20260930 then 20261001, entries [:100] then [100:]. The default is seed 20260930 and entries [:100].
 
 `REHEARSAL_COMPLETE` in that log is the success line. `-Detach` returns as soon as `Win32_Process.Create` has spawned the sequencer.
 

@@ -27,8 +27,11 @@ param(
     [switch]$NoRebootDeviation,
     [switch]$Rehearsal,
     [string]$WatchdogLog = "",
-    [ValidateSet("boot1", "boot2", "boot3", "boot4", "resident-limit", "resident-limit-2", "p0-v2", "p1-a0", "t2s-boot1")]
-    [string]$Profile = "boot1"
+    [ValidateSet("boot1", "boot2", "boot3", "boot4", "resident-limit", "resident-limit-2", "p0-v2", "p1-a0", "p1-a1", "t2s-boot1")]
+    [string]$Profile = "boot1",
+    [int]$P1Seed = 20260930,
+    [int]$P1EntryOffset = 0,
+    [int]$P1EntryCount = 100
 )
 
 $ErrorActionPreference = "Stop"
@@ -74,6 +77,7 @@ $SummaryName = switch ($Profile) {
     "resident-limit-2" { "RESIDENT_LIMIT_2_SUMMARY.json" }
     "p0-v2" { "P0_V2_SUMMARY.json" }
     "p1-a0" { "P1_A0_SUMMARY.json" }
+    "p1-a1" { "P1_A1_SUMMARY.json" }
     "t2s-boot1" { "T2S_BOOT1_SUMMARY.json" }
     default { "BOOT1_SUMMARY.json" }
 }
@@ -85,6 +89,7 @@ $DeferredName = switch ($Profile) {
     "resident-limit-2" { "DEFERRED_TO_RESIDENT_LIMIT_3.json" }
     "p0-v2" { "DEFERRED_TO_P0_V3.json" }
     "p1-a0" { "DEFERRED_TO_P1_A1.json" }
+    "p1-a1" { "DEFERRED_TO_P1_A1_NEXT.json" }
     "t2s-boot1" { "DEFERRED_TO_T2S_BOOT2.json" }
     default { "DEFERRED_TO_BOOT2.json" }
 }
@@ -94,6 +99,7 @@ $script:DeferredStatus = switch ($Profile) {
     "resident-limit-2" { "DEFERRED_TO_RESIDENT_LIMIT_3" }
     "p0-v2" { "DEFERRED_TO_P0_V3" }
     "p1-a0" { "DEFERRED_TO_P1_A1" }
+    "p1-a1" { "DEFERRED_TO_P1_A1_NEXT" }
     default { "DEFERRED_TO_BOOT2" }
 }
 $SummaryPath = Join-Path $LaunchDir $SummaryName
@@ -115,6 +121,7 @@ $script:RehearsalMac = switch ($Profile) {
     "resident-limit-2" { 'ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_resident_limit_2.ps1 -Detach -Rehearsal"' }
     "p0-v2" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p0_v2.ps1 -Detach -Rehearsal"' }
     "p1-a0" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a0.ps1 -Detach -Rehearsal"' }
+    "p1-a1" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a1.ps1 -Detach -Rehearsal"' }
     default { 'ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_boot4.ps1 -Detach -Rehearsal"' }
 }
 
@@ -389,6 +396,36 @@ if ($Profile -eq "boot2") {
         @{
             Name = "P1 A0"; Kind = "p1"; EstimateS = 4814
             Arm = "A0"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+        }
+    )
+} elseif ($Profile -eq "p1-a1") {
+    # One registered half of one A1 seed. Default is seed 20260930, entries [:100].
+    # Estimates are amendment 3: first half 4377 s, second half 4109 s.
+    if ($P1Seed -ne 20260930 -and $P1Seed -ne 20261001) {
+        throw "REFUSED -- P1 A1 seed $P1Seed is not registered"
+    }
+    if ($P1EntryOffset -eq 0 -and $P1EntryCount -eq 100) {
+        $p1Estimate = 4377
+    } elseif ($P1EntryOffset -eq 100 -and $P1EntryCount -eq 100) {
+        $p1Estimate = 4109
+    } else {
+        throw "REFUSED -- P1 A1 entry window offset=$P1EntryOffset count=$P1EntryCount is not a registered half"
+    }
+    $script:EstimateDerivation = [ordered]@{
+        formula = "amendment 3 next whole second of the half generate wall plus load plus canary overhead"
+        note = "A1 is two halves because one seed over 200 entries does not fit in 7200 s."
+        source = "derived/h1_hybrid/LOCAL_QUALITY_AMENDMENT_3.json"
+        seed = $P1Seed
+        entry_offset = $P1EntryOffset
+        entry_count = $P1EntryCount
+        estimate_s = $p1Estimate
+    }
+    $Cells = @(
+        @{
+            Name = "P1 A1"; Kind = "p1"; EstimateS = $p1Estimate
+            Arm = "A1"; Seed = $P1Seed
+            EntryOffset = $P1EntryOffset; EntryCount = $P1EntryCount
+            Model = "configs\models\Qwen3-4B-int4-ov.yaml"
         }
     )
 } elseif ($Profile -eq "t2s-boot1") {
@@ -797,6 +834,12 @@ function Get-BootCellCommand {
     }
     if ($kind -eq "p1") {
         $args = @($PythonExe, "-u", $P1Py, "--arm", $arm)
+        $seed = Get-BootCellField -Cell $Cell -Name "Seed"
+        $offset = Get-BootCellField -Cell $Cell -Name "EntryOffset"
+        $count = Get-BootCellField -Cell $Cell -Name "EntryCount"
+        if ($null -ne $seed) { $args += @("--seed", [string]$seed) }
+        if ($null -ne $offset) { $args += @("--entry-offset", [string]$offset) }
+        if ($null -ne $count) { $args += @("--entry-count", [string]$count) }
         $smokeArgs = @($PythonExe, "-u", $P1Py, "--canary-calibrate")
         return [ordered]@{
             kind = $kind; arm = $arm; model = $model; low = $low; high = $high
@@ -896,7 +939,7 @@ function Invoke-HangFaultProbe {
 }
 
 function Invoke-P1Budget {
-    if ($Profile -ne "p1-a0") { return }
+    if ($Profile -ne "p1-a0" -and $Profile -ne "p1-a1") { return }
     $mark = "measurement body is not started"
     if (-not (Test-Path -LiteralPath $P1Py)) { throw "REFUSED -- runner missing: $P1Py" }
     $text = Get-Content -LiteralPath $P1Py -Raw
@@ -905,9 +948,11 @@ function Invoke-P1Budget {
     foreach ($cell in $Cells) { $sum += [int]$cell.EstimateS }
     $fits = "false"
     if ($sum -le $WindowS) { $fits = "true" }
-    Write-Host ("p1_a0_estimate_sum_s={0} window_s={1} fits_one_window={2}" -f $sum, $WindowS, $fits)
+    $label = "p1_a0_estimate_sum_s"
+    if ($Profile -eq "p1-a1") { $label = "p1_a1_estimate_s" }
+    Write-Host ("{0}={1} window_s={2} fits_one_window={3}" -f $label, $sum, $WindowS, $fits)
     if ($fits -eq "false") {
-        throw "REFUSED -- p1-a0 estimate sum $sum s exceeds window $WindowS s; split the profile before starting"
+        throw "REFUSED -- $Profile estimate sum $sum s exceeds window $WindowS s; split the profile before starting"
     }
 }
 

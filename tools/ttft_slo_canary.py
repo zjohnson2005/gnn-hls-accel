@@ -500,6 +500,7 @@ class TtftSloCanaryGuard:
     planned_probe_count: int = 0
     allow_unguarded: bool = False
     discard_warmup: bool = False
+    enforce_probe_budget: bool = True
     calibration_c: int = CALIBRATION_C
     rel_drift_floor: float | None = None
     rel_drift_floor_t1: float | None = None
@@ -522,10 +523,19 @@ class TtftSloCanaryGuard:
             rel_drift_floor_t2=self.rel_drift_floor_t2,
         )
         self.gate["onset_s"] = self.onset_s
-        self.budget_preflight = assert_canary_budget_fits(
-            int(self.planned_probe_count),
-            calibration_c=self.calibration_c,
-        )
+        if self.enforce_probe_budget:
+            self.budget_preflight = assert_canary_budget_fits(
+                int(self.planned_probe_count),
+                calibration_c=self.calibration_c,
+            )
+        else:
+            self.budget_preflight = {
+                "ok": True,
+                "skipped": True,
+                "reason": "calibrate-only rehearsal measures no probes",
+                "planned_probe_count": int(self.planned_probe_count),
+                "calibration_c": int(self.calibration_c),
+            }
         self.refresh_interval([])
 
     def plan_fragment(self) -> dict[str, Any]:
@@ -570,6 +580,16 @@ class TtftSloCanaryGuard:
         }
 
     def refresh_interval(self, probe_wall_s: list[float]) -> None:
+        if not self.enforce_probe_budget:
+            self.n_derivation = {
+                "n": None,
+                "derivable": False,
+                "refuse": False,
+                "planned_probe_count": int(self.planned_probe_count),
+                "calibration_c": int(self.calibration_c),
+                "note": "calibrate-only rehearsal measures no probes",
+            }
+            return
         self.n_derivation = derive_canary_every_n(
             probe_wall_s,
             onset_s=self.onset_s,

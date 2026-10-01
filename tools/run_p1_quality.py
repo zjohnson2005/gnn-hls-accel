@@ -559,6 +559,7 @@ def run_canary_calibration(cfg: dict[str, Any]) -> int:
         work=out_dir / "work",
         plan_path=plan_path,
         planned=3,
+        enforce_probe_budget=False,
     )
     guard.opening()
     non_warmup = 0

@@ -228,6 +228,7 @@ def _open_canary(
     work: Path,
     plan_path: Path,
     planned: int,
+    enforce_probe_budget: bool = True,
 ) -> Any:
     from tools.ttft_slo_canary import CanaryBudgetRefuse, TtftSloCanaryGuard
 
@@ -240,6 +241,7 @@ def _open_canary(
             planned_probe_count=int(planned),
             allow_unguarded=False,
             discard_warmup=True,
+            enforce_probe_budget=enforce_probe_budget,
         )
     except CanaryBudgetRefuse as exc:
         raise SystemExit(f"REFUSED -- {exc.detail}") from exc
