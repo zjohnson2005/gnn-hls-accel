@@ -82,6 +82,10 @@ class ArmController:
         self._k_requested: int | None = None
         self._samples_finished: int | None = None
         self._vote_agreement: float | None = None
+        self._agreement: bool | None = None
+        self._override: bool | None = None
+        self._greedy_call_sha256: str | None = None
+        self._extras_call_sha256: list[str | None] | None = None
         self._source: str | None = None
         self._fallback_to_greedy = False
         self._token_cap: int | None = None
@@ -162,6 +166,10 @@ class ArmController:
         account["k_requested"] = self._k_requested
         account["samples_finished"] = self._samples_finished
         account["vote_agreement"] = self._vote_agreement
+        account["agreement"] = self._agreement
+        account["override"] = self._override
+        account["greedy_call_sha256"] = self._greedy_call_sha256
+        account["extras_call_sha256"] = self._extras_call_sha256
         account["source"] = self._source
         account["fallback_to_greedy"] = self._fallback_to_greedy
         account["emitted_tokens"] = self._emitted if self._emitted is not None else tokens
@@ -261,18 +269,23 @@ class ArmController:
                     for item in extras:
                         item["finished"] = False
         decision = compose_greedy_vote(greedy_text=str(greedy.get("text") or ""), extras=extras)
-        self._account_elapsed = self.elapsed() if decision["source"] == "vote" else greedy_elapsed
-        self._account_stopped = False if decision["source"] == "vote" else greedy_stopped
+        overridden = decision["source"] == "override"
+        self._account_elapsed = self.elapsed() if overridden else greedy_elapsed
+        self._account_stopped = False if overridden else greedy_stopped
         self._source = str(decision["source"])
         self._k_used = int(decision["k_used"])
         self._k_requested = 1 + self.extra_k if launched else 1
         self._samples_finished = int(decision["samples_finished"])
         self._vote_agreement = decision["vote_agreement"]
+        self._agreement = bool(decision["agreement"])
+        self._override = bool(decision["override"])
+        self._greedy_call_sha256 = decision["greedy_call_sha256"]
+        self._extras_call_sha256 = list(decision["extras_call_sha256"])
         self._fallback_to_greedy = bool(decision["fallback_to_greedy"])
         self._extra_wall_s = extra_wall if extras else None
         self._extras_exceeded = exceeded
         used_tokens = greedy_tokens
-        if decision["source"] == "vote":
+        if overridden:
             used_tokens += sum(int(item["tokens"]) for item in extras if item.get("finished"))
         self._emitted = used_tokens
         out = dict(greedy)

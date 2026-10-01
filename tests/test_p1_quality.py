@@ -67,10 +67,18 @@ def test_thinking_cap_matches_the_warm_spare() -> None:
 def test_smoke_covers_vote_retry_and_fallback() -> None:
     result = run_smoke()
     assert result["ok"] is True
-    vote, cutoff, backed = result["arms"]["A1"]
-    assert vote["n_samples"] == 4
-    assert vote["source"] == "vote"
-    assert vote["met_budget"] is True
+    override, split, cutoff, backed = result["arms"]["A1"]
+    assert override["n_samples"] == 4
+    assert override["source"] == "override"
+    assert override["override"] is True
+    assert override["agreement"] is True
+    assert override["met_budget"] is True
+    assert len(set(override["extras_call_sha256"])) == 1
+    assert override["greedy_call_sha256"] not in override["extras_call_sha256"]
+    assert split["source"] == "greedy"
+    assert split["override"] is False
+    assert split["agreement"] is False
+    assert split["met_budget"] is True
     assert cutoff["met_budget"] is True
     assert cutoff["k_used"] == 1
     assert cutoff["tta_s"] == 10.0
@@ -333,6 +341,35 @@ def test_a1_dry_run_is_the_registered_first_half() -> None:
     assert "fits_one_window=true" in combined
 
 
+def test_a4_dry_run_is_the_registered_first_half() -> None:
+    env = os.environ.copy()
+    command = (
+        "Set-StrictMode -Version Latest; "
+        f"& '{ROOT / 'tools' / 'launch_p1_a4.ps1'}' -DryRun; "
+        "exit $LASTEXITCODE"
+    )
+    proc = subprocess.run(
+        ["powershell", "-NoProfile", "-Command", command],
+        cwd=ROOT,
+        env=env,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    combined = proc.stdout + proc.stderr
+    assert proc.returncode == 0, combined
+    assert "DRY_RUN_OK" in combined
+    assert "--arm A4" in combined
+    assert "--seed 20260930" in combined
+    assert "--entry-offset 0" in combined
+    assert "--entry-count 100" in combined
+    assert "p1_a4_estimate_s=4500" in combined
+    assert "fits_one_window=true" in combined
+    boot = (ROOT / "tools" / "launch_boot1.ps1").read_text(encoding="utf-8")
+    assert "p1-a4" in boot
+    assert "-P1Seed $P1Seed -P1EntryOffset $P1EntryOffset -P1EntryCount $P1EntryCount" in boot
+
+
 def test_amendment_5_keeps_the_measured_ranges_and_labels_the_unbounded_run() -> None:
     from tools.score_p1_a0 import K_COUNTS, pass_at_k_ceiling, rate_arm
 
@@ -368,6 +405,39 @@ def test_amendment_5_keeps_the_measured_ranges_and_labels_the_unbounded_run() ->
         ).hexdigest()
     )
     assert prior["id"] == "LOCAL-QUALITY-AMENDMENT-4"
+
+
+def test_amendment_6_registers_the_unanimous_rule_and_the_a4_schedule() -> None:
+    path = ROOT / "derived" / "h1_hybrid" / "LOCAL_QUALITY_AMENDMENT_6.json"
+    amendment = json.loads(path.read_text(encoding="utf-8"))
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    assert digest == "c082e57a855d17a01bc108fa0c012598903795ae13f502109d1f7a61cc845105"
+    assert amendment["registered_before_any_a4_run"] is True
+    assert amendment["prior_amendments_unchanged"] is True
+    assert amendment["next_arm"] == "A4"
+    assert amendment["schedule"] == ["A4", "A2", "A3", "A1"]
+    assert amendment["a4_measurement_status"] == "not_started"
+    assert amendment["a1_bounded_measurement_status"] == "not_started"
+    result = amendment["a1_unbounded_result"]
+    assert result["run_id"] == "385cd4f6-47d4-4ed0-8031-87ac7ef21816"
+    assert result["raw_pass"] == {
+        "b_a0_pass_a1_fail": 1,
+        "c_a0_fail_a1_pass": 1,
+        "p_exact": 1.0,
+    }
+    assert result["in_budget"]["b_a0_pass_a1_fail"] == 6
+    assert result["in_budget"]["c_a0_fail_a1_pass"] == 1
+    assert result["in_budget"]["p_exact"] == 0.125
+    assert result["n_steps_tta_gt_10"] == 51
+    assert result["n_steps"] == 822
+    assert amendment["predictions"]["A1"]["vote"] == "unanimous finished extras, or keep greedy"
+    assert amendment["predictions"]["A4"]["estimates_s"] == {"first_100": 4500, "second_100": 3898}
+    assert (
+        amendment["amended_file_sha256"]
+        == hashlib.sha256(
+            (ROOT / "derived" / "h1_hybrid" / "LOCAL_QUALITY_AMENDMENT_5.json").read_bytes()
+        ).hexdigest()
+    )
 
 
 def test_a0_score_and_amendment_4_use_the_measured_rate() -> None:

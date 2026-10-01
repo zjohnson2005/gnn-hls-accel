@@ -1,0 +1,97 @@
+{
+  "a1_bounded_measurement_status": "not_started",
+  "a1_unbounded_result": {
+    "entries": "lexicographic [:100]",
+    "in_budget": {
+      "b_a0_pass_a1_fail": 6,
+      "c_a0_fail_a1_pass": 1,
+      "p_exact": 0.125
+    },
+    "label": "A1-unbounded",
+    "n_steps": 822,
+    "n_steps_tta_gt_10": 51,
+    "raw_pass": {
+      "b_a0_pass_a1_fail": 1,
+      "c_a0_fail_a1_pass": 1,
+      "p_exact": 1.0
+    },
+    "registered_comparison": false,
+    "run_id": "385cd4f6-47d4-4ed0-8031-87ac7ef21816",
+    "seed": 20260930
+  },
+  "a4_measurement_status": "not_started",
+  "amended_file_sha256": "a98697c9b3ccc819e3a9d687fc137cd68dcf1770e90aacce338ffe2e760d1569",
+  "amends": "derived/h1_hybrid/LOCAL_QUALITY_AMENDMENT_5.json",
+  "baseline_rate": "23/200",
+  "baseline_run_id": "8a529053-fc47-486d-8809-6c699d156b06",
+  "budget_s": 10.0,
+  "comparison": "Paired McNemar against A0, computed per seed. Report both seeds. b is A0 pass and this arm fail. c is A0 fail and this arm pass. p is the two-sided exact binomial test on the discordant pairs.",
+  "design_floor": "Amendment 5's design floor did not hold under plain majority vote: a plurality of extras could replace the greedy call and drop a paired A0 pass. The bounded rule keeps the greedy answer unless every finished extra shares one normalized tool call. A split sample cannot replace greedy, so that failure mode is closed and the floor holds by construction against it. The only override is that unanimous extra call.",
+  "direction": "greater than A0",
+  "id": "LOCAL-QUALITY-AMENDMENT-6",
+  "next_arm": "A4",
+  "predictions": {
+    "A1": {
+      "direction": "greater than A0",
+      "in_budget_passes_per_seed": {
+        "high": 47.68439114249999,
+        "low": 23
+      },
+      "name": "greedy_then_unanimous_extras",
+      "procedure": "Stream the greedy answer with the anytime cutoff. Remaining time R = 10 - elapsed. If R > 0, one batch of 3 extra samples with max_new_tokens = floor(R * measured batched tok/s for table k 4 at this context / 4). Finished extras override the greedy answer only when every one of them shares one normalized tool call. Otherwise keep greedy. Record the greedy call hash, the finished-extra hashes, whether they agree, and whether the step overrode.",
+      "seeds": [
+        20260930,
+        20261001
+      ],
+      "vote": "unanimous finished extras, or keep greedy"
+    },
+    "A2": {
+      "in_budget_passes_per_seed": 28.29,
+      "name": "retry_on_empty",
+      "seeds": [
+        20260930,
+        20261001
+      ]
+    },
+    "A3": {
+      "in_budget_passes_per_seed": 27.025,
+      "name": "check_and_retry",
+      "seeds": [
+        20260930,
+        20261001
+      ]
+    },
+    "A4": {
+      "derivation": "Carried from amendment 4. The count is the d482c621 local_pass trajectories whose every local step still finishes at or below 10 s after the 141-token cap. The procedure is the one in d8a19e9: greedy stream, thinking tokens capped at the remaining time times the decode rate measured on the previous step (the P0-v2 table rate on the first step), and prior think blocks stripped from history.",
+      "estimates_s": {
+        "first_100": 4500,
+        "second_100": 3898
+      },
+      "in_budget_passes_per_seed": 4,
+      "name": "thinking_on",
+      "seeds": [
+        20260930,
+        20261001
+      ],
+      "uses_baseline_rate": false
+    }
+  },
+  "prior_amendments_unchanged": true,
+  "registered_before_any_a4_run": true,
+  "runner_must_not_read_this_file": true,
+  "schedule": [
+    "A4",
+    "A2",
+    "A3",
+    "A1"
+  ],
+  "seeds": [
+    20260930,
+    20261001
+  ],
+  "source_run_ids": [
+    "8a529053-fc47-486d-8809-6c699d156b06",
+    "385cd4f6-47d4-4ed0-8031-87ac7ef21816"
+  ],
+  "why": "Plain majority vote let extras replace a correct greedy call, so amendment 5's in-budget floor did not hold. The bounded A1 rule now overrides only on a unanimous extra call. 385cd4f6 stays the unbounded result and is not the registered comparison. The next measurement is A4, then A2, then A3, then bounded A1. Amendments 1 through 5 stay on their files."
+}

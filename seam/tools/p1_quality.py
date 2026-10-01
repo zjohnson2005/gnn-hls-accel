@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 from typing import Any
@@ -18,6 +19,10 @@ _ENTRY_STEP_KEYS = (
     "retained_tokens",
     "source",
     "met_budget",
+    "greedy_call_sha256",
+    "extras_call_sha256",
+    "agreement",
+    "override",
 )
 
 
@@ -154,35 +159,50 @@ def step_account(
     }
 
 
+def call_sha256(text: str) -> str | None:
+    """SHA-256 of the normalized tool call. Unparseable text has no hash."""
+    key = normalize_tool_call(text)
+    if key is None:
+        return None
+    return hashlib.sha256(key.encode("utf-8")).hexdigest()
+
+
 def compose_greedy_vote(*, greedy_text: str, extras: list[dict[str, Any]]) -> dict[str, Any]:
-    """Vote finished extras with the greedy answer. Unfinished extras stay out."""
+    """Extras override greedy only when every finished extra shares one tool call.
+
+    A split among the finished extras keeps the greedy answer. Unfinished extras
+    stay out of the agreement check.
+    """
     finished = [item for item in extras if item.get("finished")]
-    texts = [greedy_text, *[str(item.get("text") or "") for item in finished]]
-    vote = majority_vote(texts)
-    if finished and vote["winner"] is not None:
-        chosen = str(vote["winner"])
-        source = "vote"
-        vote_index = vote["index"]
+    finished_texts = [str(item.get("text") or "") for item in finished]
+    keys = [normalize_tool_call(text) for text in finished_texts]
+    extra_hashes = [call_sha256(text) for text in finished_texts]
+    unanimous = bool(keys) and len(set(keys)) == 1 and keys[0] is not None
+    if unanimous:
+        chosen = finished_texts[0]
+        source = "override"
     else:
         chosen = greedy_text
         source = "greedy"
-        vote_index = 0
-    keys = [normalize_tool_call(text) for text in texts]
-    winner_key = normalize_tool_call(chosen)
-    if winner_key is None or not texts:
-        agreement: float | None = None
+    if not keys:
+        fraction: float | None = None
     else:
-        agreement = sum(1 for key in keys if key == winner_key) / len(texts)
+        modal = max(set(keys), key=keys.count)
+        fraction = sum(1 for key in keys if key == modal) / len(keys)
     return {
         "text": chosen,
         "source": source,
         "k_used": 1 + len(finished),
         "samples_finished": 1 + len(finished),
         "fallback_to_greedy": bool(extras) and not finished,
-        "vote_agreement": agreement,
-        "vote_index": vote_index,
-        "voted": source == "vote",
-        "tie": bool(vote["tie"]) if source == "vote" else False,
+        "vote_agreement": fraction,
+        "vote_index": 1 if unanimous else 0,
+        "voted": unanimous,
+        "tie": False,
+        "agreement": unanimous,
+        "override": unanimous,
+        "greedy_call_sha256": call_sha256(greedy_text),
+        "extras_call_sha256": extra_hashes,
     }
 
 
@@ -275,7 +295,7 @@ def _play_a1(
             considered.append({**extra, "finished": bool(extra.get("finished")) and fits})
     decision = compose_greedy_vote(greedy_text=str(greedy["text"]), extras=considered)
     tokens = int(greedy["tokens"])
-    if decision["source"] == "vote":
+    if decision["source"] == "override":
         tokens += sum(int(item["tokens"]) for item in considered if item.get("finished"))
         total = float(account["tta_s"]) + float(task.get("extra_elapsed_s") or 0.0)
         account = step_account(
@@ -295,6 +315,10 @@ def _play_a1(
     account["vote_index"] = decision["vote_index"]
     account["voted"] = decision["voted"]
     account["fallback_to_greedy"] = decision["fallback_to_greedy"]
+    account["agreement"] = decision["agreement"]
+    account["override"] = decision["override"]
+    account["greedy_call_sha256"] = decision["greedy_call_sha256"]
+    account["extras_call_sha256"] = decision["extras_call_sha256"]
     account["token_cap"] = cap
     account["emitted_tokens"] = tokens
     account["retained_tokens"] = None
@@ -415,7 +439,21 @@ def run_smoke() -> dict[str, Any]:
     call_text = json.dumps(call)
     other_text = json.dumps(other)
     think_text = "<think>\nplan the call\n</think>\n" + call_text
-    a1_vote = _play_a1(
+    a1_override = _play_a1(
+        {
+            "greedy": {"text": call_text, "elapsed_s": 4.0, "tokens": 40, "stopped": False},
+            "extras": [
+                {"text": other_text, "tokens": 40, "finished": True},
+                {"text": other_text, "tokens": 40, "finished": True},
+                {"text": other_text, "tokens": 40, "finished": True},
+            ],
+            "extra_elapsed_s": 2.0,
+        },
+        budget_s=budget_s,
+        rate_tok_s=batch4,
+        table_k=4,
+    )
+    a1_split = _play_a1(
         {
             "greedy": {"text": call_text, "elapsed_s": 4.0, "tokens": 40, "stopped": False},
             "extras": [
@@ -460,7 +498,7 @@ def run_smoke() -> dict[str, Any]:
                 budget_s=budget_s,
             ),
         ],
-        "A1": [a1_vote, a1_cutoff, a1_fallback],
+        "A1": [a1_override, a1_split, a1_cutoff, a1_fallback],
         "A2": [
             _play_retry(
                 "A2",
@@ -533,11 +571,17 @@ def _require_smoke(played: dict[str, list[dict[str, Any]]]) -> None:
         raise RuntimeError("A0 first task should finish inside the budget")
     if not a0[1]["fallback"] or not a0[1]["met_budget"]:
         raise RuntimeError("A0 second task should stop at the budget and still meet it")
-    vote, cutoff, backed = played["A1"]
-    if not vote["voted"] or vote["fallback"] or vote["n_samples"] != 4 or not vote["met_budget"]:
-        raise RuntimeError("A1 extras that finish are voted inside the budget")
-    if vote["vote_index"] != 0:
-        raise RuntimeError("A1 tie between two and two keeps the greedy sample")
+    override, split, cutoff, backed = played["A1"]
+    if not override["override"] or override["source"] != "override" or not override["met_budget"]:
+        raise RuntimeError("A1 unanimous extras override the greedy answer inside the budget")
+    if override["greedy_call_sha256"] in override["extras_call_sha256"]:
+        raise RuntimeError("A1 override records a greedy hash distinct from the extras")
+    if len(set(override["extras_call_sha256"])) != 1 or not override["agreement"]:
+        raise RuntimeError("A1 override requires every finished extra to share one hash")
+    if split["override"] or split["agreement"] or split["source"] != "greedy":
+        raise RuntimeError("A1 split extras keep the greedy answer")
+    if len(set(split["extras_call_sha256"])) < 2 or not split["met_budget"]:
+        raise RuntimeError("A1 split records disagreeing extra hashes and stays in budget")
     if cutoff["source"] != "greedy" or cutoff["k_used"] != 1 or cutoff["token_cap"] != 0:
         raise RuntimeError("A1 greedy cutoff leaves no remaining time for extras")
     if not cutoff["fallback"] or not cutoff["met_budget"] or cutoff["tta_s"] != 10.0:
