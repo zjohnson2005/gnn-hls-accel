@@ -170,9 +170,12 @@ Resident-limit rehearsal uses the same path:
 ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_resident_limit.ps1 -Detach -Rehearsal"
 ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_resident_limit_2.ps1 -Detach"
 ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p0_v2.ps1 -Detach"
+ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_preflight.ps1"
 ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a0.ps1 -Detach"
 ssh xps "powershell -NoProfile -Command Get-Content -Tail 50 C:/Users/zjohn/Projects/gnn-hls-accel/derived/c2_ttft/_launches/_rehearsal/resident-limit/resident-limit.log"
 ```
+
+`launch_p1_preflight.ps1` runs the arm smokes before the cold reboot. `launch_p1_a0.ps1 -Detach` is the measurement boot after that reboot. Its first GPU work is canary calibration with no P1 pipeline loaded.
 
 `REHEARSAL_COMPLETE` in that log is the success line. `-Detach` returns as soon as `Win32_Process.Create` has spawned the sequencer.
 

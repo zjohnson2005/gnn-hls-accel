@@ -8,6 +8,7 @@ multi-turn tasks. This file does not open a preregistration.
 from __future__ import annotations
 
 import argparse
+import gc
 import hashlib
 import json
 import os
@@ -31,6 +32,9 @@ from seam.tools.p1_quality import (  # noqa: E402
 )
 
 CONFIG_PATH = ROOT / "configs" / "p1_quality.yaml"
+# Pooled healthy sessions settled canary turn-2 prefill in this band.
+HEALTHY_REF_T2_LOW = 0.70
+HEALTHY_REF_T2_HIGH = 0.76
 
 
 def load_config() -> dict[str, Any]:
@@ -285,6 +289,94 @@ def _entries(offset: int, count: int) -> list[dict[str, Any]]:
     return rows
 
 
+class PipelineSlot:
+    """The P1 generate pipeline. Absent while a canary runs."""
+
+    def __init__(self, arm_id: str) -> None:
+        self.arm_id = arm_id
+        self.pipe: Any = None
+        self.meta: dict[str, Any] | None = None
+        self.load_s: float | None = None
+        self.loads = 0
+
+    def load(self) -> None:
+        import tools.bfcl_feasibility_probe as probe
+
+        self.pipe, self.meta, self.load_s = probe.load_arm_pipeline(
+            self.arm_id,
+            enable_prefix_caching=None,
+        )
+        self.loads += 1
+
+    def release(self) -> None:
+        self.pipe = None
+        gc.collect()
+
+
+def bind_idle_canary(guard: Any, slot: Any) -> None:
+    """Later checks release the P1 pipeline, run, then load it again."""
+    original = guard.run_canary
+
+    def run_canary(*args: Any, **kwargs: Any) -> Any:
+        slot.release()
+        try:
+            return original(*args, **kwargs)
+        finally:
+            slot.load()
+
+    guard.run_canary = run_canary
+
+
+def prepare_measurement_canary(guard: Any, slot: Any) -> None:
+    """Calibrate on an idle GPU, then hold the pipeline only for BFCL turns."""
+    guard.opening()
+    bind_idle_canary(guard, slot)
+    slot.load()
+
+
+def calibration_ref_in_healthy_range(ref_t2: float) -> bool:
+    return HEALTHY_REF_T2_LOW <= float(ref_t2) <= HEALTHY_REF_T2_HIGH
+
+
+def quality_summary(
+    *,
+    session_id: str,
+    status: str,
+    arm: str,
+    seed: int,
+    points: list[dict[str, Any]],
+    guard: Any,
+    pipeline_loads: int,
+    load_s: float | None,
+    load_meta: dict[str, Any] | None,
+    abort_reason: str | None = None,
+) -> dict[str, Any]:
+    gate = dict(guard.gate)
+    return {
+        "kind": "p1_quality",
+        "session_id": session_id,
+        "status": status,
+        "abort_reason": abort_reason,
+        "arm": arm,
+        "seed": seed,
+        "entries_completed": len(points),
+        "n_probes": len(points),
+        "passes": sum(1 for point in points if point["passed"]),
+        "in_budget_passes": sum(1 for point in points if point["in_budget_pass"]),
+        "pipeline_loads": pipeline_loads,
+        "load_s": load_s,
+        "load_meta": load_meta,
+        "canary": guard.plan_fragment(),
+        "canaries": list(guard.canaries),
+        "thresholds": {
+            "threshold_t1": gate.get("threshold_t1"),
+            "threshold_t2": gate.get("threshold_t2"),
+            "ref_turn1_prefill_s": gate.get("ref_turn1_prefill_s"),
+            "ref_turn2_prefill_s": gate.get("ref_turn2_prefill_s"),
+        },
+    }
+
+
 def run_measurement(cfg: dict[str, Any], *, arm: str, seed: int, offset: int, count: int) -> int:
     if os.environ.get("SEAM_REHEARSAL") == "1":
         print("REFUSED -- rehearsal does not start the measurement", flush=True)
@@ -336,7 +428,8 @@ def run_measurement(cfg: dict[str, Any], *, arm: str, seed: int, offset: int, co
     )
     plan["canary"] = guard.plan_fragment()
     plan_path.write_text(json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    pipe, meta, load_s = probe.load_arm_pipeline(str(cfg["arm_id"]), enable_prefix_caching=None)
+    slot = PipelineSlot(str(cfg["arm_id"]))
+    prepare_measurement_canary(guard, slot)
     tokenizer = probe._hf_tokenizer()
     import openvino_genai as ov_genai
 
@@ -346,11 +439,10 @@ def run_measurement(cfg: dict[str, Any], *, arm: str, seed: int, offset: int, co
     points: list[dict[str, Any]] = []
     probes_log: list[dict[str, Any]] = []
     try:
-        guard.opening()
         for entry in entries:
             controller = ArmController(cfg, arm=arm, seed=seed)
             session = probe.MultiTurnAgentSession(
-                pipe=pipe,
+                pipe=slot.pipe,
                 tokenizer=tokenizer,
                 cfg=cfg_idle,
                 residency_mode=str(cfg["residency"]),
@@ -381,7 +473,7 @@ def run_measurement(cfg: dict[str, Any], *, arm: str, seed: int, offset: int, co
                 and all(step["met_budget"] for step in steps),
                 "steps": steps,
                 "wall_s": wall_s,
-                "load_s": load_s,
+                "load_s": slot.load_s,
             }
             points.append(point)
             (out_dir / "points").mkdir(exist_ok=True)
@@ -392,14 +484,18 @@ def run_measurement(cfg: dict[str, Any], *, arm: str, seed: int, offset: int, co
             probes_log.append({"wall_s": wall_s})
             guard.after_probe(probes_log)
     except CanaryDriftAbort as exc:
-        summary = {
-            "kind": "p1_quality",
-            "session_id": session_id,
-            "status": "FAIL_CANARY_DRIFT",
-            "abort_reason": str(exc.detail),
-            "pipeline_loads": 1,
-            "load_meta": meta,
-        }
+        summary = quality_summary(
+            session_id=session_id,
+            status="FAIL_CANARY_DRIFT",
+            arm=arm,
+            seed=seed,
+            points=points,
+            guard=guard,
+            pipeline_loads=slot.loads,
+            load_s=slot.load_s,
+            load_meta=slot.meta,
+            abort_reason=str(exc.detail),
+        )
         (out_dir / "summary.json").write_text(
             json.dumps(summary, indent=2, sort_keys=True, default=str) + "\n",
             encoding="utf-8",
@@ -407,40 +503,105 @@ def run_measurement(cfg: dict[str, Any], *, arm: str, seed: int, offset: int, co
         _publish_cell_status("FAIL_CANARY_DRIFT", session_id)
         print(f"REFUSED -- FAIL_CANARY_DRIFT: {exc.detail}", flush=True)
         return 1
-    in_budget = sum(1 for point in points if point["in_budget_pass"])
-    summary = {
-        "kind": "p1_quality",
-        "session_id": session_id,
-        "status": "complete",
-        "arm": arm,
-        "seed": seed,
-        "n_entries": len(points),
-        "passes": sum(1 for point in points if point["passed"]),
-        "in_budget_passes": in_budget,
-        "pipeline_loads": 1,
-        "load_s": load_s,
-        "load_meta": meta,
-    }
+    summary = quality_summary(
+        session_id=session_id,
+        status="complete",
+        arm=arm,
+        seed=seed,
+        points=points,
+        guard=guard,
+        pipeline_loads=slot.loads,
+        load_s=slot.load_s,
+        load_meta=slot.meta,
+    )
     (out_dir / "summary.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True, default=str) + "\n",
         encoding="utf-8",
     )
     _publish_cell_status("complete", session_id)
-    print(f"P1_COMPLETE arm={arm} seed={seed} in_budget_passes={in_budget}", flush=True)
+    print(
+        f"P1_COMPLETE arm={arm} seed={seed} in_budget_passes={summary['in_budget_passes']}",
+        flush=True,
+    )
+    return 0
+
+
+def run_canary_calibration(cfg: dict[str, Any]) -> int:
+    """Warm-up plus three idle canaries. Does not load the P1 pipeline."""
+    from tools.boot4_session import _canary_model, _open_canary, load_harness
+
+    rehearsal = os.environ.get("SEAM_REHEARSAL") == "1"
+    if not rehearsal:
+        from tools.boot4_session import require_gates
+
+        require_gates()
+    model_spec = ROOT / str(cfg["model_spec"])
+    harness = load_harness(model_spec)
+    if rehearsal:
+        out_dir = (
+            ROOT / "derived" / "c2_ttft" / "_launches" / "_rehearsal" / "p1-a0" / "canary"
+        )
+        session_id = "rehearsal-canary"
+    else:
+        session_id = str(uuid.uuid4())
+        out_dir = ROOT / "derived" / "p1_quality" / session_id
+    out_dir.mkdir(parents=True, exist_ok=True)
+    plan_path = out_dir / "plan.json"
+    plan = {
+        "kind": "p1_canary_calibration",
+        "session_id": session_id,
+        "status": "running",
+        "p1_pipeline_loaded": False,
+    }
+    plan_path.write_text(json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    guard = _open_canary(
+        model_spec=_canary_model([harness["model_spec"]]),
+        work=out_dir / "work",
+        plan_path=plan_path,
+        planned=3,
+    )
+    guard.opening()
+    non_warmup = 0
+    while not guard.gate.get("calibration_complete"):
+        non_warmup = sum(1 for item in guard.canaries if not item.get("warmup"))
+        if non_warmup >= 6:
+            print("REFUSED -- canary calibration did not arm", flush=True)
+            return 1
+        guard.run_canary(after_probe_count=-1)
+    ref_t2 = float(guard.gate["ref_turn2_prefill_s"])
+    series = [
+        float(item["turn2_prefill_s"])
+        for item in guard.canaries
+        if not item.get("warmup") and item.get("turn2_prefill_s") is not None
+    ]
+    series_text = ",".join(f"{value:.6f}" for value in series)
+    print(f"CANARY_CALIBRATION ref_t2={ref_t2:.6f} series={series_text}", flush=True)
+    if not calibration_ref_in_healthy_range(ref_t2):
+        print(
+            "REFUSED -- canary ref_t2="
+            f"{ref_t2:.6f} outside {HEALTHY_REF_T2_LOW:.2f}-{HEALTHY_REF_T2_HIGH:.2f}",
+            flush=True,
+        )
+        return 1
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--smoke", action="store_true")
+    parser.add_argument("--canary-calibrate", action="store_true")
     parser.add_argument("--arm", default="A0")
     parser.add_argument("--seed", type=int, default=20260930)
     parser.add_argument("--entry-offset", type=int, default=0)
     parser.add_argument("--entry-count", type=int, default=0)
     args = parser.parse_args(argv)
+    if args.smoke and args.canary_calibrate:
+        raise SystemExit("REFUSED -- smoke and canary-calibrate are separate")
     if args.smoke:
         run_smoke()
         return 0
+    if args.canary_calibrate:
+        return run_canary_calibration(load_config())
     return run_measurement(
         load_config(),
         arm=str(args.arm),

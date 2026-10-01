@@ -1,6 +1,10 @@
-# P1 boot 1. Baseline greedy only. The smoke still walks every arm.
+# P1 boot 1. Baseline greedy only.
+# Arm smokes are tools/launch_p1_preflight.ps1, before the cold reboot.
+# This boot's first GPU work is idle canary calibration.
 # This script does not open a preregistration.
 #
+# Preflight, on the XPS, before reboot:
+#   powershell -NoProfile -File tools\launch_p1_preflight.ps1
 # Measurement, from the Mac, on a cold window:
 #   ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a0.ps1 -Detach"
 # Rehearsal log:

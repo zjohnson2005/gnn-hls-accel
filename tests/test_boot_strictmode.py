@@ -101,7 +101,8 @@ def test_p1_a0_rehearsal_strict_mode_stubs_smokes() -> None:
     assert "p1_a0_estimate_sum_s=4814" in combined
     assert "fits_one_window=true" in combined
     assert "P1 A0" in combined
-    assert "--smoke" in combined
+    assert "--canary-calibrate" in combined
+    assert "--smoke" not in combined
 
 
 def test_t2s_rehearsal_strict_mode_stubs_smokes() -> None:

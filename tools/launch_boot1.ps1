@@ -367,13 +367,14 @@ if ($Profile -eq "boot2") {
         }
     )
 } elseif ($Profile -eq "p1-a0") {
-    # P1 boot 1 is A0 only. The smoke still walks A0-A4.
+    # P1 boot 1 is A0 only. Arm smokes are tools/launch_p1_preflight.ps1,
+    # before the cold reboot. This boot's first GPU work is idle calibration.
     # Generate 4055.8199962596073 s + one pipeline load 5.211120400010259 s
     # + canary overhead 752.1359013 s = 4813.167017959617 s. Next whole second 4814.
     # 4814 is below the 7200 s window. Later arms are separate boots.
     $script:EstimateDerivation = [ordered]@{
         formula = "estimate_s = generate_s + load_s + canary_overhead_s, then the next whole second"
-        note = "P1 A0 is 4814 s, which is below 7200 s. The smoke covers every arm."
+        note = "P1 A0 is 4814 s, which is below 7200 s. Arm smokes run in the preflight, before reboot."
         source_run_id = "ac4e5472-76a9-4999-bf0b-8274d27ce0ca"
         ledger_run_id = "d482c621-4292-4281-b6a1-8635e5eeb6da"
         generate_s = 4055.8199962596073
@@ -796,7 +797,7 @@ function Get-BootCellCommand {
     }
     if ($kind -eq "p1") {
         $args = @($PythonExe, "-u", $P1Py, "--arm", $arm)
-        $smokeArgs = @($PythonExe, "-u", $P1Py, "--smoke")
+        $smokeArgs = @($PythonExe, "-u", $P1Py, "--canary-calibrate")
         return [ordered]@{
             kind = $kind; arm = $arm; model = $model; low = $low; high = $high
             expect_kv = $kv; command = ($args -join " "); smoke = ($smokeArgs -join " ")
@@ -894,7 +895,7 @@ function Invoke-HangFaultProbe {
     }
 }
 
-function Invoke-P1Smokes {
+function Invoke-P1Budget {
     if ($Profile -ne "p1-a0") { return }
     $mark = "measurement body is not started"
     if (-not (Test-Path -LiteralPath $P1Py)) { throw "REFUSED -- runner missing: $P1Py" }
@@ -907,22 +908,6 @@ function Invoke-P1Smokes {
     Write-Host ("p1_a0_estimate_sum_s={0} window_s={1} fits_one_window={2}" -f $sum, $WindowS, $fits)
     if ($fits -eq "false") {
         throw "REFUSED -- p1-a0 estimate sum $sum s exceeds window $WindowS s; split the profile before starting"
-    }
-    foreach ($cell in $Cells) {
-        $built = Get-BootCellCommand -Cell $cell
-        if ($DryRun) {
-            Write-Host ("smoke_planned {0} {1}" -f $cell.Name, $built.smoke)
-            continue
-        }
-        Write-Host ("smoke_run {0}" -f $built.smoke)
-        Invoke-BootCommandLine -CommandLine $built.smoke
-        if ($LASTEXITCODE -ne 0) {
-            $script:FinalState = "refused"
-            $script:FinalReason = "REFUSED -- smoke failed: $($cell.Name) exit=$LASTEXITCODE"
-            Save-BootSummary -State "refused" -Reason $script:FinalReason
-            Write-Host $script:FinalReason
-            exit $LASTEXITCODE
-        }
     }
 }
 
@@ -1058,7 +1043,7 @@ Save-BootSummary -State "started"
 # the smoke commands without loading a model.
 Invoke-Boot4Smokes
 Invoke-ResidentLimitSmokes
-Invoke-P1Smokes
+Invoke-P1Budget
 
 if ($Profile -eq "t2s-boot1") {
     $script:RunStartedUtc = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
