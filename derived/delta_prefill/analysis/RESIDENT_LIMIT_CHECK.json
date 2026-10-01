@@ -19,17 +19,32 @@
         "manifest_files": 10,
         "manifest_matches_bytes": true,
         "live_matches_sealed": true
+      },
+      {
+        "run_id": "e4a22dac-6301-4dfa-ae12-882328b6ba7c",
+        "arm": "gpu_only_u4",
+        "manifest_files": 9,
+        "manifest_matches_bytes": true,
+        "live_matches_sealed": true,
+        "sealed_text": "sealed",
+        "rewritten_by_this_closeout": false
       }
     ]
   },
   "u4": {
-    "status": "deferred",
+    "status": "complete",
     "cell": "RESIDENT-LIMIT u4",
-    "reason": "remaining cold-window time is below the next cell estimate",
-    "uptime_s": 7209,
-    "remaining_s": -9,
-    "window_s": 7200,
-    "source": "derived/c2_ttft/_launches/DEFERRED_TO_RESIDENT_LIMIT_2.json"
+    "run_id": "e4a22dac-6301-4dfa-ae12-882328b6ba7c",
+    "largest_n_cached": 26500,
+    "first_fail_n_cached": 27000,
+    "prior_deferral": {
+      "status": "deferred",
+      "reason": "remaining cold-window time is below the next cell estimate",
+      "uptime_s": 7209,
+      "remaining_s": -9,
+      "window_s": 7200,
+      "source": "derived/c2_ttft/_launches/DEFERRED_TO_RESIDENT_LIMIT_2.json"
+    }
   },
   "verdicts": {
     "definition_point": "Predicted largest 500-token rung at or below the AMEND-2 crossing. Hit only when the measured largest passing rung equals that prediction.",
@@ -69,8 +84,51 @@
         "interval_contained_in_band": false,
         "model_error_tokens": 846.3274491057055,
         "model_error_percent_of_crossing": 3.964744994770339
+      },
+      {
+        "arm": "u4",
+        "run_id": "e4a22dac-6301-4dfa-ae12-882328b6ba7c",
+        "predicted_largest_rung": 27000,
+        "measured_largest_rung": 26500,
+        "first_fail_n_cached": 27000,
+        "point_hit": false,
+        "point_error_tokens": -500,
+        "measured_interval": "(26500, 27000]",
+        "predicted_band": [26096.131792592594, 27314.342874074075],
+        "predicted_crossing": 27122.80177777778,
+        "predicted_crossing_inside_interval": false,
+        "interval_overlaps_band": true,
+        "interval_contained_in_band": true,
+        "model_error_tokens": 122.80177777777863,
+        "model_error_percent_of_crossing": 0.4527621400765183
       }
     ],
+    "three_arm": {
+      "largest_pass_first_fail": {
+        "f16": [15000, 15500],
+        "u8": [20000, 20500],
+        "u4": [26500, 27000]
+      },
+      "ratio_vs_f16": {
+        "u8": {
+          "measured": 1.3333333333333333,
+          "measured_stated": 1.333,
+          "measured_formula": "20000 / 15000",
+          "predicted": 1.3689982044166686,
+          "predicted_stated": 1.369,
+          "predicted_formula": "234827 / 171532"
+        },
+        "u4": {
+          "measured": 1.7666666666666666,
+          "measured_stated": 1.767,
+          "measured_formula": "26500 / 15000",
+          "predicted": 1.7394592592592593,
+          "predicted_stated": 1.739,
+          "predicted_formula": "234827 / 135000",
+          "measured_minus_predicted": 0.027207407407407347
+        }
+      }
+    },
     "capacity_ratio": {
       "predicted": 1.3689982044166686,
       "predicted_stated": 1.369,
@@ -109,6 +167,37 @@
         "19500": 2.305288818,
         "20000": 2.941160156
       }
+    },
+    "u4": {
+      "run_id": "e4a22dac-6301-4dfa-ae12-882328b6ba7c",
+      "values_s": {
+        "12000": 1.364324584,
+        "21000": 2.479501708,
+        "25500": 3.060839111,
+        "26500": 3.303680664
+      }
+    }
+  },
+  "n30000_permission_error": {
+    "run_id": "e4a22dac-6301-4dfa-ae12-882328b6ba7c",
+    "n_cached": 30000,
+    "class": "harness_io_winerror_5",
+    "capacity_observation": false,
+    "inside_crossing_interval": false,
+    "failure_kind": "other",
+    "failure_mode": "exception:PermissionError",
+    "turn1_prefill_s": null,
+    "hung_after_result": false,
+    "phase_at_failure": "generating",
+    "winerror": 5,
+    "call": "Path.replace of n30000.a0.result.partial onto n30000.a0.result.json",
+    "site": "seam/tools/_delta_n_child.py _Writer.flush, from _resident_two_turn writer.update(phase=generating), before turn 1",
+    "message": "[WinError 5] Access is denied",
+    "why": "The child had already loaded the resident model. The throw is the result-file replace, not an allocation. The parent polls that same result file with read_text while the child replaces it, and Windows denies the replace when the destination is open. The memory wall on this run is n27000: phase failed, failure_kind memory_wall, failure_mode turn1:RuntimeError, CL_OUT_OF_RESOURCES. first_fail stays 27000. n30000 does not move the interval.",
+    "same_class_later": {
+      "run_id": "d4f66bbc-3e50-4957-b5cb-85b7175a47a7",
+      "point": "gpu-n6000-r2",
+      "note": "Same WinError 5 on the result replace, after thinking had already passed. retry and greedy_tta are absent on that one child only."
     }
   },
   "manual_kills": {

@@ -1,0 +1,74 @@
+{
+  "device": "cpu",
+  "failure_kind": "RuntimeError:Check '!streamer_ptr->has_callback() || input_ids.size() == 1 && sampling_params[0].num_return_sequences == 1 && (sampling_params[0].is_greedy_decoding() || sampling_params[0].is_multinomial())' failed at C:\\Jenkins\\workspace\\private-ci\\ie\\build-windows-vs2022@2\\b\\repos\\openvino.genai\\src\\cpp\\src\\continuous_batching\\pipeline_impl.cpp:530:\nCurrently streaming is possible only with batch size=1 and only for greedy or multinomial decoding\n",
+  "hang_disposition": null,
+  "hang_duration_s": null,
+  "hung_after_result": false,
+  "n": 4000,
+  "outcome": "fail",
+  "probes": [
+    {
+      "completion_tokens": 64,
+      "concurrency": 1,
+      "decode_tok_s": 12.877483499344537,
+      "n_seq": 1,
+      "name": "batch-1",
+      "outcome": "pass",
+      "prefill_s": 59.5697763,
+      "prompt_tokens": 4000,
+      "stopped_for_budget": false,
+      "text_head": "It seems you've provided a text that includes the phrase \"cpu-n4000-r2\" followed by the sentence \"the quick brown fox jumps over the lazy dog,\" repeated many times, and then the word \"a\" repeated mult",
+      "wall_s": 64.46265800000015
+    },
+    {
+      "failure_mode": "RuntimeError:Check '!streamer_ptr->has_callback() || input_ids.size() == 1 && sampling_params[0].num_return_sequences == 1 && (sampling_params[0].is_greedy_decoding() || sampling_params[0].is_multinomial())' failed at C:\\Jenkins\\workspace\\private-ci\\ie\\build-windows-vs2022@2\\b\\repos\\openvino.genai\\src\\cpp\\src\\continuous_batching\\pipeline_impl.cpp:530:\nCurrently streaming is possible only with batch size=1 and only for greedy or multinomial decoding\n",
+      "name": "batch-2",
+      "outcome": "fail"
+    },
+    {
+      "failure_mode": "RuntimeError:Check '!streamer_ptr->has_callback() || input_ids.size() == 1 && sampling_params[0].num_return_sequences == 1 && (sampling_params[0].is_greedy_decoding() || sampling_params[0].is_multinomial())' failed at C:\\Jenkins\\workspace\\private-ci\\ie\\build-windows-vs2022@2\\b\\repos\\openvino.genai\\src\\cpp\\src\\continuous_batching\\pipeline_impl.cpp:530:\nCurrently streaming is possible only with batch size=1 and only for greedy or multinomial decoding\n",
+      "name": "batch-4",
+      "outcome": "fail"
+    },
+    {
+      "completion_tokens": 64,
+      "decode_tok_s": 11.486478700713707,
+      "n_seq": 1,
+      "name": "thinking",
+      "outcome": "pass",
+      "prefill_s": 57.2571999,
+      "prompt_tokens": 4000,
+      "stopped_for_budget": false,
+      "text_head": "<think>\nOkay, the user provided a lot of repeated text. Let me see... The main content is \"the quick brown fox jumps over the lazy dog.\" repeated many times, and then there's \"a a a a a\" at the end. A",
+      "wall_s": 62.74266570000009
+    },
+    {
+      "completion_tokens": 64,
+      "decode_tok_s": 12.29669272836832,
+      "n_seq": 1,
+      "name": "retry",
+      "outcome": "pass",
+      "prefill_s": 56.8102462,
+      "prompt_tokens": 4000,
+      "stopped_for_budget": false,
+      "text_head": "It seems you've provided a text that includes the phrase \"cpu-n4000-r2\" followed by the sentence \"the quick brown fox jumps over the lazy dog,\" repeated many times, and then the word \"a\" repeated mult",
+      "wall_s": 61.93408109999996
+    },
+    {
+      "completion_tokens": 4,
+      "decode_tok_s": null,
+      "give_up": true,
+      "n_seq": 1,
+      "name": "greedy_tta",
+      "outcome": "pass",
+      "parsed_tool_call": false,
+      "prefill_s": 57.4207108,
+      "prompt_tokens": 4000,
+      "stopped_for_budget": true,
+      "text_head": "The provided text",
+      "tta_s": 57.498561799999834,
+      "wall_s": 57.498561799999834
+    }
+  ],
+  "repeat": 2
+}

@@ -1,0 +1,156 @@
+{
+  "affinity_readback": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "completed": false,
+  "context_tokens": 6000,
+  "exception": null,
+  "failure_mode": "RuntimeError:Check '!streamer_ptr->has_callback() || input_ids.size() == 1 && sampling_params[0].num_return_sequences == 1 && (sampling_params[0].is_greedy_decoding() || sampling_params[0].is_multinomial())' failed at C:\\Jenkins\\workspace\\private-ci\\ie\\build-windows-vs2022@2\\b\\repos\\openvino.genai\\src\\cpp\\src\\continuous_batching\\pipeline_impl.cpp:530:\nCurrently streaming is possible only with batch size=1 and only for greedy or multinomial decoding\n",
+  "kv_cache_precision_readback": {
+    "enforced": true,
+    "failure_mode": null,
+    "match": true,
+    "readback": {
+      "device": "GPU",
+      "error": null,
+      "normalized": "u8",
+      "ok": true,
+      "property": "KV_CACHE_PRECISION",
+      "raw": "<Type: 'uint8_t'>",
+      "to_string": "u8"
+    },
+    "requested": "u8"
+  },
+  "memory_baseline": {
+    "available_mb": 8479.77734375,
+    "percent": 46.9,
+    "rss_mb": 19.28125,
+    "used_mb": 7496.3984375
+  },
+  "memory_resident_before_inference": {
+    "available_mb": 6251.1953125,
+    "percent": 60.9,
+    "rss_mb": 2536.0859375,
+    "used_mb": 9724.98046875
+  },
+  "phase": "failed",
+  "power_request": {
+    "clear_last_error": 0,
+    "cleared": true,
+    "close_last_error": 0,
+    "closed": true,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x2bc",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM exchange-rate child; PowerRequestSystemRequired for generate window",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "measurement_child",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "probes": [
+    {
+      "completion_tokens": 64,
+      "concurrency": 1,
+      "decode_tok_s": 27.9744201901781,
+      "n_seq": 1,
+      "name": "batch-1",
+      "outcome": "pass",
+      "prefill_s": 4.3021124,
+      "prompt_tokens": 6000,
+      "stopped_for_budget": false,
+      "text_head": "It seems you've provided a repetitive text with a lot of repeated phrases, including the sentence \"the quick brown fox jumps over the lazy dog,\" which is a well-known pangram (a sentence that uses eve",
+      "wall_s": 6.554816100000039
+    },
+    {
+      "failure_mode": "RuntimeError:Check '!streamer_ptr->has_callback() || input_ids.size() == 1 && sampling_params[0].num_return_sequences == 1 && (sampling_params[0].is_greedy_decoding() || sampling_params[0].is_multinomial())' failed at C:\\Jenkins\\workspace\\private-ci\\ie\\build-windows-vs2022@2\\b\\repos\\openvino.genai\\src\\cpp\\src\\continuous_batching\\pipeline_impl.cpp:530:\nCurrently streaming is possible only with batch size=1 and only for greedy or multinomial decoding\n",
+      "name": "batch-2",
+      "outcome": "fail"
+    },
+    {
+      "failure_mode": "RuntimeError:Check '!streamer_ptr->has_callback() || input_ids.size() == 1 && sampling_params[0].num_return_sequences == 1 && (sampling_params[0].is_greedy_decoding() || sampling_params[0].is_multinomial())' failed at C:\\Jenkins\\workspace\\private-ci\\ie\\build-windows-vs2022@2\\b\\repos\\openvino.genai\\src\\cpp\\src\\continuous_batching\\pipeline_impl.cpp:530:\nCurrently streaming is possible only with batch size=1 and only for greedy or multinomial decoding\n",
+      "name": "batch-4",
+      "outcome": "fail"
+    },
+    {
+      "completion_tokens": 64,
+      "decode_tok_s": 28.426415178622797,
+      "n_seq": 1,
+      "name": "thinking",
+      "outcome": "pass",
+      "prefill_s": 4.2827154,
+      "prompt_tokens": 6000,
+      "stopped_for_budget": false,
+      "text_head": "<think>\nOkay, the user provided a long string that starts with \"gpu-n6000-r0-think\" followed by multiple repetitions of the sentence \"the quick brown fox jumps over the lazy dog.\" and ends with \"a a a",
+      "wall_s": 6.499577700000032
+    },
+    {
+      "completion_tokens": 64,
+      "decode_tok_s": 24.66949243302478,
+      "n_seq": 1,
+      "name": "retry",
+      "outcome": "pass",
+      "prefill_s": 4.7097306,
+      "prompt_tokens": 6000,
+      "stopped_for_budget": false,
+      "text_head": "It seems you've provided a repetitive text with a lot of repeated phrases, including the sentence \"the quick brown fox jumps over the lazy dog,\" which is a well-known pangram (a sentence that uses eve",
+      "wall_s": 7.264143900000022
+    },
+    {
+      "completion_tokens": 76,
+      "decode_tok_s": 24.201938652732288,
+      "give_up": true,
+      "n_seq": 1,
+      "name": "greedy_tta",
+      "outcome": "pass",
+      "parsed_tool_call": false,
+      "prefill_s": 4.9545771,
+      "prompt_tokens": 6000,
+      "stopped_for_budget": false,
+      "text_head": "It seems like you've provided a repetitive text with the phrase \"the quick brown fox jumps over the lazy dog\" repeated many times, followed by \"a a\". \n\nIf you're looking for a response or a specific a",
+      "tta_s": 8.05421380000007,
+      "wall_s": 8.05421380000007
+    }
+  ],
+  "working_set_lock": {
+    "after": {
+      "flags": 9,
+      "hard_min_enabled": true,
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "read": true
+    },
+    "before": {
+      "flags": 10,
+      "hard_min_enabled": false,
+      "maximum_bytes": 1413120,
+      "minimum_bytes": 204800,
+      "read": true
+    },
+    "call": "SetProcessWorkingSetSizeEx",
+    "flags": 1,
+    "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+    "granted": true,
+    "last_error": 0,
+    "privilege": {
+      "attempted": true,
+      "granted": true,
+      "last_error": 0,
+      "last_error_meaning": "ERROR_SUCCESS",
+      "privilege": "SeIncreaseWorkingSetPrivilege",
+      "step": "AdjustTokenPrivileges"
+    },
+    "requested": true,
+    "requested_maximum_bytes": 12884901888,
+    "requested_minimum_bytes": 4294967296,
+    "returned": true
+  }
+}

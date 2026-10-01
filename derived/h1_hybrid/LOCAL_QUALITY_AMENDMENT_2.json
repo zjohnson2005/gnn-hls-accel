@@ -1,0 +1,31 @@
+{
+  "id": "LOCAL-QUALITY-AMENDMENT-2",
+  "registered_before_any_p1_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "amends": "derived/h1_hybrid/LOCAL_QUALITY_AMENDMENT.json",
+  "amended_file_sha256": "97f766d88b4bce3ed1f617531d00d1ce2f2caa47e26b38b765980bab3d2ec21f",
+  "prior_amendment_unchanged": true,
+  "original_predictions_unchanged": true,
+  "budget": {
+    "name": "per-step time-to-action",
+    "rule": "each tool call finishes within 10 s",
+    "budget_s": 10,
+    "replaces": "The prior amendment counted a trajectory only when every local turn wall was at or below 10 s. P1 uses per-step time-to-action instead."
+  },
+  "baseline_recount": {
+    "run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+    "ledger": "derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da/policies/slo_escalate/turn_ledger.json",
+    "policy": "slo_escalate",
+    "local_pass": 21,
+    "in_budget_passes": 14,
+    "grain": "The ledger stores one t_generate per turn, the time until that turn's tool calls exist. A turn can hold more than one decoded call and has no per-call clock. At that grain the rule is: every local turn on the trajectory has t_generate at or below 10 s.",
+    "turn_wall_in_budget": 14,
+    "t_generate_in_budget": 14,
+    "trajectories_with_wall_over_10_and_generate_at_or_below_10": 0,
+    "why_the_count_matches": "The seven local_pass trajectories excluded by the turn-wall rule also have a t_generate above 10 s. Changing the clock from turn wall to t_generate does not move the baseline. The other arm predictions on the prior amendment were built from this same 14 and stay on that file."
+  },
+  "source_run_ids": [
+    "d482c621-4292-4281-b6a1-8635e5eeb6da"
+  ]
+}

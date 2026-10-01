@@ -1,0 +1,156 @@
+{
+  "affinity_readback": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "completed": false,
+  "context_tokens": 4000,
+  "exception": null,
+  "failure_mode": "RuntimeError:Check '!streamer_ptr->has_callback() || input_ids.size() == 1 && sampling_params[0].num_return_sequences == 1 && (sampling_params[0].is_greedy_decoding() || sampling_params[0].is_multinomial())' failed at C:\\Jenkins\\workspace\\private-ci\\ie\\build-windows-vs2022@2\\b\\repos\\openvino.genai\\src\\cpp\\src\\continuous_batching\\pipeline_impl.cpp:530:\nCurrently streaming is possible only with batch size=1 and only for greedy or multinomial decoding\n",
+  "kv_cache_precision_readback": {
+    "enforced": true,
+    "failure_mode": null,
+    "match": true,
+    "readback": {
+      "device": "CPU",
+      "error": null,
+      "normalized": "u8",
+      "ok": true,
+      "property": "KV_CACHE_PRECISION",
+      "raw": "<Type: 'uint8_t'>",
+      "to_string": "u8"
+    },
+    "requested": "u8"
+  },
+  "memory_baseline": {
+    "available_mb": 9458.16796875,
+    "percent": 40.8,
+    "rss_mb": 19.37890625,
+    "used_mb": 6518.0078125
+  },
+  "memory_resident_before_inference": {
+    "available_mb": 9046.2109375,
+    "percent": 43.4,
+    "rss_mb": 448.359375,
+    "used_mb": 6929.96484375
+  },
+  "phase": "failed",
+  "power_request": {
+    "clear_last_error": 0,
+    "cleared": true,
+    "close_last_error": 0,
+    "closed": true,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x2bc",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM exchange-rate child; PowerRequestSystemRequired for generate window",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "measurement_child",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "probes": [
+    {
+      "completion_tokens": 64,
+      "concurrency": 1,
+      "decode_tok_s": 10.803377382704173,
+      "n_seq": 1,
+      "name": "batch-1",
+      "outcome": "pass",
+      "prefill_s": 60.6837707,
+      "prompt_tokens": 4000,
+      "stopped_for_budget": false,
+      "text_head": "It seems you've provided a text that includes a mix of content. Let me break it down:\n\n1. **CPU Model Mentioned**: \"cpu-n4000-r1\" \u2013 This appears to be a specific CPU model, possibly from a manufacture",
+      "wall_s": 66.51617769999984
+    },
+    {
+      "failure_mode": "RuntimeError:Check '!streamer_ptr->has_callback() || input_ids.size() == 1 && sampling_params[0].num_return_sequences == 1 && (sampling_params[0].is_greedy_decoding() || sampling_params[0].is_multinomial())' failed at C:\\Jenkins\\workspace\\private-ci\\ie\\build-windows-vs2022@2\\b\\repos\\openvino.genai\\src\\cpp\\src\\continuous_batching\\pipeline_impl.cpp:530:\nCurrently streaming is possible only with batch size=1 and only for greedy or multinomial decoding\n",
+      "name": "batch-2",
+      "outcome": "fail"
+    },
+    {
+      "failure_mode": "RuntimeError:Check '!streamer_ptr->has_callback() || input_ids.size() == 1 && sampling_params[0].num_return_sequences == 1 && (sampling_params[0].is_greedy_decoding() || sampling_params[0].is_multinomial())' failed at C:\\Jenkins\\workspace\\private-ci\\ie\\build-windows-vs2022@2\\b\\repos\\openvino.genai\\src\\cpp\\src\\continuous_batching\\pipeline_impl.cpp:530:\nCurrently streaming is possible only with batch size=1 and only for greedy or multinomial decoding\n",
+      "name": "batch-4",
+      "outcome": "fail"
+    },
+    {
+      "completion_tokens": 64,
+      "decode_tok_s": 12.9174658408893,
+      "n_seq": 1,
+      "name": "thinking",
+      "outcome": "pass",
+      "prefill_s": 59.4131228,
+      "prompt_tokens": 4000,
+      "stopped_for_budget": false,
+      "text_head": "<think>\nOkay, the user provided a long string that seems to be a series of repeated sentences. Let me check what's going on here.\n\nFirst, the user starts with \"cpu-n4000-r1-think\" which might be a mod",
+      "wall_s": 64.29071239999985
+    },
+    {
+      "completion_tokens": 64,
+      "decode_tok_s": 12.68755350799476,
+      "n_seq": 1,
+      "name": "retry",
+      "outcome": "pass",
+      "prefill_s": 57.7169561,
+      "prompt_tokens": 4000,
+      "stopped_for_budget": false,
+      "text_head": "It seems you've provided a text that includes a mix of content. Let me break it down:\n\n1. **CPU Model Mentioned**: \"cpu-n4000-r1\" \u2013 This appears to be a specific CPU model, possibly from a manufacture",
+      "wall_s": 62.682992900000045
+    },
+    {
+      "completion_tokens": 4,
+      "decode_tok_s": null,
+      "give_up": true,
+      "n_seq": 1,
+      "name": "greedy_tta",
+      "outcome": "pass",
+      "parsed_tool_call": false,
+      "prefill_s": 57.4505476,
+      "prompt_tokens": 4000,
+      "stopped_for_budget": true,
+      "text_head": "The provided text",
+      "tta_s": 57.52967560000002,
+      "wall_s": 57.52967560000002
+    }
+  ],
+  "working_set_lock": {
+    "after": {
+      "flags": 9,
+      "hard_min_enabled": true,
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "read": true
+    },
+    "before": {
+      "flags": 10,
+      "hard_min_enabled": false,
+      "maximum_bytes": 1413120,
+      "minimum_bytes": 204800,
+      "read": true
+    },
+    "call": "SetProcessWorkingSetSizeEx",
+    "flags": 1,
+    "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+    "granted": true,
+    "last_error": 0,
+    "privilege": {
+      "attempted": true,
+      "granted": true,
+      "last_error": 0,
+      "last_error_meaning": "ERROR_SUCCESS",
+      "privilege": "SeIncreaseWorkingSetPrivilege",
+      "step": "AdjustTokenPrivileges"
+    },
+    "requested": true,
+    "requested_maximum_bytes": 12884901888,
+    "requested_minimum_bytes": 4294967296,
+    "returned": true
+  }
+}

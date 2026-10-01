@@ -1,0 +1,82 @@
+{
+  "id": "EXCHANGE_RATE_CHECK",
+  "prereg": "derived/h1_hybrid/EXCHANGE_RATE_PREREG.json",
+  "prereg_unchanged": true,
+  "run_id": "d4f66bbc-3e50-4957-b5cb-85b7175a47a7",
+  "seal": {
+    "scheme": "boot4 manifest.sha256.json plus .sealed text 'sealed'",
+    "rewritten": false,
+    "manifest_files": 14,
+    "manifest_matches_bytes": true,
+    "live_matches_sealed": true,
+    "sealed_status": "partial",
+    "scientific_status": "partial"
+  },
+  "why_partial": "batch-2 and batch-4 were attempted on every child and failed the OpenVINO streaming check, so they produced no rate. gpu-n6000-r2 then died on a result-file replace after thinking, so retry and greedy_tta are absent on that one child. The sealed summary status was already partial. This closeout did not rewrite the seal.",
+  "label": "COLD",
+  "label_why": "Every generate used an exact-n filler with no warm prefix. These are cold prefills.",
+  "batch1_medians": [
+    {
+      "device": "gpu",
+      "n": 4000,
+      "repeats": 3,
+      "label": "COLD",
+      "prefill_s": 2.4595548,
+      "decode_tok_s": 25.03689962110825,
+      "wall_s": 4.974905799999988
+    },
+    {
+      "device": "gpu",
+      "n": 6000,
+      "repeats": 3,
+      "label": "COLD",
+      "prefill_s": 4.3021124,
+      "decode_tok_s": 27.792270687187713,
+      "wall_s": 6.555724699999928
+    },
+    {
+      "device": "cpu",
+      "n": 4000,
+      "repeats": 3,
+      "label": "COLD",
+      "prefill_s": 59.5697763,
+      "decode_tok_s": 10.803377382704173,
+      "wall_s": 65.46859940000002
+    },
+    {
+      "device": "cpu",
+      "n": 6000,
+      "repeats": 3,
+      "label": "COLD",
+      "prefill_s": 99.4641651,
+      "decode_tok_s": 9.32269427462713,
+      "wall_s": 105.92988530000002
+    }
+  ],
+  "scored_from_batch1": {
+    "prediction": "cpu_tta_exceeds_budget",
+    "budget_s": 10,
+    "verdict": "yes",
+    "why": "CPU cold prefill and CPU cold wall both exceed 10 s at 4000 and at 6000. A tool call that waits on that prefill does not fit."
+  },
+  "not_scored_from_batch1": [
+    "gpu_greedy_tta_s is a tool-call TTA, not the 64-token filler wall",
+    "gpu_batch4_aggregate_over_batch1 has no rate: batch-4 failed the streaming check",
+    "gpu_what_fits, thinking_tok_s, and retry_s_cached are not batch-1 questions"
+  ],
+  "probe_disposition": {
+    "batch-1": "12/12 pass, COLD",
+    "batch-2": "12/12 fail. OpenVINO pipeline_impl.cpp:530: streaming is possible only with batch size=1 and only for greedy or multinomial decoding. Not a rate. Not NOT_RUN.",
+    "batch-4": "12/12 fail. Same streaming check. Not a rate. Not NOT_RUN.",
+    "thinking": "12/12 pass, COLD",
+    "retry": "11/12 pass, COLD. Absent on gpu-n6000-r2.",
+    "greedy_tta": "11/12 pass, COLD. Absent on gpu-n6000-r2."
+  },
+  "gpu_n6000_r2": {
+    "failure_mode": "exception:PermissionError",
+    "class": "harness_io_winerror_5",
+    "stopped_after": "thinking",
+    "absent": ["retry", "greedy_tta"],
+    "why": "The result-file replace raised WinError 5 after thinking had passed. The per-probe handler had already continued past the batch-2 and batch-4 streaming failures. The process then died in the writer, so the last two probes were not started."
+  }
+}

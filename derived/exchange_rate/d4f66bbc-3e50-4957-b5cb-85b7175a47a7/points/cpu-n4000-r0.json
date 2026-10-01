@@ -1,0 +1,74 @@
+{
+  "device": "cpu",
+  "failure_kind": "RuntimeError:Check '!streamer_ptr->has_callback() || input_ids.size() == 1 && sampling_params[0].num_return_sequences == 1 && (sampling_params[0].is_greedy_decoding() || sampling_params[0].is_multinomial())' failed at C:\\Jenkins\\workspace\\private-ci\\ie\\build-windows-vs2022@2\\b\\repos\\openvino.genai\\src\\cpp\\src\\continuous_batching\\pipeline_impl.cpp:530:\nCurrently streaming is possible only with batch size=1 and only for greedy or multinomial decoding\n",
+  "hang_disposition": null,
+  "hang_duration_s": null,
+  "hung_after_result": false,
+  "n": 4000,
+  "outcome": "fail",
+  "probes": [
+    {
+      "completion_tokens": 64,
+      "concurrency": 1,
+      "decode_tok_s": 10.210687322206407,
+      "n_seq": 1,
+      "name": "batch-1",
+      "outcome": "pass",
+      "prefill_s": 59.2976932,
+      "prompt_tokens": 4000,
+      "stopped_for_budget": false,
+      "text_head": "It seems you've provided a text that includes a mix of content. Let me break it down:\n\n1. **CPU Model Mention**: \"cpu-n4000-r0\" \u2013 This appears to be a reference to a specific CPU model, possibly from ",
+      "wall_s": 65.46859940000002
+    },
+    {
+      "failure_mode": "RuntimeError:Check '!streamer_ptr->has_callback() || input_ids.size() == 1 && sampling_params[0].num_return_sequences == 1 && (sampling_params[0].is_greedy_decoding() || sampling_params[0].is_multinomial())' failed at C:\\Jenkins\\workspace\\private-ci\\ie\\build-windows-vs2022@2\\b\\repos\\openvino.genai\\src\\cpp\\src\\continuous_batching\\pipeline_impl.cpp:530:\nCurrently streaming is possible only with batch size=1 and only for greedy or multinomial decoding\n",
+      "name": "batch-2",
+      "outcome": "fail"
+    },
+    {
+      "failure_mode": "RuntimeError:Check '!streamer_ptr->has_callback() || input_ids.size() == 1 && sampling_params[0].num_return_sequences == 1 && (sampling_params[0].is_greedy_decoding() || sampling_params[0].is_multinomial())' failed at C:\\Jenkins\\workspace\\private-ci\\ie\\build-windows-vs2022@2\\b\\repos\\openvino.genai\\src\\cpp\\src\\continuous_batching\\pipeline_impl.cpp:530:\nCurrently streaming is possible only with batch size=1 and only for greedy or multinomial decoding\n",
+      "name": "batch-4",
+      "outcome": "fail"
+    },
+    {
+      "completion_tokens": 64,
+      "decode_tok_s": 12.562414512021483,
+      "n_seq": 1,
+      "name": "thinking",
+      "outcome": "pass",
+      "prefill_s": 59.359409,
+      "prompt_tokens": 4000,
+      "stopped_for_budget": false,
+      "text_head": "<think>\nOkay, the user provided a lot of repeated text. Let me see... The main content is \"the quick brown fox jumps over the lazy dog.\" repeated many times, and then there's \"a a a a a\" at the end. A",
+      "wall_s": 64.37487110000006
+    },
+    {
+      "completion_tokens": 64,
+      "decode_tok_s": 12.874017015159154,
+      "n_seq": 1,
+      "name": "retry",
+      "outcome": "pass",
+      "prefill_s": 56.9784466,
+      "prompt_tokens": 4000,
+      "stopped_for_budget": false,
+      "text_head": "It seems you've provided a text that includes a mix of content. Let me break it down:\n\n1. **CPU Model Mention**: \"cpu-n4000-r0\" \u2013 This appears to be a reference to a specific CPU model, possibly from ",
+      "wall_s": 61.87253929999997
+    },
+    {
+      "completion_tokens": 4,
+      "decode_tok_s": null,
+      "give_up": true,
+      "n_seq": 1,
+      "name": "greedy_tta",
+      "outcome": "pass",
+      "parsed_tool_call": false,
+      "prefill_s": 56.5819565,
+      "prompt_tokens": 4000,
+      "stopped_for_budget": true,
+      "text_head": "The provided text",
+      "tta_s": 56.658517900000106,
+      "wall_s": 56.658517900000106
+    }
+  ],
+  "repeat": 0
+}

@@ -1,0 +1,78 @@
+{
+  "id": "EXCHANGE-RATE-AMENDMENT",
+  "phase": "P0-v2",
+  "registered_before_any_p0_v2_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "amends": "derived/h1_hybrid/EXCHANGE_RATE_PREREG.json",
+  "amended_file_sha256": "a554d2f7574b4279db3c4e11e241423743c7df42f98191d143edbc458f178be0",
+  "original_predictions_unchanged": true,
+  "why": "d4f66bbc batch-2 and batch-4 failed because a streamer was attached. OpenVINO pipeline_impl.cpp:530 allows streaming only at batch size 1 for greedy or multinomial decoding. v2 times the whole generate when there is more than one prompt and divides generated tokens by wall. It also measures the warm time-to-action P1's budget uses.",
+  "warm_probe": {
+    "residency": "RESIDENT",
+    "n_cached": [4000, 6000],
+    "delta_tokens": 183,
+    "delta_derivation": "532 consecutive local-turn n_ctx gaps on d482c621 slo_escalate have median 182.5. The probe uses 183, the nearest integer.",
+    "decode_new_tokens": 64,
+    "tta": "wall of the second turn, the 183-token delta plus the 64-token decode, on the cached prefix",
+    "devices": ["GPU", "CPU"]
+  },
+  "predictions": {
+    "warm_gpu_tta_s": {
+      "4000": 2.797060597,
+      "6000": 2.742256524,
+      "derivation": "Warm prefill is the d482c621 later-turn ttft median in the n_ctx band: 0.280774597 s for 3500-4500 (n=171) and 0.475439224 s for 5500-6500 (n=12). Decode of the remaining 63 tokens uses the d4f66bbc batch-1 median, 25.03689962110825 tok/s at 4000 and 27.792270687187713 tok/s at 6000. TTA is that prefill plus 63/decode."
+    },
+    "warm_cpu_tta_s": {
+      "4000": 7.735376342857142,
+      "6000": 8.661569742857141,
+      "both_under_budget": true,
+      "derivation": "No sealed CPU warm turn exists. The new-token prefill uses the 7f232f86 slope from n=1125 to n=2000, (23.151441406 - 14.048253906) / 875 = 0.010403642857142858 s/token, times 183. Decode of the remaining 63 tokens uses the d4f66bbc CPU batch-1 median, 10.803377382704173 tok/s at 4000 and 9.32269427462713 tok/s at 6000. Both predictions are under 10 s. The cold CPU prefill is not."
+    },
+    "gpu_batch4_aggregate_over_batch1": {
+      "bar": 1.5,
+      "contexts": [4000, 6000],
+      "metric": "generated tokens divided by the wall of the whole generate, same definition on both sides",
+      "cpu": "SKIPPED_OVER_BUDGET when the projected wall exceeds 30 s, so this bar is GPU only",
+      "derivation": "The original bar stands. The clock changes because a streamer is illegal above batch size 1. 2608.19147 is still cited and is still not this prediction."
+    }
+  },
+  "cpu_skip": {
+    "run": ["warm", "batch-1", "retry", "greedy_tta"],
+    "skip_when_projected_wall_exceeds": "3 * budget_s = 30 s",
+    "outcome": "SKIPPED_OVER_BUDGET",
+    "projections_s": {
+      "4000": {
+        "batch-2": 71.36742250000003,
+        "batch-4": 83.16506870000006,
+        "thinking": 65.46859940000002
+      },
+      "6000": {
+        "batch-2": 112.39560550000004,
+        "batch-4": 125.32704590000009,
+        "thinking": 105.92988530000002
+      }
+    },
+    "projection_formula": "From d4f66bbc batch-1 medians. batch-k wall = prefill + k * (wall - prefill). thinking uses the batch-1 wall."
+  },
+  "boot": {
+    "profile": "p0-v2",
+    "cells": ["P0-V2 EXCHANGE-RATE"],
+    "u4_rerun": false,
+    "q_tier_clean": "not appended. The prereg exists and there is no rehearsed launcher.",
+    "estimate_s": 3159,
+    "window_s": 7200,
+    "fits_one_window": true,
+    "probe_sum_s": 2344.074677643949,
+    "load_s": 62.53344480012311,
+    "canary_overhead_s": 752.1359013,
+    "sum_before_rounding_s": 3158.7440237440724,
+    "formula": "Serial upper bound of the probes v2 actually runs. GPU, both contexts, three repeats: batch-1 measured wall, batch-2 and batch-4 as prefill + k * (wall - prefill), thinking, retry, and greedy_tta measured walls, warm as turn-1 prefill plus one token plus the warm TTA prediction. CPU, both contexts, three repeats: batch-1, retry, greedy_tta, and warm (batch-1 wall plus the warm TTA prediction). batch-2, batch-4, and thinking on CPU are the skipped projections and are not in the sum. Plus 12 * 5.211120400010259 s from the 24634b40 model load. Plus canary overhead 752.1359013 s. Next whole second is 3159."
+  },
+  "source_run_ids": [
+    "d4f66bbc-3e50-4957-b5cb-85b7175a47a7",
+    "d482c621-4292-4281-b6a1-8635e5eeb6da",
+    "7f232f86-2525-481b-a000-c6b8491bc224",
+    "24634b40-3f38-40f4-b722-6127143d3500"
+  ]
+}

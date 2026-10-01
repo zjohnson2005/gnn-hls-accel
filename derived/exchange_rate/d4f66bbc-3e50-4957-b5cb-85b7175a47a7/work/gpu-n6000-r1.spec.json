@@ -1,0 +1,46 @@
+{
+  "affinity_cpus": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "arm_id": "gpu_only_u8",
+  "arm_properties": {
+    "KV_CACHE_PRECISION": "u8"
+  },
+  "exchange": {
+    "budget_s": 10.0,
+    "concurrencies": [
+      1,
+      2,
+      4
+    ],
+    "context_tokens": 6000,
+    "decode_new_tokens": 64,
+    "enable_prefix_caching": true,
+    "max_num_batched_tokens": 32768,
+    "max_num_seqs": 4,
+    "salt": "gpu-n6000-r1",
+    "tta_max_new_tokens": 512
+  },
+  "filler_unit": " the quick brown fox jumps over the lazy dog.",
+  "generate_device": "GPU",
+  "load_sequence": [
+    {
+      "device": "GPU",
+      "properties": {
+        "KV_CACHE_PRECISION": "u8"
+      }
+    }
+  ],
+  "max_new_tokens": 8,
+  "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+  "prompt_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\exchange_rate\\d4f66bbc-3e50-4957-b5cb-85b7175a47a7\\work\\prompt_unused.txt",
+  "rss_interval_s": 0.05,
+  "wslock": {
+    "maximum_bytes": 12884901888,
+    "minimum_bytes": 4294967296,
+    "mode": "request"
+  }
+}
