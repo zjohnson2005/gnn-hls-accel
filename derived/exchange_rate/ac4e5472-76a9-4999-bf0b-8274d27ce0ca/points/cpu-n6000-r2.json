@@ -1,0 +1,99 @@
+{
+  "device": "cpu",
+  "failure_kind": null,
+  "hang_disposition": null,
+  "hang_duration_s": null,
+  "hung_after_result": false,
+  "n": 6000,
+  "outcome": "pass",
+  "probes": [
+    {
+      "aggregate_tok_s": 0.6071508391096387,
+      "completion_tokens": 64,
+      "concurrency": 1,
+      "decode_tok_s": 9.470178393207759,
+      "n_seq": 1,
+      "name": "batch-1",
+      "outcome": "pass",
+      "prefill_s": 98.7572288,
+      "prompt_tokens": 6000,
+      "schedule": "COLD",
+      "stopped_for_budget": false,
+      "streamer": true,
+      "text_head": "It seems you've provided a text that includes the phrase \"the quick brown fox jumps over the lazy dog\" repeated many times, along with the CPU model \"cpu-n6000-r2\" and the word \"a\" repeated multiple t",
+      "wall_s": 105.41037890000007
+    },
+    {
+      "budget_s": 10.0,
+      "limit_s": 30.0,
+      "name": "batch-2",
+      "outcome": "SKIPPED_OVER_BUDGET",
+      "projected_wall_s": 112.39560550000004,
+      "skip_multiple": 3.0
+    },
+    {
+      "budget_s": 10.0,
+      "limit_s": 30.0,
+      "name": "batch-4",
+      "outcome": "SKIPPED_OVER_BUDGET",
+      "projected_wall_s": 125.32704590000009,
+      "skip_multiple": 3.0
+    },
+    {
+      "budget_s": 10.0,
+      "limit_s": 30.0,
+      "name": "thinking",
+      "outcome": "SKIPPED_OVER_BUDGET",
+      "projected_wall_s": 105.92988530000002,
+      "skip_multiple": 3.0
+    },
+    {
+      "aggregate_tok_s": 9.686195565529301,
+      "completion_tokens": 64,
+      "decode_tok_s": 10.335754524845678,
+      "n_seq": 1,
+      "name": "retry",
+      "outcome": "pass",
+      "prefill_s": 0.5114223,
+      "prompt_tokens": 6000,
+      "schedule": "COLD",
+      "stopped_for_budget": false,
+      "streamer": true,
+      "text_head": "It seems you've provided a text that includes the phrase \"the quick brown fox jumps over the lazy dog\" repeated many times, along with the CPU model \"cpu-n6000-r2\" and the word \"a\" repeated multiple t",
+      "wall_s": 6.607341300000144
+    },
+    {
+      "aggregate_tok_s": 0.04205372238134661,
+      "completion_tokens": 4,
+      "decode_tok_s": null,
+      "give_up": true,
+      "n_seq": 1,
+      "name": "greedy_tta",
+      "outcome": "pass",
+      "parsed_tool_call": false,
+      "prefill_s": 95.0211248,
+      "prompt_tokens": 6000,
+      "schedule": "COLD",
+      "stopped_for_budget": true,
+      "streamer": true,
+      "text_head": "The provided text",
+      "tta_s": 95.11643140000001,
+      "wall_s": 95.11643140000001
+    },
+    {
+      "completion_tokens": 64,
+      "decode_new_tokens": 64,
+      "delta_tokens": 183,
+      "n_cached": 6000,
+      "name": "warm",
+      "outcome": "pass",
+      "schedule": "WARM",
+      "turn1_prefill_s": 95.007984375,
+      "turn1_wall_s": 95.00871949999987,
+      "turn2_prefill_s": 5.049645019,
+      "turn2_wall_s": 11.152177200000096,
+      "warm_tta_s": 11.152177200000096
+    }
+  ],
+  "repeat": 2
+}

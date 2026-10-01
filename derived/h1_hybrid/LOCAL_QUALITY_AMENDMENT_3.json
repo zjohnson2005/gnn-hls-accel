@@ -1,0 +1,202 @@
+{
+  "id": "LOCAL-QUALITY-AMENDMENT-3",
+  "registered_before_any_p1_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "amends": "derived/h1_hybrid/LOCAL_QUALITY_AMENDMENT_2.json",
+  "amended_file_sha256": "fef0162347da76b8311c9c6f22886f186910f9c68a39e1dba10acc891091359d",
+  "prior_amendments_unchanged": true,
+  "original_predictions_unchanged": true,
+  "why": "Amendment 1 priced cold time-to-action and sequential samples. P0-v2 measured the warm resident path. These predictions replace the expected counts used for P1. The earlier numbers stay on the earlier files.",
+  "budget_s": 10.0,
+  "seeds": [
+    20260930,
+    20261001
+  ],
+  "comparison": "Paired McNemar against A0, computed per seed. Report both seeds.",
+  "thinking_cap_tokens": 141,
+  "thinking_cap_derivation": "floor of the GPU 4000 warm spare seconds times the GPU 4000 batch-1 decode tok/s. Median n_ctx on the ledger is in the 4000 band, so that cap is the one the arm uses.",
+  "amendment_1_predictions_on_record": {
+    "baseline": 14,
+    "retry_on_empty": 17.22,
+    "best_of_3": 27.02,
+    "thinking": 2,
+    "check_and_retry": 16.45
+  },
+  "predictions": {
+    "A0": {
+      "name": "baseline_greedy",
+      "seeds": 1,
+      "in_budget_passes": 14,
+      "derivation": "A local_pass trajectory whose every local step has warm one-answer time at or below 10 s. Warm time is the P0-v2 turn-2 prefill plus (L-1)/decode_tok_s, with L from the ledger and the 4000 or 6000 band chosen by n_ctx."
+    },
+    "A1": {
+      "name": "best_of_4_parallel",
+      "seeds": [
+        20260930,
+        20261001
+      ],
+      "in_budget_passes_per_seed": 30.683215080000092,
+      "k_counts": {
+        "0": 38,
+        "1": 30,
+        "2": 40,
+        "4": 92
+      },
+      "median_only_formula": 50.38959800000005,
+      "derivation": "For each trajectory, k is 4, else 2, else 1, else 0, the largest parallel sample count whose warm wall fits in 10 s on every local step. The expected count is the sum of 1-(1-14/200)^k. The median-only formula treats every trajectory as k=4 and is not the prediction. If the four samples collapse to the greedy call, the count falls to the A0 count.",
+      "falsifier": "Samples collapse to the greedy tool call, and the in-budget count falls to 14."
+    },
+    "A2": {
+      "name": "retry_on_empty",
+      "seeds": [
+        20260930,
+        20261001
+      ],
+      "in_budget_passes_per_seed": 17.22,
+      "derivation": "At the 4000 median, one greedy answer plus one cached resample fits in 10 s and a second resample does not. Empty trajectories are the closeout first_fail_EMPTY count. Each contributes the baseline rate on one extra sample."
+    },
+    "A3": {
+      "name": "check_and_retry",
+      "seeds": [
+        20260930,
+        20261001
+      ],
+      "in_budget_passes_per_seed": 16.45,
+      "derivation": "Same one-resample fit as A2. The class is closeout first_fail_EXEC_RESP."
+    },
+    "A4": {
+      "name": "thinking_on",
+      "seeds": [
+        20260930,
+        20261001
+      ],
+      "in_budget_passes_per_seed": 4,
+      "decode": "greedy, thinking enabled, max_new_tokens equal to the cap. The seed is recorded. Sampling is off.",
+      "derivation": "The cap is spent on every step. Count local_pass trajectories whose every step still finishes at or below 10 s. This is the in-budget ceiling under the full cap, not a model of answer quality. Quality can come out lower."
+    }
+  },
+  "wall_s": {
+    "A0_generate": 4055.8199962596145,
+    "A1_generate_one_seed": 6969.790801353139,
+    "A1_first_100": 3618.9040309750644,
+    "A1_second_100": 3350.88677037807,
+    "A1_split_reason": "One A1 seed over all 200 tasks does not fit in 7200 s, because best-of-4 has no streamer and runs to completion. The seed is two boots. McNemar uses the combined 200.",
+    "A2_generate_one_seed": 4239.760204818709,
+    "A3_generate_one_seed": 4195.774502771969,
+    "A4_first_100_capped": 3742.6033869671196,
+    "A4_second_100_capped": 3139.7429643757087,
+    "load_s": 5.211120400010259,
+    "load_source_session": "24634b40",
+    "canary_overhead_s": 752.1359013,
+    "window_s": 7200,
+    "estimates_next_whole_second": {
+      "A0": 4814,
+      "A1": 7728,
+      "A1_first": 4377,
+      "A1_second": 4109,
+      "A2": 4998,
+      "A3": 4954,
+      "A4_first": 4500,
+      "A4_second": 3898
+    }
+  },
+  "boots": [
+    {
+      "order": 1,
+      "arm": "A0",
+      "seed": null,
+      "entries": "all 200",
+      "estimate_s": 4814
+    },
+    {
+      "order": 2,
+      "arm": "A1",
+      "seed": 20260930,
+      "entries": "lexicographic entry_id [:100]",
+      "estimate_s": 4377
+    },
+    {
+      "order": 3,
+      "arm": "A1",
+      "seed": 20260930,
+      "entries": "lexicographic entry_id [100:]",
+      "estimate_s": 4109
+    },
+    {
+      "order": 4,
+      "arm": "A1",
+      "seed": 20261001,
+      "entries": "lexicographic entry_id [:100]",
+      "estimate_s": 4377
+    },
+    {
+      "order": 5,
+      "arm": "A1",
+      "seed": 20261001,
+      "entries": "lexicographic entry_id [100:]",
+      "estimate_s": 4109
+    },
+    {
+      "order": 6,
+      "arm": "A2",
+      "seed": 20260930,
+      "entries": "all 200",
+      "estimate_s": 4998
+    },
+    {
+      "order": 7,
+      "arm": "A2",
+      "seed": 20261001,
+      "entries": "all 200",
+      "estimate_s": 4998
+    },
+    {
+      "order": 8,
+      "arm": "A3",
+      "seed": 20260930,
+      "entries": "all 200",
+      "estimate_s": 4954
+    },
+    {
+      "order": 9,
+      "arm": "A3",
+      "seed": 20261001,
+      "entries": "all 200",
+      "estimate_s": 4954
+    },
+    {
+      "order": 10,
+      "arm": "A4",
+      "seed": 20260930,
+      "entries": "lexicographic entry_id [:100]",
+      "estimate_s": 4500
+    },
+    {
+      "order": 11,
+      "arm": "A4",
+      "seed": 20260930,
+      "entries": "lexicographic entry_id [100:]",
+      "estimate_s": 3898
+    },
+    {
+      "order": 12,
+      "arm": "A4",
+      "seed": 20261001,
+      "entries": "lexicographic entry_id [:100]",
+      "estimate_s": 4500
+    },
+    {
+      "order": 13,
+      "arm": "A4",
+      "seed": 20261001,
+      "entries": "lexicographic entry_id [100:]",
+      "estimate_s": 3898
+    }
+  ],
+  "first_boot": "A0 only. Its smoke still runs A0, A1, A2, A3, and A4.",
+  "source_run_ids": [
+    "ac4e5472-76a9-4999-bf0b-8274d27ce0ca",
+    "d482c621-4292-4281-b6a1-8635e5eeb6da"
+  ]
+}

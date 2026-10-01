@@ -1,0 +1,181 @@
+{
+  "affinity_readback": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "completed": true,
+  "context_tokens": 4000,
+  "exception": null,
+  "failure_mode": null,
+  "kv_cache_precision_readback": {
+    "enforced": true,
+    "failure_mode": null,
+    "match": true,
+    "readback": {
+      "device": "CPU",
+      "error": null,
+      "normalized": "u8",
+      "ok": true,
+      "property": "KV_CACHE_PRECISION",
+      "raw": "<Type: 'uint8_t'>",
+      "to_string": "u8"
+    },
+    "requested": "u8"
+  },
+  "memory_baseline": {
+    "available_mb": 8326.71875,
+    "percent": 47.9,
+    "rss_mb": 19.22265625,
+    "used_mb": 7649.45703125
+  },
+  "memory_resident_before_inference": {
+    "available_mb": 7912.29296875,
+    "percent": 50.5,
+    "rss_mb": 450.68359375,
+    "used_mb": 8063.8828125
+  },
+  "phase": "done",
+  "power_request": {
+    "clear_last_error": 0,
+    "cleared": true,
+    "close_last_error": 0,
+    "closed": true,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x64",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM exchange-rate child; PowerRequestSystemRequired for generate window",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "measurement_child",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "probes": [
+    {
+      "aggregate_tok_s": 0.9957281395821675,
+      "completion_tokens": 64,
+      "concurrency": 1,
+      "decode_tok_s": 12.851569210259443,
+      "n_seq": 1,
+      "name": "batch-1",
+      "outcome": "pass",
+      "prefill_s": 59.3717687,
+      "prompt_tokens": 4000,
+      "schedule": "COLD",
+      "stopped_for_budget": false,
+      "streamer": true,
+      "text_head": "It seems you've provided a text that includes a mix of content. Let me break it down:\n\n1. **CPU Model Mentioned**: \"cpu-n4000-r1\" \u2013 This appears to be a specific CPU model, possibly from a manufacture",
+      "wall_s": 64.27457199999992
+    },
+    {
+      "budget_s": 10.0,
+      "limit_s": 30.0,
+      "name": "batch-2",
+      "outcome": "SKIPPED_OVER_BUDGET",
+      "projected_wall_s": 71.36742250000003,
+      "skip_multiple": 3.0
+    },
+    {
+      "budget_s": 10.0,
+      "limit_s": 30.0,
+      "name": "batch-4",
+      "outcome": "SKIPPED_OVER_BUDGET",
+      "projected_wall_s": 83.16506870000006,
+      "skip_multiple": 3.0
+    },
+    {
+      "budget_s": 10.0,
+      "limit_s": 30.0,
+      "name": "thinking",
+      "outcome": "SKIPPED_OVER_BUDGET",
+      "projected_wall_s": 65.46859940000002,
+      "skip_multiple": 3.0
+    },
+    {
+      "aggregate_tok_s": 12.880979368233396,
+      "completion_tokens": 64,
+      "decode_tok_s": 12.886713920678389,
+      "n_seq": 1,
+      "name": "retry",
+      "outcome": "pass",
+      "prefill_s": 0.0792607,
+      "prompt_tokens": 4000,
+      "schedule": "COLD",
+      "stopped_for_budget": false,
+      "streamer": true,
+      "text_head": "It seems you've provided a text that includes a mix of content. Let me break it down:\n\n1. **CPU Model Mentioned**: \"cpu-n4000-r1\" \u2013 This appears to be a specific CPU model, possibly from a manufacture",
+      "wall_s": 4.96856630000002
+    },
+    {
+      "aggregate_tok_s": 0.07109357431694721,
+      "completion_tokens": 4,
+      "decode_tok_s": null,
+      "give_up": true,
+      "n_seq": 1,
+      "name": "greedy_tta",
+      "outcome": "pass",
+      "parsed_tool_call": false,
+      "prefill_s": 56.1872214,
+      "prompt_tokens": 4000,
+      "schedule": "COLD",
+      "stopped_for_budget": true,
+      "streamer": true,
+      "text_head": "The provided text",
+      "tta_s": 56.263875299999995,
+      "wall_s": 56.263875299999995
+    },
+    {
+      "completion_tokens": 64,
+      "decode_new_tokens": 64,
+      "delta_tokens": 183,
+      "n_cached": 4000,
+      "name": "warm",
+      "outcome": "pass",
+      "schedule": "WARM",
+      "turn1_prefill_s": 54.796089843,
+      "turn1_wall_s": 54.79692220000004,
+      "turn2_prefill_s": 4.328437011,
+      "turn2_wall_s": 9.302643799999942,
+      "warm_tta_s": 9.302643799999942
+    }
+  ],
+  "working_set_lock": {
+    "after": {
+      "flags": 9,
+      "hard_min_enabled": true,
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "read": true
+    },
+    "before": {
+      "flags": 10,
+      "hard_min_enabled": false,
+      "maximum_bytes": 1413120,
+      "minimum_bytes": 204800,
+      "read": true
+    },
+    "call": "SetProcessWorkingSetSizeEx",
+    "flags": 1,
+    "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+    "granted": true,
+    "last_error": 0,
+    "privilege": {
+      "attempted": true,
+      "granted": true,
+      "last_error": 0,
+      "last_error_meaning": "ERROR_SUCCESS",
+      "privilege": "SeIncreaseWorkingSetPrivilege",
+      "step": "AdjustTokenPrivileges"
+    },
+    "requested": true,
+    "requested_maximum_bytes": 12884901888,
+    "requested_minimum_bytes": 4294967296,
+    "returned": true
+  }
+}
