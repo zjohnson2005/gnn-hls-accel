@@ -139,6 +139,10 @@ generation:
   # for process exit. CL_OUT_OF_RESOURCES can leave the GPU plugin hung in
   # teardown after that write. Kill and keep the result-file outcome.
   hang_after_result_s: 30
+  # Path.replace of the result file raised WinError 5 on e4a22dac n30000
+  # and on d4f66bbc gpu-n6000-r2 while the parent was polling that file.
+  result_replace_attempts: 8
+  result_replace_wait_s: 0.05
 
 recovery:
   settle_s: 20

@@ -20,12 +20,58 @@ import argparse
 import json
 import time
 import traceback
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 import psutil
 
 MB = 1024.0 * 1024.0
+_REPLACE_POLICY: tuple[int, float] | None = None
+
+
+def result_replace_policy() -> tuple[int, float]:
+    """How many times to retry a result-file replace after WinError 5.
+
+    e4a22dac n30000 and d4f66bbc gpu-n6000-r2 died in Path.replace while the
+    parent was polling the same file. The attempts and the wait live in
+    configs/delta_n.yaml.
+    """
+    global _REPLACE_POLICY
+    if _REPLACE_POLICY is None:
+        import yaml
+
+        path = Path(__file__).resolve().parents[2] / "configs" / "delta_n.yaml"
+        loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+        generation = loaded["generation"]
+        _REPLACE_POLICY = (
+            int(generation["result_replace_attempts"]),
+            float(generation["result_replace_wait_s"]),
+        )
+    return _REPLACE_POLICY
+
+
+def replace_result_file(
+    tmp: Path,
+    dest: Path,
+    *,
+    attempts: int,
+    wait_s: float,
+    sleep: Callable[[float], None] = time.sleep,
+) -> None:
+    """Replace dest with tmp. Retry PermissionError, then raise the last one."""
+    last: PermissionError | None = None
+    for _ in range(int(attempts)):
+        try:
+            tmp.replace(dest)
+        except PermissionError as exc:
+            last = exc
+            sleep(float(wait_s))
+        else:
+            return
+    if last is not None:
+        raise last
+    raise RuntimeError("result replace made no attempt")
 
 
 def _mem() -> dict[str, float]:
@@ -57,7 +103,8 @@ class _Writer:
     def flush(self) -> None:
         tmp = self._path.with_suffix(".partial")
         tmp.write_text(json.dumps(self.state, indent=2, sort_keys=True), encoding="utf-8")
-        tmp.replace(self._path)
+        attempts, wait_s = result_replace_policy()
+        replace_result_file(tmp, self._path, attempts=attempts, wait_s=wait_s)
 
 
 def main(argv: list[str] | None = None) -> int:

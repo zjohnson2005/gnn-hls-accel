@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from typing import Any
 
 
@@ -47,4 +48,54 @@ def what_fits(
         "one_call_fits": one_call_fits,
         "greedy_tta_s": greedy_tta_s,
         "cached_retry_s": retry_s,
+    }
+
+
+def streamer_allowed(n_seq: int) -> bool:
+    """A streamer is legal only for one sequence.
+
+    openvino.genai continuous_batching/pipeline_impl.cpp:530 rejects a
+    streamer unless batch size is 1 and sampling is greedy or multinomial.
+    More than one prompt, or num_return_sequences above 1, takes the
+    unstreamed generate.
+    """
+    return int(n_seq) == 1
+
+
+def isolated_probe(name: str, fn: Callable[[], dict[str, Any]]) -> dict[str, Any]:
+    """One probe. A failure is a row. It does not skip the probes that follow."""
+    try:
+        row = dict(fn())
+    except Exception as exc:
+        return {
+            "name": name,
+            "outcome": "fail",
+            "failure_mode": f"{type(exc).__name__}:{exc}"[:500],
+        }
+    row["name"] = name
+    row["outcome"] = "pass"
+    row.pop("texts", None)
+    return row
+
+
+def skip_over_budget(
+    *,
+    name: str,
+    projected_wall_s: float | None,
+    budget_s: float,
+    multiple: float | None,
+) -> dict[str, Any] | None:
+    """Skip when the projected wall is above multiple times the budget."""
+    if projected_wall_s is None or multiple is None:
+        return None
+    limit = float(multiple) * float(budget_s)
+    if float(projected_wall_s) <= limit:
+        return None
+    return {
+        "name": name,
+        "outcome": "SKIPPED_OVER_BUDGET",
+        "projected_wall_s": float(projected_wall_s),
+        "budget_s": float(budget_s),
+        "skip_multiple": float(multiple),
+        "limit_s": limit,
     }

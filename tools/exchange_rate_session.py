@@ -50,6 +50,10 @@ _REQUIRED = (
     "max_num_seqs",
     "max_num_batched_tokens",
     "model_spec",
+    "warm_delta_tokens",
+    "warm_decode_new_tokens",
+    "cpu_skip_budget_multiple",
+    "cpu_projected_wall_s",
 )
 
 
@@ -96,8 +100,24 @@ def _exchange_spec(base: dict[str, Any], plan: dict[str, Any]) -> dict[str, Any]
         "max_num_seqs": int(plan["max_num_seqs"]),
         "max_num_batched_tokens": int(plan["max_num_batched_tokens"]),
         "salt": str(plan["salt"]),
+        "warm_delta_tokens": int(plan["warm_delta_tokens"]),
+        "warm_decode_new_tokens": int(plan["warm_decode_new_tokens"]),
+        "projected_wall_s": plan.get("projected_wall_s") or {},
+        "skip_budget_multiple": plan.get("skip_budget_multiple"),
     }
     return spec
+
+
+def _cpu_projection(cfg: dict[str, Any], device_id: str, n_tokens: int) -> dict[str, float]:
+    if device_id != "cpu":
+        return {}
+    table = cfg["cpu_projected_wall_s"]
+    row = table.get(n_tokens)
+    if row is None:
+        row = table.get(str(n_tokens))
+    if not isinstance(row, dict):
+        raise SystemExit(f"REFUSED -- no CPU wall projection for n={n_tokens}")
+    return {str(name): float(value) for name, value in row.items()}
 
 
 def _run_one(
@@ -128,6 +148,10 @@ def _run_one(
             "max_num_seqs": cfg["max_num_seqs"],
             "max_num_batched_tokens": cfg["max_num_batched_tokens"],
             "salt": tag,
+            "warm_delta_tokens": cfg["warm_delta_tokens"],
+            "warm_decode_new_tokens": cfg["warm_decode_new_tokens"],
+            "projected_wall_s": _cpu_projection(cfg, str(device["id"]), int(context_tokens)),
+            "skip_budget_multiple": cfg["cpu_skip_budget_multiple"],
         },
     )
     command = [
@@ -186,6 +210,7 @@ def _measured_table(points: list[dict[str, Any]], *, budget_s: float) -> list[di
         tool_tokens: list[float] = []
         batch4: list[float] = []
         batch1: list[float] = []
+        warm: list[float] = []
         for point in group:
             for probe in point["probes"]:
                 name = str(probe.get("name"))
@@ -193,9 +218,12 @@ def _measured_table(points: list[dict[str, Any]], *, budget_s: float) -> list[di
                     prefills.append(float(probe["prefill_s"]))
                 if name == "batch-1" and probe.get("decode_tok_s") is not None:
                     decodes.append(float(probe["decode_tok_s"]))
-                    batch1.append(float(probe["decode_tok_s"]))
-                if name == "batch-4" and probe.get("decode_tok_s") is not None:
-                    batch4.append(float(probe["decode_tok_s"]))
+                if name == "batch-1" and probe.get("aggregate_tok_s") is not None:
+                    batch1.append(float(probe["aggregate_tok_s"]))
+                if name == "batch-4" and probe.get("aggregate_tok_s") is not None:
+                    batch4.append(float(probe["aggregate_tok_s"]))
+                if name == "warm" and probe.get("warm_tta_s") is not None:
+                    warm.append(float(probe["warm_tta_s"]))
                 if name == "thinking" and probe.get("decode_tok_s") is not None:
                     thinking.append(float(probe["decode_tok_s"]))
                 if name == "retry" and probe.get("prefill_s") is not None:
@@ -235,6 +263,7 @@ def _measured_table(points: list[dict[str, Any]], *, budget_s: float) -> list[di
                 "retry_decode_tok_s_median": _median(retry_decodes),
                 "greedy_tta_s_median": _median(ttas),
                 "batch4_over_batch1": ratio,
+                "warm_tta_s_median": _median(warm),
                 "what_fits": fit,
             }
         )
@@ -257,6 +286,11 @@ def run_exchange_rate_smoke(*, model_spec: Path) -> int:
             budget_s=float(cfg["smoke_budget_s"]),
             tag="smoke",
         )
+    probes = list((record.get("child") or {}).get("probes") or [])
+    names = [str(item.get("name")) for item in probes]
+    required = ["batch-1", "batch-2", "batch-4", "thinking", "retry", "greedy_tta", "warm"]
+    missing = [name for name in required if name not in names]
+    failed = [item.get("name") for item in probes if item.get("outcome") != "pass"]
     print(
         json.dumps(
             {
@@ -265,15 +299,19 @@ def run_exchange_rate_smoke(*, model_spec: Path) -> int:
                 "outcome": record.get("outcome"),
                 "context_tokens": int(cfg["smoke_context_tokens"]),
                 "failure_mode": record.get("failure_mode"),
-                "probes": [
-                    item.get("name") for item in ((record.get("child") or {}).get("probes") or [])
+                "probes": names,
+                "probe_outcomes": [
+                    {"name": item.get("name"), "outcome": item.get("outcome")} for item in probes
                 ],
+                "missing": missing,
             },
             sort_keys=True,
         ),
         flush=True,
     )
-    return 0 if record.get("outcome") == "pass" else 1
+    if missing or failed or record.get("outcome") != "pass":
+        return 1
+    return 0
 
 
 def run_exchange_rate(*, model_spec: Path, session_id: str, out_dir: Path) -> int:

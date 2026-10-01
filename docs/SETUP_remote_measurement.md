@@ -169,6 +169,7 @@ Resident-limit rehearsal uses the same path:
 ```bash
 ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_resident_limit.ps1 -Detach -Rehearsal"
 ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_resident_limit_2.ps1 -Detach"
+ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p0_v2.ps1 -Detach"
 ssh xps "powershell -NoProfile -Command Get-Content -Tail 50 C:/Users/zjohn/Projects/gnn-hls-accel/derived/c2_ttft/_launches/_rehearsal/resident-limit/resident-limit.log"
 ```
 

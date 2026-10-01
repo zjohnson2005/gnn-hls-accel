@@ -27,7 +27,7 @@ param(
     [switch]$NoRebootDeviation,
     [switch]$Rehearsal,
     [string]$WatchdogLog = "",
-    [ValidateSet("boot1", "boot2", "boot3", "boot4", "resident-limit", "resident-limit-2", "t2s-boot1")]
+    [ValidateSet("boot1", "boot2", "boot3", "boot4", "resident-limit", "resident-limit-2", "p0-v2", "t2s-boot1")]
     [string]$Profile = "boot1"
 )
 
@@ -72,6 +72,7 @@ $SummaryName = switch ($Profile) {
     "boot4" { "BOOT4_SUMMARY.json" }
     "resident-limit" { "RESIDENT_LIMIT_SUMMARY.json" }
     "resident-limit-2" { "RESIDENT_LIMIT_2_SUMMARY.json" }
+    "p0-v2" { "P0_V2_SUMMARY.json" }
     "t2s-boot1" { "T2S_BOOT1_SUMMARY.json" }
     default { "BOOT1_SUMMARY.json" }
 }
@@ -81,6 +82,7 @@ $DeferredName = switch ($Profile) {
     "boot4" { "DEFERRED_TO_BOOT5.json" }
     "resident-limit" { "DEFERRED_TO_RESIDENT_LIMIT_2.json" }
     "resident-limit-2" { "DEFERRED_TO_RESIDENT_LIMIT_3.json" }
+    "p0-v2" { "DEFERRED_TO_P0_V3.json" }
     "t2s-boot1" { "DEFERRED_TO_T2S_BOOT2.json" }
     default { "DEFERRED_TO_BOOT2.json" }
 }
@@ -88,6 +90,7 @@ $script:DeferredStatus = switch ($Profile) {
     "t2s-boot1" { "DEFERRED_TO_T2S_BOOT2" }
     "resident-limit" { "DEFERRED_TO_RESIDENT_LIMIT_2" }
     "resident-limit-2" { "DEFERRED_TO_RESIDENT_LIMIT_3" }
+    "p0-v2" { "DEFERRED_TO_P0_V3" }
     default { "DEFERRED_TO_BOOT2" }
 }
 $SummaryPath = Join-Path $LaunchDir $SummaryName
@@ -106,6 +109,7 @@ New-Item -ItemType Directory -Force -Path $LaunchDir | Out-Null
 $script:RehearsalMac = switch ($Profile) {
     "resident-limit" { 'ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_resident_limit.ps1 -Detach -Rehearsal"' }
     "resident-limit-2" { 'ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_resident_limit_2.ps1 -Detach -Rehearsal"' }
+    "p0-v2" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p0_v2.ps1 -Detach -Rehearsal"' }
     default { 'ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_boot4.ps1 -Detach -Rehearsal"' }
 }
 
@@ -329,6 +333,31 @@ if ($Profile -eq "boot2") {
         },
         @{
             Name = "P0 EXCHANGE-RATE"; Kind = "exchange"; EstimateS = 3150
+            Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+        }
+    )
+} elseif ($Profile -eq "p0-v2") {
+    # P0-v2 only. u4 already ran and is not repeated.
+    # Q-TIER-CLEAN has a prereg and no rehearsed launcher, so it is not a cell.
+    # Probe sum 2344.074677643949 s from the d4f66bbc walls and the warm
+    # serial bound, plus 12 * 5.211120400010259 s model load, plus canary
+    # overhead 752.1359013 s = 3158.7440237440724 s. Next whole second 3159.
+    # 3159 is below the 7200 s window.
+    $script:EstimateDerivation = [ordered]@{
+        formula = "estimate_s = probe_sum_s + load_s + canary_overhead_s, then the next whole second"
+        note = "P0-v2 is 3159 s, which is below 7200 s. u4 is not in this profile."
+        source_run_id = "d4f66bbc-3e50-4957-b5cb-85b7175a47a7"
+        probe_sum_s = 2344.074677643949
+        load_s = 62.53344480012311
+        canary_overhead_s = 752.1359013
+        sum_before_rounding_s = 3158.7440237440724
+        cells = @(
+            [ordered]@{ name = "P0-V2 EXCHANGE-RATE"; probe_sum_s = 2344.074677643949; load_s = 62.53344480012311; canary_overhead_s = 752.1359013; estimate_s = 3159 }
+        )
+    }
+    $Cells = @(
+        @{
+            Name = "P0-V2 EXCHANGE-RATE"; Kind = "exchange"; EstimateS = 3159
             Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
         }
     )
@@ -829,12 +858,14 @@ function Invoke-HangFaultProbe {
 }
 
 function Invoke-ResidentLimitSmokes {
-    if ($Profile -ne "resident-limit" -and $Profile -ne "resident-limit-2") { return }
+    if ($Profile -ne "resident-limit" -and $Profile -ne "resident-limit-2" -and $Profile -ne "p0-v2") { return }
     $mark = "measurement body is not started"
-    if (-not (Test-Path -LiteralPath $ResidentPy)) { throw "REFUSED -- runner missing: $ResidentPy" }
-    $text = Get-Content -LiteralPath $ResidentPy -Raw
-    if ($text.Contains($mark)) { throw "REFUSED -- stub measurement body: $ResidentPy" }
-    if ($Profile -eq "resident-limit-2") {
+    if ($Profile -eq "resident-limit" -or $Profile -eq "resident-limit-2") {
+        if (-not (Test-Path -LiteralPath $ResidentPy)) { throw "REFUSED -- runner missing: $ResidentPy" }
+        $text = Get-Content -LiteralPath $ResidentPy -Raw
+        if ($text.Contains($mark)) { throw "REFUSED -- stub measurement body: $ResidentPy" }
+    }
+    if ($Profile -eq "resident-limit-2" -or $Profile -eq "p0-v2") {
         if (-not (Test-Path -LiteralPath $ExchangePy)) { throw "REFUSED -- runner missing: $ExchangePy" }
         $exchangeText = Get-Content -LiteralPath $ExchangePy -Raw
         if ($exchangeText.Contains($mark)) { throw "REFUSED -- stub measurement body: $ExchangePy" }
@@ -843,9 +874,13 @@ function Invoke-ResidentLimitSmokes {
     foreach ($cell in $Cells) { $sum += [int]$cell.EstimateS }
     $fits = "false"
     if ($sum -le $WindowS) { $fits = "true" }
-    Write-Host ("resident_limit_estimate_sum_s={0} window_s={1} fits_one_window={2}" -f $sum, $WindowS, $fits)
+    if ($Profile -eq "p0-v2") {
+        Write-Host ("p0_v2_estimate_sum_s={0} window_s={1} fits_one_window={2}" -f $sum, $WindowS, $fits)
+    } else {
+        Write-Host ("resident_limit_estimate_sum_s={0} window_s={1} fits_one_window={2}" -f $sum, $WindowS, $fits)
+    }
     if ($fits -eq "false") {
-        throw "REFUSED -- resident-limit estimate sum $sum s exceeds window $WindowS s; split the profile before starting"
+        throw "REFUSED -- $Profile estimate sum $sum s exceeds window $WindowS s; split the profile before starting"
     }
     Invoke-HangFaultProbe
     foreach ($cell in $Cells) {

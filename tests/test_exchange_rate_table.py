@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from seam.tools.exchange_rate_table import what_fits
+from seam.tools.exchange_rate_table import (
+    isolated_probe,
+    skip_over_budget,
+    streamer_allowed,
+    what_fits,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -54,3 +59,49 @@ def test_combined_budget_fits_one_window() -> None:
     assert 'Name = "P0 EXCHANGE-RATE"; Kind = "exchange"; EstimateS = 3150' in text
     assert 'Name = "RESIDENT-LIMIT u4"; Kind = "resident"; EstimateS = 1132' in text
     assert 1132 + 3150 <= 7200
+
+
+def test_p0_v2_budget_fits_one_window() -> None:
+    text = (ROOT / "tools" / "launch_boot1.ps1").read_text(encoding="utf-8")
+    assert 'Name = "P0-V2 EXCHANGE-RATE"; Kind = "exchange"; EstimateS = 3159' in text
+    assert 3159 <= 7200
+    child = (ROOT / "seam" / "tools" / "_exchange_rate_child.py").read_text(encoding="utf-8")
+    assert "pipeline_impl.cpp:530" in child
+
+
+def test_one_failure_does_not_skip_the_next_probe() -> None:
+    def ok() -> dict[str, object]:
+        return {"wall_s": 1.0}
+
+    def boom() -> dict[str, object]:
+        raise RuntimeError("streaming refused")
+
+    rows = [
+        isolated_probe("batch-1", ok),
+        isolated_probe("batch-2", boom),
+        isolated_probe("batch-4", ok),
+    ]
+    assert [row["name"] for row in rows] == ["batch-1", "batch-2", "batch-4"]
+    assert rows[1]["outcome"] == "fail"
+    assert rows[2]["outcome"] == "pass"
+
+
+def test_streamer_is_refused_above_batch_size_one() -> None:
+    assert streamer_allowed(1) is True
+    assert streamer_allowed(2) is False
+    assert streamer_allowed(4) is False
+
+
+def test_cpu_projection_above_three_budgets_is_skipped() -> None:
+    skipped = skip_over_budget(
+        name="batch-4",
+        projected_wall_s=83.16506870000006,
+        budget_s=10.0,
+        multiple=3.0,
+    )
+    assert skipped is not None
+    assert skipped["outcome"] == "SKIPPED_OVER_BUDGET"
+    assert skipped["projected_wall_s"] == 83.16506870000006
+    assert (
+        skip_over_budget(name="batch-1", projected_wall_s=None, budget_s=10.0, multiple=3.0) is None
+    )

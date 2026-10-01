@@ -6,7 +6,24 @@ budget_s: 10
 context_tokens: [4000, 6000]
 smoke_context_tokens: 512
 concurrencies: [1, 2, 4]
-smoke_concurrencies: [1]
+smoke_concurrencies: [1, 2, 4]
+# Second turn on a resident prefix. 183 is the nearest integer to the
+# d482c621 median consecutive-turn n_ctx gap, 182.5.
+warm_delta_tokens: 183
+warm_decode_new_tokens: 64
+# Skip a CPU probe when its projected wall exceeds this multiple of budget_s.
+cpu_skip_budget_multiple: 3
+# Serial upper bounds from d4f66bbc batch-1 medians.
+# batch-k = prefill + k * (wall - prefill). thinking uses the batch-1 wall.
+cpu_projected_wall_s:
+  4000:
+    batch-2: 71.36742250000003
+    batch-4: 83.16506870000006
+    thinking: 65.46859940000002
+  6000:
+    batch-2: 112.39560550000004
+    batch-4: 125.32704590000009
+    thinking: 105.92988530000002
 decode_new_tokens: 64
 smoke_decode_new_tokens: 8
 smoke_budget_s: 2

@@ -76,6 +76,20 @@ def test_resident_limit_2_rehearsal_strict_mode_stubs_smokes() -> None:
     assert "P0 EXCHANGE-RATE" in combined
 
 
+def test_p0_v2_rehearsal_strict_mode_stubs_smokes() -> None:
+    proc = _run("launch_p0_v2.ps1")
+    _assert_no_strict_fault(proc, "launch_p0_v2.ps1")
+    combined = proc.stdout + proc.stderr
+    assert proc.returncode == 0, combined
+    assert "smoke_stub" in combined
+    assert "REHEARSAL_COMPLETE" in combined
+    assert "BOOT_COMPLETE" in combined
+    assert "p0_v2_estimate_sum_s=3159" in combined
+    assert "fits_one_window=true" in combined
+    assert "P0-V2 EXCHANGE-RATE" in combined
+    assert "RESIDENT-LIMIT u4" not in combined
+
+
 def test_t2s_rehearsal_strict_mode_stubs_smokes() -> None:
     proc = _run("launch_t2s_boot1.ps1")
     _assert_no_strict_fault(proc, "launch_t2s_boot1.ps1")
