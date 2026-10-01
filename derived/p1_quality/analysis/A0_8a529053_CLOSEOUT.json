@@ -1,0 +1,148 @@
+{
+  "amendment_2_recount": {
+    "clock": "t_generate is one clock per turn, the time until that turn tool calls exist. A turn can hold several decoded steps. A0 TTA is one clock per step. The anytime fallback stops a step at the budget and records TTA as min(elapsed, 10), with met_budget true.",
+    "rule": "Amendment 2 counts a local_pass only when every local turn has t_generate at or below 10 s. Seven of the 21 local_pass trajectories have a turn above 10 s, which is why the registered baseline is 14.",
+    "slow_entries": [
+      {
+        "a0_in_budget_pass": true,
+        "a0_max_tta_s": 3.834503399999903,
+        "a0_n_fallback": 0,
+        "a0_n_steps": 16,
+        "entry_id": "multi_turn_base_60",
+        "max_t_generate_s": 11.8040656
+      },
+      {
+        "a0_in_budget_pass": true,
+        "a0_max_tta_s": 5.828960199999983,
+        "a0_n_fallback": 0,
+        "a0_n_steps": 8,
+        "entry_id": "multi_turn_base_77",
+        "max_t_generate_s": 10.7459617
+      },
+      {
+        "a0_in_budget_pass": true,
+        "a0_max_tta_s": 4.592985799999951,
+        "a0_n_fallback": 0,
+        "a0_n_steps": 13,
+        "entry_id": "multi_turn_base_88",
+        "max_t_generate_s": 14.1979518
+      },
+      {
+        "a0_in_budget_pass": true,
+        "a0_max_tta_s": 9.359966100000008,
+        "a0_n_fallback": 0,
+        "a0_n_steps": 11,
+        "entry_id": "multi_turn_base_114",
+        "max_t_generate_s": 16.1230395
+      },
+      {
+        "a0_in_budget_pass": true,
+        "a0_max_tta_s": 5.984418400000095,
+        "a0_n_fallback": 0,
+        "a0_n_steps": 9,
+        "entry_id": "multi_turn_base_169",
+        "max_t_generate_s": 26.717487899999995
+      },
+      {
+        "a0_in_budget_pass": true,
+        "a0_max_tta_s": 5.595123300000068,
+        "a0_n_fallback": 0,
+        "a0_n_steps": 12,
+        "entry_id": "multi_turn_base_179",
+        "max_t_generate_s": 21.8836371
+      },
+      {
+        "a0_in_budget_pass": true,
+        "a0_max_tta_s": 6.5627660999998625,
+        "a0_n_fallback": 0,
+        "a0_n_steps": 8,
+        "entry_id": "multi_turn_base_193",
+        "max_t_generate_s": 10.6596227
+      }
+    ],
+    "source_run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+    "why_it_did_not_recur": "All seven entries are in-budget passes on A0, with zero fallback steps and every step TTA at or below 10 s. The slowest of those step clocks is multi_turn_base_114 at 9.360 s. On d482c621 the exceeding clocks are turn-level t_generate values, several of them covering many decoded steps under one number (entry 60 turn 0 is 11.804 s across 7 decoded steps; entry 169 turn 0 is 26.717 s across 6). A0 clocks each step, so a multi-step turn can miss the turn clock and still meet every step clock. Entry 193 is the single-step case: its turn t_generate values 10.137 s and 10.660 s are step TTA at most 6.563 s here, with no fallback, so the warm resident step also finished inside the budget. The anytime stop did fire on 14 steps, all on entries that did not pass. It caps TTA at 10 s, so those steps cannot appear as TTA greater than 10 s, and it is not what kept the seven inside the count."
+  },
+  "canary_kv": {
+    "26118b6c": {
+      "arm_id": "gpu_only_f16",
+      "arm_properties": {
+        "KV_CACHE_PRECISION": "f16"
+      },
+      "label": "gpu only (KV_CACHE_PRECISION=f16)",
+      "readback_normalized": "f16",
+      "readback_raw": "<Type: 'float16'>"
+    },
+    "26118b6c_calibration_turn2_prefill_s": [
+      0.962146972,
+      0.963638488,
+      0.970075683
+    ],
+    "26118b6c_check_turn2_prefill_s": 0.771533325,
+    "8a529053": {
+      "arm_id": "gpu_only_f16",
+      "arm_properties": {
+        "KV_CACHE_PRECISION": "f16"
+      },
+      "label": "gpu only (KV_CACHE_PRECISION=f16)",
+      "readback_normalized": "f16",
+      "readback_raw": "<Type: 'float16'>"
+    },
+    "8a529053_calibration_turn2_prefill_s": [
+      0.807383483,
+      0.965885559,
+      0.964286987
+    ],
+    "decision": "Keep the canary on gpu_only_f16 and keep the pooled f16 floor. Do not re-derive the floor. The P1 canary already uses the pooled cell.",
+    "p1_measurement_pipeline": "gpu_only_u8",
+    "pool_fixed_cell": "gpu_only_f16 RESIDENT n_cached=4000 delta=400",
+    "pooled_c2246b1f": {
+      "arm_id": "gpu_only_f16",
+      "arm_properties": {
+        "KV_CACHE_PRECISION": "f16"
+      },
+      "label": "gpu only (KV_CACHE_PRECISION=f16)",
+      "readback_normalized": "f16",
+      "readback_raw": "<Type: 'float16'>"
+    },
+    "ref_turn2_prefill_s": {
+      "26118b6c": 0.963638488,
+      "8a529053": 0.964286987
+    },
+    "trip": "26118b6c tripped because the armed f16 check at 0.771533325 was faster than its f16 calibration reference 0.963638488. The check sits in the pooled settled band. The reference is slow because all three f16 calibration samples were near 0.96 s, not because the canary KV differed from the pool. 8a529053 uses the same f16 cell and the same median reference, 0.964286987, because two of its three calibration samples were 0.965885559 and 0.964286987. Its early relative spread widened threshold_t2 to 0.3254290602596301, so the later faster checks did not trip."
+  },
+  "entries": 200,
+  "observed_in_budget_passes": 23,
+  "observed_passes": 23,
+  "paired": {
+    "a0_in_budget_pass": 23,
+    "both": 21,
+    "d482_local_pass": 21,
+    "d482_run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+    "entries_that_differ": 2,
+    "only_a0": [
+      "multi_turn_base_120",
+      "multi_turn_base_130"
+    ],
+    "only_d482": []
+  },
+  "predicted_in_budget_passes": 14,
+  "prediction_file": "derived/h1_hybrid/LOCAL_QUALITY_AMENDMENT_3.json",
+  "prediction_sha256": "c794a402ad168274264c596ddb5ed84c6c70410db68cce74d66f214b5050e70d",
+  "run_id": "8a529053-fc47-486d-8809-6c699d156b06",
+  "seal_dir": "derived/p1_quality/sealed_8a529053-fc47-486d-8809-6c699d156b06",
+  "source_dir": "derived/p1_quality/8a529053-fc47-486d-8809-6c699d156b06",
+  "steps": {
+    "max_tta_s": 10.0,
+    "median_tta_s": 2.27214175000006,
+    "n_fallback": 14,
+    "n_fallback_on_in_budget_pass": 0,
+    "n_steps": 1530,
+    "n_tta_gt_10": 0,
+    "p90_method": "statistics.quantiles(data, n=10, method='inclusive')[8]",
+    "p90_tta_s": 4.584698120000212
+  },
+  "tree_sha256": "acc8172efb657ab5a7a19713bd58b2ebb3f291a9fddd32de5a5e903e8fac1a48",
+  "verdict": "MISS_HIGH",
+  "verify_seal": "MATCH"
+}
