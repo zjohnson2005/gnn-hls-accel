@@ -98,6 +98,7 @@ $DetPy = Join-Path $root "tools\run_det_probe.py"
 $WarmPy = Join-Path $root "tools\run_warm_kv.py"
 $DecodePy = Join-Path $root "tools\run_decode_match.py"
 $ResidentPy = Join-Path $root "tools\run_resident_limit.py"
+$ExchangePy = Join-Path $root "tools\run_exchange_rate.py"
 $SmokePy = Join-Path $root "tools\c2_extraction_smoke.py"
 $SpawnPs1 = Join-Path $root "tools\spawn_detached.ps1"
 New-Item -ItemType Directory -Force -Path $LaunchDir | Out-Null
@@ -301,27 +302,34 @@ if ($Profile -eq "boot2") {
         }
     )
 } elseif ($Profile -eq "resident-limit-2") {
-    # u4 only. f16 and u8 already ran; this window is the deferred arm.
-    # Same per-arm ceiling as resident-limit: 8 probes times the sealed
-    # dd2b0779 u4 n=24000 resident pass 47.439898192 s = 379.519185536,
-    # plus canary overhead 752.1359013, next whole second 1132.
-    # One arm is 1132 s. Window is 7200 s.
-    # A post-result hang is now capped at generation.hang_after_result_s
-    # (30 s), which sits inside the per-probe bound.
+    # u4 first, then P0 exchange-rate. f16 and u8 already ran.
+    # u4: 8 probes times the sealed dd2b0779 u4 n=24000 resident pass
+    # 47.439898192 s = 379.519185536, plus canary overhead 752.1359013,
+    # next whole second 1132.
+    # P0: serial upper bound of the cold-context probes is 2334.648721088813 s,
+    # plus 12 * 5.211120400010259 s model load, plus canary overhead
+    # 752.1359013 s = 3149.3180671889363 s, next whole second 3150.
+    # 1132 + 3150 = 4282, which is below the 7200 s window.
     $script:EstimateDerivation = [ordered]@{
-        formula = "estimate_s = base_s + canary_overhead_s"
-        note = "Resident-limit-2 is u4 alone: 1132 s is below 7200 s."
+        formula = "estimate_s = base_s + canary_overhead_s, then the next whole second"
+        note = "u4 is 1132 s and P0 is 3150 s. The sum 4282 s is below 7200 s."
         source_run_id = "dd2b0779-48c1-4ad6-9567-ed38e8e1fec9"
-        probe_bound_s = 47.439898192
-        probes_per_arm = 8
+        p0_probe_sum_s = 2334.648721088813
+        p0_load_s = 62.53344480012311
+        p0_canary_overhead_s = 752.1359013
         cells = @(
             [ordered]@{ name = "RESIDENT-LIMIT u4"; base_s = 379.519185536; canary_overhead_s = 752.1359013; estimate_s = 1132 }
+            [ordered]@{ name = "P0 EXCHANGE-RATE"; probe_sum_s = 2334.648721088813; load_s = 62.53344480012311; canary_overhead_s = 752.1359013; estimate_s = 3150 }
         )
     }
     $Cells = @(
         @{
             Name = "RESIDENT-LIMIT u4"; Kind = "resident"; EstimateS = 1132
             Arm = "gpu_only_u4"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+        },
+        @{
+            Name = "P0 EXCHANGE-RATE"; Kind = "exchange"; EstimateS = 3150
+            Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
         }
     )
 } elseif ($Profile -eq "t2s-boot1") {
@@ -728,6 +736,15 @@ function Get-BootCellCommand {
             expect_kv = $kv; command = ($args -join " ")
         }
     }
+    if ($kind -eq "exchange") {
+        $modelPath = Join-Path $root $model
+        $args = @($PythonExe, "-u", $ExchangePy, "--model-spec", $modelPath)
+        $smokeArgs = @($PythonExe, "-u", $ExchangePy, "--smoke", "--model-spec", $modelPath)
+        return [ordered]@{
+            kind = $kind; arm = $arm; model = $model; low = $low; high = $high
+            expect_kv = $kv; command = ($args -join " "); smoke = ($smokeArgs -join " ")
+        }
+    }
     if ($kind -eq "warm" -or $kind -eq "decode" -or $kind -eq "resident") {
         $script = $WarmPy
         if ($kind -eq "decode") { $script = $DecodePy }
@@ -817,6 +834,11 @@ function Invoke-ResidentLimitSmokes {
     if (-not (Test-Path -LiteralPath $ResidentPy)) { throw "REFUSED -- runner missing: $ResidentPy" }
     $text = Get-Content -LiteralPath $ResidentPy -Raw
     if ($text.Contains($mark)) { throw "REFUSED -- stub measurement body: $ResidentPy" }
+    if ($Profile -eq "resident-limit-2") {
+        if (-not (Test-Path -LiteralPath $ExchangePy)) { throw "REFUSED -- runner missing: $ExchangePy" }
+        $exchangeText = Get-Content -LiteralPath $ExchangePy -Raw
+        if ($exchangeText.Contains($mark)) { throw "REFUSED -- stub measurement body: $ExchangePy" }
+    }
     $sum = 0
     foreach ($cell in $Cells) { $sum += [int]$cell.EstimateS }
     $fits = "false"
@@ -881,7 +903,7 @@ function Invoke-BootDryCell {
     $built = Get-BootCellCommand -Cell $Cell
     Write-Host ("dry_run {0} kind={1} arm={2} model={3} low={4} high={5} expect_kv={6}" -f `
         $name, $built.kind, $built.arm, $built.model, $built.low, $built.high, $built.expect_kv)
-    if ($built.kind -eq "det" -or $built.kind -eq "warm" -or $built.kind -eq "decode" -or $built.kind -eq "resident") {
+    if ($built.kind -eq "det" -or $built.kind -eq "warm" -or $built.kind -eq "decode" -or $built.kind -eq "resident" -or $built.kind -eq "exchange") {
         Invoke-BootGates -Label $name -ReportOnly
     } else {
         Invoke-BootGates -Label $name -ReportOnly
@@ -982,7 +1004,7 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         Assert-T2sOwnedWorkers
         Assert-BootAc
         Assert-BootTree | Out-Null
-        if ($cell.Kind -eq "det" -or $cell.Kind -eq "warm" -or $cell.Kind -eq "decode" -or $cell.Kind -eq "resident") {
+        if ($cell.Kind -eq "det" -or $cell.Kind -eq "warm" -or $cell.Kind -eq "decode" -or $cell.Kind -eq "resident" -or $cell.Kind -eq "exchange") {
             Invoke-CellPreamble -Label $cell.Name -SkipGateFile
         } else {
             Invoke-CellPreamble -Label $cell.Name
@@ -1028,7 +1050,7 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         continue
     }
 
-    if ($cell.Kind -eq "warm" -or $cell.Kind -eq "decode" -or $cell.Kind -eq "resident") {
+    if ($cell.Kind -eq "warm" -or $cell.Kind -eq "decode" -or $cell.Kind -eq "resident" -or $cell.Kind -eq "exchange") {
         $built = Get-BootCellCommand -Cell $cell
         $statusFile = Join-Path $LaunchDir ("cell-status-{0}.txt" -f $i)
         $env:SEAM_CELL_STATUS_PATH = $statusFile

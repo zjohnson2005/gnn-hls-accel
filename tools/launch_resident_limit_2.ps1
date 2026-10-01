@@ -1,9 +1,9 @@
-# RESIDENT-LIMIT-2. The deferred u4 arm. Search bounds stay in the runner.
+# RESIDENT-LIMIT-2. u4, then the P0 exchange-rate cell.
 # This script does not open a preregistration.
 #
-# Rehearsal includes the hang fault-injection child, then the u4 smoke.
-#   ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_resident_limit_2.ps1 -Detach -Rehearsal"
-# Poll:
+# Measurement, from the Mac, on a cold window:
+#   ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_resident_limit_2.ps1 -Detach"
+# Rehearsal log:
 #   ssh xps "powershell -NoProfile -Command Get-Content -Tail 50 C:/Users/zjohn/Projects/gnn-hls-accel/derived/c2_ttft/_launches/_rehearsal/resident-limit-2/resident-limit-2.log"
 # REHEARSAL_COMPLETE is the success line.
 

@@ -70,9 +70,10 @@ def test_resident_limit_2_rehearsal_strict_mode_stubs_smokes() -> None:
     assert "smoke_stub" in combined
     assert "REHEARSAL_COMPLETE" in combined
     assert "BOOT_COMPLETE" in combined
-    assert "resident_limit_estimate_sum_s=1132" in combined
+    assert "resident_limit_estimate_sum_s=4282" in combined
     assert "fits_one_window=true" in combined
     assert "RESIDENT-LIMIT u4" in combined
+    assert "P0 EXCHANGE-RATE" in combined
 
 
 def test_t2s_rehearsal_strict_mode_stubs_smokes() -> None:
