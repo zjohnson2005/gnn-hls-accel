@@ -11,21 +11,25 @@ import argparse
 import hashlib
 import json
 import os
+import sys
 import time
 import uuid
 from pathlib import Path
 from typing import Any
 
-import yaml
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-from seam.tools.p1_quality import (
+import yaml  # noqa: E402
+
+from seam.tools.p1_quality import (  # noqa: E402
     majority_vote,
     run_smoke,
     should_resample,
     step_account,
 )
 
-ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "configs" / "p1_quality.yaml"
 
 
