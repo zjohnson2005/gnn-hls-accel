@@ -1,0 +1,81 @@
+{
+  "id": "LOCAL-QUALITY-AMENDMENT",
+  "registered_before_any_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "amends": "derived/h1_hybrid/LOCAL_QUALITY_PREREG.json",
+  "amended_file_sha256": "c06b7fe2146f73f68cafb5adfa4083c3eaa6a345bb1b04a65b95f49c4025b99b",
+  "original_predictions_unchanged": true,
+  "original_on_record": {
+    "thinking_on": "Latency up. Pass count down. Think tokens compete with the tool call under max_new_tokens.",
+    "anchor_full_local_trajectory_pass": "10/200",
+    "anchor_run_id": "72d270e2-1a87-40b6-860a-fb709ffcbe22"
+  },
+  "metric": {
+    "name": "per-turn time-to-action",
+    "abbreviation": "TTA",
+    "definition": "Wall time from turn start to a parseable tool call, or to give-up.",
+    "budget_s": 10,
+    "anytime_rule": "At the budget, use the best answer so far. Record TTA, tokens, and samples used."
+  },
+  "related_work_cited_not_adopted": [
+    "2505.19634",
+    "2509.23324",
+    "2608.22472 reports Qwen3-4B thinking raising tool calling from 74.6% to 86.7%. That number is not a prediction here. The original prereg says thinking lowers passes, and that direction stays.",
+    "2608.19147 reports iGPU batching at 4.9x aggregate with 16 concurrent samples. That number is not a prediction here. The P0 bar is 1.5x at batch 4."
+  ],
+  "p1": {
+    "model": "Qwen3-4B-int4-ov",
+    "placement": "GPU",
+    "kv": "u8",
+    "residency": "RESIDENT",
+    "policy": "local_only",
+    "tasks": 200,
+    "seeds": [20260930, 20261001],
+    "arms": [
+      "baseline_greedy",
+      "retry_on_empty",
+      "best_of_3",
+      "thinking",
+      "check_and_retry"
+    ],
+    "comparison": "McNemar exact test on the 200 paired tasks. Discordant counts are summed across the two seeds. Each arm is compared with baseline_greedy. Greedy ignores the seed. Sampled arms use the seed.",
+    "predictions": {
+      "baseline_greedy": {
+        "passes": 14,
+        "derivation": "d482c621 slo_escalate is local-only: 0 escalations, TTFT never exceeded 10 s, local_pass 21 of 200. Seven of those 21 have a local turn whose wall exceeds 10 s. Under the anytime rule those seven are not counted. The remaining 14 have every local turn wall at or below 10 s."
+      },
+      "retry_on_empty": {
+        "passes": 17.22,
+        "k": 2,
+        "derivation": "Eligible set is the 46 slo_escalate EMPTY first-failures. Empty-turn wall median is 2.7022512 s and parseable-turn wall median is 4.789615 s. One resample fits (7.4918662 s) and a second resample does not (12.2814812 s), so k is 2. Each eligible task gains one sample at the capped pass rate 14/200. Added passes are 46 * 14/200 = 3.22. Predicted passes are 14 + 3.22."
+      },
+      "best_of_3": {
+        "passes": 27.02,
+        "finished_samples": 2,
+        "derivation": "Three sequential copies of the parseable-turn median wall are 14.368845 s, which misses the budget. Two copies are 9.579230 s, which fits. The third sample does not finish. Under an independence assumption each finished sample passes with probability 14/200. Predicted passes are 200 * (1 - (1 - 14/200)^2) = 27.02. If samples collapse to the greedy call the count falls to the baseline 14; that collapse is a falsification of the independence assumption, not a change to this prediction."
+      },
+      "thinking": {
+        "passes": 2,
+        "direction": "below baseline",
+        "max_tokens": "sized to the budget",
+        "derivation": "The original prereg stands: thinking lowers passes because think tokens compete with the tool call. The point uses the median parseable turn wall, 4.789615 s, as the think-prefix cost, because that is the sealed length of a current answer. A clean pass survives only when its slowest turn plus that prefix is still within 10 s, which means the slowest turn is at most 5.210385 s. Two of the 14 clean passes meet that (4.040352 s and 4.827154 s)."
+      },
+      "check_and_retry": {
+        "passes": 16.45,
+        "derivation": "Eligible set is the 35 slo_escalate EXEC_RESP first-failures. One retry fits on the same wall arithmetic as retry-on-empty. Added passes are 35 * 14/200 = 2.45. Predicted passes are 14 + 2.45."
+      }
+    }
+  },
+  "p3": {
+    "claim": "best local arm plus emission_escalate reaches at least 46 passes for under 16.12 USD",
+    "passes": 46,
+    "usd": 15.835885933442624,
+    "usd_ceiling": 16.12,
+    "derivation": "emission_escalate on d482c621 scores 46 passes at 16.119519 USD across 183 escalated turns. The local gain that overlaps that repair is the EMPTY set: 46 * 14/200 = 3.22 tasks answered locally instead of escalated. Predicted USD is 16.119519 - 3.22 * (16.119519 / 183). Passes stay 46 because those tasks are already inside the emission count."
+  },
+  "source_run_ids": [
+    "d482c621-4292-4281-b6a1-8635e5eeb6da",
+    "72d270e2-1a87-40b6-860a-fb709ffcbe22"
+  ]
+}

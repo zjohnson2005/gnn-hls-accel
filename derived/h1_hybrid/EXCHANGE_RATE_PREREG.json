@@ -1,0 +1,84 @@
+{
+  "id": "EXCHANGE-RATE",
+  "phase": "P0",
+  "registered_before_any_cell": true,
+  "measurement_status": "not_started",
+  "runner_must_not_read_this_file": true,
+  "metric": "per-turn time-to-action",
+  "budget_s": 10,
+  "model": "Qwen3-4B-int4-ov",
+  "kv": "u8",
+  "residency": "RESIDENT",
+  "devices": ["GPU", "CPU"],
+  "context_tokens": [4000, 6000],
+  "context_derivation": "d482c621 slo_escalate local turns, n=732: n_ctx minimum 2152, p10 2743.3, median 3935.5, p90 4963, maximum 6279. 4000 sits beside the median. 6000 sits inside the maximum and above the p90. The census figure bfcl_tool_schema_tokens 2598 is MEASURED_ORPHAN and is not an input.",
+  "measures": [
+    "decode tok/s at 1, 2, and 4 concurrent samples on a shared prefix",
+    "thinking tokens/s",
+    "time per retry with the prefix cached, re-decode only",
+    "TTA of one greedy tool call",
+    "what fits in the budget, per configuration"
+  ],
+  "predictions": {
+    "gpu_greedy_tta_s": {
+      "4000": 6.591373359533581,
+      "6000": 8.66652150637391,
+      "derivation": "TTA = prefill + (tool_tokens - 1) / decode_tok_s. tool_tokens is 102.04468915458858, the median of 1 + decode_tok_s * (t_generate - ttft_s) on the 732 local turns. Prefill and decode at 4000 are the 180dfbb9 int4 u8 medians 2.528209228 s and 24.868473407312436 tok/s. At 6000 they are the linear interpolation of the 4000 and 8000 medians: prefill 4.6689598385 s, decode 25.276580463192424 tok/s. The 8000 medians are 6.809710449 s and 25.68468751907241 tok/s."
+    },
+    "gpu_what_fits": {
+      "4000": {
+        "full_calls": 1,
+        "thinking_tokens": 185,
+        "cached_retries_after_one_call": 0,
+        "one_call_fits": true
+      },
+      "6000": {
+        "full_calls": 1,
+        "thinking_tokens": 134,
+        "cached_retries_after_one_call": 0,
+        "one_call_fits": true
+      },
+      "derivation": "After one cold prefill, thinking tokens are floor((10 - prefill) * decode_tok_s). A full median tool call fits when the greedy TTA is at or below 10 s. A cached retry costs (tool_tokens - 1) / decode_tok_s, which is 4.063164131533581 s at 4000 and 3.99756166787391 s at 6000. Neither remainder after the greedy call holds one more full retry. The P1 k=2 count uses the observed warm turn walls, not this cold-context table."
+    },
+    "cpu_tta_exceeds_budget": {
+      "both_contexts": true,
+      "full_calls": 0,
+      "thinking_tokens": 0,
+      "derivation": "7f232f86 arm A, the 10 s prefill ceiling, passes at n=468 (median prefill 8.366479492 s) and misses at n=687 (median prefill 10.04889746 s). At n=2000 the median prefill is 23.151441406 s. Both P0 contexts are longer than 2000, and prefill rose at every rung of that run, so CPU prefill alone exceeds 10 s. Nothing that waits on that prefill fits in the budget."
+    },
+    "gpu_batch4_aggregate_over_batch1": {
+      "bar": 1.5,
+      "contexts": [4000, 6000],
+      "derivation": "Four samples share one prefix and then decode. The pre-registered bar is aggregate decode tok/s at batch 4 above 1.5 times batch 1. 2608.19147 reports 4.9x at 16 concurrent samples. That figure is cited and is not this prediction."
+    },
+    "thinking_tok_s": {
+      "equals": "the greedy decode tok/s of the same device and context",
+      "derivation": "Thinking tokens and answer tokens are both decode of the same resident pipeline. No sealed thinking-on rate exists, so the rate prediction is the sealed greedy decode rate. The pass-count effect of thinking is in the local-quality amendment, not here."
+    },
+    "retry_s_cached": {
+      "gpu_4000": 4.063164131533581,
+      "gpu_6000": 3.99756166787391,
+      "derivation": "Prefix cached, so the retry pays re-decode only: (tool_tokens - 1) / decode_tok_s."
+    }
+  },
+  "boot_budget": {
+    "appended_after": "RESIDENT-LIMIT u4",
+    "u4_estimate_s": 1132,
+    "p0_estimate_s": 3150,
+    "sum_s": 4282,
+    "window_s": 7200,
+    "fits_one_window": true,
+    "formula": "Per child, serial upper bound: for concurrency in 1, 2, 4, prefill + concurrency * (63 / decode_tok_s), plus the same cost for thinking and for a cache-miss retry, plus a 10 s TTA cap. GPU rates are the 180dfbb9 medians and the 6000 interpolation above. CPU prefill and decode are extrapolated from 7f232f86 n=1125 to n=2000 (prefill 14.048253906 to 23.151441406, decode 20.940366401501716 to 18.619462902214963) out to 4000 and 6000. Three repeats, two contexts, two devices. Plus 12 * 5.211120400010259 s from the 24634b40 model load, applied to every child. Plus canary overhead 752.1359013 s. The sum is 3149.3180671889363 s, and the estimate is the next whole second, 3150.",
+    "source_run_ids": [
+      "180dfbb9-5ad6-446e-a3f2-0d6fa8eea196",
+      "7f232f86-2525-481b-a000-c6b8491bc224",
+      "24634b40-3f38-40f4-b722-6127143d3500",
+      "dd2b0779-48c1-4ad6-9567-ed38e8e1fec9"
+    ]
+  },
+  "source_run_ids": [
+    "d482c621-4292-4281-b6a1-8635e5eeb6da",
+    "180dfbb9-5ad6-446e-a3f2-0d6fa8eea196",
+    "7f232f86-2525-481b-a000-c6b8491bc224"
+  ]
+}

@@ -1,0 +1,31 @@
+# P0 exchange rate. The runner reads this file. It does not open a preregistration.
+# Context lengths are the BFCL band pinned before the run: 4000 is beside the
+# d482c621 local-turn median 3935.5, and 6000 is inside the observed maximum 6279.
+
+budget_s: 10
+context_tokens: [4000, 6000]
+smoke_context_tokens: 512
+concurrencies: [1, 2, 4]
+smoke_concurrencies: [1]
+decode_new_tokens: 64
+smoke_decode_new_tokens: 8
+smoke_budget_s: 2
+tta_max_new_tokens: 512
+repeats: 3
+residency: RESIDENT
+model_spec: configs/models/Qwen3-4B-int4-ov.yaml
+enable_prefix_caching: true
+max_num_seqs: 4
+# 6000 * 4 = 24000. 32768 leaves room for the batch to be concurrent.
+max_num_batched_tokens: 32768
+devices:
+  - id: gpu
+    arm: gpu_only_u8
+    kv_cache_precision: u8
+  - id: cpu
+    arm: A
+    kv_cache_precision: u8
+tool:
+  name: echo
+  description: Echo the provided text.
+  parameter: text
