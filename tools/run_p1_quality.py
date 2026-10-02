@@ -28,6 +28,7 @@ from seam.tools.p1_quality import (  # noqa: E402
     capped_new_tokens,
     compose_greedy_vote,
     entry_record,
+    feedback_sha256,
     measured_batch_rate,
     normalize_tool_call,
     run_smoke,
@@ -96,6 +97,11 @@ class ArmController:
         self._extra_wall_s: float | None = None
         self._extras_exceeded = False
         self._retention: dict[str, Any] = {}
+        self._check_result: str | None = None
+        self._checks: list[str] = []
+        self._greedy_check: str | None = None
+        self._feedback_sha256: list[str] = []
+        self._feedback_tokens = 0
 
     def elapsed(self) -> float:
         if not self.step_open:
@@ -124,6 +130,33 @@ class ArmController:
             elapsed_s=self.elapsed(),
             budget_s=self.budget_s,
         )
+
+    def can_feedback_retry(self, *, n_ctx: int | None) -> bool:
+        """A5 only. One more greedy decode while remaining time can buy a token."""
+        if self.arm != "A5":
+            return False
+        if self.attempts >= self.max_attempts:
+            return False
+        if self.budget_s - self.elapsed() <= 0.0:
+            return False
+        return self._remaining_cap(requested_k=1, n_ctx=n_ctx) > 0
+
+    def note_feedback(self, text: str, tokens: int) -> None:
+        self._feedback_sha256.append(feedback_sha256(text))
+        self._feedback_tokens += int(tokens)
+
+    def finish_precheck(self, check: dict[str, Any], *, accepted: bool) -> None:
+        """Record the pre-execution class. A later passing decode is the feedback source."""
+        result = str(check["result"])
+        self._checks.append(result)
+        if self.attempts <= 1:
+            self._greedy_check = result
+        if accepted and self.attempts > 1:
+            self._source = "feedback"
+            self._check_result = result
+            return
+        self._source = "greedy"
+        self._check_result = result if accepted else self._greedy_check
 
     def record_retention(
         self,
@@ -181,6 +214,11 @@ class ArmController:
         account["decode_tok_s_source"] = self._decode_source
         account["extra_wall_s"] = self._extra_wall_s
         account["extras_exceeded_remaining"] = self._extras_exceeded
+        account["check_result"] = self._check_result
+        account["checks"] = list(self._checks) if self._checks else None
+        account["feedback_sha256"] = list(self._feedback_sha256) if self._feedback_sha256 else None
+        account["feedback_tokens"] = self._feedback_tokens if self._feedback_sha256 else None
+        account["attempts"] = self.attempts if self.arm == "A5" else None
         account.update(self._retention)
         self._current = account
         return account
@@ -202,14 +240,19 @@ class ArmController:
             return self._thinking(pipe, ov_genai, prompt, prompt_tokens=prompt_tokens)
         sample = self.arm in {"A2", "A3"} and self.attempts > 1
         max_new: int | None = None
-        if sample:
+        if self.arm == "A5" and self.attempts > 1:
+            max_new = self._remaining_cap(requested_k=1, n_ctx=prompt_tokens)
+        elif sample:
             max_new = self._remaining_cap(requested_k=1, n_ctx=prompt_tokens)
         row = self._one(pipe, ov_genai, prompt, sample=sample, max_new=max_new)
         tokens = int(row.get("generated_tokens") or 0)
         self.samples.append(
             {"text": row.get("text") or "", "tokens": tokens, "elapsed_s": self.elapsed()}
         )
-        self._source = "retry" if sample else "greedy"
+        if self.arm == "A5":
+            self._source = "greedy"
+        else:
+            self._source = "retry" if sample else "greedy"
         self._k_used = len(self.samples)
         self._k_requested = self._k_used
         self._samples_finished = self._k_used

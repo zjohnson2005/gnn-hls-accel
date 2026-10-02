@@ -2227,6 +2227,33 @@ class MultiTurnAgentSession:
                 self.stop_reason = "generation_error"
                 break
 
+            controller = getattr(self, "p1", None)
+            if controller is not None and controller.arm == "A5":
+                from seam.tools.p1_quality import check_pre_execution, feedback_text
+
+                check = check_pre_execution(text, list(tools or []))
+                reported_ctx = (
+                    prompt_tokens_reported if prompt_tokens_reported is not None else prompt_n
+                )
+                if not check["ok"] and controller.can_feedback_retry(n_ctx=reported_ctx):
+                    message = feedback_text(check)
+                    feedback_tokens = len(tokenizer(message)["input_ids"])
+                    controller.note_feedback(message, feedback_tokens)
+                    controller.finish_precheck(check, accepted=False)
+                    step_rec["p1"] = controller.step_record()
+                    feedback_msg = {"role": "user", "content": message}
+                    self.messages.append(feedback_msg)
+                    if self.resident_history is not None:
+                        self.resident_history.append(_chat_message_for_genai(feedback_msg))
+                    continue
+                if not check["ok"]:
+                    controller.finish_precheck(check, accepted=False)
+                    step_rec["p1"] = controller.step_record()
+                    self.stop_reason = "pre_execution_" + str(check["result"])
+                    break
+                controller.finish_precheck(check, accepted=True)
+                step_rec["p1"] = controller.step_record()
+
             try:
                 decoded = decode_execute_qwen(text)
                 empty_kind = "empty" if is_empty_execute_response(decoded) else None
@@ -2234,7 +2261,11 @@ class MultiTurnAgentSession:
                 decoded = []
                 empty_kind = "unparseable"
             if empty_kind is not None:
-                controller = getattr(self, "p1", None)
+                if controller is not None and controller.arm == "A5":
+                    self.stop_reason = (
+                        "no_tool_call" if empty_kind == "unparseable" else "empty_execute"
+                    )
+                    break
                 if controller is not None and controller.retry_empty():
                     self._undo_assistant(history_base)
                     continue

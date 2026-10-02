@@ -1,4 +1,4 @@
-# P1 A1. Bounded best-of-4. Runs after A4, A2, and A3.
+# P1 A1. Bounded best-of-4. Runs after A4, A5, A2, and A3.
 # One registered half of one seed. Default is seed 20260930, entries [:100].
 # Arm smokes are tools/launch_p1_preflight.ps1, before the cold reboot.
 # This script does not open a preregistration.

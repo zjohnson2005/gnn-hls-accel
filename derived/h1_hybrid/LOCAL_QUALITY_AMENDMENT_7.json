@@ -1,0 +1,91 @@
+{
+  "a0_points_do_not_store_call_text": true,
+  "a1_bounded_measurement_status": "not_started",
+  "a4_measurement_status": "not_started",
+  "a5_measurement_status": "not_started",
+  "amended_file_sha256": "c082e57a855d17a01bc108fa0c012598903795ae13f502109d1f7a61cc845105",
+  "amends": "derived/h1_hybrid/LOCAL_QUALITY_AMENDMENT_6.json",
+  "baseline_rate": "23/200",
+  "baseline_run_id": "8a529053-fc47-486d-8809-6c699d156b06",
+  "budget_s": 10.0,
+  "class_run_id": "d482c621-4292-4281-b6a1-8635e5eeb6da",
+  "class_source": "derived/h1_hybrid/analysis_d482c621/failturn/FAILTURN_RESULTS.json policy slo_escalate first_fail_bucket",
+  "comparison": "Paired McNemar against A0, computed per seed. Report both seeds. b is A0 pass and this arm fail. c is A0 fail and this arm pass. p is the two-sided exact binomial test on the discordant pairs.",
+  "design_floor": "A call is executed only after the pre-execution check passes. A greedy call that already passes is not replaced. A feedback decode that does not finish inside the remaining time is not executed, and the step keeps the greedy text. Execution errors are not a feedback retry.",
+  "direction": "greater than A0",
+  "eligible": {
+    "a0_entries": 200,
+    "a0_failures": 177,
+    "a0_passes": 23,
+    "among_a0_failures": {
+      "EMPTY": 44,
+      "EXEC_RESP": 35,
+      "MISMATCH": 98
+    },
+    "count": 44,
+    "d482_empty_that_passed_a0": [
+      "multi_turn_base_120",
+      "multi_turn_base_130"
+    ],
+    "first_100": 25,
+    "recorded_pre_execution_class": "empty_turn_model_response",
+    "schema_invalid_separate_bucket": false,
+    "second_100": 19,
+    "unparseable_separate_bucket": false
+  },
+  "id": "LOCAL-QUALITY-AMENDMENT-7",
+  "next_arm": "A4",
+  "predictions": {
+    "A5": {
+      "derivation": "A0 points identify 177 failing entries (200 minus 23 passes; in-budget passes are the same 23). The points do not store the call text or the checker class. Joining those ids to the d482 fail-turn rescore, slo_escalate first_fail_bucket, gives EMPTY 44, EXEC_RESP 35, and MISMATCH 98. The rescore has no separate unparseable or schema-invalid bucket. empty_turn_model_response is the recorded pre-execution failure. Two d482 EMPTY entries passed on A0 (multi_turn_base_120 and multi_turn_base_130) and are not in the eligible set. Schema-invalid calls that still executed sit in MISMATCH or EXEC_RESP, which A5 does not retry. Eligible is 44. Low is 23: a check-passing greedy call is kept, and a retry that misses the remaining time keeps greedy, so an A0 in-budget pass is not removed by this rule. High is 23 + 44 * 23/200 = 28.06, one extra sample on each eligible entry at the measured A0 rate.",
+      "direction": "greater than A0",
+      "estimate_derivation": {
+        "a0_first_100_wall_s": 2133.4399603999987,
+        "a0_second_100_wall_s": 2029.0370704000024,
+        "canary_overhead_s": 752.1359013,
+        "eligible_first_100": 25,
+        "eligible_second_100": 19,
+        "extra_formula": "(A2_generate_one_seed 4239.760204818709 - A0_generate 4055.8199962596145) / closeout first_fail_EMPTY 46",
+        "extra_per_eligible_s": 3.9987001860672735,
+        "first_sum_before_rounding_s": 2990.754486751691,
+        "load_s": 5.211120400010259,
+        "rounding": "next whole second",
+        "second_sum_before_rounding_s": 2862.359395635291,
+        "wall_note": "Sum of A0 point wall_s on the lexicographic halves. The 200-entry sum is 4162.477030800002, above the amendment-3 generate-only figure 4055.8199962596145, so the half base is an upper bound on generate time."
+      },
+      "estimates_s": {
+        "first_100": 2991,
+        "second_100": 2863
+      },
+      "in_budget_passes_per_seed": {
+        "high": 28.06,
+        "low": 23
+      },
+      "name": "feedback_retry",
+      "procedure": "Stream the greedy answer with the anytime cutoff. Before execution, classify it as ok, empty, unparseable, unknown_function, missing_argument, extra_argument, or ill_typed. On a failure, do not execute. While remaining time R is above 0 and the attempt count is below max_resamples, append a short feedback turn naming the failure and greedy-decode again with max_new_tokens = floor(R * measured decode tok/s / k) for k = 1, the same cap as the bounded retry. The streamer still stops at R. Stop when a decode passes the check, the attempts are exhausted, or R cannot buy a token. Never execute a failed call. If the retry does not finish, keep the greedy text. An execution error is returned as the tool result and is not a feedback retry. Record the check result, the feedback text hash, the feedback token count, the attempt count, and the final source (greedy or feedback).",
+      "seeds": [
+        20260930,
+        20261001
+      ]
+    }
+  },
+  "prior_amendments_unchanged": true,
+  "registered_before_any_a5_run": true,
+  "runner_must_not_read_this_file": true,
+  "schedule": [
+    "A4",
+    "A5",
+    "A2",
+    "A3",
+    "A1"
+  ],
+  "seeds": [
+    20260930,
+    20261001
+  ],
+  "source_run_ids": [
+    "8a529053-fc47-486d-8809-6c699d156b06",
+    "d482c621-4292-4281-b6a1-8635e5eeb6da"
+  ],
+  "why": "A2 and A3 resample the same context and do not tell the model why the call failed. A5 checks the greedy reply before execution and, on an empty, unparseable, or schema-invalid call, appends a short feedback turn and decodes again inside the remaining time. A failed check is never executed. Execution errors stay in the agent loop as the tool result. The next measurement is still A4, then A5, then A2, then A3, then bounded A1. Amendments 1 through 6 stay on their files."
+}

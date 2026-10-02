@@ -15,7 +15,10 @@ import yaml
 
 from seam.tools.p1_quality import (
     capped_new_tokens,
+    check_pre_execution,
     entry_record,
+    feedback_sha256,
+    feedback_text,
     in_budget_pass,
     majority_vote,
     measured_batch_rate,
@@ -95,6 +98,17 @@ def test_smoke_covers_vote_retry_and_fallback() -> None:
     assert "<think>" not in thinking["retained_text"]
     assert thinking["emitted_chars"] > thinking["retained_chars"]
     assert thinking["token_cap"] == 100
+    recovered, kept = result["arms"]["A5"]
+    assert recovered["source"] == "feedback"
+    assert recovered["checks"] == ["unknown_function", "ok"]
+    assert recovered["executed"] is True
+    assert recovered["attempts"] == 2
+    assert recovered["met_budget"] is True
+    assert kept["source"] == "greedy"
+    assert kept["check_result"] == "unknown_function"
+    assert kept["executed"] is False
+    assert kept["retry_unfinished"] is True
+    assert kept["met_budget"] is True
 
 
 def test_extra_cap_uses_the_measured_batch_row() -> None:
@@ -480,6 +494,155 @@ def test_a0_score_and_amendment_4_use_the_measured_rate() -> None:
     assert closeout["observed_in_budget_passes"] == 23
     assert closeout["steps"]["n_steps"] == stats["n_steps"]
     assert closeout["verify_seal"] == "MATCH"
+
+
+def _weather_tools() -> list[dict[str, object]]:
+    return [
+        {
+            "type": "function",
+            "function": {
+                "name": "get_weather",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"city": {"type": "string"}},
+                    "required": ["city"],
+                },
+            },
+        }
+    ]
+
+
+def test_pre_execution_check_names_schema_failures() -> None:
+    tools = _weather_tools()
+    empty = check_pre_execution("  ", tools)
+    assert empty["result"] == "empty" and empty["ok"] is False
+    broken = check_pre_execution("not a call", tools)
+    assert broken["result"] == "unparseable"
+    unknown = check_pre_execution(
+        json.dumps({"name": "missing_fn", "arguments": {}}),
+        tools,
+    )
+    assert unknown["result"] == "unknown_function"
+    assert unknown["name"] == "missing_fn"
+    missing = check_pre_execution(
+        json.dumps({"name": "get_weather", "arguments": {}}),
+        tools,
+    )
+    assert missing["result"] == "missing_argument" and missing["argument"] == "city"
+    extra = check_pre_execution(
+        json.dumps({"name": "get_weather", "arguments": {"city": "Paris", "units": "C"}}),
+        tools,
+    )
+    assert extra["result"] == "extra_argument" and extra["argument"] == "units"
+    ill = check_pre_execution(
+        json.dumps({"name": "get_weather", "arguments": {"city": 1}}),
+        tools,
+    )
+    assert ill["result"] == "ill_typed" and ill["expected_type"] == "string"
+    ok = check_pre_execution(
+        json.dumps({"name": "get_weather", "arguments": {"city": "Paris"}}),
+        tools,
+    )
+    assert ok["ok"] is True and ok["result"] == "ok"
+    named = feedback_text(unknown)
+    assert "missing_fn" in named
+    assert feedback_sha256(named) == hashlib.sha256(named.encode("utf-8")).hexdigest()
+
+
+def test_a5_dry_run_is_the_registered_first_half() -> None:
+    command = (
+        "Set-StrictMode -Version Latest; "
+        f"& '{ROOT / 'tools' / 'launch_p1_a5.ps1'}' -DryRun; "
+        "exit $LASTEXITCODE"
+    )
+    proc = subprocess.run(
+        ["powershell", "-NoProfile", "-Command", command],
+        cwd=ROOT,
+        env=os.environ.copy(),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    combined = proc.stdout + proc.stderr
+    assert proc.returncode == 0, combined
+    assert "DRY_RUN_OK" in combined
+    assert "--arm A5" in combined
+    assert "--seed 20260930" in combined
+    assert "--entry-offset 0" in combined
+    assert "--entry-count 100" in combined
+    assert "p1_a5_estimate_s=2991" in combined
+    assert "fits_one_window=true" in combined
+    boot = (ROOT / "tools" / "launch_boot1.ps1").read_text(encoding="utf-8")
+    assert "p1-a5" in boot
+    assert "-P1Seed $P1Seed -P1EntryOffset $P1EntryOffset -P1EntryCount $P1EntryCount" in boot
+
+
+def test_amendment_7_registers_feedback_retry_after_a4() -> None:
+    from tools.score_p1_a0 import a0_points, rate_arm
+
+    path = ROOT / "derived" / "h1_hybrid" / "LOCAL_QUALITY_AMENDMENT_7.json"
+    amendment = json.loads(path.read_text(encoding="utf-8"))
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    assert digest == "fc58a6abb1c253ceabf01483e0ff3186247716c939c3c86866c37c3a7ce15983"
+    assert amendment["registered_before_any_a5_run"] is True
+    assert amendment["prior_amendments_unchanged"] is True
+    assert amendment["a5_measurement_status"] == "not_started"
+    assert amendment["next_arm"] == "A4"
+    assert amendment["schedule"] == ["A4", "A5", "A2", "A3", "A1"]
+    assert amendment["comparison"].startswith("Paired McNemar against A0, computed per seed")
+    points = a0_points()
+    failturn = json.loads(
+        (
+            ROOT
+            / "derived"
+            / "h1_hybrid"
+            / "analysis_d482c621"
+            / "failturn"
+            / "FAILTURN_RESULTS.json"
+        ).read_text(encoding="utf-8")
+    )
+    classes = {
+        str(row["entry_id"]): str(row["first_fail_bucket"])
+        for row in failturn["per_entry"]
+        if row["policy"] == "slo_escalate"
+    }
+    ordered = sorted(points, key=lambda row: str(row["id"]))
+    failures = [row for row in ordered if not row["passed"]]
+    buckets: dict[str, int] = {}
+    for row in failures:
+        bucket = classes[str(row["id"])]
+        buckets[bucket] = buckets.get(bucket, 0) + 1
+    assert len(ordered) == 200
+    assert len(failures) == 177
+    assert buckets == {"EMPTY": 44, "EXEC_RESP": 35, "MISMATCH": 98}
+    eligible_ids = [str(row["id"]) for row in failures if classes[str(row["id"])] == "EMPTY"]
+    assert len(eligible_ids) == 44
+    halves = [str(row["id"]) for row in ordered[:100]], [str(row["id"]) for row in ordered[100:]]
+    half_counts = [sum(1 for entry_id in half if entry_id in set(eligible_ids)) for half in halves]
+    assert half_counts == [25, 19]
+    prediction = amendment["predictions"]["A5"]
+    assert prediction["in_budget_passes_per_seed"]["low"] == 23
+    assert prediction["in_budget_passes_per_seed"]["high"] == rate_arm(23, 44)
+    assert prediction["direction"] == "greater than A0"
+    extra = (4239.760204818709 - 4055.8199962596145) / 46
+    load_s = 5.211120400010259
+    canary_s = 752.1359013
+    walls = [
+        sum(float(row["wall_s"]) for row in ordered[:100]),
+        sum(float(row["wall_s"]) for row in ordered[100:]),
+    ]
+    estimates = [
+        math.ceil(wall + count * extra + load_s + canary_s)
+        for wall, count in zip(walls, half_counts, strict=True)
+    ]
+    assert estimates == [2991, 2863]
+    assert prediction["estimates_s"] == {"first_100": 2991, "second_100": 2863}
+    assert 2991 <= 7200 and 2863 <= 7200
+    prior = ROOT / "derived" / "h1_hybrid" / "LOCAL_QUALITY_AMENDMENT_6.json"
+    assert amendment["amended_file_sha256"] == hashlib.sha256(prior.read_bytes()).hexdigest()
+    assert json.loads(prior.read_text(encoding="utf-8"))["schedule"] == ["A4", "A2", "A3", "A1"]
+    cfg = yaml.safe_load((ROOT / "configs" / "p1_quality.yaml").read_text(encoding="utf-8"))
+    assert cfg["arms"] == ["A0", "A1", "A2", "A3", "A4", "A5"]
 
 
 def test_refused_session_summary_records_the_canary_series() -> None:

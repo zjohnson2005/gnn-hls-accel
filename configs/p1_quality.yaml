@@ -11,6 +11,9 @@
 # measured row and divides by that row's k. Context band is 4000 at or below
 # context_band_threshold prompt tokens, else 6000. Unknown context uses the
 # slower per-sequence rate.
+# A5 decodes again after a pre-execution failure. The retry is one greedy
+# sample whose max_new_tokens is the same remaining-time cap, and the attempt
+# count stops at max_resamples.
 
 budget_s: 10
 arm_id: gpu_only_u8
@@ -36,4 +39,4 @@ sampling:
   temperature: 0.6
   top_p: 0.95
   top_k: 20
-arms: [A0, A1, A2, A3, A4]
+arms: [A0, A1, A2, A3, A4, A5]

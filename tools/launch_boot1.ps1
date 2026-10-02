@@ -27,7 +27,7 @@ param(
     [switch]$NoRebootDeviation,
     [switch]$Rehearsal,
     [string]$WatchdogLog = "",
-    [ValidateSet("boot1", "boot2", "boot3", "boot4", "resident-limit", "resident-limit-2", "p0-v2", "p1-a0", "p1-a4", "p1-a1", "t2s-boot1")]
+    [ValidateSet("boot1", "boot2", "boot3", "boot4", "resident-limit", "resident-limit-2", "p0-v2", "p1-a0", "p1-a4", "p1-a5", "p1-a1", "t2s-boot1")]
     [string]$Profile = "boot1",
     [int]$P1Seed = 20260930,
     [int]$P1EntryOffset = 0,
@@ -78,6 +78,7 @@ $SummaryName = switch ($Profile) {
     "p0-v2" { "P0_V2_SUMMARY.json" }
     "p1-a0" { "P1_A0_SUMMARY.json" }
     "p1-a4" { "P1_A4_SUMMARY.json" }
+    "p1-a5" { "P1_A5_SUMMARY.json" }
     "p1-a1" { "P1_A1_SUMMARY.json" }
     "t2s-boot1" { "T2S_BOOT1_SUMMARY.json" }
     default { "BOOT1_SUMMARY.json" }
@@ -90,7 +91,8 @@ $DeferredName = switch ($Profile) {
     "resident-limit-2" { "DEFERRED_TO_RESIDENT_LIMIT_3.json" }
     "p0-v2" { "DEFERRED_TO_P0_V3.json" }
     "p1-a0" { "DEFERRED_TO_P1_A4.json" }
-    "p1-a4" { "DEFERRED_TO_P1_A2.json" }
+    "p1-a4" { "DEFERRED_TO_P1_A5.json" }
+    "p1-a5" { "DEFERRED_TO_P1_A2.json" }
     "p1-a1" { "DEFERRED_TO_P1_A1_NEXT.json" }
     "t2s-boot1" { "DEFERRED_TO_T2S_BOOT2.json" }
     default { "DEFERRED_TO_BOOT2.json" }
@@ -101,7 +103,8 @@ $script:DeferredStatus = switch ($Profile) {
     "resident-limit-2" { "DEFERRED_TO_RESIDENT_LIMIT_3" }
     "p0-v2" { "DEFERRED_TO_P0_V3" }
     "p1-a0" { "DEFERRED_TO_P1_A4" }
-    "p1-a4" { "DEFERRED_TO_P1_A2" }
+    "p1-a4" { "DEFERRED_TO_P1_A5" }
+    "p1-a5" { "DEFERRED_TO_P1_A2" }
     "p1-a1" { "DEFERRED_TO_P1_A1_NEXT" }
     default { "DEFERRED_TO_BOOT2" }
 }
@@ -125,6 +128,7 @@ $script:RehearsalMac = switch ($Profile) {
     "p0-v2" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p0_v2.ps1 -Detach -Rehearsal"' }
     "p1-a0" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a0.ps1 -Detach -Rehearsal"' }
     "p1-a4" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a4.ps1 -Detach -Rehearsal"' }
+    "p1-a5" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a5.ps1 -Detach -Rehearsal"' }
     "p1-a1" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a1.ps1 -Detach -Rehearsal"' }
     default { 'ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_boot4.ps1 -Detach -Rehearsal"' }
 }
@@ -142,7 +146,7 @@ if ($Detach) {
     $cmd = "powershell -NoProfile -File $self -Profile $Profile"
     if ($NoRebootDeviation) { $cmd += " -NoRebootDeviation" }
     if ($Rehearsal) { $cmd += " -Rehearsal" }
-    if ($Profile -eq "p1-a1" -or $Profile -eq "p1-a4") {
+    if ($Profile -eq "p1-a1" -or $Profile -eq "p1-a4" -or $Profile -eq "p1-a5") {
         $cmd += " -P1Seed $P1Seed -P1EntryOffset $P1EntryOffset -P1EntryCount $P1EntryCount"
     }
     if ($WatchdogLog) { $cmd += " -WatchdogLog `"$WatchdogLog`"" }
@@ -423,7 +427,7 @@ if ($Profile -eq "boot2") {
     }
     $script:EstimateDerivation = [ordered]@{
         formula = "amendment 3 next whole second of the capped thinking half plus load plus canary overhead"
-        note = "Schedule is A4, then A2, then A3, then bounded A1. A4 thinking uses the greedy stream, the remaining-time token cap, and the think-block strip."
+        note = "Schedule is A4, then A5, then A2, then A3, then bounded A1. A4 thinking uses the greedy stream, the remaining-time token cap, and the think-block strip."
         seed = $P1Seed
         entry_offset = $P1EntryOffset
         entry_count = $P1EntryCount
@@ -433,6 +437,42 @@ if ($Profile -eq "boot2") {
         @{
             Name = "P1 A4"; Kind = "p1"; EstimateS = $p1Estimate
             Arm = "A4"; Seed = $P1Seed
+            EntryOffset = $P1EntryOffset; EntryCount = $P1EntryCount
+            Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+        }
+    )
+} elseif ($Profile -eq "p1-a5") {
+    # Next P1 boot after A4. One registered half of one A5 seed.
+    # Default is seed 20260930, entries [:100].
+    # First-half entry walls from A0 run 8a529053 sum to 2133.4399603999987 s.
+    # Second half sums to 2029.0370704000024 s. Eligible pre-execution failures
+    # in those halves are 25 and 19. Each adds the A2-minus-A0 generate gap
+    # per closeout empty trajectory, 3.9987001860672735 s. Load is
+    # 5.211120400010259 s and canary overhead is 752.1359013 s. Next whole
+    # second is 2991 s and 2863 s. Both are below the 7200 s window.
+    # This script does not open the amendment file.
+    if ($P1Seed -ne 20260930 -and $P1Seed -ne 20261001) {
+        throw "REFUSED -- P1 A5 seed $P1Seed is not registered"
+    }
+    if ($P1EntryOffset -eq 0 -and $P1EntryCount -eq 100) {
+        $p1Estimate = 2991
+    } elseif ($P1EntryOffset -eq 100 -and $P1EntryCount -eq 100) {
+        $p1Estimate = 2863
+    } else {
+        throw "REFUSED -- P1 A5 entry window offset=$P1EntryOffset count=$P1EntryCount is not a registered half"
+    }
+    $script:EstimateDerivation = [ordered]@{
+        formula = "A0 half wall plus one A2-sized extra sample per eligible entry, plus load, plus canary overhead, then the next whole second"
+        note = "Schedule is A4, then A5, then A2, then A3, then bounded A1. A5 checks the greedy call before execution and decodes again only inside the remaining time."
+        seed = $P1Seed
+        entry_offset = $P1EntryOffset
+        entry_count = $P1EntryCount
+        estimate_s = $p1Estimate
+    }
+    $Cells = @(
+        @{
+            Name = "P1 A5"; Kind = "p1"; EstimateS = $p1Estimate
+            Arm = "A5"; Seed = $P1Seed
             EntryOffset = $P1EntryOffset; EntryCount = $P1EntryCount
             Model = "configs\models\Qwen3-4B-int4-ov.yaml"
         }
@@ -978,7 +1018,7 @@ function Invoke-HangFaultProbe {
 }
 
 function Invoke-P1Budget {
-    if ($Profile -ne "p1-a0" -and $Profile -ne "p1-a1" -and $Profile -ne "p1-a4") { return }
+    if ($Profile -ne "p1-a0" -and $Profile -ne "p1-a1" -and $Profile -ne "p1-a4" -and $Profile -ne "p1-a5") { return }
     $mark = "measurement body is not started"
     if (-not (Test-Path -LiteralPath $P1Py)) { throw "REFUSED -- runner missing: $P1Py" }
     $text = Get-Content -LiteralPath $P1Py -Raw
@@ -990,6 +1030,7 @@ function Invoke-P1Budget {
     $label = "p1_a0_estimate_sum_s"
     if ($Profile -eq "p1-a1") { $label = "p1_a1_estimate_s" }
     if ($Profile -eq "p1-a4") { $label = "p1_a4_estimate_s" }
+    if ($Profile -eq "p1-a5") { $label = "p1_a5_estimate_s" }
     Write-Host ("{0}={1} window_s={2} fits_one_window={3}" -f $label, $sum, $WindowS, $fits)
     if ($fits -eq "false") {
         throw "REFUSED -- $Profile estimate sum $sum s exceeds window $WindowS s; split the profile before starting"
