@@ -6,9 +6,9 @@
 # Preflight, on the XPS, before reboot:
 #   powershell -NoProfile -File tools\launch_p1_preflight.ps1
 # Measurement, from the Mac, on a cold window:
-#   ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a0.ps1 -Detach"
+#   ssh zjohn@100.101.81.6 "cd <repo>; powershell -NoProfile -File tools\launch_p1_a0.ps1 -Detach"
 # Rehearsal log:
-#   ssh zjohn@100.101.81.6 "powershell -NoProfile -Command Get-Content -Tail 80 C:/Users/zjohn/Projects/gnn-hls-accel/derived/c2_ttft/_launches/_rehearsal/p1-a0/p1-a0.log"
+#   ssh zjohn@100.101.81.6 "powershell -NoProfile -Command Get-Content -Tail 80 <repo>/derived/c2_ttft/_launches/_rehearsal/p1-a0/p1-a0.log"
 # REHEARSAL_COMPLETE is the success line.
 
 [CmdletBinding()]

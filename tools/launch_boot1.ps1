@@ -5,9 +5,9 @@
 #   ssh xps "cd <repo-root>; powershell -NoProfile -File tools\launch_boot1.ps1 -Detach"
 #
 # Boot 4 rehearsal uses the same ssh + WMI path. Do not start it from the Cursor terminal.
-#   ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_boot4.ps1 -Detach -Rehearsal"
+#   ssh xps "cd <repo>; powershell -NoProfile -File tools\launch_boot4.ps1 -Detach -Rehearsal"
 # Poll:
-#   ssh xps "powershell -NoProfile -Command Get-Content -Tail 50 C:/Users/zjohn/Projects/gnn-hls-accel/derived/c2_ttft/_launches/_rehearsal/boot4/boot4.log"
+#   ssh xps "powershell -NoProfile -Command Get-Content -Tail 50 <repo>/derived/c2_ttft/_launches/_rehearsal/boot4/boot4.log"
 #
 # Poll the summary (run_ids and statuses; rewritten after every cell):
 #   ssh xps "powershell -NoProfile -Command Get-Content -Raw <repo-root>\derived\c2_ttft\_launches\BOOT1_SUMMARY.json"

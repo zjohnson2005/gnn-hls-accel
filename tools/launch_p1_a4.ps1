@@ -5,13 +5,13 @@
 # Schedule after this arm: A5, then A2, then A3, then bounded A1.
 #
 # First half, seed 20260930, from the Mac, on a cold window:
-#   ssh zjohn@100.101.81.6 'cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a4.ps1 -Detach'
+#   ssh zjohn@100.101.81.6 'cd <repo>; powershell -NoProfile -File tools\launch_p1_a4.ps1 -Detach'
 # Second half, same seed:
-#   ssh zjohn@100.101.81.6 'cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a4.ps1 -Detach -EntryOffset 100'
+#   ssh zjohn@100.101.81.6 'cd <repo>; powershell -NoProfile -File tools\launch_p1_a4.ps1 -Detach -EntryOffset 100'
 # First half, seed 20261001:
-#   ssh zjohn@100.101.81.6 'cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a4.ps1 -Detach -Seed 20261001'
+#   ssh zjohn@100.101.81.6 'cd <repo>; powershell -NoProfile -File tools\launch_p1_a4.ps1 -Detach -Seed 20261001'
 # Second half, seed 20261001:
-#   ssh zjohn@100.101.81.6 'cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a4.ps1 -Detach -Seed 20261001 -EntryOffset 100'
+#   ssh zjohn@100.101.81.6 'cd <repo>; powershell -NoProfile -File tools\launch_p1_a4.ps1 -Detach -Seed 20261001 -EntryOffset 100'
 
 [CmdletBinding()]
 param(

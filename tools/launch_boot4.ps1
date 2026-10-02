@@ -3,9 +3,9 @@
 #
 # Rehearsal runs in the same context as the real launch: ssh from the Mac, then
 # WMI detach (tools/spawn_detached.ps1). The Cursor terminal is refused.
-#   ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_boot4.ps1 -Detach -Rehearsal"
+#   ssh xps "cd <repo>; powershell -NoProfile -File tools\launch_boot4.ps1 -Detach -Rehearsal"
 # Poll the detached log:
-#   ssh xps "powershell -NoProfile -Command Get-Content -Tail 50 C:/Users/zjohn/Projects/gnn-hls-accel/derived/c2_ttft/_launches/_rehearsal/boot4/boot4.log"
+#   ssh xps "powershell -NoProfile -Command Get-Content -Tail 50 <repo>/derived/c2_ttft/_launches/_rehearsal/boot4/boot4.log"
 # REHEARSAL_COMPLETE is the success line.
 
 [CmdletBinding()]
