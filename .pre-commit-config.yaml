@@ -46,15 +46,15 @@ repos:
     hooks:
       - id: no-key-material
         name: block API key material
-        entry: py -3 tools/hooks/check_no_secrets.py
-        language: system
+        entry: python tools/hooks/check_no_secrets.py
+        language: python
         pass_filenames: true
         stages: [pre-commit]
 
       - id: sealed-immutable
         name: block edits to sealed raw/ and derived/**/sealed_* trees
-        entry: py -3 tools/hooks/check_sealed_immutable.py
-        language: system
+        entry: python tools/hooks/check_sealed_immutable.py
+        language: python
         # Always run: the hook reads the staged index so sealed deletes are
         # caught even when pass_filenames would omit them.
         pass_filenames: false
@@ -63,32 +63,32 @@ repos:
 
       - id: verify-doc-pins
         name: verify governing document SHA-256 pins (AM-009)
-        entry: py -3 tools/hooks/verify_pins.py
-        language: system
+        entry: python tools/hooks/verify_pins.py
+        language: python
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
 
       - id: check-amendment-ledgers
         name: fail on divergent AMENDMENTS.md / Blueprint §14 dual definitions
-        entry: py -3 tools/hooks/check_amendment_ledgers.py
-        language: system
+        entry: python tools/hooks/check_amendment_ledgers.py
+        language: python
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
 
       - id: raw-ceiling
         name: enforce AM-014 raw/ payload ceiling
-        entry: py -3 tools/hooks/check_raw_ceiling.py
-        language: system
+        entry: python tools/hooks/check_raw_ceiling.py
+        language: python
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
 
       - id: ascii-source
         name: reject non-ASCII in tools/tests/seam source
-        entry: py -3 tools/hooks/check_ascii_source.py
-        language: system
+        entry: python tools/hooks/check_ascii_source.py
+        language: python
         pass_filenames: true
         files: ^(seam|tests|tools)/.*\.(py|ps1)$
         stages: [pre-commit]
