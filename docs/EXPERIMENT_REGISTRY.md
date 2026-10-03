@@ -150,7 +150,7 @@ Seal check 2026-10-03 (`tools/seal_verify.py` on the `sealed_` tree when one exi
 | X-1 reproducibility | sigma <= 0.10 instrument pair | infra | B | FAIL (raw/09dfe95d, raw/9e3ca312; sigma 0.145 and 0.159 in derived/fixed_throughput/kernel_power_repeat_correlation_20260806.md and docs/README_characterizations.md) | standing FAIL on XPS in Aug |
 | PREREG-AMEND protocol | RETENTION_PROTOCOL.md with OBS_MASK, residency-interaction, interaction-cost outcomes | C2 | A | NOT FOUND (searched: docs/, repo filenames, git log --grep RETENTION_PROTOCOL) | 2026-09-23 amendment did not land |
 | PREREG-AMEND bisection | bisection runners record error_class and requested_bytes, including alloc_logits_pattern | C1 | A | NOT FOUND (tools/run_c1_ceiling.py classify_c1_failure records failure_kind; no error_class, requested_bytes, or alloc_logits_pattern in tools/ or seam/) | 2026-09-23 amendment did not land |
-| PREREG-AMEND NPU control | NPU positive-control rule | C5 | A | NOT FOUND (searched tools/, docs/, seam/; NPUW_LLM_MAX_PROMPT_LEN exists in tools/bfcl_feasibility_probe.py and is not that rule) | 2026-09-23 amendment did not land |
+| PREREG-AMEND NPU control | NPU positive-control rule | C5 | A | WRITTEN (docs/NPU_PROTOCOL.md, seam/npu_validity.py) | registered before any NPU run |
 | PREREG-AMEND predictions | OBS_MASK, CB_VS_STATEFUL, and BUDGET prediction files | C2 | A | NOT FOUND (searched derived/, docs/, repo filenames) | 2026-09-23 amendment did not land |
 | PREREG-AMEND alloc_diag | tools/alloc_diag.py | C1 | A | NOT FOUND (file absent) | ALLOC-DIAG row remains NEXT |
 
@@ -168,7 +168,7 @@ time after Wednesday; this list does not fit in the window.
 | P1-T2 | A0 + fixed A4 at B = 10/20 on the faster GPU: does thinking fit? | C4, C5 | A | PLANNED | A4 fix + AMENDMENT_8 |
 | P0-T2 | exchange rate on T2S | C4 | B | PLANNED | launcher profile |
 | P1-T2 8B | P1 arms with 8B (more quality headroom) | C4 | B | PLANNED | |
-| NPU-1 | NPU as third placement; limit set by toolchain (MAX_PROMPT_LEN) | C1, C5 | A | PLANNED | output-validity check (#3255); int4 symmetric IR |
+| NPU-1 | NPU as third placement; limit set by toolchain (MAX_PROMPT_LEN) | C1, C5 | A | PLANNED | positive control docs/NPU_PROTOCOL.md; int4 symmetric IR |
 | NPU-2 | int8 on NPU crashes: first infeasible cell | C5, P2 | B | PLANNED | |
 | HET-1 | phase split across devices; primary arm NPU prefill -> GPU decode (AMD direction), contrast GPU prefill -> NPU decode; measure handoff cost | C5 | B | PLANNED | feasibility spike first: can OpenVINO pass KV across devices? |
 | CB-T2 | continuous batching + prefix caching: dominated on XPS, best on 64 GB? Includes concurrency (sessions/hour) | C5 | A | PLANNED | output-equivalence check required (DET-PROBE, #4367) |
