@@ -1,8 +1,8 @@
 # T2S boot 1. f16 control at n=18687, then 4B-int4 GPU u8, then 8B-int4 GPU u8.
 # Same cell machinery as launch_boot4.ps1. -Detach is launch_boot1.ps1
 # -Detach, which uses tools/spawn_detached.ps1 (Win32_Process.Create).
-# -Detach refuses unless -WatchdogLog (default C:\apu\ovn\watchdog.log) ends in
-# {"action":"empty_flag"},
+# -Detach refuses unless the last non-digest entry of -WatchdogLog (default
+# C:\apu\ovn\watchdog.log) is idle: {"action":"empty_flag"} or {"action":"paused"},
 # no python or llama-server is running, and free memory is at least 24000 MB.
 # -NoRebootDeviation skips only the uptime gate and records UNCOLD_UPTIME.
 # This script does not register a logon task or a scheduled task.

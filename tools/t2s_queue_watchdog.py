@@ -19,6 +19,11 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 _TS_KEYS = ("utc", "timestamp", "ts", "time")
+# The owner's idle states. "paused" is set by hand by the queue owner and is a
+# stronger idle guarantee than "empty_flag", which only says the queue was empty
+# at that tick (52fab50c was voided under empty_flag). See
+# docs/T2S_WATCHDOG_GATE.md.
+IDLE_ACTIONS = frozenset({"empty_flag", "paused"})
 _WORKER_PREFIXES = ("python", "llama-server")
 
 
@@ -51,7 +56,8 @@ def parse_log_line(line: str) -> dict[str, Any] | None:
             except json.JSONDecodeError:
                 return None
             if isinstance(obj, dict):
-                obj.setdefault("utc", parts[0])
+                # Live log prefix is "[2026-10-02T12:33:02Z]".
+                obj.setdefault("utc", parts[0].strip("[]"))
                 return obj
             return None
         return None
@@ -75,11 +81,21 @@ def entry_utc(entry: dict[str, Any]) -> datetime | None:
     return None
 
 
+def is_neutral(entry: dict[str, Any]) -> bool:
+    """Digest lines report the owner's results summary. They are neither idle nor busy."""
+    return "action" not in entry and "digest" in entry
+
+
+def is_idle(entry: dict[str, Any]) -> bool:
+    return entry.get("action") in IDLE_ACTIONS
+
+
 def last_entry(text: str) -> dict[str, Any] | None:
+    """Last entry that says idle or busy. Neutral digest lines are skipped."""
     last: dict[str, Any] | None = None
     for line in text.splitlines():
         parsed = parse_log_line(line)
-        if parsed is not None:
+        if parsed is not None and not is_neutral(parsed):
             last = parsed
     return last
 
@@ -97,15 +113,16 @@ def launch_refusal(
     *,
     log_path: str,
 ) -> str | None:
-    """(a) last log entry must be empty_flag, and no python or llama-server."""
+    """(a) last non-digest log entry must be idle, and no python or llama-server."""
     if log_text is None:
         return f"REFUSED -- watchdog.log missing: {log_path}"
     if last_entry(log_text) is None:
         return f"REFUSED -- watchdog.log has no JSON entry: {log_path}"
     entry = last_entry(log_text)
     assert entry is not None
-    if entry.get("action") != "empty_flag":
-        return f"REFUSED -- last watchdog action is {entry.get('action')!r}, want empty_flag"
+    if not is_idle(entry):
+        want = " or ".join(sorted(IDLE_ACTIONS))
+        return f"REFUSED -- last watchdog action is {entry.get('action')!r}, want {want}"
     busy = [name for name in running_names if is_worker_name(name)]
     if busy:
         return "REFUSED -- python or llama-server is running"
@@ -161,7 +178,7 @@ def evidence_lines(log_text: str, started_utc: str, ended_utc: str) -> list[str]
 def mark_overlapping_cells(
     cells: list[dict[str, Any]], evidence: list[str]
 ) -> list[dict[str, Any]]:
-    """Mark a cell FOREIGN_ACTIVITY when a non-empty_flag line overlaps it."""
+    """Mark a cell FOREIGN_ACTIVITY when a busy (not idle, not digest) line overlaps it."""
     parsed_window: list[tuple[datetime, dict[str, Any]]] = []
     for line in evidence:
         parsed = parse_log_line(line)
@@ -180,7 +197,7 @@ def mark_overlapping_cells(
             c0 = parse_utc(started)
             c1 = parse_utc(ended)
             bad = any(
-                c0 <= stamp <= c1 and entry.get("action") != "empty_flag"
+                c0 <= stamp <= c1 and not is_idle(entry) and not is_neutral(entry)
                 for stamp, entry in parsed_window
             )
             if bad:

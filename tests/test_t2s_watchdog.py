@@ -232,3 +232,70 @@ def test_launcher_has_no_logon_registration() -> None:
     sequencer = (ROOT / "tools" / "launch_boot1.ps1").read_text(encoding="utf-8")
     assert "-WatchdogLog" in sequencer
     assert r'log_path = "C:\apu\watchdog.log"' not in sequencer
+
+
+def test_live_log_ending_in_paused_and_digest_is_idle() -> None:
+    text = (FIXTURES / "live_paused.jsonl").read_text(encoding="utf-8")
+    entry = last_entry(text)
+    assert entry is not None
+    assert entry["action"] == "paused"
+    assert launch_refusal(text, [], log_path=r"C:\apu\ovn\watchdog.log") is None
+    assert launch_refusal(text, ["python"], log_path=r"C:\apu\ovn\watchdog.log") is not None
+
+
+def test_digest_line_is_neither_idle_nor_busy() -> None:
+    busy_then_digest = (
+        '[2026-10-02T12:23:07Z] {"action": "crashed_requeued", "launched": "job"}\n'
+        '[2026-10-02T12:23:09Z] {"digest": {"action": "ran", "rc": 0}}\n'
+    )
+    reason = launch_refusal(busy_then_digest, [], log_path="w.log")
+    assert reason is not None
+    assert "crashed_requeued" in reason
+    only_digest = '[2026-10-02T12:23:09Z] {"digest": {"action": "ran", "rc": 0}}\n'
+    assert launch_refusal(only_digest, [], log_path="w.log") is not None
+    lines = evidence_lines(only_digest, "2026-10-02T12:00:00Z", "2026-10-02T13:00:00Z")
+    assert len(lines) == 1
+    cells = mark_overlapping_cells(
+        [
+            {
+                "name": "cell",
+                "status": "complete",
+                "started_utc": "2026-10-02T12:00:00Z",
+                "ended_utc": "2026-10-02T13:00:00Z",
+            }
+        ],
+        lines,
+    )
+    assert cells[0]["status"] == "complete"
+
+
+def test_bracketed_timestamps_parse_into_the_window() -> None:
+    text = (FIXTURES / "live_paused.jsonl").read_text(encoding="utf-8")
+    lines = evidence_lines(text, "2026-10-02T12:20:00Z", "2026-10-02T12:34:00Z")
+    assert len(lines) == 4
+    assert all("12:13:" not in line for line in lines)
+
+
+def test_foreign_launch_inside_the_run_window_is_detected() -> None:
+    text = (FIXTURES / "live_foreign_launch.jsonl").read_text(encoding="utf-8")
+    lines = evidence_lines(text, "2026-09-29T18:20:00Z", "2026-09-29T18:45:00Z")
+    cells = mark_overlapping_cells(
+        [
+            {
+                "name": "T2S 4B-int4 GPU u8",
+                "status": "complete",
+                "started_utc": "2026-09-29T18:23:01Z",
+                "ended_utc": "2026-09-29T18:28:00Z",
+            },
+            {
+                "name": "after",
+                "status": "complete",
+                "started_utc": "2026-09-29T18:29:00Z",
+                "ended_utc": "2026-09-29T18:44:00Z",
+            },
+        ],
+        lines,
+    )
+    assert cells[0]["status"] == "FOREIGN_ACTIVITY"
+    assert cells[0]["exclude_from_sealed_results"] is True
+    assert cells[1]["status"] == "complete"
