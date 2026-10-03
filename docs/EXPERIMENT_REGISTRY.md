@@ -99,8 +99,8 @@ Seal check 2026-10-03 (`tools/seal_verify.py` on the `sealed_` tree when one exi
 | d482c621 | derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da | MATCH_LEGACY_SELF_REF |
 | ac4e5472 | derived/exchange_rate/sealed_ac4e5472-76a9-4999-bf0b-8274d27ce0ca | MATCH_MANIFEST |
 | 8a529053 | derived/p1_quality/sealed_8a529053-fc47-486d-8809-6c699d156b06 | MATCH |
-| 385cd4f6 | derived/p1_quality/385cd4f6-47d4-4ed0-8031-87ac7ef21816 | UNSEALED (no .sealed) |
-| 3b4d8207 | derived/p1_quality/3b4d8207-ad36-480a-a717-1c146828d53c | UNSEALED (no .sealed) |
+| 385cd4f6 | derived/p1_quality/sealed_385cd4f6-47d4-4ed0-8031-87ac7ef21816 | MATCH tree_sha256 01adc99801c5f571b0c912bbab91865ce68c12679ea1fa173dcaf9512f90bc13 |
+| 3b4d8207 | derived/p1_quality/sealed_3b4d8207-ad36-480a-a717-1c146828d53c | MATCH tree_sha256 6bb5728cffb58c9409e3b94ba68767e640318e41e9fc67d2d39b51882e74c216 |
 | c76fed24 | NOT IN derived/ (searched derived/, docs/, repo filenames) | NOT IN derived/ |
 
 ---
