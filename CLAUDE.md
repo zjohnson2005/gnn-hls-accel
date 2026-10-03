@@ -97,15 +97,12 @@ touching the T2S watchdog.
 
 ## Current state (keep this section updated)
 
+- Plan of record: docs/EXPERIMENT_REGISTRY.md. Read at session start; update in the same commit as the work. Never delete a row.
 - Key sealed results: placement 21.4x (GPU 10000 vs CPU 468 tokens;
   c2246b1f, 7f232f86); resident-session limits f16/u8/u4 = 15000/20000/
   26500 (553b3a5c, cf3555d5, e4a22dac); warm turn-2 at 12k f16 0.639 s vs
   u8 1.003 s vs u4 0.946 s (72776603, 1587d2f4, dd2b0779); int8 decodes
   ~30-34% slower than int4 (180dfbb9); P0-v2 exchange rate ac4e5472
   (warm TTA GPU 2.47/3.26 s, CPU 9.29/11.17 s at 4k/6k).
-- P1 budget-quality (amendments 1-7 on record): A0 8a529053 = 23/200
-  in budget. A1-unbounded 385cd4f6 = no gain. A4-as-implemented 3b4d8207
-  = 2/100 (no greedy fallback; greedy thinking). Next: A4 fix
-  (greedy-first + sampled thinking) + budget sweep B = 10/20/30 s; A5
-  feedback-retry; A2, A3, bounded A1.
+- P1 budget-quality: docs/EXPERIMENT_REGISTRY.md.
 - T2S window: Fri Oct 2 1 am ET to Tue Oct 6; back to Rithwik Wed.
