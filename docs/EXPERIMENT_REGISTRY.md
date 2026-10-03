@@ -135,7 +135,7 @@ Seal check 2026-10-03 (`tools/seal_verify.py` on the `sealed_` tree when one exi
 | Q-4 | add BFCL long_context, miss_func, miss_param categories | C3, C4 | B | PLANNED | long_context also serves COST-DEEP |
 | Q-TIER-CLEAN | 8B vs 4B quality, clean seal | C1, C3 | A | PLANNED | fix 72d270e2 seal mismatch first |
 | Q-KV-CLEAN | KV precision vs quality, clean seal | C1 | B | PLANNED | fix 137f6f46 seal mismatch first |
-| SEM-IMPL | build semantic retention (required spans, original order) | C2 | A | NOT FOUND (searched: seam/, tools/, docs/, derived/, git log --all --grep "semantic retention"; seam/raw_retention.py is the AM-014 raw/ ceiling) | was it built? |
+| SEM-IMPL | build semantic retention (required spans, original order) | C2 | A | BUILT (seam/retention_prompt.py; CPU smoke tools/retention_smoke.py; fixture tests/fixtures/retention_labels.json; RETENTION_PROTOCOL.md still absent; no sealed run) | was it built? |
 | RET-0 | retention pilot: FULL / POSITIONAL / OBS-MASK / SEMANTIC | C2 | A | BLOCKED | SEMANTIC arm on Rithwik labels; OBS-MASK can run now |
 | OBS-MASK | label-free observation masking arm | C2 | A | NEXT | no labels needed |
 | RET x RES | retention under residency; append-stable variant | C2 | A | PLANNED | after RET-0 |
