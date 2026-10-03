@@ -1,0 +1,233 @@
+{
+    "boot_id":  "4de047b9-d0da-4d2a-b75d-2808c308df25",
+    "state":  "complete",
+    "reason":  "",
+    "last_run_id":  "56c116a6-d484-400d-abed-868fdbcedc9e",
+    "window_s":  7200,
+    "uptime_s":  1056610,
+    "estimate_derivation":  {
+                                "formula":  "estimate_s = base_s + canary_overhead_s, then the next whole second",
+                                "platform_id":  "evo-t2",
+                                "platform_config":  "configs/platforms/evo-t2.yaml",
+                                "free_memory_floor_mb":  24000,
+                                "free_memory_floor_provenance":  "derived_unmeasured: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate about 36-40 GB leaves about 24-28 GB Available; floor 24000 MB. configs/platforms/evo-t2.yaml measurement_gates.pre_run_available_mb_min.",
+                                "onset_s":  null,
+                                "onset_status":  "unknown",
+                                "onset_provenance":  "not measured on evo-t2",
+                                "canary_onset_s":  657,
+                                "canary_onset_provenance":  "borrowed from aipc-c1 session 7f569929 via docs/CANARY_PROTOCOL.md and tools/ttft_slo_canary.py ONSET_S. Same value recorded on 5c714535 and 051d2681. Not an evo-t2 measurement.",
+                                "harness":  "tools/run_c1_ceiling.py --criterion ttft_slo --slo-s 10 --resolution 250 --repeats 3",
+                                "affinity_cpus":  "0,1,2,3",
+                                "wslock":  "request minimum_bytes=4294967296 maximum_bytes=12884901888",
+                                "max_new_tokens":  8,
+                                "harness_source":  "5c714535 and 051d2681 work spec.json; configs/delta_n.yaml; aipc-c1 topology.p_cpus pinned by run_c1_ceiling.py",
+                                "anchor_run_id":  "c2246b1f-c588-4998-838a-5507da87e9ee",
+                                "canary_overhead_s":  752.1359013,
+                                "canary_overhead_stated_s":  752.136,
+                                "cells":  [
+                                              {
+                                                  "name":  "T2S 4B-int4 GPU f16 control",
+                                                  "reference_run_id":  "5c714535-9f36-4614-a594-698b6cd09296",
+                                                  "n":  18687,
+                                                  "repeats":  3,
+                                                  "base_s":  29.491110350999996,
+                                                  "canary_overhead_s":  752.1359013,
+                                                  "estimate_s":  782,
+                                                  "formula":  "estimate_s = next whole second of (3 * reference median prefill_s + canary overhead 752.1359013 from c2246b1f)"
+                                              },
+                                              {
+                                                  "name":  "T2S 4B-int4 GPU u8",
+                                                  "base_run_id":  "5c714535-9f36-4614-a594-698b6cd09296",
+                                                  "base_s":  520,
+                                                  "canary_overhead_s":  752.1359013,
+                                                  "estimate_s":  1273
+                                              },
+                                              {
+                                                  "name":  "T2S 8B-int4 GPU u8",
+                                                  "base_run_id":  "051d2681-4bb8-4f50-b9fc-b14441359ba6",
+                                                  "base_s":  570,
+                                                  "canary_overhead_s":  752.1359013,
+                                                  "estimate_s":  1323
+                                              }
+                                          ]
+                            },
+    "cells":  [
+                  {
+                      "name":  "T2S 4B-int4 GPU f16 control",
+                      "status":  "complete",
+                      "run_id":  "c76fed24-63a9-4b3b-98be-11ff83da7a4c",
+                      "estimate_s":  782,
+                      "detail":  "summary_status=complete",
+                      "started_utc":  "2026-10-03T21:23:05.791Z",
+                      "ended_utc":  "2026-10-03T21:27:01.390Z",
+                      "workloads_session_host":  {
+                                                     "before":  {
+                                                                    "instance_count":  0,
+                                                                    "pids":  [
+
+                                                                             ],
+                                                                    "WS_MB":  [
+
+                                                                              ],
+                                                                    "CPU_s":  [
+
+                                                                              ],
+                                                                    "read_errors":  [
+
+                                                                                    ]
+                                                                },
+                                                     "kill_errors":  [
+
+                                                                     ],
+                                                     "after":  {
+                                                                   "instance_count":  0,
+                                                                   "pids":  [
+
+                                                                            ],
+                                                                   "WS_MB":  [
+
+                                                                             ],
+                                                                   "CPU_s":  [
+
+                                                                             ],
+                                                                   "read_errors":  [
+
+                                                                                   ]
+                                                               }
+                                                 }
+                  },
+                  {
+                      "name":  "T2S 4B-int4 GPU u8",
+                      "status":  "complete",
+                      "run_id":  "d2d5cc4a-20e3-401f-8bba-d3a6d76bda81",
+                      "estimate_s":  1273,
+                      "detail":  "summary_status=complete",
+                      "started_utc":  "2026-10-03T21:27:01.548Z",
+                      "ended_utc":  "2026-10-03T21:47:17.204Z",
+                      "workloads_session_host":  {
+                                                     "before":  {
+                                                                    "instance_count":  0,
+                                                                    "pids":  [
+
+                                                                             ],
+                                                                    "WS_MB":  [
+
+                                                                              ],
+                                                                    "CPU_s":  [
+
+                                                                              ],
+                                                                    "read_errors":  [
+
+                                                                                    ]
+                                                                },
+                                                     "kill_errors":  [
+
+                                                                     ],
+                                                     "after":  {
+                                                                   "instance_count":  0,
+                                                                   "pids":  [
+
+                                                                            ],
+                                                                   "WS_MB":  [
+
+                                                                             ],
+                                                                   "CPU_s":  [
+
+                                                                             ],
+                                                                   "read_errors":  [
+
+                                                                                   ]
+                                                               }
+                                                 }
+                  },
+                  {
+                      "name":  "T2S 8B-int4 GPU u8",
+                      "status":  "complete",
+                      "run_id":  "56c116a6-d484-400d-abed-868fdbcedc9e",
+                      "estimate_s":  1323,
+                      "detail":  "summary_status=complete",
+                      "started_utc":  "2026-10-03T21:47:17.347Z",
+                      "ended_utc":  "2026-10-03T22:09:08.927Z",
+                      "workloads_session_host":  {
+                                                     "before":  {
+                                                                    "instance_count":  0,
+                                                                    "pids":  [
+
+                                                                             ],
+                                                                    "WS_MB":  [
+
+                                                                              ],
+                                                                    "CPU_s":  [
+
+                                                                              ],
+                                                                    "read_errors":  [
+
+                                                                                    ]
+                                                                },
+                                                     "kill_errors":  [
+
+                                                                     ],
+                                                     "after":  {
+                                                                   "instance_count":  0,
+                                                                   "pids":  [
+
+                                                                            ],
+                                                                   "WS_MB":  [
+
+                                                                             ],
+                                                                   "CPU_s":  [
+
+                                                                             ],
+                                                                   "read_errors":  [
+
+                                                                                   ]
+                                                               }
+                                                 }
+                  }
+              ],
+    "foreign_queue_evidence":  [
+
+                               ],
+    "watchdog_log_missing":  false,
+    "watchdog_log":  "C:\\apu\\ovn\\watchdog.log",
+    "deviation":  {
+                      "kind":  "UNCOLD_UPTIME",
+                      "uptime_s":  1056610,
+                      "reason":  "remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access"
+                  },
+    "workloads_session_host":  {
+                                   "before":  {
+                                                  "instance_count":  0,
+                                                  "pids":  [
+
+                                                           ],
+                                                  "WS_MB":  [
+
+                                                            ],
+                                                  "CPU_s":  [
+
+                                                            ],
+                                                  "read_errors":  [
+
+                                                                  ]
+                                              },
+                                   "kill_errors":  [
+
+                                                   ],
+                                   "after":  {
+                                                 "instance_count":  0,
+                                                 "pids":  [
+
+                                                          ],
+                                                 "WS_MB":  [
+
+                                                           ],
+                                                 "CPU_s":  [
+
+                                                           ],
+                                                 "read_errors":  [
+
+                                                                 ]
+                                             }
+                               }
+}

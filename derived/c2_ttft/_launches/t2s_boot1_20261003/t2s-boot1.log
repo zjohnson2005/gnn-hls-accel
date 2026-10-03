@@ -1,0 +1,622 @@
+platform_id=evo-t2 config=configs/platforms/evo-t2.yaml
+watchdog_log=C:\apu\ovn\watchdog.log
+free_memory_floor_mb=24000 provenance=derived_unmeasured CAP-4-class peak on 64 GB; floor keeps Available at or above 24000 MB
+onset_s=null onset_status=unknown provenance=not measured on evo-t2
+canary_onset_s=657 provenance=borrowed from aipc-c1 session 7f569929; recorded on 5c714535 and 051d2681; not an evo-t2 measurement
+harness affinity_cpus=0,1,2,3 wslock=request:4294967296:12884901888 max_new_tokens=8 source=5c714535/051d2681
+control_band {"b_t2s": 1.8910956492245918, "b_t2s_arm": "gpu_only_f16", "b_t2s_by_arm": {"gpu_only_f16": 1.8910956492245918, "gpu_only_u4": 1.8935978784960912, "gpu_only_u8": 1.89315583791242}, "b_t2s_mean": 1.8926164552110343, "b_t2s_run_id": "65e33de8-ac07-405a-a1f8-53698974afe9", "b_t2s_source": "matching_kv", "base_s": 29.491110350999996, "canary_overhead_s": 752.1359013, "estimate_formula": "estimate_s = next whole second of (3 * reference median prefill_s + canary overhead 752.1359013 from c2246b1f)", "estimate_s": 782, "formula": "tol = b_t2s * (resolution / n_control); low = reference_median * (1 - tol); high = reference_median * (1 + tol); pass iff the control median prefill_s is inside [low, high]", "high": 10.079074699845377, "interpretation": "drift small enough that it cannot move a bisected limit by more than one 250-token step", "low": 9.581665534154624, "max": 9.831558593, "max_relative_spread": 0.0005409138147101883, "median": 9.830370117, "min": 9.825052734, "n": 18687, "n_control": 18687, "noreboot_reason": "remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access", "reference_run_id": "5c714535-9f36-4614-a594-698b6cd09296", "repeats_prefill_s": [9.831558593, 9.830370117, 9.825052734], "resolution": 250, "tol": 0.025299615363950766, "within_session_high": 9.836876618863085, "within_session_low": 9.819738227245923}
+deviation kind=UNCOLD_UPTIME uptime_s=1053846 reason=remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access
+uptime_gate=skipped other_gates=enforced watchdog=enforced machine_lock=enforced canary=must_arm
+battery_present=false ac=pass reason=platform power.has_battery is false (evo-t2 mains-only)
+json_ok
+time_check T2S 4B-int4 GPU f16 control: uptime_s=1053846 remaining_s=-1046646 estimate_s=782
+uptime_gate=skipped deviation=UNCOLD_UPTIME uptime_s=1053846
+battery_present=false ac=pass reason=platform power.has_battery is false (evo-t2 mains-only)
+
+=== preamble T2S 4B-int4 GPU f16 control ===
+WorkloadsSessionHost: none resident
+{
+  "all_passed": true,
+  "gates": [
+    {
+      "detail": {
+        "ac_ok": true,
+        "battery_present": false,
+        "recorded_reason": "platform power.has_battery is false; mains-only; Win32_Battery was not consulted"
+      },
+      "name": "ac",
+      "passed": true,
+      "reason": "no_battery_platform_mains_only"
+    },
+    {
+      "detail": {
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "required_ac_max": 100,
+        "required_ac_min": 100,
+        "scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+        "scheme_name": "High performance",
+        "scheme_text": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+      },
+      "name": "processor_ac",
+      "passed": true,
+      "reason": "processor_ac_100_100"
+    },
+    {
+      "detail": {
+        "citation": "DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate ~36\u201340 GB => Available target ~24\u201328 GB; floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.",
+        "floor_mb": 24000.0,
+        "observed_mb": 59672.0
+      },
+      "name": "available_mb",
+      "passed": true,
+      "reason": "available_mb_ok"
+    },
+    {
+      "detail": {
+        "citation": "CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.",
+        "deviation": {
+          "kind": "UNCOLD_UPTIME",
+          "reason": "remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access",
+          "uptime_s": 1053826.0070118904
+        },
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 1053826.0070118904
+      },
+      "name": "uptime",
+      "passed": true,
+      "reason": "uptime_skipped_noreboot_deviation"
+    },
+    {
+      "detail": {
+        "onset_citation": "UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed. Sessions on this platform must record onset_status=unknown in run_environment.",
+        "onset_s": null,
+        "onset_status": "unknown",
+        "seal_note": "platform onset_s is unknown; recorded in run_environment; canary N must not assume aipc-c1's 657 s"
+      },
+      "name": "onset",
+      "passed": true,
+      "reason": "onset_unknown"
+    }
+  ],
+  "platform_id": "evo-t2",
+  "refusal_reasons": [],
+  "run_environment_fields": {
+    "measurement_gates": {
+      "ac": {
+        "detail": {
+          "ac_ok": true,
+          "battery_present": false,
+          "recorded_reason": "platform power.has_battery is false; mains-only; Win32_Battery was not consulted"
+        },
+        "passed": true,
+        "reason": "no_battery_platform_mains_only"
+      },
+      "all_passed": true,
+      "available_mb": {
+        "citation": "DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate ~36\u201340 GB => Available target ~24\u201328 GB; floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.",
+        "floor_mb": 24000.0,
+        "observed_mb": 59672.0,
+        "passed": true
+      },
+      "onset_citation": "UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed. Sessions on this platform must record onset_status=unknown in run_environment.",
+      "onset_s": null,
+      "onset_seal_note": "platform onset_s is unknown; recorded in run_environment; canary N must not assume aipc-c1's 657 s",
+      "onset_status": "unknown",
+      "platform_id": "evo-t2",
+      "processor_ac": {
+        "passed": true,
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "reason": "processor_ac_100_100",
+        "scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+        "scheme_name": "High performance"
+      },
+      "uptime": {
+        "citation": "CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.",
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 1053826.0070118904,
+        "passed": true
+      },
+      "workloads_session_host": {
+        "CPU_s": [],
+        "WS_MB": [],
+        "instance_count": 0,
+        "pids": [],
+        "process": "WorkloadsSessionHost",
+        "read_errors": []
+      }
+    }
+  },
+  "workloads_session_host": {
+    "CPU_s": [],
+    "WS_MB": [],
+    "instance_count": 0,
+    "pids": [],
+    "process": "WorkloadsSessionHost",
+    "read_errors": []
+  }
+}
+json_ok
+=== machine-lock / alive-worker check ===
+machine.lock: absent
+{"chars": 298, "event": "delta_n.prompt_built", "n_tokens_realized": 64, "n_tokens_requested": 64, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n64.txt", "sha256": "785e8e539e7098def7c7295ad55d526ed1bcf93f9eea2374931a900d6c36ea96", "ts": "2026-10-03T21:23:12.080233+00:00"}
+[c2_smoke] probe arm=gpu_only_f16 n=64 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_f16.n64.r0.a0", "ts": "2026-10-03T21:23:46.939348+00:00", "wall_s": 4.45}
+[c2_smoke] outcome='pass' completed=True prefill_s=0.483941406 decode_tok_s=34.332053782610664 wall_s=0.6878324998542666
+EXTRACTION_SMOKE_OK prefill_s=0.483941406
+{"criterion": "ttft_slo", "event": "c2.plan_written", "session_id": "c76fed24-63a9-4b3b-98be-11ff83da7a4c"}
+[c2_canary] index=0 after_probes=-1 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-03T21:23:55.457684+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-03T21:23:56.381139+00:00"}
+[c2] BEGIN arm=gpu_only_f16
+{"chars": 84094, "event": "delta_n.prompt_built", "n_tokens_realized": 18687, "n_tokens_requested": 18687, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n18687.txt", "sha256": "e03fde56f78edb42883f1efb8629acfc749178fce298edf376bc48cae561c15a", "ts": "2026-10-03T21:24:07.994866+00:00"}
+[c2] probe arm=gpu_only_f16 n=18687 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_f16.n18687.r0.a0", "ts": "2026-10-03T21:24:52.822712+00:00", "wall_s": 14.5}
+[c2_canary] index=1 after_probes=0 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-03T21:24:54.454065+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-03T21:24:55.391670+00:00"}
+[c2] probe arm=gpu_only_f16 n=18687 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_f16.n18687.r1.a0", "ts": "2026-10-03T21:25:50.193444+00:00", "wall_s": 14.3}
+[c2_canary] index=2 after_probes=1 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-03T21:25:51.800973+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-03T21:25:52.594486+00:00"}
+[c2_canary] gate ARMED: calib_n=3; ref_t1=1.023376 ref_t2=0.478796; early_max_rel_t1=0.009156 early_max_rel_t2=0.034498; threshold_t1=max(2*early_max_t1,healthy_floor_t1=0.07709453214145699)=0.077095; threshold_t2=max(2*early_max_t2,healthy_floor_t2=0.1642942216508742)=0.164294
+[c2] probe arm=gpu_only_f16 n=18687 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_f16.n18687.r2.a0", "ts": "2026-10-03T21:26:47.432421+00:00", "wall_s": 14.29}
+[c2_canary] index=3 after_probes=2 armed=True every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-03T21:26:49.054896+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-03T21:26:49.866295+00:00"}
+{
+  "ok": true,
+  "status": "complete",
+  "abort_reason": null,
+  "criterion": "ttft_slo",
+  "session_id": "c76fed24-63a9-4b3b-98be-11ff83da7a4c",
+  "out": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\c2_ttft\\c76fed24-63a9-4b3b-98be-11ff83da7a4c",
+  "UNGUARDED": false
+}
+{"b_t2s": 1.8910956492245918, "b_t2s_run_id": "65e33de8-ac07-405a-a1f8-53698974afe9", "b_t2s_source": "matching_kv", "control_prefills": [9.930541015, 9.861765625, 9.875425781], "formula": "tol = b_t2s * (resolution / n_control); low = reference_median * (1 - tol); high = reference_median * (1 + tol); pass iff the control median prefill_s is inside [low, high]", "high": 10.079074699845377, "interpretation": "drift small enough that it cannot move a bisected limit by more than one 250-token step", "low": 9.581665534154624, "max_relative_spread": 0.0005409138147101883, "median": 9.875425781, "n": 18687, "old_within_session_pass": false, "pass": true, "reason": "inside_tol", "reference_median": 9.830370117, "reference_run_id": "5c714535-9f36-4614-a594-698b6cd09296", "tol": 0.025299615363950766, "within_session_high": 9.836876618863085, "within_session_low": 9.819738227245923}
+json_ok
+time_check T2S 4B-int4 GPU u8: uptime_s=1054082 remaining_s=-1046882 estimate_s=1273
+uptime_gate=skipped deviation=UNCOLD_UPTIME uptime_s=1054082
+battery_present=false ac=pass reason=platform power.has_battery is false (evo-t2 mains-only)
+
+=== preamble T2S 4B-int4 GPU u8 ===
+WorkloadsSessionHost: none resident
+{
+  "all_passed": true,
+  "gates": [
+    {
+      "detail": {
+        "ac_ok": true,
+        "battery_present": false,
+        "recorded_reason": "platform power.has_battery is false; mains-only; Win32_Battery was not consulted"
+      },
+      "name": "ac",
+      "passed": true,
+      "reason": "no_battery_platform_mains_only"
+    },
+    {
+      "detail": {
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "required_ac_max": 100,
+        "required_ac_min": 100,
+        "scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+        "scheme_name": "High performance",
+        "scheme_text": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+      },
+      "name": "processor_ac",
+      "passed": true,
+      "reason": "processor_ac_100_100"
+    },
+    {
+      "detail": {
+        "citation": "DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate ~36\u201340 GB => Available target ~24\u201328 GB; floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.",
+        "floor_mb": 24000.0,
+        "observed_mb": 59673.0
+      },
+      "name": "available_mb",
+      "passed": true,
+      "reason": "available_mb_ok"
+    },
+    {
+      "detail": {
+        "citation": "CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.",
+        "deviation": {
+          "kind": "UNCOLD_UPTIME",
+          "reason": "remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access",
+          "uptime_s": 1054061.7637109756
+        },
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 1054061.7637109756
+      },
+      "name": "uptime",
+      "passed": true,
+      "reason": "uptime_skipped_noreboot_deviation"
+    },
+    {
+      "detail": {
+        "onset_citation": "UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed. Sessions on this platform must record onset_status=unknown in run_environment.",
+        "onset_s": null,
+        "onset_status": "unknown",
+        "seal_note": "platform onset_s is unknown; recorded in run_environment; canary N must not assume aipc-c1's 657 s"
+      },
+      "name": "onset",
+      "passed": true,
+      "reason": "onset_unknown"
+    }
+  ],
+  "platform_id": "evo-t2",
+  "refusal_reasons": [],
+  "run_environment_fields": {
+    "measurement_gates": {
+      "ac": {
+        "detail": {
+          "ac_ok": true,
+          "battery_present": false,
+          "recorded_reason": "platform power.has_battery is false; mains-only; Win32_Battery was not consulted"
+        },
+        "passed": true,
+        "reason": "no_battery_platform_mains_only"
+      },
+      "all_passed": true,
+      "available_mb": {
+        "citation": "DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate ~36\u201340 GB => Available target ~24\u201328 GB; floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.",
+        "floor_mb": 24000.0,
+        "observed_mb": 59673.0,
+        "passed": true
+      },
+      "onset_citation": "UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed. Sessions on this platform must record onset_status=unknown in run_environment.",
+      "onset_s": null,
+      "onset_seal_note": "platform onset_s is unknown; recorded in run_environment; canary N must not assume aipc-c1's 657 s",
+      "onset_status": "unknown",
+      "platform_id": "evo-t2",
+      "processor_ac": {
+        "passed": true,
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "reason": "processor_ac_100_100",
+        "scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+        "scheme_name": "High performance"
+      },
+      "uptime": {
+        "citation": "CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.",
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 1054061.7637109756,
+        "passed": true
+      },
+      "workloads_session_host": {
+        "CPU_s": [],
+        "WS_MB": [],
+        "instance_count": 0,
+        "pids": [],
+        "process": "WorkloadsSessionHost",
+        "read_errors": []
+      }
+    }
+  },
+  "workloads_session_host": {
+    "CPU_s": [],
+    "WS_MB": [],
+    "instance_count": 0,
+    "pids": [],
+    "process": "WorkloadsSessionHost",
+    "read_errors": []
+  }
+}
+json_ok
+=== machine-lock / alive-worker check ===
+machine.lock: absent
+{"chars": 298, "event": "delta_n.prompt_built", "n_tokens_realized": 64, "n_tokens_requested": 64, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n64.txt", "sha256": "785e8e539e7098def7c7295ad55d526ed1bcf93f9eea2374931a900d6c36ea96", "ts": "2026-10-03T21:27:07.615209+00:00"}
+[c2_smoke] probe arm=gpu_only_f16 n=64 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_f16.n64.r0.a0", "ts": "2026-10-03T21:27:42.482152+00:00", "wall_s": 4.45}
+[c2_smoke] outcome='pass' completed=True prefill_s=0.4943255 decode_tok_s=34.558378508953155 wall_s=0.6968812998384237
+EXTRACTION_SMOKE_OK prefill_s=0.4943255
+{"criterion": "ttft_slo", "event": "c2.plan_written", "session_id": "d2d5cc4a-20e3-401f-8bba-d3a6d76bda81"}
+[c2_canary] index=0 after_probes=-1 armed=False every_n=6 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-03T21:27:51.072616+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-03T21:27:51.888236+00:00"}
+[c2] BEGIN arm=gpu_only_u8
+{"chars": 62995, "event": "delta_n.prompt_built", "n_tokens_realized": 14000, "n_tokens_requested": 14000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n14000.txt", "sha256": "9574013b58a2453f01a97ae15d3292afc2edced8afb4a3aacf14ea26f291911a", "ts": "2026-10-03T21:28:03.397848+00:00"}
+[c2] probe arm=gpu_only_u8 n=14000 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n14000.r0.a0", "ts": "2026-10-03T21:28:44.194689+00:00", "wall_s": 10.48}
+[c2] probe arm=gpu_only_u8 n=14000 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n14000.r1.a0", "ts": "2026-10-03T21:29:25.293471+00:00", "wall_s": 10.28}
+[c2] probe arm=gpu_only_u8 n=14000 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n14000.r2.a0", "ts": "2026-10-03T21:30:06.577416+00:00", "wall_s": 10.48}
+{"chars": 116995, "event": "delta_n.prompt_built", "n_tokens_realized": 26000, "n_tokens_requested": 26000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n26000.txt", "sha256": "ce6e401a12786944f81eca663b0e1045a4d0a06b04c9239bfb737311d0ee0405", "ts": "2026-10-03T21:30:07.787234+00:00"}
+[c2] probe arm=gpu_only_u8 n=26000 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n26000.r0.a0", "ts": "2026-10-03T21:31:00.468386+00:00", "wall_s": 22.33}
+[c2] probe arm=gpu_only_u8 n=26000 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n26000.r1.a0", "ts": "2026-10-03T21:31:53.603261+00:00", "wall_s": 22.32}
+[c2] probe arm=gpu_only_u8 n=26000 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n26000.r2.a0", "ts": "2026-10-03T21:32:46.747200+00:00", "wall_s": 22.33}
+[c2_canary] index=1 after_probes=5 armed=False every_n=6 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-03T21:32:48.426029+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-03T21:32:49.368641+00:00"}
+{"chars": 89995, "event": "delta_n.prompt_built", "n_tokens_realized": 20000, "n_tokens_requested": 20000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n20000.txt", "sha256": "30b61960211b438ed740b72683dfb18e60f03fe9f9c191be86457e2b186eeee2", "ts": "2026-10-03T21:32:59.996721+00:00"}
+[c2] probe arm=gpu_only_u8 n=20000 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n20000.r0.a0", "ts": "2026-10-03T21:33:46.012342+00:00", "wall_s": 15.7}
+[c2] probe arm=gpu_only_u8 n=20000 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n20000.r1.a0", "ts": "2026-10-03T21:34:32.530495+00:00", "wall_s": 15.71}
+[c2] probe arm=gpu_only_u8 n=20000 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n20000.r2.a0", "ts": "2026-10-03T21:35:19.051132+00:00", "wall_s": 15.71}
+{"chars": 76495, "event": "delta_n.prompt_built", "n_tokens_realized": 17000, "n_tokens_requested": 17000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n17000.txt", "sha256": "7c40c81a5d8e4618201431f55b56d10f8032ba688948b6a18fbd4db569bdcf2a", "ts": "2026-10-03T21:35:19.996714+00:00"}
+[c2] probe arm=gpu_only_u8 n=17000 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n17000.r0.a0", "ts": "2026-10-03T21:36:03.208831+00:00", "wall_s": 12.9}
+[c2] probe arm=gpu_only_u8 n=17000 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n17000.r1.a0", "ts": "2026-10-03T21:36:47.111333+00:00", "wall_s": 13.09}
+[c2] probe arm=gpu_only_u8 n=17000 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n17000.r2.a0", "ts": "2026-10-03T21:37:30.813268+00:00", "wall_s": 12.89}
+[c2_canary] index=2 after_probes=11 armed=False every_n=6 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-03T21:37:32.441586+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-03T21:37:33.257870+00:00"}
+[c2_canary] gate ARMED: calib_n=3; ref_t1=1.037632 ref_t2=0.471099; early_max_rel_t1=0.036558 early_max_rel_t2=0.060030; threshold_t1=max(2*early_max_t1,healthy_floor_t1=0.07709453214145699)=0.077095; threshold_t2=max(2*early_max_t2,healthy_floor_t2=0.1642942216508742)=0.164294
+{"chars": 83245, "event": "delta_n.prompt_built", "n_tokens_realized": 18500, "n_tokens_requested": 18500, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n18500.txt", "sha256": "41aba4295be1d98c7eb1942c2e248a5e7ce0f7d5363e67e54a94133ec72ce347", "ts": "2026-10-03T21:37:44.000937+00:00"}
+[c2] probe arm=gpu_only_u8 n=18500 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n18500.r0.a0", "ts": "2026-10-03T21:38:28.816550+00:00", "wall_s": 14.51}
+[c2] probe arm=gpu_only_u8 n=18500 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n18500.r1.a0", "ts": "2026-10-03T21:39:13.962115+00:00", "wall_s": 14.3}
+[c2] probe arm=gpu_only_u8 n=18500 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n18500.r2.a0", "ts": "2026-10-03T21:39:59.261655+00:00", "wall_s": 14.5}
+{"chars": 86620, "event": "delta_n.prompt_built", "n_tokens_realized": 19250, "n_tokens_requested": 19250, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n19250.txt", "sha256": "a3504143420f7ffaffb5a087742a9baaf7d28942d07b85563378d9ebff9ebaf2", "ts": "2026-10-03T21:40:00.255632+00:00"}
+[c2] probe arm=gpu_only_u8 n=19250 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n19250.r0.a0", "ts": "2026-10-03T21:40:45.652891+00:00", "wall_s": 15.1}
+[c2] probe arm=gpu_only_u8 n=19250 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n19250.r1.a0", "ts": "2026-10-03T21:41:31.557138+00:00", "wall_s": 15.1}
+[c2] probe arm=gpu_only_u8 n=19250 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n19250.r2.a0", "ts": "2026-10-03T21:42:17.691956+00:00", "wall_s": 15.31}
+[c2_canary] index=3 after_probes=17 armed=True every_n=6 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-03T21:42:19.336052+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-03T21:42:20.145701+00:00"}
+{"chars": 84945, "event": "delta_n.prompt_built", "n_tokens_realized": 18875, "n_tokens_requested": 18875, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n18875.txt", "sha256": "c5de7e0542d2ec338eeebecb7cffbdb4af5270351695ce2a772781e2cc26e154", "ts": "2026-10-03T21:42:30.756129+00:00"}
+[c2] probe arm=gpu_only_u8 n=18875 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n18875.r0.a0", "ts": "2026-10-03T21:43:15.764827+00:00", "wall_s": 14.7}
+[c2] probe arm=gpu_only_u8 n=18875 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n18875.r1.a0", "ts": "2026-10-03T21:44:01.268837+00:00", "wall_s": 14.69}
+[c2] probe arm=gpu_only_u8 n=18875 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n18875.r2.a0", "ts": "2026-10-03T21:44:46.563477+00:00", "wall_s": 14.5}
+{"chars": 84094, "event": "delta_n.prompt_built", "n_tokens_realized": 18687, "n_tokens_requested": 18687, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n18687.txt", "sha256": "e03fde56f78edb42883f1efb8629acfc749178fce298edf376bc48cae561c15a", "ts": "2026-10-03T21:44:47.574654+00:00"}
+[c2] probe arm=gpu_only_u8 n=18687 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n18687.r0.a0", "ts": "2026-10-03T21:45:32.592495+00:00", "wall_s": 14.69}
+[c2] probe arm=gpu_only_u8 n=18687 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n18687.r1.a0", "ts": "2026-10-03T21:46:17.892304+00:00", "wall_s": 14.5}
+[c2] probe arm=gpu_only_u8 n=18687 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n18687.r2.a0", "ts": "2026-10-03T21:47:03.382491+00:00", "wall_s": 14.69}
+[c2_canary] index=4 after_probes=23 armed=True every_n=6 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-03T21:47:05.168701+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-03T21:47:05.983204+00:00"}
+{
+  "ok": true,
+  "status": "complete",
+  "abort_reason": null,
+  "criterion": "ttft_slo",
+  "session_id": "d2d5cc4a-20e3-401f-8bba-d3a6d76bda81",
+  "out": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\c2_ttft\\d2d5cc4a-20e3-401f-8bba-d3a6d76bda81",
+  "UNGUARDED": false
+}
+json_ok
+time_check T2S 8B-int4 GPU u8: uptime_s=1055298 remaining_s=-1048098 estimate_s=1323
+uptime_gate=skipped deviation=UNCOLD_UPTIME uptime_s=1055298
+battery_present=false ac=pass reason=platform power.has_battery is false (evo-t2 mains-only)
+
+=== preamble T2S 8B-int4 GPU u8 ===
+WorkloadsSessionHost: none resident
+{
+  "all_passed": true,
+  "gates": [
+    {
+      "detail": {
+        "ac_ok": true,
+        "battery_present": false,
+        "recorded_reason": "platform power.has_battery is false; mains-only; Win32_Battery was not consulted"
+      },
+      "name": "ac",
+      "passed": true,
+      "reason": "no_battery_platform_mains_only"
+    },
+    {
+      "detail": {
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "required_ac_max": 100,
+        "required_ac_min": 100,
+        "scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+        "scheme_name": "High performance",
+        "scheme_text": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+      },
+      "name": "processor_ac",
+      "passed": true,
+      "reason": "processor_ac_100_100"
+    },
+    {
+      "detail": {
+        "citation": "DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate ~36\u201340 GB => Available target ~24\u201328 GB; floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.",
+        "floor_mb": 24000.0,
+        "observed_mb": 59665.0
+      },
+      "name": "available_mb",
+      "passed": true,
+      "reason": "available_mb_ok"
+    },
+    {
+      "detail": {
+        "citation": "CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.",
+        "deviation": {
+          "kind": "UNCOLD_UPTIME",
+          "reason": "remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access",
+          "uptime_s": 1055277.5350568295
+        },
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 1055277.5350568295
+      },
+      "name": "uptime",
+      "passed": true,
+      "reason": "uptime_skipped_noreboot_deviation"
+    },
+    {
+      "detail": {
+        "onset_citation": "UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed. Sessions on this platform must record onset_status=unknown in run_environment.",
+        "onset_s": null,
+        "onset_status": "unknown",
+        "seal_note": "platform onset_s is unknown; recorded in run_environment; canary N must not assume aipc-c1's 657 s"
+      },
+      "name": "onset",
+      "passed": true,
+      "reason": "onset_unknown"
+    }
+  ],
+  "platform_id": "evo-t2",
+  "refusal_reasons": [],
+  "run_environment_fields": {
+    "measurement_gates": {
+      "ac": {
+        "detail": {
+          "ac_ok": true,
+          "battery_present": false,
+          "recorded_reason": "platform power.has_battery is false; mains-only; Win32_Battery was not consulted"
+        },
+        "passed": true,
+        "reason": "no_battery_platform_mains_only"
+      },
+      "all_passed": true,
+      "available_mb": {
+        "citation": "DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate ~36\u201340 GB => Available target ~24\u201328 GB; floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.",
+        "floor_mb": 24000.0,
+        "observed_mb": 59665.0,
+        "passed": true
+      },
+      "onset_citation": "UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed. Sessions on this platform must record onset_status=unknown in run_environment.",
+      "onset_s": null,
+      "onset_seal_note": "platform onset_s is unknown; recorded in run_environment; canary N must not assume aipc-c1's 657 s",
+      "onset_status": "unknown",
+      "platform_id": "evo-t2",
+      "processor_ac": {
+        "passed": true,
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "reason": "processor_ac_100_100",
+        "scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+        "scheme_name": "High performance"
+      },
+      "uptime": {
+        "citation": "CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.",
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 1055277.5350568295,
+        "passed": true
+      },
+      "workloads_session_host": {
+        "CPU_s": [],
+        "WS_MB": [],
+        "instance_count": 0,
+        "pids": [],
+        "process": "WorkloadsSessionHost",
+        "read_errors": []
+      }
+    }
+  },
+  "workloads_session_host": {
+    "CPU_s": [],
+    "WS_MB": [],
+    "instance_count": 0,
+    "pids": [],
+    "process": "WorkloadsSessionHost",
+    "read_errors": []
+  }
+}
+json_ok
+=== machine-lock / alive-worker check ===
+machine.lock: absent
+{"chars": 298, "event": "delta_n.prompt_built", "n_tokens_realized": 64, "n_tokens_requested": 64, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n64.txt", "sha256": "785e8e539e7098def7c7295ad55d526ed1bcf93f9eea2374931a900d6c36ea96", "ts": "2026-10-03T21:47:23.462321+00:00"}
+[c2_smoke] probe arm=gpu_only_f16 n=64 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_f16.n64.r0.a0", "ts": "2026-10-03T21:48:00.340639+00:00", "wall_s": 6.47}
+[c2_smoke] outcome='pass' completed=True prefill_s=0.513625976 decode_tok_s=21.624679200244426 wall_s=0.8373302000109106
+EXTRACTION_SMOKE_OK prefill_s=0.513625976
+{"criterion": "ttft_slo", "event": "c2.plan_written", "session_id": "56c116a6-d484-400d-abed-868fdbcedc9e"}
+[c2_canary] index=0 after_probes=-1 armed=False every_n=6 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-03T21:48:08.773660+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-03T21:48:09.589010+00:00"}
+[c2] BEGIN arm=gpu_only_u8
+{"chars": 62995, "event": "delta_n.prompt_built", "n_tokens_realized": 14000, "n_tokens_requested": 14000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n14000.txt", "sha256": "9574013b58a2453f01a97ae15d3292afc2edced8afb4a3aacf14ea26f291911a", "ts": "2026-10-03T21:48:26.436742+00:00"}
+[c2] probe arm=gpu_only_u8 n=14000 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n14000.r0.a0", "ts": "2026-10-03T21:49:10.878964+00:00", "wall_s": 14.09}
+[c2] probe arm=gpu_only_u8 n=14000 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n14000.r1.a0", "ts": "2026-10-03T21:49:55.793205+00:00", "wall_s": 14.1}
+[c2] probe arm=gpu_only_u8 n=14000 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n14000.r2.a0", "ts": "2026-10-03T21:50:40.690309+00:00", "wall_s": 14.1}
+{"chars": 116995, "event": "delta_n.prompt_built", "n_tokens_realized": 26000, "n_tokens_requested": 26000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n26000.txt", "sha256": "ce6e401a12786944f81eca663b0e1045a4d0a06b04c9239bfb737311d0ee0405", "ts": "2026-10-03T21:50:41.920667+00:00"}
+[c2] probe arm=gpu_only_u8 n=26000 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n26000.r0.a0", "ts": "2026-10-03T21:51:39.600223+00:00", "wall_s": 27.36}
+[c2] probe arm=gpu_only_u8 n=26000 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n26000.r1.a0", "ts": "2026-10-03T21:52:37.782868+00:00", "wall_s": 27.35}
+[c2] probe arm=gpu_only_u8 n=26000 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n26000.r2.a0", "ts": "2026-10-03T21:53:35.987285+00:00", "wall_s": 27.36}
+[c2_canary] index=1 after_probes=5 armed=False every_n=6 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-03T21:53:37.641729+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-03T21:53:38.574790+00:00"}
+{"chars": 89995, "event": "delta_n.prompt_built", "n_tokens_realized": 20000, "n_tokens_requested": 20000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n20000.txt", "sha256": "30b61960211b438ed740b72683dfb18e60f03fe9f9c191be86457e2b186eeee2", "ts": "2026-10-03T21:53:54.531329+00:00"}
+[c2] probe arm=gpu_only_u8 n=20000 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n20000.r0.a0", "ts": "2026-10-03T21:54:44.952097+00:00", "wall_s": 20.11}
+[c2] probe arm=gpu_only_u8 n=20000 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n20000.r1.a0", "ts": "2026-10-03T21:55:35.691975+00:00", "wall_s": 19.93}
+[c2] probe arm=gpu_only_u8 n=20000 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n20000.r2.a0", "ts": "2026-10-03T21:56:26.677036+00:00", "wall_s": 20.11}
+{"chars": 76495, "event": "delta_n.prompt_built", "n_tokens_realized": 17000, "n_tokens_requested": 17000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n17000.txt", "sha256": "7c40c81a5d8e4618201431f55b56d10f8032ba688948b6a18fbd4db569bdcf2a", "ts": "2026-10-03T21:56:27.646033+00:00"}
+[c2] probe arm=gpu_only_u8 n=17000 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n17000.r0.a0", "ts": "2026-10-03T21:57:14.867044+00:00", "wall_s": 16.91}
+[c2] probe arm=gpu_only_u8 n=17000 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n17000.r1.a0", "ts": "2026-10-03T21:58:02.585687+00:00", "wall_s": 16.91}
+[c2] probe arm=gpu_only_u8 n=17000 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n17000.r2.a0", "ts": "2026-10-03T21:58:50.310965+00:00", "wall_s": 16.91}
+[c2_canary] index=2 after_probes=11 armed=False every_n=6 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-03T21:58:51.934479+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-03T21:58:52.742222+00:00"}
+[c2_canary] gate ARMED: calib_n=3; ref_t1=1.666986 ref_t2=0.650750; early_max_rel_t1=0.019913 early_max_rel_t2=0.055596; threshold_t1=max(2*early_max_t1,healthy_floor_t1=0.07709453214145699)=0.077095; threshold_t2=max(2*early_max_t2,healthy_floor_t2=0.1642942216508742)=0.164294
+{"chars": 69745, "event": "delta_n.prompt_built", "n_tokens_realized": 15500, "n_tokens_requested": 15500, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n15500.txt", "sha256": "c5e50f24793ff947ba461b64d75a809f795edf1d62529342b5cded0753eca7b1", "ts": "2026-10-03T21:59:08.612850+00:00"}
+[c2] probe arm=gpu_only_u8 n=15500 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n15500.r0.a0", "ts": "2026-10-03T21:59:54.426641+00:00", "wall_s": 15.49}
+[c2] probe arm=gpu_only_u8 n=15500 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n15500.r1.a0", "ts": "2026-10-03T22:00:40.517813+00:00", "wall_s": 15.3}
+[c2] probe arm=gpu_only_u8 n=15500 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n15500.r2.a0", "ts": "2026-10-03T22:01:26.608580+00:00", "wall_s": 15.29}
+{"chars": 73120, "event": "delta_n.prompt_built", "n_tokens_realized": 16250, "n_tokens_requested": 16250, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n16250.txt", "sha256": "10208c03351b067ff43653d7fef592ed6df1204b36990df08c9412dab27ec089", "ts": "2026-10-03T22:01:27.526128+00:00"}
+[c2] probe arm=gpu_only_u8 n=16250 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n16250.r0.a0", "ts": "2026-10-03T22:02:13.951587+00:00", "wall_s": 16.1}
+[c2] probe arm=gpu_only_u8 n=16250 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n16250.r1.a0", "ts": "2026-10-03T22:03:00.866671+00:00", "wall_s": 16.11}
+[c2] probe arm=gpu_only_u8 n=16250 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n16250.r2.a0", "ts": "2026-10-03T22:03:47.834587+00:00", "wall_s": 16.1}
+[c2_canary] index=3 after_probes=17 armed=True every_n=6 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-03T22:03:49.479173+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-03T22:03:50.283982+00:00"}
+{"chars": 74820, "event": "delta_n.prompt_built", "n_tokens_realized": 16625, "n_tokens_requested": 16625, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n16625.txt", "sha256": "c1534bb685387d9388204b54c5b6231b39e6cd3ec7067fae29cb15dbce6cba3c", "ts": "2026-10-03T22:04:06.201471+00:00"}
+[c2] probe arm=gpu_only_u8 n=16625 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n16625.r0.a0", "ts": "2026-10-03T22:04:53.005870+00:00", "wall_s": 16.5}
+[c2] probe arm=gpu_only_u8 n=16625 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n16625.r1.a0", "ts": "2026-10-03T22:05:40.314724+00:00", "wall_s": 16.5}
+[c2] probe arm=gpu_only_u8 n=16625 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n16625.r2.a0", "ts": "2026-10-03T22:06:27.635201+00:00", "wall_s": 16.51}
+{"chars": 73969, "event": "delta_n.prompt_built", "n_tokens_realized": 16437, "n_tokens_requested": 16437, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n16437.txt", "sha256": "b488733249ffc0b0f30f09123635cf311dca0dd6e1767c4fd9d85cf3f5a8e45c", "ts": "2026-10-03T22:06:28.553803+00:00"}
+[c2] probe arm=gpu_only_u8 n=16437 repeat=0
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n16437.r0.a0", "ts": "2026-10-03T22:07:15.153424+00:00", "wall_s": 16.3}
+[c2] probe arm=gpu_only_u8 n=16437 repeat=1
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n16437.r1.a0", "ts": "2026-10-03T22:08:02.317906+00:00", "wall_s": 16.31}
+[c2] probe arm=gpu_only_u8 n=16437 repeat=2
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "gpu_only_u8.n16437.r2.a0", "ts": "2026-10-03T22:08:49.490163+00:00", "wall_s": 16.36}
+[c2_canary] index=4 after_probes=23 armed=True every_n=6 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-03T22:08:51.244617+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-03T22:08:52.058115+00:00"}
+{
+  "ok": true,
+  "status": "complete",
+  "abort_reason": null,
+  "criterion": "ttft_slo",
+  "session_id": "56c116a6-d484-400d-abed-868fdbcedc9e",
+  "out": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\c2_ttft\\56c116a6-d484-400d-abed-868fdbcedc9e",
+  "UNGUARDED": false
+}
+json_ok
+json_ok
+BOOT_COMPLETE

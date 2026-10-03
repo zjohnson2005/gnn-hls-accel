@@ -92,6 +92,47 @@ def _rel(path: Path) -> str:
         return str(path)
 
 
+def planned_arm_ids(plan: dict[str, Any]) -> list[str]:
+    """Arm ids from plan.json. Entries may be strings or objects with arm_id."""
+    raw = plan.get("arms")
+    if not isinstance(raw, list) or not raw:
+        raise SystemExit("REFUSED -- plan.json has no arms list")
+    ids: list[str] = []
+    for item in raw:
+        if isinstance(item, str) and item:
+            ids.append(item)
+        elif isinstance(item, dict) and isinstance(item.get("arm_id"), str) and item["arm_id"]:
+            ids.append(str(item["arm_id"]))
+        else:
+            raise SystemExit("REFUSED -- plan arms entry is not an arm id")
+    return ids
+
+
+def summary_arm_ids(summary: dict[str, Any]) -> list[str]:
+    raw = summary.get("arm_results")
+    if not isinstance(raw, list):
+        raise SystemExit("REFUSED -- summary.json has no arm_results")
+    ids: list[str] = []
+    for item in raw:
+        if (
+            not isinstance(item, dict)
+            or not isinstance(item.get("arm_id"), str)
+            or not item["arm_id"]
+        ):
+            raise SystemExit("REFUSED -- summary arm_results entry has no arm_id")
+        ids.append(str(item["arm_id"]))
+    return ids
+
+
+def require_matching_arms(plan: dict[str, Any], summary: dict[str, Any]) -> list[str]:
+    """Plan arm count is the expected count. A different summary set refuses."""
+    planned = planned_arm_ids(plan)
+    reported = summary_arm_ids(summary)
+    if sorted(planned) != sorted(reported):
+        raise SystemExit(f"REFUSED -- plan/summary arm mismatch plan={planned} summary={reported}")
+    return planned
+
+
 def _integrity(session_dir: Path, summary: dict[str, Any], plan: dict[str, Any]) -> dict[str, Any]:
     probes_path = session_dir / "probes.ndjson"
     if not probes_path.is_file():
@@ -105,9 +146,12 @@ def _integrity(session_dir: Path, summary: dict[str, Any], plan: dict[str, Any])
     if not work_results:
         raise SystemExit("REFUSED -- no work/*.result.json")
 
+    expected_arms = require_matching_arms(plan, summary)
     arms = summary.get("arm_results") or []
-    if len(arms) != 3:
-        raise SystemExit(f"REFUSED -- expected 3 arms, got {len(arms)}")
+    if len(arms) != len(expected_arms):
+        raise SystemExit(
+            f"REFUSED -- expected {len(expected_arms)} arms from plan.json, got {len(arms)}"
+        )
     for arm in arms:
         if arm.get("status") != "complete":
             raise SystemExit(f"REFUSED -- arm {arm.get('arm_id')} status={arm.get('status')!r}")
@@ -169,7 +213,7 @@ def _integrity(session_dir: Path, summary: dict[str, Any], plan: dict[str, Any])
 
     primary = summary.get("primary_claim_eval") or plan.get("primary_claim_eval") or {}
     limits = summary.get("ttft_limits") or primary.get("limits") or {}
-    for arm_id in ARM_EXPECT:
+    for arm_id in expected_arms:
         if limits.get(arm_id) != 10000:
             raise SystemExit(f"REFUSED -- ttft_limits[{arm_id}]={limits.get(arm_id)}")
 
@@ -179,7 +223,7 @@ def _integrity(session_dir: Path, summary: dict[str, Any], plan: dict[str, Any])
     return {
         "status": "integrity_pass",
         "arms_converged": True,
-        "n_arms": 3,
+        "n_arms": len(expected_arms),
         "ttft_limits": limits,
         "primary_prediction_held": bool(primary.get("primary_prediction_held")),
         "n_probes_ndjson": len(probes),

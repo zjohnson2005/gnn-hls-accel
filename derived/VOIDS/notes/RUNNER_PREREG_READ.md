@@ -43,3 +43,13 @@ Plan files only (the summary does not carry the path): `q8b_b1a291f0` and `q8b_7
 ## Fix
 
 `b8b1763298d8c83c4a95ecff7c22242f32988f91`. `resolve_ttft_slo_plan_predictions` no longer opens a file. It returns the inline C-2 block with `predictions_path` null. `tests/test_parity_remeasure_prereg.py` fails if any `derived/**` file whose name contains PREDICTIONS, PREREG, or AMEND is opened, including the 8B model-spec path that used to open CAP3.
+
+## Scoring of the mis-attached bands
+
+`69234ed5` carries the f16 band [4000, 7000]. `a427233b` carries the f16 band [7000, 9750]. No verdict file scores either run against that attached band.
+
+- `derived/c2_ttft/PARITY_REMEASURE_CHECK.json` scores `69234ed5` against its parity prereg 6312 and amendment 5661.3883152204435, and `a427233b` against prereg 15562 and amendment 9381.425974154272.
+- `derived/c2_ttft/PARITY_REMEASURE_T2S_CHECK.json` repeats those same prereg and amendment scores.
+- `derived/c2_ttft/analysis_69234ed5.json` and `derived/c2_ttft/analysis_a427233b.json` report the measured limits 4062 and 9890. They do not issue HIT or MISS against the attached band.
+- Each summary's `primary_claim_eval` is `evaluable: false` on the claim `turn1_limits_agree_within_resolution`. It does not evaluate the attached band.
+- `docs/EXPERIMENT_REGISTRY.md` cites the measured limits. `derived/c2_ttft/DECODE_MATCH_PREREG.json` names `a427233b` as a shared rung, not as a band score.
