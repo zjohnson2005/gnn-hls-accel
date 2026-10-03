@@ -1,10 +1,10 @@
 """Semantic retention and the OBS_MASK arm.
 
-RETENTION_PROTOCOL.md is not in the tree. This module follows the build
-rules given for SEM-IMPL: the prompt is the required spans in original
-order, with nothing inserted in the gaps, and its resident token count
-must equal the POSITIONAL budget for the cell. OBS_MASK runs beside it
-and records K. It does not read a preregistration.
+docs/RETENTION_PROTOCOL.md is the registered rule. The prompt is the
+required spans in original order, with nothing inserted in the gaps, and
+its resident token count must equal the POSITIONAL budget for the cell.
+OBS_MASK runs beside it and records K. This module does not read a
+preregistration.
 """
 
 from __future__ import annotations

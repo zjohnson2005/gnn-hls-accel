@@ -148,11 +148,11 @@ Seal check 2026-10-03 (`tools/seal_verify.py` on the `sealed_` tree when one exi
 | N-2 window sweep | eviction window sizes vs ~95 KB/token residual | C1 | C | PLANNED (zero cells; docs/README_characterizations.md Axis 4; residual from 41e419bd) | |
 | INF-2 onset | derive the uptime gate instead of the provisional 7200 s | infra | B | PLANNED | also T2S onset |
 | X-1 reproducibility | sigma <= 0.10 instrument pair | infra | B | FAIL (raw/09dfe95d, raw/9e3ca312; sigma 0.145 and 0.159 in derived/fixed_throughput/kernel_power_repeat_correlation_20260806.md and docs/README_characterizations.md) | standing FAIL on XPS in Aug |
-| PREREG-AMEND protocol | RETENTION_PROTOCOL.md with OBS_MASK, residency-interaction, interaction-cost outcomes | C2 | A | NOT FOUND (searched: docs/, repo filenames, git log --grep RETENTION_PROTOCOL) | 2026-09-23 amendment did not land |
-| PREREG-AMEND bisection | bisection runners record error_class and requested_bytes, including alloc_logits_pattern | C1 | A | NOT FOUND (tools/run_c1_ceiling.py classify_c1_failure records failure_kind; no error_class, requested_bytes, or alloc_logits_pattern in tools/ or seam/) | 2026-09-23 amendment did not land |
+| PREREG-AMEND protocol | RETENTION_PROTOCOL.md with OBS_MASK, residency-interaction, interaction-cost outcomes | C2 | A | WRITTEN (docs/RETENTION_PROTOCOL.md) | builder seam/retention_prompt.py |
+| PREREG-AMEND bisection | bisection runners record error_class and requested_bytes, including alloc_logits_pattern | C1 | A | WRITTEN (tools/run_c1_ceiling.py classify_c1_failure) | failure_kind is unchanged |
 | PREREG-AMEND NPU control | NPU positive-control rule | C5 | A | WRITTEN (docs/NPU_PROTOCOL.md, seam/npu_validity.py) | registered before any NPU run |
-| PREREG-AMEND predictions | OBS_MASK, CB_VS_STATEFUL, and BUDGET prediction files | C2 | A | NOT FOUND (searched derived/, docs/, repo filenames) | 2026-09-23 amendment did not land |
-| PREREG-AMEND alloc_diag | tools/alloc_diag.py | C1 | A | NOT FOUND (file absent) | ALLOC-DIAG row remains NEXT |
+| PREREG-AMEND predictions | OBS_MASK, CB_VS_STATEFUL, and BUDGET prediction files | C2 | A | WRITTEN (derived/retention/OBS_MASK_PREDICTIONS.json, CB_VS_STATEFUL_PREDICTIONS.json, BUDGET_PREDICTIONS.json) | no numeric limit invented |
+| PREREG-AMEND alloc_diag | tools/alloc_diag.py | C1 | A | WRITTEN (tools/alloc_diag.py) | classifies a result JSON; does not open a prereg |
 
 ---
 

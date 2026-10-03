@@ -24,6 +24,7 @@ import atexit
 import copy
 import json
 import os
+import re
 import statistics
 import subprocess
 import sys
@@ -193,6 +194,25 @@ def memory_fields(result: dict[str, Any]) -> dict[str, Any]:
     return found
 
 
+_REQUESTED_BYTES = re.compile(r"(\d+)\s+bytes", re.IGNORECASE)
+
+
+def requested_bytes(text: str) -> int | None:
+    match = _REQUESTED_BYTES.search(text)
+    if match is None:
+        return None
+    return int(match.group(1))
+
+
+def alloc_logits_pattern(text: str) -> bool:
+    """True when the text is a logits-buffer allocation failure."""
+    lowered = text.lower()
+    if "logit" not in lowered:
+        return False
+    markers = ("alloc", "out of memory", "bad_alloc", "cannot allocate", "failed to allocate")
+    return any(marker in lowered for marker in markers)
+
+
 def classify_c1_failure(result: dict[str, Any]) -> dict[str, Any]:
     """Label memory_wall, onednn_primitive_failure, or position_limit.
 
@@ -246,6 +266,9 @@ def classify_c1_failure(result: dict[str, Any]) -> dict[str, Any]:
         return {
             "class": "pass",
             "failure_kind": None,
+            "error_class": None,
+            "requested_bytes": None,
+            "alloc_logits_pattern": False,
             "verbatim": None,
             "memory": snapshot,
             "base": base,
@@ -269,6 +292,9 @@ def classify_c1_failure(result: dict[str, Any]) -> dict[str, Any]:
     return {
         "class": base.get("class"),
         "failure_kind": kind,
+        "error_class": kind,
+        "requested_bytes": requested_bytes(combined),
+        "alloc_logits_pattern": alloc_logits_pattern(combined),
         "verbatim": verbatim[:2000] if verbatim else None,
         "exception_type": exc_type or None,
         "exception_message": (exc_msg[:1200] if exc_msg else None),
