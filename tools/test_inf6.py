@@ -15,10 +15,7 @@ from tools.criterion_timeout import (
     TTFT_SLO_TIMEOUT_MULTIPLIER,
     derive_probe_timeout_s,
 )
-from tools.ttft_slo_predictions import (
-    match_cap3_arm,
-    resolve_ttft_slo_plan_predictions,
-)
+from tools.ttft_slo_predictions import resolve_ttft_slo_plan_predictions
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -117,20 +114,20 @@ def _c2_default(*, slo_s: float, repeats: int) -> dict:
     }
 
 
-def test_plan_prediction_pointer_for_8b_cap3() -> None:
+def test_plan_prediction_does_not_select_cap3_for_8b() -> None:
     pred = resolve_ttft_slo_plan_predictions(
         model_spec=ROOT / "configs/models/Qwen3-8B-int4-ov.yaml",
-        arm_ids=["gpu_only_f16"],
+        arm_ids=["gpu_only_u8"],
         slo_s=10.0,
         repeats=3,
         default_c2_predictions=_c2_default,
         repo_root=ROOT,
+        predictions_path=ROOT / "derived/cap3/CAP3_PREDICTIONS.json",
     )
-    assert pred["source"] == "cap3_predictions_file"
-    assert pred["predictions_path"] == "derived/cap3/CAP3_PREDICTIONS.json"
-    assert pred["arm_key"] == "arm1_8b_int4"
-    assert pred["c2_am038_not_applicable"] is True
-    assert "P1_limit_band" in (pred.get("predictions") or {})
+    assert pred["source"] == "c2_am038_inline"
+    assert pred["predictions_path"] is None
+    assert pred["arm_key"] is None
+    assert "P1_limit_band" not in pred
 
 
 def test_plan_prediction_default_c2_for_4b_int4() -> None:
@@ -146,15 +143,6 @@ def test_plan_prediction_default_c2_for_4b_int4() -> None:
     assert pred["predictions_path"] is None
     assert pred["c2_am038_not_applicable"] is False
     assert pred["primary_prediction"]["status"] == "ACTIVE"
-
-
-def test_match_cap3_arm_int8() -> None:
-    m = match_cap3_arm(
-        model_spec=ROOT / "configs/models/Qwen3-4B-int8-ov.yaml",
-        repo_root=ROOT,
-    )
-    assert m is not None
-    assert m[0] == "arm2_4b_int8"
 
 
 def test_launch_h1_has_modelspec_param() -> None:
