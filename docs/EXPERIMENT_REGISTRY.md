@@ -163,7 +163,7 @@ time after Wednesday; this list does not fit in the window.
 
 | id | question | claim | pri | status | blocked by / notes |
 |---|---|---|---|---|---|
-| PARITY u8 | 4B and 8B u8 limits vs f16 | C1, C5 | A | RUNNING | control c76fed24 passed |
+| PARITY u8 | 4B and 8B u8 limits vs f16 | C1, C5 | A | RUNNING | host hashes match the copies (140/140): c76fed24, d2d5cc4a, 56c116a6. Seal refused (mtime gate and 3-arm sealer). Scores in derived/c2_ttft/PARITY_REMEASURE_T2S_CHECK.json are not a sealed result. |
 | RESIDENT-T2 | 4B: one f16 point at 131,072 (context window binds, not memory); 8B: predicted memory walls, search if inside context | C1, C5 | A | PLANNED | CHANGED 2026-10-03 from full 3-precision search |
 | P1-T2 | A0 + fixed A4 at B = 10/20 on the faster GPU: does thinking fit? | C4, C5 | A | PLANNED | A4 fix + AMENDMENT_8 |
 | P0-T2 | exchange rate on T2S | C4 | B | PLANNED | launcher profile |
@@ -190,7 +190,7 @@ time after Wednesday; this list does not fit in the window.
 
 | id | what | pri | status |
 |---|---|---|---|
-| OPLIMIT-FIG | operating limit per config, colored by binding constraint | A | PLANNED (update with parity + T2S) |
+| OPLIMIT-FIG | operating limit per config, colored by binding constraint | A | PLANNED (T2S u8 copies are unsealed, so the figure was not updated) |
 | COST-FRONTIER | cost vs completions, one curve per configuration | A | 4B row done (d482c621); needs R0, H1-CPU, 8B |
 | CENSUS-D | failure classes A/B/C/D (silent failures) | A | PARTIAL (A/B/C on 86d0f4cf in derived/h1_hybrid/H1_RESULTS.md; D UNAVAILABLE; trigger split d482c621) |
 | SPACE-SHAPE | axes that appear / flip / collapse across platforms | A | PLANNED (after T2S runs) |

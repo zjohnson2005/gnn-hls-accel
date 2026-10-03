@@ -1,0 +1,183 @@
+{
+  "id": "PARITY-REMEASURE-T2S-CHECK",
+  "seal_status": "NOT_SEALED",
+  "seal_note": "Hash-matched copies. Not a sealed result. reconstruct_mtime_seal refused because every local mtime is the copy time, after ended_utc+120s. seal_c2_ttft refused c76fed24 with expected 3 arms, got 1. OPLIMIT_FIGURE.json was not updated.",
+  "hash_compare": {
+    "host_list": "C:\\Users\\zjohn\\Projects\\t2s_parity_host_sha256.txt",
+    "local_list": "C:\\Users\\zjohn\\Projects\\t2s_parity_local_sha256.txt",
+    "identical": 140,
+    "differing": 0,
+    "host_only": 0,
+    "local_only": 0
+  },
+  "verdict_rule": "HIT within resolution when abs(measured - predicted) <= 250. Predictions are the registered numbers, not reinterpreted.",
+  "scored_documents": [
+    "derived/c2_ttft/PARITY_REMEASURE_PREREG.json",
+    "derived/c2_ttft/PARITY_REMEASURE_AMEND_1.json"
+  ],
+  "not_scored": {
+    "file": "derived/cap3/CAP3_PREDICTIONS.json",
+    "reason": "Attached to 56c116a6 as arm1_8b_int4 gpu_only_f16 band [4000, 7000]. That band is not a prediction for this u8 cell."
+  },
+  "result_plain": "4B u8 ttft_limit_n 18500 (d2d5cc4a) versus f16 18687 (5c714535): absolute error 187, one 250-token bisection step. 8B u8 16437 (56c116a6) is identical to f16 16437 (051d2681).",
+  "cells": [
+    {
+      "boot": "T2S-1",
+      "cell": "4B-int4 GPU u8",
+      "run_id": "d2d5cc4a-20e3-401f-8bba-d3a6d76bda81",
+      "measured_ttft_limit_n": 18500,
+      "first_slo_fail_n": 18687,
+      "f16_reference_run": "5c714535-9f36-4614-a594-698b6cd09296",
+      "f16_ttft_limit_n": 18687,
+      "prereg": {
+        "predicted_limit_n": 18687,
+        "predicted_limit_kind": "SLO",
+        "abs_error": 187,
+        "verdict": "HIT"
+      },
+      "amendment_1": {
+        "verdict": "NO_CELL",
+        "note": "PARITY_REMEASURE_AMEND_1.json has no T2S cell"
+      }
+    },
+    {
+      "boot": "T2S-1",
+      "cell": "8B-int4 GPU u8",
+      "run_id": "56c116a6-d484-400d-abed-868fdbcedc9e",
+      "measured_ttft_limit_n": 16437,
+      "first_slo_fail_n": 16625,
+      "f16_reference_run": "051d2681-4bb8-4f50-b9fc-b14441359ba6",
+      "f16_ttft_limit_n": 16437,
+      "prereg": {
+        "predicted_limit_n": 16437,
+        "predicted_limit_kind": "SLO",
+        "abs_error": 0,
+        "verdict": "HIT"
+      },
+      "amendment_1": {
+        "verdict": "NO_CELL",
+        "note": "PARITY_REMEASURE_AMEND_1.json has no T2S cell"
+      }
+    },
+    {
+      "boot": "XPS-1",
+      "cell": "4B-int4 GPU u8",
+      "run_id": "c2246b1f-c588-4998-838a-5507da87e9ee",
+      "measured_ttft_limit_n": 10000,
+      "prior_file": "derived/c2_ttft/PARITY_REMEASURE_CHECK.json",
+      "prereg": {
+        "predicted_limit_n": 9750,
+        "predicted_limit_kind": "SLO",
+        "abs_error": 250,
+        "verdict": "HIT"
+      },
+      "amendment_1": {
+        "predicted_limit_n": 9875.588438243161,
+        "predicted_limit_kind": "SLO",
+        "abs_error": 124.411561756839,
+        "verdict": "HIT"
+      }
+    },
+    {
+      "boot": "XPS-1",
+      "cell": "4B-int8 GPU u8",
+      "run_id": "a427233b-df1c-4c4a-87b9-c368bb270b31",
+      "measured_ttft_limit_n": 9890,
+      "prior_file": "derived/c2_ttft/PARITY_REMEASURE_CHECK.json",
+      "prereg": {
+        "predicted_limit_n": 15562,
+        "predicted_limit_kind": "memory_wall",
+        "abs_error": 5672,
+        "verdict": "MISS"
+      },
+      "amendment_1": {
+        "predicted_limit_n": 9381.425974154272,
+        "predicted_limit_kind": "SLO",
+        "abs_error": 508.574025845728,
+        "verdict": "MISS"
+      }
+    },
+    {
+      "boot": "XPS-1",
+      "cell": "8B-int4 GPU u8",
+      "run_id": "69234ed5-a716-4274-b851-33509bdb9972",
+      "measured_ttft_limit_n": 4062,
+      "prior_file": "derived/c2_ttft/PARITY_REMEASURE_CHECK.json",
+      "prereg": {
+        "predicted_limit_n": 6312,
+        "predicted_limit_kind": "memory_wall",
+        "abs_error": 2250,
+        "verdict": "MISS"
+      },
+      "amendment_1": {
+        "predicted_limit_n": 5661.3883152204435,
+        "predicted_limit_kind": "SLO",
+        "abs_error": 1599.3883152204435,
+        "verdict": "MISS"
+      }
+    },
+    {
+      "boot": "XPS-1",
+      "cell": "4B-int4 CPU u8",
+      "run_id": "7f232f86-2525-481b-a000-c6b8491bc224",
+      "measured_ttft_limit_n": 468,
+      "prior_file": "derived/c2_ttft/PARITY_REMEASURE_CHECK.json",
+      "prereg": {
+        "predicted_limit_n": 500,
+        "predicted_limit_kind": "SLO",
+        "abs_error": 32,
+        "verdict": "HIT"
+      },
+      "amendment_1": {
+        "verdict": "NO_CELL",
+        "note": "PARITY_REMEASURE_AMEND_1.json has no CPU cell"
+      }
+    }
+  ],
+  "control_band": {
+    "run_id": "c76fed24-63a9-4b3b-98be-11ff83da7a4c",
+    "tool": "tools/t2s_control_band.py",
+    "pass": true,
+    "reason": "inside_tol",
+    "median": 9.875425781,
+    "control_prefills": [
+      9.930541015,
+      9.861765625,
+      9.875425781
+    ],
+    "reference_run_id": "5c714535-9f36-4614-a594-698b6cd09296",
+    "reference_median": 9.830370117,
+    "low": 9.581665534154624,
+    "high": 10.079074699845377,
+    "tol": 0.025299615363950766,
+    "b_t2s": 1.8910956492245918,
+    "b_t2s_source": "matching_kv",
+    "b_t2s_run_id": "65e33de8-ac07-405a-a1f8-53698974afe9",
+    "within_session_recorded_not_a_gate": true,
+    "old_within_session_pass": false,
+    "verdict": "HIT"
+  },
+  "deviations": {
+    "UNGUARDED": false,
+    "UNCOLD_UPTIME": {
+      "kind": "UNCOLD_UPTIME",
+      "reason": "remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access",
+      "uptime_s": {
+        "c76fed24-63a9-4b3b-98be-11ff83da7a4c": 1053889.0,
+        "d2d5cc4a-20e3-401f-8bba-d3a6d76bda81": 1054124.0,
+        "56c116a6-d484-400d-abed-868fdbcedc9e": 1055342.0
+      }
+    },
+    "canary_onset": {
+      "onset_s": 657.0,
+      "constant": "tools/ttft_slo_canary.py ONSET_S from session 7f569929",
+      "threshold_platform_id": "aipc-c1",
+      "note": "The T2S plan records onset_s 657.0 and threshold_derivation.platform_id aipc-c1. This host did not measure its own onset."
+    },
+    "memory_floor": {
+      "label": "derived_unmeasured",
+      "hardcoded_mb": 24000,
+      "source": "tools/launch_t2s_boot1.ps1"
+    }
+  }
+}
