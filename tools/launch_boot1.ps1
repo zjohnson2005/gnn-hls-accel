@@ -894,6 +894,17 @@ function Assert-BootTree {
     return $paths
 }
 
+function Get-RehearsalSmokeOut {
+    param($Cell)
+    # Spaces become underscores so Invoke-BootCommandLine's split on spaces
+    # keeps --out as one argument. Angle brackets are stripped so a cell name
+    # cannot recreate the <cell> placeholder.
+    $name = [string](Get-BootCellField -Cell $Cell -Name "Name")
+    $safe = $name -replace '[<>:"/\\|?*]', "_"
+    $safe = $safe -replace "\s+", "_"
+    return (Join-Path (Join-Path $LaunchDir $safe) "extraction_smoke")
+}
+
 function Get-BootCellCommand {
     param($Cell)
     $kind = Get-BootCellField -Cell $Cell -Name "Kind"
@@ -952,8 +963,16 @@ function Get-BootCellCommand {
         }
     }
     $modelPath = Join-Path $root $model
+    # Real cells build derived\c2_ttft\<guid>\extraction_smoke in Invoke-CeilingCell.
+    # The <cell> token below is the dry-run stand-in for that path. Rehearsal
+    # executes this string, so it must be a directory that exists.
+    $smokeOut = "<cell>\extraction_smoke"
+    if ($Rehearsal) {
+        $smokeOut = Get-RehearsalSmokeOut -Cell $Cell
+        New-Item -ItemType Directory -Force -Path $smokeOut | Out-Null
+    }
     $smoke = @(
-        $PythonExe, "-u", $SmokePy, "--out", "<cell>\extraction_smoke",
+        $PythonExe, "-u", $SmokePy, "--out", $smokeOut,
         "--model-spec", $modelPath, "--n-tokens", "64", "--arm", "gpu_only_f16"
     ) -join " "
     $workerParts = @(

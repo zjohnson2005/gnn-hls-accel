@@ -100,3 +100,44 @@ def test_t2s_noreboot_dry_run_skips_only_uptime() -> None:
     launcher = LAUNCHER.read_text(encoding="utf-8")
     assert "-NoRebootDeviation" in launcher
     assert 'launchArgs += "-NoRebootDeviation"' in launcher
+
+
+def _dry_run(*extra: str) -> str:
+    proc = subprocess.run(
+        ["powershell", "-NoProfile", "-File", str(LAUNCHER), *extra],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr + proc.stdout
+    return proc.stdout
+
+
+def test_rehearsal_smoke_out_is_a_real_directory() -> None:
+    out = _dry_run("-DryRun", "-Rehearsal")
+    smoke_lines = [line for line in out.splitlines() if line.startswith("smoke ")]
+    assert len(smoke_lines) == 3
+    names = (
+        "T2S_4B-int4_GPU_f16_control",
+        "T2S_4B-int4_GPU_u8",
+        "T2S_8B-int4_GPU_u8",
+    )
+    root = ROOT / "derived" / "c2_ttft" / "_launches" / "_rehearsal" / "t2s-boot1"
+    for line, name in zip(smoke_lines, names, strict=True):
+        assert "<" not in line and ">" not in line
+        dest = root / name / "extraction_smoke"
+        assert dest.is_dir()
+        assert str(dest) in line
+
+
+def test_real_launch_smoke_path_is_unchanged() -> None:
+    out = _dry_run("-DryRun")
+    smoke_lines = [line for line in out.splitlines() if line.startswith("smoke ")]
+    command_lines = [line for line in out.splitlines() if line.startswith("command ")]
+    assert smoke_lines
+    assert all("<cell>\\extraction_smoke" in line for line in smoke_lines)
+    assert any("--out <cell>" in line and "--session-id <new>" in line for line in command_lines)
+    text = SEQUENCER.read_text(encoding="utf-8")
+    assert 'Join-Path $root ("derived\\c2_ttft\\" + $sid)' in text
+    assert 'Join-Path $out "extraction_smoke"' in text
