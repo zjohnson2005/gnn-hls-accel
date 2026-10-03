@@ -27,3 +27,11 @@ three tests fail with `AttributeError`:
 
 The Mac suite does not reach this line (OpenVINO is not installed there).
 Not fixed yet.
+
+## Boot 1-3 det cells have no rehearsal smoke
+
+Profiles `boot1`, `boot2`, and `boot3` each include a det cell
+(`DET-PROBE` or `DET-PROBE-KV`). `Get-BootCellCommand` builds no smoke
+command for kind `det`, and rehearsal throws
+`REFUSED -- no rehearsal smoke` at that cell. Those profiles cannot reach
+`REHEARSAL_COMPLETE`. Not blocking t2s-boot1. Not fixed yet.
