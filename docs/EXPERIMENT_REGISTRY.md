@@ -142,7 +142,7 @@ Seal check 2026-10-03 (`tools/seal_verify.py` on the `sealed_` tree when one exi
 | RET-1 | full retention experiment (36 trajectories) | C2 | A | BLOCKED | R-LABELS, R-SIZE |
 | XPS-PWR | 3 power plans x canary cell; battery vs AC; energy per task on the laptop | C1, C5 | B | PLANNED | was "Power/TDP probe" in Aug plan; needs energy read path (PCM/RAPL gate) |
 | W-3 trajectory gap | 20 vs 10-14 unexplained | - | C | PLANNED | analysis only (6dd387aa) |
-| Q-1 / anomaly | our ~10% vs published ~35% on multi_turn_base (XLAM format arm) | C4 | B | PLANNED (10% is 6225d6e1 trajectory_pass 0.100 in docs/README_feasibility.md; XLAM arm and published 35% NOT FOUND (searched: docs/, derived/, git log --all --grep XLAM)) | a reviewer will ask; status unclear |
+| Q-1 / anomaly | our ~10% vs published ~35% on multi_turn_base (XLAM format arm) | C4 | B | PLANNED (10% is 6225d6e1; published 35.25% / 34% in docs/RELATED_SEARCHES.md, source URL TO CONFIRM) | a reviewer will ask; status unclear |
 | EMIT-GAP | emission 0.675 vs 0.775 on same entries | C3 | C | DONE (86d0f4cf, 8ffd8371; measured 0.675 vs predicted 0.775 in derived/h1_hybrid/H1_RESULTS.md; seal MATCH_LEGACY_SELF_REF) | |
 | X-3 arm B | cpu-p + igpu: measure one cell or formally exclude | C1 | C | NO SEALED CELL (unsealed checkpoint derived/ceiling_a/fbe3ea9c; raw/af8b59e7 in_progress; no .sealed under derived/) | |
 | N-2 window sweep | eviction window sizes vs ~95 KB/token residual | C1 | C | PLANNED (zero cells; docs/README_characterizations.md Axis 4; residual from 41e419bd) | |
@@ -191,7 +191,7 @@ time after Wednesday; this list does not fit in the window.
 | SPACE-SHAPE | axes that appear / flip / collapse across platforms | A | PLANNED (after T2S runs) |
 | P2 DSE / replay | fdr_replay predictor, cross-platform prediction (D-1c, T2-3) | C | PLANNED (paper 2) |
 | CORRECTIONS | KV claim wording, OPLIMIT colours | B | PARTIAL (KV wording in derived/WITHDRAWN.md 2026-09-23 and 2026-09-25; OPLIMIT colours NOT FOUND (searched: docs/, derived/)) |
-| RELATED-LOG | docs/RELATED_SEARCHES.md before any "first" claim | A | NOT FOUND (searched: docs/RELATED_SEARCHES.md, docs/, git log --all --grep RELATED_SEARCHES) |
+| RELATED-LOG | docs/RELATED_SEARCHES.md before any "first" claim | A | DONE (docs/RELATED_SEARCHES.md, search date 2026-09-23) |
 | P1 slow canary | f16 canary turn-2 0.86-0.96 s vs 0.70-0.76 | B | OPEN |
 
 ---
