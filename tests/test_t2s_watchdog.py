@@ -299,3 +299,34 @@ def test_foreign_launch_inside_the_run_window_is_detected() -> None:
     assert cells[0]["status"] == "FOREIGN_ACTIVITY"
     assert cells[0]["exclude_from_sealed_results"] is True
     assert cells[1]["status"] == "complete"
+
+
+def _cell_dir(root: Path, run_id: str) -> Path:
+    session = root / "derived" / "c2_ttft" / run_id
+    session.mkdir(parents=True)
+    (session / "plan.json").write_text("{}\n", encoding="utf-8")
+    (session / "summary.json").write_text("{}\n", encoding="utf-8")
+    return session
+
+
+def test_stamp_patches_only_the_finished_cell(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    first = _cell_dir(repo, "run-1")
+    second = _cell_dir(repo, "run-2")
+    payload = {
+        "log_path": str(tmp_path / "missing.log"),
+        "started_utc": "",
+        "ended_utc": "",
+        "repo_root": str(repo),
+        "cells": [
+            {"run_id": "run-1", "status": "complete"},
+            {"run_id": "run-2", "status": "complete"},
+        ],
+    }
+    apply_summary(payload, patch_run_id="run-1")
+    assert "watchdog_log" in json.loads((first / "plan.json").read_text(encoding="utf-8"))
+    assert json.loads((second / "plan.json").read_text(encoding="utf-8")) == {}
+    before = (first / "summary.json").read_bytes()
+    apply_summary(payload, patch_files=False)
+    assert (first / "summary.json").read_bytes() == before
+    assert json.loads((second / "summary.json").read_text(encoding="utf-8")) == {}

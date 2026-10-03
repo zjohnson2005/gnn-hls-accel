@@ -1,0 +1,40 @@
+{
+  "evidence_source": "T2S_SOURCE_MANIFEST",
+  "finish_source": "summary.json:ended_utc",
+  "label": "RECONSTRUCTED",
+  "launcher_boot_end_stamp": {
+    "boot_complete_utc": "2026-10-03T22:09:09.133203+00:00",
+    "boot_complete_utc_source": "host LastWriteTime of 56c116a6-d484-400d-abed-868fdbcedc9e plan.json and summary.json, the last _patch_cell_files write in boot 4de047b9-d0da-4d2a-b75d-2808c308df25 before t2s-boot1.log line BOOT_COMPLETE. That log line has no clock.",
+    "files": [
+      "plan.json",
+      "summary.json"
+    ],
+    "gate_reference": "BOOT_COMPLETE",
+    "launch_log": "derived/c2_ttft/_launches/t2s_boot1_20261003/t2s-boot1.log",
+    "launch_log_shows": "BOOT_COMPLETE",
+    "measured_fields_match": {
+      "embedded_probe_rows": {
+        "plan.json": 6,
+        "summary.json": 6
+      },
+      "mismatches": 0,
+      "probe_rows": 24,
+      "result_rows": 24,
+      "stamp_fields": [
+        "watchdog_log",
+        "foreign_queue_evidence"
+      ]
+    },
+    "reason": "tools/t2s_queue_watchdog.py _patch_cell_files is called from apply_summary, which launch_boot1.ps1 Update-T2sForeignEvidence runs in the finally block immediately before Write-Host BOOT_COMPLETE. The rewrite assigns watchdog_log and foreign_queue_evidence on plan.json and summary.json. It sets exclude_from_sealed_results and status FOREIGN_ACTIVITY only when a busy watchdog line overlaps the cell. It does not assign prefill, ttft, or search fields.",
+    "rule": "launcher boot-end stamp"
+  },
+  "manifest_sha256": "b5c5bc0bb5c175e3089f680fe59f93acd0d85fb6970fc67e7b214111a599e3e8",
+  "mtime_gate_s": 120,
+  "newest_source_file": "plan.json",
+  "newest_source_mtime_utc": "2026-10-03T22:09:09.119512+00:00",
+  "note": "Full tree copied. T2S manifest mtimes used for the finish+120s gate. Source bytes were not modified. tree_sha256 is only in this file.",
+  "recorded_finish_time": "2026-10-03T21:47:16.198919+00:00",
+  "run_id": "d2d5cc4a-20e3-401f-8bba-d3a6d76bda81",
+  "source_path": "derived/c2_ttft/d2d5cc4a-20e3-401f-8bba-d3a6d76bda81",
+  "tree_sha256": "2b0a94c6cefc92aac4cc4c5a2e049a7300bff6fd81ae2707a43c8ea2231e9f07"
+}

@@ -668,6 +668,9 @@ function Add-Row {
     # An ordered dictionary has no PSObject .name, so Merge-BootCells would drop it.
     $script:Rows += [pscustomobject]$row
     Save-BootSummary -State "running"
+    if ($Profile -eq "t2s-boot1" -and $RunId) {
+        Update-T2sForeignEvidence -RunId $RunId
+    }
 }
 
 function Assert-T2sOwnedWorkers {
@@ -682,6 +685,7 @@ function Assert-T2sOwnedWorkers {
 }
 
 function Update-T2sForeignEvidence {
+    param([string]$RunId = "", [switch]$NoPatchFiles)
     if ($Profile -ne "t2s-boot1" -or $DryRun) { return }
     if (-not $script:RunStartedUtc) { return }
     $ended = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
@@ -695,7 +699,13 @@ function Update-T2sForeignEvidence {
     $checker = Join-Path $root "tools\t2s_queue_watchdog.py"
     $tmp = Join-Path $env:TEMP "t2s_watchdog_payload.json"
     Write-Utf8NoBom -Path $tmp -Text ($payload | ConvertTo-Json -Depth 6)
-    $raw = & $PythonExe $checker apply-summary --payload $tmp
+    $applyArgs = @($checker, "apply-summary", "--payload", $tmp)
+    if ($NoPatchFiles) {
+        $applyArgs += "--no-patch-files"
+    } elseif ($RunId) {
+        $applyArgs += @("--run-id", $RunId)
+    }
+    $raw = & $PythonExe @applyArgs
     if ($LASTEXITCODE -ne 0) {
         throw "REFUSED -- watchdog evidence apply failed"
     }
@@ -1381,7 +1391,7 @@ if ($Rehearsal) { Write-Host "REHEARSAL_COMPLETE" }
     exit 1
 } finally {
     try {
-        Update-T2sForeignEvidence
+        Update-T2sForeignEvidence -NoPatchFiles
     } catch {
         $script:FinalReason = $_.Exception.Message
         Write-Host $script:FinalReason

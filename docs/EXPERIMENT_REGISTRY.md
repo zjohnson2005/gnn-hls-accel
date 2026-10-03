@@ -163,7 +163,7 @@ time after Wednesday; this list does not fit in the window.
 
 | id | question | claim | pri | status | blocked by / notes |
 |---|---|---|---|---|---|
-| PARITY u8 | 4B and 8B u8 limits vs f16 | C1, C5 | A | RUNNING | 56c116a6 sealed c9bc509818485bd98e09b3611afb3ceba744a89d9cbb0efd9558c61a2bb7e7bf MATCH. c76fed24 and d2d5cc4a refused: host plan.json and summary.json mtime 2026-10-03T22:09:09Z is after ended_utc+120s. |
+| PARITY u8 | 4B and 8B u8 limits vs f16 | C1, C5 | A | DONE | c76fed24 control tree 1986ba64bda37fb148aca44d163e0076d814c4c01490df01e8a603c5a8df373e MATCH; d2d5cc4a 4B u8 18500 tree 2b0a94c6cefc92aac4cc4c5a2e049a7300bff6fd81ae2707a43c8ea2231e9f07 MATCH; 56c116a6 8B u8 16437 tree c9bc509818485bd98e09b3611afb3ceba744a89d9cbb0efd9558c61a2bb7e7bf MATCH. plan.json and summary.json of the first two used the launcher boot-end stamp rule. |
 | RESIDENT-T2 | 4B: one f16 point at 131,072 (context window binds, not memory); 8B: predicted memory walls, search if inside context | C1, C5 | A | PLANNED | CHANGED 2026-10-03 from full 3-precision search |
 | P1-T2 | A0 + fixed A4 at B = 10/20 on the faster GPU: does thinking fit? | C4, C5 | A | PLANNED | A4 fix + AMENDMENT_8 |
 | P0-T2 | exchange rate on T2S | C4 | B | PLANNED | launcher profile |
@@ -190,7 +190,7 @@ time after Wednesday; this list does not fit in the window.
 
 | id | what | pri | status |
 |---|---|---|---|
-| OPLIMIT-FIG | operating limit per config, colored by binding constraint | A | PLANNED (T2S u8 figure not updated: c76fed24 and d2d5cc4a are unsealed) |
+| OPLIMIT-FIG | operating limit per config, colored by binding constraint | A | PARTIAL (evo-t2 u8 points added: 4B 18500 d2d5cc4a, 8B 16437 56c116a6; f16 rows kept, kv distinguished) |
 | COST-FRONTIER | cost vs completions, one curve per configuration | A | 4B row done (d482c621); needs R0, H1-CPU, 8B |
 | CENSUS-D | failure classes A/B/C/D (silent failures) | A | PARTIAL (A/B/C on 86d0f4cf in derived/h1_hybrid/H1_RESULTS.md; D UNAVAILABLE; trigger split d482c621) |
 | SPACE-SHAPE | axes that appear / flip / collapse across platforms | A | PLANNED (after T2S runs) |
@@ -234,7 +234,7 @@ time after Wednesday; this list does not fit in the window.
 
 ## 7. Schedule to freeze (each XPS boot ~2 h; ask before any launch or spend)
 
-- Oct 3-6, T2S: PARITY (running) -> NPU-1/NPU-2 smoke + DUAL-T2 -> P1-T2
+- Oct 3-6, T2S: PARITY (done) -> NPU-1/NPU-2 smoke + DUAL-T2 -> P1-T2
   A0 + A4 B=10 -> SPEC-T2 decode -> CB-T2 -> TIER-T2 limits -> FP16-T2.
   Ask for time after Wed for the rest (HET-1, PWR-T2, T2-4, TIER quality,
   R2b/R2c-8B, P0-T2, P1-T2 8B, RESIDENT-T2).

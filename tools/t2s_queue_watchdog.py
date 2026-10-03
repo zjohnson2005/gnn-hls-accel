@@ -248,7 +248,12 @@ def _patch_cell_files(
         path.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
 
 
-def apply_summary(payload: dict[str, Any]) -> dict[str, Any]:
+def apply_summary(
+    payload: dict[str, Any],
+    *,
+    patch_files: bool = True,
+    patch_run_id: str | None = None,
+) -> dict[str, Any]:
     log_path = Path(str(payload.get("log_path") or ""))
     log_s = str(log_path)
     started = str(payload.get("started_utc") or "")
@@ -258,9 +263,11 @@ def apply_summary(payload: dict[str, Any]) -> dict[str, Any]:
     root = Path(str(repo)) if repo else None
 
     def _stamp(rows: list[dict[str, Any]], evidence: list[str]) -> None:
-        if root is None:
+        if not patch_files or root is None:
             return
         for cell in rows:
+            if patch_run_id is not None and str(cell.get("run_id") or "") != patch_run_id:
+                continue
             _patch_cell_files(root, cell, evidence, log_s)
 
     if not log_path.is_file() or not started or not ended:
@@ -335,6 +342,8 @@ def main(argv: list[str] | None = None) -> int:
 
     apply = sub.add_parser("apply-summary")
     apply.add_argument("--payload", type=Path, required=True)
+    apply.add_argument("--run-id", default="")
+    apply.add_argument("--no-patch-files", action="store_true")
     args = parser.parse_args(argv)
 
     if args.cmd == "launch-check":
@@ -360,7 +369,14 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     payload = read_payload(args.payload)
-    json.dump(apply_summary(payload), sys.stdout)
+    json.dump(
+        apply_summary(
+            payload,
+            patch_files=not args.no_patch_files,
+            patch_run_id=args.run_id or None,
+        ),
+        sys.stdout,
+    )
     return 0
 
 

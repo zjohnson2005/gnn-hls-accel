@@ -45,6 +45,7 @@
       "platform_id": "evo-t2",
       "placement": "gpu_only",
       "model": "8B-int4",
+      "kv": "f16",
       "ttft_limit_n": 16437,
       "run_id_prefix": "051d2681",
       "binding": "not_verified_on_this_host",
@@ -54,16 +55,38 @@
       "platform_id": "evo-t2",
       "placement": "gpu_only",
       "model": "4B-int4",
+      "kv": "f16",
       "ttft_limit_n": 18687,
       "run_id_prefix": "5c714535",
       "binding": "not_verified_on_this_host",
       "evidence": "operator-cited sealed limit; tree absent from aipc-c1"
+    },
+    {
+      "platform_id": "evo-t2",
+      "placement": "gpu_only",
+      "model": "8B-int4",
+      "kv": "u8",
+      "ttft_limit_n": 16437,
+      "run_id": "56c116a6-d484-400d-abed-868fdbcedc9e",
+      "binding": "latency",
+      "evidence": "highest_slo_ok_n=16437; first_slo_fail_n=16625; failure_kind_at_wall null. Sealed tree c9bc509818485bd98e09b3611afb3ceba744a89d9cbb0efd9558c61a2bb7e7bf MATCH."
+    },
+    {
+      "platform_id": "evo-t2",
+      "placement": "gpu_only",
+      "model": "4B-int4",
+      "kv": "u8",
+      "ttft_limit_n": 18500,
+      "run_id": "d2d5cc4a-20e3-401f-8bba-d3a6d76bda81",
+      "binding": "latency",
+      "evidence": "highest_slo_ok_n=18500; first_slo_fail_n=18687; failure_kind_at_wall null. Sealed tree 2b0a94c6cefc92aac4cc4c5a2e049a7300bff6fd81ae2707a43c8ea2231e9f07 MATCH."
     }
   ],
   "ratios": {
     "placement_aipc_c1": {"value": 19.5, "arithmetic": "9750/500", "runs": ["c647f0c7", "d3dcbd3b"]},
     "tier_aipc_c1": {"value": 3.09, "arithmetic": "9750/3156", "runs": ["c647f0c7", "322b2f86"]},
     "tier_evo_t2": {"value": 1.14, "arithmetic": "18687/16437", "runs": ["5c714535", "051d2681"]},
+    "tier_evo_t2_u8": {"value": 1.13, "arithmetic": "18500/16437", "runs": ["d2d5cc4a", "56c116a6"]},
     "weight_precision_aipc_c1": {"value": 1.25, "arithmetic": "9750/7781", "runs": ["c647f0c7", "fea55e0c"]}
   },
   "below_workload_max_7743": ["d3dcbd3b", "322b2f86"],

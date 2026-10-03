@@ -14,6 +14,14 @@ LAUNCHER = ROOT / "tools" / "launch_t2s_boot1.ps1"
 SEQUENCER = ROOT / "tools" / "launch_boot1.ps1"
 
 
+def test_cell_provenance_is_stamped_at_cell_end() -> None:
+    text = SEQUENCER.read_text(encoding="utf-8")
+    assert "Update-T2sForeignEvidence -RunId $RunId" in text
+    assert "Update-T2sForeignEvidence -NoPatchFiles" in text
+    assert "--run-id" in text
+    assert "--no-patch-files" in text
+
+
 def test_t2s_launcher_does_not_name_the_prereg() -> None:
     for path in (LAUNCHER, SEQUENCER):
         text = path.read_text(encoding="utf-8")
