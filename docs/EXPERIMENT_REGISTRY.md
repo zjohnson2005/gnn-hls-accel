@@ -69,7 +69,7 @@ leak + credits), 52fab50c (T2S u8 cell, foreign launch). Unsealed/aborted:
 16a6368b (control, clean), 98bf5873 (8B f16 range miss).
 Seal MISMATCH, not citable until fixed: Q-8B 72d270e2, Q-KV 137f6f46, q_repro.
 
-Seal check 2026-10-03 (`tools/seal_verify.py` on the `sealed_` tree when one exists). MATCH_LEGACY_SELF_REF is the verifier's accepted legacy seal, not a mismatch.
+Seal check 2026-10-03 (`tools/seal_verify.py` on the `sealed_` tree when one exists). MATCH_LEGACY_SELF_REF is the verifier's accepted legacy seal, not a mismatch. Manifest-format seals (`.sealed` is the word sealed, plus `manifest.sha256.json`) are MATCH_MANIFEST when every other file is listed, none listed is missing, and every hash matches.
 
 | run_id | under derived/ | seal |
 |---|---|---|
@@ -89,15 +89,15 @@ Seal check 2026-10-03 (`tools/seal_verify.py` on the `sealed_` tree when one exi
 | POST-CAP4 | derived/cap4/POST_CAP4.md (analysis, not a run_id) | no seal |
 | cb9773be | derived/h1_hybrid/sealed_det_probe_cb9773be-71a7-4cc8-b9ff-f7b18e5231f8 | MATCH |
 | c46d9c94 | derived/h1_hybrid/sealed_det_probe_c46d9c94-3928-4e29-98c3-779f19895e25 | MATCH |
-| 72776603 | derived/delta_prefill/sealed_72776603-7ea0-4279-a425-941d73a0bf57 | UNSEALED (`.sealed` is the word "sealed", no tree_sha256); manifest.sha256.json file hashes MATCH |
-| 1587d2f4 | derived/delta_prefill/sealed_1587d2f4-b30f-4be9-9c1d-6d0d04690c4b | UNSEALED (word "sealed"); manifest.sha256.json file hashes MATCH |
-| dd2b0779 | derived/delta_prefill/sealed_dd2b0779-48c1-4ad6-9567-ed38e8e1fec9 | UNSEALED (word "sealed"); manifest.sha256.json file hashes MATCH |
-| 180dfbb9 | derived/c2_ttft/sealed_180dfbb9-5ad6-446e-a3f2-0d6fa8eea196 | UNSEALED (word "sealed"); manifest.sha256.json file hashes MATCH |
-| 553b3a5c | derived/delta_prefill/sealed_553b3a5c-dd68-4502-bb3f-1b6a10a61eb1 | UNSEALED (word "sealed"); manifest.sha256.json file hashes MATCH |
-| cf3555d5 | derived/delta_prefill/sealed_cf3555d5-1361-434f-b1fb-745fc17e6843 | UNSEALED (word "sealed"); manifest.sha256.json file hashes MATCH |
-| e4a22dac | derived/delta_prefill/sealed_e4a22dac-6301-4dfa-ae12-882328b6ba7c | UNSEALED (word "sealed"); manifest.sha256.json file hashes MATCH |
+| 72776603 | derived/delta_prefill/sealed_72776603-7ea0-4279-a425-941d73a0bf57 | MATCH_MANIFEST |
+| 1587d2f4 | derived/delta_prefill/sealed_1587d2f4-b30f-4be9-9c1d-6d0d04690c4b | MATCH_MANIFEST |
+| dd2b0779 | derived/delta_prefill/sealed_dd2b0779-48c1-4ad6-9567-ed38e8e1fec9 | MATCH_MANIFEST |
+| 180dfbb9 | derived/c2_ttft/sealed_180dfbb9-5ad6-446e-a3f2-0d6fa8eea196 | MATCH_MANIFEST |
+| 553b3a5c | derived/delta_prefill/sealed_553b3a5c-dd68-4502-bb3f-1b6a10a61eb1 | MATCH_MANIFEST |
+| cf3555d5 | derived/delta_prefill/sealed_cf3555d5-1361-434f-b1fb-745fc17e6843 | MATCH_MANIFEST |
+| e4a22dac | derived/delta_prefill/sealed_e4a22dac-6301-4dfa-ae12-882328b6ba7c | MATCH_MANIFEST |
 | d482c621 | derived/h1_hybrid/interleaved_d482c621-4292-4281-b6a1-8635e5eeb6da | MATCH_LEGACY_SELF_REF |
-| ac4e5472 | derived/exchange_rate/sealed_ac4e5472-76a9-4999-bf0b-8274d27ce0ca | UNSEALED (word "sealed"); manifest.sha256.json file hashes MATCH |
+| ac4e5472 | derived/exchange_rate/sealed_ac4e5472-76a9-4999-bf0b-8274d27ce0ca | MATCH_MANIFEST |
 | 8a529053 | derived/p1_quality/sealed_8a529053-fc47-486d-8809-6c699d156b06 | MATCH |
 | 385cd4f6 | derived/p1_quality/385cd4f6-47d4-4ed0-8031-87ac7ef21816 | UNSEALED (no .sealed) |
 | 3b4d8207 | derived/p1_quality/3b4d8207-ad36-480a-a717-1c146828d53c | UNSEALED (no .sealed) |

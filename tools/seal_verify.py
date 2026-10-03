@@ -5,6 +5,12 @@ the tree hash by name. Older H1 seals appended the same hash to ``summary.json``
 after hashing. ``verify_seal`` accepts that pattern as ``MATCH_LEGACY_SELF_REF``
 without rewriting the file.
 
+Manifest-format seals store the word ``sealed`` in ``.sealed`` and a
+``manifest.sha256.json`` of relative path to sha256. ``MATCH_MANIFEST`` requires
+every other file to be listed, every listed file to exist, and every hash to
+match. Any miss is ``MANIFEST_COVERAGE_GAP`` and names the files. Neither
+verdict writes into the tree.
+
 Void notices go to ``derived/VOIDS/<run_id>.json``. Nothing in this module
 writes ``VOID.json`` inside a run directory.
 """
@@ -15,13 +21,30 @@ import hashlib
 import json
 import re
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
-SealStatus = Literal["MATCH", "MATCH_LEGACY_SELF_REF", "MISMATCH", "UNSEALED"]
+SealStatus = Literal[
+    "MATCH",
+    "MATCH_LEGACY_SELF_REF",
+    "MATCH_MANIFEST",
+    "MANIFEST_COVERAGE_GAP",
+    "MISMATCH",
+    "UNSEALED",
+]
 
 _SEAL_EXCLUDE = frozenset({".sealed"})
+_MANIFEST_NAME = "manifest.sha256.json"
 _TREE_LINE = re.compile(rb'^(\s*)"tree_sha256"\s*:')
+
+
+@dataclass(frozen=True)
+class SealVerdict:
+    """Verifier result. ``files`` is empty except for ``MANIFEST_COVERAGE_GAP``."""
+
+    status: SealStatus
+    files: tuple[str, ...] = ()
 
 
 def tree_sha256(
@@ -122,21 +145,89 @@ def _recorded_tree_sha256(root: Path) -> str | None:
     return value
 
 
-def verify_seal(directory: Path) -> SealStatus:
-    """Return MATCH, MATCH_LEGACY_SELF_REF, MISMATCH, or UNSEALED.
-
-    Does not write into ``directory``.
-    """
+def seal_verdict(directory: Path) -> SealVerdict:
+    """Classify ``directory``. Does not write into it."""
     root = directory.resolve()
     recorded = _recorded_tree_sha256(root)
-    if recorded is None:
-        return "UNSEALED"
-    if tree_sha256(root) == recorded:
-        return "MATCH"
-    overlay = _legacy_overlay(root)
-    if overlay and tree_sha256(root, file_bytes=overlay) == recorded:
-        return "MATCH_LEGACY_SELF_REF"
-    return "MISMATCH"
+    if recorded is not None:
+        if tree_sha256(root) == recorded:
+            return SealVerdict("MATCH")
+        overlay = _legacy_overlay(root)
+        if overlay and tree_sha256(root, file_bytes=overlay) == recorded:
+            return SealVerdict("MATCH_LEGACY_SELF_REF")
+        return SealVerdict("MISMATCH")
+    if _is_word_sealed(root) and (root / _MANIFEST_NAME).is_file():
+        return _manifest_verdict(root)
+    return SealVerdict("UNSEALED")
+
+
+def verify_seal(directory: Path) -> SealStatus:
+    """Return the seal status. Does not write into ``directory``.
+
+    Tree-hash seals: MATCH, MATCH_LEGACY_SELF_REF, MISMATCH, or UNSEALED.
+    Manifest-format seals: MATCH_MANIFEST or MANIFEST_COVERAGE_GAP.
+    """
+    return seal_verdict(directory).status
+
+
+def _is_word_sealed(root: Path) -> bool:
+    marker = root / ".sealed"
+    if not marker.is_file():
+        return False
+    try:
+        text = marker.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return False
+    return text.strip() == "sealed"
+
+
+def _manifest_verdict(root: Path) -> SealVerdict:
+    """MATCH_MANIFEST, or MANIFEST_COVERAGE_GAP naming every problem path."""
+    manifest_path = root / _MANIFEST_NAME
+    try:
+        doc = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return SealVerdict("MANIFEST_COVERAGE_GAP", (_MANIFEST_NAME,))
+    if not isinstance(doc, dict):
+        return SealVerdict("MANIFEST_COVERAGE_GAP", (_MANIFEST_NAME,))
+
+    listed: dict[str, object] = {str(key).replace("\\", "/"): value for key, value in doc.items()}
+    present = {
+        path.relative_to(root).as_posix()
+        for path in root.rglob("*")
+        if path.is_file()
+        and path.name not in _SEAL_EXCLUDE
+        and path.resolve() != manifest_path.resolve()
+    }
+    unlisted = tuple(sorted(present - set(listed)))
+    missing: list[str] = []
+    hash_mismatch: list[str] = []
+    for rel, expect in sorted(listed.items()):
+        path = _path_inside(root, rel)
+        if path is None or not path.is_file():
+            missing.append(rel)
+            continue
+        if not isinstance(expect, str) or hashlib.sha256(path.read_bytes()).hexdigest() != expect:
+            hash_mismatch.append(rel)
+    files = unlisted + tuple(missing) + tuple(hash_mismatch)
+    if files:
+        return SealVerdict("MANIFEST_COVERAGE_GAP", files)
+    return SealVerdict("MATCH_MANIFEST")
+
+
+def _path_inside(root: Path, rel: str) -> Path | None:
+    """Resolve ``rel`` only when it stays inside ``root``."""
+    if not rel or rel.startswith(("/", "\\")):
+        return None
+    parts = Path(rel).parts
+    if ".." in parts:
+        return None
+    path = (root / rel).resolve()
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return None
+    return path
 
 
 def void_notice_path(run_id: str, *, root: Path) -> Path:

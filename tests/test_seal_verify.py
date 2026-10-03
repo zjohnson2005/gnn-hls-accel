@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -17,6 +18,7 @@ from tools.run_h1_hybrid import (  # noqa: E402
     run_session,
 )
 from tools.seal_verify import (  # noqa: E402
+    seal_verdict,
     strip_legacy_tree_sha256_line,
     tree_sha256,
     verify_seal,
@@ -98,6 +100,54 @@ def test_mismatch_and_unsealed(tmp_path: Path) -> None:
 def test_d482_is_legacy_self_ref() -> None:
     assert D482.is_dir()
     assert verify_seal(D482) == "MATCH_LEGACY_SELF_REF"
+
+
+def _sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def _manifest_tree(root: Path, files: dict[str, bytes], listed: dict[str, str]) -> None:
+    for rel, blob in files.items():
+        path = root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(blob)
+    (root / "manifest.sha256.json").write_text(
+        json.dumps(listed, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    (root / ".sealed").write_bytes(b"sealed\r\n")
+
+
+def test_manifest_seal_matches_when_coverage_is_complete(tmp_path: Path) -> None:
+    blob = b"point\n"
+    _manifest_tree(tmp_path, {"points/n.json": blob}, {"points/n.json": _sha256(blob)})
+    before = {path: path.read_bytes() for path in tmp_path.rglob("*") if path.is_file()}
+    verdict = seal_verdict(tmp_path)
+    after = {path: path.read_bytes() for path in tmp_path.rglob("*") if path.is_file()}
+    assert verdict.status == "MATCH_MANIFEST"
+    assert verdict.files == ()
+    assert verify_seal(tmp_path) == "MATCH_MANIFEST"
+    assert before == after
+
+
+def test_manifest_coverage_gap_names_unlisted_missing_and_hash(tmp_path: Path) -> None:
+    blob = b"kept\n"
+    other = b"other\n"
+    _manifest_tree(
+        tmp_path,
+        {"kept.json": blob, "extra.json": other},
+        {"kept.json": "0" * 64, "absent.json": _sha256(b"nope")},
+    )
+    verdict = seal_verdict(tmp_path)
+    assert verdict.status == "MANIFEST_COVERAGE_GAP"
+    assert verify_seal(tmp_path) == "MANIFEST_COVERAGE_GAP"
+    assert verdict.files == ("extra.json", "absent.json", "kept.json")
+
+
+def test_word_sealed_without_manifest_stays_unsealed(tmp_path: Path) -> None:
+    (tmp_path / ".sealed").write_text("sealed\n", encoding="utf-8")
+    (tmp_path / "summary.json").write_text("{}\n", encoding="utf-8")
+    assert verify_seal(tmp_path) == "UNSEALED"
 
 
 def test_void_notice_is_outside_the_run(tmp_path: Path) -> None:
