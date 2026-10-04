@@ -28,6 +28,27 @@ three tests fail with `AttributeError`:
 The Mac suite does not reach this line (OpenVINO is not installed there).
 Not fixed yet.
 
+## Rehearsal ssh-parent check and the npu-1 hint
+
+`Test-SeamProcessAncestor` walks four parent processes looking for
+`sshd.exe`. A `powershell -File` on the ssh command adds a process, and
+that walk then misses `sshd.exe`. The rehearsal refuses with
+`REFUSED -- rehearsal -Detach must be started from ssh`. Invoke the
+script in the ssh PowerShell:
+
+```
+.\tools\launch_t2s_npu1.ps1 -Detach -Rehearsal
+```
+
+not `powershell -NoProfile -File tools\launch_t2s_npu1.ps1`. The same
+rule applies to every T2S launch and rehearsal, and to the XPS A5
+commands. Found 2026-10-03. Not fixed yet.
+
+Profile `npu-1` is not in `$script:RehearsalMac` in
+`tools/launch_boot1.ps1`. The refusal hint falls through to the default,
+which prints an XPS command for `tools\launch_boot4.ps1`. The T2S command
+is `.\tools\launch_t2s_npu1.ps1`. Not fixed yet.
+
 ## Boot 1-3 det cells have no rehearsal smoke
 
 Profiles `boot1`, `boot2`, and `boot3` each include a det cell
