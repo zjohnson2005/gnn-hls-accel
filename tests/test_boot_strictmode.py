@@ -105,6 +105,34 @@ def test_p1_a0_rehearsal_strict_mode_stubs_smokes() -> None:
     assert "--smoke" not in combined
 
 
+def test_result_kinds_rehearse_through_the_cell_invoker() -> None:
+    """Ceiling and det share the $ran.Exit read. Rehearsal must call it."""
+    env = os.environ.copy()
+    env["SEAM_BOOT_CELL_STUB"] = "1"
+    env["SEAM_BOOT_SMOKE_STUB"] = "1"
+    command = (
+        "Set-StrictMode -Version Latest; "
+        f"& '{ROOT / 'tools' / 'launch_boot1.ps1'}' -Profile boot1 -Rehearsal; "
+        "exit $LASTEXITCODE"
+    )
+    proc = subprocess.run(
+        ["powershell", "-NoProfile", "-Command", command],
+        cwd=ROOT,
+        env=env,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    combined = proc.stdout + proc.stderr
+    _assert_no_strict_fault(proc, "boot1 rehearsal invoker")
+    assert proc.returncode == 0, combined
+    assert "cell_invoke kind=det" in combined
+    assert "cell_invoke kind=ceiling" in combined
+    assert "SMOKE_OK det" in combined
+    assert "REHEARSAL_COMPLETE" in combined
+    assert "no rehearsal smoke" not in combined
+
+
 def test_t2s_rehearsal_strict_mode_stubs_smokes() -> None:
     proc = _run("launch_t2s_boot1.ps1")
     _assert_no_strict_fault(proc, "launch_t2s_boot1.ps1")

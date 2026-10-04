@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import builtins
 import contextlib
+import json
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -107,6 +110,72 @@ def test_binding_is_toolchain_latency_or_load_fail() -> None:
     assert below["ttft_limit_n"] is None
     failed = bind_setting(load_ok=False, cap=1024, rungs=[])
     assert failed["binding"] == "LOAD_FAIL"
+
+
+def _run_npu_cells(*, rehearsal: bool) -> subprocess.CompletedProcess[str]:
+    env = os.environ.copy()
+    env["SEAM_BOOT_CELL_STUB"] = "1"
+    if rehearsal:
+        env["SEAM_BOOT_SMOKE_STUB"] = "1"
+    flags = "-NoRebootDeviation -Npu2 -MaxPromptLen 1024"
+    if rehearsal:
+        flags = "-Rehearsal " + flags
+    command = (
+        "Set-StrictMode -Version Latest; "
+        f"& '{LAUNCHER}' -Profile npu-1 {flags}; "
+        "exit $LASTEXITCODE"
+    )
+    return subprocess.run(
+        ["powershell", "-NoProfile", "-Command", command],
+        cwd=ROOT,
+        env=env,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_npu_real_cell_stub_reads_exit() -> None:
+    """The real invoker, not the rehearsal smoke branch, must survive worker stdout."""
+    proc = _run_npu_cells(rehearsal=False)
+    combined = proc.stdout + proc.stderr
+    assert "cannot be found on this object" not in combined, combined
+    assert proc.returncode == 0, combined
+    assert "cell_invoke kind=npu" in combined
+    assert "SMOKE_OK npu2-load" in combined
+    assert "SMOKE_OK npu1-setting" in combined
+    assert "=== machine-lock / alive-worker check ===" in combined
+    summary = (
+        ROOT / "derived" / "c2_ttft" / "_launches" / "_stub" / "npu-1" / "T2S_NPU1_SUMMARY.json"
+    )
+    doc = json.loads(summary.read_text(encoding="utf-8"))
+    assert doc["state"] == "complete"
+    assert len(doc["cells"]) == 2
+    assert doc["cells"][0]["status"] == "smoke"
+
+
+def test_npu_rehearsal_uses_the_cell_invoker() -> None:
+    proc = _run_npu_cells(rehearsal=True)
+    combined = proc.stdout + proc.stderr
+    assert "cannot be found on this object" not in combined, combined
+    assert proc.returncode == 0, combined
+    assert "cell_invoke kind=npu" in combined
+    assert "SMOKE_OK npu2-load" in combined
+    assert "REHEARSAL_COMPLETE" in combined
+    assert "rehearsal_cell " not in combined
+    summary = (
+        ROOT
+        / "derived"
+        / "c2_ttft"
+        / "_launches"
+        / "_rehearsal"
+        / "npu-1"
+        / "T2S_NPU1_SUMMARY.json"
+    )
+    doc = json.loads(summary.read_text(encoding="utf-8"))
+    assert doc["state"] == "complete"
+    assert doc["cells"]
+    assert doc["cells"][0]["status"] == "rehearsal_invoke"
 
 
 def test_ir_is_groupwise_int4_sym() -> None:

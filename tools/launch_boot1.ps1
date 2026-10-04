@@ -75,6 +75,9 @@ if ($Rehearsal) {
     $LaunchDir = Join-Path $LaunchDir ("_rehearsal\" + $Profile)
     $env:SEAM_REHEARSAL = "1"
     Write-Host ("rehearsal=true writes={0}" -f $LaunchDir)
+} elseif ($env:SEAM_BOOT_CELL_STUB -eq "1") {
+    # Tests of the real cell invoker must not write the live summary.
+    $LaunchDir = Join-Path $LaunchDir ("_stub\" + $Profile)
 }
 $SummaryName = switch ($Profile) {
     "boot2" { "BOOT2_SUMMARY.json" }
@@ -810,7 +813,7 @@ function Assert-T2sOwnedWorkers {
 
 function Update-T2sForeignEvidence {
     param([string]$RunId = "", [switch]$NoPatchFiles)
-    if (-not $script:EvoT2 -or $DryRun) { return }
+    if (-not $script:EvoT2 -or $DryRun -or $env:SEAM_BOOT_CELL_STUB -eq "1") { return }
     if (-not $script:RunStartedUtc) { return }
     $ended = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
     $payload = [ordered]@{
@@ -958,6 +961,17 @@ function Invoke-CellPreamble {
 
 function Invoke-DetProbe {
     param($Cell)
+    # Rehearsal uses this same function. A stub worker still prints a line so an
+    # uncaptured stdout return fails $ran.Exit under strict mode.
+    if ($Rehearsal -or $env:SEAM_BOOT_CELL_STUB -eq "1") {
+        $workerLines = New-Object System.Collections.Generic.List[string]
+        & $PythonExe -c "print('SMOKE_OK det')" 2>&1 | ForEach-Object {
+            $workerLines.Add([string]$_)
+            Write-Host $_
+        }
+        return Get-BootCeilingResult -SummaryPath (Join-Path $LaunchDir "det-stub-summary.json") `
+            -Stdout @($workerLines) -ExitCode $LASTEXITCODE -RunId "stub" -Out $LaunchDir
+    }
     $detArgs = @("-u", $DetPy)
     $arm = Get-BootCellField -Cell $Cell -Name "Arm"
     if ($arm) { $detArgs += @("--arm", $arm) }
@@ -974,11 +988,19 @@ function Invoke-DetProbe {
 
 function Invoke-NpuCell {
     param($Cell)
+    # Worker stdout must not join this return. The ceiling path already does
+    # this in Get-BootCeilingResult: an extra string makes $ran an Object[],
+    # and strict mode then throws on $ran.Exit before any cell is recorded.
     $phase = Get-BootCellField -Cell $Cell -Name "Phase"
     $model = Join-Path $root (Get-BootCellField -Cell $Cell -Name "Model")
     if (-not (Test-Path -LiteralPath $model)) { throw "REFUSED -- missing model spec $model" }
     $sid = [guid]::NewGuid().ToString()
-    $out = Join-Path $root ("derived\npu\" + $sid)
+    $stubWorker = $Rehearsal -or $env:SEAM_BOOT_CELL_STUB -eq "1"
+    if ($stubWorker) {
+        $out = Join-Path $LaunchDir ("npu_" + $sid)
+    } else {
+        $out = Join-Path $root ("derived\npu\" + $sid)
+    }
     New-Item -ItemType Directory -Force -Path $out | Out-Null
     $workerArgs = @(
         "-u", $NpuPy,
@@ -995,19 +1017,42 @@ function Invoke-NpuCell {
     if ($null -ne $resolution) { $workerArgs += @("--resolution", [string]$resolution) }
     if ($null -ne $mpl) { $workerArgs += @("--max-prompt-len", [string]$mpl) }
     if ($loadOnly) { $workerArgs += "--load-only" }
-    & $PythonExe @workerArgs
+    if ($stubWorker) { $workerArgs += "--smoke" }
+    $workerLines = New-Object System.Collections.Generic.List[string]
+    & $PythonExe @workerArgs 2>&1 | ForEach-Object {
+        $workerLines.Add([string]$_)
+        Write-Host $_
+    }
     $exit = $LASTEXITCODE
     $summaryPath = Join-Path $out "summary.json"
-    $status = "REFUSED"
-    if (Test-Path -LiteralPath $summaryPath) {
-        $doc = Get-Content -LiteralPath $summaryPath -Raw | ConvertFrom-Json
-        if ($doc.status) { $status = [string]$doc.status }
-    }
-    return @{ Exit = $exit; Status = $status; RunId = $sid; Out = $out }
+    return Get-BootCeilingResult -SummaryPath $summaryPath -Stdout @($workerLines) `
+        -ExitCode $exit -RunId $sid -Out $out
 }
 
 function Invoke-CeilingCell {
     param($Cell)
+    # Same return shape as a real cell. Rehearsal runs the smoke worker, then
+    # the caller still reads $ran.Exit.
+    if ($Rehearsal -or $env:SEAM_BOOT_CELL_STUB -eq "1") {
+        $built = Get-BootCellCommand -Cell $Cell
+        $workerLines = New-Object System.Collections.Generic.List[string]
+        $exit = 0
+        if ($built.smoke) {
+            if ($env:SEAM_BOOT_SMOKE_STUB -eq "1" -or $env:SEAM_BOOT_CELL_STUB -eq "1") {
+                Write-Host ("smoke_stub {0}" -f $built.smoke)
+                $workerLines.Add("SMOKE_OK ceiling")
+            } else {
+                $parts = @($built.smoke -split " ")
+                & $parts[0] @($parts | Select-Object -Skip 1) 2>&1 | ForEach-Object {
+                    $workerLines.Add([string]$_)
+                    Write-Host $_
+                }
+                $exit = $LASTEXITCODE
+            }
+        }
+        return Get-BootCeilingResult -SummaryPath (Join-Path $LaunchDir "ceiling-stub-summary.json") `
+            -Stdout @($workerLines) -ExitCode $exit -RunId "stub" -Out $LaunchDir
+    }
     $model = Join-Path $root $Cell.Model
     if (-not (Test-Path -LiteralPath $model)) { throw "REFUSED -- missing model spec $($Cell.Model)" }
     $sid = [guid]::NewGuid().ToString()
@@ -1443,25 +1488,32 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
     }
 
     $script:CellStartedUtc = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-    try {
-        Assert-T2sOwnedWorkers
-        Assert-BootAc
-        Assert-BootTree | Out-Null
-        if ($cell.Kind -eq "det" -or $cell.Kind -eq "warm" -or $cell.Kind -eq "decode" -or $cell.Kind -eq "resident" -or $cell.Kind -eq "exchange" -or $cell.Kind -eq "p1") {
-            Invoke-CellPreamble -Label $cell.Name -SkipGateFile
-        } else {
-            Invoke-CellPreamble -Label $cell.Name
+    # Kinds whose real launch reads $ran.Exit. Rehearsal calls that same
+    # invoker with a stub worker. A smoke-only branch never reached it.
+    $sharesCellInvoker = $cell.Kind -eq "npu" -or $cell.Kind -eq "det" -or $cell.Kind -eq "ceiling" -or $cell.Kind -eq "control"
+    if ($env:SEAM_BOOT_CELL_STUB -eq "1") {
+        Assert-BootLockClear
+    } else {
+        try {
+            Assert-T2sOwnedWorkers
+            Assert-BootAc
+            Assert-BootTree | Out-Null
+            if ($cell.Kind -eq "det" -or $cell.Kind -eq "warm" -or $cell.Kind -eq "decode" -or $cell.Kind -eq "resident" -or $cell.Kind -eq "exchange" -or $cell.Kind -eq "p1") {
+                Invoke-CellPreamble -Label $cell.Name -SkipGateFile
+            } else {
+                Invoke-CellPreamble -Label $cell.Name
+            }
+        } catch {
+            $script:FinalState = "refused"
+            $script:FinalReason = $_.Exception.Message
+            Add-Row -Cell $cell -Status "REFUSED" -RunId "" -Detail $script:FinalReason
+            Save-BootSummary -State "refused" -Reason $script:FinalReason
+            Write-Host $script:FinalReason
+            exit 1
         }
-    } catch {
-        $script:FinalState = "refused"
-        $script:FinalReason = $_.Exception.Message
-        Add-Row -Cell $cell -Status "REFUSED" -RunId "" -Detail $script:FinalReason
-        Save-BootSummary -State "refused" -Reason $script:FinalReason
-        Write-Host $script:FinalReason
-        exit 1
     }
 
-    if ($Rehearsal) {
+    if ($Rehearsal -and -not $sharesCellInvoker) {
         $built = Get-BootCellCommand -Cell $cell
         if (-not $built.smoke) { throw "REFUSED -- no rehearsal smoke for $($cell.Name)" }
         Write-Host ("rehearsal_cell {0}" -f $built.smoke)
@@ -1479,6 +1531,7 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
     }
 
     if ($cell.Kind -eq "npu") {
+        Write-Host "cell_invoke kind=npu"
         $ran = Invoke-NpuCell -Cell $cell
         if ($ran.Exit -ne 0 -or $ran.Status -match "UNARMED|REFUSED") {
             $script:LastRunId = $ran.RunId
@@ -1489,11 +1542,14 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
             exit $ran.Exit
         }
         $script:LastRunId = $ran.RunId
-        Add-Row -Cell $cell -Status $ran.Status -RunId $ran.RunId -Detail "summary_status=$($ran.Status)"
+        $npuStatus = [string]$ran.Status
+        if ($Rehearsal) { $npuStatus = "rehearsal_invoke" }
+        Add-Row -Cell $cell -Status $npuStatus -RunId $ran.RunId -Detail "summary_status=$($ran.Status)"
         continue
     }
 
     if ($cell.Kind -eq "det") {
+        Write-Host "cell_invoke kind=det"
         $ran = Invoke-DetProbe -Cell $cell
         if ($ran.Exit -ne 0) {
             $script:LastRunId = $ran.RunId
@@ -1504,7 +1560,9 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
             exit $ran.Exit
         }
         $script:LastRunId = $ran.RunId
-        Add-Row -Cell $cell -Status "complete" -RunId $ran.RunId -Detail ""
+        $detStatus = "complete"
+        if ($Rehearsal) { $detStatus = "rehearsal_invoke" }
+        Add-Row -Cell $cell -Status $detStatus -RunId $ran.RunId -Detail ""
         continue
     }
 
@@ -1533,6 +1591,7 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
     }
 
     try {
+        Write-Host ("cell_invoke kind={0}" -f $cell.Kind)
         $ran = Invoke-CeilingCell -Cell $cell
     } catch {
         $script:FinalState = "refused"
@@ -1551,6 +1610,11 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         Save-BootSummary -State "refused" -Reason $script:FinalReason
         Write-Host ("REFUSED -- canary did not arm for {0} ({1})" -f $cell.Name, $detail)
         exit 1
+    }
+    if ($Rehearsal) {
+        $script:LastRunId = $ran.RunId
+        Add-Row -Cell $cell -Status "rehearsal_invoke" -RunId $ran.RunId -Detail "summary_status=$($ran.Status)"
+        continue
     }
     $expectKv = Get-BootCellField -Cell $cell -Name "ExpectKvReadback"
     if ($expectKv) {

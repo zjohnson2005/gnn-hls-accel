@@ -100,7 +100,7 @@ Seal check 2026-10-03 (`tools/seal_verify.py` on the `sealed_` tree when one exi
 | ac4e5472 | derived/exchange_rate/sealed_ac4e5472-76a9-4999-bf0b-8274d27ce0ca | MATCH_MANIFEST |
 | 8a529053 | derived/p1_quality/sealed_8a529053-fc47-486d-8809-6c699d156b06 | MATCH |
 | 385cd4f6 | derived/p1_quality/sealed_385cd4f6-47d4-4ed0-8031-87ac7ef21816 | MATCH tree_sha256 01adc99801c5f571b0c912bbab91865ce68c12679ea1fa173dcaf9512f90bc13 |
-| 3b4d8207 | derived/p1_quality/sealed_3b4d8207-ad36-480a-a717-1c146828d53c | MATCH tree_sha256 6bb5728cffb58c9409e3b94ba68767e640318e41e9fc67d2d39b51882e74c216 |
+| 3b4d8207 | derived/p1_quality/sealed_3b4d8207-ad36-480a-a717-1c146828d53c | MATCH tree_sha256 6bb5728cffb58c9409e3b94ba68767e640318e41e9fc67d2d39b51882e74c216. entries.jsonl companion seal not needed: pass and in_budget duplicate passed and in_budget_pass on all 100 rows |
 | c76fed24 | NOT IN derived/ (searched derived/, docs/, repo filenames) | NOT IN derived/ |
 
 ---
@@ -168,7 +168,7 @@ time after Wednesday; this list does not fit in the window.
 | P1-T2 | A0 + fixed A4 at B = 10/20 on the faster GPU: does thinking fit? | C4, C5 | A | PLANNED | A4 fix committed; amendment 8 registered |
 | P0-T2 | exchange rate on T2S | C4 | B | PLANNED | launcher profile |
 | P1-T2 8B | P1 arms with 8B (more quality headroom) | C4 | B | PLANNED | |
-| NPU-1 | NPU as third placement; limit set by toolchain (MAX_PROMPT_LEN) | C1, C5 | A | PLANNED | MAX_PROMPT_LEN is the load-time axis (1024, 2048, 4096, 8192, then double until load fails). One detached session per setting: the pilot-extrapolated bound of the fixed ladder is above 7200 s. IR is INT4_SYM group_size 128. Binding per setting is TOOLCHAIN_CAP, LATENCY, or LOAD_FAIL. Profile tools/launch_t2s_npu1.ps1. Prereg derived/npu/NPU1_PREREG.json sha256 483ed364c2fef94b65e6822404702bf576c5e80d600ab40e701e60196565ce07. Predictions registered, not launched. |
+| NPU-1 | NPU as third placement; limit set by toolchain (MAX_PROMPT_LEN) | C1, C5 | A | PLANNED | MAX_PROMPT_LEN is the load-time axis (1024, 2048, 4096, 8192, then double until load fails). One detached session per setting: the pilot-extrapolated bound of the fixed ladder is above 7200 s. IR is INT4_SYM group_size 128. Binding per setting is TOOLCHAIN_CAP, LATENCY, or LOAD_FAIL. Profile tools/launch_t2s_npu1.ps1. Prereg derived/npu/NPU1_PREREG.json sha256 483ed364c2fef94b65e6822404702bf576c5e80d600ab40e701e60196565ce07. Predictions registered. Attempt c3caa5fc crashed before any cell (T2S_NPU1_SUMMARY state crashed, cells empty). No data. |
 | NPU-1-CW | channel-wise int4 (group_size -1) on NPU | C1 | C | PARKED | conversion or download of Qwen/Qwen3-4B INT4_SYM group_size -1 waits for Rithwik's OK |
 | NPU-2 | int8 on NPU crashes: first infeasible cell | C5, P2 | B | PLANNED | same profile, load-only cell (-Npu2); not launched |
 | HET-1 | phase split across devices; primary arm NPU prefill -> GPU decode (AMD direction), contrast GPU prefill -> NPU decode; measure handoff cost | C5 | B | PLANNED | feasibility spike first: can OpenVINO pass KV across devices? |

@@ -51,8 +51,16 @@ is `.\tools\launch_t2s_npu1.ps1`. Not fixed yet.
 
 ## Boot 1-3 det cells have no rehearsal smoke
 
-Profiles `boot1`, `boot2`, and `boot3` each include a det cell
-(`DET-PROBE` or `DET-PROBE-KV`). `Get-BootCellCommand` builds no smoke
-command for kind `det`, and rehearsal throws
-`REFUSED -- no rehearsal smoke` at that cell. Those profiles cannot reach
-`REHEARSAL_COMPLETE`. Not blocking t2s-boot1. Not fixed yet.
+Fixed 2026-10-04. Rehearsal of kind `det` calls `Invoke-DetProbe`, the same
+function as a real cell, with a stub worker that prints `SMOKE_OK det` and
+returns an `Exit` code. It no longer throws `REFUSED -- no rehearsal smoke`.
+
+## NPU-1 attempt c3caa5fc crashed before any cell
+
+Boot `c3caa5fc`. `T2S_NPU1_SUMMARY` state `crashed`, `cells` empty. Right
+after the machine-lock check, strict mode threw `The property 'Exit' cannot
+be found on this object`. `Invoke-NpuCell` left the worker stdout in its
+return, so `$ran` was not the result object. Nothing was measured. Fixed:
+worker stdout is captured and the result is `Get-BootCeilingResult`.
+Rehearsal of `npu`, `det`, `ceiling`, and `control` now calls that same
+invoker with a stub worker.
