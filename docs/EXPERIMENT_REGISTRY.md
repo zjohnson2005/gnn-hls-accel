@@ -212,7 +212,7 @@ time after Wednesday; this list does not fit in the window.
 | R-LLAMA / RET-1L | llama.cpp arm on T2S | RET-1L | OPEN |
 | R-EVICT | published eviction methods vs ablation truth | related work | OPEN |
 | T2S time | window extension after Wed; watchdog paused; Tailscale unattended; model downloads | all T2S rows | ASKED |
-| 0921 coverage | confirm no T2S jobs 2026-09-21 16:30-19:00Z | 5c714535, 051d2681 note | ASKED |
+| 0921 coverage | confirm no T2S jobs 2026-09-21 16:30-19:00Z | 5c714535, 051d2681 note | ASKED (derived/VOIDS/PENDING_T2S_0921_coverage.md) |
 | GRID-1 / PROTO-1 | shared config grid; retention protocol sign-off | joint paper | NOT FOUND (searched: docs/, derived/, git log --all --grep GRID-1) |
 
 ---
