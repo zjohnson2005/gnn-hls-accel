@@ -1,49 +1,62 @@
 {
   "id": "NPU1_PREREG",
+  "registered_before_any_npu_run": true,
+  "measurement_status": "not_started",
   "runner_must_not_read_this_file": true,
-  "predictions": "TBD",
-  "numeric_prediction": null,
-  "note": "Fill the numbers before any NPU run. The runner must not open this file.",
+  "predictions": [
+    {
+      "id": "a",
+      "statement": "1024, 2048, 4096, and 8192 load with readback equal to the request. 16384 does not load at the requested value: LOAD_FAIL, or a readback mismatch that refuses the cell.",
+      "source": "OpenVINO 2025.3 release notes, 8K dynamic-prompt cap.",
+      "falsified_if": "16384 loads at the requested value, or any of 1024, 2048, 4096, 8192 fails to load at the requested value."
+    },
+    {
+      "id": "b",
+      "statement": "At 1024 the bound is TOOLCHAIN_CAP. At 8192 the bound is LATENCY and the limit is below 8192. The crossover setting is TBD.",
+      "source": "NPU-1 hypothesis (2026-09-22, toolchain-bound regime). XPS pilot n=64 prefill 1.41 s versus GPU 0.51 s. The pilot is not a measurement.",
+      "falsified_if": "1024 is LATENCY, or 8192 is TOOLCHAIN_CAP."
+    },
+    {
+      "id": "c",
+      "statement": "Directional only: NPU decode tok/s is below 34.3. No point value.",
+      "comparison": "34.3 tok/s is the GPU figure from the T2S smoke on 2026-10-03.",
+      "source": "openvino.genai #1563. XPS pilot 16.46 tok/s is a different NPU generation and is a pilot, not the predicted point.",
+      "falsified_if": "NPU decode tok/s is greater than or equal to 34.3.",
+      "numeric_prediction": null
+    },
+    {
+      "id": "d",
+      "statement": "NPU-2 int8 load fails. The cell is infeasible and does not generate. error_class is TBD.",
+      "source": "openvino #35641.",
+      "falsified_if": "The int8 load succeeds, or the cell generates."
+    }
+  ],
   "derivation_sources": [
     {
-      "source": "OpenVINO NPU GenAI docs",
-      "url": "https://docs.openvino.ai/2026/openvino-workflow-generative/inference-with-genai/inference-with-genai-on-npu.html",
-      "uses": "NPUW_LLM_MAX_PROMPT_LEN as loaded, and the documented dynamic-prompt cap of 8192"
+      "source": "OpenVINO 2025.3 release notes",
+      "uses": "8K dynamic-prompt cap. Prediction (a)."
+    },
+    {
+      "source": "NPU-1 hypothesis 2026-09-22",
+      "uses": "Toolchain-bound regime. Prediction (b), with the XPS pilot n=64 prefill 1.41 s versus GPU 0.51 s. Pilot, not a measurement."
     },
     {
       "source": "openvino.genai#1563",
       "url": "https://github.com/openvinotoolkit/openvino.genai/issues/1563",
-      "uses": "NPU decode is slow relative to GPU; decode tok/s prediction"
+      "uses": "NPU decode is slow relative to GPU. Prediction (c), directional, no point value."
     },
     {
-      "source": "openvino.genai#3255",
-      "url": "https://github.com/openvinotoolkit/openvino.genai/issues/3255",
-      "uses": "output past MAX_PROMPT_LEN is not a timing"
+      "source": "T2S GPU smoke 2026-10-03",
+      "uses": "34.3 tok/s. The comparison line for prediction (c). Not a sealed measurement."
+    },
+    {
+      "source": "XPS NPU feasibility pilot 2026-10-03",
+      "uses": "16.46 tok/s decode on a different NPU generation. Pilot context for prediction (c), not the predicted point. n=64 prefill 1.41 s versus GPU 0.51 s is pilot context for prediction (b)."
     },
     {
       "source": "openvino#35641",
       "url": "https://github.com/openvinotoolkit/openvino/issues/35641",
-      "uses": "int8 on NPU is infeasible at load"
-    },
-    {
-      "source": "evo-t2 GPU f16 4B ttft_limit_n 18687",
-      "run_id": "5c714535-9f36-4614-a594-698b6cd09296"
-    },
-    {
-      "source": "evo-t2 GPU u8 4B ttft_limit_n 18500",
-      "run_id": "d2d5cc4a-20e3-401f-8bba-d3a6d76bda81"
-    },
-    {
-      "source": "evo-t2 GPU u8 8B ttft_limit_n 16437",
-      "run_id": "56c116a6-d484-400d-abed-868fdbcedc9e"
-    },
-    {
-      "source": "aipc-c1 GPU 4B-int4 ttft_limit_n 9750",
-      "run_id": "c647f0c7-5cc9-47bb-a491-3450533c34d1"
-    },
-    {
-      "source": "aipc-c1 CPU 4B-int4 ttft_limit_n 500",
-      "run_id": "d3dcbd3b-5107-4b5e-a0dd-402f99f6f90c"
+      "uses": "int8 on NPU is infeasible at load. Prediction (d). error_class stays TBD."
     }
   ]
 }
