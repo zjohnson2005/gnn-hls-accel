@@ -157,6 +157,11 @@ if ($Detach) {
     if ($Profile -eq "p1-a1" -or $Profile -eq "p1-a4" -or $Profile -eq "p1-a5") {
         $cmd += " -P1Seed $P1Seed -P1EntryOffset $P1EntryOffset -P1EntryCount $P1EntryCount"
     }
+    if ($Profile -eq "npu-1") {
+        if ($Npu2) { $cmd += " -Npu2" }
+        if ($LoadOnly) { $cmd += " -LoadOnly" }
+        if ($MaxPromptLen -gt 0) { $cmd += " -MaxPromptLen $MaxPromptLen" }
+    }
     if ($WatchdogLog) { $cmd += " -WatchdogLog `"$WatchdogLog`"" }
     $log = Join-Path $LaunchDir "$Profile.log"
     $json = & $SpawnPs1 -CommandLine $cmd -LogPath $log -WorkingDirectory $root
