@@ -93,11 +93,18 @@ def test_smoke_covers_vote_retry_and_fallback() -> None:
     assert result["arms"]["A2"][1]["met_budget"] is True
     assert result["arms"]["A3"][0]["retried"] is True
     assert result["arms"]["A3"][1]["met_budget"] is True
-    thinking = result["arms"]["A4"][0]
-    assert thinking["thinking_stripped"] is True
-    assert "<think>" not in thinking["retained_text"]
-    assert thinking["emitted_chars"] > thinking["retained_chars"]
-    assert thinking["token_cap"] == 100
+    used, rejected, cutoff = result["arms"]["A4"]
+    assert used["source"] == "thinking"
+    assert used["thinking_accepted"] is True
+    assert used["thinking_closed"] is True
+    assert "<think>" not in used["chosen_text"]
+    assert used["greedy_call_sha256"]
+    assert rejected["source"] == "greedy"
+    assert rejected["thinking_accepted"] is False
+    assert rejected["thinking_closed"] is False
+    assert cutoff["source"] == "greedy"
+    assert cutoff["token_cap"] == 0
+    assert cutoff["thinking_accepted"] is False
     recovered, kept = result["arms"]["A5"]
     assert recovered["source"] == "feedback"
     assert recovered["checks"] == ["unknown_function", "ok"]
@@ -355,8 +362,7 @@ def test_a1_dry_run_is_the_registered_first_half() -> None:
     assert "fits_one_window=true" in combined
 
 
-def test_a4_dry_run_is_the_registered_first_half() -> None:
-    env = os.environ.copy()
+def test_a4_launcher_refuses_the_closed_procedure() -> None:
     command = (
         "Set-StrictMode -Version Latest; "
         f"& '{ROOT / 'tools' / 'launch_p1_a4.ps1'}' -DryRun; "
@@ -365,7 +371,26 @@ def test_a4_dry_run_is_the_registered_first_half() -> None:
     proc = subprocess.run(
         ["powershell", "-NoProfile", "-Command", command],
         cwd=ROOT,
-        env=env,
+        env=os.environ.copy(),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    combined = proc.stdout + proc.stderr
+    assert proc.returncode != 0, combined
+    assert "A4-as-implemented is closed" in combined
+
+
+def test_sweep_dry_run_fits_one_window() -> None:
+    command = (
+        "Set-StrictMode -Version Latest; "
+        f"& '{ROOT / 'tools' / 'launch_p1_sweep.ps1'}' -DryRun; "
+        "exit $LASTEXITCODE"
+    )
+    proc = subprocess.run(
+        ["powershell", "-NoProfile", "-Command", command],
+        cwd=ROOT,
+        env=os.environ.copy(),
         check=False,
         capture_output=True,
         text=True,
@@ -373,15 +398,49 @@ def test_a4_dry_run_is_the_registered_first_half() -> None:
     combined = proc.stdout + proc.stderr
     assert proc.returncode == 0, combined
     assert "DRY_RUN_OK" in combined
-    assert "--arm A4" in combined
+    assert "--arm A0" in combined
+    assert "--budget-s 10" in combined
     assert "--seed 20260930" in combined
     assert "--entry-offset 0" in combined
     assert "--entry-count 100" in combined
-    assert "p1_a4_estimate_s=4500" in combined
+    assert "p1_sweep_estimate_s=2891" in combined
     assert "fits_one_window=true" in combined
-    boot = (ROOT / "tools" / "launch_boot1.ps1").read_text(encoding="utf-8")
-    assert "p1-a4" in boot
-    assert "-P1Seed $P1Seed -P1EntryOffset $P1EntryOffset -P1EntryCount $P1EntryCount" in boot
+    first_a4 = (
+        "Set-StrictMode -Version Latest; "
+        f"& '{ROOT / 'tools' / 'launch_p1_sweep.ps1'}' -DryRun -Arm A4 -EntryCount 83; "
+        "exit $LASTEXITCODE"
+    )
+    a4 = subprocess.run(
+        ["powershell", "-NoProfile", "-Command", first_a4],
+        cwd=ROOT,
+        env=os.environ.copy(),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    a4_text = a4.stdout + a4.stderr
+    assert a4.returncode == 0, a4_text
+    assert "DRY_RUN_OK" in a4_text
+    assert "--arm A4" in a4_text
+    assert "--budget-s 10" in a4_text
+    assert "--entry-count 83" in a4_text
+    assert "p1_sweep_estimate_s=7168" in a4_text
+    assert "fits_one_window=true" in a4_text
+    wide = (
+        "Set-StrictMode -Version Latest; "
+        f"& '{ROOT / 'tools' / 'launch_p1_sweep.ps1'}' -DryRun -Arm A4 -BudgetS 10; "
+        "exit $LASTEXITCODE"
+    )
+    refused = subprocess.run(
+        ["powershell", "-NoProfile", "-Command", wide],
+        cwd=ROOT,
+        env=os.environ.copy(),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert refused.returncode != 0
+    assert "not a registered boot" in (refused.stdout + refused.stderr)
 
 
 def test_amendment_5_keeps_the_measured_ranges_and_labels_the_unbounded_run() -> None:

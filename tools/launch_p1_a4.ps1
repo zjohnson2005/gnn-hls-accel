@@ -1,17 +1,6 @@
-# P1 A4. Next arm after A0. One registered half of one seed.
-# Default is seed 20260930, entries [:100].
-# Arm smokes are tools/launch_p1_preflight.ps1, before the cold reboot.
-# This script does not open a preregistration.
-# Schedule after this arm: A5, then A2, then A3, then bounded A1.
-#
-# First half, seed 20260930, from the Mac, on a cold window:
-#   ssh zjohn@100.101.81.6 'cd <repo>; powershell -NoProfile -File tools\launch_p1_a4.ps1 -Detach'
-# Second half, same seed:
-#   ssh zjohn@100.101.81.6 'cd <repo>; powershell -NoProfile -File tools\launch_p1_a4.ps1 -Detach -EntryOffset 100'
-# First half, seed 20261001:
-#   ssh zjohn@100.101.81.6 'cd <repo>; powershell -NoProfile -File tools\launch_p1_a4.ps1 -Detach -Seed 20261001'
-# Second half, seed 20261001:
-#   ssh zjohn@100.101.81.6 'cd <repo>; powershell -NoProfile -File tools\launch_p1_a4.ps1 -Detach -Seed 20261001 -EntryOffset 100'
+# P1 A4 as implemented is closed (run 3b4d8207, entries [:100]).
+# This launcher refuses. The registered A4 boots are tools/launch_p1_sweep.ps1
+# after A5. Do not start the second half.
 
 [CmdletBinding()]
 param(
@@ -23,14 +12,5 @@ param(
     [int]$EntryCount = 100
 )
 
-$root = Split-Path -Parent $PSScriptRoot
-$launcher = Join-Path $PSScriptRoot "launch_boot1.ps1"
-$launchArgs = @(
-    "-NoProfile", "-File", $launcher, "-Profile", "p1-a4",
-    "-P1Seed", "$Seed", "-P1EntryOffset", "$EntryOffset", "-P1EntryCount", "$EntryCount"
-)
-if ($Detach) { $launchArgs += "-Detach" }
-if ($DryRun) { $launchArgs += "-DryRun" }
-if ($Rehearsal) { $launchArgs += "-Rehearsal" }
-& powershell @launchArgs
-exit $LASTEXITCODE
+Write-Error "A4-as-implemented is closed"
+exit 1

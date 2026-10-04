@@ -109,7 +109,7 @@ Seal check 2026-10-03 (`tools/seal_verify.py` on the `sealed_` tree when one exi
 
 | id | question | claim | pri | status | blocked by / notes |
 |---|---|---|---|---|---|
-| A4-FIX + B sweep | greedy-first, sampled thinking, only finished valid calls; B = 10/20/30 s | C4 | A | NEXT | AMENDMENT_8 before any run; A4-DIAG first |
+| A4-FIX + B sweep | greedy-first, sampled thinking, only finished valid calls; B = 10/20/30 s | C4 | A | NEXT | greedy-first runner committed; measurement waits on amendment 8 |
 | A5 feedback-retry | retry with the wrong answer and error in context | C4 | A | NEXT | amendment 7 registered (pred 23-28.06) |
 | A2 retry-on-empty | resample on empty/unparseable while TTA < B | C4 | B | PLANNED | after A5 |
 | A3 check-and-retry | resample on tool error while TTA < B | C4 | B | PLANNED | note: 0 tool_exec errors in d482c621; may be near-null, still run |

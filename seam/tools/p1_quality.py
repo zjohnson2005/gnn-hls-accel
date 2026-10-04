@@ -28,6 +28,10 @@ _ENTRY_STEP_KEYS = (
     "feedback_sha256",
     "feedback_tokens",
     "attempts",
+    "thinking_closed",
+    "thinking_parseable",
+    "thinking_accepted",
+    "thinking_error",
 )
 
 _TOOL_CALL_BLOCK = re.compile(r"<tool_call>\s*(.*?)\s*</tool_call>", re.DOTALL)
@@ -587,30 +591,105 @@ def _play_retry(
     return account
 
 
-def _play_a4(sample: dict[str, Any], *, budget_s: float, decode_tok_s: float) -> dict[str, Any]:
-    """Thinking tokens are capped at the live decode rate, then stripped from history."""
-    cap = capped_new_tokens(remaining_s=budget_s, rate_tok_s=decode_tok_s, batch_k=1)
-    emitted = min(int(sample["tokens"]), cap)
-    stopped = str(sample["kind"]) == "stopped" or float(sample["elapsed_s"]) >= budget_s
-    account = step_account(
-        elapsed_s=float(sample["elapsed_s"]),
+def accept_thinking_answer(text: str) -> dict[str, Any]:
+    """Use a thinking decode only when it closed the think block and left a tool call.
+
+    The call has to be in the answer after ``</think>``. An unclosed block, or a
+    closed block whose answer does not parse as a tool call, keeps the greedy text.
+    """
+    split = split_reasoning(text or "")
+    closed = (not split.truncated) and ("</think>" in (text or "").lower())
+    answer = split.answer.strip()
+    parseable = normalize_tool_call(answer) is not None
+    return {
+        "accept": closed and parseable,
+        "closed": closed,
+        "parseable": parseable,
+        "answer": answer,
+    }
+
+
+def _play_a4(
+    greedy: dict[str, Any],
+    thinking: dict[str, Any] | None,
+    *,
+    budget_s: float,
+    rate_tok_s: float,
+) -> dict[str, Any]:
+    """Greedy stream first. Thinking is sampled only inside the time that remains."""
+    greedy_stopped = str(greedy["kind"]) == "stopped" or float(greedy["elapsed_s"]) >= budget_s
+    greedy_account = step_account(
+        elapsed_s=float(greedy["elapsed_s"]),
         budget_s=budget_s,
         n_samples=1,
-        tokens=emitted,
-        stopped_for_budget=stopped,
+        tokens=int(greedy["tokens"]),
+        stopped_for_budget=greedy_stopped,
     )
-    stripped = strip_prior_thinking(str(sample["text"]))
-    account["source"] = "greedy"
-    account["k_used"] = 1
-    account["samples_finished"] = 1
+    remaining = budget_s - float(greedy_account["tta_s"])
+    cap = capped_new_tokens(remaining_s=remaining, rate_tok_s=rate_tok_s, batch_k=1)
+    accepted = False
+    closed = False
+    parseable = False
+    launched = False
+    exceeded = False
+    chosen_text = str(greedy["text"])
+    retained_text = ""
+    emitted_tokens = int(greedy["tokens"])
+    thinking_tokens = 0
+    retained_tokens: int | None = None
+    if thinking is not None and remaining > 0.0 and cap > 0 and bool(greedy.get("ok", True)):
+        finishes = (
+            float(thinking["elapsed_s"]) <= budget_s
+            and int(thinking["tokens"]) <= cap
+            and bool(thinking.get("finished", True))
+        )
+        if not finishes:
+            exceeded = True
+        else:
+            launched = True
+            decision = accept_thinking_answer(str(thinking["text"]))
+            closed = bool(decision["closed"])
+            parseable = bool(decision["parseable"])
+            stripped = strip_prior_thinking(str(thinking["text"]))
+            retained_text = str(decision["answer"])
+            thinking_tokens = int(thinking["tokens"])
+            raw_retained = thinking.get("retained_tokens")
+            retained_tokens = None if raw_retained is None else int(raw_retained)
+            if decision["accept"]:
+                accepted = True
+                chosen_text = retained_text
+                emitted_tokens = int(greedy["tokens"]) + thinking_tokens
+                total = float(greedy_account["tta_s"]) + float(thinking.get("think_elapsed_s", 0.0))
+                greedy_account = step_account(
+                    elapsed_s=total,
+                    budget_s=budget_s,
+                    n_samples=2,
+                    tokens=emitted_tokens,
+                    stopped_for_budget=False,
+                )
+            greedy_account["emitted_chars"] = stripped["emitted_chars"]
+            greedy_account["retained_chars"] = stripped["retained_chars"]
+            greedy_account["thinking_stripped"] = stripped["thinking_stripped"]
+    account = greedy_account
+    account["source"] = "thinking" if accepted else "greedy"
+    account["k_used"] = 2 if launched else 1
+    account["samples_finished"] = 2 if launched else 1
+    account["n_samples"] = account["samples_finished"]
     account["token_cap"] = cap
-    account["emitted_tokens"] = int(sample["tokens"])
-    account["retained_tokens"] = sample.get("retained_tokens")
-    account["emitted_chars"] = stripped["emitted_chars"]
-    account["retained_chars"] = stripped["retained_chars"]
-    account["retained_text"] = stripped["retained_text"]
-    account["thinking_stripped"] = stripped["thinking_stripped"]
+    account["emitted_tokens"] = emitted_tokens
+    account["tokens"] = emitted_tokens
+    account["retained_tokens"] = retained_tokens
+    account["retained_text"] = retained_text
+    account["chosen_text"] = chosen_text
+    account["greedy_call_sha256"] = call_sha256(str(greedy["text"]))
+    account["thinking_closed"] = closed
+    account["thinking_parseable"] = parseable
+    account["thinking_accepted"] = accepted
+    account["fallback_to_greedy"] = (not accepted) and (exceeded or launched)
+    account["fallback"] = bool(account["fallback"] or exceeded)
     account["vote_agreement"] = None
+    if "thinking_stripped" not in account:
+        account["thinking_stripped"] = False
     return account
 
 
@@ -713,7 +792,6 @@ def run_smoke() -> dict[str, Any]:
     # reads the same figures from configs/p1_quality.yaml.
     batch4 = 60.98813887904501
     decode = 25.269383662886206
-    live_decode = 10.0
     call = {"name": "get_weather", "arguments": {"city": "Paris"}}
     other = {"name": "get_weather", "arguments": {"city": "Lyon"}}
     call_text = json.dumps(call)
@@ -835,14 +913,36 @@ def run_smoke() -> dict[str, Any]:
         ],
         "A4": [
             _play_a4(
-                {"text": think_text, "elapsed_s": 4.0, "tokens": 200, "kind": "call"},
+                {"text": call_text, "elapsed_s": 4.0, "tokens": 40, "kind": "call"},
+                {
+                    "text": think_text,
+                    "elapsed_s": 8.0,
+                    "think_elapsed_s": 4.0,
+                    "tokens": 80,
+                    "retained_tokens": 12,
+                    "kind": "call",
+                },
                 budget_s=budget_s,
-                decode_tok_s=live_decode,
+                rate_tok_s=decode,
+            ),
+            _play_a4(
+                {"text": call_text, "elapsed_s": 4.0, "tokens": 40, "kind": "call"},
+                {
+                    "text": "<think>\nplan the call",
+                    "elapsed_s": 8.0,
+                    "think_elapsed_s": 4.0,
+                    "tokens": 80,
+                    "retained_tokens": 0,
+                    "kind": "call",
+                },
+                budget_s=budget_s,
+                rate_tok_s=decode,
             ),
             _play_a4(
                 {"text": call_text, "elapsed_s": 10.0, "tokens": 20, "kind": "stopped"},
+                {"text": think_text, "elapsed_s": 12.0, "tokens": 80, "kind": "call"},
                 budget_s=budget_s,
-                decode_tok_s=live_decode,
+                rate_tok_s=decode,
             ),
         ],
         "A5": [
@@ -912,15 +1012,25 @@ def _require_smoke(played: dict[str, list[dict[str, Any]]]) -> None:
         raise RuntimeError("A3 should resample a tool error while inside the budget")
     if not played["A3"][1]["retry_unfinished"] or not played["A3"][1]["met_budget"]:
         raise RuntimeError("A3 does not take a retry that would miss the budget")
-    thinking = played["A4"][0]
-    if thinking["token_cap"] != 100 or thinking["tokens"] != 100:
-        raise RuntimeError("A4 caps thinking tokens at the live decode rate")
-    if not thinking["thinking_stripped"] or "<think>" in str(thinking["retained_text"]):
-        raise RuntimeError("A4 strips the thinking block before the next step")
-    if thinking["emitted_chars"] <= thinking["retained_chars"]:
-        raise RuntimeError("A4 records emitted text longer than the retained answer")
-    if not played["A4"][1]["fallback"] or not played["A4"][1]["met_budget"]:
-        raise RuntimeError("A4 second task should stop at the budget")
+    used, rejected, cutoff = played["A4"]
+    if used["source"] != "thinking" or not used["thinking_accepted"] or not used["met_budget"]:
+        raise RuntimeError("A4 uses a closed think with a parseable call inside the budget")
+    if "<think>" in str(used["chosen_text"]) or "get_weather" not in str(used["chosen_text"]):
+        raise RuntimeError("A4 keeps the answer after the think block, not the block")
+    if not used["greedy_call_sha256"] or used["thinking_closed"] is not True:
+        raise RuntimeError("A4 records the greedy call and that the think block closed")
+    if (
+        rejected["source"] != "greedy"
+        or rejected["thinking_accepted"]
+        or rejected["thinking_closed"]
+    ):
+        raise RuntimeError("A4 keeps greedy when the think block does not close")
+    if rejected["chosen_text"] != used["chosen_text"] or not rejected["met_budget"]:
+        raise RuntimeError("A4 keeps the greedy call when thinking does not qualify")
+    if cutoff["source"] != "greedy" or cutoff["token_cap"] != 0 or cutoff["k_used"] != 1:
+        raise RuntimeError("A4 does not start thinking when the greedy stream uses the budget")
+    if not cutoff["fallback"] or not cutoff["met_budget"] or cutoff["thinking_accepted"]:
+        raise RuntimeError("A4 greedy cutoff keeps the greedy answer inside the budget")
     recovered, kept = played["A5"]
     if recovered["source"] != "feedback" or recovered["check_result"] != "ok":
         raise RuntimeError("A5 feedback retry replaces a schema-invalid greedy call")

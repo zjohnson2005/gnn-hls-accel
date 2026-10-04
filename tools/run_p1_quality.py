@@ -25,6 +25,8 @@ if str(ROOT) not in sys.path:
 import yaml  # noqa: E402
 
 from seam.tools.p1_quality import (  # noqa: E402
+    accept_thinking_answer,
+    call_sha256,
     capped_new_tokens,
     compose_greedy_vote,
     entry_record,
@@ -34,6 +36,7 @@ from seam.tools.p1_quality import (  # noqa: E402
     run_smoke,
     should_resample,
     step_account,
+    strip_prior_thinking,
 )
 
 CONFIG_PATH = ROOT / "configs" / "p1_quality.yaml"
@@ -102,6 +105,12 @@ class ArmController:
         self._greedy_check: str | None = None
         self._feedback_sha256: list[str] = []
         self._feedback_tokens = 0
+        self._thinking_text: str | None = None
+        self._thinking_emitted = 0
+        self._thinking_closed = False
+        self._thinking_parseable = False
+        self._thinking_accepted = False
+        self._thinking_error: str | None = None
 
     def elapsed(self) -> float:
         if not self.step_open:
@@ -168,13 +177,12 @@ class ArmController:
     ) -> None:
         """A4: tokens emitted against tokens kept in history after the think strip."""
         self._retention = {
-            "emitted_tokens": int(emitted_tokens),
+            "thinking_emitted_tokens": int(emitted_tokens),
             "retained_tokens": int(retained_tokens),
             "emitted_chars": int(emitted_chars),
             "retained_chars": int(retained_chars),
             "thinking_stripped": int(emitted_chars) != int(retained_chars),
         }
-        self._emitted = int(emitted_tokens)
 
     def step_record(self) -> dict[str, Any]:
         tokens = (
@@ -219,6 +227,10 @@ class ArmController:
         account["feedback_sha256"] = list(self._feedback_sha256) if self._feedback_sha256 else None
         account["feedback_tokens"] = self._feedback_tokens if self._feedback_sha256 else None
         account["attempts"] = self.attempts if self.arm == "A5" else None
+        account["thinking_closed"] = self._thinking_closed if self.arm == "A4" else None
+        account["thinking_parseable"] = self._thinking_parseable if self.arm == "A4" else None
+        account["thinking_accepted"] = self._thinking_accepted if self.arm == "A4" else None
+        account["thinking_error"] = self._thinking_error if self.arm == "A4" else None
         account.update(self._retention)
         self._current = account
         return account
@@ -237,12 +249,10 @@ class ArmController:
         if self.arm == "A1":
             return self._greedy_then_extras(pipe, ov_genai, prompt, prompt_tokens=prompt_tokens)
         if self.arm == "A4":
-            return self._thinking(pipe, ov_genai, prompt, prompt_tokens=prompt_tokens)
+            return self._greedy_then_thinking(pipe, ov_genai, prompt, prompt_tokens=prompt_tokens)
         sample = self.arm in {"A2", "A3"} and self.attempts > 1
         max_new: int | None = None
-        if self.arm == "A5" and self.attempts > 1:
-            max_new = self._remaining_cap(requested_k=1, n_ctx=prompt_tokens)
-        elif sample:
+        if (self.arm == "A5" and self.attempts > 1) or sample:
             max_new = self._remaining_cap(requested_k=1, n_ctx=prompt_tokens)
         row = self._one(pipe, ov_genai, prompt, sample=sample, max_new=max_new)
         tokens = int(row.get("generated_tokens") or 0)
@@ -335,35 +345,87 @@ class ArmController:
         out["text"] = decision["text"]
         return out
 
-    def _thinking(
+    def _set_thinking(self, prompt: Any, enabled: bool) -> None:
+        """The greedy pass uses the A0 template. Thinking is the second pass only."""
+        set_context = getattr(prompt, "set_extra_context", None)
+        if callable(set_context):
+            set_context({"enable_thinking": bool(enabled)})
+
+    def _greedy_then_thinking(
         self, pipe: Any, ov_genai: Any, prompt: Any, *, prompt_tokens: int | None
     ) -> dict[str, Any]:
-        remaining = self.budget_s - self.elapsed()
-        if self._live_decode is not None and self._live_decode > 0.0:
-            rate = self._live_decode
+        self._set_thinking(prompt, False)
+        greedy = self._one(pipe, ov_genai, prompt, sample=False, max_new=None)
+        greedy_elapsed = self.elapsed()
+        greedy_stopped = self.stopped
+        greedy_text = str(greedy.get("text") or "")
+        greedy_tokens = int(greedy.get("generated_tokens") or 0)
+        self.samples.append(
+            {"text": greedy_text, "tokens": greedy_tokens, "elapsed_s": greedy_elapsed}
+        )
+        self._greedy_call_sha256 = call_sha256(greedy_text)
+        reported = greedy.get("prompt_tokens_reported")
+        n_ctx = int(reported) if reported is not None else prompt_tokens
+        remaining = self.budget_s - greedy_elapsed
+        observed = greedy.get("decode_tok_s")
+        if observed is not None and float(observed) > 0.0:
+            rate = float(observed)
+            self._live_decode = rate
             self._rate_tok_s = rate
             self._table_k = 1
             self._band = None
             self._decode_source = "live"
             cap = capped_new_tokens(remaining_s=remaining, rate_tok_s=rate, batch_k=1)
+            self._token_cap = cap
+        elif remaining > 0.0:
+            cap = self._remaining_cap(requested_k=1, n_ctx=n_ctx)
         else:
-            cap = self._remaining_cap(requested_k=1, n_ctx=prompt_tokens)
-            self._decode_source = "table"
-        self._token_cap = cap
-        row = self._one(pipe, ov_genai, prompt, sample=False, max_new=cap)
-        observed = row.get("decode_tok_s")
-        if observed is not None and float(observed) > 0.0:
-            self._live_decode = float(observed)
-        tokens = int(row.get("generated_tokens") or 0)
-        self.samples.append(
-            {"text": row.get("text") or "", "tokens": tokens, "elapsed_s": self.elapsed()}
-        )
+            cap = 0
+            self._token_cap = 0
+        thinking: dict[str, Any] | None = None
+        exceeded = False
+        if bool(greedy.get("ok")) and remaining > 0.0 and cap > 0:
+            self._set_thinking(prompt, True)
+            thinking = self._one(pipe, ov_genai, prompt, sample=True, max_new=cap)
+            self._set_thinking(prompt, False)
+            if self.elapsed() - greedy_elapsed > remaining:
+                exceeded = True
+        decision = {"accept": False, "closed": False, "parseable": False, "answer": ""}
+        if thinking is not None and not bool(thinking.get("ok")):
+            self._thinking_error = str(thinking.get("error") or "thinking_generate_failed")
+        if thinking is not None and bool(thinking.get("ok")) and not exceeded:
+            decision = accept_thinking_answer(str(thinking.get("text") or ""))
+            self._thinking_text = str(thinking.get("text") or "")
+            self._thinking_emitted = int(thinking.get("generated_tokens") or 0)
+        self._thinking_closed = bool(decision["closed"])
+        self._thinking_parseable = bool(decision["parseable"])
+        self._thinking_accepted = bool(decision["accept"])
+        self._extras_exceeded = exceeded
+        accepted = bool(decision["accept"])
+        if accepted:
+            stripped = strip_prior_thinking(str(thinking.get("text") if thinking else ""))
+            self._account_elapsed = self.elapsed()
+            self._account_stopped = False
+            self._source = "thinking"
+            self._k_used = 2
+            self._k_requested = 2
+            self._samples_finished = 2
+            self._emitted = greedy_tokens + self._thinking_emitted
+            self._fallback_to_greedy = False
+            out = dict(greedy)
+            out["text"] = str(stripped["retained_text"])
+            return out
+        self._account_elapsed = greedy_elapsed
+        self._account_stopped = greedy_stopped
         self._source = "greedy"
         self._k_used = 1
-        self._k_requested = 1
+        self._k_requested = 2 if thinking is not None else 1
         self._samples_finished = 1
-        self._emitted = tokens
-        return row
+        self._emitted = greedy_tokens
+        self._fallback_to_greedy = thinking is not None
+        out = dict(greedy)
+        out["text"] = greedy_text
+        return out
 
     def _config(
         self, ov_genai: Any, prompt: Any, *, sample: bool, sequences: int, max_new: int | None
@@ -624,7 +686,15 @@ def quality_summary(
     }
 
 
-def run_measurement(cfg: dict[str, Any], *, arm: str, seed: int, offset: int, count: int) -> int:
+def run_measurement(
+    cfg: dict[str, Any],
+    *,
+    arm: str,
+    seed: int,
+    offset: int,
+    count: int,
+    budget_s: float | None = None,
+) -> int:
     if os.environ.get("SEAM_REHEARSAL") == "1":
         print("REFUSED -- rehearsal does not start the measurement", flush=True)
         return 1
@@ -638,6 +708,11 @@ def run_measurement(cfg: dict[str, Any], *, arm: str, seed: int, offset: int, co
     )
     from tools.ttft_slo_canary import CanaryDriftAbort
 
+    if budget_s is not None:
+        if float(budget_s) <= 0.0:
+            raise SystemExit("REFUSED -- budget_s must be positive")
+        cfg = dict(cfg)
+        cfg["budget_s"] = float(budget_s)
     if arm not in list(cfg["arms"]):
         raise SystemExit(f"REFUSED -- unknown arm {arm}")
     gates = require_gates()
@@ -696,7 +771,7 @@ def run_measurement(cfg: dict[str, Any], *, arm: str, seed: int, offset: int, co
                 ov_genai=ov_genai,
             )
             session.p1 = controller
-            session.p1_enable_thinking = arm == "A4"
+            session.p1_enable_thinking = False
             t0 = time.perf_counter()
             session.begin(entry)
             try:
@@ -841,6 +916,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=20260930)
     parser.add_argument("--entry-offset", type=int, default=0)
     parser.add_argument("--entry-count", type=int, default=0)
+    parser.add_argument("--budget-s", type=float, default=None)
     args = parser.parse_args(argv)
     if args.smoke and args.canary_calibrate:
         raise SystemExit("REFUSED -- smoke and canary-calibrate are separate")
@@ -855,6 +931,7 @@ def main(argv: list[str] | None = None) -> int:
         seed=int(args.seed),
         offset=int(args.entry_offset),
         count=int(args.entry_count),
+        budget_s=None if args.budget_s is None else float(args.budget_s),
     )
 
 
