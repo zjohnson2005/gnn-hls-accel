@@ -29,6 +29,9 @@ param(
     [string]$WatchdogLog = "",
     [ValidateSet("boot1", "boot2", "boot3", "boot4", "resident-limit", "resident-limit-2", "p0-v2", "p1-a0", "p1-a4", "p1-a5", "p1-a1", "t2s-boot1", "npu-1")]
     [string]$Profile = "boot1",
+    [int]$MaxPromptLen = 0,
+    [switch]$Npu2,
+    [switch]$LoadOnly,
     [int]$P1Seed = 20260930,
     [int]$P1EntryOffset = 0,
     [int]$P1EntryCount = 100
@@ -574,38 +577,84 @@ if ($Profile -eq "boot2") {
     )
 } elseif ($Profile -eq "npu-1") {
     # T2S NPU-1 / NPU-2. Does not open the NPU preregistration.
-    # estimate_s is 1 because no NPU cell has been timed. -NoRebootDeviation
-    # skips the cold-window deferral; the number is not a duration.
+    # MAX_PROMPT_LEN is the axis. The scheduling bound is a linear extrapolation
+    # of the XPS feasibility pilot and is not a measurement. The fixed ladder
+    # does not fit one 7200 s session, so a real launch is one setting.
     $env:SEAM_PLATFORM_ID = "evo-t2"
     $script:UncoldReason = "remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access"
+    if (-not (Test-Path -LiteralPath $PythonExe)) { throw "REFUSED -- python missing: $PythonExe" }
+    $planRaw = & $PythonExe -c "import json; from tools.run_npu_profile import scheduling_plan; print(json.dumps(scheduling_plan()))"
+    if ($LASTEXITCODE -ne 0) { throw "REFUSED -- NPU scheduling plan failed" }
+    $npuPlan = $planRaw | Select-Object -Last 1 | ConvertFrom-Json
     $script:EstimateDerivation = [ordered]@{
-        formula = "estimate_s = 1; duration is unmeasured, so the cold-window deferral is not a measured bound"
+        formula = "per setting: pilot load plus planned probes times (pilot prefill at 64 scaled by n/64, plus the 10 s SLO as the paired GPU bound)"
         platform_id = "evo-t2"
-        estimate_s_status = "unmeasured"
+        estimate_s_status = "pilot_extrapolation"
+        pilot_note = [string]$npuPlan.pilot_note
+        pilot_prefill_s_at_64 = $npuPlan.pilot_prefill_s_at_64
+        pilot_load_s = $npuPlan.pilot_load_s
+        sum_s = $npuPlan.sum_s
+        fits_one_session = $npuPlan.fits_one_session
+        split = [string]$npuPlan.split
         prefill_chunk_size = 1024
         prefill_chunk_citation = "openvino#34617"
         slo_s = 10
         low = 64
         resolution = 64
+        ir = "INT4_SYM group_size 128; channel-wise is parked"
     }
-    $Cells = @(
-        @{
-            Name = "NPU-2 int8 load"; Kind = "npu"; Phase = "npu2-load"; EstimateS = 1
+    foreach ($row in @($npuPlan.settings)) {
+        Write-Host ("npu_setting max_prompt_len={0} estimate_s={1}" -f $row.max_prompt_len, $row.estimate_s)
+    }
+    Write-Host ("npu_ladder_sum_s={0} fits_one_session={1} tail_start={2}" -f $npuPlan.sum_s, $npuPlan.fits_one_session, $npuPlan.tail_start)
+    $int4 = "configs\models\Qwen3-4B-int4-ov.yaml"
+    $built = @()
+    if ($Npu2 -or ($MaxPromptLen -eq 0 -and ($DryRun -or $Rehearsal))) {
+        $built += @{
+            Name = "NPU-2 int8 load"; Kind = "npu"; Phase = "npu2-load"; EstimateS = [int]$npuPlan.pilot_load_s
             Model = "configs\models\Qwen3-4B-int8-ov.yaml"
-        },
-        @{
-            Name = "NPU-1 feasibility"; Kind = "npu"; Phase = "npu1-feasibility"; EstimateS = 1
-            Model = "configs\models\Qwen3-4B-int4-ov.yaml"
-        },
-        @{
-            Name = "NPU-1 TTFT bisection"; Kind = "npu"; Phase = "npu1-bisect"; EstimateS = 1
-            Model = "configs\models\Qwen3-4B-int4-ov.yaml"; Low = 64; Resolution = 64
-        },
-        @{
-            Name = "NPU-1 over max"; Kind = "npu"; Phase = "npu1-overmax"; EstimateS = 1
-            Model = "configs\models\Qwen3-4B-int4-ov.yaml"
         }
-    )
+    }
+    $lengths = @()
+    if ($MaxPromptLen -gt 0) {
+        if ($MaxPromptLen -lt 1024 -or (($MaxPromptLen -band ($MaxPromptLen - 1)) -ne 0)) {
+            throw "REFUSED -- MaxPromptLen must be a power of two and at least 1024"
+        }
+        $lengths = @($MaxPromptLen)
+    } elseif ($DryRun -or $Rehearsal) {
+        foreach ($row in @($npuPlan.settings)) { $lengths += [int]$row.max_prompt_len }
+        $lengths += [int]$npuPlan.tail_start
+    }
+    foreach ($n in $lengths) {
+        $est = $null
+        foreach ($row in @($npuPlan.settings)) {
+            if ([int]$row.max_prompt_len -eq $n) { $est = [int]$row.estimate_s }
+        }
+        if ($null -eq $est) {
+            $estRaw = & $PythonExe -c "from tools.run_npu_profile import setting_estimate_s; print(setting_estimate_s($n))"
+            if ($LASTEXITCODE -ne 0) { throw "REFUSED -- NPU setting estimate failed" }
+            $est = [int]($estRaw | Select-Object -Last 1)
+        }
+        $loadOnlyCell = $LoadOnly -or ($est -gt $WindowS)
+        if ($loadOnlyCell -and -not $DryRun -and -not $Rehearsal -and -not $LoadOnly -and $est -gt $WindowS) {
+            throw "REFUSED -- MAX_PROMPT_LEN $n bound $est s exceeds $WindowS s. Pass -LoadOnly to record the load and stop."
+        }
+        $cellEstimate = $est
+        if ($loadOnlyCell) { $cellEstimate = [int]$npuPlan.pilot_load_s }
+        $built += @{
+            Name = "NPU-1 MAX_PROMPT_LEN=$n"; Kind = "npu"; Phase = "npu1-setting"; EstimateS = $cellEstimate
+            Model = $int4; MaxPromptLen = $n; Low = 64; Resolution = 64; LoadOnly = [bool]$loadOnlyCell
+        }
+    }
+    if ($built.Count -eq 0) {
+        throw "REFUSED -- NPU-1 bound $($npuPlan.sum_s) s exceeds $WindowS s. Pass -MaxPromptLen for one setting, or -Npu2 for the int8 load."
+    }
+    $sum = 0
+    foreach ($cell in $built) { $sum += [int]$cell.EstimateS }
+    if (-not $DryRun -and -not $Rehearsal -and $sum -gt $WindowS) {
+        throw "REFUSED -- NPU session bound $sum s exceeds $WindowS s. Launch one MAX_PROMPT_LEN per session."
+    }
+    $Cells = $built
 } else {
 $Cells = @(
     @{ Name = "DET-PROBE"; Kind = "det"; EstimateS = 1200 },
@@ -904,8 +953,12 @@ function Invoke-NpuCell {
     )
     $low = Get-BootCellField -Cell $Cell -Name "Low"
     $resolution = Get-BootCellField -Cell $Cell -Name "Resolution"
+    $mpl = Get-BootCellField -Cell $Cell -Name "MaxPromptLen"
+    $loadOnly = Get-BootCellField -Cell $Cell -Name "LoadOnly"
     if ($null -ne $low) { $workerArgs += @("--low", [string]$low) }
     if ($null -ne $resolution) { $workerArgs += @("--resolution", [string]$resolution) }
+    if ($null -ne $mpl) { $workerArgs += @("--max-prompt-len", [string]$mpl) }
+    if ($loadOnly) { $workerArgs += "--load-only" }
     & $PythonExe @workerArgs
     $exit = $LASTEXITCODE
     $summaryPath = Join-Path $out "summary.json"
@@ -1030,8 +1083,12 @@ function Get-BootCellCommand {
         $args = @($PythonExe, "-u", $NpuPy, "--cell", $phase, "--model-spec", $modelPath, "--prefill-chunk-size", "1024")
         $low = Get-BootCellField -Cell $Cell -Name "Low"
         $resolution = Get-BootCellField -Cell $Cell -Name "Resolution"
+        $mpl = Get-BootCellField -Cell $Cell -Name "MaxPromptLen"
+        $loadOnly = Get-BootCellField -Cell $Cell -Name "LoadOnly"
         if ($null -ne $low) { $args += @("--low", [string]$low) }
         if ($null -ne $resolution) { $args += @("--resolution", [string]$resolution) }
+        if ($null -ne $mpl) { $args += @("--max-prompt-len", [string]$mpl) }
+        if ($loadOnly) { $args += "--load-only" }
         $smokeArgs = @($PythonExe, "-u", $NpuPy, "--smoke", "--cell", $phase, "--out", (Get-RehearsalSmokeOut -Cell $Cell))
         return [ordered]@{
             kind = $kind; arm = $arm; model = $model; low = $low; high = $high
@@ -1283,7 +1340,8 @@ if ($Profile -eq "npu-1") {
     Write-Host ("watchdog_log={0}" -f $WatchdogLog)
     Write-Host "free_memory_floor_mb=24000 provenance=derived_unmeasured CAP-4-class peak on 64 GB; floor keeps Available at or above 24000 MB"
     Write-Host "canary=must_arm UNGUARDED=false"
-    Write-Host "npu_cells=npu2-load,npu1-feasibility,npu1-bisect,npu1-overmax"
+    $npuNames = @($Cells | ForEach-Object { $_.Name }) -join ","
+    Write-Host ("npu_cells={0}" -f $npuNames)
     if ($NoRebootDeviation) {
         $upNow = Get-ColdUptimeSeconds
         Write-Host ("deviation kind=UNCOLD_UPTIME uptime_s={0} reason={1}" -f $upNow, $script:UncoldReason)

@@ -12,9 +12,13 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.run_npu_profile import (  # noqa: E402
+    bind_setting,
+    ir_quantization,
     main,
     npu2_load_record,
     over_max_record,
+    scheduling_plan,
+    setting_estimate_s,
     slo_bisect,
 )
 
@@ -76,4 +80,59 @@ def test_runner_does_not_open_the_prereg(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setattr(builtins, "open", guarded)
     with contextlib.suppress(SystemExit):
         main(["--help"])
-    assert main(["--cell", "npu1-feasibility", "--smoke", "--out", str(tmp_path)]) == 0
+    assert main(["--cell", "npu1-setting", "--smoke", "--out", str(tmp_path)]) == 0
+
+
+def test_binding_is_toolchain_latency_or_load_fail() -> None:
+    cap = bind_setting(
+        load_ok=True,
+        cap=1024,
+        rungs=[{"n_tokens": 1024, "slo_pass": True, "decode_tok_s": [10.0, 12.0, 11.0]}],
+    )
+    assert cap["binding"] == "TOOLCHAIN_CAP"
+    assert cap["ttft_limit_n"] == 1024
+    assert cap["decode_tok_s_at_limit"] == 11.0
+    late = bind_setting(
+        load_ok=True,
+        cap=1024,
+        rungs=[
+            {"n_tokens": 64, "slo_pass": True, "decode_tok_s": [16.0]},
+            {"n_tokens": 1024, "slo_pass": False, "decode_tok_s": [1.0]},
+        ],
+    )
+    assert late["binding"] == "LATENCY"
+    assert late["ttft_limit_n"] == 64
+    below = bind_setting(load_ok=True, cap=1024, rungs=[{"n_tokens": 64, "slo_pass": False}])
+    assert below["binding"] == "LATENCY"
+    assert below["ttft_limit_n"] is None
+    failed = bind_setting(load_ok=False, cap=1024, rungs=[])
+    assert failed["binding"] == "LOAD_FAIL"
+
+
+def test_ir_is_groupwise_int4_sym() -> None:
+    import yaml
+
+    doc = yaml.safe_load(
+        (ROOT / "configs" / "models" / "Qwen3-4B-int4-ov.yaml").read_text(encoding="utf-8")
+    )
+    row = ir_quantization(doc)
+    assert row["mode"] == "INT4_SYM"
+    assert row["group_size"] == 128
+    assert row["channel_wise"] is False
+
+
+def test_fixed_ladder_does_not_fit_one_session() -> None:
+    plan = scheduling_plan()
+    assert plan["fits_one_session"] is False
+    assert plan["split"] == "one detached session per MAX_PROMPT_LEN"
+    assert [row["max_prompt_len"] for row in plan["settings"]] == [1024, 2048, 4096, 8192]
+    assert all(int(row["estimate_s"]) <= 7200 for row in plan["settings"])
+    assert setting_estimate_s(int(plan["tail_start"])) > 7200
+
+
+def test_launcher_uses_the_prompt_len_axis() -> None:
+    text = LAUNCHER.read_text(encoding="utf-8")
+    assert "npu1-setting" in text
+    assert "MaxPromptLen" in text
+    assert "npu1-feasibility" not in text
+    assert "npu1-bisect" not in text

@@ -1,15 +1,18 @@
 """NPU-1 and NPU-2 cells. This runner does not open a preregistration.
 
 NPU-2 loads the int8 IR and stops. An int8 load is infeasible and is never
-generated. NPU-1 loads the int4 IR, records NPUW_LLM_MAX_PROMPT_LEN, runs one
-short paired GPU prompt, then bisects the 10 s TTFT SLO from 64 up to that
-length. A prompt of MAX_PROMPT_LEN + 1 is infeasible and is not generated.
+generated. NPU-1 loads the int4 IR once per requested NPUW_LLM_MAX_PROMPT_LEN.
+The length is a load-time setting. At each loaded setting the runner bisects
+the 10 s TTFT SLO from 64 up to that setting, records decode tok/s at the
+highest passing rung, and records MAX_PROMPT_LEN + 1 as infeasible without
+generating it.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 import time
 import uuid
@@ -35,6 +38,12 @@ SLO_S = 10.0
 SHORT_PROMPT_TOKENS = 64
 REPEATS = 3
 MAX_NEW_TOKENS = 8
+SESSION_BUDGET_S = 7200
+# XPS feasibility pilot, 2026-10-03. Not a measurement. The prefill figure is
+# one 64-token generate. The load figure is the ceiling of that pilot's walls.
+PILOT_PREFILL_S_AT_64 = 1.4136199
+PILOT_LOAD_S = 78.0
+LADDER_START = (1024, 2048, 4096, 8192)
 
 
 def error_class_for(message: str) -> str | None:
@@ -63,6 +72,112 @@ def npu2_load_record(load_error: str | None) -> dict[str, Any]:
     decision["load_error"] = load_error
     decision["error_class"] = error_class_for(load_error) if load_error else None
     return decision
+
+
+def ir_quantization(spec: dict[str, Any]) -> dict[str, Any]:
+    """The pinned IR is group-wise INT4_SYM. Channel-wise is a later arm."""
+    pub = spec.get("publisher_quantization")
+    if not isinstance(pub, dict):
+        pub = {}
+    group = pub.get("group_size")
+    mode = pub.get("mode")
+    return {
+        "mode": mode,
+        "group_size": group,
+        "ratio": pub.get("ratio"),
+        "channel_wise": group == -1,
+        "ir_note": (
+            "INT4_SYM group_size 128 is group-wise, not channel-wise. "
+            "A channel-wise IR is a later arm and is parked until a conversion is approved."
+        ),
+    }
+
+
+def process_rss_mb() -> dict[str, Any]:
+    try:
+        import psutil
+    except Exception as exc:
+        return {"rss_mb": None, "error": f"{type(exc).__name__}: {exc}"}
+    try:
+        rss = psutil.Process().memory_info().rss / (1024.0 * 1024.0)
+    except Exception as exc:
+        return {"rss_mb": None, "error": f"{type(exc).__name__}: {exc}"}
+    return {"rss_mb": rss, "error": None}
+
+
+def median_number(values: list[float]) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    return ordered[len(ordered) // 2]
+
+
+def bind_setting(*, load_ok: bool, cap: int, rungs: list[dict[str, Any]]) -> dict[str, Any]:
+    """TOOLCHAIN_CAP if the top rung passes, LATENCY if the SLO fails below it."""
+    if not load_ok:
+        return {"binding": "LOAD_FAIL", "ttft_limit_n": None, "decode_tok_s_at_limit": None}
+    top = [row for row in rungs if row.get("n_tokens") == cap and row.get("slo_pass")]
+    passing = [row for row in rungs if row.get("slo_pass")]
+    if top:
+        chosen = top[0]
+        binding = "TOOLCHAIN_CAP"
+        limit: int | None = cap
+    elif passing:
+        chosen = max(passing, key=lambda row: int(row["n_tokens"]))
+        binding = "LATENCY"
+        limit = int(chosen["n_tokens"])
+    else:
+        return {"binding": "LATENCY", "ttft_limit_n": None, "decode_tok_s_at_limit": None}
+    rates = [
+        float(value)
+        for value in chosen.get("decode_tok_s") or []
+        if isinstance(value, (int, float))
+    ]
+    return {
+        "binding": binding,
+        "ttft_limit_n": limit,
+        "decode_tok_s_at_limit": median_number(rates),
+    }
+
+
+def setting_estimate_s(
+    high: int,
+    *,
+    low: int = SHORT_PROMPT_TOKENS,
+    resolution: int = 64,
+    repeats: int = REPEATS,
+) -> int:
+    """Scheduling bound. Prefill at ``high`` is the 64-token pilot scaled linearly."""
+    from tools.ttft_slo_canary import estimate_bisect_planned_probes
+
+    probes = estimate_bisect_planned_probes(
+        n_arms=1,
+        low=low,
+        high=high,
+        resolution=resolution,
+        repeats=repeats,
+    )
+    per_probe_s = (PILOT_PREFILL_S_AT_64 * (high / float(SHORT_PROMPT_TOKENS))) + SLO_S
+    return math.ceil(PILOT_LOAD_S + probes * per_probe_s)
+
+
+def scheduling_plan() -> dict[str, Any]:
+    rows = [{"max_prompt_len": n, "estimate_s": setting_estimate_s(n)} for n in LADDER_START]
+    total = sum(int(row["estimate_s"]) for row in rows)
+    return {
+        "session_budget_s": SESSION_BUDGET_S,
+        "settings": rows,
+        "sum_s": total,
+        "fits_one_session": total <= SESSION_BUDGET_S,
+        "split": "one detached session per MAX_PROMPT_LEN",
+        "tail_start": LADDER_START[-1] * 2,
+        "pilot_prefill_s_at_64": PILOT_PREFILL_S_AT_64,
+        "pilot_load_s": PILOT_LOAD_S,
+        "pilot_note": (
+            "XPS feasibility pilot 2026-10-03, not a measurement. "
+            "Longer-prompt prefill is extrapolated linearly from the 64-token pilot."
+        ),
+    }
 
 
 def over_max_record(max_prompt_len: int) -> dict[str, Any]:
@@ -251,6 +366,8 @@ def run_hardware(args: argparse.Namespace) -> int:
         "prefill_chunk_size": args.prefill_chunk_size,
         "prefill_chunk_citation": "openvino#34617",
         "max_prompt_len_property": "NPUW_LLM_MAX_PROMPT_LEN",
+        "requested_max_prompt_len": args.max_prompt_len,
+        "ir_quantization": ir_quantization(spec) if weight == "int4" else None,
     }
     _write(out / "plan.json", plan)
 
@@ -278,14 +395,21 @@ def run_hardware(args: argparse.Namespace) -> int:
     core = ov.Core()
     props: dict[str, Any] = {}
     if weight == "int4":
+        if args.max_prompt_len is None:
+            raise SystemExit("REFUSED -- MAX_PROMPT_LEN is required")
         props["NPUW_LLM_PREFILL_CHUNK_SIZE"] = int(args.prefill_chunk_size)
+        props["NPUW_LLM_MAX_PROMPT_LEN"] = int(args.max_prompt_len)
     load_error = None
     pipe = None
     max_prompt_len = None
+    rss_before = process_rss_mb()
+    load_t0 = time.perf_counter()
     try:
         pipe = ov_genai.LLMPipeline(str(ir), "NPU", **props)
     except Exception as exc:
         load_error = f"{type(exc).__name__}: {exc}"
+    load_s = time.perf_counter() - load_t0
+    rss_after = process_rss_mb()
     read_errors: list[str] = []
     if pipe is not None and weight == "int4":
         try:
@@ -298,42 +422,117 @@ def run_hardware(args: argparse.Namespace) -> int:
                 read_errors.append(f"core: {type(exc2).__name__}: {exc2}")
     plan["max_prompt_len_read_errors"] = read_errors
 
+    load_fields = {
+        "load_s": load_s,
+        "process_rss_mb_before": rss_before["rss_mb"],
+        "process_rss_mb_after": rss_after["rss_mb"],
+        "process_rss_error": rss_before["error"] or rss_after["error"],
+        "requested_max_prompt_len": args.max_prompt_len,
+        "max_prompt_len_readback": max_prompt_len,
+    }
+
     if args.cell == "npu2-load":
         summary = npu2_load_record(load_error)
-        summary.update({"session_id": session_id, "status": "infeasible", "cell": args.cell})
+        summary.update(
+            {"session_id": session_id, "status": "infeasible", "cell": args.cell, **load_fields}
+        )
         _write(out / "summary.json", summary)
         print(json.dumps({"ok": True, "status": "infeasible", "generated": False}))
         return 0
 
-    if load_error or max_prompt_len is None or pipe is None:
+    quant = ir_quantization(spec)
+    if load_error or pipe is None:
+        if not arm(4):
+            return 1
         summary = {
             "session_id": session_id,
             "cell": args.cell,
-            "status": "infeasible" if load_error else "REFUSED",
+            "status": "infeasible",
+            "binding": "LOAD_FAIL",
+            "ttft_limit_n": None,
             "load_error": load_error,
-            "max_prompt_len": max_prompt_len,
+            "max_prompt_len": None,
             "error_class": error_class_for(load_error) if load_error else None,
             "generated": False,
             "timed": False,
+            "over_max": None,
+            "ir_quantization": quant,
+            "measurement": True,
+            **load_fields,
         }
         _write(out / "summary.json", summary)
-        print(json.dumps({"ok": False, "status": summary["status"]}))
-        return 1 if not load_error else 0
+        print(json.dumps({"ok": True, "status": "infeasible", "binding": "LOAD_FAIL"}))
+        return 0
+
+    if max_prompt_len is None:
+        summary = {
+            "session_id": session_id,
+            "cell": args.cell,
+            "status": "REFUSED",
+            "binding": None,
+            "load_error": None,
+            "max_prompt_len": None,
+            "generated": False,
+            "timed": False,
+            "ir_quantization": quant,
+            "detail": "load returned no NPUW_LLM_MAX_PROMPT_LEN readback",
+            **load_fields,
+        }
+        _write(out / "summary.json", summary)
+        print(json.dumps({"ok": False, "status": "REFUSED"}))
+        return 1
+
+    if int(max_prompt_len) != int(args.max_prompt_len):
+        summary = {
+            "session_id": session_id,
+            "cell": args.cell,
+            "status": "REFUSED",
+            "binding": None,
+            "generated": False,
+            "timed": False,
+            "ir_quantization": quant,
+            "detail": "readback does not match the requested MAX_PROMPT_LEN",
+            **load_fields,
+        }
+        _write(out / "summary.json", summary)
+        print(json.dumps({"ok": False, "status": "REFUSED", "max_prompt_len": max_prompt_len}))
+        return 1
 
     plan["max_prompt_len"] = max_prompt_len
     _write(out / "plan.json", plan)
-    if args.cell == "npu1-bisect":
-        from tools.ttft_slo_canary import estimate_bisect_planned_probes
+    cap = int(max_prompt_len)
+    if args.load_only:
+        if not arm(4):
+            return 1
+        bound = setting_estimate_s(cap, low=int(args.low), resolution=int(args.resolution))
+        summary = {
+            "session_id": session_id,
+            "cell": args.cell,
+            "status": "loaded_bisect_deferred",
+            "binding": None,
+            "ttft_limit_n": None,
+            "max_prompt_len": cap,
+            "generated": False,
+            "timed": False,
+            "bisect_estimate_s": bound,
+            "detail": "load succeeded; the bisection bound does not fit one session",
+            "ir_quantization": quant,
+            "measurement": True,
+            **load_fields,
+        }
+        _write(out / "summary.json", summary)
+        print(json.dumps({"ok": True, "status": "loaded_bisect_deferred", "max_prompt_len": cap}))
+        return 0
 
-        planned = estimate_bisect_planned_probes(
-            n_arms=1,
-            low=int(args.low),
-            high=int(max_prompt_len),
-            resolution=int(args.resolution),
-            repeats=REPEATS,
-        )
-    else:
-        planned = 4
+    from tools.ttft_slo_canary import estimate_bisect_planned_probes
+
+    planned = estimate_bisect_planned_probes(
+        n_arms=1,
+        low=int(args.low),
+        high=cap,
+        resolution=int(args.resolution),
+        repeats=REPEATS,
+    )
     if not arm(planned):
         return 1
     tokenizer = ov_genai.Tokenizer(str(ir))
@@ -375,13 +574,6 @@ def run_hardware(args: argparse.Namespace) -> int:
         measured["prompt_tokens"] = measured.get("prompt_tokens") or n_tokens
         return measured
 
-    if args.cell == "npu1-overmax":
-        summary = over_max_record(max_prompt_len)
-        summary.update({"session_id": session_id, "status": "infeasible", "cell": args.cell})
-        _write(out / "summary.json", summary)
-        print(json.dumps({"ok": True, "status": "infeasible", "generated": False}))
-        return 0
-
     gpu = ov_genai.LLMPipeline(str(ir), "GPU")
 
     def paired(n_tokens: int) -> dict[str, Any]:
@@ -413,20 +605,6 @@ def run_hardware(args: argparse.Namespace) -> int:
         row["metric_error"] = npu_row.get("metric_error")
         return row
 
-    if args.cell == "npu1-feasibility":
-        row = paired(SHORT_PROMPT_TOKENS)
-        summary = {
-            "session_id": session_id,
-            "cell": args.cell,
-            "status": "complete",
-            "max_prompt_len": max_prompt_len,
-            "short_prompt": row,
-            "measurement": False,
-        }
-        _write(out / "summary.json", summary)
-        print(json.dumps({"ok": True, "status": "complete", "max_prompt_len": max_prompt_len}))
-        return 0
-
     def probe(n_tokens: int) -> dict[str, Any]:
         repeats = [paired(n_tokens) for _ in range(REPEATS)]
         return {
@@ -439,19 +617,23 @@ def run_hardware(args: argparse.Namespace) -> int:
             "timed": [row.get("timed") for row in repeats],
         }
 
-    high = int(max_prompt_len)
+    high = cap
     rungs = slo_bisect(int(args.low), high, int(args.resolution), probe)
-    passing = [row["n_tokens"] for row in rungs if row["slo_pass"]]
+    bound = bind_setting(load_ok=True, cap=high, rungs=rungs)
+    over = over_max_record(high)
     summary = {
         "session_id": session_id,
         "cell": args.cell,
         "status": "complete",
-        "max_prompt_len": max_prompt_len,
+        "max_prompt_len": high,
         "low": int(args.low),
         "resolution": int(args.resolution),
         "rungs": rungs,
-        "highest_slo_ok_n": max(passing) if passing else None,
+        "over_max": over,
+        "ir_quantization": quant,
         "measurement": True,
+        **load_fields,
+        **bound,
     }
     _write(out / "summary.json", summary)
     print(json.dumps({"ok": True, "status": "complete", "rungs": len(rungs)}))
@@ -463,11 +645,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--cell",
         required=True,
-        choices=("npu2-load", "npu1-feasibility", "npu1-bisect", "npu1-overmax"),
+        choices=("npu2-load", "npu1-setting"),
     )
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--model-spec", type=Path)
     parser.add_argument("--smoke", action="store_true")
+    parser.add_argument("--max-prompt-len", type=int)
+    parser.add_argument("--load-only", action="store_true")
     parser.add_argument("--low", type=int, default=64)
     parser.add_argument("--resolution", type=int, default=64)
     parser.add_argument("--prefill-chunk-size", type=int, default=1024)

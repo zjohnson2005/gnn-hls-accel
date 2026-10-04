@@ -24,6 +24,21 @@ An NPU cell is valid only when both of these hold:
 
 ## Infeasible cells are not timings
 
+`NPUW_LLM_MAX_PROMPT_LEN` is a load-time setting, not a measured limit.
+NPU-1 sets it at load for 1024, 2048, 4096, 8192, and then doubles until
+the load fails. Record the requested value, the readback, the load time,
+process memory, and `error_class` when the load fails. A readback that
+does not match the requested value refuses the cell.
+
+At each loaded setting, bisect the 10 s TTFT SLO from 64 up to that
+setting. Record decode tok/s at the highest rung that passes. A prompt of
+`MAX_PROMPT_LEN + 1` is infeasible and is not generated. The setting's
+bound is `TOOLCHAIN_CAP` when the top rung passes the SLO, `LATENCY` when
+the SLO fails below the cap, and `LOAD_FAIL` when the load fails.
+
+The int4 IR is INT4_SYM group_size 128 (group-wise). A channel-wise IR
+(group_size -1) is a later arm.
+
 Record `NPUW_LLM_MAX_PROMPT_LEN` as loaded (`max_prompt_len`) and the
 prompt length in the same token count the cell used. A prompt longer than
 `MAX_PROMPT_LEN` is an infeasible cell. It is not a timing.

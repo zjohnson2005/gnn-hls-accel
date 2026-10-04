@@ -168,8 +168,9 @@ time after Wednesday; this list does not fit in the window.
 | P1-T2 | A0 + fixed A4 at B = 10/20 on the faster GPU: does thinking fit? | C4, C5 | A | PLANNED | A4 fix + AMENDMENT_8 |
 | P0-T2 | exchange rate on T2S | C4 | B | PLANNED | launcher profile |
 | P1-T2 8B | P1 arms with 8B (more quality headroom) | C4 | B | PLANNED | |
-| NPU-1 | NPU as third placement; limit set by toolchain (MAX_PROMPT_LEN) | C1, C5 | A | PLANNED | profile tools/launch_t2s_npu1.ps1 (feasibility, TTFT bisection, over-max); prereg derived/npu/NPU1_PREREG.json predictions TBD; not launched |
-| NPU-2 | int8 on NPU crashes: first infeasible cell | C5, P2 | B | PLANNED | same profile, load-only cell; not launched |
+| NPU-1 | NPU as third placement; limit set by toolchain (MAX_PROMPT_LEN) | C1, C5 | A | PLANNED | MAX_PROMPT_LEN is the load-time axis (1024, 2048, 4096, 8192, then double until load fails). One detached session per setting: the pilot-extrapolated bound of the fixed ladder is above 7200 s. IR is INT4_SYM group_size 128. Binding per setting is TOOLCHAIN_CAP, LATENCY, or LOAD_FAIL. Profile tools/launch_t2s_npu1.ps1. Prereg derived/npu/NPU1_PREREG.json predictions TBD. Not launched. |
+| NPU-1-CW | channel-wise int4 (group_size -1) on NPU | C1 | C | PARKED | conversion or download of Qwen/Qwen3-4B INT4_SYM group_size -1 waits for Rithwik's OK |
+| NPU-2 | int8 on NPU crashes: first infeasible cell | C5, P2 | B | PLANNED | same profile, load-only cell (-Npu2); not launched |
 | HET-1 | phase split across devices; primary arm NPU prefill -> GPU decode (AMD direction), contrast GPU prefill -> NPU decode; measure handoff cost | C5 | B | PLANNED | feasibility spike first: can OpenVINO pass KV across devices? |
 | CB-T2 | continuous batching + prefix caching: dominated on XPS, best on 64 GB? Includes concurrency (sessions/hour) | C5 | A | PLANNED | output-equivalence check required (DET-PROBE, #4367) |
 | SPEC-T2 | speculative decoding, 0.6B draft on CPU / GPU / NPU | C4, C5 | A | PLANNED | re-verify 0.6B pin; pair with A4 budget sweep |

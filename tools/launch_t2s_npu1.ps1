@@ -1,4 +1,4 @@
-# T2S NPU-1 / NPU-2. Load-only int8, int4 feasibility, TTFT bisection, over-max.
+# T2S NPU-1 / NPU-2. One MAX_PROMPT_LEN per detached session.
 # -Detach refuses unless the watchdog log is idle, no python or llama-server
 # is running, and free memory is at least 24000 MB.
 # -NoRebootDeviation is always passed: this host is not rebooted.
@@ -10,6 +10,9 @@ param(
     [switch]$Detach,
     [switch]$DryRun,
     [switch]$Rehearsal,
+    [switch]$Npu2,
+    [switch]$LoadOnly,
+    [int]$MaxPromptLen = 0,
     [string]$WatchdogLog = "C:\apu\ovn\watchdog.log"
 )
 
@@ -46,5 +49,8 @@ $launchArgs = @(
 if ($Rehearsal) { $launchArgs += "-Rehearsal" }
 if ($Detach -and -not $DryRun) { $launchArgs += "-Detach" }
 if ($DryRun) { $launchArgs += "-DryRun" }
+if ($Npu2) { $launchArgs += "-Npu2" }
+if ($LoadOnly) { $launchArgs += "-LoadOnly" }
+if ($MaxPromptLen -gt 0) { $launchArgs += @("-MaxPromptLen", [string]$MaxPromptLen) }
 & powershell @launchArgs
 exit $LASTEXITCODE
