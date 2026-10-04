@@ -7,6 +7,7 @@ import inspect
 import json
 import math
 import os
+import statistics
 import subprocess
 from pathlib import Path
 
@@ -702,6 +703,239 @@ def test_amendment_7_registers_feedback_retry_after_a4() -> None:
     assert json.loads(prior.read_text(encoding="utf-8"))["schedule"] == ["A4", "A2", "A3", "A1"]
     cfg = yaml.safe_load((ROOT / "configs" / "p1_quality.yaml").read_text(encoding="utf-8"))
     assert cfg["arms"] == ["A0", "A1", "A2", "A3", "A4", "A5"]
+
+
+def test_amendment_8_registers_the_greedy_first_fix_and_the_sweep() -> None:
+    path = ROOT / "derived" / "h1_hybrid" / "LOCAL_QUALITY_AMENDMENT_8.json"
+    amendment = json.loads(path.read_text(encoding="utf-8"))
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    assert digest == "efc4b375b24bb97250ba1b1fc1a14881cd87a54649e7a986e76d2c1d6b9278a4"
+    assert amendment["registered_before_any_a4_rerun"] is True
+    assert amendment["prior_amendments_unchanged"] is True
+    assert amendment["next_arm"] == "A5"
+    assert amendment["schedule"] == ["A5", "BUDGET_SWEEP", "A2", "A3", "A1"]
+    assert amendment["a4_fixed_measurement_status"] == "not_started"
+    assert amendment["sweep_measurement_status"] == "not_started"
+    implemented = amendment["a4_as_implemented"]
+    assert implemented["label"] == "A4-as-implemented"
+    assert implemented["registered_comparison"] is False
+    assert implemented["run_id"] == "3b4d8207-ad36-480a-a717-1c146828d53c"
+    assert implemented["passes"] == 2
+    assert implemented["in_budget_passes"] == 2
+    example = json.loads(
+        (
+            ROOT
+            / "derived"
+            / "p1_quality"
+            / implemented["run_id"]
+            / "points"
+            / "multi_turn_base_12.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert example["steps"][0]["greedy_call_sha256"] is None
+    assert example["steps"][0]["source"] == "greedy"
+    assert example["steps"][0]["emitted_tokens"] == 215
+    assert example["steps"][1]["emitted_tokens"] == 257
+    assert example["steps"][0]["retained_tokens"] == 0
+    assert example["steps"][0]["tta_s"] == 10.0
+    points = [
+        json.loads(item.read_text(encoding="utf-8"))
+        for item in (ROOT / "derived" / "p1_quality" / implemented["run_id"] / "points").glob(
+            "*.json"
+        )
+    ]
+    finished: list[tuple[int, float]] = []
+    n_steps = 0
+    for point in points:
+        for step in point["steps"]:
+            n_steps += 1
+            retained = int(step.get("retained_tokens") or 0)
+            if step.get("thinking_stripped") and retained > 0:
+                tokens = int(step["emitted_tokens"]) - retained
+                finished.append((tokens, tokens / float(step["rate_tok_s"])))
+    lengths = amendment["thinking_length"]
+    assert lengths["n_finished"] == len(finished) == 160
+    assert lengths["n_steps"] == n_steps == 489
+    token_values = [item[0] for item in finished]
+    second_values = [item[1] for item in finished]
+    assert lengths["tokens"]["median"] == statistics.median(token_values)
+    assert (
+        lengths["tokens"]["p90"] == statistics.quantiles(token_values, n=10, method="inclusive")[8]
+    )
+    assert lengths["seconds"]["median"] == statistics.median(second_values)
+    assert (
+        lengths["seconds"]["p90"]
+        == statistics.quantiles(second_values, n=10, method="inclusive")[8]
+    )
+    a0 = sorted(
+        (
+            json.loads(item.read_text(encoding="utf-8"))
+            for item in (
+                ROOT / "derived" / "p1_quality" / "8a529053-fc47-486d-8809-6c699d156b06" / "points"
+            ).glob("*.json")
+        ),
+        key=lambda row: str(row["id"]),
+    )[:100]
+    greedy = [float(step["tta_s"]) for row in a0 for step in row["steps"]]
+    crossing = amendment["crossing_derivation"]
+    assert crossing["a0_median_greedy_tta_s"] == statistics.median(greedy)
+    assert crossing["p90_plus_greedy_s"] == lengths["seconds"]["p90"] + statistics.median(greedy)
+    assert crossing["median_plus_greedy_s"] <= 10
+    assert 10 < crossing["p90_plus_greedy_s"] <= 20
+    assert amendment["expected_crossing_b"] == 20
+    crossing_def = amendment["crossing"]
+    assert crossing_def["prediction_b"] == 20
+    assert "McNemar p is below 0.05" in crossing_def["definition"]
+    assert crossing_def["falsified_if"] == (
+        "B=10 crosses, or no B in {10, 20, 30} crosses. Report which of those two occurred."
+    )
+    assert sum(1 for row in a0 if row["in_budget_pass"]) == 14
+    retained_zero = sum(
+        1
+        for point in points
+        for step in point["steps"]
+        if int(step.get("retained_tokens") or 0) == 0
+    )
+    close = amendment["predictions"]["close_fraction"]
+    assert retained_zero == close["n_right_censored"] == 329
+    assert close["n_observed_closes"] == len(finished) == 160
+    assert close["n_steps"] == n_steps == 489
+    assert close["prediction_floor"] == "160/489"
+    assert close["budgets_s"] == [10, 20, 30]
+    assert close["observed_close_max_s"] == max(second_values)
+    assert close["observed_close_max_s"] <= 10
+    assert amendment["predictions"]["sweep"]["direction"] == "A4 >= A0 at each B"
+    assert amendment["predictions"]["sweep"]["budgets_s"] == [10, 20, 30]
+    ordered = sorted(
+        (
+            json.loads(item.read_text(encoding="utf-8"))
+            for item in (
+                ROOT / "derived" / "p1_quality" / "8a529053-fc47-486d-8809-6c699d156b06" / "points"
+            ).glob("*.json")
+        ),
+        key=lambda row: str(row["id"]),
+    )
+    second_half = ordered[100:]
+    second_record = amendment["a0_second_half"]
+    assert second_record["wall_s"] == sum(float(row["wall_s"]) for row in second_half)
+    assert second_record["n_steps"] == sum(len(row["steps"]) for row in second_half) == 745
+    assert second_record["n_steps_tta_at_10"] == sum(
+        1 for row in second_half for step in row["steps"] if float(step["tta_s"]) == 10.0
+    )
+    assert second_record["in_budget_passes"] == sum(
+        1 for row in second_half if row["in_budget_pass"]
+    )
+    load_s = 5.211120400010259
+    canary_s = 752.1359013
+    expected_boots: list[dict[str, int]] = []
+    for budget_s in (10, 20, 30):
+        expected_boots.append(
+            {
+                "arm": "A0",
+                "budget_s": budget_s,
+                "entry_count": 100,
+                "entry_offset": 100,
+                "estimate_s": math.ceil(
+                    second_record["wall_s"]
+                    + (budget_s - 10) * second_record["n_steps_tta_at_10"]
+                    + load_s
+                    + canary_s
+                ),
+            }
+        )
+        start = 0
+        acc = 0
+        for index, row in enumerate(second_half):
+            count = len(row["steps"])
+            if acc and math.ceil((acc + count) * budget_s + load_s + canary_s) > 7200:
+                expected_boots.append(
+                    {
+                        "arm": "A4",
+                        "budget_s": budget_s,
+                        "entry_count": index - start,
+                        "entry_offset": 100 + start,
+                        "estimate_s": math.ceil(acc * budget_s + load_s + canary_s),
+                    }
+                )
+                start = index
+                acc = count
+            else:
+                acc += count
+        expected_boots.append(
+            {
+                "arm": "A4",
+                "budget_s": budget_s,
+                "entry_count": len(second_half) - start,
+                "entry_offset": 100 + start,
+                "estimate_s": math.ceil(acc * budget_s + load_s + canary_s),
+            }
+        )
+    assert [boot for boot in amendment["boots"] if boot["entry_offset"] >= 100] == expected_boots
+    assert len(amendment["boots"]) == 24
+    assert all(boot["estimate_s"] <= 7200 for boot in amendment["boots"])
+    for budget_s in (10, 20, 30):
+        for arm in ("A0", "A4"):
+            covered = [
+                boot
+                for boot in amendment["boots"]
+                if boot["arm"] == arm and boot["budget_s"] == budget_s
+            ]
+            assert sum(boot["entry_count"] for boot in covered) == 200
+    a5_estimates = json.loads(
+        (ROOT / "derived" / "h1_hybrid" / "LOCAL_QUALITY_AMENDMENT_7.json").read_text(
+            encoding="utf-8"
+        )
+    )["predictions"]["A5"]["estimates_s"]
+    assert amendment["run_order"] == [
+        {
+            "arm": "A5",
+            "entry_count": 100,
+            "entry_offset": 0,
+            "estimate_s": a5_estimates["first_100"],
+            "seed": 20260930,
+        },
+        {
+            "arm": "A5",
+            "entry_count": 100,
+            "entry_offset": 100,
+            "estimate_s": a5_estimates["second_100"],
+            "seed": 20260930,
+        },
+        {
+            "arms": ["A0", "A4"],
+            "budget_s": 10,
+            "entries": "lexicographic [:100]",
+            "phase": "BUDGET_SWEEP",
+        },
+        {
+            "arms": ["A0", "A4"],
+            "budget_s": 20,
+            "entries": "lexicographic [:100]",
+            "phase": "BUDGET_SWEEP",
+        },
+        {
+            "arms": ["A0", "A4"],
+            "budget_s": 30,
+            "entries": "lexicographic [:100]",
+            "phase": "BUDGET_SWEEP",
+        },
+        {
+            "arms": ["A0", "A4"],
+            "budgets_s": [10, 20, 30],
+            "entries": "lexicographic [100:200]",
+            "note": "After every [:100] cell. Nothing dropped.",
+            "phase": "BUDGET_SWEEP",
+        },
+    ]
+    prior = ROOT / "derived" / "h1_hybrid" / "LOCAL_QUALITY_AMENDMENT_7.json"
+    assert amendment["amended_file_sha256"] == hashlib.sha256(prior.read_bytes()).hexdigest()
+    assert json.loads(prior.read_text(encoding="utf-8"))["schedule"] == [
+        "A4",
+        "A5",
+        "A2",
+        "A3",
+        "A1",
+    ]
 
 
 def test_refused_session_summary_records_the_canary_series() -> None:

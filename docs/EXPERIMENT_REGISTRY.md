@@ -109,9 +109,9 @@ Seal check 2026-10-03 (`tools/seal_verify.py` on the `sealed_` tree when one exi
 
 | id | question | claim | pri | status | blocked by / notes |
 |---|---|---|---|---|---|
-| A4-FIX + B sweep | greedy-first, sampled thinking, only finished valid calls; B = 10/20/30 s | C4 | A | NEXT | greedy-first runner committed; measurement waits on amendment 8 |
-| A5 feedback-retry | retry with the wrong answer and error in context | C4 | A | NEXT | amendment 7 registered (pred 23-28.06) |
-| A2 retry-on-empty | resample on empty/unparseable while TTA < B | C4 | B | PLANNED | after A5 |
+| A4-FIX + B sweep | greedy-first, sampled thinking, only finished valid calls; B = 10/20/30 s | C4 | A | NEXT | amendment 8 registered, not started. Crossing: smallest B with McNemar p < 0.05, predicted B=20. Close-fraction floor 160/489 (3b4d8207). Order: A5 both halves, then B=10, B=20, B=30, then second-half entries. sha256 292ac69df1cf87d25b24c5a50fb8c37ee5b97049d379ba180482d0c7822da408 |
+| A5 feedback-retry | retry with the wrong answer and error in context | C4 | A | NEXT | amendment 7 pred 23-28.06; amendment 8 runs both halves of seed 20260930 before the sweep |
+| A2 retry-on-empty | resample on empty/unparseable while TTA < B | C4 | B | PLANNED | after A5 and the budget sweep |
 | A3 check-and-retry | resample on tool error while TTA < B | C4 | B | PLANNED | note: 0 tool_exec errors in d482c621; may be near-null, still run |
 | A1 bounded | best-of-4 cut at B, both seeds | C4 | B | PLANNED | unanimous-extras rule (amendment 6) |
 | A6 CONSTRAINED (from Q-MECH) | xgrammar constrained decoding as a budget-spending arm | C4 | A | PLANNED | CHANGED 2026-10-03: Q-MECH arm folded into P1; constraint costs decode time |
@@ -165,7 +165,7 @@ time after Wednesday; this list does not fit in the window.
 |---|---|---|---|---|---|
 | PARITY u8 | 4B and 8B u8 limits vs f16 | C1, C5 | A | DONE | c76fed24 control tree 1986ba64bda37fb148aca44d163e0076d814c4c01490df01e8a603c5a8df373e MATCH; d2d5cc4a 4B u8 18500 tree 2b0a94c6cefc92aac4cc4c5a2e049a7300bff6fd81ae2707a43c8ea2231e9f07 MATCH; 56c116a6 8B u8 16437 tree c9bc509818485bd98e09b3611afb3ceba744a89d9cbb0efd9558c61a2bb7e7bf MATCH. plan.json and summary.json of the first two used the launcher boot-end stamp rule. |
 | RESIDENT-T2 | 4B: one f16 point at 131,072 (context window binds, not memory); 8B: predicted memory walls, search if inside context | C1, C5 | A | PLANNED | CHANGED 2026-10-03 from full 3-precision search |
-| P1-T2 | A0 + fixed A4 at B = 10/20 on the faster GPU: does thinking fit? | C4, C5 | A | PLANNED | A4 fix + AMENDMENT_8 |
+| P1-T2 | A0 + fixed A4 at B = 10/20 on the faster GPU: does thinking fit? | C4, C5 | A | PLANNED | A4 fix committed; amendment 8 registered |
 | P0-T2 | exchange rate on T2S | C4 | B | PLANNED | launcher profile |
 | P1-T2 8B | P1 arms with 8B (more quality headroom) | C4 | B | PLANNED | |
 | NPU-1 | NPU as third placement; limit set by toolchain (MAX_PROMPT_LEN) | C1, C5 | A | PLANNED | MAX_PROMPT_LEN is the load-time axis (1024, 2048, 4096, 8192, then double until load fails). One detached session per setting: the pilot-extrapolated bound of the fixed ladder is above 7200 s. IR is INT4_SYM group_size 128. Binding per setting is TOOLCHAIN_CAP, LATENCY, or LOAD_FAIL. Profile tools/launch_t2s_npu1.ps1. Prereg derived/npu/NPU1_PREREG.json sha256 483ed364c2fef94b65e6822404702bf576c5e80d600ab40e701e60196565ce07. Predictions registered, not launched. |
@@ -239,8 +239,9 @@ time after Wednesday; this list does not fit in the window.
   A0 + A4 B=10 -> SPEC-T2 decode -> CB-T2 -> TIER-T2 limits -> FP16-T2.
   Ask for time after Wed for the rest (HET-1, PWR-T2, T2-4, TIER quality,
   R2b/R2c-8B, P0-T2, P1-T2 8B, RESIDENT-T2).
-- Oct 5-11, XPS: A4-DIAG + AMENDMENT_8 -> A4 fix B=10/20/30 -> A5 ->
-  ALLOC-DIAG + BUDGET (+ ALLOC-MODEL) -> RES-QUALITY -> OBS-MASK.
+- Oct 5-11, XPS: A5 both halves, then sweep B=10, B=20, B=30, then
+  second-half entries (amendment 8) -> ALLOC-DIAG + BUDGET (+ ALLOC-MODEL) ->
+  RES-QUALITY -> OBS-MASK.
   Cursor builds A6-A8 and SCHEMA-RET meanwhile; fix Q-TIER/Q-KV seals.
 - Oct 12-18, XPS: A6/A7 -> OBS-COST -> P2 -> A2, A3, A1 bounded ->
   Q-TIER-CLEAN, Q-KV-CLEAN -> CB-XPS -> XPS-PWR gate.
