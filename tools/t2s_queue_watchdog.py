@@ -229,7 +229,9 @@ def _patch_cell_files(
     if not run_id:
         return
     session = repo_root / "derived" / "c2_ttft" / run_id
-    sealed = repo_root / "derived" / "c2_ttft" / f"sealed_{run_id}"
+    if not session.is_dir():
+        session = repo_root / "derived" / "npu" / run_id
+    sealed = session.parent / f"sealed_{run_id}"
     if sealed.exists() or not session.is_dir():
         return
     exclude = bool(cell.get("exclude_from_sealed_results"))

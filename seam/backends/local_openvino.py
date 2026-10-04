@@ -440,9 +440,11 @@ def _make_ttft_streamer(ov_genai: Any) -> Any:
             self.ttft_ns: int | None = None
             self.first_token_ns: int | None = None
             self.last_token_ns: int | None = None
+            self.tokens_written: int = 0
 
         def write(self, _token: Any) -> Any:
             now = time.perf_counter_ns()
+            self.tokens_written += 1
             if self.first_token_ns is None:
                 self.first_token_ns = now
                 if self.ttft_ns is None and self.t0_ns is not None:

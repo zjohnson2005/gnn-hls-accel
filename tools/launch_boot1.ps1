@@ -27,7 +27,7 @@ param(
     [switch]$NoRebootDeviation,
     [switch]$Rehearsal,
     [string]$WatchdogLog = "",
-    [ValidateSet("boot1", "boot2", "boot3", "boot4", "resident-limit", "resident-limit-2", "p0-v2", "p1-a0", "p1-a4", "p1-a5", "p1-a1", "t2s-boot1")]
+    [ValidateSet("boot1", "boot2", "boot3", "boot4", "resident-limit", "resident-limit-2", "p0-v2", "p1-a0", "p1-a4", "p1-a5", "p1-a1", "t2s-boot1", "npu-1")]
     [string]$Profile = "boot1",
     [int]$P1Seed = 20260930,
     [int]$P1EntryOffset = 0,
@@ -81,6 +81,7 @@ $SummaryName = switch ($Profile) {
     "p1-a5" { "P1_A5_SUMMARY.json" }
     "p1-a1" { "P1_A1_SUMMARY.json" }
     "t2s-boot1" { "T2S_BOOT1_SUMMARY.json" }
+    "npu-1" { "T2S_NPU1_SUMMARY.json" }
     default { "BOOT1_SUMMARY.json" }
 }
 $DeferredName = switch ($Profile) {
@@ -95,10 +96,12 @@ $DeferredName = switch ($Profile) {
     "p1-a5" { "DEFERRED_TO_P1_A2.json" }
     "p1-a1" { "DEFERRED_TO_P1_A1_NEXT.json" }
     "t2s-boot1" { "DEFERRED_TO_T2S_BOOT2.json" }
+    "npu-1" { "DEFERRED_TO_T2S_NPU1.json" }
     default { "DEFERRED_TO_BOOT2.json" }
 }
 $script:DeferredStatus = switch ($Profile) {
     "t2s-boot1" { "DEFERRED_TO_T2S_BOOT2" }
+    "npu-1" { "DEFERRED_TO_T2S_NPU1" }
     "resident-limit" { "DEFERRED_TO_RESIDENT_LIMIT_2" }
     "resident-limit-2" { "DEFERRED_TO_RESIDENT_LIMIT_3" }
     "p0-v2" { "DEFERRED_TO_P0_V3" }
@@ -112,6 +115,8 @@ $SummaryPath = Join-Path $LaunchDir $SummaryName
 $DeferredPath = Join-Path $LaunchDir $DeferredName
 $PythonExe = Join-Path $root ".venv-seam\Scripts\python.exe"
 $WorkerPy = Join-Path $root "tools\run_c1_ceiling.py"
+$NpuPy = Join-Path $root "tools\run_npu_profile.py"
+$script:EvoT2 = ($Profile -eq "t2s-boot1" -or $Profile -eq "npu-1")
 $DetPy = Join-Path $root "tools\run_det_probe.py"
 $WarmPy = Join-Path $root "tools\run_warm_kv.py"
 $DecodePy = Join-Path $root "tools\run_decode_match.py"
@@ -567,6 +572,40 @@ if ($Profile -eq "boot2") {
             Low = 14000; High = 26000
         }
     )
+} elseif ($Profile -eq "npu-1") {
+    # T2S NPU-1 / NPU-2. Does not open the NPU preregistration.
+    # estimate_s is 1 because no NPU cell has been timed. -NoRebootDeviation
+    # skips the cold-window deferral; the number is not a duration.
+    $env:SEAM_PLATFORM_ID = "evo-t2"
+    $script:UncoldReason = "remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access"
+    $script:EstimateDerivation = [ordered]@{
+        formula = "estimate_s = 1; duration is unmeasured, so the cold-window deferral is not a measured bound"
+        platform_id = "evo-t2"
+        estimate_s_status = "unmeasured"
+        prefill_chunk_size = 1024
+        prefill_chunk_citation = "openvino#34617"
+        slo_s = 10
+        low = 64
+        resolution = 64
+    }
+    $Cells = @(
+        @{
+            Name = "NPU-2 int8 load"; Kind = "npu"; Phase = "npu2-load"; EstimateS = 1
+            Model = "configs\models\Qwen3-4B-int8-ov.yaml"
+        },
+        @{
+            Name = "NPU-1 feasibility"; Kind = "npu"; Phase = "npu1-feasibility"; EstimateS = 1
+            Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+        },
+        @{
+            Name = "NPU-1 TTFT bisection"; Kind = "npu"; Phase = "npu1-bisect"; EstimateS = 1
+            Model = "configs\models\Qwen3-4B-int4-ov.yaml"; Low = 64; Resolution = 64
+        },
+        @{
+            Name = "NPU-1 over max"; Kind = "npu"; Phase = "npu1-overmax"; EstimateS = 1
+            Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+        }
+    )
 } else {
 $Cells = @(
     @{ Name = "DET-PROBE"; Kind = "det"; EstimateS = 1200 },
@@ -631,7 +670,7 @@ function Save-BootSummary {
         $doc.foreign_queue_evidence = @($script:ForeignQueueEvidence)
         $doc.watchdog_log_missing = [bool]$script:WatchdogLogMissing
     }
-    if ($Profile -eq "t2s-boot1" -and $WatchdogLog) {
+    if ($script:EvoT2 -and $WatchdogLog) {
         $doc.watchdog_log = [string]$WatchdogLog
     }
     if ($Rehearsal) { $doc.rehearsal = $true }
@@ -668,13 +707,13 @@ function Add-Row {
     # An ordered dictionary has no PSObject .name, so Merge-BootCells would drop it.
     $script:Rows += [pscustomobject]$row
     Save-BootSummary -State "running"
-    if ($Profile -eq "t2s-boot1" -and $RunId) {
+    if ($script:EvoT2 -and $RunId) {
         Update-T2sForeignEvidence -RunId $RunId
     }
 }
 
 function Assert-T2sOwnedWorkers {
-    if ($Profile -ne "t2s-boot1") { return }
+    if (-not $script:EvoT2) { return }
     $checker = Join-Path $root "tools\t2s_queue_watchdog.py"
     $out = & $PythonExe $checker cell-check --root-pid $PID
     if ($LASTEXITCODE -ne 0) {
@@ -686,7 +725,7 @@ function Assert-T2sOwnedWorkers {
 
 function Update-T2sForeignEvidence {
     param([string]$RunId = "", [switch]$NoPatchFiles)
-    if ($Profile -ne "t2s-boot1" -or $DryRun) { return }
+    if (-not $script:EvoT2 -or $DryRun) { return }
     if (-not $script:RunStartedUtc) { return }
     $ended = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
     $payload = [ordered]@{
@@ -848,6 +887,36 @@ function Invoke-DetProbe {
     return @{ Exit = $exit; RunId = $runId }
 }
 
+function Invoke-NpuCell {
+    param($Cell)
+    $phase = Get-BootCellField -Cell $Cell -Name "Phase"
+    $model = Join-Path $root (Get-BootCellField -Cell $Cell -Name "Model")
+    if (-not (Test-Path -LiteralPath $model)) { throw "REFUSED -- missing model spec $model" }
+    $sid = [guid]::NewGuid().ToString()
+    $out = Join-Path $root ("derived\npu\" + $sid)
+    New-Item -ItemType Directory -Force -Path $out | Out-Null
+    $workerArgs = @(
+        "-u", $NpuPy,
+        "--cell", $phase,
+        "--out", $out,
+        "--model-spec", $model,
+        "--prefill-chunk-size", "1024"
+    )
+    $low = Get-BootCellField -Cell $Cell -Name "Low"
+    $resolution = Get-BootCellField -Cell $Cell -Name "Resolution"
+    if ($null -ne $low) { $workerArgs += @("--low", [string]$low) }
+    if ($null -ne $resolution) { $workerArgs += @("--resolution", [string]$resolution) }
+    & $PythonExe @workerArgs
+    $exit = $LASTEXITCODE
+    $summaryPath = Join-Path $out "summary.json"
+    $status = "REFUSED"
+    if (Test-Path -LiteralPath $summaryPath) {
+        $doc = Get-Content -LiteralPath $summaryPath -Raw | ConvertFrom-Json
+        if ($doc.status) { $status = [string]$doc.status }
+    }
+    return @{ Exit = $exit; Status = $status; RunId = $sid; Out = $out }
+}
+
 function Invoke-CeilingCell {
     param($Cell)
     $model = Join-Path $root $Cell.Model
@@ -950,6 +1019,20 @@ function Get-BootCellCommand {
         $modelPath = Join-Path $root $model
         $args = @($PythonExe, "-u", $ExchangePy, "--model-spec", $modelPath)
         $smokeArgs = @($PythonExe, "-u", $ExchangePy, "--smoke", "--model-spec", $modelPath)
+        return [ordered]@{
+            kind = $kind; arm = $arm; model = $model; low = $low; high = $high
+            expect_kv = $kv; command = ($args -join " "); smoke = ($smokeArgs -join " ")
+        }
+    }
+    if ($kind -eq "npu") {
+        $phase = Get-BootCellField -Cell $Cell -Name "Phase"
+        $modelPath = Join-Path $root $model
+        $args = @($PythonExe, "-u", $NpuPy, "--cell", $phase, "--model-spec", $modelPath, "--prefill-chunk-size", "1024")
+        $low = Get-BootCellField -Cell $Cell -Name "Low"
+        $resolution = Get-BootCellField -Cell $Cell -Name "Resolution"
+        if ($null -ne $low) { $args += @("--low", [string]$low) }
+        if ($null -ne $resolution) { $args += @("--resolution", [string]$resolution) }
+        $smokeArgs = @($PythonExe, "-u", $NpuPy, "--smoke", "--cell", $phase, "--out", (Get-RehearsalSmokeOut -Cell $Cell))
         return [ordered]@{
             kind = $kind; arm = $arm; model = $model; low = $low; high = $high
             expect_kv = $kv; command = ($args -join " "); smoke = ($smokeArgs -join " ")
@@ -1158,7 +1241,7 @@ function Invoke-BootDryCell {
 }
 
 function Assert-BootAc {
-    if ($Profile -eq "t2s-boot1") {
+    if ($script:EvoT2) {
         Write-Host "battery_present=false ac=pass reason=platform power.has_battery is false (evo-t2 mains-only)"
         return
     }
@@ -1191,6 +1274,24 @@ if ($Profile -eq "t2s-boot1") {
     Assert-BootAc
 }
 
+if ($Profile -eq "npu-1") {
+    if ([string]::IsNullOrWhiteSpace($WatchdogLog)) {
+        $WatchdogLog = "C:\apu\ovn\watchdog.log"
+    }
+    $env:SEAM_WATCHDOG_LOG = [string]$WatchdogLog
+    Write-Host "platform_id=evo-t2 config=configs/platforms/evo-t2.yaml"
+    Write-Host ("watchdog_log={0}" -f $WatchdogLog)
+    Write-Host "free_memory_floor_mb=24000 provenance=derived_unmeasured CAP-4-class peak on 64 GB; floor keeps Available at or above 24000 MB"
+    Write-Host "canary=must_arm UNGUARDED=false"
+    Write-Host "npu_cells=npu2-load,npu1-feasibility,npu1-bisect,npu1-overmax"
+    if ($NoRebootDeviation) {
+        $upNow = Get-ColdUptimeSeconds
+        Write-Host ("deviation kind=UNCOLD_UPTIME uptime_s={0} reason={1}" -f $upNow, $script:UncoldReason)
+        Write-Host "uptime_gate=skipped other_gates=enforced watchdog=enforced machine_lock=enforced canary=must_arm"
+    }
+    Assert-BootAc
+}
+
 Save-BootSummary -State "started"
 
 # Boot 4 has no reboot step. Smokes run before any measurement cell and a
@@ -1200,7 +1301,7 @@ Invoke-Boot4Smokes
 Invoke-ResidentLimitSmokes
 Invoke-P1Budget
 
-if ($Profile -eq "t2s-boot1") {
+if ($script:EvoT2) {
     $script:RunStartedUtc = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
 }
 
@@ -1277,6 +1378,21 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
             exit $exit
         }
         Add-Row -Cell $cell -Status "rehearsal_smoke" -RunId "" -Detail "smoke"
+        continue
+    }
+
+    if ($cell.Kind -eq "npu") {
+        $ran = Invoke-NpuCell -Cell $cell
+        if ($ran.Exit -ne 0 -or $ran.Status -match "UNARMED|REFUSED") {
+            $script:LastRunId = $ran.RunId
+            $script:FinalState = "refused"
+            $script:FinalReason = "npu cell $($cell.Name) status=$($ran.Status) exit=$($ran.Exit)"
+            Add-Row -Cell $cell -Status "REFUSED" -RunId $ran.RunId -Detail $script:FinalReason
+            Save-BootSummary -State "refused" -Reason $script:FinalReason
+            exit $ran.Exit
+        }
+        $script:LastRunId = $ran.RunId
+        Add-Row -Cell $cell -Status $ran.Status -RunId $ran.RunId -Detail "summary_status=$($ran.Status)"
         continue
     }
 
