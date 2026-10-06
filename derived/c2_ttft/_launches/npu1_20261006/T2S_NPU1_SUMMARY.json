@@ -1,0 +1,160 @@
+{
+    "boot_id":  "792e909d-f4d2-4271-9557-b2cc69504b38",
+    "state":  "complete",
+    "reason":  "",
+    "last_run_id":  "680b031a-b691-477d-a423-3535d36da5b8",
+    "window_s":  7200,
+    "uptime_s":  1242818,
+    "estimate_derivation":  {
+                                "formula":  "per setting: pilot load plus planned probes times (pilot prefill at 64 scaled by n/64, plus the 10 s SLO as the paired GPU bound)",
+                                "platform_id":  "evo-t2",
+                                "estimate_s_status":  "pilot_extrapolation",
+                                "pilot_note":  "XPS feasibility pilot 2026-10-03, not a measurement. Longer-prompt prefill is extrapolated linearly from the 64-token pilot.",
+                                "pilot_prefill_s_at_64":  1.4136199,
+                                "pilot_load_s":  78.0,
+                                "sum_s":  9628,
+                                "fits_one_session":  false,
+                                "split":  "one detached session per MAX_PROMPT_LEN",
+                                "prefill_chunk_size":  1024,
+                                "prefill_chunk_citation":  "openvino#34617",
+                                "slo_s":  10,
+                                "low":  64,
+                                "resolution":  64,
+                                "ir":  "INT4_SYM group_size 128; channel-wise is parked"
+                            },
+    "cells":  [
+                  {
+                      "name":  "NPU-2 int8 load",
+                      "status":  "infeasible",
+                      "run_id":  "27b4841d-3267-4a44-86b0-40ad2cc37164",
+                      "estimate_s":  78,
+                      "detail":  "summary_status=infeasible",
+                      "started_utc":  "2026-10-06T01:47:24.198Z",
+                      "ended_utc":  "2026-10-06T01:50:11.941Z",
+                      "workloads_session_host":  {
+                                                     "before":  {
+                                                                    "instance_count":  0,
+                                                                    "pids":  [
+
+                                                                             ],
+                                                                    "WS_MB":  [
+
+                                                                              ],
+                                                                    "CPU_s":  [
+
+                                                                              ],
+                                                                    "read_errors":  [
+
+                                                                                    ]
+                                                                },
+                                                     "kill_errors":  [
+
+                                                                     ],
+                                                     "after":  {
+                                                                   "instance_count":  0,
+                                                                   "pids":  [
+
+                                                                            ],
+                                                                   "WS_MB":  [
+
+                                                                             ],
+                                                                   "CPU_s":  [
+
+                                                                             ],
+                                                                   "read_errors":  [
+
+                                                                                   ]
+                                                               }
+                                                 }
+                  },
+                  {
+                      "name":  "NPU-1 MAX_PROMPT_LEN=1024",
+                      "status":  "complete",
+                      "run_id":  "680b031a-b691-477d-a423-3535d36da5b8",
+                      "estimate_s":  666,
+                      "detail":  "summary_status=complete",
+                      "started_utc":  "2026-10-06T01:50:12.178Z",
+                      "ended_utc":  "2026-10-06T01:52:37.096Z",
+                      "workloads_session_host":  {
+                                                     "before":  {
+                                                                    "instance_count":  0,
+                                                                    "pids":  [
+
+                                                                             ],
+                                                                    "WS_MB":  [
+
+                                                                              ],
+                                                                    "CPU_s":  [
+
+                                                                              ],
+                                                                    "read_errors":  [
+
+                                                                                    ]
+                                                                },
+                                                     "kill_errors":  [
+
+                                                                     ],
+                                                     "after":  {
+                                                                   "instance_count":  0,
+                                                                   "pids":  [
+
+                                                                            ],
+                                                                   "WS_MB":  [
+
+                                                                             ],
+                                                                   "CPU_s":  [
+
+                                                                             ],
+                                                                   "read_errors":  [
+
+                                                                                   ]
+                                                               }
+                                                 }
+                  }
+              ],
+    "foreign_queue_evidence":  [
+
+                               ],
+    "watchdog_log_missing":  false,
+    "watchdog_log":  "C:\\apu\\ovn\\watchdog.log",
+    "deviation":  {
+                      "kind":  "UNCOLD_UPTIME",
+                      "uptime_s":  1242818,
+                      "reason":  "remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access"
+                  },
+    "workloads_session_host":  {
+                                   "before":  {
+                                                  "instance_count":  0,
+                                                  "pids":  [
+
+                                                           ],
+                                                  "WS_MB":  [
+
+                                                            ],
+                                                  "CPU_s":  [
+
+                                                            ],
+                                                  "read_errors":  [
+
+                                                                  ]
+                                              },
+                                   "kill_errors":  [
+
+                                                   ],
+                                   "after":  {
+                                                 "instance_count":  0,
+                                                 "pids":  [
+
+                                                          ],
+                                                 "WS_MB":  [
+
+                                                           ],
+                                                 "CPU_s":  [
+
+                                                           ],
+                                                 "read_errors":  [
+
+                                                                 ]
+                                             }
+                               }
+}

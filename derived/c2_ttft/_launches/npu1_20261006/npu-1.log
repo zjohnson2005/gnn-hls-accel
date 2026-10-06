@@ -1,0 +1,290 @@
+npu_setting max_prompt_len=1024 estimate_s=666
+npu_setting max_prompt_len=2048 estimate_s=1238
+npu_setting max_prompt_len=4096 estimate_s=2490
+npu_setting max_prompt_len=8192 estimate_s=5234
+npu_ladder_sum_s=9628 fits_one_session=False tail_start=16384
+platform_id=evo-t2 config=configs/platforms/evo-t2.yaml
+watchdog_log=C:\apu\ovn\watchdog.log
+free_memory_floor_mb=24000 provenance=derived_unmeasured CAP-4-class peak on 64 GB; floor keeps Available at or above 24000 MB
+canary=must_arm UNGUARDED=false
+npu_cells=NPU-2 int8 load,NPU-1 MAX_PROMPT_LEN=1024
+deviation kind=UNCOLD_UPTIME uptime_s=1242504 reason=remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access
+uptime_gate=skipped other_gates=enforced watchdog=enforced machine_lock=enforced canary=must_arm
+battery_present=false ac=pass reason=platform power.has_battery is false (evo-t2 mains-only)
+json_ok
+time_check NPU-2 int8 load: uptime_s=1242505 remaining_s=-1235305 estimate_s=78
+uptime_gate=skipped deviation=UNCOLD_UPTIME uptime_s=1242505
+battery_present=false ac=pass reason=platform power.has_battery is false (evo-t2 mains-only)
+
+=== preamble NPU-2 int8 load ===
+WorkloadsSessionHost: none resident
+{
+  "all_passed": true,
+  "gates": [
+    {
+      "detail": {
+        "ac_ok": true,
+        "battery_present": false,
+        "recorded_reason": "platform power.has_battery is false; mains-only; Win32_Battery was not consulted"
+      },
+      "name": "ac",
+      "passed": true,
+      "reason": "no_battery_platform_mains_only"
+    },
+    {
+      "detail": {
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "required_ac_max": 100,
+        "required_ac_min": 100,
+        "scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+        "scheme_name": "High performance",
+        "scheme_text": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+      },
+      "name": "processor_ac",
+      "passed": true,
+      "reason": "processor_ac_100_100"
+    },
+    {
+      "detail": {
+        "citation": "DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate ~36\u201340 GB => Available target ~24\u201328 GB; floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.",
+        "floor_mb": 24000.0,
+        "observed_mb": 59501.0
+      },
+      "name": "available_mb",
+      "passed": true,
+      "reason": "available_mb_ok"
+    },
+    {
+      "detail": {
+        "citation": "CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.",
+        "deviation": {
+          "kind": "UNCOLD_UPTIME",
+          "reason": "remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access",
+          "uptime_s": 1242480.5779838562
+        },
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 1242480.5779838562
+      },
+      "name": "uptime",
+      "passed": true,
+      "reason": "uptime_skipped_noreboot_deviation"
+    },
+    {
+      "detail": {
+        "onset_citation": "UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed. Sessions on this platform must record onset_status=unknown in run_environment.",
+        "onset_s": null,
+        "onset_status": "unknown",
+        "seal_note": "platform onset_s is unknown; recorded in run_environment; canary N must not assume aipc-c1's 657 s"
+      },
+      "name": "onset",
+      "passed": true,
+      "reason": "onset_unknown"
+    }
+  ],
+  "platform_id": "evo-t2",
+  "refusal_reasons": [],
+  "run_environment_fields": {
+    "measurement_gates": {
+      "ac": {
+        "detail": {
+          "ac_ok": true,
+          "battery_present": false,
+          "recorded_reason": "platform power.has_battery is false; mains-only; Win32_Battery was not consulted"
+        },
+        "passed": true,
+        "reason": "no_battery_platform_mains_only"
+      },
+      "all_passed": true,
+      "available_mb": {
+        "citation": "DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate ~36\u201340 GB => Available target ~24\u201328 GB; floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.",
+        "floor_mb": 24000.0,
+        "observed_mb": 59501.0,
+        "passed": true
+      },
+      "onset_citation": "UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed. Sessions on this platform must record onset_status=unknown in run_environment.",
+      "onset_s": null,
+      "onset_seal_note": "platform onset_s is unknown; recorded in run_environment; canary N must not assume aipc-c1's 657 s",
+      "onset_status": "unknown",
+      "platform_id": "evo-t2",
+      "processor_ac": {
+        "passed": true,
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "reason": "processor_ac_100_100",
+        "scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+        "scheme_name": "High performance"
+      },
+      "uptime": {
+        "citation": "CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.",
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 1242480.5779838562,
+        "passed": true
+      },
+      "workloads_session_host": {
+        "CPU_s": [],
+        "WS_MB": [],
+        "instance_count": 0,
+        "pids": [],
+        "process": "WorkloadsSessionHost",
+        "read_errors": []
+      }
+    }
+  },
+  "workloads_session_host": {
+    "CPU_s": [],
+    "WS_MB": [],
+    "instance_count": 0,
+    "pids": [],
+    "process": "WorkloadsSessionHost",
+    "read_errors": []
+  }
+}
+json_ok
+=== machine-lock / alive-worker check ===
+machine.lock: absent
+cell_invoke kind=npu
+[c2_canary] index=0 after_probes=-1 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-06T01:47:50.618071+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-06T01:47:51.430238+00:00"}
+{"ok": true, "status": "infeasible", "generated": false}
+json_ok
+time_check NPU-1 MAX_PROMPT_LEN=1024: uptime_s=1242673 remaining_s=-1235473 estimate_s=666
+uptime_gate=skipped deviation=UNCOLD_UPTIME uptime_s=1242673
+battery_present=false ac=pass reason=platform power.has_battery is false (evo-t2 mains-only)
+
+=== preamble NPU-1 MAX_PROMPT_LEN=1024 ===
+WorkloadsSessionHost: none resident
+{
+  "all_passed": true,
+  "gates": [
+    {
+      "detail": {
+        "ac_ok": true,
+        "battery_present": false,
+        "recorded_reason": "platform power.has_battery is false; mains-only; Win32_Battery was not consulted"
+      },
+      "name": "ac",
+      "passed": true,
+      "reason": "no_battery_platform_mains_only"
+    },
+    {
+      "detail": {
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "required_ac_max": 100,
+        "required_ac_min": 100,
+        "scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+        "scheme_name": "High performance",
+        "scheme_text": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+      },
+      "name": "processor_ac",
+      "passed": true,
+      "reason": "processor_ac_100_100"
+    },
+    {
+      "detail": {
+        "citation": "DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate ~36\u201340 GB => Available target ~24\u201328 GB; floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.",
+        "floor_mb": 24000.0,
+        "observed_mb": 59435.0
+      },
+      "name": "available_mb",
+      "passed": true,
+      "reason": "available_mb_ok"
+    },
+    {
+      "detail": {
+        "citation": "CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.",
+        "deviation": {
+          "kind": "UNCOLD_UPTIME",
+          "reason": "remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access",
+          "uptime_s": 1242648.5679962635
+        },
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 1242648.5679962635
+      },
+      "name": "uptime",
+      "passed": true,
+      "reason": "uptime_skipped_noreboot_deviation"
+    },
+    {
+      "detail": {
+        "onset_citation": "UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed. Sessions on this platform must record onset_status=unknown in run_environment.",
+        "onset_s": null,
+        "onset_status": "unknown",
+        "seal_note": "platform onset_s is unknown; recorded in run_environment; canary N must not assume aipc-c1's 657 s"
+      },
+      "name": "onset",
+      "passed": true,
+      "reason": "onset_unknown"
+    }
+  ],
+  "platform_id": "evo-t2",
+  "refusal_reasons": [],
+  "run_environment_fields": {
+    "measurement_gates": {
+      "ac": {
+        "detail": {
+          "ac_ok": true,
+          "battery_present": false,
+          "recorded_reason": "platform power.has_battery is false; mains-only; Win32_Battery was not consulted"
+        },
+        "passed": true,
+        "reason": "no_battery_platform_mains_only"
+      },
+      "all_passed": true,
+      "available_mb": {
+        "citation": "DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate ~36\u201340 GB => Available target ~24\u201328 GB; floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.",
+        "floor_mb": 24000.0,
+        "observed_mb": 59435.0,
+        "passed": true
+      },
+      "onset_citation": "UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed. Sessions on this platform must record onset_status=unknown in run_environment.",
+      "onset_s": null,
+      "onset_seal_note": "platform onset_s is unknown; recorded in run_environment; canary N must not assume aipc-c1's 657 s",
+      "onset_status": "unknown",
+      "platform_id": "evo-t2",
+      "processor_ac": {
+        "passed": true,
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "reason": "processor_ac_100_100",
+        "scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+        "scheme_name": "High performance"
+      },
+      "uptime": {
+        "citation": "CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.",
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 1242648.5679962635,
+        "passed": true
+      },
+      "workloads_session_host": {
+        "CPU_s": [],
+        "WS_MB": [],
+        "instance_count": 0,
+        "pids": [],
+        "process": "WorkloadsSessionHost",
+        "read_errors": []
+      }
+    }
+  },
+  "workloads_session_host": {
+    "CPU_s": [],
+    "WS_MB": [],
+    "instance_count": 0,
+    "pids": [],
+    "process": "WorkloadsSessionHost",
+    "read_errors": []
+  }
+}
+json_ok
+=== machine-lock / alive-worker check ===
+machine.lock: absent
+cell_invoke kind=npu
+[c2_canary] index=0 after_probes=-1 armed=False every_n=4 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-06T01:51:43.050579+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-06T01:51:43.832380+00:00"}
+{"ok": true, "status": "complete", "rungs": 6}
+json_ok
+json_ok
+BOOT_COMPLETE
