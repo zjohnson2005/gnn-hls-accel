@@ -33,8 +33,9 @@ does not match the requested value refuses the cell.
 At each loaded setting, bisect the 10 s TTFT SLO from 64 up to that
 setting. Record decode tok/s at the highest rung that passes. A prompt of
 `MAX_PROMPT_LEN + 1` is infeasible and is not generated. The setting's
-bound is `TOOLCHAIN_CAP` when the top rung passes the SLO, `LATENCY` when
-the SLO fails below the cap, and `LOAD_FAIL` when the load fails.
+bound is `TOOLCHAIN_CAP` when the highest feasible rung passes the SLO.
+`LATENCY` only when a timed rung fails the SLO. An infeasible or refused
+rung is not a timing and is not `LATENCY`. `LOAD_FAIL` when the load fails.
 
 The int4 IR is INT4_SYM group_size 128 (group-wise). A channel-wise IR
 (group_size -1) is a later arm.

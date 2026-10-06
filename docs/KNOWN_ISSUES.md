@@ -44,16 +44,26 @@ not `powershell -NoProfile -File tools\launch_t2s_npu1.ps1`. The same
 rule applies to every T2S launch and rehearsal, and to the XPS A5
 commands. Found 2026-10-03. Not fixed yet.
 
-Profile `npu-1` is not in `$script:RehearsalMac` in
-`tools/launch_boot1.ps1`. The refusal hint falls through to the default,
-which prints an XPS command for `tools\launch_boot4.ps1`. The T2S command
-is `.\tools\launch_t2s_npu1.ps1`. Not fixed yet.
+Profile `npu-1` is in `$script:RehearsalMac`. The refusal hint names
+`.\tools\launch_t2s_npu1.ps1` on T2S. Fixed 2026-10-05.
 
 ## Boot 1-3 det cells have no rehearsal smoke
 
 Fixed 2026-10-04. Rehearsal of kind `det` calls `Invoke-DetProbe`, the same
 function as a real cell, with a stub worker that prints `SMOKE_OK det` and
 returns an `Exit` code. It no longer throws `REFUSED -- no rehearsal smoke`.
+
+## NPU-1 session 1 canary did not arm
+
+Boot `792e909d`, cell `680b031a`. The opening log line
+`[c2_canary] index=0 after_probes=-1 armed=False` is printed before the
+canary cell. That cell is `gpu_only_f16` on GPU (`n_cached=4000`,
+`delta=400`, RESIDENT), a separate pipeline from the NPU load. One opening
+canary cannot arm (`C=3`), and the runner dropped the guard, so no later
+canary ran. The plan hardcoded `UNGUARDED: false` and the summary omitted
+both fields. The run is UNGUARDED. See `derived/VOIDS/notes/680b031a.md`.
+Fixed for later runs: `armed: false` writes `UNGUARDED: true` on the plan
+and the summary.
 
 ## NPU-1 attempt c3caa5fc crashed before any cell
 

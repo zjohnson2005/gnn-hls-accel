@@ -112,30 +112,42 @@ def median_number(values: list[float]) -> float | None:
     return ordered[len(ordered) // 2]
 
 
+def _timed_slo_miss(row: dict[str, Any]) -> bool:
+    """A rung whose recorded prefills miss the SLO.
+
+    A null prefill is a refused or infeasible cell. It is not a latency miss.
+    """
+    if row.get("slo_pass"):
+        return False
+    prefills = row.get("prefill_s")
+    if isinstance(prefills, list):
+        return bool(prefills) and all(isinstance(value, (int, float)) for value in prefills)
+    return isinstance(prefills, (int, float))
+
+
 def bind_setting(*, load_ok: bool, cap: int, rungs: list[dict[str, Any]]) -> dict[str, Any]:
-    """TOOLCHAIN_CAP if the top rung passes, LATENCY if the SLO fails below it."""
+    """TOOLCHAIN_CAP when the highest feasible rung passes the SLO.
+
+    LATENCY only when a timed rung misses the SLO. An infeasible or refused
+    rung, including MAX_PROMPT_LEN itself when it was never timed, does not
+    count. ``cap`` is the loaded setting and is not itself a pass.
+    """
+    del cap
     if not load_ok:
         return {"binding": "LOAD_FAIL", "ttft_limit_n": None, "decode_tok_s_at_limit": None}
-    top = [row for row in rungs if row.get("n_tokens") == cap and row.get("slo_pass")]
     passing = [row for row in rungs if row.get("slo_pass")]
-    if top:
-        chosen = top[0]
-        binding = "TOOLCHAIN_CAP"
-        limit: int | None = cap
-    elif passing:
-        chosen = max(passing, key=lambda row: int(row["n_tokens"]))
-        binding = "LATENCY"
-        limit = int(chosen["n_tokens"])
-    else:
-        return {"binding": "LATENCY", "ttft_limit_n": None, "decode_tok_s_at_limit": None}
-    rates = [
-        float(value)
-        for value in chosen.get("decode_tok_s") or []
-        if isinstance(value, (int, float))
-    ]
+    chosen = max(passing, key=lambda row: int(row["n_tokens"])) if passing else None
+    binding = "LATENCY" if any(_timed_slo_miss(row) for row in rungs) else "TOOLCHAIN_CAP"
+    rates: list[float] = []
+    if chosen is not None:
+        rates = [
+            float(value)
+            for value in chosen.get("decode_tok_s") or []
+            if isinstance(value, (int, float))
+        ]
     return {
         "binding": binding,
-        "ttft_limit_n": limit,
+        "ttft_limit_n": None if chosen is None else int(chosen["n_tokens"]),
         "decode_tok_s_at_limit": median_number(rates),
     }
 
@@ -222,6 +234,41 @@ def rung_record(
     decision["generated"] = True
     decision["error_class"] = None
     return decision
+
+
+def canary_marker(fragment: dict[str, Any] | None) -> dict[str, bool]:
+    """Any unarmed canary writes UNGUARDED true. An armed gate writes false."""
+    armed = False
+    if isinstance(fragment, dict) and not fragment.get("smoke_skip"):
+        gate = fragment.get("canary_gate")
+        if isinstance(gate, dict):
+            armed = bool(gate.get("armed"))
+        elif "armed" in fragment:
+            armed = bool(fragment.get("armed"))
+    return {"armed": armed, "UNGUARDED": not armed}
+
+
+def summarize_rung(n_tokens: int, repeats: list[dict[str, Any]]) -> dict[str, Any]:
+    """Per-rung prefill and the realized prompt length, including refused rungs."""
+
+    def realized(row: dict[str, Any]) -> int | None:
+        if isinstance(row.get("prompt_length"), int):
+            return int(row["prompt_length"])
+        if isinstance(row.get("prompt_tokens"), int):
+            return int(row["prompt_tokens"])
+        return None
+
+    return {
+        "n_tokens": n_tokens,
+        "repeats": repeats,
+        "slo_pass": slo_pass(repeats),
+        "prefill_s": [row.get("prefill_s") for row in repeats],
+        "decode_tok_s": [row.get("decode_tok_s") for row in repeats],
+        "prompt_tokens": [realized(row) for row in repeats],
+        "exact_match_vs_gpu": [row.get("exact_match_vs_gpu") for row in repeats],
+        "timed": [row.get("timed") for row in repeats],
+        "reason": [row.get("reason") for row in repeats],
+    }
 
 
 def slo_pass(repeats: list[dict[str, Any]], slo_s: float = SLO_S) -> bool:
@@ -371,21 +418,27 @@ def run_hardware(args: argparse.Namespace) -> int:
     }
     _write(out / "plan.json", plan)
 
+    def write_summary(summary: dict[str, Any]) -> None:
+        summary.update(
+            canary_marker(plan.get("canary") if isinstance(plan.get("canary"), dict) else None)
+        )
+        _write(out / "summary.json", summary)
+
     def arm(planned: int) -> bool:
         if args.no_canary:
             plan["canary"] = {"armed": False, "smoke_skip": True}
-            plan["UNGUARDED"] = False
+            plan.update(canary_marker(plan["canary"]))
             _write(out / "plan.json", plan)
             return True
         try:
             armed = _arm_canary(out, args.model_spec, planned)
         except SystemExit as exc:
             summary = {"session_id": session_id, "status": "REFUSED_CANARY", "detail": str(exc)}
-            _write(out / "summary.json", summary)
+            write_summary(summary)
             print(str(exc))
             return False
         plan["canary"] = armed["canary"]
-        plan["UNGUARDED"] = False
+        plan.update(canary_marker(plan["canary"]))
         _write(out / "plan.json", plan)
         return True
 
@@ -436,7 +489,7 @@ def run_hardware(args: argparse.Namespace) -> int:
         summary.update(
             {"session_id": session_id, "status": "infeasible", "cell": args.cell, **load_fields}
         )
-        _write(out / "summary.json", summary)
+        write_summary(summary)
         print(json.dumps({"ok": True, "status": "infeasible", "generated": False}))
         return 0
 
@@ -460,7 +513,7 @@ def run_hardware(args: argparse.Namespace) -> int:
             "measurement": True,
             **load_fields,
         }
-        _write(out / "summary.json", summary)
+        write_summary(summary)
         print(json.dumps({"ok": True, "status": "infeasible", "binding": "LOAD_FAIL"}))
         return 0
 
@@ -478,7 +531,7 @@ def run_hardware(args: argparse.Namespace) -> int:
             "detail": "load returned no NPUW_LLM_MAX_PROMPT_LEN readback",
             **load_fields,
         }
-        _write(out / "summary.json", summary)
+        write_summary(summary)
         print(json.dumps({"ok": False, "status": "REFUSED"}))
         return 1
 
@@ -494,7 +547,7 @@ def run_hardware(args: argparse.Namespace) -> int:
             "detail": "readback does not match the requested MAX_PROMPT_LEN",
             **load_fields,
         }
-        _write(out / "summary.json", summary)
+        write_summary(summary)
         print(json.dumps({"ok": False, "status": "REFUSED", "max_prompt_len": max_prompt_len}))
         return 1
 
@@ -520,7 +573,7 @@ def run_hardware(args: argparse.Namespace) -> int:
             "measurement": True,
             **load_fields,
         }
-        _write(out / "summary.json", summary)
+        write_summary(summary)
         print(json.dumps({"ok": True, "status": "loaded_bisect_deferred", "max_prompt_len": cap}))
         return 0
 
@@ -555,7 +608,7 @@ def run_hardware(args: argparse.Namespace) -> int:
                 "error_class": error_class_for(message),
                 "prefill_s": None,
                 "decode_tok_s": None,
-                "prompt_tokens": n_tokens,
+                "prompt_tokens": None,
             }
         text = _text_from_generate_result(result)
         measured = _metrics(result)
@@ -589,6 +642,8 @@ def run_hardware(args: argparse.Namespace) -> int:
                 "prefill_s": None,
                 "decode_tok_s": None,
                 "exact_match_vs_gpu": None,
+                "prompt_tokens": npu_row.get("prompt_tokens"),
+                "reason": None,
                 "slo_pass": False,
             }
         row = rung_record(
@@ -606,16 +661,7 @@ def run_hardware(args: argparse.Namespace) -> int:
         return row
 
     def probe(n_tokens: int) -> dict[str, Any]:
-        repeats = [paired(n_tokens) for _ in range(REPEATS)]
-        return {
-            "n_tokens": n_tokens,
-            "repeats": repeats,
-            "slo_pass": slo_pass(repeats),
-            "prefill_s": [row.get("prefill_s") for row in repeats],
-            "decode_tok_s": [row.get("decode_tok_s") for row in repeats],
-            "exact_match_vs_gpu": [row.get("exact_match_vs_gpu") for row in repeats],
-            "timed": [row.get("timed") for row in repeats],
-        }
+        return summarize_rung(n_tokens, [paired(n_tokens) for _ in range(REPEATS)])
 
     high = cap
     rungs = slo_bisect(int(args.low), high, int(args.resolution), probe)
@@ -635,7 +681,7 @@ def run_hardware(args: argparse.Namespace) -> int:
         **load_fields,
         **bound,
     }
-    _write(out / "summary.json", summary)
+    write_summary(summary)
     print(json.dumps({"ok": True, "status": "complete", "rungs": len(rungs)}))
     return 0
 

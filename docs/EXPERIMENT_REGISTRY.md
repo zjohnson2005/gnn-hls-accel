@@ -168,9 +168,9 @@ time after Wednesday; this list does not fit in the window.
 | P1-T2 | A0 + fixed A4 at B = 10/20 on the faster GPU: does thinking fit? | C4, C5 | A | PLANNED | A4 fix committed; amendment 8 registered |
 | P0-T2 | exchange rate on T2S | C4 | B | PLANNED | launcher profile |
 | P1-T2 8B | P1 arms with 8B (more quality headroom) | C4 | B | PLANNED | |
-| NPU-1 | NPU as third placement; limit set by toolchain (MAX_PROMPT_LEN) | C1, C5 | A | PLANNED | MAX_PROMPT_LEN is the load-time axis (1024, 2048, 4096, 8192, then double until load fails). One detached session per setting: the pilot-extrapolated bound of the fixed ladder is above 7200 s. IR is INT4_SYM group_size 128. Binding per setting is TOOLCHAIN_CAP, LATENCY, or LOAD_FAIL. Profile tools/launch_t2s_npu1.ps1. Prereg derived/npu/NPU1_PREREG.json sha256 483ed364c2fef94b65e6822404702bf576c5e80d600ab40e701e60196565ce07. Predictions registered. Attempt c3caa5fc crashed before any cell (T2S_NPU1_SUMMARY state crashed, cells empty). No data. |
+| NPU-1 | NPU as third placement; limit set by toolchain (MAX_PROMPT_LEN) | C1, C5 | A | PARTIAL | MAX_PROMPT_LEN is the load-time axis (1024, 2048, 4096, 8192, then double until load fails). One detached session per setting: the pilot-extrapolated bound of the fixed ladder is above 7200 s. IR is INT4_SYM group_size 128. Binding per setting is TOOLCHAIN_CAP, LATENCY, or LOAD_FAIL. Profile tools/launch_t2s_npu1.ps1. Prereg derived/npu/NPU1_PREREG.json sha256 483ed364c2fef94b65e6822404702bf576c5e80d600ab40e701e60196565ce07. Predictions registered. Attempt c3caa5fc crashed before any cell (T2S_NPU1_SUMMARY state crashed, cells empty). No data. Boot 792e909d session 1 cell 680b031a (readback 1024, ttft_limit_n 960) is UNGUARDED (derived/VOIDS/notes/680b031a.md). The summary file says LATENCY; corrected classification TOOLCHAIN_CAP is analysis/npu/680b031a_binding.md. Prediction b is not scored from an UNGUARDED run. 2048 stays on hold. |
 | NPU-1-CW | channel-wise int4 (group_size -1) on NPU | C1 | C | PARKED | conversion or download of Qwen/Qwen3-4B INT4_SYM group_size -1 waits for Rithwik's OK |
-| NPU-2 | int8 on NPU crashes: first infeasible cell | C5, P2 | B | PLANNED | same profile, load-only cell (-Npu2); not launched |
+| NPU-2 | int8 on NPU crashes: first infeasible cell | C5, P2 | B | PARTIAL | Boot 792e909d cell 27b4841d, infeasible, no generate. error_class and the exception text are summary fields error_class and load_error on the host tree; this clone does not contain them. |
 | HET-1 | phase split across devices; primary arm NPU prefill -> GPU decode (AMD direction), contrast GPU prefill -> NPU decode; measure handoff cost | C5 | B | PLANNED | feasibility spike first: can OpenVINO pass KV across devices? |
 | CB-T2 | continuous batching + prefix caching: dominated on XPS, best on 64 GB? Includes concurrency (sessions/hour) | C5 | A | PLANNED | output-equivalence check required (DET-PROBE, #4367) |
 | SPEC-T2 | speculative decoding, 0.6B draft on CPU / GPU / NPU | C4, C5 | A | PLANNED | re-verify 0.6B pin; pair with A4 budget sweep |
@@ -235,7 +235,7 @@ time after Wednesday; this list does not fit in the window.
 
 ## 7. Schedule to freeze (each XPS boot ~2 h; ask before any launch or spend)
 
-- Oct 3-6, T2S: PARITY (done) -> NPU-1/NPU-2 smoke + DUAL-T2 -> P1-T2
+- Oct 3-6, T2S: PARITY (done) -> NPU-1/NPU-2 session 1 (680b031a UNGUARDED; 2048 on hold) + DUAL-T2 -> P1-T2
   A0 + A4 B=10 -> SPEC-T2 decode -> CB-T2 -> TIER-T2 limits -> FP16-T2.
   Ask for time after Wed for the rest (HET-1, PWR-T2, T2-4, TIER quality,
   R2b/R2c-8B, P0-T2, P1-T2 8B, RESIDENT-T2).

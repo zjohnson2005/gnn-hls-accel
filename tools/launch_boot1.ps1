@@ -149,6 +149,7 @@ $script:RehearsalMac = switch ($Profile) {
     "p1-a5" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a5.ps1 -Detach -Rehearsal"' }
     "p1-sweep" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_sweep.ps1 -Detach -Rehearsal"' }
     "p1-a1" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a1.ps1 -Detach -Rehearsal"' }
+    "npu-1" { 'ssh zach@100.72.40.24 ''cd C:\Users\zach\Projects\gnn-hls-accel; .\tools\launch_t2s_npu1.ps1 -Detach -Rehearsal''' }
     default { 'ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_boot4.ps1 -Detach -Rehearsal"' }
 }
 

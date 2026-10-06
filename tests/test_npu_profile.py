@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
 
 from tools.run_npu_profile import (  # noqa: E402
     bind_setting,
+    canary_marker,
     ir_quantization,
     main,
     npu2_load_record,
@@ -23,6 +24,7 @@ from tools.run_npu_profile import (  # noqa: E402
     scheduling_plan,
     setting_estimate_s,
     slo_bisect,
+    summarize_rung,
 )
 
 RUNNER = ROOT / "tools" / "run_npu_profile.py"
@@ -90,7 +92,14 @@ def test_binding_is_toolchain_latency_or_load_fail() -> None:
     cap = bind_setting(
         load_ok=True,
         cap=1024,
-        rungs=[{"n_tokens": 1024, "slo_pass": True, "decode_tok_s": [10.0, 12.0, 11.0]}],
+        rungs=[
+            {
+                "n_tokens": 1024,
+                "slo_pass": True,
+                "prefill_s": [1.3, 1.3, 1.3],
+                "decode_tok_s": [10.0, 12.0, 11.0],
+            }
+        ],
     )
     assert cap["binding"] == "TOOLCHAIN_CAP"
     assert cap["ttft_limit_n"] == 1024
@@ -99,17 +108,96 @@ def test_binding_is_toolchain_latency_or_load_fail() -> None:
         load_ok=True,
         cap=1024,
         rungs=[
-            {"n_tokens": 64, "slo_pass": True, "decode_tok_s": [16.0]},
-            {"n_tokens": 1024, "slo_pass": False, "decode_tok_s": [1.0]},
+            {"n_tokens": 64, "slo_pass": True, "prefill_s": [1.3], "decode_tok_s": [16.0]},
+            {"n_tokens": 1024, "slo_pass": False, "prefill_s": [12.0], "decode_tok_s": [1.0]},
         ],
     )
     assert late["binding"] == "LATENCY"
     assert late["ttft_limit_n"] == 64
-    below = bind_setting(load_ok=True, cap=1024, rungs=[{"n_tokens": 64, "slo_pass": False}])
-    assert below["binding"] == "LATENCY"
-    assert below["ttft_limit_n"] is None
+    refused = bind_setting(
+        load_ok=True,
+        cap=1024,
+        rungs=[{"n_tokens": 64, "slo_pass": False, "prefill_s": None}],
+    )
+    assert refused["binding"] == "TOOLCHAIN_CAP"
+    assert refused["ttft_limit_n"] is None
     failed = bind_setting(load_ok=False, cap=1024, rungs=[])
     assert failed["binding"] == "LOAD_FAIL"
+
+
+def test_refused_cap_is_toolchain_when_a_lower_rung_passes() -> None:
+    """680b031a shape: the cap was never timed, and the rung under it passed."""
+    bound = bind_setting(
+        load_ok=True,
+        cap=1024,
+        rungs=[
+            {
+                "n_tokens": 960,
+                "slo_pass": True,
+                "prefill_s": [1.30, 1.30, 1.31],
+                "decode_tok_s": [16.5, 18.5, 16.6],
+            },
+            {
+                "n_tokens": 1024,
+                "slo_pass": False,
+                "prefill_s": [None, None, None],
+                "reason": ["prompt_longer_than_max_prompt_len"] * 3,
+            },
+        ],
+    )
+    assert bound["binding"] == "TOOLCHAIN_CAP"
+    assert bound["ttft_limit_n"] == 960
+
+
+def test_unarmed_canary_marker_is_unguarded() -> None:
+    assert canary_marker(None) == {"armed": False, "UNGUARDED": True}
+    assert canary_marker({"armed": False, "smoke_skip": True})["UNGUARDED"] is True
+    opened = canary_marker({"canary_gate": {"armed": False}})
+    assert opened == {"armed": False, "UNGUARDED": True}
+    assert canary_marker({"canary_gate": {"armed": True}}) == {"armed": True, "UNGUARDED": False}
+
+
+def test_rung_summary_keeps_prefill_and_realized_tokens() -> None:
+    row = summarize_rung(
+        960,
+        [
+            {
+                "prefill_s": 1.30,
+                "decode_tok_s": 16.5,
+                "prompt_length": 960,
+                "exact_match_vs_gpu": False,
+                "timed": True,
+                "reason": None,
+            }
+        ],
+    )
+    assert row["prefill_s"] == [1.30]
+    assert row["prompt_tokens"] == [960]
+    refused = summarize_rung(
+        1024,
+        [
+            {
+                "prefill_s": None,
+                "prompt_length": 1024 + 8,
+                "timed": False,
+                "reason": "prompt_longer_than_max_prompt_len",
+                "exact_match_vs_gpu": None,
+                "decode_tok_s": None,
+            }
+        ],
+    )
+    assert refused["prefill_s"] == [None]
+    assert refused["prompt_tokens"] == [1032]
+    assert refused["slo_pass"] is False
+
+
+def test_npu1_refusal_hint_names_the_t2s_launcher() -> None:
+    text = LAUNCHER.read_text(encoding="utf-8")
+    start = text.index("$script:RehearsalMac")
+    arm = text[text.index('"npu-1"', start) : text.index("default", start)]
+    assert "launch_t2s_npu1.ps1" in arm
+    assert "launch_boot4.ps1" not in arm
+    assert ".\\tools\\launch_t2s_npu1.ps1" in arm
 
 
 def _run_npu_cells(*, rehearsal: bool) -> subprocess.CompletedProcess[str]:
@@ -121,9 +209,7 @@ def _run_npu_cells(*, rehearsal: bool) -> subprocess.CompletedProcess[str]:
     if rehearsal:
         flags = "-Rehearsal " + flags
     command = (
-        "Set-StrictMode -Version Latest; "
-        f"& '{LAUNCHER}' -Profile npu-1 {flags}; "
-        "exit $LASTEXITCODE"
+        f"Set-StrictMode -Version Latest; & '{LAUNCHER}' -Profile npu-1 {flags}; exit $LASTEXITCODE"
     )
     return subprocess.run(
         ["powershell", "-NoProfile", "-Command", command],
