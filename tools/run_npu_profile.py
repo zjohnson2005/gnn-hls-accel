@@ -36,6 +36,7 @@ from tools.run_c1_ceiling import classify_c1_failure  # noqa: E402
 
 SLO_S = 10.0
 SHORT_PROMPT_TOKENS = 64
+NPU_SERIES_TOKENS = 400
 REPEATS = 3
 MAX_NEW_TOKENS = 8
 SESSION_BUDGET_S = 7200
@@ -271,6 +272,74 @@ def summarize_rung(n_tokens: int, repeats: list[dict[str, Any]]) -> dict[str, An
     }
 
 
+def new_npu_series(derivation: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Non-gating n=400 samples on the loaded NPU pipeline.
+
+    The GPU canary is the guard. This series only builds an NPU pool.
+    """
+    return {
+        "label": "npu_canary_series",
+        "gates": False,
+        "device": "NPU",
+        "n_tokens": NPU_SERIES_TOKENS,
+        "n_derivation": derivation,
+        "samples": [],
+    }
+
+
+def stamp_canary(
+    plan: dict[str, Any],
+    summary: dict[str, Any],
+    guard: Any,
+    series: dict[str, Any] | None = None,
+) -> dict[str, bool]:
+    """Write the guard's armed bit and UNGUARDED onto the plan and the summary."""
+    fragment = guard.plan_fragment()
+    marker = canary_marker(fragment)
+    plan["canary"] = fragment
+    plan["armed"] = marker["armed"]
+    plan["UNGUARDED"] = marker["UNGUARDED"]
+    summary["canary"] = fragment
+    summary["canaries"] = list(guard.canaries)
+    summary["armed"] = marker["armed"]
+    summary["UNGUARDED"] = marker["UNGUARDED"]
+    if series is not None:
+        series["n_derivation"] = guard.n_derivation
+        plan["npu_canary_series"] = series
+        summary["npu_canary_series"] = series
+    return marker
+
+
+def drive_npu_rung(
+    n_tokens: int,
+    *,
+    repeats: int,
+    one_repeat: Callable[[int], dict[str, Any]],
+    guard: Any | None,
+    probes_log: list[dict[str, Any]],
+    on_interval: Callable[[int], None] | None = None,
+) -> dict[str, Any]:
+    """One rung. ``after_probe`` runs once per repeat, as in the GPU ceiling runner.
+
+    The NPU n=400 series is recorded when that call fires a canary, and its
+    result is not a gate.
+    """
+    rows: list[dict[str, Any]] = []
+    for _ in range(repeats):
+        started = time.perf_counter()
+        row = one_repeat(n_tokens)
+        row["wall_s"] = time.perf_counter() - started
+        rows.append(row)
+        if guard is None:
+            continue
+        probes_log.append(row)
+        canaries_before = len(guard.canaries)
+        guard.after_probe(probes_log)
+        if on_interval is not None and len(guard.canaries) > canaries_before:
+            on_interval(len(probes_log) - 1)
+    return summarize_rung(n_tokens, rows)
+
+
 def slo_pass(repeats: list[dict[str, Any]], slo_s: float = SLO_S) -> bool:
     timed = [row for row in repeats if row.get("timed") and row.get("prefill_s") is not None]
     if len(timed) != len(repeats) or not timed:
@@ -383,12 +452,13 @@ def _arm_canary(out: Path, model_spec: Path, planned: int) -> dict[str, Any]:
         )
     except CanaryBudgetRefuse as exc:
         raise SystemExit(f"REFUSED -- {exc.detail}") from exc
+    tripped: str | None = None
     try:
         guard.opening()
     except CanaryDriftAbort as exc:
-        raise SystemExit(f"REFUSED -- canary drift: {exc.detail}") from exc
+        tripped = exc.detail
     fragment = guard.plan_fragment()
-    return {"guard": guard, "canary": fragment, "UNGUARDED": False}
+    return {"guard": guard, "canary": fragment, "trip": tripped, **canary_marker(fragment)}
 
 
 def run_hardware(args: argparse.Namespace) -> int:
@@ -418,10 +488,17 @@ def run_hardware(args: argparse.Namespace) -> int:
     }
     _write(out / "plan.json", plan)
 
+    guard_holder: dict[str, Any] = {"guard": None}
+
     def write_summary(summary: dict[str, Any]) -> None:
-        summary.update(
-            canary_marker(plan.get("canary") if isinstance(plan.get("canary"), dict) else None)
-        )
+        guard = guard_holder["guard"]
+        if guard is not None:
+            stamp_canary(plan, summary, guard, plan.get("npu_canary_series"))
+        else:
+            summary.update(
+                canary_marker(plan.get("canary") if isinstance(plan.get("canary"), dict) else None)
+            )
+        _write(out / "plan.json", plan)
         _write(out / "summary.json", summary)
 
     def arm(planned: int) -> bool:
@@ -437,9 +514,19 @@ def run_hardware(args: argparse.Namespace) -> int:
             write_summary(summary)
             print(str(exc))
             return False
-        plan["canary"] = armed["canary"]
-        plan.update(canary_marker(plan["canary"]))
+        guard_holder["guard"] = armed["guard"]
+        stamp_canary(plan, {}, armed["guard"], None)
         _write(out / "plan.json", plan)
+        if armed["trip"]:
+            summary = {
+                "session_id": session_id,
+                "status": "FAIL_CANARY_DRIFT",
+                "abort_reason": "FAIL_CANARY_DRIFT",
+                "canary_trip_detail": armed["trip"],
+            }
+            write_summary(summary)
+            print(f"REFUSED -- canary drift: {armed['trip']}")
+            return False
         return True
 
     if args.cell == "npu2-load" and not arm(4):
@@ -660,11 +747,59 @@ def run_hardware(args: argparse.Namespace) -> int:
         row["metric_error"] = npu_row.get("metric_error")
         return row
 
+    guard = guard_holder["guard"]
+    probes_log: list[dict[str, Any]] = []
+    series = new_npu_series(None if guard is None else guard.n_derivation)
+    plan["npu_canary_series"] = series
+
+    def on_interval(after_probe_count: int) -> None:
+        sample = one_generate(pipe, NPU_SERIES_TOKENS)
+        series["n_derivation"] = None if guard is None else guard.n_derivation
+        series["samples"].append(
+            {
+                "label": "npu_canary_series",
+                "gates": False,
+                "n_tokens": NPU_SERIES_TOKENS,
+                "after_probe_count": after_probe_count,
+                "prefill_s": sample.get("prefill_s"),
+                "prompt_tokens": sample.get("prompt_tokens"),
+                "ok": bool(sample.get("ok", True)),
+                "error": sample.get("error"),
+            }
+        )
+
     def probe(n_tokens: int) -> dict[str, Any]:
-        return summarize_rung(n_tokens, [paired(n_tokens) for _ in range(REPEATS)])
+        rung = drive_npu_rung(
+            n_tokens,
+            repeats=REPEATS,
+            one_repeat=paired,
+            guard=guard,
+            probes_log=probes_log,
+            on_interval=None if guard is None else on_interval,
+        )
+        if guard is not None:
+            series["n_derivation"] = guard.n_derivation
+        return rung
 
     high = cap
-    rungs = slo_bisect(int(args.low), high, int(args.resolution), probe)
+    from tools.ttft_slo_canary import CanaryDriftAbort, CanaryUnarmedSealRefuse
+
+    try:
+        rungs = slo_bisect(int(args.low), high, int(args.resolution), probe)
+    except CanaryDriftAbort as exc:
+        summary = {
+            "session_id": session_id,
+            "cell": args.cell,
+            "status": "FAIL_CANARY_DRIFT",
+            "abort_reason": "FAIL_CANARY_DRIFT",
+            "canary_trip_detail": exc.detail,
+            "max_prompt_len": high,
+            "measurement": True,
+            **load_fields,
+        }
+        write_summary(summary)
+        print(f"REFUSED -- canary drift: {exc.detail}")
+        return 1
     bound = bind_setting(load_ok=True, cap=high, rungs=rungs)
     over = over_max_record(high)
     summary = {
@@ -681,6 +816,16 @@ def run_hardware(args: argparse.Namespace) -> int:
         **load_fields,
         **bound,
     }
+    if guard is not None:
+        try:
+            guard.finalize_or_refuse()
+        except CanaryUnarmedSealRefuse as exc:
+            summary["status"] = "REFUSED_UNARMED_CANARY"
+            summary["abort_reason"] = "REFUSED_UNARMED_CANARY"
+            summary["canary_unarmed_detail"] = str(exc)
+            write_summary(summary)
+            print(f"REFUSED -- {exc.detail}")
+            return 1
     write_summary(summary)
     print(json.dumps({"ok": True, "status": "complete", "rungs": len(rungs)}))
     return 0

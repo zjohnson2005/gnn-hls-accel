@@ -17,13 +17,16 @@ if str(ROOT) not in sys.path:
 from tools.run_npu_profile import (  # noqa: E402
     bind_setting,
     canary_marker,
+    drive_npu_rung,
     ir_quantization,
     main,
+    new_npu_series,
     npu2_load_record,
     over_max_record,
     scheduling_plan,
     setting_estimate_s,
     slo_bisect,
+    stamp_canary,
     summarize_rung,
 )
 
@@ -189,6 +192,80 @@ def test_rung_summary_keeps_prefill_and_realized_tokens() -> None:
     assert refused["prefill_s"] == [None]
     assert refused["prompt_tokens"] == [1032]
     assert refused["slo_pass"] is False
+
+
+def test_stub_session_arms_after_c_plus_one_canaries(tmp_path: Path, monkeypatch) -> None:
+    """The GPU guard arms once C+1 canaries have run. The NPU series does not gate."""
+    from tools.ttft_slo_canary import CALIBRATION_C, TtftSloCanaryGuard
+
+    guard = TtftSloCanaryGuard(
+        root=ROOT,
+        model_spec=ROOT / "configs" / "models" / "Qwen3-4B-int4-ov.yaml",
+        work_dir=tmp_path / "canaries",
+        plan_path=tmp_path / "plan.json",
+        planned_probe_count=CALIBRATION_C + 1,
+    )
+
+    def stub_cell() -> dict[str, object]:
+        return {
+            "is_canary": True,
+            "canary_index": len(guard.canaries),
+            "classification": "OK",
+            "turn1_prefill_s": 1.0,
+            "turn2_prefill_s": 0.5,
+            "execute_ok": True,
+        }
+
+    monkeypatch.setattr(guard, "_run_cell", stub_cell)
+    guard.opening()
+    series = new_npu_series()
+    probes_log: list[dict[str, object]] = []
+
+    def one_repeat(n_tokens: int) -> dict[str, object]:
+        return {
+            "n_tokens": n_tokens,
+            "slo_pass": True,
+            "prefill_s": 1.0,
+            "decode_tok_s": 16.0,
+            "prompt_length": n_tokens,
+            "timed": True,
+            "exact_match_vs_gpu": False,
+            "reason": None,
+        }
+
+    def on_interval(after_probe_count: int) -> None:
+        series["n_derivation"] = guard.n_derivation
+        series["samples"].append(
+            {
+                "label": "npu_canary_series",
+                "gates": False,
+                "n_tokens": 400,
+                "after_probe_count": after_probe_count,
+            }
+        )
+
+    drive_npu_rung(
+        64,
+        repeats=CALIBRATION_C,
+        one_repeat=one_repeat,
+        guard=guard,
+        probes_log=probes_log,
+        on_interval=on_interval,
+    )
+    assert len(guard.canaries) == CALIBRATION_C + 1
+    assert guard.gate["armed"] is True
+    assert guard.canaries[CALIBRATION_C]["gate_armed"] is True
+    plan: dict[str, object] = {}
+    summary: dict[str, object] = {"status": "complete"}
+    marker = stamp_canary(plan, summary, guard, series)
+    assert marker == {"armed": True, "UNGUARDED": False}
+    assert summary["armed"] is True
+    assert summary["UNGUARDED"] is False
+    assert series["label"] == "npu_canary_series"
+    assert series["gates"] is False
+    assert series["n_derivation"]["n"] == 1
+    assert series["samples"]
+    assert all(row["gates"] is False for row in series["samples"])
 
 
 def test_npu1_refusal_hint_names_the_t2s_launcher() -> None:

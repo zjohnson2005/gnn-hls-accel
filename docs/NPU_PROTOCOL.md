@@ -54,6 +54,33 @@ session. Record whether the NPU output text is an exact match to the GPU
 output. A mismatch is recorded and is not a failure. A missing GPU output
 refuses the cell.
 
+## Amendment 2026-10-05 — guard and non-gating NPU series
+
+Registered before any further NPU run. The canary guards machine state.
+The guard for an NPU session is the existing GPU canary: arm
+`gpu_only_f16`, `n_cached=4000`, `delta=400`, mode `RESIDENT`, generated
+on GPU. T2S parity runs used this same cell. The floors are the aipc-c1
+pool, not an NPU pool:
+
+- `healthy_floor_t1` = 0.07709453214145699
+- `healthy_floor_t2` = 0.1642942216508742
+- host `computadora`, platform `aipc-c1`
+- derivation `derived/c2_ttft/analysis/canary_threshold_pool.json`
+- threshold = max(2 * early drift, that floor), recorded on the plan
+
+The runner calls `after_probe` once per NPU repeat, the same call the GPU
+ceiling runner makes. A trip aborts the session with `FAIL_CANARY_DRIFT`.
+`armed` and `UNGUARDED` are written on the plan and the summary. A session
+that finishes with `armed` false is `REFUSED_UNARMED_CANARY` and
+`UNGUARDED: true`.
+
+`npu_canary_series` is a separate record: one generate at n=400 on the
+NPU pipeline already loaded for the session, taken every N probes. N is
+the GPU canary interval, `min(floor(onset_s / mean_probe_wall_s), floor(planned / (C+1)))`,
+with onset 657 s from session `7f569929` and C=3. The derivation is stored
+on the series. The series does not gate. It builds the first NPU pool.
+It stays non-gating until that pool exists.
+
 ## Failures
 
 A refused or infeasible decision has `timed: false` and a `reason`. The

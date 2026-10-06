@@ -62,8 +62,9 @@ canary cell. That cell is `gpu_only_f16` on GPU (`n_cached=4000`,
 canary cannot arm (`C=3`), and the runner dropped the guard, so no later
 canary ran. The plan hardcoded `UNGUARDED: false` and the summary omitted
 both fields. The run is UNGUARDED. See `derived/VOIDS/notes/680b031a.md`.
-Fixed for later runs: `armed: false` writes `UNGUARDED: true` on the plan
-and the summary.
+The next run keeps that GPU guard and calls `after_probe` after each NPU
+repeat. `armed` and `UNGUARDED` are written on the plan and the summary.
+An n=400 NPU series is recorded on the same interval and does not gate.
 
 ## NPU-1 attempt c3caa5fc crashed before any cell
 
