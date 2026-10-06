@@ -44,6 +44,25 @@ def test_host_mtime_after_finish_refuses(tmp_path: Path) -> None:
     assert not (tmp_path / f"sealed_{RUN}").exists()
 
 
+def test_missing_end_stamp_uses_the_newest_host_mtime(tmp_path: Path) -> None:
+    source = tmp_path / RUN
+    source.mkdir()
+    (source / "summary.json").write_text(
+        json.dumps({"status": "complete"}) + "\n", encoding="utf-8"
+    )
+    listing = tmp_path / "mtimes.txt"
+    listing.write_text(
+        "2026-10-05T20:00:00.0000000Z\t"
+        f"C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\npu\\{RUN}\\summary.json\n",
+        encoding="utf-8",
+    )
+    sealed = reconstruct_from_host_manifest(source, listing)
+    assert sealed is not None
+    marker = json.loads((sealed / ".sealed").read_text(encoding="utf-8"))
+    assert marker["finish_source"] == "newest_host_mtime"
+    assert marker["recorded_finish_time"].startswith("2026-10-05T20:00:00")
+
+
 def test_host_mtime_inside_gate_seals(tmp_path: Path) -> None:
     source = _tree(tmp_path)
     listing = tmp_path / "mtimes.txt"

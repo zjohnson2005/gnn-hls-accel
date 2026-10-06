@@ -376,6 +376,10 @@ def reconstruct_from_host_manifest(
             if digest != hashes[rel]:
                 raise SystemExit(f"REFUSED -- sha256 mismatch {rel}")
     finish, finish_source = _finish(source)
+    if finish_source == "newest_source_mtime":
+        # A summary with no end stamp must not use the copy's local mtime.
+        finish = max(host_times.values())
+        finish_source = "newest_host_mtime"
     deadline = finish + GATE
     late: list[tuple[str, str]] = []
     newest_path = ""
