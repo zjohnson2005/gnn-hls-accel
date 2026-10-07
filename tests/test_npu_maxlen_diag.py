@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import copy
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -30,7 +31,6 @@ from tools.npu_maxlen_diag import (  # noqa: E402
     watchdog_state,
 )
 
-RUNNER = ROOT / "tools" / "run_npu_profile.py"
 DIAG = ROOT / "tools" / "npu_maxlen_diag.py"
 
 
@@ -217,8 +217,25 @@ def test_watchdog_gate(tmp_path: Path) -> None:
 # ---------------------------------------------------------------- readback pin
 
 
+# The diagnostic copied the runner's readback as it was at 29a5214, before
+# amendment 2026-10-07 changed the runner. The pin is to that revision.
+PINNED_RUNNER_REV = "29a5214"
+
+
+def _pinned_runner_source() -> str:
+    done = subprocess.run(
+        ["git", "show", f"{PINNED_RUNNER_REV}:tools/run_npu_profile.py"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert done.returncode == 0, done.stderr
+    return done.stdout
+
+
 def _runner_readback_block() -> ast.If:
-    tree = ast.parse(RUNNER.read_text(encoding="utf-8"))
+    tree = ast.parse(_pinned_runner_source())
     for node in ast.walk(tree):
         if isinstance(node, ast.If) and ast.unparse(node.test) == (
             "pipe is not None and weight == 'int4'"
@@ -260,7 +277,7 @@ class _Core:
 )
 def test_readback_copy_matches_runner_source(pipe: Any, core: Any) -> None:
     block = _runner_readback_block()
-    code = compile(ast.Module(body=block.body, type_ignores=[]), str(RUNNER), "exec")
+    code = compile(ast.Module(body=block.body, type_ignores=[]), "run_npu_profile@29a5214", "exec")
     scope: dict[str, Any] = {
         "pipe": pipe,
         "core": core,

@@ -1,8 +1,13 @@
 """NPU-1 and NPU-2 cells. This runner does not open a preregistration.
 
 NPU-2 loads the int8 IR and stops. An int8 load is infeasible and is never
-generated. NPU-1 loads the int4 IR once per requested NPUW_LLM_MAX_PROMPT_LEN.
-The length is a load-time setting. At each loaded setting the runner bisects
+generated. NPU-1 loads the int4 IR once per requested MAX_PROMPT_LEN (with
+MIN_RESPONSE_LEN; amendment 2026-10-07). The length is a load-time setting.
+Each load is confirmed by a realized-capacity check (cap - 64 accepted,
+cap + 64 refused by the runtime length check), not by a readback. Every
+generate is single-template (apply_chat_template False, list call form) and
+prompt_length is the pipeline-reported input count. At each loaded setting the
+runner bisects
 the 10 s TTFT SLO from 64 up to that setting, records decode tok/s at the
 highest passing rung, and records MAX_PROMPT_LEN + 1 as infeasible without
 generating it.
@@ -30,8 +35,14 @@ from seam.backends.local_openvino import (  # noqa: E402
     resolve_ttft_ns,
 )
 from seam.model_provenance import load_local_spec  # noqa: E402
-from seam.npu_validity import decide_npu_cell  # noqa: E402
-from seam.tools.boot4_text import rendered_exact_prompt  # noqa: E402
+from seam.npu_validity import (  # noqa: E402
+    REPEAT_FRACTION_MAX,
+    decide_npu_cell,
+    fourgram_repeat_fraction,
+    output_parses,
+    whitespace_tokens,
+)
+from seam.tools.boot4_text import id_count, rendered_exact_prompt  # noqa: E402
 from tools.run_c1_ceiling import classify_c1_failure  # noqa: E402
 
 SLO_S = 10.0
@@ -45,6 +56,12 @@ SESSION_BUDGET_S = 7200
 PILOT_PREFILL_S_AT_64 = 1.4136199
 PILOT_LOAD_S = 78.0
 LADDER_START = (1024, 2048, 4096, 8192)
+# Amendment 2026-10-07: the documented GenAI key. NPUW_LLM_MAX_PROMPT_LEN is
+# not passed (it did not apply at 2048 in NPU-MAXLEN-DIAG run 2).
+MAX_PROMPT_LEN_PROPERTY = "MAX_PROMPT_LEN"
+MIN_RESPONSE_LEN = MAX_NEW_TOKENS
+CAPACITY_MARGIN = 64
+LENGTH_CHECK_TEXT = "input_ids.get_size() <= m_max_prompt_len"
 
 
 def error_class_for(message: str) -> str | None:
@@ -206,6 +223,7 @@ def over_max_record(max_prompt_len: int) -> dict[str, Any]:
     )
     decision["generated"] = False
     decision["error_class"] = None
+    decision["max_prompt_len_property"] = MAX_PROMPT_LEN_PROPERTY
     return decision
 
 
@@ -234,7 +252,134 @@ def rung_record(
     decision["decode_tok_s"] = decode_tok_s if decision["timed"] else None
     decision["generated"] = True
     decision["error_class"] = None
+    decision["max_prompt_len_property"] = MAX_PROMPT_LEN_PROPERTY
     return decision
+
+
+def npu_load_props(max_prompt_len: int, prefill_chunk_size: int) -> dict[str, Any]:
+    """Int4 NPU load config. Amendment 2026-10-07 item 1."""
+    return {
+        "NPUW_LLM_PREFILL_CHUNK_SIZE": int(prefill_chunk_size),
+        MAX_PROMPT_LEN_PROPERTY: int(max_prompt_len),
+        "MIN_RESPONSE_LEN": int(MIN_RESPONSE_LEN),
+    }
+
+
+def generation_config(ov_genai: Any) -> Any:
+    """Greedy, MAX_NEW_TOKENS, one chat template (the prompt is pre-rendered)."""
+    cfg = ov_genai.GenerationConfig()
+    cfg.max_new_tokens = MAX_NEW_TOKENS
+    cfg.do_sample = False
+    cfg.apply_chat_template = False
+    return cfg
+
+
+def generate_once(ov_genai: Any, device_pipe: Any, prompt: str) -> dict[str, Any]:
+    """One generate in the list call form, so the result carries perf_metrics.
+
+    ``prompt_tokens`` is the pipeline-reported input count only. It is None
+    when the pipeline does not report it; the caller must not time that cell.
+    """
+    cfg = generation_config(ov_genai)
+    streamer = _make_ttft_streamer(ov_genai)
+    streamer.t0_ns = time.perf_counter_ns()
+    try:
+        result = device_pipe.generate([prompt], cfg, streamer)
+    except Exception as exc:
+        message = f"{type(exc).__name__}: {exc}"
+        return {
+            "ok": False,
+            "text": "",
+            "error": message,
+            "error_class": error_class_for(message),
+            "length_check_refusal": LENGTH_CHECK_TEXT in message,
+            "prefill_s": None,
+            "decode_tok_s": None,
+            "prompt_tokens": None,
+        }
+    text = _text_from_generate_result(result)
+    measured = _metrics(result)
+    measured["text"] = text
+    if getattr(result, "perf_metrics", None) is None:
+        measured["metric_error"] = f"no perf_metrics on {type(result).__name__}"
+    ttft_ns, ttft_source = resolve_ttft_ns(None, streamer.ttft_ns)
+    if ttft_ns:
+        measured["prefill_s"] = ttft_ns / 1e9
+        measured["ttft_source"] = ttft_source
+    else:
+        measured["metric_error"] = "ttft unavailable"
+    written = int(getattr(streamer, "tokens_written", 0))
+    first = streamer.first_token_ns
+    last = streamer.last_token_ns
+    if written > 1 and first is not None and last is not None and last > first:
+        measured["decode_tok_s"] = (written - 1) / ((last - first) / 1e9)
+    return measured
+
+
+def _text_valid(text: str) -> dict[str, Any]:
+    """docs/NPU_PROTOCOL.md validity without a GPU reference."""
+    parses = output_parses(text)
+    fraction = fourgram_repeat_fraction(whitespace_tokens(text))
+    degenerate = fraction is not None and fraction > REPEAT_FRACTION_MAX
+    return {"parses": parses, "repeat_4gram_fraction": fraction, "valid": parses and not degenerate}
+
+
+def capacity_probe(
+    *,
+    cap: int,
+    build_prompt: Callable[[int], str],
+    count_tokens: Callable[[str], int],
+    generate: Callable[[str], dict[str, Any]],
+    margin: int = CAPACITY_MARGIN,
+) -> dict[str, Any]:
+    """Amendment 2026-10-07 item 2. Replaces readback == request.
+
+    P1: cap - margin realized tokens accepted, pipeline count == realized, valid.
+    P2: cap + margin tokens refused by the runtime length check.
+    """
+
+    def one(target: int) -> dict[str, Any]:
+        row: dict[str, Any] = {"target_tokens": target}
+        try:
+            prompt = build_prompt(target)
+            row["realized_tokens"] = int(count_tokens(prompt))
+        except Exception as exc:
+            row.update(realized_tokens=None, build_error=f"{type(exc).__name__}: {exc}")
+            return row
+        out = generate(prompt)
+        row.update(
+            ok=bool(out.get("ok", True)),
+            error=out.get("error"),
+            pipeline_input_tokens=out.get("prompt_tokens"),
+            prefill_s=out.get("prefill_s"),
+            text=out.get("text"),
+            length_check_refusal=bool(out.get("length_check_refusal")),
+        )
+        return row
+
+    p1 = one(int(cap) - int(margin))
+    p1.update(_text_valid(str(p1.get("text") or "")) if p1.get("ok") else {"valid": False})
+    p1["pass"] = bool(
+        p1.get("ok")
+        and isinstance(p1.get("realized_tokens"), int)
+        and p1.get("pipeline_input_tokens") == p1.get("realized_tokens")
+        and p1.get("valid")
+    )
+    p2 = one(int(cap) + int(margin))
+    p2["pass"] = bool(
+        isinstance(p2.get("realized_tokens"), int)
+        and not p2.get("ok", True)
+        and p2.get("length_check_refusal")
+    )
+    return {
+        "cap": int(cap),
+        "margin": int(margin),
+        "length_check_text": LENGTH_CHECK_TEXT,
+        "P1": p1,
+        "P2": p2,
+        "passed": bool(p1["pass"] and p2["pass"]),
+        "timed": False,
+    }
 
 
 def canary_marker(fragment: dict[str, Any] | None) -> dict[str, bool]:
@@ -482,7 +627,11 @@ def run_hardware(args: argparse.Namespace) -> int:
         "slo_s": SLO_S,
         "prefill_chunk_size": args.prefill_chunk_size,
         "prefill_chunk_citation": "openvino#34617",
-        "max_prompt_len_property": "NPUW_LLM_MAX_PROMPT_LEN",
+        "max_prompt_len_property": MAX_PROMPT_LEN_PROPERTY,
+        "min_response_len": MIN_RESPONSE_LEN,
+        "apply_chat_template": False,
+        "generate_call_form": "list",
+        "amendment": "NPU 2026-10-07",
         "requested_max_prompt_len": args.max_prompt_len,
         "ir_quantization": ir_quantization(spec) if weight == "int4" else None,
     }
@@ -537,8 +686,8 @@ def run_hardware(args: argparse.Namespace) -> int:
     if weight == "int4":
         if args.max_prompt_len is None:
             raise SystemExit("REFUSED -- MAX_PROMPT_LEN is required")
-        props["NPUW_LLM_PREFILL_CHUNK_SIZE"] = int(args.prefill_chunk_size)
-        props["NPUW_LLM_MAX_PROMPT_LEN"] = int(args.max_prompt_len)
+        props = npu_load_props(int(args.max_prompt_len), int(args.prefill_chunk_size))
+    plan["load_props"] = dict(props)
     load_error = None
     pipe = None
     max_prompt_len = None
@@ -569,6 +718,9 @@ def run_hardware(args: argparse.Namespace) -> int:
         "process_rss_error": rss_before["error"] or rss_after["error"],
         "requested_max_prompt_len": args.max_prompt_len,
         "max_prompt_len_readback": max_prompt_len,
+        "max_prompt_len_readback_note": (
+            "device default via core fallback; informational, gates nothing (amendment 2026-10-07)"
+        ),
     }
 
     if args.cell == "npu2-load":
@@ -604,43 +756,40 @@ def run_hardware(args: argparse.Namespace) -> int:
         print(json.dumps({"ok": True, "status": "infeasible", "binding": "LOAD_FAIL"}))
         return 0
 
-    if max_prompt_len is None:
-        summary = {
-            "session_id": session_id,
-            "cell": args.cell,
-            "status": "REFUSED",
-            "binding": None,
-            "load_error": None,
-            "max_prompt_len": None,
-            "generated": False,
-            "timed": False,
-            "ir_quantization": quant,
-            "detail": "load returned no NPUW_LLM_MAX_PROMPT_LEN readback",
-            **load_fields,
-        }
-        write_summary(summary)
-        print(json.dumps({"ok": False, "status": "REFUSED"}))
-        return 1
+    cap = int(args.max_prompt_len)
+    tokenizer = ov_genai.Tokenizer(str(ir))
+    filler = _filler()
 
-    if int(max_prompt_len) != int(args.max_prompt_len):
-        summary = {
-            "session_id": session_id,
-            "cell": args.cell,
-            "status": "REFUSED",
-            "binding": None,
-            "generated": False,
-            "timed": False,
-            "ir_quantization": quant,
-            "detail": "readback does not match the requested MAX_PROMPT_LEN",
-            **load_fields,
-        }
-        write_summary(summary)
-        print(json.dumps({"ok": False, "status": "REFUSED", "max_prompt_len": max_prompt_len}))
-        return 1
+    def build_prompt(n_tokens: int) -> str:
+        return rendered_exact_prompt(tokenizer, n_tokens, unit=filler, salt="npu")
 
-    plan["max_prompt_len"] = max_prompt_len
+    capacity = capacity_probe(
+        cap=cap,
+        build_prompt=build_prompt,
+        count_tokens=lambda text: id_count(tokenizer, text),
+        generate=lambda prompt: generate_once(ov_genai, pipe, prompt),
+    )
+    plan["capacity_check"] = capacity
     _write(out / "plan.json", plan)
-    cap = int(max_prompt_len)
+    if not capacity["passed"]:
+        summary = {
+            "session_id": session_id,
+            "cell": args.cell,
+            "status": "REFUSED_CAPACITY",
+            "binding": None,
+            "generated": False,
+            "timed": False,
+            "ir_quantization": quant,
+            "capacity_check": capacity,
+            "detail": "realized-capacity check failed (amendment 2026-10-07)",
+            **load_fields,
+        }
+        write_summary(summary)
+        print(json.dumps({"ok": False, "status": "REFUSED_CAPACITY", "max_prompt_len": cap}))
+        return 1
+
+    plan["max_prompt_len"] = cap
+    _write(out / "plan.json", plan)
     if args.load_only:
         if not arm(4):
             return 1
@@ -656,6 +805,7 @@ def run_hardware(args: argparse.Namespace) -> int:
             "timed": False,
             "bisect_estimate_s": bound,
             "detail": "load succeeded; the bisection bound does not fit one session",
+            "capacity_check": capacity,
             "ir_quantization": quant,
             "measurement": True,
             **load_fields,
@@ -675,44 +825,9 @@ def run_hardware(args: argparse.Namespace) -> int:
     )
     if not arm(planned):
         return 1
-    tokenizer = ov_genai.Tokenizer(str(ir))
-    filler = _filler()
 
     def one_generate(device_pipe: object, n_tokens: int) -> dict[str, Any]:
-        prompt = rendered_exact_prompt(tokenizer, n_tokens, unit=filler, salt="npu")
-        cfg = ov_genai.GenerationConfig()
-        cfg.max_new_tokens = MAX_NEW_TOKENS
-        streamer = _make_ttft_streamer(ov_genai)
-        streamer.t0_ns = time.perf_counter_ns()
-        try:
-            result = device_pipe.generate(prompt, cfg, streamer)
-        except Exception as exc:
-            message = f"{type(exc).__name__}: {exc}"
-            return {
-                "ok": False,
-                "text": "",
-                "error": message,
-                "error_class": error_class_for(message),
-                "prefill_s": None,
-                "decode_tok_s": None,
-                "prompt_tokens": None,
-            }
-        text = _text_from_generate_result(result)
-        measured = _metrics(result)
-        measured["text"] = text
-        ttft_ns, ttft_source = resolve_ttft_ns(None, streamer.ttft_ns)
-        if ttft_ns:
-            measured["prefill_s"] = ttft_ns / 1e9
-            measured["ttft_source"] = ttft_source
-        else:
-            measured["metric_error"] = "ttft unavailable"
-        written = int(getattr(streamer, "tokens_written", 0))
-        first = streamer.first_token_ns
-        last = streamer.last_token_ns
-        if written > 1 and first is not None and last is not None and last > first:
-            measured["decode_tok_s"] = (written - 1) / ((last - first) / 1e9)
-        measured["prompt_tokens"] = measured.get("prompt_tokens") or n_tokens
-        return measured
+        return generate_once(ov_genai, device_pipe, build_prompt(n_tokens))
 
     gpu = ov_genai.LLMPipeline(str(ir), "GPU")
 
@@ -733,9 +848,24 @@ def run_hardware(args: argparse.Namespace) -> int:
                 "reason": None,
                 "slo_pass": False,
             }
+        if npu_row.get("prompt_tokens") is None:
+            return {
+                "n_tokens": n_tokens,
+                "timed": False,
+                "generated": True,
+                "status": "REFUSED",
+                "error_class": None,
+                "prefill_s": None,
+                "decode_tok_s": None,
+                "exact_match_vs_gpu": None,
+                "prompt_tokens": None,
+                "reason": "prompt_length_not_reported",
+                "metric_error": npu_row.get("metric_error"),
+                "slo_pass": False,
+            }
         row = rung_record(
             n_tokens=n_tokens,
-            max_prompt_len=max_prompt_len,
+            max_prompt_len=cap,
             npu_text=str(npu_row.get("text") or ""),
             gpu_text=str(gpu_row.get("text") or ""),
             prefill_s=npu_row.get("prefill_s"),
@@ -745,6 +875,7 @@ def run_hardware(args: argparse.Namespace) -> int:
         row["slo_pass"] = slo_pass([row])
         row["gpu_error_class"] = gpu_row.get("error_class")
         row["metric_error"] = npu_row.get("metric_error")
+        row["gpu_prompt_tokens"] = gpu_row.get("prompt_tokens")
         return row
 
     guard = guard_holder["guard"]
