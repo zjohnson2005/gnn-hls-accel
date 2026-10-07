@@ -11,6 +11,7 @@ Each arm records load time, every readback source, then generates one prompt
 per band directly, with no length check of ours in front of generate. This
 script does not open a preregistration, amendment, prediction or rule file.
 
+Rule v2 by default (--rule-version 1 reproduces run 1; --classify re-reads output).
 Final stdout line: DIAG_VERDICT <D1|D2|D3|D4> <subcase> <out_dir>
 """
 
@@ -18,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import socket
 import subprocess
 import sys
@@ -53,6 +55,15 @@ DEFAULT_MODEL_SPEC = ROOT / "configs" / "models" / "Qwen3-4B-int4-ov.yaml"
 DEFAULT_WATCHDOG_LOG = r"C:\apu\ovn\watchdog.log"
 READBACK_TOKENS = ("PROMPT", "RESPONSE", "NPUW_LLM")
 SALT = "npu"
+RULE_VERSION = 2
+BANDS_BY_VERSION = {
+    1: "850-950,1450-1550",
+    2: "850-950,1450-1550,2100-2150",
+}
+LENGTH_CHECK_TEXT = "m_max_prompt_len"
+# v2: the runner leaves apply_chat_template at its default (True). Kept, and set
+# explicitly, so the pipeline sees the prompt as the runner sends it.
+APPLY_CHAT_TEMPLATE = True
 
 
 # ---------------------------------------------------------------- decision
@@ -114,15 +125,38 @@ def _arm_broken(arm: dict[str, Any] | None) -> bool:
     return arm.get("load_error") is not None
 
 
+def length_check_refusal(row: dict[str, Any] | None) -> bool:
+    """v2: generate raised and the message names the runtime length check."""
+    if row is None or row.get("generate_returned"):
+        return False
+    exc = row.get("exception")
+    if not isinstance(exc, dict):
+        return False
+    return LENGTH_CHECK_TEXT in str(exc.get("message") or "")
+
+
+def stated_cap(message: str | None) -> int | None:
+    """The cap the runtime states ("up to N tokens"). Recorded, outside the rule."""
+    match = re.search(r"up to (\d+) tokens", message or "")
+    return None if match is None else int(match.group(1))
+
+
 def classify(results: dict[str, Any]) -> tuple[str, str]:
-    """The rule in derived/npu/diag, by code. Returns (verdict, subcase)."""
+    """The rule in derived/npu/diag, by code. Returns (verdict, subcase).
+
+    ``rule_version`` absent means 1 (run 1 output predates the field).
+    """
+    version = int(results.get("rule_version") or 1)
+    if version not in BANDS_BY_VERSION:
+        raise SystemExit(f"REFUSED -- unknown rule version {version}")
+    n_bands = len(parse_bands(BANDS_BY_VERSION[version], version))
     request = int(results["request"])
     arms = results.get("arms") or {}
     for name in ARMS:
         arm = arms.get(name)
         if _arm_broken(arm):
             return "D4", "-"
-        for index in (0, 1):
+        for index in range(n_bands):
             row = _band_row(arm, index)
             if row is None or not _in_band(row):
                 return "D4", "-"
@@ -130,19 +164,26 @@ def classify(results: dict[str, Any]) -> tuple[str, str]:
             return "D4", "-"
     b_rows = {name: _band_row(arms[name], 1) for name in ARMS}
     b_ok = {name: _ok(row) for name, row in b_rows.items()}
-    if any(b_ok.values()):
+    if version == 1:
+        d1_arm = b_ok
+    else:
+        d1_arm = {
+            name: b_ok[name] and length_check_refusal(_band_row(arms[name], 2)) for name in ARMS
+        }
+    if any(d1_arm.values()):
         subs: list[str] = []
-        if not b_ok["npuw"]:
+        if not d1_arm["npuw"]:
             subs.append("key_fix")
         for name in ARMS:
-            if b_ok[name] and arms[name].get("r1_after_value") != request:
+            if d1_arm[name] and arms[name].get("r1_after_value") != request:
                 subs.append("readback_fix")
                 break
         return "D1", "+".join(subs) if subs else "none"
     statuses = {name: prompt_status(row) for name, row in b_rows.items() if row is not None}
     if all(statuses[name] in ("refused", "truncated") for name in ARMS):
         return "D2", "-"
-    if any(statuses[name] == "accepted" for name in ARMS):
+    accepted = [name for name in ARMS if statuses[name] == "accepted"]
+    if accepted and all(b_rows[name].get("valid") is not True for name in accepted):
         return "D3", "-"
     return "D4", "-"
 
@@ -255,15 +296,17 @@ def pipeline_readback(pipe: Any, names: list[str]) -> dict[str, Any]:
 # ---------------------------------------------------------------- child
 
 
-def parse_bands(text: str) -> list[list[int]]:
+def parse_bands(text: str, version: int = RULE_VERSION) -> list[list[int]]:
+    """Bands A, B (v1) or A, B, C (v2), as "lo-hi,lo-hi[,lo-hi]"."""
     bands: list[list[int]] = []
     for part in text.split(","):
         lo, hi = (int(x) for x in part.strip().split("-", 1))
         if hi < lo:
             raise SystemExit(f"REFUSED -- band {part!r} is reversed")
         bands.append([lo, hi])
-    if len(bands) != 2:
-        raise SystemExit("REFUSED -- need exactly two bands (A then B)")
+    want = 2 if int(version) == 1 else 3
+    if len(bands) != want:
+        raise SystemExit(f"REFUSED -- rule v{version} needs exactly {want} bands")
     return bands
 
 
@@ -284,38 +327,84 @@ def validity(text: str) -> dict[str, Any]:
     }
 
 
-def generate_direct(ov_genai: Any, pipe: Any, prompt: str) -> dict[str, Any]:
-    """generate with no length check in front. Same call shape as the runner."""
+def greedy_config(ov_genai: Any) -> tuple[Any, dict[str, Any]]:
+    """v2: explicit greedy config, fresh per call, and the record of it."""
     cfg = ov_genai.GenerationConfig()
     cfg.max_new_tokens = MAX_NEW_TOKENS
     cfg.do_sample = False
+    cfg.apply_chat_template = APPLY_CHAT_TEMPLATE
+    record: dict[str, Any] = {}
+    for name in dir(cfg):
+        if name.startswith("_"):
+            continue
+        try:
+            value = getattr(cfg, name)
+        except Exception as exc:
+            record[name] = f"unreadable: {type(exc).__name__}"
+            continue
+        if not callable(value):
+            record[name] = _jsonable(value)
+    return cfg, record
+
+
+def generate_direct(
+    ov_genai: Any, pipe: Any, prompt: str, *, version: int = RULE_VERSION
+) -> dict[str, Any]:
+    """generate with no length check in front.
+
+    v1 passed the prompt as a str, which returns a str with no perf_metrics on
+    openvino-genai 2026.2.1. v2 passes a one-element list, which returns
+    DecodedResults whose perf_metrics reports the input-token count.
+    """
+    if version == 1:
+        cfg = ov_genai.GenerationConfig()
+        cfg.max_new_tokens = MAX_NEW_TOKENS
+        cfg.do_sample = False
+        config_record: dict[str, Any] | None = None
+        inputs: Any = prompt
+    else:
+        cfg, config_record = greedy_config(ov_genai)
+        inputs = [prompt]
     streamer = _make_ttft_streamer(ov_genai)
     streamer.t0_ns = time.perf_counter_ns()
     t0 = time.perf_counter()
     try:
-        result = pipe.generate(prompt, cfg, streamer)
+        result = pipe.generate(inputs, cfg, streamer)
     except Exception as exc:
+        message = str(exc)
         return {
             "generate_returned": False,
-            "exception": {"class": type(exc).__name__, "message": str(exc)},
+            "exception": {"class": type(exc).__name__, "message": message},
+            "length_check_refusal": LENGTH_CHECK_TEXT in message,
+            "stated_cap": stated_cap(message),
             "wall_s": time.perf_counter() - t0,
             "output_text": None,
             "pipeline_input_tokens": None,
             "ttft_s": None,
+            "generation_config": config_record,
+            "input_form": type(inputs).__name__,
         }
     wall_s = time.perf_counter() - t0
     text = _text_from_generate_result(result)
     measured = _metrics(result)
+    metric_error = measured.get("metric_error")
+    if getattr(result, "perf_metrics", None) is None and metric_error is None:
+        metric_error = f"no perf_metrics on {type(result).__name__}"
     ttft_ns, ttft_source = resolve_ttft_ns(None, streamer.ttft_ns)
     return {
         "generate_returned": True,
         "exception": None,
+        "length_check_refusal": False,
+        "stated_cap": None,
         "wall_s": wall_s,
         "output_text": text,
+        "result_type": type(result).__name__,
+        "input_form": type(inputs).__name__,
+        "generation_config": config_record,
         "pipeline_input_tokens": measured.get("prompt_tokens"),
         "pipeline_completion_tokens": measured.get("completion_tokens"),
         "perf_metrics_ttft_s": measured.get("prefill_s"),
-        "metric_error": measured.get("metric_error"),
+        "metric_error": metric_error,
         "ttft_s": None if not ttft_ns else ttft_ns / 1e9,
         "ttft_source": ttft_source if ttft_ns else None,
         "streamer_tokens": int(getattr(streamer, "tokens_written", 0)),
@@ -325,8 +414,10 @@ def generate_direct(ov_genai: Any, pipe: Any, prompt: str) -> dict[str, Any]:
 
 def run_child(args: argparse.Namespace) -> int:
     result_path: Path = args.result
-    bands = parse_bands(args.prompt_bands)
+    version = int(args.rule_version)
+    bands = parse_bands(args.prompt_bands, version)
     rec: dict[str, Any] = {
+        "rule_version": version,
         "arm": args.arm,
         "label": ARM_LABEL[args.arm],
         "request": int(args.request),
@@ -391,7 +482,7 @@ def run_child(args: argparse.Namespace) -> int:
             rec["prompts"].append(row)
             _write(result_path, rec)
             continue
-        row.update(generate_direct(ov_genai, pipe, prompt))
+        row.update(generate_direct(ov_genai, pipe, prompt, version=version))
         row["status"] = prompt_status(row)
         rec["prompts"].append(row)
         _write(result_path, rec)
@@ -404,7 +495,7 @@ def _smoke_child(rec: dict[str, Any], bands: list[list[int]], result_path: Path)
     """Plumbing only. No openvino. Synthetic, never a result."""
     rec.update(smoke=True, load_error=None, load_s=0.0, r1_after_value=None)
     rec["prompts"] = []
-    for band in bands:
+    for index, band in enumerate(bands):
         target = (band[0] + band[1]) // 2
         row = {
             "band": band,
@@ -416,6 +507,16 @@ def _smoke_child(rec: dict[str, Any], bands: list[list[int]], result_path: Path)
             "output_text": "smoke",
             **validity("smoke"),
         }
+        if index == 2:
+            message = f"smoke {LENGTH_CHECK_TEXT} up to 2048 tokens"
+            row.update(
+                generate_returned=False,
+                exception={"class": "RuntimeError", "message": message},
+                pipeline_input_tokens=None,
+                output_text=None,
+                length_check_refusal=True,
+                stated_cap=stated_cap(message),
+            )
         row["status"] = prompt_status(row)
         rec["prompts"].append(row)
     rec["complete"] = True
@@ -496,6 +597,8 @@ def run_arm(args: argparse.Namespace, arm: str, out_dir: Path) -> dict[str, Any]
         str(args.request),
         "--prompt-bands",
         args.prompt_bands,
+        "--rule-version",
+        str(args.rule_version),
         "--model-spec",
         str(args.model_spec),
         "--result",
@@ -542,7 +645,8 @@ def run_parent(args: argparse.Namespace) -> int:
     arms = [a.strip() for a in args.arms.split(",") if a.strip()]
     if sorted(arms) != sorted(ARMS):
         raise SystemExit("REFUSED -- the rule needs both arms: doc,npuw")
-    parse_bands(args.prompt_bands)
+    version = int(args.rule_version)
+    bands = parse_bands(args.prompt_bands, version)
     started = datetime.now(UTC)
     stamp = started.strftime("%Y%m%dT%H%M%SZ")
     head = _git("rev-parse", "HEAD").strip()
@@ -562,6 +666,7 @@ def run_parent(args: argparse.Namespace) -> int:
     out_dir.mkdir(parents=True, exist_ok=False)
     doc: dict[str, Any] = {
         "diagnostic": "NPU-MAXLEN-DIAG",
+        "rule_version": version,
         "measurement": False,
         "smoke": bool(args.smoke),
         "host": socket.gethostname(),
@@ -571,8 +676,10 @@ def run_parent(args: argparse.Namespace) -> int:
         "versions": {} if args.smoke else live_versions(),
         "watchdog": watchdog,
         "request": int(args.request),
-        "prompt_bands": parse_bands(args.prompt_bands),
+        "prompt_bands": bands,
         "max_new_tokens": MAX_NEW_TOKENS,
+        "do_sample": False,
+        "apply_chat_template": APPLY_CHAT_TEMPLATE if version >= 2 else None,
         "child_timeout_s": args.child_timeout,
         "arms": {},
     }
@@ -584,6 +691,7 @@ def run_parent(args: argparse.Namespace) -> int:
         prompts = rec.get("prompts") or []
         if prompts and isinstance(prompts[0], dict):
             rec["band_a_ttft_s"] = prompts[0].get("ttft_s")
+            rec["band_a_perf_metrics_ttft_s"] = prompts[0].get("perf_metrics_ttft_s")
     doc["band_a_ttft_reference"] = "flat ~1.30 s prefill near 1024 in 680b031a; outside the rule"
     verdict, subcase = classify(doc)
     doc["verdict"] = verdict
@@ -594,11 +702,24 @@ def run_parent(args: argparse.Namespace) -> int:
     return 0
 
 
+def classify_file(path: Path) -> int:
+    """Re-read a finished diag.json (any rule version) and print its verdict."""
+    doc = json.loads(Path(path).read_text(encoding="utf-8"))
+    verdict, subcase = classify(doc)
+    version = int(doc.get("rule_version") or 1)
+    recorded = (doc.get("verdict"), doc.get("subcase"))
+    print(f"rule v{version} recorded {recorded[0]} {recorded[1]}")
+    print(f"DIAG_VERDICT {verdict} {subcase} {Path(path).parent}")
+    return 0 if recorded == (verdict, subcase) else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--request", type=int, default=2048)
     parser.add_argument("--arms", default="doc,npuw")
-    parser.add_argument("--prompt-bands", default="850-950,1450-1550")
+    parser.add_argument("--rule-version", type=int, choices=(1, 2), default=RULE_VERSION)
+    parser.add_argument("--prompt-bands", default=None)
+    parser.add_argument("--classify", type=Path, help="re-read a diag.json; no run")
     parser.add_argument("--out", type=Path, default=ROOT / "derived" / "npu" / "diag")
     parser.add_argument("--model-spec", type=Path, default=DEFAULT_MODEL_SPEC)
     parser.add_argument("--watchdog-log", default=DEFAULT_WATCHDOG_LOG)
@@ -608,6 +729,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--arm", choices=ARMS)
     parser.add_argument("--result", type=Path)
     args = parser.parse_args(argv)
+    if args.classify is not None:
+        return classify_file(args.classify)
+    if args.prompt_bands is None:
+        args.prompt_bands = BANDS_BY_VERSION[int(args.rule_version)]
     if args.child:
         if args.arm is None or args.result is None:
             raise SystemExit("REFUSED -- child needs --arm and --result")

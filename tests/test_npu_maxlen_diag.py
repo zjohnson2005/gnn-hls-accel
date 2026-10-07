@@ -17,11 +17,15 @@ if str(ROOT) not in sys.path:
 from tools.npu_maxlen_diag import (  # noqa: E402
     arm_props,
     classify,
+    classify_file,
     dirty_tracked,
+    generate_direct,
+    length_check_refusal,
     main,
     parse_bands,
     prompt_status,
     runner_readback,
+    stated_cap,
     validity,
     watchdog_state,
 )
@@ -74,6 +78,10 @@ REFUSED_B = _prompt(
 )
 TRUNCATED_B = _prompt([1450, 1550], 1500, pipeline_input_tokens=1024)
 INVALID_B = _prompt([1450, 1550], 1500, valid=False)
+
+
+# ---------------------------------------------------------------- rule v1
+# _results() without rule_version is v1, as run 1 output is.
 
 
 def test_d1_none_both_arms_apply_and_read_back() -> None:
@@ -185,7 +193,10 @@ def test_arm_props() -> None:
 
 
 def test_parse_bands_and_dirty() -> None:
-    assert parse_bands("850-950,1450-1550") == [[850, 950], [1450, 1550]]
+    assert parse_bands("850-950,1450-1550", 1) == [[850, 950], [1450, 1550]]
+    assert parse_bands("850-950,1450-1550,2100-2150") == [[850, 950], [1450, 1550], [2100, 2150]]
+    with pytest.raises(SystemExit):
+        parse_bands("850-950,1450-1550")
     assert dirty_tracked("?? derived/npu/diag/diag_x/\n") == []
     assert dirty_tracked(" M tools/x.py\n?? y\n") == [" M tools/x.py"]
 
@@ -286,6 +297,12 @@ def test_smoke_parent_and_children(tmp_path: Path, capsys) -> None:
     assert (verdict, sub) == ("D1", "readback_fix")
 
 
+def test_smoke_rule_v1_still_runs(tmp_path: Path, capsys) -> None:
+    assert main(["--smoke", "--rule-version", "1", "--out", str(tmp_path)]) == 0
+    last = capsys.readouterr().out.strip().splitlines()[-1]
+    assert last.split(" ")[1:3] == ["D1", "readback_fix"]
+
+
 def test_diag_requires_both_arms(tmp_path: Path) -> None:
     with pytest.raises(SystemExit):
         main(["--smoke", "--arms", "doc", "--out", str(tmp_path)])
@@ -293,3 +310,181 @@ def test_diag_requires_both_arms(tmp_path: Path) -> None:
 
 def test_diag_source_is_ascii() -> None:
     DIAG.read_bytes().decode("ascii")
+
+
+# ---------------------------------------------------------------- rule v2
+
+RUN1 = ROOT / "derived" / "npu" / "diag" / "diag_20261007T180320Z" / "diag.json"
+CHECK_MSG = (
+    "Check 'data->input_ids.get_size() <= m_max_prompt_len' failed at x:367:\n"
+    "Stateful LLM pipeline on NPU may only process prompts or hold chat history up to "
+    "2048 tokens. 2133 is passed.\n"
+)
+C_REFUSED = _prompt(
+    [2100, 2150],
+    2125,
+    generate_returned=False,
+    exception={"class": "RuntimeError", "message": CHECK_MSG},
+    pipeline_input_tokens=None,
+    valid=None,
+)
+C_ACCEPTED = _prompt([2100, 2150], 2125, pipeline_input_tokens=2133)
+C_OTHER_ERROR = _prompt(
+    [2100, 2150],
+    2125,
+    generate_returned=False,
+    exception={"class": "RuntimeError", "message": "bad_alloc"},
+    pipeline_input_tokens=None,
+    valid=None,
+)
+
+
+def _arm2(r1_after: int | None = 2048, a=None, b=None, c=None) -> dict:
+    arm = _arm(r1_after, a, b)
+    arm["prompts"].append(c if c is not None else C_REFUSED)
+    return arm
+
+
+def _results2(doc: dict | None = None, npuw: dict | None = None) -> dict:
+    return {
+        "rule_version": 2,
+        "request": 2048,
+        "arms": {"doc": doc or _arm2(), "npuw": npuw or _arm2()},
+    }
+
+
+def test_v2_d1_needs_band_c_refused_by_length_check() -> None:
+    assert classify(_results2()) == ("D1", "none")
+    assert length_check_refusal(C_REFUSED) is True
+    assert length_check_refusal(C_OTHER_ERROR) is False
+    assert stated_cap(CHECK_MSG) == 2048
+
+
+def test_v2_band_c_accepted_is_not_a_d1_arm() -> None:
+    res = _results2(npuw=_arm2(c=C_ACCEPTED))
+    assert classify(res) == ("D1", "key_fix")
+    res = _results2(doc=_arm2(c=C_ACCEPTED), npuw=_arm2(c=C_OTHER_ERROR))
+    assert classify(res) == ("D4", "-")
+
+
+def test_v2_d1_subcases() -> None:
+    res = _results2(doc=_arm2(r1_after=1024), npuw=_arm2(r1_after=1024, b=REFUSED_B))
+    assert classify(res) == ("D1", "key_fix+readback_fix")
+    res = _results2(doc=_arm2(r1_after=1024), npuw=_arm2(r1_after=1024))
+    assert classify(res) == ("D1", "readback_fix")
+
+
+def test_v2_d2_d3_unchanged_by_band_c() -> None:
+    res = _results2(doc=_arm2(b=REFUSED_B), npuw=_arm2(b=TRUNCATED_B))
+    assert classify(res) == ("D2", "-")
+    res = _results2(doc=_arm2(b=INVALID_B), npuw=_arm2(b=REFUSED_B, c=C_ACCEPTED))
+    assert classify(res) == ("D3", "-")
+
+
+def test_v2_band_c_out_of_band_or_missing_is_d4() -> None:
+    res = _results2(doc=_arm2(c=_prompt([2100, 2150], 2200)))
+    assert classify(res) == ("D4", "-")
+    two = _arm()  # v1-shaped arm, no band C
+    assert classify(_results2(npuw=two)) == ("D4", "-")
+
+
+def test_v2_broken_arm_still_first() -> None:
+    broken = _arm2()
+    broken["load_error"] = "RuntimeError: x"
+    assert classify(_results2(npuw=broken)) == ("D4", "-")
+
+
+def test_run1_output_stays_readable_and_d4(capsys) -> None:
+    assert classify_file(RUN1) == 0
+    out = capsys.readouterr().out
+    assert "rule v1 recorded D4 -" in out
+    assert out.strip().splitlines()[-1].startswith("DIAG_VERDICT D4 - ")
+
+
+class _FakeCfg:
+    def __init__(self) -> None:
+        self.max_new_tokens = 0
+        self.do_sample = True
+        self.apply_chat_template = True
+        self.temperature = 0.6
+
+
+class _FakeStreamerBase:
+    def __init__(self) -> None:
+        pass
+
+
+class _FakeGenai:
+    GenerationConfig = _FakeCfg
+    StreamerBase = _FakeStreamerBase
+
+    class StreamingStatus:
+        RUNNING = 0
+
+
+class _Ttft:
+    mean = 12.5
+
+
+class _Metrics:
+    def get_num_input_tokens(self) -> int:
+        return 908
+
+    def get_num_generated_tokens(self) -> int:
+        return 8
+
+    def get_ttft(self) -> _Ttft:
+        return _Ttft()
+
+
+class _Decoded:
+    def __init__(self) -> None:
+        self.texts = ["hello world"]
+        self.perf_metrics = _Metrics()
+
+
+class _FakePipe:
+    def __init__(self, exc: Exception | None = None) -> None:
+        self.calls: list[tuple[Any, Any]] = []
+        self.exc = exc
+
+    def generate(self, inputs: Any, cfg: Any, streamer: Any) -> Any:
+        self.calls.append((inputs, cfg))
+        if self.exc is not None:
+            raise self.exc
+        streamer.write(1)
+        if isinstance(inputs, list):
+            return _Decoded()
+        return "hello world"
+
+
+def test_v2_generate_passes_a_list_and_reads_perf_metrics() -> None:
+    pipe = _FakePipe()
+    row = generate_direct(_FakeGenai, pipe, "prompt text")
+    inputs, cfg = pipe.calls[0]
+    assert inputs == ["prompt text"]
+    assert (cfg.do_sample, cfg.max_new_tokens, cfg.apply_chat_template) == (False, 8, True)
+    assert row["generation_config"]["do_sample"] is False
+    assert row["generation_config"]["max_new_tokens"] == 8
+    assert row["generation_config"]["apply_chat_template"] is True
+    assert row["result_type"] == "_Decoded"
+    assert row["pipeline_input_tokens"] == 908
+    assert row["perf_metrics_ttft_s"] == pytest.approx(0.0125)
+    assert row["metric_error"] is None
+
+
+def test_v1_generate_str_form_has_no_perf_metrics_and_says_so() -> None:
+    pipe = _FakePipe()
+    row = generate_direct(_FakeGenai, pipe, "prompt text", version=1)
+    assert pipe.calls[0][0] == "prompt text"
+    assert row["pipeline_input_tokens"] is None
+    assert row["metric_error"] == "no perf_metrics on str"
+
+
+def test_v2_generate_records_length_check_refusal() -> None:
+    pipe = _FakePipe(exc=RuntimeError(CHECK_MSG))
+    row = generate_direct(_FakeGenai, pipe, "p")
+    assert row["generate_returned"] is False
+    assert row["length_check_refusal"] is True
+    assert row["stated_cap"] == 2048
+    assert row["generation_config"]["do_sample"] is False
