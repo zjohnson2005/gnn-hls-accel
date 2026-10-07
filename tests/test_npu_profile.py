@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import builtins
 import contextlib
+import io
 import json
 import os
 import subprocess
@@ -32,11 +33,13 @@ from tools.run_npu_profile import (  # noqa: E402
 
 RUNNER = ROOT / "tools" / "run_npu_profile.py"
 LAUNCHER = ROOT / "tools" / "launch_boot1.ps1"
+DIAG = ROOT / "tools" / "npu_maxlen_diag.py"
 
 
 def test_sources_do_not_name_the_prereg() -> None:
-    for path in (RUNNER, LAUNCHER, ROOT / "tools" / "launch_t2s_npu1.ps1"):
+    for path in (RUNNER, LAUNCHER, ROOT / "tools" / "launch_t2s_npu1.ps1", DIAG):
         assert "NPU1_PREREG" not in path.read_text(encoding="utf-8")
+    assert "NPU_MAXLEN_DIAG_RULE" not in DIAG.read_text(encoding="utf-8")
     assert (ROOT / "derived" / "npu" / "NPU1_PREREG.json").is_file()
 
 
@@ -80,15 +83,24 @@ def test_runner_does_not_open_the_prereg(monkeypatch, tmp_path: Path) -> None:
         text = str(file).replace("\\", "/")
         name = text.rsplit("/", 1)[-1].upper()
         if "/derived/" in text.lower() and any(
-            token in name for token in ("PREREG", "PREDICTIONS", "AMEND")
+            token in name for token in ("PREREG", "PREDICTIONS", "AMEND", "RULE")
         ):
             raise AssertionError(f"runner opened {file}")
         return real_open(file, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "open", guarded)
+    # pathlib.Path.open / read_text go through io.open.
+    monkeypatch.setattr(io, "open", guarded)
     with contextlib.suppress(SystemExit):
         main(["--help"])
     assert main(["--cell", "npu1-setting", "--smoke", "--out", str(tmp_path)]) == 0
+
+    from tools import npu_maxlen_diag
+
+    with contextlib.suppress(SystemExit):
+        npu_maxlen_diag.main(["--help"])
+    assert npu_maxlen_diag.main(["--smoke", "--out", str(tmp_path / "diag")]) == 0
+    npu_maxlen_diag.watchdog_state(str(tmp_path / "watchdog.log"))
 
 
 def test_binding_is_toolchain_latency_or_load_fail() -> None:
