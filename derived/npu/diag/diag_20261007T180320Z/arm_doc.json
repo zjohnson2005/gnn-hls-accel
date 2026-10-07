@@ -1,0 +1,137 @@
+{
+  "arm": "doc",
+  "complete": true,
+  "ir_dir": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+  "label": "K-DOC",
+  "load_error": null,
+  "load_s": 95.22381500015035,
+  "prompts": [
+    {
+      "band": [
+        850,
+        950
+      ],
+      "exception": null,
+      "generate_returned": true,
+      "metric_error": null,
+      "output_text": "</think>\n\nThe\n",
+      "parses": true,
+      "perf_metrics_ttft_s": null,
+      "pipeline_completion_tokens": null,
+      "pipeline_input_tokens": null,
+      "realized_tokens": 900,
+      "repeat_4gram_fraction": null,
+      "status": "truncation_unknown",
+      "streamer_tokens": 5,
+      "target_tokens": 900,
+      "ttft_s": 1.3949699,
+      "ttft_source": "streamer_first_token",
+      "valid": true,
+      "wall_s": 1.6637661000713706
+    },
+    {
+      "band": [
+        1450,
+        1550
+      ],
+      "exception": null,
+      "generate_returned": true,
+      "metric_error": null,
+      "output_text": "<think>\n",
+      "parses": true,
+      "perf_metrics_ttft_s": null,
+      "pipeline_completion_tokens": null,
+      "pipeline_input_tokens": null,
+      "realized_tokens": 1500,
+      "repeat_4gram_fraction": null,
+      "status": "truncation_unknown",
+      "streamer_tokens": 3,
+      "target_tokens": 1500,
+      "ttft_s": 2.7670524,
+      "ttft_source": "streamer_first_token",
+      "valid": true,
+      "wall_s": 2.903532200027257
+    }
+  ],
+  "props": {
+    "MAX_PROMPT_LEN": 2048,
+    "MIN_RESPONSE_LEN": 8,
+    "NPUW_LLM_PREFILL_CHUNK_SIZE": 1024
+  },
+  "r1_after": {
+    "read_errors": [
+      "pipeline: AttributeError: 'openvino_genai.py_openvino_genai.LLMPipeline' object has no attribute 'get_property'"
+    ],
+    "source": "core",
+    "value": 1024
+  },
+  "r1_after_value": 1024,
+  "r1_before": {
+    "read_errors": [],
+    "source": "core",
+    "value": 1024
+  },
+  "r2_after": {},
+  "r2_before": {},
+  "r2_names": [],
+  "r2_names_error": null,
+  "r3_after": {
+    "attempts": [
+      {
+        "call": "get_property",
+        "error": "not exposed",
+        "value": null
+      },
+      {
+        "call": "get_generation_config()",
+        "error": null,
+        "value": {
+          "adapters": null,
+          "apply_chat_template": true,
+          "assistant_confidence_threshold": 0.0,
+          "diversity_penalty": 0.0,
+          "do_sample": true,
+          "echo": false,
+          "eos_token_id": 151645,
+          "frequency_penalty": 0.0,
+          "ignore_eos": false,
+          "include_stop_str_in_output": false,
+          "length_penalty": 1.0,
+          "logprobs": 0,
+          "max_length": 18446744073709551615,
+          "max_new_tokens": 18446744073709551615,
+          "max_ngram_size": 0,
+          "min_new_tokens": 0,
+          "min_p": 0.0,
+          "no_repeat_ngram_size": 18446744073709551615,
+          "num_assistant_tokens": 0,
+          "num_beam_groups": 1,
+          "num_beams": 1,
+          "num_return_sequences": 1,
+          "parsers": [],
+          "presence_penalty": 0.0,
+          "pruning_ratio": 0,
+          "relevance_weight": 0.5,
+          "repetition_penalty": 1.0,
+          "rng_seed": 0,
+          "stop_criteria": "StopCriteria.HEURISTIC",
+          "stop_strings": "set()",
+          "stop_token_ids": "{151643, 151645}",
+          "structured_output_config": null,
+          "temperature": 0.6000000238418579,
+          "top_k": 20,
+          "top_p": 0.949999988079071
+        }
+      }
+    ],
+    "public_attributes": [
+      "finish_chat",
+      "generate",
+      "get_generation_config",
+      "get_tokenizer",
+      "set_generation_config",
+      "start_chat"
+    ]
+  },
+  "request": 2048
+}
