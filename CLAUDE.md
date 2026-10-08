@@ -95,6 +95,15 @@ Always ask the human before: rebooting a host, launching a measurement,
 spending cloud money (H1/R0/P3 runs need explicit spend approval), or
 touching the T2S watchdog.
 
+## Task reports (standing rule)
+
+At the end of every task, write the final report and nothing else. It is
+ASCII markdown under 150 lines covering: what changed, commits in order,
+registry rows touched, test results, open issues, and exact host commands.
+Write it to `_agent_reports/<UTC yyyymmddThhmmZ>_<slug>.md` and overwrite
+`_agent_reports/LATEST.md` with the same text. In the terminal, print only
+the report path and a 3-line summary. `_agent_reports/` is gitignored.
+
 ## Current state (keep this section updated)
 
 - Plan of record: docs/EXPERIMENT_REGISTRY.md. Read at session start; update in the same commit as the work. Never delete a row.
