@@ -500,6 +500,8 @@ class TtftSloCanaryGuard:
     planned_probe_count: int = 0
     allow_unguarded: bool = False
     discard_warmup: bool = False
+    # NPU amendment 2026-10-08: run the C calibration canaries before any probe.
+    arm_before_probes: bool = False
     enforce_probe_budget: bool = True
     calibration_c: int = CALIBRATION_C
     rel_drift_floor: float | None = None
@@ -553,6 +555,7 @@ class TtftSloCanaryGuard:
             "budget_preflight": self.budget_preflight,
             "allow_unguarded": bool(self.allow_unguarded),
             "canary_every_n": self.n_every,
+            **({"schedule": "arm_before_probes"} if self.arm_before_probes else {}),
             "n_derivation": self.n_derivation,
             "canary_gate": self.gate,
             "n_canaries": len(self.canaries),
@@ -722,8 +725,14 @@ class TtftSloCanaryGuard:
             return
         if self.discard_warmup:
             self.run_canary(after_probe_count=-1, warmup=True)
-        self.run_canary(after_probe_count=-1)
+        for _ in range(int(self.calibration_c) if self.arm_before_probes else 1):
+            self.run_canary(after_probe_count=-1)
         self.opening_done = True
+
+    def closing(self, probes_log: list[dict[str, Any]]) -> None:
+        """One armed check after the last probe when probes ran since the last canary."""
+        if self.arm_before_probes and probes_log and self.probes_since_canary > 0:
+            self.run_canary(after_probe_count=len(probes_log) - 1)
 
     def after_probe(self, probes_log: list[dict[str, Any]]) -> None:
         """Call once after each successful probe append."""

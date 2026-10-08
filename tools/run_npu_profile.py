@@ -163,11 +163,25 @@ def bind_setting(*, load_ok: bool, cap: int, rungs: list[dict[str, Any]]) -> dic
             for value in chosen.get("decode_tok_s") or []
             if isinstance(value, (int, float))
         ]
-    return {
+    decode = median_number(rates)
+    record: dict[str, Any] = {
         "binding": binding,
         "ttft_limit_n": None if chosen is None else int(chosen["n_tokens"]),
-        "decode_tok_s_at_limit": median_number(rates),
+        "decode_tok_s_at_limit": decode,
     }
+    if chosen is not None and decode is None:
+        reasons = sorted(
+            {
+                str(r.get("decode_reason"))
+                for r in chosen.get("repeats") or []
+                if isinstance(r, dict)
+            }
+        )
+        record["decode_tok_s_at_limit_reason"] = (
+            "no repeat at the limit rung streamed two or more tokens"
+            + (f" ({', '.join(reasons)})" if reasons else "")
+        )
+    return record
 
 
 def setting_estimate_s(
@@ -269,6 +283,8 @@ def generation_config(ov_genai: Any) -> Any:
     """Greedy, MAX_NEW_TOKENS, one chat template (the prompt is pre-rendered)."""
     cfg = ov_genai.GenerationConfig()
     cfg.max_new_tokens = MAX_NEW_TOKENS
+    # Amendment 2026-10-08 item 2: exactly MAX_NEW_TOKENS so decode is measurable.
+    cfg.min_new_tokens = MAX_NEW_TOKENS
     cfg.do_sample = False
     cfg.apply_chat_template = False
     return cfg
@@ -311,8 +327,12 @@ def generate_once(ov_genai: Any, device_pipe: Any, prompt: str) -> dict[str, Any
     written = int(getattr(streamer, "tokens_written", 0))
     first = streamer.first_token_ns
     last = streamer.last_token_ns
+    measured["streamer_tokens"] = written
+    measured["decode_reason"] = None
     if written > 1 and first is not None and last is not None and last > first:
         measured["decode_tok_s"] = (written - 1) / ((last - first) / 1e9)
+    else:
+        measured["decode_reason"] = f"streamer_tokens={written}; decode needs two or more"
     return measured
 
 
@@ -354,6 +374,8 @@ def capacity_probe(
             prefill_s=out.get("prefill_s"),
             text=out.get("text"),
             length_check_refusal=bool(out.get("length_check_refusal")),
+            completion_tokens=out.get("completion_tokens"),
+            streamer_tokens=out.get("streamer_tokens"),
         )
         return row
 
@@ -579,7 +601,9 @@ def _metrics(result: object) -> dict[str, Any]:
     }
 
 
-def _arm_canary(out: Path, model_spec: Path, planned: int) -> dict[str, Any]:
+def _arm_canary(
+    out: Path, model_spec: Path, planned: int, *, before_probes: bool = False
+) -> dict[str, Any]:
     from tools.ttft_slo_canary import (
         CanaryBudgetRefuse,
         CanaryDriftAbort,
@@ -594,6 +618,7 @@ def _arm_canary(out: Path, model_spec: Path, planned: int) -> dict[str, Any]:
             plan_path=out / "plan.json",
             planned_probe_count=planned,
             allow_unguarded=False,
+            arm_before_probes=before_probes,
         )
     except CanaryBudgetRefuse as exc:
         raise SystemExit(f"REFUSED -- {exc.detail}") from exc
@@ -650,14 +675,14 @@ def run_hardware(args: argparse.Namespace) -> int:
         _write(out / "plan.json", plan)
         _write(out / "summary.json", summary)
 
-    def arm(planned: int) -> bool:
+    def arm(planned: int, *, before_probes: bool = False) -> bool:
         if args.no_canary:
             plan["canary"] = {"armed": False, "smoke_skip": True}
             plan.update(canary_marker(plan["canary"]))
             _write(out / "plan.json", plan)
             return True
         try:
-            armed = _arm_canary(out, args.model_spec, planned)
+            armed = _arm_canary(out, args.model_spec, planned, before_probes=before_probes)
         except SystemExit as exc:
             summary = {"session_id": session_id, "status": "REFUSED_CANARY", "detail": str(exc)}
             write_summary(summary)
@@ -675,6 +700,20 @@ def run_hardware(args: argparse.Namespace) -> int:
             }
             write_summary(summary)
             print(f"REFUSED -- canary drift: {armed['trip']}")
+            return False
+        if before_probes and not armed["armed"]:
+            # Amendment 2026-10-08 item 1: no probe runs on an unarmed gate.
+            summary = {
+                "session_id": session_id,
+                "cell": args.cell,
+                "status": "REFUSED_UNARMED_CANARY",
+                "abort_reason": "REFUSED_UNARMED_CANARY",
+                "canary_unarmed_detail": "gate not armed after the calibration canaries",
+                "generated": False,
+                "timed": False,
+            }
+            write_summary(summary)
+            print("REFUSED -- gate not armed after the calibration canaries; no probe ran")
             return False
         return True
 
@@ -823,7 +862,8 @@ def run_hardware(args: argparse.Namespace) -> int:
         resolution=int(args.resolution),
         repeats=REPEATS,
     )
-    if not arm(planned):
+    plan["guard_schedule"] = "arm_before_probes (amendment 2026-10-08)"
+    if not arm(planned, before_probes=True):
         return 1
 
     def one_generate(device_pipe: object, n_tokens: int) -> dict[str, Any]:
@@ -876,6 +916,9 @@ def run_hardware(args: argparse.Namespace) -> int:
         row["gpu_error_class"] = gpu_row.get("error_class")
         row["metric_error"] = npu_row.get("metric_error")
         row["gpu_prompt_tokens"] = gpu_row.get("prompt_tokens")
+        row["npu_completion_tokens"] = npu_row.get("completion_tokens")
+        row["npu_streamer_tokens"] = npu_row.get("streamer_tokens")
+        row["decode_reason"] = npu_row.get("decode_reason")
         return row
 
     guard = guard_holder["guard"]
@@ -917,6 +960,8 @@ def run_hardware(args: argparse.Namespace) -> int:
 
     try:
         rungs = slo_bisect(int(args.low), high, int(args.resolution), probe)
+        if guard is not None:
+            guard.closing(probes_log)
     except CanaryDriftAbort as exc:
         summary = {
             "session_id": session_id,
@@ -941,6 +986,7 @@ def run_hardware(args: argparse.Namespace) -> int:
         "low": int(args.low),
         "resolution": int(args.resolution),
         "rungs": rungs,
+        "capacity_check": capacity,
         "over_max": over,
         "ir_quantization": quant,
         "measurement": True,
