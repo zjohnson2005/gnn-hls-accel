@@ -862,14 +862,45 @@ def run_hardware(args: argparse.Namespace) -> int:
         resolution=int(args.resolution),
         repeats=REPEATS,
     )
-    plan["guard_schedule"] = "arm_before_probes (amendment 2026-10-08)"
-    if not arm(planned, before_probes=True):
-        return 1
 
     def one_generate(device_pipe: object, n_tokens: int) -> dict[str, Any]:
         return generate_once(ov_genai, device_pipe, build_prompt(n_tokens))
 
+    # Amendment 2026-10-08b: calibrate in measurement state. The paired GPU
+    # pipeline exists and has run one untimed warm-up generate first.
     gpu = ov_genai.LLMPipeline(str(ir), "GPU")
+    warm = one_generate(gpu, int(args.low))
+    plan["gpu_warmup"] = {
+        "n_tokens": int(args.low),
+        "prompt": "rendered_exact_prompt(target=low, salt=npu), the low-rung prompt",
+        "ok": bool(warm.get("ok", True)),
+        "error": warm.get("error"),
+        "prompt_tokens": warm.get("prompt_tokens"),
+        "streamer_tokens": warm.get("streamer_tokens"),
+        "timed": False,
+        "is_probe": False,
+    }
+    _write(out / "plan.json", plan)
+    if not plan["gpu_warmup"]["ok"]:
+        summary = {
+            "session_id": session_id,
+            "cell": args.cell,
+            "status": "REFUSED_GPU_WARMUP",
+            "detail": warm.get("error"),
+            "generated": False,
+            "timed": False,
+            "capacity_check": capacity,
+            **load_fields,
+        }
+        write_summary(summary)
+        print(json.dumps({"ok": False, "status": "REFUSED_GPU_WARMUP"}))
+        return 1
+
+    plan["guard_schedule"] = (
+        "gpu pipeline + warm-up, then arm_before_probes (amendments 2026-10-08, 2026-10-08b)"
+    )
+    if not arm(planned, before_probes=True):
+        return 1
 
     def paired(n_tokens: int) -> dict[str, Any]:
         npu_row = one_generate(pipe, n_tokens)

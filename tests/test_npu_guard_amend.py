@@ -242,7 +242,7 @@ def test_run_1024_two_rungs_arms_before_probes_and_records_decode(monkeypatch, t
     rows = [r for rung in summary["rungs"] for r in rung["repeats"]]
     assert all(r["npu_streamer_tokens"] == 8 and r["decode_reason"] is None for r in rows)
     assert summary["capacity_check"]["passed"] is True
-    assert plan["guard_schedule"].startswith("arm_before_probes")
+    assert "arm_before_probes" in plan["guard_schedule"]
     assert all(cfg.min_new_tokens == 8 for _, cfg in npu.calls)
 
 
