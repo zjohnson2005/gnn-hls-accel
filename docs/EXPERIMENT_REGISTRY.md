@@ -214,7 +214,7 @@ time after Wednesday; this list does not fit in the window.
 | R-LLAMA / RET-1L | llama.cpp arm on T2S | RET-1L | OPEN |
 | R-EVICT | published eviction methods vs ablation truth | related work | OPEN |
 | T2S time | window extension after Wed; watchdog paused; Tailscale unattended; model downloads | all T2S rows | ASKED |
-| 0921 coverage | confirm no T2S jobs 2026-09-21 16:30-19:00Z | 5c714535, 051d2681 note | ASKED (derived/VOIDS/PENDING_T2S_0921_coverage.md) |
+| 0921 coverage | confirm no T2S jobs 2026-09-21 16:30-19:00Z | 5c714535, 051d2681 note | ASKED (derived/VOIDS/PENDING_T2S_0921_coverage.md); gate probes now committed (derived/evidence/EVIDENCE_MANIFEST_20261009.txt): derived/_gate_probes/gates_20260921_094024.json sha256 194b3baa84fa79417739109d018633bd9b4f4438c9c04e23e49ab84165c9a6a4, gates_20260921_100128.json 07e74170141136acc273c6cd242e3c8fd5eb5edb2cb217075c7383ec7581c8fb, gates_20260921_113129.json 306ee56c5b1a5e63b2cdc6b19f917ea7853d503cff21ee08dd871de223be4cac; status unchanged, coverage still pending |
 | GRID-1 / PROTO-1 | shared config grid; retention protocol sign-off | joint paper | NOT FOUND (searched: docs/, derived/, git log --all --grep GRID-1) |
 
 ---
