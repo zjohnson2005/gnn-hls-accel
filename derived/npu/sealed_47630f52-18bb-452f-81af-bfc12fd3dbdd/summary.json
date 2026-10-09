@@ -1,0 +1,63 @@
+{
+  "UNGUARDED": true,
+  "armed": false,
+  "binding": null,
+  "capacity_check": {
+    "P1": {
+      "completion_tokens": 8,
+      "error": null,
+      "length_check_refusal": false,
+      "ok": true,
+      "parses": true,
+      "pass": false,
+      "pipeline_input_tokens": 4032,
+      "prefill_s": 6.5439895,
+      "realized_tokens": 4032,
+      "repeat_4gram_fraction": 0.8,
+      "streamer_tokens": 8,
+      "target_tokens": 4032,
+      "text": "`\n\n`\n\n`\n\n`\n\n`\n\n`\n\n`\n\n`\n\n",
+      "valid": false
+    },
+    "P2": {
+      "completion_tokens": null,
+      "error": "RuntimeError: Check 'data->input_ids.get_size() <= m_max_prompt_len' failed at C:\\Jenkins\\workspace\\private-ci\\ie\\build-windows-vs2022@2\\b\\repos\\openvino.genai\\src\\cpp\\src\\llm\\pipeline_stateful.cpp:367:\nStateful LLM pipeline on NPU may only process prompts or hold chat history up to 4096 tokens. 4160 is passed.\n Set the \"MAX_PROMPT_LEN\" config option to increase the limit.\n",
+      "length_check_refusal": true,
+      "ok": false,
+      "pass": true,
+      "pipeline_input_tokens": null,
+      "prefill_s": null,
+      "realized_tokens": 4160,
+      "streamer_tokens": null,
+      "target_tokens": 4160,
+      "text": ""
+    },
+    "cap": 4096,
+    "length_check_text": "input_ids.get_size() <= m_max_prompt_len",
+    "margin": 64,
+    "passed": false,
+    "timed": false
+  },
+  "cell": "npu1-setting",
+  "detail": "realized-capacity check failed (amendment 2026-10-07)",
+  "generated": false,
+  "ir_quantization": {
+    "channel_wise": false,
+    "group_size": 128,
+    "ir_note": "INT4_SYM group_size 128 is group-wise, not channel-wise. A channel-wise IR is a later arm and is parked until a conversion is approved.",
+    "mode": "INT4_SYM",
+    "ratio": 1.0
+  },
+  "load_s": 117.09093599999323,
+  "max_prompt_len_readback": 1024,
+  "max_prompt_len_readback_note": "device default via core fallback; informational, gates nothing (amendment 2026-10-07)",
+  "process_rss_error": null,
+  "process_rss_mb_after": 3697.0625,
+  "process_rss_mb_before": 57.1328125,
+  "requested_max_prompt_len": 4096,
+  "session_id": "553a9fa0-9130-4b2b-a5f1-7b291fbfe885",
+  "status": "REFUSED_CAPACITY",
+  "timed": false,
+  "watchdog_log": "C:\\apu\\ovn\\watchdog.log",
+  "foreign_queue_evidence": []
+}
