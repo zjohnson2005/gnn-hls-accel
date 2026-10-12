@@ -47,6 +47,12 @@ prompt length in the same token count the cell used. A prompt longer than
 int8 weights on NPU are infeasible at load (`npu_int8_not_run_past_load`,
 openvino #35641). Do not run the cell past load, and do not record a time.
 
+`041d9f13` (2026-10-04 01:03Z) and `27b4841d` carry that reason with
+`error_class` and `load_error` null. They are records, not measurements.
+Prediction (d) is UNSCORED. An isolated-child int8 load plus a 64-token
+generate (openvino #35641) is not authorized. It waits on a protocol
+amendment Zach approves. Until that amendment, this rule stands.
+
 ## Paired GPU reference
 
 Each NPU cell runs a paired GPU generation on the same prompt in the same

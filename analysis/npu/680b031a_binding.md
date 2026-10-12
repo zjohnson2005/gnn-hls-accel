@@ -36,8 +36,24 @@ see whether the cost steps once per 1024-token chunk. An untimed rung
 still stores `prefill_s: null`; the protocol does not record a duration
 for a refused cell.
 
-## NPU-2 `27b4841d`
+## NPU-2 records, not measurements
 
-Same boot. The cell is the int8 load. `generated` is false, `status` is
-`infeasible`, `reason` is `npu_int8_not_run_past_load`. `error_class` is
-null. `load_error` is null. The summary records no exception text.
+`041d9f13` (2026-10-04 01:03Z) and `27b4841d` both have `status` infeasible,
+`reason` `npu_int8_not_run_past_load`, `error_class` null, `load_error`
+null, and `generated` false. `decide_npu_cell` writes that reason for every
+int8 cell and returns before a generate. `error_class` is set only when
+`load_error` is a non-empty string. Neither record measures the int8 load.
+Prediction (d) in `derived/npu/NPU1_PREREG.json` is UNSCORED. The prereg
+file is not edited. Both runs are kept and sealed as records.
+
+`27b4841d` (boot `792e909d`) is sealed here, tree
+`2a1ff44dafb64e11ee77f34e6a688b2bb59e2f20a43121d2f3ec5eaad2de28d2` MATCH.
+The runner calls `LLMPipeline` on NPU and then writes the protocol reason
+whether or not that call raises. The sealed summary stores `load_s`
+125.32019000011496 and RSS 1702.6953125 MB before that call and
+6544.8046875 MB after. Those fields are not a scored load. `041d9f13` is
+not in this clone; this note does not reseal it.
+
+The next attempt is an isolated child that loads int8 and generates 64
+tokens (openvino #35641). It is blocked until Zach approves a protocol
+amendment. Until that amendment, the int8 cell is not run past load.

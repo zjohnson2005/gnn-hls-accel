@@ -66,6 +66,16 @@ The next run keeps that GPU guard and calls `after_probe` after each NPU
 repeat. `armed` and `UNGUARDED` are written on the plan and the summary.
 An n=400 NPU series is recorded on the same interval and does not gate.
 
+## NPU-2 int8 cells are labeled infeasible by rule
+
+`decide_npu_cell` writes `npu_int8_not_run_past_load` for every int8 cell
+and does not generate. `run_npu_profile.py` still calls `LLMPipeline` on
+NPU, then writes that reason. A null `load_error` means the constructor
+did not raise. It does not mean the constructor was skipped, and it does
+not make the cell a measurement. `041d9f13` and `27b4841d` are records.
+Prediction (d) is UNSCORED. The isolated-child load plus a 64-token
+generate is blocked until Zach approves a protocol amendment.
+
 ## NPU-1 attempt c3caa5fc crashed before any cell
 
 Boot `c3caa5fc`. `T2S_NPU1_SUMMARY` state `crashed`, `cells` empty. Right
