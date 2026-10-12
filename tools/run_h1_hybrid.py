@@ -54,6 +54,31 @@ W3_SEAL_REFS = (
     "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
     "1d8db970-4c18-4bcf-824d-d9c141b6eb22",
 )
+# Entry sets the live runner accepts, keyed by the file's sha256. The W-3
+# 200-entry multi_turn_base pin, and the DEMO-1 long_context subset drawn by
+# tools/h1_context_sizing.py --make-subset (seed 20260930; rule in its
+# .meta.json).
+DEMO1_LONGCTX_30_SHA256 = "7a71fa6ab4a649bdc18b2c994c9904e44f5667a680abadf2f79147f6ed2513cb"
+ENTRY_PINS: dict[str, dict[str, Any]] = {
+    W3_ENTRIES_SHA256: {"name": "W3_multi_turn_base_200", "n": 200, "seal_refs": list(W3_SEAL_REFS)},
+    DEMO1_LONGCTX_30_SHA256: {
+        "name": "DEMO1_LONGCTX_30",
+        "n": 30,
+        "path": "derived/h1_hybrid/demo1/DEMO1_LONGCTX_30.json",
+        "category": "multi_turn_long_context",
+        "seed": 20260930,
+    },
+}
+ENTRY_PIN_DEFAULT: dict[str, Any] = {"sha256": W3_ENTRIES_SHA256, **ENTRY_PINS[W3_ENTRIES_SHA256]}
+
+
+def _w3_pin_field(entry_pin: dict[str, Any] | None) -> str | None:
+    """Plan field kept for old readers: the W-3 sha when the W-3 set ran, else None."""
+    if entry_pin is None or entry_pin.get("sha256") == W3_ENTRIES_SHA256:
+        return W3_ENTRIES_SHA256
+    return None
+
+
 SCORER_CHECKER = "bfcl_eval.eval_checker.multi_turn_eval.multi_turn_checker"
 SCORER_WRAPPER = "apu_characterization.cap01.bfcl_cap01_multi_turn_checker"
 CB781_SEAL = "cb781dbf-3486-4fbc-a69a-34026f801abe"
@@ -248,11 +273,23 @@ def local_model_identity(local: Any) -> dict[str, str]:
     return {"model": name, "tier": match.group(1)}
 
 
+LOCAL_PLACEMENTS = ("gpu_only", "cpu-p")
+LOCAL_RESIDENCIES = ("RESIDENT", "NON_RESIDENT")
+
+
 def arm_config_for(policy: str, local: Any) -> dict[str, str]:
-    """ARM_CONFIG[policy] with the local model and tier taken from ``local``."""
+    """ARM_CONFIG[policy] with model, tier, placement and residency from ``local``.
+
+    A backend built with --placement / --residency records what it loaded;
+    stubs without those attributes keep the ARM_CONFIG values.
+    """
     arm = dict(ARM_CONFIG[policy])
     if arm["placement"] != "cloud":
         arm.update(local_model_identity(local))
+        for key in ("placement", "residency"):
+            value = getattr(local, key, None)
+            if isinstance(value, str) and value:
+                arm[key] = value
     return arm
 
 
@@ -1891,19 +1928,34 @@ def save_checkpoint(path: Path, state: dict[str, Any]) -> None:
 # ---------------------------------------------------------------------------
 # Entry / scorer asserts
 # ---------------------------------------------------------------------------
-def assert_entry_set_matches_w3(entries_path: Path) -> dict[str, Any]:
+def assert_entry_set_pinned(entries_path: Path) -> dict[str, Any]:
+    """Refuse an entries file whose sha256 is not in ENTRY_PINS, or whose count differs."""
     digest = _sha256_file(entries_path)
-    if digest != W3_ENTRIES_SHA256:
+    pin = ENTRY_PINS.get(digest)
+    if pin is None:
         raise SystemExit(
-            f"REFUSED -- multi_turn entries sha256 {digest} != W-3 pin {W3_ENTRIES_SHA256} "
-            f"(seals {', '.join(W3_SEAL_REFS)})"
+            f"REFUSED -- multi_turn entries sha256 {digest} is not a pinned entry set "
+            f"(W-3 {W3_ENTRIES_SHA256}, seals {', '.join(W3_SEAL_REFS)}; "
+            f"DEMO1_LONGCTX_30 {DEMO1_LONGCTX_30_SHA256})"
         )
     entries = json.loads(entries_path.read_text(encoding="utf-8-sig"))
-    if not isinstance(entries, list) or len(entries) != 200:
+    if not isinstance(entries, list) or len(entries) != int(pin["n"]):
         raise SystemExit(
-            f"REFUSED -- expected 200 entries, got {type(entries)} n={getattr(entries, '__len__', lambda: '?')()}"
+            f"REFUSED -- expected {pin['n']} entries, got {type(entries)} "
+            f"n={getattr(entries, '__len__', lambda: '?')()}"
         )
-    return {"sha256": digest, "n": len(entries), "seal_refs": list(W3_SEAL_REFS)}
+    return {"sha256": digest, **pin}
+
+
+def assert_entry_set_matches_w3(entries_path: Path) -> dict[str, Any]:
+    """Kept for callers that accept only the W-3 pin."""
+    doc = assert_entry_set_pinned(entries_path)
+    if doc["sha256"] != W3_ENTRIES_SHA256:
+        raise SystemExit(
+            f"REFUSED -- multi_turn entries sha256 {doc['sha256']} != W-3 pin {W3_ENTRIES_SHA256} "
+            f"(seals {', '.join(W3_SEAL_REFS)})"
+        )
+    return {"sha256": doc["sha256"], "n": doc["n"], "seal_refs": list(W3_SEAL_REFS)}
 
 
 def assert_scorer_version(gold_selftest: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -2550,6 +2602,7 @@ def run_session(
     skip_entry_assert: bool = False,
     caching_policy: str = "none",
     seal_git: dict[str, Any] | None = None,
+    entry_pin: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if max_usd is None:
         raise SystemExit("REFUSED -- --max-usd is required (cost guard)")
@@ -2588,7 +2641,8 @@ def run_session(
         "local_backend": local_backend_kind(local),
         "seal": bool(seal),
         "started_utc": _utc_now(),
-        "w3_entry_pin": W3_ENTRIES_SHA256,
+        "w3_entry_pin": _w3_pin_field(entry_pin),
+        "entry_pin": entry_pin or ENTRY_PIN_DEFAULT,
         "w3_seal_refs": list(W3_SEAL_REFS),
         "scorer": assert_scorer_version(),
         "caching_policy": caching_policy,
@@ -2806,6 +2860,7 @@ def run_interleaved_session(
     caching_policy: str = "none",
     seal_git: dict[str, Any] | None = None,
     arm_order_seed: int = 0,
+    entry_pin: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Entry-by-entry interleave of selected H1 policy arms (INF-5 session_design=interleaved).
 
@@ -2867,6 +2922,7 @@ def run_interleaved_session(
     excl = interleaved_exclusion_meta(policies)
     kind = interleaved_kind(policies)
     identity = local_model_identity(local)
+    local_arm = arm_config_for("slo_escalate", local)
     plan = {
         "run_id": run_id,
         "kind": kind,
@@ -2881,13 +2937,20 @@ def run_interleaved_session(
         "local_backend": local_backend_kind(local),
         "seal": bool(seal),
         "started_utc": _utc_now(),
-        "w3_entry_pin": W3_ENTRIES_SHA256,
+        "w3_entry_pin": _w3_pin_field(entry_pin),
+        "entry_pin": entry_pin or ENTRY_PIN_DEFAULT,
         "w3_seal_refs": list(W3_SEAL_REFS),
         "scorer": assert_scorer_version(),
         "caching_policy": caching_policy,
-        "kv_match_seal": KV_MATCH_SEAL_4B if identity["tier"] == DEFAULT_LOCAL_TIER else None,
-        "placement": "gpu_only",
-        "residency": "RESIDENT",
+        "kv_match_seal": (
+            KV_MATCH_SEAL_4B
+            if identity["tier"] == DEFAULT_LOCAL_TIER
+            and local_arm["placement"] == "gpu_only"
+            and local_arm["residency"] == "RESIDENT"
+            else None
+        ),
+        "placement": local_arm["placement"],
+        "residency": local_arm["residency"],
         "tier": identity["tier"],
         "model": identity["model"],
         "weight": "int4",
@@ -3425,7 +3488,7 @@ def load_w3_entries(path: Path | None = None) -> tuple[list[dict[str, Any]], Pat
             / "artifacts"
             / "multi_turn_probe_entries.json"
         )
-    assert_entry_set_matches_w3(path)
+    assert_entry_set_pinned(path)
     entries = json.loads(path.read_text(encoding="utf-8-sig"))
     return entries, path
 
@@ -3478,6 +3541,19 @@ def build_argparser() -> argparse.ArgumentParser:
         help="Output / seal directory (required except --lifecycle-smoke)",
     )
     p.add_argument("--run-id", type=str, default=None)
+    p.add_argument(
+        "--placement",
+        choices=LOCAL_PLACEMENTS,
+        default=None,
+        help="Hybrid local arm placement (default: ARM_CONFIG, gpu_only). cpu-p = delta_n arm A.",
+    )
+    p.add_argument(
+        "--residency",
+        choices=LOCAL_RESIDENCIES,
+        default=None,
+        help="Hybrid local arm residency (default: ARM_CONFIG, RESIDENT). "
+        "NON_RESIDENT prefills the full prompt every step.",
+    )
     p.add_argument(
         "--entries", type=Path, default=None, help="BFCL entries JSON (default: W-3 seal)"
     )
@@ -3788,14 +3864,43 @@ def run_turnwise_lifecycle_smoke(
     }
 
 
-def _make_openvino_local(policy: str, model_spec: Path | None) -> OpenVinoLocalBackend:
+def local_arm_settings(
+    policy: str, *, placement: str | None = None, residency: str | None = None
+) -> dict[str, str]:
+    """Placement, residency and kv for a hybrid local arm. Defaults are ARM_CONFIG.
+
+    placement cpu-p loads delta_n arm A (CPU only, as in the sealed CPU limit
+    7f232f86); its KV is not pinned and is checked by readback (u8 on CPU).
+    NON_RESIDENT prefills the full prompt every step (prefix caching off), as
+    when the sealed cold limits were measured.
+    """
     arm = ARM_CONFIG[policy]
+    out = {
+        "placement": placement or arm["placement"],
+        "residency": (residency or arm["residency"]).upper(),
+        "kv": arm["kv"],
+    }
+    if out["placement"] not in LOCAL_PLACEMENTS:
+        raise SystemExit(f"REFUSED -- placement {out['placement']!r} not in {LOCAL_PLACEMENTS}")
+    if out["residency"] not in LOCAL_RESIDENCIES:
+        raise SystemExit(f"REFUSED -- residency {out['residency']!r} not in {LOCAL_RESIDENCIES}")
+    return out
+
+
+def _make_openvino_local(
+    policy: str,
+    model_spec: Path | None,
+    *,
+    placement: str | None = None,
+    residency: str | None = None,
+) -> OpenVinoLocalBackend:
+    settings = local_arm_settings(policy, placement=placement, residency=residency)
     spec = model_spec or (ROOT / "configs" / "models" / "Qwen3-4B-int4-ov.yaml")
     return OpenVinoLocalBackend(
         model_spec=spec,
-        placement=arm["placement"],
-        residency=arm["residency"],
-        kv=arm["kv"],
+        placement=settings["placement"],
+        residency=settings["residency"],
+        kv=settings["kv"],
         max_new_tokens=512,
     )
 
@@ -3865,6 +3970,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if summary["status"] == "complete" else 2
 
     entries, entries_path = load_w3_entries(args.entries)
+    entry_pin = assert_entry_set_pinned(entries_path)
     gold_path = entries_path.parent / "multi_turn_gold_selftest.json"
     gold = json.loads(gold_path.read_text(encoding="utf-8-sig")) if gold_path.is_file() else None
     assert_scorer_version(gold)
@@ -3883,7 +3989,9 @@ def main(argv: list[str] | None = None) -> int:
         script = json.loads(args.local_script.read_text(encoding="utf-8"))
         local = ScriptedLiveLocalBackend(script=script)
     else:
-        local = _make_openvino_local(args.policy, args.model_spec)
+        local = _make_openvino_local(
+            args.policy, args.model_spec, placement=args.placement, residency=args.residency
+        )
 
     summary = run_session(
         policy=args.policy,
@@ -3897,6 +4005,7 @@ def main(argv: list[str] | None = None) -> int:
         seal=seal,
         caching_policy=args.caching_policy,
         seal_git=args.seal_git,
+        entry_pin=entry_pin,
     )
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
     return 0 if summary["status"] == "complete" else 2
@@ -3947,6 +4056,7 @@ def _main_interleaved(args: argparse.Namespace) -> int:
         return 0 if summary["status"] in ok_statuses else 2
 
     entries, entries_path = load_w3_entries(args.entries)
+    entry_pin = assert_entry_set_pinned(entries_path)
     gold_path = entries_path.parent / "multi_turn_gold_selftest.json"
     gold = json.loads(gold_path.read_text(encoding="utf-8-sig")) if gold_path.is_file() else None
     assert_scorer_version(gold)
@@ -3961,7 +4071,9 @@ def _main_interleaved(args: argparse.Namespace) -> int:
         local = ScriptedLiveLocalBackend(script=script)
     else:
         # Selected arms share gpu_only RESIDENT u8 int4-4B (match 86d0f4cf).
-        local = _make_openvino_local("slo_escalate", args.model_spec)
+        local = _make_openvino_local(
+            "slo_escalate", args.model_spec, placement=args.placement, residency=args.residency
+        )
 
     summary = run_interleaved_session(
         entries=entries,
@@ -3976,6 +4088,7 @@ def _main_interleaved(args: argparse.Namespace) -> int:
         seal=seal,
         caching_policy=args.caching_policy,
         seal_git=args.seal_git,
+        entry_pin=entry_pin,
     )
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
     ok_statuses = {"complete", "partial_policy_cap"}

@@ -61,6 +61,12 @@
 #   powershell -NoProfile -File tools/launch_h1.ps1 -T2S -Interleaved `
 #     -ModelSpec configs/models/Qwen3-8B-int4-ov.yaml -DryRun
 #
+# DEMO-1 / H1-CPU options (defaults unchanged):
+#   -Entries <path>     a pinned entries file (run_h1_hybrid.py ENTRY_PINS), e.g.
+#                       derived/h1_hybrid/demo1/DEMO1_LONGCTX_30.json. Default W-3.
+#   -Placement cpu-p    hybrid local arm on CPU (delta_n arm A). Default gpu_only.
+#   -Residency NON_RESIDENT   full prefill every step. Default RESIDENT.
+#
 # Dry-run (gates report-only; spawn suppressed):
 #   powershell -NoProfile -File tools/launch_h1.ps1 -Policy cloud_only -DryRun
 #   powershell -NoProfile -File tools/launch_h1.ps1 -Interleaved -DryRun
@@ -86,7 +92,12 @@ param(
     [switch]$AllowUnguarded,
     [switch]$AllowDirty,
     [switch]$T2S,
-    [string]$WatchdogLog = "C:\apu\ovn\watchdog.log"
+    [string]$WatchdogLog = "C:\apu\ovn\watchdog.log",
+    [string]$Entries = "",
+    [ValidateSet("", "gpu_only", "cpu-p")]
+    [string]$Placement = "",
+    [ValidateSet("", "RESIDENT", "NON_RESIDENT")]
+    [string]$Residency = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -122,6 +133,11 @@ $SpawnPs1 = Join-Path $root "tools\spawn_detached.ps1"
 $SessionRoot = Join-Path $root "derived\h1_hybrid"
 $LaunchDir = Join-Path $SessionRoot "_launches"
 $W3Entries = Join-Path $root "derived\bfcl_feasibility\w3_weight_quality\sealed_6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a\artifacts\multi_turn_probe_entries.json"
+# The run's entries. The runner refuses any file whose sha256 is not pinned.
+$RunEntries = $W3Entries
+if (-not [string]::IsNullOrWhiteSpace($Entries)) {
+    if ([System.IO.Path]::IsPathRooted($Entries)) { $RunEntries = $Entries } else { $RunEntries = Join-Path $root $Entries }
+}
 $MachineLockPath = Join-Path $root ".locks\machine.lock"
 
 $WorkloadAppxNames = @(
@@ -442,7 +458,7 @@ if ($Interleaved) {
     $resolvedCmd = $resolvedCmd +
         ' --out "' + $artifactDir + '"' +
         ' --run-id ' + $sid +
-        ' --entries "' + $W3Entries + '"'
+        ' --entries "' + $RunEntries + '"'
 } else {
     $resolvedCmd = $envPrefix +
         '&& "' + $PythonExe + '" -u "' + $WorkerPy + '"' +
@@ -450,7 +466,7 @@ if ($Interleaved) {
         ' --max-usd ' + $MaxUsd +
         ' --out "' + $artifactDir + '"' +
         ' --run-id ' + $sid +
-        ' --entries "' + $W3Entries + '"'
+        ' --entries "' + $RunEntries + '"'
 }
 
 if (-not [string]::IsNullOrWhiteSpace($LocalScript)) {
@@ -468,6 +484,14 @@ if (-not [string]::IsNullOrWhiteSpace($LocalScript)) {
     }
     $resolvedCmd = $resolvedCmd + ' --model-spec "' + $ModelSpec + '"'
     Write-Host ("ModelSpec      : {0}" -f $ModelSpec)
+}
+
+if (-not (Test-Path -LiteralPath $RunEntries)) { Refuse "entries file missing: $RunEntries"; exit 2 }
+if (-not [string]::IsNullOrWhiteSpace($Placement)) {
+    $resolvedCmd = $resolvedCmd + ' --placement ' + $Placement
+}
+if (-not [string]::IsNullOrWhiteSpace($Residency)) {
+    $resolvedCmd = $resolvedCmd + ' --residency ' + $Residency
 }
 
 if ($AllowDirty) {
