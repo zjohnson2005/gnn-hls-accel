@@ -52,7 +52,11 @@ The runner calls `LLMPipeline` on NPU and then writes the protocol reason
 whether or not that call raises. The sealed summary stores `load_s`
 125.32019000011496 and RSS 1702.6953125 MB before that call and
 6544.8046875 MB after. Those fields are not a scored load. `041d9f13` is
-not in this clone; this note does not reseal it.
+sealed here, tree
+`023374aea5ee0a6d2f086848cf874129533a2d60ac90c378a196880fad92724d` MATCH.
+This note does not reseal it. Its summary stores `load_s`
+126.20929250004701 and RSS 1796.8046875 MB before the constructor and
+6642.0390625 MB after. Those fields are not a scored load.
 
 The next attempt is an isolated child that loads int8 and generates 64
 tokens (openvino #35641). It is blocked until Zach approves a protocol
