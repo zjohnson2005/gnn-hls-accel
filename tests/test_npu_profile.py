@@ -34,13 +34,27 @@ from tools.run_npu_profile import (  # noqa: E402
 RUNNER = ROOT / "tools" / "run_npu_profile.py"
 LAUNCHER = ROOT / "tools" / "launch_boot1.ps1"
 DIAG = ROOT / "tools" / "npu_maxlen_diag.py"
+NATSTOP = ROOT / "tools" / "npu_natstop.py"
+NATSTOP_LAUNCHER = ROOT / "tools" / "launch_t2s_natstop.ps1"
 
 
 def test_sources_do_not_name_the_prereg() -> None:
-    for path in (RUNNER, LAUNCHER, ROOT / "tools" / "launch_t2s_npu1.ps1", DIAG):
+    for path in (
+        RUNNER,
+        LAUNCHER,
+        ROOT / "tools" / "launch_t2s_npu1.ps1",
+        DIAG,
+        NATSTOP,
+        NATSTOP_LAUNCHER,
+    ):
         assert "NPU1_PREREG" not in path.read_text(encoding="utf-8")
     assert "NPU_MAXLEN_DIAG_RULE" not in DIAG.read_text(encoding="utf-8")
+    for path in (NATSTOP, NATSTOP_LAUNCHER):
+        text = path.read_text(encoding="utf-8")
+        assert "NPU_NATSTOP_RULE" not in text
+        assert "docs/amendments" not in text and "NPU_AMEND" not in text
     assert (ROOT / "derived" / "npu" / "NPU1_PREREG.json").is_file()
+    assert (ROOT / "derived" / "npu" / "NPU_NATSTOP_RULE.md").is_file()
 
 
 def test_npu2_does_not_generate() -> None:
@@ -101,6 +115,17 @@ def test_runner_does_not_open_the_prereg(monkeypatch, tmp_path: Path) -> None:
         npu_maxlen_diag.main(["--help"])
     assert npu_maxlen_diag.main(["--smoke", "--out", str(tmp_path / "diag")]) == 0
     npu_maxlen_diag.watchdog_state(str(tmp_path / "watchdog.log"))
+
+    from tools import npu_natstop
+
+    with contextlib.suppress(SystemExit):
+        npu_natstop.main(["--help"])
+    result = tmp_path / "natstop_child.json"
+    child = ["--child", "--smoke", "--device", "NPU", "--template", "SINGLE"]
+    assert npu_natstop.main([*child, "--n-tokens", "64", "--result", str(result)]) == 0
+    assert npu_natstop.main(["--smoke", "--out", str(tmp_path / "natstop")]) == 0
+    (summary,) = (tmp_path / "natstop").glob("natstop_*/summary.json")
+    assert npu_natstop.main(["--classify", str(summary)]) == 0
 
 
 def test_binding_is_toolchain_latency_or_load_fail() -> None:

@@ -279,24 +279,39 @@ def npu_load_props(max_prompt_len: int, prefill_chunk_size: int) -> dict[str, An
     }
 
 
-def generation_config(ov_genai: Any) -> Any:
-    """Greedy, MAX_NEW_TOKENS, one chat template (the prompt is pre-rendered)."""
+def generation_config(
+    ov_genai: Any,
+    *,
+    max_new_tokens: int = MAX_NEW_TOKENS,
+    min_new_tokens: int | None = MAX_NEW_TOKENS,
+    apply_chat_template: bool = False,
+) -> Any:
+    """Greedy, MAX_NEW_TOKENS, one chat template (the prompt is pre-rendered).
+
+    The defaults are the NPU-1 config. NPU-NATSTOP passes min_new_tokens None
+    (not set, nothing forced) and chooses the template.
+    """
     cfg = ov_genai.GenerationConfig()
-    cfg.max_new_tokens = MAX_NEW_TOKENS
-    # Amendment 2026-10-08 item 2: exactly MAX_NEW_TOKENS so decode is measurable.
-    cfg.min_new_tokens = MAX_NEW_TOKENS
+    cfg.max_new_tokens = max_new_tokens
+    if min_new_tokens is not None:
+        # Amendment 2026-10-08 item 2: exactly MAX_NEW_TOKENS so decode is measurable.
+        cfg.min_new_tokens = min_new_tokens
     cfg.do_sample = False
-    cfg.apply_chat_template = False
+    cfg.apply_chat_template = apply_chat_template
     return cfg
 
 
-def generate_once(ov_genai: Any, device_pipe: Any, prompt: str) -> dict[str, Any]:
+def generate_once(
+    ov_genai: Any, device_pipe: Any, prompt: str, cfg: Any | None = None
+) -> dict[str, Any]:
     """One generate in the list call form, so the result carries perf_metrics.
 
     ``prompt_tokens`` is the pipeline-reported input count only. It is None
     when the pipeline does not report it; the caller must not time that cell.
+    ``cfg`` defaults to generation_config(ov_genai).
     """
-    cfg = generation_config(ov_genai)
+    if cfg is None:
+        cfg = generation_config(ov_genai)
     streamer = _make_ttft_streamer(ov_genai)
     streamer.t0_ns = time.perf_counter_ns()
     try:
@@ -325,6 +340,7 @@ def generate_once(ov_genai: Any, device_pipe: Any, prompt: str) -> dict[str, Any
     else:
         measured["metric_error"] = "ttft unavailable"
     written = int(getattr(streamer, "tokens_written", 0))
+    measured["token_ids"] = list(getattr(streamer, "token_ids", []))
     first = streamer.first_token_ns
     last = streamer.last_token_ns
     measured["streamer_tokens"] = written

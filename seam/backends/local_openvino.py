@@ -441,10 +441,19 @@ def _make_ttft_streamer(ov_genai: Any) -> Any:
             self.first_token_ns: int | None = None
             self.last_token_ns: int | None = None
             self.tokens_written: int = 0
+            # Ids as received (an int, or a list of ints on newer GenAI builds).
+            self.token_ids: list[int] = []
 
-        def write(self, _token: Any) -> Any:
+        def write(self, token: Any) -> Any:
             now = time.perf_counter_ns()
             self.tokens_written += 1
+            try:
+                if isinstance(token, (list, tuple)):
+                    self.token_ids.extend(int(item) for item in token)
+                else:
+                    self.token_ids.append(int(token))
+            except (TypeError, ValueError):
+                pass
             if self.first_token_ns is None:
                 self.first_token_ns = now
                 if self.ttft_ns is None and self.t0_ns is not None:
