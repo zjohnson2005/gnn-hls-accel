@@ -24,6 +24,8 @@ from typing import Any, Final
 
 import yaml
 
+from seam.isolation import TIER1_CONTENDING_PROCESS_NAMES, _normalize_process_name
+
 __all__ = [
     "UNCOLD_UPTIME_REASON",
     "GateResult",
@@ -283,6 +285,49 @@ def probe_available_mb() -> float | None:
         return None
 
 
+def classify_tier1_processes(process_names: list[str] | tuple[str, ...]) -> GateResult:
+    """Refuse when a tier-1 name is resident. Matching is case-insensitive.
+
+    ``chrome`` and ``Chrome.exe`` both normalize to ``chrome.exe``. Tier-2
+    names such as ``msedgewebview2.exe`` are not a refusal.
+    """
+    resident = sorted(
+        {
+            normalized
+            for normalized in (_normalize_process_name(name) for name in process_names)
+            if normalized in TIER1_CONTENDING_PROCESS_NAMES
+        }
+    )
+    if resident:
+        return GateResult(
+            name="tier1_processes",
+            passed=False,
+            reason="tier1_resident",
+            detail={"resident": resident},
+        )
+    return GateResult(
+        name="tier1_processes",
+        passed=True,
+        reason="tier1_clear",
+        detail={"resident": []},
+    )
+
+
+def probe_process_names() -> list[str]:
+    """Live process names. An unreadable probe must not pass the gate."""
+    import psutil
+
+    found: list[str] = []
+    for process in psutil.process_iter(["name"]):
+        try:
+            name = process.info.get("name")
+        except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess):
+            continue
+        if name:
+            found.append(str(name))
+    return found
+
+
 def probe_uptime_s() -> float | None:
     try:
         import psutil
@@ -313,6 +358,7 @@ def evaluate_measurement_gates(
     skip_uptime: bool = False,
     ac_override: GateResult | None = None,
     processor_override: GateResult | None = None,
+    process_names: list[str] | tuple[str, ...] | None = None,
 ) -> MeasurementGateReport:
     """Evaluate measurement gates for ``platform_id``.
 
@@ -471,6 +517,20 @@ def evaluate_measurement_gates(
     )
     gates.append(onset_gate)
 
+    if process_names is not None or not skip_host_probes:
+        try:
+            names = list(process_names) if process_names is not None else probe_process_names()
+            gates.append(classify_tier1_processes(names))
+        except Exception as exc:
+            gates.append(
+                GateResult(
+                    name="tier1_processes",
+                    passed=False,
+                    reason="tier1_unreadable",
+                    detail={"error": f"{type(exc).__name__}: {exc}"},
+                )
+            )
+
     refusals = [f"{g.name}:{g.reason}" for g in gates if (not g.passed) and g.name != "onset"]
     if skip_host_probes:
         wsh: dict[str, Any] = {"skipped": True, "reason": "skip_host_probes"}
@@ -495,6 +555,7 @@ def run_environment_gate_fields(report: MeasurementGateReport) -> dict[str, Any]
     mem = by_name.get("available_mb")
     up = by_name.get("uptime")
     onset = by_name.get("onset")
+    tier1 = by_name.get("tier1_processes")
     return {
         "measurement_gates": {
             "platform_id": report.platform_id,
@@ -535,6 +596,13 @@ def run_environment_gate_fields(report: MeasurementGateReport) -> dict[str, Any]
             "onset_citation": None if onset is None else (onset.detail or {}).get("onset_citation"),
             "onset_seal_note": None if onset is None else (onset.detail or {}).get("seal_note"),
             "workloads_session_host": dict(report.workloads_session_host),
+            "tier1_processes": {
+                "passed": None if tier1 is None else tier1.passed,
+                "reason": None if tier1 is None else tier1.reason,
+                "resident": (
+                    [] if tier1 is None else list((tier1.detail or {}).get("resident") or [])
+                ),
+            },
         }
     }
 
@@ -549,7 +617,24 @@ def _main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Skip only the uptime gate and record an UNCOLD_UPTIME deviation.",
     )
+    parser.add_argument(
+        "--tier1-only",
+        action="store_true",
+        help="Refuse if a tier-1 process (chrome, Cursor, Code, msedge, ...) is resident.",
+    )
     args = parser.parse_args(argv)
+    if args.tier1_only:
+        try:
+            result = classify_tier1_processes(probe_process_names())
+        except Exception as exc:
+            print(f"REFUSED -- tier-1 unreadable: {type(exc).__name__}: {exc}")
+            return 1
+        if result.passed:
+            print("tier1_clear")
+            return 0
+        resident = ", ".join(result.detail.get("resident") or [])
+        print(f"REFUSED -- tier-1 resident: {resident}")
+        return 1
     root = (args.repo_root or Path(__file__).resolve().parents[1]).resolve()
     report = evaluate_measurement_gates(
         root,

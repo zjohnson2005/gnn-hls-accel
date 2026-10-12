@@ -289,6 +289,84 @@ def test_skip_uptime_records_uncold_and_keeps_memory_floor() -> None:
     assert any(r.startswith("uptime:") for r in warm.refusal_reasons)
 
 
+def _ac_and_processor() -> tuple[GateResult, GateResult]:
+    return (
+        GateResult(name="ac", passed=True, reason="ac_ok", detail={}),
+        GateResult(
+            name="processor_ac",
+            passed=True,
+            reason="processor_ac_100_100",
+            detail={"procthrottlemin_ac": 100, "procthrottlemax_ac": 100},
+        ),
+    )
+
+
+def test_chrome_on_the_process_list_refuses() -> None:
+    ac, proc = _ac_and_processor()
+    report = evaluate_measurement_gates(
+        REPO,
+        platform_id="aipc-c1",
+        available_mb=8000.0,
+        uptime_s=60.0,
+        skip_host_probes=True,
+        ac_override=ac,
+        processor_override=proc,
+        process_names=["chrome", "Chrome.exe", "CHROME"],
+    )
+    assert report.all_passed is False
+    gate = next(g for g in report.gates if g.name == "tier1_processes")
+    assert gate.passed is False
+    assert gate.reason == "tier1_resident"
+    assert gate.detail["resident"] == ["chrome.exe"]
+    assert any(item.startswith("tier1_processes:") for item in report.refusal_reasons)
+
+
+def test_cursor_code_and_msedge_refuse_webview_does_not() -> None:
+    ac, proc = _ac_and_processor()
+    for name in ("Cursor", "Code", "msedge.exe"):
+        report = evaluate_measurement_gates(
+            REPO,
+            platform_id="aipc-c1",
+            available_mb=8000.0,
+            uptime_s=60.0,
+            skip_host_probes=True,
+            ac_override=ac,
+            processor_override=proc,
+            process_names=[name],
+        )
+        assert report.all_passed is False
+        gate = next(g for g in report.gates if g.name == "tier1_processes")
+        assert gate.reason == "tier1_resident"
+    clear = evaluate_measurement_gates(
+        REPO,
+        platform_id="aipc-c1",
+        available_mb=8000.0,
+        uptime_s=60.0,
+        skip_host_probes=True,
+        ac_override=ac,
+        processor_override=proc,
+        process_names=["msedgewebview2.exe", "SearchHost"],
+    )
+    assert clear.all_passed
+    gate = next(g for g in clear.gates if g.name == "tier1_processes")
+    assert gate.passed
+    assert gate.reason == "tier1_clear"
+    assert gate.detail["resident"] == []
+
+
+def test_p1_cell_checks_tier1_when_the_gate_file_is_skipped() -> None:
+    text = (REPO / "tools" / "launch_boot1.ps1").read_text(encoding="utf-8").replace("\r\n", "\n")
+    preamble = text.split("function Invoke-CellPreamble", 1)[1].split("\nfunction ", 1)[0]
+    assert "-not $SkipGateFile" in preamble
+    marker = "Assert-BootAc\n            # The smoke stub is the strict-mode harness."
+    assert marker in text
+    skipped = text.split(marker, 1)[1]
+    assert "Assert-BootTier1" in skipped
+    assert 'SEAM_BOOT_SMOKE_STUB -eq "1"' in skipped
+    assert 'Kind -eq "p1"' in skipped
+    assert "Invoke-CellPreamble -Label $cell.Name -SkipGateFile" in skipped
+
+
 def test_wrong_type_measurement_gates_raises_type_error(tmp_path: Path) -> None:
     platform_id = "tmp-bad-gates"
     cfg = tmp_path / "configs" / "platforms"

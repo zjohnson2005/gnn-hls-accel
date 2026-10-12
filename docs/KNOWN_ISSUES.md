@@ -66,6 +66,22 @@ The next run keeps that GPU guard and calls `after_probe` after each NPU
 repeat. `armed` and `UNGUARDED` are written on the plan and the summary.
 An n=400 NPU series is recorded on the same interval and does not gate.
 
+## XPS launch gate did not see Chrome (fixed 2026-10-12)
+
+A5 `c42328c7` launched on 2026-10-06 with Chrome running since about 16:09
+local. The cell kind is `p1`. `Invoke-CellPreamble` in
+`tools/launch_boot1.ps1` calls `Invoke-BootGates` only when `-SkipGateFile`
+is absent, and the cell loop passes `-SkipGateFile` for `p1`.
+`seam/measurement_gates.py` also had no process-name gate: its checks are
+AC `BatteryStatus`, processor AC throttle, available memory, uptime, and
+onset. Chrome was not a wrong name or a case mismatch. The check never ran.
+`tools/launch_p1_a5.ps1` only forwards to that launcher. The cell loop now
+calls `Assert-BootTier1` on that path. The gate refuses `chrome.exe`,
+`cursor.exe`, `code.exe`, `msedge.exe`, and the rest of
+`TIER1_CONTENDING_PROCESS_NAMES`, case-insensitively. `msedgewebview2.exe`
+stays tier 2 and does not refuse. Battery charge percent is still not
+recorded and not gated.
+
 ## NPU-2 int8 cells are labeled infeasible by rule
 
 `decide_npu_cell` writes `npu_int8_not_run_past_load` for every int8 cell

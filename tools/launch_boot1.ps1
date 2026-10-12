@@ -1382,6 +1382,28 @@ function Invoke-BootDryCell {
     Write-Host ("DRY_RUN_OK {0}" -f $name)
 }
 
+function Assert-BootTier1 {
+    # p1 passes -SkipGateFile, which skips Invoke-BootGates entirely.
+    # The process check has to run on that path or Chrome is invisible.
+    $prev = $env:PYTHONPATH
+    try {
+        if ([string]::IsNullOrWhiteSpace($env:PYTHONPATH)) {
+            $env:PYTHONPATH = $root
+        } elseif ($env:PYTHONPATH -notlike "*$root*") {
+            $env:PYTHONPATH = "$root;$env:PYTHONPATH"
+        }
+        $output = & $PythonExe -m seam.measurement_gates --repo-root $root --tier1-only 2>&1
+        $code = $LASTEXITCODE
+    } finally {
+        $env:PYTHONPATH = $prev
+    }
+    $text = ($output | ForEach-Object { "$_" }) -join "`n"
+    Write-Host $text
+    if ($code -ne 0) {
+        throw "REFUSED -- tier-1 process resident: $text"
+    }
+}
+
 function Assert-BootAc {
     if ($script:EvoT2) {
         Write-Host "battery_present=false ac=pass reason=platform power.has_battery is false (evo-t2 mains-only)"
@@ -1498,6 +1520,12 @@ for ($i = 0; $i -lt $Cells.Count; $i++) {
         try {
             Assert-T2sOwnedWorkers
             Assert-BootAc
+            # The smoke stub is the strict-mode harness. A real launch does not set it.
+            if ($env:SEAM_BOOT_SMOKE_STUB -eq "1") {
+                Write-Host "tier1_gate=skipped smoke_stub"
+            } else {
+                Assert-BootTier1
+            }
             Assert-BootTree | Out-Null
             if ($cell.Kind -eq "det" -or $cell.Kind -eq "warm" -or $cell.Kind -eq "decode" -or $cell.Kind -eq "resident" -or $cell.Kind -eq "exchange" -or $cell.Kind -eq "p1") {
                 Invoke-CellPreamble -Label $cell.Name -SkipGateFile
