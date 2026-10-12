@@ -215,6 +215,57 @@ ARM_CONFIG: dict[str, dict[str, str]] = {
     },
 }
 
+DEFAULT_LOCAL_MODEL = "Qwen3-4B-int4-ov"
+DEFAULT_LOCAL_TIER = "4B"
+KV_MATCH_SEAL_4B = "86d0f4cf-e8c2-4ce5-96da-04c6a9c129f3"
+
+
+def local_model_identity(local: Any) -> dict[str, str]:
+    """Model name and tier of the local backend, read from its model spec.
+
+    ARM_CONFIG names the 4B IR. A backend loaded from another spec (for
+    example configs/models/Qwen3-8B-int4-ov.yaml) must not be recorded as 4B.
+    A backend without a readable spec file (stubs, lifecycle smoke) keeps
+    the 4B default.
+    """
+    import re
+
+    spec = getattr(local, "model_spec", None)
+    if spec is None:
+        return {"model": DEFAULT_LOCAL_MODEL, "tier": DEFAULT_LOCAL_TIER}
+    path = Path(spec)
+    if not path.is_absolute():
+        path = ROOT / path
+    if not path.is_file():
+        return {"model": DEFAULT_LOCAL_MODEL, "tier": DEFAULT_LOCAL_TIER}
+    import yaml
+
+    doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    name = str(doc.get("name") or "").strip()
+    match = re.search(r"-(\d+(?:\.\d+)?B)-", name)
+    if match is None:
+        raise SystemExit(f"REFUSED -- model spec {path} has no tier in its name ({name!r})")
+    return {"model": name, "tier": match.group(1)}
+
+
+def arm_config_for(policy: str, local: Any) -> dict[str, str]:
+    """ARM_CONFIG[policy] with the local model and tier taken from ``local``."""
+    arm = dict(ARM_CONFIG[policy])
+    if arm["placement"] != "cloud":
+        arm.update(local_model_identity(local))
+    return arm
+
+
+def run_platform_id() -> str | None:
+    """Platform the gates resolve to: SEAM_PLATFORM_ID, else the tracked pin."""
+    from seam.measurement_gates import resolve_platform_id
+
+    try:
+        return resolve_platform_id(ROOT)
+    except RuntimeError:
+        return None
+
+
 USD_PER_MTOK_IN = 3.0
 USD_PER_MTOK_OUT = 15.0
 
@@ -2514,7 +2565,7 @@ def run_session(
 
     out_dir.mkdir(parents=True, exist_ok=True)
     run_id = run_id or str(uuid.uuid4())
-    arm = ARM_CONFIG[policy]
+    arm = arm_config_for(policy, local)
     model = model or arm["model"]
     ckpt_path = out_dir / "checkpoint.json"
     ckpt = load_checkpoint(ckpt_path)
@@ -2542,6 +2593,7 @@ def run_session(
         "scorer": assert_scorer_version(),
         "caching_policy": caching_policy,
         "resume_from_completed": sorted(completed),
+        "platform_id": run_platform_id(),
         "git": git_rec,
     }
     from tools.h1_provenance import provenance_block
@@ -2796,7 +2848,7 @@ def run_interleaved_session(
         if quality_path.is_file():
             prev_q = json.loads(quality_path.read_text(encoding="utf-8-sig"))
             quality_rows = list(prev_q.get("entries") or [])
-        arm = ARM_CONFIG[policy]
+        arm = arm_config_for(policy, local)
         state[policy] = {
             "dir": pdir,
             "completed": set(ckpt.get("completed_entry_ids") or []),
@@ -2814,6 +2866,7 @@ def run_interleaved_session(
 
     excl = interleaved_exclusion_meta(policies)
     kind = interleaved_kind(policies)
+    identity = local_model_identity(local)
     plan = {
         "run_id": run_id,
         "kind": kind,
@@ -2832,11 +2885,13 @@ def run_interleaved_session(
         "w3_seal_refs": list(W3_SEAL_REFS),
         "scorer": assert_scorer_version(),
         "caching_policy": caching_policy,
-        "kv_match_seal": "86d0f4cf-e8c2-4ce5-96da-04c6a9c129f3",
+        "kv_match_seal": KV_MATCH_SEAL_4B if identity["tier"] == DEFAULT_LOCAL_TIER else None,
         "placement": "gpu_only",
         "residency": "RESIDENT",
-        "tier": "4B",
+        "tier": identity["tier"],
+        "model": identity["model"],
         "weight": "int4",
+        "platform_id": run_platform_id(),
         "resume_completed_by_policy": {
             p: sorted(state[p]["completed"]) for p in policies
         },

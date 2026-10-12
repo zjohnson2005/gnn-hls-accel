@@ -17,6 +17,9 @@ function Invoke-SeamMeasurementGates {
         [Parameter(Mandatory = $true)][string]$RepoRoot,
         [Parameter(Mandatory = $true)][string]$PythonExe,
         [string]$PlatformId = "",
+        # T2S is not rebooted: skip only the uptime gate; the gate JSON records
+        # the UNCOLD_UPTIME deviation (seam.measurement_gates --skip-uptime).
+        [switch]$SkipUptime,
         [switch]$DryRun
     )
 
@@ -38,6 +41,9 @@ function Invoke-SeamMeasurementGates {
     )
     if (-not [string]::IsNullOrWhiteSpace($PlatformId)) {
         $pyArgs += @("--platform-id", $PlatformId)
+    }
+    if ($SkipUptime) {
+        $pyArgs += "--skip-uptime"
     }
 
     Write-Host "=== measurement gates (PORT-2) ==="

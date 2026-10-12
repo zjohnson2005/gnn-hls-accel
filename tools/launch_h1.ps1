@@ -49,6 +49,18 @@
 # already alive. Two interleaved launches eight minutes apart (2026-09-20) only
 # avoided contention because R2c refused - this check makes that a hard refuse.
 #
+# EVO-T2S (-T2S): SEAM_PLATFORM_ID=evo-t2 for the gates, the canary, the
+# smoke and the detached worker (passed on its command line); Rithwik's
+# watchdog launch-check (C:\apu\ovn\watchdog.log, refuses on a busy queue or
+# a foreign python / llama-server); a venv import check (anthropic,
+# transformers, bfcl_eval); the uptime gate is skipped and recorded as
+# UNCOLD_UPTIME because T2S is not rebooted. Canary onset and floors are the
+# aipc-c1 values (borrowed, as in t2s-boot1). Without -T2S this launcher
+# refuses on a host that has C:\apu\ovn.
+#   powershell -NoProfile -File tools/launch_h1.ps1 -T2S -Interleaved -DryRun
+#   powershell -NoProfile -File tools/launch_h1.ps1 -T2S -Interleaved `
+#     -ModelSpec configs/models/Qwen3-8B-int4-ov.yaml -DryRun
+#
 # Dry-run (gates report-only; spawn suppressed):
 #   powershell -NoProfile -File tools/launch_h1.ps1 -Policy cloud_only -DryRun
 #   powershell -NoProfile -File tools/launch_h1.ps1 -Interleaved -DryRun
@@ -72,7 +84,9 @@ param(
     [string]$LocalScript = "",
     [string]$ModelSpec = "",
     [switch]$AllowUnguarded,
-    [switch]$AllowDirty
+    [switch]$AllowDirty,
+    [switch]$T2S,
+    [string]$WatchdogLog = "C:\apu\ovn\watchdog.log"
 )
 
 $ErrorActionPreference = "Stop"
@@ -248,6 +262,39 @@ if (-not $Interleaved) {
     Write-Host ""
 }
 # ---------------------------------------------------------------------------
+# 0. Platform (EVO-T2S needs -T2S)
+# ---------------------------------------------------------------------------
+Write-Host "=== 0. platform ==="
+$T2sMarker = "C:\apu\ovn"
+if ($T2S) {
+    $env:SEAM_PLATFORM_ID = "evo-t2"
+    Write-Host "platform_id=evo-t2 config=configs/platforms/evo-t2.yaml"
+    Write-Host ("watchdog_log={0}" -f $WatchdogLog)
+    Write-Host "uptime_gate=skipped deviation=UNCOLD_UPTIME (T2S is not rebooted); other gates enforced"
+    Write-Host "canary onset_s=657 and healthy floors are borrowed from aipc-c1 (not an evo-t2 measurement)"
+    $names = @(Get-Process -Name python, llama-server -ErrorAction SilentlyContinue |
+        ForEach-Object { $_.ProcessName })
+    if ($names.Count -eq 0) {
+        $running = "[]"
+    } else {
+        $running = ConvertTo-Json -InputObject @($names) -Compress
+    }
+    & $PythonExe (Join-Path $root "tools\t2s_queue_watchdog.py") launch-check --log $WatchdogLog --running-json $running
+    if ($LASTEXITCODE -ne 0) {
+        Refuse "T2S watchdog launch-check failed (exit $LASTEXITCODE)"
+    }
+    & $PythonExe -c "import anthropic, transformers, bfcl_eval; print('venv_imports_ok')"
+    if ($LASTEXITCODE -ne 0) {
+        Refuse "T2S venv lacks anthropic, transformers or bfcl_eval"
+    }
+} elseif (Test-Path -LiteralPath $T2sMarker) {
+    Refuse "this host has $T2sMarker (EVO-T2S); pass -T2S so the gates and the plan use evo-t2"
+} else {
+    Write-Host "platform_id from SEAM_PLATFORM_ID or configs/platforms/active_platform_id.txt"
+}
+Write-Host ""
+
+# ---------------------------------------------------------------------------
 # 1. Non-persistent host cleaning
 # ---------------------------------------------------------------------------
 Write-Host "=== 1. host cleaning (non-persistent) ==="
@@ -298,7 +345,7 @@ $pythonForGates = if ($PythonExe -and (Test-Path -LiteralPath $PythonExe)) { $Py
     else { Join-Path $root ".venv-seam\Scripts\python.exe" }
 $platformId = if ($env:SEAM_PLATFORM_ID) { $env:SEAM_PLATFORM_ID } else { "" }
 Invoke-SeamMeasurementGates -RepoRoot $root -PythonExe $pythonForGates `
-    -PlatformId $platformId -DryRun:$DryRun
+    -PlatformId $platformId -SkipUptime:$T2S -DryRun:$DryRun
 Write-Host ""
 
 # ---------------------------------------------------------------------------
@@ -379,8 +426,12 @@ if ($Interleaved) {
 New-Item -ItemType Directory -Force -Path $LaunchDir | Out-Null
 $log = Join-Path $LaunchDir "$tagLaunch.log"
 
+# The WMI child does not inherit this shell's environment.
+$envPrefix = 'set SEAM_LAUNCH_CONTEXT=ssh_detached'
+if ($T2S) { $envPrefix = $envPrefix + '&& set SEAM_PLATFORM_ID=evo-t2' }
+
 if ($Interleaved) {
-    $resolvedCmd = 'set SEAM_LAUNCH_CONTEXT=ssh_detached' +
+    $resolvedCmd = $envPrefix +
         '&& "' + $PythonExe + '" -u "' + $WorkerPy + '"' +
         ' --interleaved' +
         ' --session-max-usd ' + $SessionMaxUsd
@@ -393,7 +444,7 @@ if ($Interleaved) {
         ' --run-id ' + $sid +
         ' --entries "' + $W3Entries + '"'
 } else {
-    $resolvedCmd = 'set SEAM_LAUNCH_CONTEXT=ssh_detached' +
+    $resolvedCmd = $envPrefix +
         '&& "' + $PythonExe + '" -u "' + $WorkerPy + '"' +
         ' --policy ' + $Policy +
         ' --max-usd ' + $MaxUsd +
