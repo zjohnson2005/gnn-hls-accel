@@ -66,6 +66,7 @@
 #                       derived/h1_hybrid/demo1/DEMO1_LONGCTX_30.json. Default W-3.
 #   -Placement cpu-p    hybrid local arm on CPU (delta_n arm A). Default gpu_only.
 #   -Residency NON_RESIDENT   full prefill every step. Default RESIDENT.
+#   -PolicyCapUsd "p=usd,..."   interleaved per-policy caps (default table above).
 #   -EntryOffset <i> -EntryCount <n>   one boot's chunk of the pinned entries
 #                       (H1-CPU chunking); the plan records the chunk.
 #   -ObsMaskK <K>       OBS_MASK arm: keep the first K whitespace tokens of every tool
@@ -104,7 +105,10 @@ param(
     [string]$Residency = "",
     [Nullable[int]]$ObsMaskK = $null,
     [Nullable[int]]$EntryOffset = $null,
-    [Nullable[int]]$EntryCount = $null
+    [Nullable[int]]$EntryCount = $null,
+    # Interleaved per-policy caps, overriding the defaults, e.g.
+    # "emission_escalate=3,full_signal_bounceback=2,local_only=0" (H1-CPU amendment 2).
+    [string]$PolicyCapUsd = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -129,10 +133,11 @@ $DefaultPolicyCapUsd = @{
     "emission_escalate"      = 20.0
     "full_signal_bounceback" = 10.0
     "cloud_only"             = 81.1056
+    "local_only"             = 0.0
 }
 
 $DefaultInterleave = @("slo_escalate", "emission_escalate", "full_signal_bounceback")
-$AllowedInterleave = @("slo_escalate", "emission_escalate", "full_signal_bounceback", "cloud_only")
+$AllowedInterleave = @("slo_escalate", "emission_escalate", "full_signal_bounceback", "cloud_only", "local_only")
 
 $PythonExe = Join-Path $root ".venv-seam\Scripts\python.exe"
 $WorkerPy = Join-Path $root "tools\run_h1_hybrid.py"
@@ -249,6 +254,23 @@ if ($Interleaved) {
         if ($hasR2c) { $SessionMaxUsd = [double]35.0 }
         else { $SessionMaxUsd = [double]25.0 }
     }
+    if (-not [string]::IsNullOrWhiteSpace($PolicyCapUsd)) {
+        foreach ($item in @($PolicyCapUsd -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" })) {
+            $kv = $item -split "=", 2
+            if ($kv.Count -ne 2) { Refuse ("-PolicyCapUsd item must be POLICY=USD: {0}" -f $item); exit 1 }
+            $capName = $kv[0].Trim()
+            if ($resolvedInterleavePolicies -notcontains $capName) {
+                Refuse ("-PolicyCapUsd names a policy not in -InterleavedPolicies: {0}" -f $capName)
+                exit 1
+            }
+            $capValue = 0.0
+            if (-not [double]::TryParse($kv[1].Trim(), [ref]$capValue) -or $capValue -lt 0) {
+                Refuse ("-PolicyCapUsd value must be a number >= 0: {0}" -f $item)
+                exit 1
+            }
+            $DefaultPolicyCapUsd[$capName] = $capValue
+        }
+    }
     $tag = if ($hasR2c) { "H1-3POLICY" } else { "H1-2POLICY" }
     Write-Host ("Mode           : INTERLEAVED ({0})" -f $tag)
     Write-Host ("ArmOrder       : {0}" -f ($resolvedInterleavePolicies -join " -> "))
@@ -265,6 +287,9 @@ if ($Interleaved) {
     Write-Host ""
 } elseif (-not [string]::IsNullOrWhiteSpace($InterleavedPolicies)) {
     Refuse "-InterleavedPolicies requires -Interleaved"
+    exit 1
+} elseif (-not [string]::IsNullOrWhiteSpace($PolicyCapUsd)) {
+    Refuse "-PolicyCapUsd requires -Interleaved (single-policy runs use -MaxUsd)"
     exit 1
 } elseif ([string]::IsNullOrWhiteSpace($Policy)) {
     Refuse "Pass -Policy slo_escalate|emission_escalate|cloud_only|full_signal_bounceback, or -Interleaved, or -DeriveR1"

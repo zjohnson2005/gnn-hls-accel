@@ -1,0 +1,120 @@
+{
+ "id": "H1-CPU-AMEND-2",
+ "amends": [
+  "derived/h1_hybrid/H1_CPU_PREREG.json",
+  "derived/h1_hybrid/H1_CPU_AMEND_1.json"
+ ],
+ "does_not_edit_the_prereg": true,
+ "registered_before_any_cell": true,
+ "measurement_status": "not_started",
+ "runner_must_not_read_this_file": true,
+ "approved": "Zach, 2026-10-12 (as drafted in _agent_reports/20261013T0050Z_demo1-prereg-obsmask-h1cpu.md)",
+ "why": "About 24 h of XPS CPU time for 4 arms x 200 entries (analysis/demo1/GROUNDWORK.md section 5) does not fit 7200 s cold boots.",
+ "design": {
+  "placement": "cpu-p (delta_n arm A, as 7f232f86): run_h1_hybrid --placement cpu-p",
+  "residency": "RESIDENT (as registered)",
+  "slo_escalate": {
+   "entries": "all 200 W-3 entries (sha256 3502c5356219f8bf5679f2f5626cb706a1f24b61eb38e51d6921e0fcfcf8628e)",
+   "session_design": "single policy, not interleaved",
+   "boots": [
+    {
+     "boot": 1,
+     "entry_offset": 0,
+     "entry_count": 67
+    },
+    {
+     "boot": 2,
+     "entry_offset": 67,
+     "entry_count": 67
+    },
+    {
+     "boot": 3,
+     "entry_offset": 134,
+     "entry_count": 66
+    }
+   ],
+   "estimate": "about 94 s/entry -> about 6,300 s/boot"
+  },
+  "subset_arms": {
+   "policies": [
+    "emission_escalate",
+    "full_signal_bounceback",
+    "local_only"
+   ],
+   "session_design": "interleaved",
+   "entries": "DEMO1_BASE_30 (derived/h1_hybrid/demo1/DEMO1_BASE_30.json, seed 20260930, sha256 7842d7d960b4acb5d5b09614fbf5a2b06fe752407f766d8df57ddd02e1f0260c)",
+   "boots": [
+    {
+     "boot": 4,
+     "entry_offset": 0,
+     "entry_count": 15
+    },
+    {
+     "boot": 5,
+     "entry_offset": 15,
+     "entry_count": 15
+    }
+   ],
+   "estimate": "about 344 s/entry for 3 arms -> about 5,200 s/boot"
+  },
+  "total_boots": 5,
+  "per_boot": "gates and C=3 canary as registered; each chunk is its own sealed run; the analysis concatenates chunks in entry order"
+ },
+ "predictions": {
+  "slo_escalate": {
+   "statement": "escalates at turn 0 in 200/200 entries",
+   "basis": "cold turn 0 >= 2,152 tokens; 7f232f86 measured 23.2 s at 2,000 tokens on CPU",
+   "cost": "as H1_CPU_AMEND_1: expected 64.64643093818181 USD, cap 72.02903126328212 USD"
+  },
+  "emission_escalate": {
+   "statement": "capability-triggered routing on CPU equals the d482c621 GPU routing on the same entries",
+   "unit": "per entry: escalated or not, first escalation turn, trigger class",
+   "holds_if": "at least 24/30 entries agree",
+   "threshold_basis": "DET-PROBE cb9773be / c46d9c94: 4/20 greedy outputs changed under a pure execution-path change",
+   "gpu_reference_on_these_30": "6 entries escalated (no_parseable_tool_call), 1.56 USD"
+  },
+  "full_signal_bounceback": {
+   "statement": "capability-triggered routing on CPU equals the d482c621 GPU routing on the same entries",
+   "unit": "per entry: escalated or not, first escalation turn, trigger class",
+   "holds_if": "at least 24/30 entries agree",
+   "threshold_basis": "DET-PROBE cb9773be / c46d9c94: 4/20 greedy outputs changed under a pure execution-path change",
+   "gpu_reference_on_these_30": "6 entries (11 no_parseable_tool_call bounces, 1 step_budget), 0.84 USD"
+  },
+  "local_only": {
+   "statement": "cloud cost 0; passes recorded",
+   "gpu_reference_on_these_30": "4/30 local passes"
+  }
+ },
+ "caps_usd": {
+  "slo_escalate": 72.03,
+  "emission_escalate": 3,
+  "full_signal_bounceback": 2,
+  "local_only": 0,
+  "session": 77.03
+ },
+ "per_boot_caps_usd": {
+  "derivation": "Totals as drafted. slo_escalate: 72.03 split in proportion to each chunk's turn count in d482c621 (216 / 252 / 264 of 732; same per-turn method as H1_CPU_AMEND_1). Subset arms: 3 and 2 split in proportion to each half's d482c621 GPU spend (emission 0.940 / 0.625; bounceback 0.639 / 0.202).",
+  "boot1": {
+   "slo_escalate": 21.25
+  },
+  "boot2": {
+   "slo_escalate": 24.8
+  },
+  "boot3": {
+   "slo_escalate": 25.98
+  },
+  "boot4": {
+   "emission_escalate": 1.8,
+   "full_signal_bounceback": 1.52,
+   "local_only": 0,
+   "session": 3.32
+  },
+  "boot5": {
+   "emission_escalate": 1.2,
+   "full_signal_bounceback": 0.48,
+   "local_only": 0,
+   "session": 1.68
+  }
+ },
+ "not_predicted": "wall time per boot (estimated, not registered); quality beyond the routing claim"
+}

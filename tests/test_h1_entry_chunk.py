@@ -90,3 +90,58 @@ def test_launcher_passes_the_chunk() -> None:
     text = (ROOT / "tools" / "launch_h1.ps1").read_text(encoding="ascii")
     assert "' --entry-offset ' + $EntryOffset" in text
     assert "' --entry-count ' + $EntryCount" in text
+
+
+# ---------------------------------------------------------------- H1-CPU amendment 2
+
+AMEND_2 = ROOT / "derived" / "h1_hybrid" / "H1_CPU_AMEND_2.json"
+
+
+def test_amendment_2_boots_cover_the_entry_sets_and_caps_add_up() -> None:
+    doc = json.loads(AMEND_2.read_text(encoding="ascii"))
+    assert doc["runner_must_not_read_this_file"] is True and doc["does_not_edit_the_prereg"]
+    design = doc["design"]
+    slo = design["slo_escalate"]["boots"]
+    assert [(b["entry_offset"], b["entry_count"]) for b in slo] == [(0, 67), (67, 67), (134, 66)]
+    sub = design["subset_arms"]["boots"]
+    assert [(b["entry_offset"], b["entry_count"]) for b in sub] == [(0, 15), (15, 15)]
+    assert design["total_boots"] == 5
+    caps = doc["caps_usd"]
+    assert caps["session"] == 77.03 == round(caps["slo_escalate"] + 3 + 2 + 0, 2)
+    per = doc["per_boot_caps_usd"]
+    assert round(sum(per[f"boot{i}"]["slo_escalate"] for i in (1, 2, 3)), 2) == 72.03
+    assert round(per["boot4"]["emission_escalate"] + per["boot5"]["emission_escalate"], 2) == 3
+    assert (
+        round(per["boot4"]["full_signal_bounceback"] + per["boot5"]["full_signal_bounceback"], 2)
+        == 2
+    )
+    for pred in ("emission_escalate", "full_signal_bounceback"):
+        assert doc["predictions"][pred]["holds_if"] == "at least 24/30 entries agree"
+
+
+def test_runner_and_launcher_never_open_amendment_2(monkeypatch, tmp_path: Path) -> None:
+    for rel in ("tools/run_h1_hybrid.py", "tools/launch_h1.ps1"):
+        text = (ROOT / rel).read_text(encoding="utf-8")
+        assert "H1_CPU_AMEND" not in text and "H1_CPU_PREREG" not in text, rel
+    import builtins
+    import io
+
+    real_open = builtins.open
+
+    def guarded(file, *args, **kwargs):
+        if "H1_CPU_AMEND" in str(file) or "H1_CPU_PREREG" in str(file):
+            raise AssertionError(f"runner opened {file}")
+        return real_open(file, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", guarded)
+    monkeypatch.setattr(io, "open", guarded)
+    test_plan_records_the_chunk(tmp_path)
+
+
+def test_launcher_interleaved_caps_and_local_only() -> None:
+    text = (ROOT / "tools" / "launch_h1.ps1").read_text(encoding="ascii")
+    assert '"local_only"             = 0.0' in text
+    assert '"cloud_only", "local_only")' in text
+    assert '[string]$PolicyCapUsd = ""' in text
+    assert "$DefaultPolicyCapUsd[$capName] = $capValue" in text
+    assert "-PolicyCapUsd requires -Interleaved" in text

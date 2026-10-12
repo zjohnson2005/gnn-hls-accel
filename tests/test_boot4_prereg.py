@@ -22,6 +22,8 @@ PREREG = (
     ROOT / "derived" / "q_kv" / "Q_KV_CLEAN_PREREG.json",
     ROOT / "derived" / "h1_hybrid" / "H1_CPU_PREREG.json",
     ROOT / "derived" / "h1_hybrid" / "H1_CPU_AMEND_1.json",
+    ROOT / "derived" / "h1_hybrid" / "H1_CPU_AMEND_2.json",
+    ROOT / "derived" / "h1_hybrid" / "demo1" / "DEMO_PREREG_v2.json",
     ROOT / "derived" / "h1_hybrid" / "R0_CLOUD_ONLY_PREREG.json",
     ROOT / "derived" / "h1_hybrid" / "CACHE_ARM_PREREG.json",
     ROOT / "derived" / "h1_hybrid" / "LOCAL_QUALITY_PREREG.json",
