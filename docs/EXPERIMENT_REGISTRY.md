@@ -101,7 +101,7 @@ Seal check 2026-10-03 (`tools/seal_verify.py` on the `sealed_` tree when one exi
 | 8a529053 | derived/p1_quality/sealed_8a529053-fc47-486d-8809-6c699d156b06 | MATCH |
 | 385cd4f6 | derived/p1_quality/sealed_385cd4f6-47d4-4ed0-8031-87ac7ef21816 | MATCH tree_sha256 01adc99801c5f571b0c912bbab91865ce68c12679ea1fa173dcaf9512f90bc13 |
 | 3b4d8207 | derived/p1_quality/sealed_3b4d8207-ad36-480a-a717-1c146828d53c | MATCH tree_sha256 6bb5728cffb58c9409e3b94ba68767e640318e41e9fc67d2d39b51882e74c216. entries.jsonl companion seal not needed: pass and in_budget duplicate passed and in_budget_pass on all 100 rows |
-| c76fed24 | NOT IN derived/ (searched derived/, docs/, repo filenames) | NOT IN derived/ |
+| c76fed24 | derived/c2_ttft/sealed_c76fed24-63a9-4b3b-98be-11ff83da7a4c | MATCH (RECONSTRUCTED, launcher boot-end stamp rule, sealed in 19f2442; tree_sha256 1986ba64bda37fb148aca44d163e0076d814c4c01490df01e8a603c5a8df373e; verified 2026-10-12 on the CRLF checkout form; an LF checkout such as the Mac reports MISMATCH, as d2d5cc4a and 56c116a6 do) |
 
 ---
 
