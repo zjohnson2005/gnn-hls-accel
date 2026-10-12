@@ -45,6 +45,9 @@ if str(ROOT) not in sys.path:
 CATEGORIES = ("multi_turn_base", "multi_turn_long_context")
 CLOSING_TEXT = "Done."
 BANDS = ((0, 10_000), (10_000, 18_500), (18_500, None))
+# DEMO-1 envelope bands: [0,468], (468,10000], (10000,16437], (16437,18500], (18500,inf)
+# from the sealed cold limits 7f232f86, c2246b1f, 56c116a6, d2d5cc4a.
+ENVELOPE_EDGES = (468, 10_000, 16_437, 18_500)
 SUBSET_SEED = 20260930
 SUBSET_N = 30
 SUBSET_MIN_CTX = 10_000
@@ -90,13 +93,39 @@ def load_entries(category: str, data_dir: Path) -> list[dict[str, Any]]:
     return probe._select_from_spec(((category, fname, 10_000),), kind="multi_turn")
 
 
-def size_entry(entry: dict[str, Any], tokenizer: Any) -> dict[str, Any]:
+def size_entry(
+    entry: dict[str, Any], tokenizer: Any, *, obs_mask_k: int | None = None
+) -> dict[str, Any]:
+    """Size one entry. obs_mask_k applies the OBS_MASK arm
+    (seam.retention_prompt.mask_observation) to every tool observation the
+    model sees; tool state is unchanged."""
     import tools.bfcl_feasibility_probe as probe
+    from seam.retention_prompt import mask_observation
 
     _install_fake_genai()
     pipe = GoldPipe()
     session = probe.MultiTurnAgentSession(pipe=pipe, tokenizer=tokenizer, cfg=None)
     session.begin(entry)
+    observations: list[dict[str, Any]] = []
+    execute = session._execute_multi_turn_func_call
+
+    def observed(decoded: list[str], *args: Any, **kwargs: Any) -> Any:
+        results, instances = execute(decoded, *args, **kwargs)
+        out = []
+        for call, result in zip(decoded, results, strict=False):
+            text = str(result)
+            shown = text if obs_mask_k is None else mask_observation(text, obs_mask_k)
+            observations.append(
+                {
+                    "call": call.split("(", 1)[0],
+                    "tokens": len(tokenizer(text)["input_ids"]),
+                    "shown_tokens": len(tokenizer(shown)["input_ids"]),
+                }
+            )
+            out.append(shown)
+        return out, instances
+
+    session._execute_multi_turn_func_call = observed
     turns: list[dict[str, Any]] = []
     try:
         for turn_idx, gold in enumerate(entry["reference"]):
@@ -106,7 +135,9 @@ def size_entry(entry: dict[str, Any], tokenizer: Any) -> dict[str, Any]:
                 if calls
                 else [CLOSING_TEXT]
             )
+            seen = len(observations)
             metric = session.run_user_turn(turn_idx)
+            obs = observations[seen:]
             steps = [s for s in metric["steps"] if "prompt_tokens" in s]
             turns.append(
                 {
@@ -116,6 +147,13 @@ def size_entry(entry: dict[str, Any], tokenizer: Any) -> dict[str, Any]:
                     "n_steps": len(steps),
                     "n_gold_calls": len(calls),
                     "tool_exec_error": bool(metric.get("tool_exec_error")),
+                    "max_observation_tokens": max((o["tokens"] for o in obs), default=0),
+                    "max_observation_call": (
+                        max(obs, key=lambda o: o["tokens"])["call"] if obs else None
+                    ),
+                    "max_shown_observation_tokens": max(
+                        (o["shown_tokens"] for o in obs), default=0
+                    ),
                 }
             )
             if session.force_quit:
@@ -137,6 +175,32 @@ def _quantile(values: list[int], q: float) -> int:
     return ordered[min(len(ordered) - 1, round(q * (len(ordered) - 1)))]
 
 
+def envelope_band(n: float) -> str:
+    """Name of the DEMO-1 envelope band that holds n."""
+    lo = 0
+    for edge in ENVELOPE_EDGES:
+        if n <= edge:
+            return f"({lo},{edge}]" if lo else f"[0,{edge}]"
+        lo = edge
+    return f"({lo},inf)"
+
+
+def envelope_bands(per_turn: list[float], per_entry: list[float]) -> dict[str, Any]:
+    """Count and share of turns, and of entries by their max, per envelope band."""
+    names = [envelope_band(e) for e in ENVELOPE_EDGES] + [envelope_band(ENVELOPE_EDGES[-1] + 1)]
+    out: dict[str, Any] = {}
+    for name in names:
+        turns = sum(envelope_band(n) == name for n in per_turn)
+        entries = sum(envelope_band(n) == name for n in per_entry)
+        out[name] = {
+            "turns": turns,
+            "turn_share": round(turns / len(per_turn), 4) if per_turn else None,
+            "entries_by_max": entries,
+            "entry_share": round(entries / len(per_entry), 4) if per_entry else None,
+        }
+    return out
+
+
 def summarize(rows: list[dict[str, Any]]) -> dict[str, Any]:
     per_turn = [t["n_ctx"] for r in rows for t in r["turns"]]
     per_entry = [r["max_n_ctx"] for r in rows if r["max_n_ctx"] is not None]
@@ -151,6 +215,7 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "turns": sum(inside(n) for n in per_turn),
             "entries_by_max": sum(inside(n) for n in per_entry),
         }
+    envelope = envelope_bands(per_turn, per_entry)
     has_mid = [
         r["entry_id"] for r in rows if any(10_000 < t["n_ctx"] <= 18_500 for t in r["turns"])
     ]
@@ -170,6 +235,7 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "max": max(per_entry),
         },
         "bands": bands,
+        "envelope_bands": envelope,
         "entries_with_a_turn_in_10000_18500": len(has_mid),
         "tool_exec_errors": sum(t["tool_exec_error"] for r in rows for t in r["turns"]),
     }
@@ -196,16 +262,29 @@ def tokenizer_record(path: Path) -> dict[str, Any]:
     return {"dir": "scratch (not committed)", "sha256": files}
 
 
-def select_subset(sizing: dict[str, Any]) -> tuple[list[str], list[str]]:
-    """(eligible ids, selected ids), both in file order."""
-    eligible = [
-        r["entry_id"]
-        for r in sizing["entries"]
-        if any(t["n_ctx"] > SUBSET_MIN_CTX for t in r["turns"])
-    ]
-    if len(eligible) < SUBSET_N:
-        raise SystemExit(f"REFUSED -- {len(eligible)} eligible entries < {SUBSET_N}")
-    chosen = set(random.Random(SUBSET_SEED).sample(eligible, SUBSET_N))
+def select_subset(
+    sizing: dict[str, Any],
+    *,
+    n: int = SUBSET_N,
+    min_ctx: int | None = SUBSET_MIN_CTX,
+    max_ctx: int | None = None,
+) -> tuple[list[str], list[str]]:
+    """(eligible ids, selected ids), both in file order.
+
+    Eligible: an entry with a turn n_ctx > min_ctx (None: every entry), and,
+    when max_ctx is given, a largest turn n_ctx <= max_ctx.
+    """
+    eligible = []
+    for r in sizing["entries"]:
+        largest = max((t["n_ctx"] for t in r["turns"]), default=0)
+        if min_ctx is not None and largest <= min_ctx:
+            continue
+        if max_ctx is not None and largest > max_ctx:
+            continue
+        eligible.append(r["entry_id"])
+    if len(eligible) < n:
+        raise SystemExit(f"REFUSED -- {len(eligible)} eligible entries < {n}")
+    chosen = set(random.Random(SUBSET_SEED).sample(eligible, n))
     return eligible, [e for e in eligible if e in chosen]
 
 
@@ -213,9 +292,17 @@ def entries_bytes(entries: list[dict[str, Any]]) -> bytes:
     return (json.dumps(entries, indent=2, ensure_ascii=True) + "\n").encode("ascii")
 
 
-def make_subset(sizing_path: Path, out: Path, data_dir: Path | None) -> int:
+def make_subset(
+    sizing_path: Path,
+    out: Path,
+    data_dir: Path | None,
+    *,
+    n: int = SUBSET_N,
+    min_ctx: int | None = SUBSET_MIN_CTX,
+    max_ctx: int | None = None,
+) -> int:
     sizing = json.loads(sizing_path.read_text(encoding="utf-8"))
-    eligible, selected = select_subset(sizing)
+    eligible, selected = select_subset(sizing, n=n, min_ctx=min_ctx, max_ctx=max_ctx)
     by_id = {e["id"]: e for e in load_entries(sizing["category"], bfcl_data_dir(data_dir))}
     entries = [by_id[i] for i in selected]
     payload = entries_bytes(entries)
@@ -227,10 +314,18 @@ def make_subset(sizing_path: Path, out: Path, data_dir: Path | None) -> int:
         "name": out.stem,
         "category": sizing["category"],
         "rule": (
-            f"eligible = entries with a turn whose gold n_ctx > {SUBSET_MIN_CTX}; "
-            f"random.Random({SUBSET_SEED}).sample(eligible in file order, {SUBSET_N}); "
-            "kept in file order"
+            "eligible = "
+            + (
+                "every entry"
+                if min_ctx is None
+                else f"entries with a turn whose gold n_ctx > {min_ctx}"
+            )
+            + ("" if max_ctx is None else f" and largest turn n_ctx <= {max_ctx}")
+            + f"; random.Random({SUBSET_SEED}).sample(eligible in file order, {n}); kept in file order"
         ),
+        "sizing_file": sizing_path.as_posix(),
+        "retention_arm": sizing.get("retention_arm", "FULL"),
+        "obs_mask_k": sizing.get("obs_mask_k"),
         "seed": SUBSET_SEED,
         "n": len(entries),
         "entries_sha256": hashlib.sha256(payload).hexdigest(),
@@ -253,11 +348,27 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--tokenizer", type=Path)
     parser.add_argument("--bfcl-data", type=Path, default=None)
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--obs-mask-k", type=int, default=None, help="OBS_MASK arm K")
     parser.add_argument("--make-subset", type=Path, help="sizing JSON to draw the subset from")
+    parser.add_argument("--subset-n", type=int, default=SUBSET_N)
+    parser.add_argument(
+        "--subset-min-ctx",
+        default=str(SUBSET_MIN_CTX),
+        help="eligible if a turn n_ctx exceeds this; 'none' = every entry",
+    )
+    parser.add_argument("--subset-max-ctx", type=int, default=None)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args(argv)
     if args.make_subset is not None:
-        return make_subset(args.make_subset, args.out, args.bfcl_data)
+        min_ctx = None if str(args.subset_min_ctx).lower() == "none" else int(args.subset_min_ctx)
+        return make_subset(
+            args.make_subset,
+            args.out,
+            args.bfcl_data,
+            n=args.subset_n,
+            min_ctx=min_ctx,
+            max_ctx=args.subset_max_ctx,
+        )
     if args.category is None or args.tokenizer is None:
         raise SystemExit("REFUSED -- sizing needs --category and --tokenizer")
 
@@ -267,12 +378,14 @@ def main(argv: list[str] | None = None) -> int:
     entries = load_entries(args.category, bfcl_data_dir(args.bfcl_data))
     if args.limit is not None:
         entries = entries[: args.limit]
-    rows = [size_entry(e, tokenizer) for e in entries]
+    rows = [size_entry(e, tokenizer, obs_mask_k=args.obs_mask_k) for e in entries]
     doc = {
         "kind": "h1_context_sizing",
         "measurement": False,
         "trajectory": "gold (BFCL ground-truth calls, one step per turn, closing text 'Done.')",
         "category": args.category,
+        "retention_arm": "FULL" if args.obs_mask_k is None else "OBS_MASK",
+        "obs_mask_k": args.obs_mask_k,
         "prompt_render": "bfcl_feasibility_probe.render_bfcl_tools_style via MultiTurnAgentSession",
         "n_ctx_definition": "step-0 prompt tokens of each user turn (the H1 ledger n_ctx)",
         "versions": _versions(),

@@ -59,6 +59,11 @@ W3_SEAL_REFS = (
 # tools/h1_context_sizing.py --make-subset (seed 20260930; rule in its
 # .meta.json).
 DEMO1_LONGCTX_30_SHA256 = "7a71fa6ab4a649bdc18b2c994c9904e44f5667a680abadf2f79147f6ed2513cb"
+DEMO1_BASE_30_SHA256 = "7842d7d960b4acb5d5b09614fbf5a2b06fe752407f766d8df57ddd02e1f0260c"
+DEMO1_LONGCTX_15_SHA256 = "7311610496286db6af4af8e98aa49723cdaaaf61d139d8c30d074358b18befdd"
+DEMO1_LONGCTX_OBSK1024_15_SHA256 = (
+    "3d6dc25f574019025a915c434ec4e7f284fca888e2e3935f0520b2385b939995"
+)
 ENTRY_PINS: dict[str, dict[str, Any]] = {
     W3_ENTRIES_SHA256: {"name": "W3_multi_turn_base_200", "n": 200, "seal_refs": list(W3_SEAL_REFS)},
     DEMO1_LONGCTX_30_SHA256: {
@@ -67,6 +72,30 @@ ENTRY_PINS: dict[str, dict[str, Any]] = {
         "path": "derived/h1_hybrid/demo1/DEMO1_LONGCTX_30.json",
         "category": "multi_turn_long_context",
         "seed": 20260930,
+    },
+    DEMO1_BASE_30_SHA256: {
+        "name": "DEMO1_BASE_30",
+        "n": 30,
+        "path": "derived/h1_hybrid/demo1/DEMO1_BASE_30.json",
+        "category": "multi_turn_base",
+        "seed": 20260930,
+    },
+    DEMO1_LONGCTX_15_SHA256: {
+        "name": "DEMO1_LONGCTX_15",
+        "n": 15,
+        "path": "derived/h1_hybrid/demo1/DEMO1_LONGCTX_15.json",
+        "category": "multi_turn_long_context",
+        "seed": 20260930,
+    },
+    # Entries for DEMO-1 V4: chosen by the OBS_MASK K=1024 sizing; the arm
+    # itself is not in the live runner yet (DEMO-1 tooling gap).
+    DEMO1_LONGCTX_OBSK1024_15_SHA256: {
+        "name": "DEMO1_LONGCTX_OBSK1024_15",
+        "n": 15,
+        "path": "derived/h1_hybrid/demo1/DEMO1_LONGCTX_OBSK1024_15.json",
+        "category": "multi_turn_long_context",
+        "seed": 20260930,
+        "retention_arm_required": "OBS_MASK K=1024",
     },
 }
 ENTRY_PIN_DEFAULT: dict[str, Any] = {"sha256": W3_ENTRIES_SHA256, **ENTRY_PINS[W3_ENTRIES_SHA256]}

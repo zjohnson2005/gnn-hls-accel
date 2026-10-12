@@ -309,3 +309,81 @@ def test_launcher_passes_entries_placement_residency() -> None:
     assert "' --placement ' + $Placement" in text
     assert "' --residency ' + $Residency" in text
     assert text.count("' --entries \"' + $RunEntries + '\"'") == 2
+
+
+# ---------------------------------------------------------------- DEMO-1 v2 groundwork
+
+import tools.demo1_atlas as atlas_mod  # noqa: E402
+
+ATLAS_JSON = ROOT / "analysis" / "demo1" / "DEMO1_ATLAS.json"
+
+
+def test_envelope_band_edges() -> None:
+    assert sizing.envelope_band(468) == "[0,468]"
+    assert sizing.envelope_band(469) == "(468,10000]"
+    assert sizing.envelope_band(10_000) == "(468,10000]"
+    assert sizing.envelope_band(16_437) == "(10000,16437]"
+    assert sizing.envelope_band(18_500) == "(16437,18500]"
+    assert sizing.envelope_band(18_501) == "(18500,inf)"
+
+
+def test_new_pins_reproduce_from_the_atlas() -> None:
+    cases = (
+        ("DEMO1_BASE_30", "multi_turn_base_FULL", 30, None, None),
+        ("DEMO1_LONGCTX_15", "multi_turn_long_context_FULL", 15, 10_000, None),
+        (
+            "DEMO1_LONGCTX_OBSK1024_15",
+            "multi_turn_long_context_OBS_MASK_K1024",
+            15,
+            10_000,
+            18_500,
+        ),
+    )
+    for pin, stem, n, lo, hi in cases:
+        doc = json.loads((ROOT / "analysis" / "demo1" / "atlas" / f"{stem}.json").read_text())
+        eligible, selected = sizing.select_subset(doc, n=n, min_ctx=lo, max_ctx=hi)
+        meta = json.loads((DEMO / f"{pin}.meta.json").read_text(encoding="utf-8"))
+        assert meta["selected"] == selected and meta["eligible"] == eligible
+        assert _sha256_file(DEMO / f"{pin}.json") == meta["entries_sha256"]
+        assert assert_entry_set_pinned(DEMO / f"{pin}.json")["name"] == pin
+    assert (
+        len(json.loads((DEMO / "DEMO1_LONGCTX_OBSK1024_15.meta.json").read_text())["eligible"])
+        == 37
+    )
+
+
+def test_edge_interpolation_is_log_log_and_bounded() -> None:
+    med = {1000: 1.0, 4000: 16.0}
+    got = atlas_mod.edge_at(med, 4.0)
+    assert got is not None and got["n"] == 2000 and got["between"] == [1000, 4000]
+    assert atlas_mod.edge_at(med, 0.5) is None
+    assert atlas_mod.edge_at(med, 20.0) is None
+
+
+def test_slo_sens_edges_from_sealed_runs() -> None:
+    edges = atlas_mod.slo_edges()
+    assert edges["xps_gpu_4b_u8"]["10s"]["source"] == "c2246b1f"
+    assert 10_000 < edges["xps_gpu_4b_u8"]["10s"]["n"] < 10_250
+    assert edges["t2s_gpu_4b_u8"]["20s"]["source"] == "65e33de8"
+    assert edges["xps_gpu_4b_u8"]["5s"]["n"] is None
+    assert edges["xps_gpu_4b_u8"]["5s"]["bound"].startswith("< 8000")
+    assert edges["xps_cpu_4b"]["5s"]["bound"].startswith("< 250")
+
+
+def test_committed_atlas_is_current(tmp_path: Path) -> None:
+    out = tmp_path / "atlas.json"
+    assert atlas_mod.main(["--out", str(out)]) == 0
+    assert json.loads(out.read_text()) == json.loads(ATLAS_JSON.read_text())
+
+
+def test_route_and_predict_cell() -> None:
+    assert atlas_mod.route_entry([2000, 5000, 34000, 34100], 10_000) == 2
+    assert atlas_mod.route_entry([2000, 5000], 10_000) == 2
+    cell = atlas_mod.predict_cell({"a": [2000, 12_000, 20_000]}, "xps_gpu_4b_u8")
+    lo, hi = cell["low"], cell["high"]
+    assert lo["local_share"] == round(1 / 3, 3) and lo["escalations_ttft"] == 1
+    assert lo["split_usd"]["latency"] > 0 and lo["split_usd"]["context"] > 0
+    assert lo["split_usd"]["capability"] == 0.0
+    ref = atlas_mod.predict_cell({"a": [2000, 12_000, 20_000]}, None)["low"]
+    assert ref["local_share"] == 0.0
+    assert ref["usd"] == round(34_000 * 7.11 * 3.20e-6, 2)
