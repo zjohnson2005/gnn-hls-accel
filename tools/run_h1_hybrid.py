@@ -64,6 +64,7 @@ DEMO1_LONGCTX_15_SHA256 = "7311610496286db6af4af8e98aa49723cdaaaf61d139d8c30d074
 DEMO1_LONGCTX_OBSK1024_15_SHA256 = (
     "3d6dc25f574019025a915c434ec4e7f284fca888e2e3935f0520b2385b939995"
 )
+DEMO1_PAIRED_15_SHA256 = "71faf5455559887cf0aa3c7a8317fab641b27c939b0643e501eeab5f63f9c080"
 ENTRY_PINS: dict[str, dict[str, Any]] = {
     W3_ENTRIES_SHA256: {"name": "W3_multi_turn_base_200", "n": 200, "seal_refs": list(W3_SEAL_REFS)},
     DEMO1_LONGCTX_30_SHA256: {
@@ -96,6 +97,14 @@ ENTRY_PINS: dict[str, dict[str, Any]] = {
         "category": "multi_turn_long_context",
         "seed": 20260930,
         "retention_arm_required": "OBS_MASK K=1024",
+    },
+    # DEMO-1 V3 (FULL) and V4 (OBS_MASK K=1024) on the same 15 entries.
+    DEMO1_PAIRED_15_SHA256: {
+        "name": "DEMO1_PAIRED_15",
+        "n": 15,
+        "path": "derived/h1_hybrid/demo1/DEMO1_PAIRED_15.json",
+        "category": "multi_turn_long_context",
+        "seed": 20260930,
     },
 }
 ENTRY_PIN_DEFAULT: dict[str, Any] = {"sha256": W3_ENTRIES_SHA256, **ENTRY_PINS[W3_ENTRIES_SHA256]}

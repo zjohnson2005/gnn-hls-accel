@@ -273,14 +273,25 @@ def select_subset(
     n: int = SUBSET_N,
     min_ctx: int | None = SUBSET_MIN_CTX,
     max_ctx: int | None = None,
+    also: dict[str, Any] | None = None,
+    also_min_ctx: int | None = None,
 ) -> tuple[list[str], list[str]]:
     """(eligible ids, selected ids), both in file order.
 
     Eligible: an entry with a turn n_ctx > min_ctx (None: every entry), and,
-    when max_ctx is given, a largest turn n_ctx <= max_ctx.
+    when max_ctx is given, a largest turn n_ctx <= max_ctx. With ``also`` (a
+    second sizing of the same entries, e.g. FULL vs OBS_MASK), the entry's
+    largest turn there must also exceed ``also_min_ctx``.
     """
+    also_max = (
+        {r["entry_id"]: max((t["n_ctx"] for t in r["turns"]), default=0) for r in also["entries"]}
+        if also is not None
+        else None
+    )
     eligible = []
     for r in sizing["entries"]:
+        if also_max is not None and also_max.get(r["entry_id"], 0) <= int(also_min_ctx or 0):
+            continue
         largest = max((t["n_ctx"] for t in r["turns"]), default=0)
         if min_ctx is not None and largest <= min_ctx:
             continue
@@ -305,9 +316,14 @@ def make_subset(
     n: int = SUBSET_N,
     min_ctx: int | None = SUBSET_MIN_CTX,
     max_ctx: int | None = None,
+    also_path: Path | None = None,
+    also_min_ctx: int | None = None,
 ) -> int:
     sizing = json.loads(sizing_path.read_text(encoding="utf-8"))
-    eligible, selected = select_subset(sizing, n=n, min_ctx=min_ctx, max_ctx=max_ctx)
+    also = json.loads(also_path.read_text(encoding="utf-8")) if also_path is not None else None
+    eligible, selected = select_subset(
+        sizing, n=n, min_ctx=min_ctx, max_ctx=max_ctx, also=also, also_min_ctx=also_min_ctx
+    )
     by_id = {e["id"]: e for e in load_entries(sizing["category"], bfcl_data_dir(data_dir))}
     entries = [by_id[i] for i in selected]
     payload = entries_bytes(entries)
@@ -326,6 +342,11 @@ def make_subset(
                 else f"entries with a turn whose gold n_ctx > {min_ctx}"
             )
             + ("" if max_ctx is None else f" and largest turn n_ctx <= {max_ctx}")
+            + (
+                ""
+                if also_path is None
+                else f" and largest turn n_ctx > {also_min_ctx} in {also_path.as_posix()}"
+            )
             + f"; random.Random({SUBSET_SEED}).sample(eligible in file order, {n}); kept in file order"
         ),
         "sizing_file": sizing_path.as_posix(),
@@ -362,6 +383,8 @@ def main(argv: list[str] | None = None) -> int:
         help="eligible if a turn n_ctx exceeds this; 'none' = every entry",
     )
     parser.add_argument("--subset-max-ctx", type=int, default=None)
+    parser.add_argument("--subset-also-sizing", type=Path, default=None)
+    parser.add_argument("--subset-also-min-ctx", type=int, default=None)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args(argv)
     if args.make_subset is not None:
@@ -373,6 +396,8 @@ def main(argv: list[str] | None = None) -> int:
             n=args.subset_n,
             min_ctx=min_ctx,
             max_ctx=args.subset_max_ctx,
+            also_path=args.subset_also_sizing,
+            also_min_ctx=args.subset_also_min_ctx,
         )
     if args.category is None or args.tokenizer is None:
         raise SystemExit("REFUSED -- sizing needs --category and --tokenizer")

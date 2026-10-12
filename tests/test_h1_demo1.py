@@ -387,3 +387,37 @@ def test_route_and_predict_cell() -> None:
     ref = atlas_mod.predict_cell({"a": [2000, 12_000, 20_000]}, None)["low"]
     assert ref["local_share"] == 0.0
     assert ref["usd"] == round(34_000 * 7.11 * 3.20e-6, 2)
+
+
+def test_paired_pin_v3_v4() -> None:
+    full = json.loads((ROOT / "analysis/demo1/atlas/multi_turn_long_context_FULL.json").read_text())
+    k1024 = json.loads(
+        (ROOT / "analysis/demo1/atlas/multi_turn_long_context_OBS_MASK_K1024.json").read_text()
+    )
+    eligible, selected = sizing.select_subset(
+        k1024, n=15, min_ctx=10_000, max_ctx=18_500, also=full, also_min_ctx=18_500
+    )
+    meta = json.loads((DEMO / "DEMO1_PAIRED_15.meta.json").read_text(encoding="utf-8"))
+    assert meta["eligible"] == eligible and meta["selected"] == selected and len(eligible) == 36
+    assert assert_entry_set_pinned(DEMO / "DEMO1_PAIRED_15.json")["name"] == "DEMO1_PAIRED_15"
+    assert atlas_mod.CELLS["V3"][0] == atlas_mod.CELLS["V4"][0] == "DEMO1_PAIRED_15"
+    fmax = {r["entry_id"]: max(t["n_ctx"] for t in r["turns"]) for r in full["entries"]}
+    kmax = {r["entry_id"]: max(t["n_ctx"] for t in r["turns"]) for r in k1024["entries"]}
+    assert all(fmax[e] > 18_500 and 10_000 < kmax[e] <= 18_500 for e in selected)
+
+
+def test_k_rule_selects_1024() -> None:
+    full = {r["entry_id"]: r for r in atlas_mod.rows_for("multi_turn_long_context_FULL")}
+    jump = [e for e, r in full.items() if any(t["n_ctx"] > 10_000 for t in r["turns"])]
+    chosen = None
+    for k in atlas_mod.SWEPT_K:
+        rows = {
+            r["entry_id"]: r for r in atlas_mod.rows_for(f"multi_turn_long_context_OBS_MASK_K{k}")
+        }
+        share = sum(
+            10_000 < max(t["n_ctx"] for t in rows[e]["turns"]) <= 18_500 for e in jump
+        ) / len(jump)
+        if share >= 0.9:
+            chosen = k
+            break
+    assert len(jump) == 40 and chosen == 1024

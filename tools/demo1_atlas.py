@@ -281,13 +281,27 @@ def pin_entries(pin: str, sizing_stem: str) -> dict[str, list[int]]:
 CELLS = {
     "V1": ("DEMO1_BASE_30", "multi_turn_base_FULL", ("xps_gpu_4b_u8", "t2s_gpu_4b_u8")),
     "V2": ("DEMO1_BASE_30", "multi_turn_base_FULL", ("xps_cpu_4b",)),
-    "V3": ("DEMO1_LONGCTX_15", "multi_turn_long_context_FULL", ("xps_gpu_4b_u8", "t2s_gpu_4b_u8")),
+    # V3 and V4 share DEMO1_PAIRED_15 (docs/DEMO1_DESIGN.md, pairing).
+    "V3": ("DEMO1_PAIRED_15", "multi_turn_long_context_FULL", ("xps_gpu_4b_u8", "t2s_gpu_4b_u8")),
     "V4": (
-        "DEMO1_LONGCTX_OBSK1024_15",
+        "DEMO1_PAIRED_15",
         "multi_turn_long_context_OBS_MASK_K1024",
         ("xps_gpu_4b_u8", "t2s_gpu_4b_u8"),
     ),
 }
+SWEPT_K = (256, 512, 1024, 1536, 2048, 4096, 8192, 16384)
+
+
+def v4_at_every_k() -> dict[str, Any]:
+    """V4 predictions on DEMO1_PAIRED_15 at every swept K (K rule sensitivity)."""
+    out: dict[str, Any] = {}
+    for k in SWEPT_K:
+        entries = pin_entries("DEMO1_PAIRED_15", f"multi_turn_long_context_OBS_MASK_K{k}")
+        out[str(k)] = {
+            "all_cloud_reference": predict_cell(entries, None),
+            "configs": {c: predict_cell(entries, c) for c in ("xps_gpu_4b_u8", "t2s_gpu_4b_u8")},
+        }
+    return out
 
 
 def predictions() -> dict[str, Any]:
@@ -328,8 +342,9 @@ def main(argv: list[str] | None = None) -> int:
     args.out.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     if args.predictions_out is not None:
         args.predictions_out.parent.mkdir(parents=True, exist_ok=True)
+        doc_pred = {"cells": predictions(), "v4_at_every_k": v4_at_every_k()}
         args.predictions_out.write_text(
-            json.dumps(predictions(), indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            json.dumps(doc_pred, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
     print(f"ATLAS {args.out}")
     return 0

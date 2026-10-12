@@ -106,6 +106,24 @@ Notes:
   collapses whitespace, which changes n_ctx by a few tokens.
 - The prereg reports V4 predictions at every swept K, not only at K = 1024.
 
+## V3 / V4 pairing (2026-10-12)
+
+V3 (FULL) and V4 (OBS_MASK, K = 1024) run on the same 15 entries, so V3 vs
+V4 measures retention value on identical tasks. The pin is
+derived/h1_hybrid/demo1/DEMO1_PAIRED_15.json (sha256
+71faf5455559887cf0aa3c7a8317fab641b27c939b0643e501eeab5f63f9c080).
+- Eligible: entries whose largest gold turn exceeds 18,500 under FULL (a
+  context jump) and lies in (10,000, 18,500] under K = 1024. That is 36
+  entries.
+- Draw: random.Random(20260930).sample 15, kept in file order.
+
+This replaces two earlier pins for V3 and V4: DEMO1_LONGCTX_15 for V3, and
+DEMO1_LONGCTX_OBSK1024_15 for V4, which shares 8 entries with the new pin.
+The earlier V4 pin included multi_turn_long_context_59, whose FULL peak
+(11,057) is already in band. Under FULL that entry would add latency spend
+to V3, so V3 would no longer test context spend only. Both earlier pins stay
+committed and accepted by the runner, unused by DEMO-1.
+
 ## Outputs
 
 - In-band share per workload: the share of turns in (10,000, 18,500].
