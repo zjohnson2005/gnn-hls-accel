@@ -11,6 +11,13 @@ and rung prompt builder. This script does not open a preregistration,
 amendment, prediction or rule file.
 
 Final stdout line: NATSTOP_VERDICT <N1|N2|N3|N4> <out_dir>
+
+--prompt-set chat is the NPU-NATSTOP-B scope check: the same devices and
+templates on 2 fixed short chat prompts (8 cells), classified B1-B4 under the
+real-token validity rule. Its final stdout line is
+NATSTOP_B_VERDICT <B1|B2|B3|B4> <out_dir>. The prompt texts and the validity
+constants are written here and in the amendment; this script does not open
+the amendment.
 """
 
 from __future__ import annotations
@@ -31,7 +38,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from seam.npu_validity import REPEAT_FRACTION_MAX, fourgram_repeat_fraction  # noqa: E402
-from seam.tools.boot4_text import id_count, rendered_exact_prompt  # noqa: E402
+from seam.tools.boot4_text import id_count, render_user, rendered_exact_prompt  # noqa: E402
 from tools.npu_maxlen_diag import (  # noqa: E402
     _git,
     _jsonable,
@@ -63,14 +70,32 @@ DEFAULT_MODEL_SPEC = ROOT / "configs" / "models" / "Qwen3-4B-int4-ov.yaml"
 DEFAULT_OUT = ROOT / "derived" / "npu"
 DEFAULT_WATCHDOG_LOG = r"C:\apu\ovn\watchdog.log"
 
+PROMPT_SETS = ("filler", "chat")
+# NPU-NATSTOP-B prompts (fixed text, user turn, thinking disabled).
+CHAT_PROMPTS = {
+    "chat1": "What is the capital of France? Answer in one sentence.",
+    "chat2": "Give three tips for staying focused while studying.",
+}
+# Validity rule (amendment 2026-10-12), derived from the 8 GPU cells of
+# natstop_6b39a76e: K = fewest real tokens in a GPU cell (62, DOUBLE: 64 ids
+# less <think> and one newline); T = highest GPU id 4-gram repeat (27/61, GPU
+# DOUBLE 64, which quotes the repeated filler).
+VALID_MIN_REAL_TOKENS = 62
+VALID_REPEAT_MAX = 27 / 61
 
-def cell_order() -> list[tuple[str, str, int]]:
-    """For each length ascending: NPU SINGLE, NPU DOUBLE, GPU SINGLE, GPU DOUBLE."""
-    return [(d, t, n) for n in LENGTHS for d in DEVICES for t in TEMPLATES]
+
+def items_for(prompt_set: str = "filler") -> tuple[Any, ...]:
+    """Lengths for the filler set; prompt ids for the chat set."""
+    return LENGTHS if prompt_set == "filler" else tuple(CHAT_PROMPTS)
 
 
-def cell_key(device: str, template: str, n_tokens: int) -> str:
-    return f"{device}_{template}_{n_tokens}"
+def cell_order(prompt_set: str = "filler") -> list[tuple[str, str, Any]]:
+    """For each length (or prompt): NPU SINGLE, NPU DOUBLE, GPU SINGLE, GPU DOUBLE."""
+    return [(d, t, n) for n in items_for(prompt_set) for d in DEVICES for t in TEMPLATES]
+
+
+def cell_key(device: str, template: str, item: Any) -> str:
+    return f"{device}_{template}_{item}"
 
 
 # ---------------------------------------------------------------- definitions
@@ -201,6 +226,65 @@ def classify(cells: dict[str, Any]) -> str:
     return "N4"
 
 
+def real_token_count(cell: dict[str, Any] | None) -> int | None:
+    """Recorded by the child: generated ids that are not think tags, not in
+    the stop set, and do not decode to whitespace only."""
+    if not isinstance(cell, dict):
+        return None
+    count = cell.get("real_token_count")
+    return count if isinstance(count, int) else None
+
+
+def valid(cell: dict[str, Any] | None, reference: dict[str, Any] | None) -> bool:
+    """Amendment 2026-10-12 validity rule.
+
+    Cell ok, at least max(1, K_eff) real tokens, id 4-gram repeat <= T.
+    K_eff = min(K, real tokens of the paired GPU cell) when that cell stopped
+    by EOS (a short answer is the reference length); K when it hit max.
+    """
+    if not cell_ok(cell):
+        return False
+    assert cell is not None
+    count = real_token_count(cell)
+    if count is None:
+        return False
+    k_eff = VALID_MIN_REAL_TOKENS
+    ref_count = real_token_count(reference)
+    if cell_ok(reference) and stop_reason(reference) == "EOS" and ref_count is not None:
+        k_eff = min(k_eff, ref_count)
+    if count < max(1, k_eff):
+        return False
+    fraction = id_repeat_fraction(cell)
+    return fraction is None or fraction <= VALID_REPEAT_MAX
+
+
+def classify_scope(cells: dict[str, Any]) -> str:
+    """NPU-NATSTOP-B rule, by code. First match wins.
+
+    G: every GPU SINGLE chat cell is valid (its own reference); else B4.
+    B1: every NPU chat cell (both templates, both prompts) is invalid.
+    B2: NPU SINGLE valid on both prompts, or NPU DOUBLE valid on both.
+    B3: anything else (mixed).
+    """
+
+    def get(device: str, template: str, item: str) -> dict[str, Any] | None:
+        cell = cells.get(cell_key(device, template, item))
+        return cell if isinstance(cell, dict) else None
+
+    prompts = tuple(CHAT_PROMPTS)
+    if not all(valid(get("GPU", "SINGLE", p), get("GPU", "SINGLE", p)) for p in prompts):
+        return "B4"
+
+    def npu_valid(template: str, p: str) -> bool:
+        return valid(get("NPU", template, p), get("GPU", template, p))
+
+    if not any(npu_valid(t, p) for t in TEMPLATES for p in prompts):
+        return "B1"
+    if any(all(npu_valid(t, p) for p in prompts) for t in TEMPLATES):
+        return "B2"
+    return "B3"
+
+
 # ---------------------------------------------------------------- child
 
 
@@ -253,6 +337,17 @@ def generation_fields(
     stop_set = set(eos.get("stop_token_ids") or [])
     if isinstance(eos.get("eos_token_id"), int):
         stop_set.add(int(eos["eos_token_id"]))
+    real_count = None
+    if tokenizer is not None:
+        real_count = 0
+        for token in ids:
+            if token in stop_set:
+                continue
+            piece = decode_one(tokenizer, token) or ""
+            for tag in THINK_TAGS:
+                piece = piece.replace(tag, "")
+            if piece.strip():
+                real_count += 1
     kv_room = None
     if device == "NPU" and isinstance(reported, int):
         kv_room = NPU_MAX_PROMPT_LEN + MIN_RESPONSE_LEN - reported
@@ -266,6 +361,7 @@ def generation_fields(
         "streamer_tokens": out.get("streamer_tokens"),
         "first_token_id": first,
         "first_token_text": decode_one(tokenizer, first),
+        "real_token_count": real_count,
         "last_id_in_stop_set": bool(ids) and ids[-1] in stop_set,
         "ttft_s": out.get("prefill_s"),
         "ttft_source": out.get("ttft_source"),
@@ -280,7 +376,8 @@ def run_child(args: argparse.Namespace) -> int:
     rec: dict[str, Any] = {
         "device": args.device,
         "template": args.template,
-        "n_tokens": int(args.n_tokens),
+        "n_tokens": None if args.prompt_id else int(args.n_tokens),
+        "prompt_id": args.prompt_id,
         "complete": False,
     }
     if args.device == "NPU":
@@ -302,7 +399,10 @@ def run_child(args: argparse.Namespace) -> int:
     rec["ir_dir"] = str(ir)
     tokenizer = ov_genai.Tokenizer(str(ir))
     try:
-        prompt = rendered_exact_prompt(tokenizer, int(args.n_tokens), unit=_filler(), salt=SALT)
+        if args.prompt_id:
+            prompt = render_user(tokenizer, CHAT_PROMPTS[args.prompt_id])
+        else:
+            prompt = rendered_exact_prompt(tokenizer, int(args.n_tokens), unit=_filler(), salt=SALT)
         rec["realized_tokens"] = id_count(tokenizer, prompt)
     except Exception as exc:
         rec.update(realized_tokens=None, build_error=f"{type(exc).__name__}: {exc}")
@@ -342,7 +442,7 @@ def run_child(args: argparse.Namespace) -> int:
 
 def _smoke_child(rec: dict[str, Any], result_path: Path) -> int:
     """Plumbing only. No openvino. Synthetic, never a result."""
-    n = int(rec["n_tokens"])
+    n = 16 if rec.get("prompt_id") else int(rec["n_tokens"])
     reported = n + (8 if rec["template"] == "DOUBLE" else 0)
     ids = list(range(100, 100 + 20))
     rec.update(
@@ -370,6 +470,7 @@ def _smoke_child(rec: dict[str, Any], result_path: Path) -> int:
     eos = {"eos_token_id": 0, "stop_token_ids": [0], "error": None}
     rec.update(generation_fields(out, device=rec["device"], eos=eos, tokenizer=None))
     rec["first_token_text"] = "smoke"
+    rec["real_token_count"] = len(ids)
     rec["complete"] = True
     _write(result_path, rec)
     return 0
@@ -379,10 +480,11 @@ def _smoke_child(rec: dict[str, Any], result_path: Path) -> int:
 
 
 def run_cell(
-    args: argparse.Namespace, device: str, template: str, n: int, out_dir: Path
+    args: argparse.Namespace, device: str, template: str, n: Any, out_dir: Path
 ) -> dict[str, Any]:
     key = cell_key(device, template, n)
     result_path = out_dir / f"cell_{key}.json"
+    chat = args.prompt_set == "chat"
     argv = [
         sys.executable,
         "-u",
@@ -392,7 +494,7 @@ def run_cell(
         device,
         "--template",
         template,
-        "--n-tokens",
+        "--prompt-id" if chat else "--n-tokens",
         str(n),
         "--model-spec",
         str(args.model_spec),
@@ -422,7 +524,10 @@ def run_cell(
             rec = json.loads(result_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             rec = {}
-    rec.update(device=device, template=template, n_tokens=n)
+    if chat:
+        rec.update(device=device, template=template, prompt_id=n, n_tokens=None)
+    else:
+        rec.update(device=device, template=template, n_tokens=n)
     rec["timed_out"] = timed_out
     rec["child_exit_code"] = code
     rec["child_exit_hex"] = None if code is None else f"0x{code & 0xFFFFFFFF:08X}"
@@ -448,11 +553,13 @@ def run_parent(args: argparse.Namespace) -> int:
             print(f"REFUSED -- watchdog not idle: {watchdog.get('last_line') or watchdog}")
             return 1
     run_id = str(uuid.uuid4())
-    out_dir = Path(args.out) / f"natstop_{run_id}"
+    chat = args.prompt_set == "chat"
+    out_dir = Path(args.out) / (f"natstop_b_{run_id}" if chat else f"natstop_{run_id}")
     out_dir.mkdir(parents=True, exist_ok=False)
     plan: dict[str, Any] = {
-        "diagnostic": DIAGNOSTIC,
+        "diagnostic": "NPU-NATSTOP-B" if chat else DIAGNOSTIC,
         "run_id": run_id,
+        "prompt_set": args.prompt_set,
         "measurement": False,
         "smoke": bool(args.smoke),
         "host": socket.gethostname(),
@@ -464,40 +571,59 @@ def run_parent(args: argparse.Namespace) -> int:
         "model_spec": str(args.model_spec),
         "devices": list(DEVICES),
         "templates": list(TEMPLATES),
-        "lengths": list(LENGTHS),
-        "cell_order": [cell_key(*c) for c in cell_order()],
+        "lengths": [] if chat else list(LENGTHS),
+        "cell_order": [cell_key(*c) for c in cell_order(args.prompt_set)],
         "npu_load_props": npu_load_props(NPU_MAX_PROMPT_LEN, PREFILL_CHUNK_SIZE),
         "max_new_tokens": MAX_NEW_TOKENS,
         "min_new_tokens": None,
         "do_sample": False,
         "generate_call_form": "list",
-        "prompt_builder": "rendered_exact_prompt(tokenizer, n, unit=delta_n filler, salt=npu)",
+        "prompt_builder": (
+            "render_user(tokenizer, CHAT_PROMPTS[id])"
+            if chat
+            else "rendered_exact_prompt(tokenizer, n, unit=delta_n filler, salt=npu)"
+        ),
         "match_ids": MATCH_IDS,
         "child_timeout_s": args.child_timeout,
     }
+    if chat:
+        plan["chat_prompts"] = dict(CHAT_PROMPTS)
+        plan["validity"] = {
+            "min_real_tokens": VALID_MIN_REAL_TOKENS,
+            "repeat_max": VALID_REPEAT_MAX,
+        }
     _write(out_dir / "plan.json", plan)
     cells: dict[str, Any] = {}
     summary: dict[str, Any] = {**plan, "cells": cells, "status": "running"}
-    for device, template, n in cell_order():
+    for device, template, n in cell_order(args.prompt_set):
         rec = run_cell(args, device, template, n, out_dir)
         rec["derived"] = derived_fields(rec)
         cells[cell_key(device, template, n)] = rec
         _write(out_dir / "summary.json", summary)
-    verdict = classify(cells)
+    if chat:
+        for device, template, n in cell_order(args.prompt_set):
+            cell = cells[cell_key(device, template, n)]
+            reference = cells.get(cell_key("GPU", template, n))
+            cell["derived"]["valid"] = valid(cell, reference)
+    verdict = classify_scope(cells) if chat else classify(cells)
     summary["verdict"] = verdict
     summary["status"] = "complete"
     summary["ended_utc"] = datetime.now(UTC).isoformat()
     _write(out_dir / "summary.json", summary)
-    print(f"NATSTOP_VERDICT {verdict} {out_dir}")
+    tag = "NATSTOP_B_VERDICT" if chat else "NATSTOP_VERDICT"
+    print(f"{tag} {verdict} {out_dir}")
     return 0
 
 
 def classify_file(path: Path) -> int:
     """Re-read a finished summary.json and print its verdict."""
     doc = json.loads(Path(path).read_text(encoding="utf-8"))
-    verdict = classify(doc.get("cells") or {})
+    chat = doc.get("prompt_set") == "chat"
+    cells = doc.get("cells") or {}
+    verdict = classify_scope(cells) if chat else classify(cells)
+    tag = "NATSTOP_B_VERDICT" if chat else "NATSTOP_VERDICT"
     print(f"recorded {doc.get('verdict')}")
-    print(f"NATSTOP_VERDICT {verdict} {Path(path).parent}")
+    print(f"{tag} {verdict} {Path(path).parent}")
     return 0 if doc.get("verdict") == verdict else 1
 
 
@@ -513,13 +639,24 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--device", choices=DEVICES)
     parser.add_argument("--template", choices=TEMPLATES)
     parser.add_argument("--n-tokens", type=int, choices=LENGTHS)
+    parser.add_argument(
+        "--prompt-set",
+        choices=PROMPT_SETS,
+        default="filler",
+        help="filler: the 16-cell NATSTOP run (default); chat: NPU-NATSTOP-B, 8 cells",
+    )
+    parser.add_argument("--prompt-id", choices=tuple(CHAT_PROMPTS))
     parser.add_argument("--result", type=Path)
     args = parser.parse_args(argv)
     if args.classify is not None:
         return classify_file(args.classify)
     if args.child:
-        if None in (args.device, args.template, args.n_tokens, args.result):
-            raise SystemExit("REFUSED -- child needs --device --template --n-tokens --result")
+        if None in (args.device, args.template, args.result) or (
+            args.n_tokens is None and args.prompt_id is None
+        ):
+            raise SystemExit(
+                "REFUSED -- child needs --device --template --result and --n-tokens or --prompt-id"
+            )
         return run_child(args)
     return run_parent(args)
 

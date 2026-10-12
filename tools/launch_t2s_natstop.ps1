@@ -13,6 +13,9 @@
 # This script does not open the NPU-NATSTOP rule file.
 # This script does not register a logon task or a scheduled task.
 #
+# -PromptSet chat runs NPU-NATSTOP-B (8 cells, 2 fixed chat prompts; log
+#   npu-natstop-b_<UTC stamp>.log, run dir derived\npu\natstop_b_<run_id>\,
+#   final line NATSTOP_B_VERDICT). Default filler is the 16-cell NATSTOP run.
 # From the Mac (rehearsal, then real):
 #   ssh zach@100.72.40.24 'cd C:\Users\zach\Projects\gnn-hls-accel; git pull --ff-only; .\tools\launch_t2s_natstop.ps1 -Detach -Rehearsal'
 #   ssh zach@100.72.40.24 'cd C:\Users\zach\Projects\gnn-hls-accel; git pull --ff-only; .\tools\launch_t2s_natstop.ps1 -Detach'
@@ -21,6 +24,8 @@
 param(
     [switch]$Detach,
     [switch]$Rehearsal,
+    [ValidateSet("filler", "chat")]
+    [string]$PromptSet = "filler",
     [string]$WatchdogLog = "C:\apu\ovn\watchdog.log"
 )
 
@@ -63,12 +68,14 @@ if ($Detach) {
         }
     }
     $stamp = (Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ")
-    $log = Join-Path $launchDir ("npu-natstop_" + $stamp + ".log")
+    $logBase = "npu-natstop_"
+    if ($PromptSet -eq "chat") { $logBase = "npu-natstop-b_" }
+    $log = Join-Path $launchDir ($logBase + $stamp + ".log")
     if (Test-Path -LiteralPath $log) {
         Write-Host ("REFUSED -- log exists: {0}" -f $log)
         exit 1
     }
-    $cmd = "powershell -NoProfile -File `"$PSCommandPath`" -WatchdogLog `"$WatchdogLog`""
+    $cmd = "powershell -NoProfile -File `"$PSCommandPath`" -WatchdogLog `"$WatchdogLog`" -PromptSet $PromptSet"
     if ($Rehearsal) { $cmd += " -Rehearsal" }
     $json = & $spawn -CommandLine $cmd -LogPath $log -WorkingDirectory $root
     Write-Host $json
@@ -84,10 +91,10 @@ if (-not (Test-SeamProcessAncestor -Names @("WmiPrvSE.exe") -Depth 4)) {
     exit 1
 }
 
-Write-Host ("npu-natstop rehearsal={0} utc={1}" -f [bool]$Rehearsal, (Get-Date).ToUniversalTime().ToString("o"))
+Write-Host ("npu-natstop rehearsal={0} prompt_set={1} utc={2}" -f [bool]$Rehearsal, $PromptSet, (Get-Date).ToUniversalTime().ToString("o"))
 Assert-SeamMachineLockClear -RepoRoot $root
 
-$pyArgs = @("-u", $natstopPy, "--watchdog-log", $WatchdogLog)
+$pyArgs = @("-u", $natstopPy, "--watchdog-log", $WatchdogLog, "--prompt-set", $PromptSet)
 if ($Rehearsal) {
     $pyArgs += @("--smoke", "--out", (Join-Path $launchDir "runs"))
 }
