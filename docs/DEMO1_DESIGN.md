@@ -75,6 +75,37 @@ same budget.
   - Otherwise: a labeled trace-driven replay of
     corpus/normalized/trajectories.jsonl.
 
+## K rule (OBS_MASK treatment for V4; fixed 2026-10-12, before the prereg)
+
+K is the treatment that places long_context in the hardware-sensitive band
+(10,000, 18,500]. OBS_MASK keeps the first K whitespace tokens of every tool
+observation (seam.retention_prompt.mask_observation, local and cloud).
+
+Rule: K is the smallest value in the sweep {256, 512, 1024, 1536, 2048,
+4096, 8192, 16384} that puts at least 90% of the jump entries in the band.
+- Jump entries: the 40 long_context entries with a gold turn above 10,000
+  under FULL.
+- In the band: the entry's largest gold turn n_ctx under K is in
+  (10,000, 18,500].
+- Measured on the gold sizing in analysis/demo1/atlas/
+  (tools/h1_context_sizing.py).
+- If no K qualified, V4 would fall back to the labeled trace replay.
+
+Applied to the existing sweep, in-band jump entries per K:
+
+| K | 256 | 512 | 1024 | 1536 | 2048 | 4096 | 8192 | 16384 |
+|---|---|---|---|---|---|---|---|---|
+| in band | 0/40 | 10/40 | 37/40 | 20/40 | 5/40 | 1/40 | 1/40 | 1/40 |
+
+So K = 1024. It is the only swept K at or above 90% (0.925).
+
+Notes:
+- The band is not monotone in K. A small K shrinks the ~31.7k
+  get_stock_info output below the band, and a large K leaves it above.
+- At K 4096 and above the output is not truncated. mask_observation still
+  collapses whitespace, which changes n_ctx by a few tokens.
+- The prereg reports V4 predictions at every swept K, not only at K = 1024.
+
 ## Outputs
 
 - In-band share per workload: the share of turns in (10,000, 18,500].
