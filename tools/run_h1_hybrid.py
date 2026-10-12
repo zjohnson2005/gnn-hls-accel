@@ -2002,6 +2002,35 @@ def assert_entry_set_pinned(entries_path: Path) -> dict[str, Any]:
     return {"sha256": digest, **pin}
 
 
+def slice_entries(
+    entries: list[dict[str, Any]], entry_pin: dict[str, Any], *, offset: int | None, count: int | None
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Chunk a pinned entry set for one boot (--entry-offset / --entry-count).
+
+    The whole file is still checked against its pin; the chunk is recorded on
+    the pin record in the plan. No flags: the full set, unchanged.
+    """
+    if offset is None and count is None:
+        return entries, entry_pin
+    start = int(offset or 0)
+    n = len(entries) - start if count is None else int(count)
+    if start < 0 or n < 1 or start + n > len(entries):
+        raise SystemExit(
+            f"REFUSED -- entry chunk offset={start} count={n} outside the pinned set "
+            f"of {len(entries)} entries"
+        )
+    chunk = entries[start : start + n]
+    return chunk, {
+        **entry_pin,
+        "chunk": {
+            "offset": start,
+            "count": n,
+            "first_entry_id": str(chunk[0]["id"]),
+            "last_entry_id": str(chunk[-1]["id"]),
+        },
+    }
+
+
 def assert_entry_set_matches_w3(entries_path: Path) -> dict[str, Any]:
     """Kept for callers that accept only the W-3 pin."""
     doc = assert_entry_set_pinned(entries_path)
@@ -3601,6 +3630,18 @@ def build_argparser() -> argparse.ArgumentParser:
     )
     p.add_argument("--run-id", type=str, default=None)
     p.add_argument(
+        "--entry-offset",
+        type=int,
+        default=None,
+        help="Chunk: first entry index (0-based) of the pinned set for this boot.",
+    )
+    p.add_argument(
+        "--entry-count",
+        type=int,
+        default=None,
+        help="Chunk: number of entries from --entry-offset (default: to the end).",
+    )
+    p.add_argument(
         "--obs-mask-k",
         type=int,
         default=None,
@@ -4069,6 +4110,9 @@ def main(argv: list[str] | None = None) -> int:
 
     entries, entries_path = load_w3_entries(args.entries)
     entry_pin = assert_entry_set_pinned(entries_path)
+    entries, entry_pin = slice_entries(
+        entries, entry_pin, offset=args.entry_offset, count=args.entry_count
+    )
     gold_path = entries_path.parent / "multi_turn_gold_selftest.json"
     gold = json.loads(gold_path.read_text(encoding="utf-8-sig")) if gold_path.is_file() else None
     assert_scorer_version(gold)
@@ -4158,6 +4202,9 @@ def _main_interleaved(args: argparse.Namespace) -> int:
 
     entries, entries_path = load_w3_entries(args.entries)
     entry_pin = assert_entry_set_pinned(entries_path)
+    entries, entry_pin = slice_entries(
+        entries, entry_pin, offset=args.entry_offset, count=args.entry_count
+    )
     gold_path = entries_path.parent / "multi_turn_gold_selftest.json"
     gold = json.loads(gold_path.read_text(encoding="utf-8-sig")) if gold_path.is_file() else None
     assert_scorer_version(gold)

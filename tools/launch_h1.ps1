@@ -66,6 +66,8 @@
 #                       derived/h1_hybrid/demo1/DEMO1_LONGCTX_30.json. Default W-3.
 #   -Placement cpu-p    hybrid local arm on CPU (delta_n arm A). Default gpu_only.
 #   -Residency NON_RESIDENT   full prefill every step. Default RESIDENT.
+#   -EntryOffset <i> -EntryCount <n>   one boot's chunk of the pinned entries
+#                       (H1-CPU chunking); the plan records the chunk.
 #   -ObsMaskK <K>       OBS_MASK arm: keep the first K whitespace tokens of every tool
 #                       observation (local and cloud). Default off. Ledger: obs_mask_ledger.json.
 #
@@ -100,7 +102,9 @@ param(
     [string]$Placement = "",
     [ValidateSet("", "RESIDENT", "NON_RESIDENT")]
     [string]$Residency = "",
-    [Nullable[int]]$ObsMaskK = $null
+    [Nullable[int]]$ObsMaskK = $null,
+    [Nullable[int]]$EntryOffset = $null,
+    [Nullable[int]]$EntryCount = $null
 )
 
 $ErrorActionPreference = "Stop"
@@ -498,6 +502,12 @@ if (-not [string]::IsNullOrWhiteSpace($Residency)) {
 }
 if ($null -ne $ObsMaskK) {
     $resolvedCmd = $resolvedCmd + ' --obs-mask-k ' + $ObsMaskK
+}
+if ($null -ne $EntryOffset) {
+    $resolvedCmd = $resolvedCmd + ' --entry-offset ' + $EntryOffset
+}
+if ($null -ne $EntryCount) {
+    $resolvedCmd = $resolvedCmd + ' --entry-count ' + $EntryCount
 }
 
 if ($AllowDirty) {
