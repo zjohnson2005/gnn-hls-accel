@@ -177,3 +177,20 @@ def test_gate_helper_skip_uptime_is_opt_in() -> None:
     text = GATES_PS1.read_text(encoding="ascii")
     assert "[switch]$SkipUptime" in text
     assert '$pyArgs += "--skip-uptime"' in text
+
+
+def test_launch_h1_runs_the_tier1_gate_on_both_hosts() -> None:
+    """f713edc: the tier-1 process gate is in the full gate set launch_h1 runs."""
+    launch = LAUNCH_H1.read_text(encoding="ascii")
+    assert '. (Join-Path $PSScriptRoot "_run_measurement_gates.ps1")' in launch
+    assert "Invoke-SeamMeasurementGates -RepoRoot $root -PythonExe $pythonForGates" in launch
+    helper = GATES_PS1.read_text(encoding="ascii")
+    assert '"-m", "seam.measurement_gates",' in helper
+    assert "--tier1-only" not in helper and "skip-host-probes" not in helper
+    gates = (ROOT / "seam" / "measurement_gates.py").read_text(encoding="utf-8")
+    main = gates[gates.index("def _main(") :]
+    call = main[main.index("report = evaluate_measurement_gates(") :]
+    call = call[: call.index(")") + 1]
+    assert "skip_host_probes" not in call
+    assert "if process_names is not None or not skip_host_probes:" in gates
+    assert "gates.append(classify_tier1_processes(names))" in gates
