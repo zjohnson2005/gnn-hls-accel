@@ -66,6 +66,8 @@
 #                       derived/h1_hybrid/demo1/DEMO1_LONGCTX_30.json. Default W-3.
 #   -Placement cpu-p    hybrid local arm on CPU (delta_n arm A). Default gpu_only.
 #   -Residency NON_RESIDENT   full prefill every step. Default RESIDENT.
+#   -ObsMaskK <K>       OBS_MASK arm: keep the first K whitespace tokens of every tool
+#                       observation (local and cloud). Default off. Ledger: obs_mask_ledger.json.
 #
 # Dry-run (gates report-only; spawn suppressed):
 #   powershell -NoProfile -File tools/launch_h1.ps1 -Policy cloud_only -DryRun
@@ -97,7 +99,8 @@ param(
     [ValidateSet("", "gpu_only", "cpu-p")]
     [string]$Placement = "",
     [ValidateSet("", "RESIDENT", "NON_RESIDENT")]
-    [string]$Residency = ""
+    [string]$Residency = "",
+    [Nullable[int]]$ObsMaskK = $null
 )
 
 $ErrorActionPreference = "Stop"
@@ -492,6 +495,9 @@ if (-not [string]::IsNullOrWhiteSpace($Placement)) {
 }
 if (-not [string]::IsNullOrWhiteSpace($Residency)) {
     $resolvedCmd = $resolvedCmd + ' --residency ' + $Residency
+}
+if ($null -ne $ObsMaskK) {
+    $resolvedCmd = $resolvedCmd + ' --obs-mask-k ' + $ObsMaskK
 }
 
 if ($AllowDirty) {

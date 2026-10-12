@@ -1197,6 +1197,8 @@ class OpenVinoLocalBackend:
     residency: str
     kv: str
     max_new_tokens: int = 512
+    # OBS_MASK arm (tools.h1_obs_mask.ObservationMask); None = FULL observations.
+    obs_mask: Any = field(default=None, repr=False)
     arm_id: str = field(init=False)
     pipe: Any = field(init=False, repr=False)
     tokenizer: Any = field(init=False, repr=False)
@@ -1262,6 +1264,7 @@ class OpenVinoLocalBackend:
         placement: str = "gpu_only",
         max_new_tokens: int = 512,
         ov_genai: Any = None,
+        obs_mask: Any = None,
     ) -> OpenVinoLocalBackend:
         """Build a live-shaped backend without loading an IR (tests / launcher smoke).
 
@@ -1273,6 +1276,7 @@ class OpenVinoLocalBackend:
         obj.residency = residency.upper()
         obj.kv = kv
         obj.max_new_tokens = max_new_tokens
+        obj.obs_mask = obs_mask
         obj.arm_id = arm_id_for_h1({"placement": placement, "kv": kv})
         obj.pipe = pipe
         obj.tokenizer = tokenizer
@@ -1450,6 +1454,11 @@ class OpenVinoLocalBackend:
             ov_genai=self.ov_genai,
         )
         session.begin(entry)
+        if self.obs_mask is not None:
+            from tools.h1_obs_mask import install_on_session
+
+            self.obs_mask.context = {"policy": policy}
+            install_on_session(session, self.obs_mask, entry_id=eid)
         self._sessions[key] = session
         turns_in = turns_in_entry_count(entry)
         self._span_state[key] = LocalEntrySpan(turns_in, turns_in, "completed")
@@ -1752,6 +1761,8 @@ class AnthropicCloudBackend:
     cloud_model: str
     max_tokens: int = 512
     caching_policy: str = "none"
+    # OBS_MASK arm: the cloud agent sees the same masked observations as local.
+    obs_mask: Any = None
     _entry_cache: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     def _ensure_entry(self, entry: dict[str, Any]) -> dict[str, Any]:
@@ -1759,6 +1770,11 @@ class AnthropicCloudBackend:
         if eid not in self._entry_cache:
             import tools.bfcl_feasibility_probe as probe
 
+            hook = None
+            if self.obs_mask is not None:
+                from tools.h1_obs_mask import cloud_hook
+
+                hook = cloud_hook(self.obs_mask, entry_id=eid)
             row = probe.run_cloud_multi_turn_agent_entry(
                 client=self.client,
                 model=self.cloud_model,
@@ -1766,6 +1782,7 @@ class AnthropicCloudBackend:
                 entry=entry,
                 running_usd=0.0,
                 caching_policy=self.caching_policy,
+                observation_hook=hook,
             )
             self._entry_cache[eid] = row
         return self._entry_cache[eid]
@@ -2632,6 +2649,7 @@ def run_session(
     caching_policy: str = "none",
     seal_git: dict[str, Any] | None = None,
     entry_pin: dict[str, Any] | None = None,
+    retention: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if max_usd is None:
         raise SystemExit("REFUSED -- --max-usd is required (cost guard)")
@@ -2672,6 +2690,7 @@ def run_session(
         "started_utc": _utc_now(),
         "w3_entry_pin": _w3_pin_field(entry_pin),
         "entry_pin": entry_pin or ENTRY_PIN_DEFAULT,
+        "retention": retention or {"arm": "FULL"},
         "w3_seal_refs": list(W3_SEAL_REFS),
         "scorer": assert_scorer_version(),
         "caching_policy": caching_policy,
@@ -2890,6 +2909,7 @@ def run_interleaved_session(
     seal_git: dict[str, Any] | None = None,
     arm_order_seed: int = 0,
     entry_pin: dict[str, Any] | None = None,
+    retention: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Entry-by-entry interleave of selected H1 policy arms (INF-5 session_design=interleaved).
 
@@ -2968,6 +2988,7 @@ def run_interleaved_session(
         "started_utc": _utc_now(),
         "w3_entry_pin": _w3_pin_field(entry_pin),
         "entry_pin": entry_pin or ENTRY_PIN_DEFAULT,
+        "retention": retention or {"arm": "FULL"},
         "w3_seal_refs": list(W3_SEAL_REFS),
         "scorer": assert_scorer_version(),
         "caching_policy": caching_policy,
@@ -3571,6 +3592,13 @@ def build_argparser() -> argparse.ArgumentParser:
     )
     p.add_argument("--run-id", type=str, default=None)
     p.add_argument(
+        "--obs-mask-k",
+        type=int,
+        default=None,
+        help="OBS_MASK retention arm: keep the first K whitespace tokens of every tool "
+        "observation (local and cloud). Default: off (FULL).",
+    )
+    p.add_argument(
         "--placement",
         choices=LOCAL_PLACEMENTS,
         default=None,
@@ -3725,6 +3753,12 @@ def _stubbed_generate_fakes(hf_tokenizer: Any) -> tuple[Any, Any, Any]:
 
         def pop(self) -> dict[str, Any]:
             return self._messages.pop()
+
+        def get_messages(self) -> list[dict[str, Any]]:
+            return [dict(m) for m in self._messages]
+
+        def set_messages(self, messages: list[dict[str, Any]]) -> None:
+            self._messages = [dict(m) for m in messages]
 
     class _FakeStreamingStatus:
         RUNNING = 0
@@ -3916,6 +3950,32 @@ def local_arm_settings(
     return out
 
 
+def attach_obs_mask(
+    k: int | None, local: Any, cloud: Any
+) -> tuple[dict[str, Any] | None, Any]:
+    """Build the OBS_MASK arm and give it to both backends. (plan record, mask)."""
+    if k is None:
+        return None, None
+    from tools.h1_obs_mask import ObservationMask, hf_token_count
+
+    if isinstance(local, ScriptedLiveLocalBackend):
+        raise SystemExit("REFUSED -- --obs-mask-k cannot apply to precomputed --local-script turns")
+    tokenizer = getattr(local, "tokenizer", None)
+    count = hf_token_count(tokenizer) if callable(tokenizer) else None
+    mask = ObservationMask(int(k), token_count=count)
+    if hasattr(local, "obs_mask"):
+        local.obs_mask = mask
+    if hasattr(cloud, "obs_mask"):
+        cloud.obs_mask = mask
+    return mask.plan_record(), mask
+
+
+def write_obs_mask_ledger(out_dir: Path, mask: Any) -> None:
+    """Every observation's original and kept sizes, beside the turn ledgers."""
+    if mask is not None:
+        _write_json(Path(out_dir) / "obs_mask_ledger.json", mask.ledger())
+
+
 def _make_openvino_local(
     policy: str,
     model_spec: Path | None,
@@ -4022,6 +4082,7 @@ def main(argv: list[str] | None = None) -> int:
             args.policy, args.model_spec, placement=args.placement, residency=args.residency
         )
 
+    retention, obs_mask = attach_obs_mask(args.obs_mask_k, local, cloud)
     summary = run_session(
         policy=args.policy,
         entries=entries,
@@ -4035,7 +4096,9 @@ def main(argv: list[str] | None = None) -> int:
         caching_policy=args.caching_policy,
         seal_git=args.seal_git,
         entry_pin=entry_pin,
+        retention=retention,
     )
+    write_obs_mask_ledger(args.out, obs_mask)
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
     return 0 if summary["status"] == "complete" else 2
 
@@ -4104,6 +4167,7 @@ def _main_interleaved(args: argparse.Namespace) -> int:
             "slo_escalate", args.model_spec, placement=args.placement, residency=args.residency
         )
 
+    retention, obs_mask = attach_obs_mask(args.obs_mask_k, local, cloud)
     summary = run_interleaved_session(
         entries=entries,
         out_dir=args.out,
@@ -4118,7 +4182,9 @@ def _main_interleaved(args: argparse.Namespace) -> int:
         caching_policy=args.caching_policy,
         seal_git=args.seal_git,
         entry_pin=entry_pin,
+        retention=retention,
     )
+    write_obs_mask_ledger(args.out, obs_mask)
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
     ok_statuses = {"complete", "partial_policy_cap"}
     return 0 if summary["status"] in ok_statuses else 2

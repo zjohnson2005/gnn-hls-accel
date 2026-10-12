@@ -3645,8 +3645,13 @@ def run_cloud_multi_turn_agent_entry(
     entry: dict[str, Any],
     running_usd: float,
     caching_policy: str = "none",
+    observation_hook: Any = None,
 ) -> dict[str, Any]:
-    """Same agent loop as run_gpu_multi_turn; model call is Anthropic native tool-use."""
+    """Same agent loop as run_gpu_multi_turn; model call is Anthropic native tool-use.
+
+    ``observation_hook(decoded, results, turn_idx) -> texts`` (optional) rewrites
+    the tool results the model sees (H1 OBS_MASK arm); tool state is unchanged.
+    """
     sys.path.insert(0, str(ROOT))
     sys.path.insert(0, str(BFCL_UNPACKED))
     from apu_characterization.cap01.bfcl_shims import install_bfcl_runtime_shims
@@ -3877,6 +3882,8 @@ def run_cloud_multi_turn_agent_entry(
                 long_context=("long_context" in test_category or "composite" in test_category),
                 is_evaL_run=False,
             )
+            if observation_hook is not None:
+                execution_results = observation_hook(decoded, list(execution_results), turn_idx)
             tool_result_content = []
             for block, exec_result in zip(tool_uses, execution_results, strict=True):
                 tool_result_content.append(

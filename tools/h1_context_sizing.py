@@ -100,8 +100,9 @@ def size_entry(
     (seam.retention_prompt.mask_observation) to every tool observation the
     model sees; tool state is unchanged."""
     import tools.bfcl_feasibility_probe as probe
-    from seam.retention_prompt import mask_observation
+    from tools.h1_obs_mask import ObservationMask
 
+    mask = None if obs_mask_k is None else ObservationMask(obs_mask_k)
     _install_fake_genai()
     pipe = GoldPipe()
     session = probe.MultiTurnAgentSession(pipe=pipe, tokenizer=tokenizer, cfg=None)
@@ -111,10 +112,14 @@ def size_entry(
 
     def observed(decoded: list[str], *args: Any, **kwargs: Any) -> Any:
         results, instances = execute(decoded, *args, **kwargs)
+        texts = [str(r) for r in results]
+        shown_texts = (
+            texts
+            if mask is None
+            else mask.apply(decoded, texts, source="local", entry_id=str(entry["id"]), turn=None)
+        )
         out = []
-        for call, result in zip(decoded, results, strict=False):
-            text = str(result)
-            shown = text if obs_mask_k is None else mask_observation(text, obs_mask_k)
+        for call, text, shown in zip(decoded, texts, shown_texts, strict=False):
             observations.append(
                 {
                     "call": call.split("(", 1)[0],
