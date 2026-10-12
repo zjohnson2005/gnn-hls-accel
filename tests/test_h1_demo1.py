@@ -421,3 +421,78 @@ def test_k_rule_selects_1024() -> None:
             chosen = k
             break
     assert len(jump) == 40 and chosen == 1024
+
+
+# ---------------------------------------------------------------- DEMO_PREREG_v2
+
+PREREG = DEMO / "DEMO_PREREG_v2.json"
+NO_READ_SOURCES = (
+    ROOT / "tools" / "run_h1_hybrid.py",
+    ROOT / "tools" / "launch_h1.ps1",
+    ROOT / "tools" / "h1_obs_mask.py",
+    ROOT / "tools" / "h1_context_sizing.py",
+    ROOT / "tools" / "bfcl_feasibility_probe.py",
+)
+
+
+def test_prereg_is_committed_and_capped() -> None:
+    doc = json.loads(PREREG.read_text(encoding="ascii"))
+    assert doc["runner_must_not_read_this_file"] is True
+    assert doc["registered_before_any_cell"] is True
+    assert doc["k_rule"]["applied"] == 1024
+    assert doc["cells"]["V3"]["pin"] == doc["cells"]["V4"]["pin"] == "DEMO1_PAIRED_15"
+    caps = doc["spend"]["per_cell_caps_usd"]
+    assert sum(sum(c.values()) for c in caps.values()) == doc["spend"]["caps_usd_total"] == 145
+    assert doc["spend"]["ceiling_usd"] == 200 and doc["spend"]["reserve_usd"] == 55
+    for name, cell in doc["cells"].items():
+        assert (
+            assert_entry_set_pinned(DEMO / f"{cell['pin']}.json")["sha256"] == cell["pin_sha256"]
+        ), name
+    assert set(doc["v4_at_every_swept_k"]) == {str(k) for k in atlas_mod.SWEPT_K}
+
+
+def test_runner_sources_do_not_name_the_prereg() -> None:
+    for path in NO_READ_SOURCES:
+        text = path.read_text(encoding="utf-8")
+        assert "DEMO_PREREG" not in text and "DEMO1_DESIGN" not in text, path
+
+
+def test_runner_never_opens_the_prereg(monkeypatch, tmp_path: Path) -> None:
+    import builtins
+    import io
+
+    real_open = builtins.open
+
+    def guarded(file, *args, **kwargs):
+        if "DEMO_PREREG" in str(file) or "PREREG" in Path(str(file)).name.upper():
+            raise AssertionError(f"runner opened {file}")
+        return real_open(file, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", guarded)
+    monkeypatch.setattr(io, "open", guarded)
+    _entries, path = load_w3_entries(DEMO / "DEMO1_PAIRED_15.json")
+    assert assert_entry_set_pinned(path)["name"] == "DEMO1_PAIRED_15"
+    row = {
+        "n_ctx": 100,
+        "ttft_s": 0.5,
+        "decode_tok_s": 30.0,
+        "emitted_parseable_tool_call": True,
+        "turn_wall_s": 0.05,
+        "t_generate": 0.03,
+        "t_tokenize": 0.005,
+        "t_template_build": 0.005,
+        "t_tool_exec": 0.005,
+    }
+    entry = {"id": "e0", "question": [[]], "n_user_turns": 1}
+    run_interleaved_session(
+        entries=[entry],
+        out_dir=tmp_path / "s",
+        local=StubLocalBackend(script={"e0": [row]}),
+        cloud=StubCloudBackend(tokens_in=1, tokens_out=1),
+        policies=("slo_escalate",),
+        policy_caps_usd={"slo_escalate": 1.0},
+        session_max_usd=1.0,
+        run_id="noread",
+        skip_entry_assert=True,
+        seal=False,
+    )

@@ -1,0 +1,738 @@
+{
+  "cells": {
+    "V1": {
+      "all_cloud_reference": {
+        "usd_per_task": [
+          0.32,
+          0.347
+        ]
+      },
+      "configs": {
+        "t2s_gpu_4b_u8": {
+          "cap_usd": 5,
+          "host": "EVO-T2S (evo-t2), -T2S",
+          "prediction": {
+            "escalations_ttft": [
+              0,
+              0
+            ],
+            "local_share": [
+              1.0,
+              1.0
+            ],
+            "split_usd": {
+              "fewest_cloud": {
+                "capability": 0.0,
+                "context": 0.0,
+                "latency": 0.0
+              },
+              "most_cloud": {
+                "capability": 0.0,
+                "context": 0.0,
+                "latency": 0.0
+              }
+            },
+            "stay_cloud_turns": [
+              0,
+              0
+            ],
+            "usd": [
+              0.0,
+              0.0
+            ],
+            "usd_per_task": [
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "xps_gpu_4b_u8": {
+          "cap_usd": 5,
+          "host": "XPS (aipc-c1)",
+          "prediction": {
+            "escalations_ttft": [
+              0,
+              0
+            ],
+            "local_share": [
+              1.0,
+              1.0
+            ],
+            "split_usd": {
+              "fewest_cloud": {
+                "capability": 0.0,
+                "context": 0.0,
+                "latency": 0.0
+              },
+              "most_cloud": {
+                "capability": 0.0,
+                "context": 0.0,
+                "latency": 0.0
+              }
+            },
+            "stay_cloud_turns": [
+              0,
+              0
+            ],
+            "usd": [
+              0.0,
+              0.0
+            ],
+            "usd_per_task": [
+              0.0,
+              0.0
+            ]
+          }
+        }
+      },
+      "n": 30,
+      "pin": "DEMO1_BASE_30",
+      "pin_sha256": "7842d7d960b4acb5d5b09614fbf5a2b06fe752407f766d8df57ddd02e1f0260c",
+      "retention": "FULL",
+      "sizing": "analysis/demo1/atlas/multi_turn_base_FULL.json",
+      "tests": "hardware-attributable spend 0 and identical routing: both configs fully local (no turn exceeds 10,000)."
+    },
+    "V2": {
+      "all_cloud_reference": {
+        "usd_per_task": [
+          0.32,
+          0.347
+        ]
+      },
+      "configs": {
+        "xps_cpu_4b": {
+          "cap_usd": 15,
+          "host": "XPS (aipc-c1), --placement cpu-p",
+          "prediction": {
+            "escalations_ttft": [
+              30,
+              30
+            ],
+            "local_share": [
+              0.0,
+              0.0
+            ],
+            "split_usd": {
+              "fewest_cloud": {
+                "capability": 0.0,
+                "context": 0.0,
+                "latency": 9.61
+              },
+              "most_cloud": {
+                "capability": 0.0,
+                "context": 0.0,
+                "latency": 10.41
+              }
+            },
+            "stay_cloud_turns": [
+              88,
+              88
+            ],
+            "usd": [
+              9.61,
+              10.41
+            ],
+            "usd_per_task": [
+              0.32,
+              0.347
+            ]
+          }
+        }
+      },
+      "n": 30,
+      "pin": "DEMO1_BASE_30",
+      "pin_sha256": "7842d7d960b4acb5d5b09614fbf5a2b06fe752407f766d8df57ddd02e1f0260c",
+      "retention": "FULL",
+      "sizing": "analysis/demo1/atlas/multi_turn_base_FULL.json",
+      "tests": "escalation at turn 0 in 30/30 entries; spend equals the all-cloud reference; split all latency."
+    },
+    "V3": {
+      "all_cloud_reference": {
+        "usd_per_task": [
+          1.922,
+          2.081
+        ]
+      },
+      "configs": {
+        "t2s_gpu_4b_u8": {
+          "cap_usd": 45,
+          "host": "EVO-T2S (evo-t2), -T2S",
+          "prediction": {
+            "escalations_ttft": [
+              15,
+              15
+            ],
+            "local_share": [
+              0.436,
+              0.436
+            ],
+            "split_usd": {
+              "fewest_cloud": {
+                "capability": 0.0,
+                "context": 26.56,
+                "latency": 0.0
+              },
+              "most_cloud": {
+                "capability": 0.0,
+                "context": 28.77,
+                "latency": 0.0
+              }
+            },
+            "stay_cloud_turns": [
+              16,
+              16
+            ],
+            "usd": [
+              26.56,
+              28.77
+            ],
+            "usd_per_task": [
+              1.771,
+              1.918
+            ]
+          }
+        },
+        "xps_gpu_4b_u8": {
+          "cap_usd": 45,
+          "host": "XPS (aipc-c1)",
+          "prediction": {
+            "escalations_ttft": [
+              15,
+              15
+            ],
+            "local_share": [
+              0.436,
+              0.436
+            ],
+            "split_usd": {
+              "fewest_cloud": {
+                "capability": 0.0,
+                "context": 26.56,
+                "latency": 0.0
+              },
+              "most_cloud": {
+                "capability": 0.0,
+                "context": 28.77,
+                "latency": 0.0
+              }
+            },
+            "stay_cloud_turns": [
+              16,
+              16
+            ],
+            "usd": [
+              26.56,
+              28.77
+            ],
+            "usd_per_task": [
+              1.771,
+              1.918
+            ]
+          }
+        }
+      },
+      "n": 15,
+      "pin": "DEMO1_PAIRED_15",
+      "pin_sha256": "71faf5455559887cf0aa3c7a8317fab641b27c939b0643e501eeab5f63f9c080",
+      "retention": "FULL",
+      "sizing": "analysis/demo1/atlas/multi_turn_long_context_FULL.json",
+      "tests": "same escalation turn in both configs (the get_stock_info jump past 18,500); spend all context; configs NOT separate."
+    },
+    "V4": {
+      "all_cloud_reference": {
+        "usd_per_task": [
+          0.811,
+          0.878
+        ]
+      },
+      "configs": {
+        "t2s_gpu_4b_u8": {
+          "cap_usd": 10,
+          "host": "EVO-T2S (evo-t2), -T2S",
+          "prediction": {
+            "escalations_ttft": [
+              0,
+              2
+            ],
+            "local_share": [
+              0.909,
+              1.0
+            ],
+            "split_usd": {
+              "fewest_cloud": {
+                "capability": 0.0,
+                "context": 0.0,
+                "latency": 0.0
+              },
+              "most_cloud": {
+                "capability": 0.0,
+                "context": 2.13,
+                "latency": 0.0
+              }
+            },
+            "stay_cloud_turns": [
+              0,
+              3
+            ],
+            "usd": [
+              0.0,
+              2.13
+            ],
+            "usd_per_task": [
+              0.0,
+              0.142
+            ]
+          }
+        },
+        "xps_gpu_4b_u8": {
+          "cap_usd": 20,
+          "host": "XPS (aipc-c1)",
+          "prediction": {
+            "escalations_ttft": [
+              15,
+              15
+            ],
+            "local_share": [
+              0.436,
+              0.436
+            ],
+            "split_usd": {
+              "fewest_cloud": {
+                "capability": 0.0,
+                "context": 0.0,
+                "latency": 9.9
+              },
+              "most_cloud": {
+                "capability": 0.0,
+                "context": 2.13,
+                "latency": 8.59
+              }
+            },
+            "stay_cloud_turns": [
+              16,
+              16
+            ],
+            "usd": [
+              9.9,
+              10.72
+            ],
+            "usd_per_task": [
+              0.66,
+              0.715
+            ]
+          }
+        }
+      },
+      "n": 15,
+      "pin": "DEMO1_PAIRED_15",
+      "pin_sha256": "71faf5455559887cf0aa3c7a8317fab641b27c939b0643e501eeab5f63f9c080",
+      "retention": "OBS_MASK K=1024",
+      "sizing": "analysis/demo1/atlas/multi_turn_long_context_OBS_MASK_K1024.json",
+      "tests": "XPS escalates where T2S stays local; configs separate on local share and $/task."
+    }
+  },
+  "cost_model": "cloud $ = 3.20e-6 x 7.11 x n_ctx per cloud turn (d482c621: $3.20 per M input tokens, r^2 0.996; 7.11 cloud input tokens per local n_ctx)",
+  "design": "docs/DEMO1_DESIGN.md (design 183e4e2; K rule d64e99d; V3/V4 pairing 50336a6)",
+  "envelopes": {
+    "t2s_gpu_4b_u8": {
+      "first_failing_rung": 18687,
+      "run": "d2d5cc4a",
+      "sealed_limit": 18500
+    },
+    "xps_cpu_4b": {
+      "first_failing_rung": 687,
+      "run": "7f232f86",
+      "sealed_limit": 468
+    },
+    "xps_gpu_4b_u8": {
+      "first_failing_rung": 10250,
+      "run": "c2246b1f",
+      "sealed_limit": 10000
+    }
+  },
+  "experiment": "DEMO-1",
+  "id": "DEMO1_PREREG_v2",
+  "k_rule": {
+    "applied": 1024,
+    "in_band": "37/40",
+    "rule": "smallest K in {256,512,1024,1536,2048,4096,8192,16384} with >= 90% of the 40 jump entries (FULL turn > 10,000) having their largest gold turn in (10000, 18500]"
+  },
+  "measurement_status": "not_started",
+  "not_predicted": "passes and quality (15-30 entries resolve only large differences; masked and 8B quality have no sealed basis)",
+  "pairing": "V3 (FULL) and V4 (OBS_MASK K=1024) use the same 15 entries (DEMO1_PAIRED_15); V3 vs V4 measures retention value on identical tasks",
+  "policy": "slo_escalate in every cell (the only latency trigger; sticky equals per-turn here because n_ctx never decreases within an entry)",
+  "predicted_separation": {
+    "V1": "not separate (identical)",
+    "V3": "not separate",
+    "V4": "separate on local share and $/task"
+  },
+  "recorded_not_predicted": {
+    "capability_cost_of_masking": "per config, passes(V3, FULL) - passes(V4, OBS_MASK K=1024) on DEMO1_PAIRED_15, with the paired entry bootstrap CI; reported, not predicted",
+    "per_cell": [
+      "passes (BFCL multi_turn checker, hybrid trajectory)",
+      "local passes",
+      "no_parseable_tool_call count among local turns",
+      "per-turn measured TTFT",
+      "obs_mask_ledger.json (V4)"
+    ]
+  },
+  "registered_before_any_cell": true,
+  "registered_utc": "2026-10-12",
+  "residency": "NON_RESIDENT in every cell (as when the sealed cold limits were measured)",
+  "routing_model": "A turn escalates when its n_ctx exceeds the config's sealed cold limit (cold TTFT > 10 s); the entry then stays on cloud. Band: fewest cloud turns = gold n_ctx with the edge at the first failing rung; most cloud turns = gold x 1.083 (p90 live/gold ratio on d482c621) with the edge at the last passing rung.",
+  "run_order": [
+    "V1 XPS GPU then T2S 4B ($0)",
+    "V2 XPS CPU",
+    "V4 XPS GPU then T2S 4B",
+    "V3 XPS GPU then T2S 4B"
+  ],
+  "runner_must_not_read_this_file": true,
+  "schedule": {
+    "runs": "2026-10-17 to 2026-10-22",
+    "shown": "2026-10-26"
+  },
+  "sensitivity_slo_sens": {
+    "edges_tokens": {
+      "t2s_gpu_4b_u8": {
+        "10s": 18590,
+        "20s": 27878,
+        "5s": 12720
+      },
+      "t2s_gpu_8b_u8": {
+        "10s": 16541,
+        "20s": 25317,
+        "5s": "< 14000 (7.67 s at 14000)"
+      },
+      "xps_cpu_4b": {
+        "10s": 680,
+        "20s": 1690,
+        "5s": "< 250 (6.47 s at 250)"
+      },
+      "xps_gpu_4b_u8": {
+        "10s": 10175,
+        "20s": 15187,
+        "5s": "< 8000 (6.80 s at 8000)"
+      }
+    },
+    "in_band_turn_share": {
+      "10s": {
+        "multi_turn_base_FULL": {
+          "entries_with_a_turn": 0,
+          "entry_share": 0.0,
+          "turn_share": 0.0
+        },
+        "multi_turn_long_context_FULL": {
+          "entries_with_a_turn": 2,
+          "entry_share": 0.01,
+          "turn_share": 0.0054
+        },
+        "multi_turn_long_context_OBS_MASK_K1024": {
+          "entries_with_a_turn": 40,
+          "entry_share": 0.2,
+          "turn_share": 0.1281
+        },
+        "swe_trajectories": {
+          "entries_with_a_turn": 8,
+          "entry_share": 0.5333,
+          "turn_share": 0.3252
+        }
+      },
+      "20s": {
+        "multi_turn_base_FULL": {
+          "entries_with_a_turn": 0,
+          "entry_share": 0.0,
+          "turn_share": 0.0
+        },
+        "multi_turn_long_context_FULL": {
+          "entries_with_a_turn": 0,
+          "entry_share": 0.0,
+          "turn_share": 0.0
+        },
+        "multi_turn_long_context_OBS_MASK_K1024": {
+          "entries_with_a_turn": 17,
+          "entry_share": 0.085,
+          "turn_share": 0.0518
+        },
+        "swe_trajectories": {
+          "entries_with_a_turn": 4,
+          "entry_share": 0.2667,
+          "turn_share": 0.0912
+        }
+      },
+      "5s": "edge unresolved: xps {'n': None, 'source': None, 'bound': '< 8000 (6.80 s at 8000)'}, t2s4b {'n': 12720, 'between': [12000, 16000], 'prefill_s': [4.53, 7.38], 'source': '65e33de8', 'bound': None}"
+    },
+    "note": "stated sensitivity, not a rule change; the SLO stays 10 s"
+  },
+  "separation_rule": {
+    "floors": {
+      "local_share": 0.1,
+      "usd_per_task": "20% of the cell's all-cloud reference $/task (point estimate, gold)"
+    },
+    "method": "paired entry bootstrap, 10,000 draws, seed 20260930",
+    "metrics": [
+      "local_share",
+      "usd_per_task"
+    ],
+    "separate_iff": "the 95% CI of M_A - M_B excludes 0 and |M_A - M_B| >= floor"
+  },
+  "spend": {
+    "approved": "Zach 2026-10-12",
+    "caps_usd_total": 145,
+    "ceiling_usd": 200,
+    "per_cell_caps_usd": {
+      "V1": {
+        "t2s_gpu_4b_u8": 5,
+        "xps_gpu_4b_u8": 5
+      },
+      "V2": {
+        "xps_cpu_4b": 15
+      },
+      "V3": {
+        "t2s_gpu_4b_u8": 45,
+        "xps_gpu_4b_u8": 45
+      },
+      "V4": {
+        "t2s_gpu_4b_u8": 10,
+        "xps_gpu_4b_u8": 20
+      }
+    },
+    "predicted_total_usd": [
+      72.63,
+      80.8
+    ],
+    "reserve_rule": "spending any of the reserve needs Zach's written OK",
+    "reserve_usd": 55,
+    "rule": "hard per-config caps (--max-usd); cheapest cells first; if V3 or V4 would exceed its cap, shrink n before changing the design"
+  },
+  "split_rule": "capability = escalation by a capability trigger (none under slo_escalate); context = cloud turn with n_ctx > 18,500; latency = any other cloud turn",
+  "supersedes": "DEMO-1 v1 (5 configs on DEMO1_LONGCTX_30): SUPERSEDED 2026-10-12, registry",
+  "thesis": "Every cloud turn buys capability, latency or context. Hardware configuration changes only the latency purchase, for turns whose n_ctx lies between configurations' envelopes.",
+  "trigger_mix": "every escalation is ttft>10 (latency trigger); 0 decode<6 (sealed decode >= 14.4 tok/s in all limit runs); all later turns stay_cloud",
+  "v4_at_every_swept_k": {
+    "1024": {
+      "all_cloud_usd_per_task": [
+        0.811,
+        0.878
+      ],
+      "configs": {
+        "t2s_gpu_4b_u8": {
+          "local_share": [
+            0.909,
+            1.0
+          ],
+          "usd_per_task": [
+            0.0,
+            0.142
+          ]
+        },
+        "xps_gpu_4b_u8": {
+          "local_share": [
+            0.436,
+            0.436
+          ],
+          "usd_per_task": [
+            0.66,
+            0.715
+          ]
+        }
+      }
+    },
+    "1536": {
+      "all_cloud_usd_per_task": [
+        1.001,
+        1.084
+      ],
+      "configs": {
+        "t2s_gpu_4b_u8": {
+          "local_share": [
+            0.636,
+            0.764
+          ],
+          "usd_per_task": [
+            0.403,
+            0.642
+          ]
+        },
+        "xps_gpu_4b_u8": {
+          "local_share": [
+            0.436,
+            0.436
+          ],
+          "usd_per_task": [
+            0.851,
+            0.921
+          ]
+        }
+      }
+    },
+    "16384": {
+      "all_cloud_usd_per_task": [
+        1.92,
+        2.08
+      ],
+      "configs": {
+        "t2s_gpu_4b_u8": {
+          "local_share": [
+            0.436,
+            0.436
+          ],
+          "usd_per_task": [
+            1.769,
+            1.916
+          ]
+        },
+        "xps_gpu_4b_u8": {
+          "local_share": [
+            0.436,
+            0.436
+          ],
+          "usd_per_task": [
+            1.769,
+            1.916
+          ]
+        }
+      }
+    },
+    "2048": {
+      "all_cloud_usd_per_task": [
+        1.192,
+        1.29
+      ],
+      "configs": {
+        "t2s_gpu_4b_u8": {
+          "local_share": [
+            0.436,
+            0.491
+          ],
+          "usd_per_task": [
+            0.957,
+            1.127
+          ]
+        },
+        "xps_gpu_4b_u8": {
+          "local_share": [
+            0.436,
+            0.436
+          ],
+          "usd_per_task": [
+            1.041,
+            1.127
+          ]
+        }
+      }
+    },
+    "256": {
+      "all_cloud_usd_per_task": [
+        0.404,
+        0.438
+      ],
+      "configs": {
+        "t2s_gpu_4b_u8": {
+          "local_share": [
+            1.0,
+            1.0
+          ],
+          "usd_per_task": [
+            0.0,
+            0.0
+          ]
+        },
+        "xps_gpu_4b_u8": {
+          "local_share": [
+            1.0,
+            1.0
+          ],
+          "usd_per_task": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "4096": {
+      "all_cloud_usd_per_task": [
+        1.92,
+        2.08
+      ],
+      "configs": {
+        "t2s_gpu_4b_u8": {
+          "local_share": [
+            0.436,
+            0.436
+          ],
+          "usd_per_task": [
+            1.769,
+            1.916
+          ]
+        },
+        "xps_gpu_4b_u8": {
+          "local_share": [
+            0.436,
+            0.436
+          ],
+          "usd_per_task": [
+            1.769,
+            1.916
+          ]
+        }
+      }
+    },
+    "512": {
+      "all_cloud_usd_per_task": [
+        0.54,
+        0.585
+      ],
+      "configs": {
+        "t2s_gpu_4b_u8": {
+          "local_share": [
+            1.0,
+            1.0
+          ],
+          "usd_per_task": [
+            0.0,
+            0.0
+          ]
+        },
+        "xps_gpu_4b_u8": {
+          "local_share": [
+            0.764,
+            0.891
+          ],
+          "usd_per_task": [
+            0.096,
+            0.213
+          ]
+        }
+      }
+    },
+    "8192": {
+      "all_cloud_usd_per_task": [
+        1.92,
+        2.08
+      ],
+      "configs": {
+        "t2s_gpu_4b_u8": {
+          "local_share": [
+            0.436,
+            0.436
+          ],
+          "usd_per_task": [
+            1.769,
+            1.916
+          ]
+        },
+        "xps_gpu_4b_u8": {
+          "local_share": [
+            0.436,
+            0.436
+          ],
+          "usd_per_task": [
+            1.769,
+            1.916
+          ]
+        }
+      }
+    }
+  },
+  "version": 2
+}
