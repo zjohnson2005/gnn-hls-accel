@@ -88,6 +88,13 @@ Where to look and what to look for:
 - Log: `derived\h1_hybrid\_launches\h1_slo_escalate_<yyyyMMdd_HHmmss>.log`.
 - Artifact: `derived\h1_hybrid\slo_escalate_<run_id>\` (plan.json, summary.json,
   turn_ledger.json, entry_quality.json, obs_mask_ledger.json for V4, .sealed).
+- Launch evidence (since 2026-10-13): `derived\h1_hybrid\_launches\<run_id>\`
+  holds the gate JSON (`gates_<stamp>.json`) and the opening canary
+  (`canary_opening\opening_plan.json`, `canary_opening\canaries\`). It is
+  gitignored, so the worker's clean-tree check passes. The worker records each
+  file's path, size and sha256 in plan.json `git.launch_evidence`. The shared
+  `derived\h1_hybrid\_canary_opening\` (d482c621) and `derived\_gate_probes\`
+  are no longer written by a live launch_h1.
 - Done when the log ends with the runner's JSON block `{"ok": true, "summary": ...}`
   containing `"status": "complete"`, and the artifact has `.sealed`.
 - Poll:
@@ -121,13 +128,18 @@ Logs, artifacts and estimates:
 ssh <host> 'cd <repo>\derived\h1_hybrid; $r="<run>"; $base=(Resolve-Path $r).Path; Get-ChildItem -Recurse -File $r | ForEach-Object { "{0}|{1}|{2}|{3}|{4}" -f $r, $_.FullName.Substring($base.Length+1).Replace("\","/"), $_.Length, (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLower(), $_.LastWriteTimeUtc.ToString("o") }' > ~/seam_closeout/H1_SOURCE_MANIFEST_<date>_<run>.txt
 ```
 2. Copy: `scp -r <host>:"<repo>/derived/h1_hybrid/<run>" ~/seam_closeout/h1/`.
-   Compare every file's sha256 with the listing.
+   Compare every file's sha256 with the listing. Also copy the launch evidence:
+   `scp -r <host>:"<repo>/derived/h1_hybrid/_launches/<run_id>" ~/seam_closeout/h1/launch_<run_id>/`,
+   and check each file against plan.json `git.launch_evidence.files[].sha256`.
 3. Seal check. The run seals itself in-run (`.sealed`). Copy the dir into
    derived/h1_hybrid/ and run `python tools/seal_verify.py derived/h1_hybrid/<run>`.
    Expect MATCH. Add `-text` for the dir in .gitattributes if any file has
    CRLF endings.
 4. Commit the run dir and the listing, score against DEMO_PREREG_v2.json (or
-   H1_CPU_AMEND_2.json), update the registry, and push.
+   H1_CPU_AMEND_2.json), update the registry, and push. Commit the launch
+   evidence at `derived/h1_hybrid/_launches/<run_id>/` with a .gitignore
+   exception (`!derived/h1_hybrid/_launches/<run_id>/` and `/**`) and `-text`,
+   as for the natstop launch dirs; its hashes are already fixed by the plan.
 5. Host: verify against origin, move, pull. It moves only if every file matches:
 ```
 ssh <host> 'cd <repo>; git fetch -q origin; $d="derived/h1_hybrid/<run>"; $files=@(Get-ChildItem -Recurse -File $d); $bad=0; foreach ($f in $files) { $p=$f.FullName.Substring((Resolve-Path .).Path.Length+1).Replace("\","/"); if ((git hash-object -- $p) -ne (git rev-parse "origin/main:$p")) { $bad++; "DIFF $p" } }; "files=$($files.Count) diff=$bad"; if ($bad -eq 0) { $dst="<backup dir>"; New-Item -ItemType Directory -Force $dst | Out-Null; Move-Item $d $dst; git pull --ff-only; git status --short } else { "NOT MOVED" }'
@@ -135,15 +147,30 @@ ssh <host> 'cd <repo>; git fetch -q origin; $d="derived/h1_hybrid/<run>"; $files
 Backup dirs:
 - XPS: `C:\Users\zjohn\gnn_backup_demo1\run_dirs\` (new).
 - T2S: `C:\Users\zach\gnn_backup_20260929\run_dirs_demo1\`.
+   The launch evidence dir stays on the host (it is ignored there); after the
+   commit and pull it is tracked and matches origin.
+
+## One-time host cleanup before the first launch after 2026-10-13
+The refused launches T2S 199f3f7d and XPS 16e8ec3f left each host dirty: the
+tracked `derived\h1_hybrid\_canary_opening\canaries\canary.0.json` and
+`opening_plan.json` are modified, and `derived\_gate_probes\gates_<stamp>.json`
+is untracked. launch_h1 refuses a dirty tree, so keep a copy, then restore.
+Look at the status first; run only with Zach's OK. Example, T2S:
+```
+ssh zach@100.72.40.24 'cd C:\Users\zach\Projects\gnn-hls-accel; git status --short; $dst="C:\Users\zach\gnn_backup_20260929\refused_h1_199f3f7d"; New-Item -ItemType Directory -Force $dst | Out-Null; Copy-Item -Recurse derived\h1_hybrid\_canary_opening $dst; Get-ChildItem derived\_gate_probes\gates_20261013_*.json | Move-Item -Destination $dst; git checkout -- derived/h1_hybrid/_canary_opening; git pull --ff-only; git status --short'
+```
+XPS: the same with `C:\Users\zjohn\...` and `refused_h1_16e8ec3f` under
+`C:\Users\zjohn\gnn_backup_demo1\`. Before moving, check that the gates
+files listed are the ones from these refused launches.
 
 ## Tier-1 process gate (f713edc) on both hosts
 launch_h1.ps1 runs the full measurement gate set, tier-1 included, before
 any spawn:
-- tools/launch_h1.ps1:391 dot-sources tools/_run_measurement_gates.ps1.
-- tools/launch_h1.ps1:395 calls Invoke-SeamMeasurementGates. On the T2S it
-  adds only -SkipUptime.
-- tools/_run_measurement_gates.ps1:38 runs `python -m seam.measurement_gates --json`.
-  It refuses at :72 on a non-zero exit.
+- tools/launch_h1.ps1:407 dot-sources tools/_run_measurement_gates.ps1.
+- tools/launch_h1.ps1:412 calls Invoke-SeamMeasurementGates. On the T2S it
+  adds only -SkipUptime. Live launches pass -ProbeDir (the run's launch dir).
+- tools/_run_measurement_gates.ps1:50 runs `python -m seam.measurement_gates --json`.
+  It refuses at :83 on a non-zero exit.
 - seam/measurement_gates.py:639 `_main` calls evaluate_measurement_gates
   without skip_host_probes.
 - :520 appends the tier1_processes gate.

@@ -43,7 +43,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools.h1_seal_git import seal_git_record  # noqa: E402
+from tools.h1_seal_git import launch_evidence_record, seal_git_record  # noqa: E402
 from tools.phase_timers import finalize_phase_timers, phases_sum_to_wall  # noqa: E402
 
 # ---------------------------------------------------------------------------
@@ -3719,6 +3719,13 @@ def build_argparser() -> argparse.ArgumentParser:
         action="store_true",
         help="Permit a dirty tree. Plan and seal record DIRTY and the sha256 of git diff HEAD.",
     )
+    p.add_argument(
+        "--launch-evidence-dir",
+        type=Path,
+        default=None,
+        help="The launcher's per-run, gitignored evidence dir (gate JSON, opening canary). "
+        "Each file is recorded with its sha256 in plan.json git.launch_evidence.",
+    )
     return p
 
 
@@ -4058,6 +4065,8 @@ def main(argv: list[str] | None = None) -> int:
         git_rec = seal_git_record(allow_dirty=bool(args.allow_dirty), root=ROOT)
     except DirtyTreeError as exc:
         raise SystemExit(f"REFUSED -- {exc}") from exc
+    if args.launch_evidence_dir is not None:
+        git_rec["launch_evidence"] = launch_evidence_record(args.launch_evidence_dir, root=ROOT)
     args.seal_git = git_rec
 
     if args.out is None:

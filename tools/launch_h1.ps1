@@ -76,6 +76,12 @@
 #   powershell -NoProfile -File tools/launch_h1.ps1 -Policy cloud_only -DryRun
 #   powershell -NoProfile -File tools/launch_h1.ps1 -Interleaved -DryRun
 #
+# Launch evidence (live): the gate JSON and the opening canary are written to
+# derived/h1_hybrid/_launches/<run_id>/ (gitignored), not to the shared tracked
+# derived/h1_hybrid/_canary_opening/ or to derived/_gate_probes/. The worker's
+# clean-tree check then passes without --allow-dirty, and the worker records
+# every file there with its sha256 in plan.json git.launch_evidence.
+#
 # Steps: (1) non-persistent host clean  (2) five gates  (3) INF-1b canary guard
 #        (4) machine-lock / alive-worker check  (5) TURNWISE lifecycle smoke
 #        (6) spawn_detached  (7) print run_id + artifact dir; exit without waiting.
@@ -382,6 +388,16 @@ $availAfter = Get-AvailableMBytes
 Write-Host ("Available MBytes AFTER  clean: {0:N1}" -f $availAfter)
 Write-Host ""
 
+# The run_id is fixed before the gates so every launcher-owned evidence file
+# lands in this run's launch dir.
+$sid = [guid]::NewGuid().ToString()
+$SessionLaunchDir = Join-Path $LaunchDir $sid
+if (-not $DryRun) {
+    New-Item -ItemType Directory -Force -Path $SessionLaunchDir | Out-Null
+}
+Write-Host ("launch_evidence_dir : {0}" -f $SessionLaunchDir)
+Write-Host ""
+
 # ---------------------------------------------------------------------------
 # 2. Five gates (PORT-2: platform YAML + processor AC 100/100; GUID recorded only)
 # ---------------------------------------------------------------------------
@@ -392,8 +408,9 @@ Write-Host ""
 $pythonForGates = if ($PythonExe -and (Test-Path -LiteralPath $PythonExe)) { $PythonExe } `
     else { Join-Path $root ".venv-seam\Scripts\python.exe" }
 $platformId = if ($env:SEAM_PLATFORM_ID) { $env:SEAM_PLATFORM_ID } else { "" }
+$gateProbeDir = if ($DryRun) { "" } else { $SessionLaunchDir }
 $gateJson = Invoke-SeamMeasurementGates -RepoRoot $root -PythonExe $pythonForGates `
-    -PlatformId $platformId -SkipUptime:$T2S -DryRun:$DryRun
+    -PlatformId $platformId -SkipUptime:$T2S -DryRun:$DryRun -ProbeDir $gateProbeDir
 $gateFails = @(Get-SeamGateRefusals -GateJson $gateJson)
 Write-Host ""
 
@@ -408,7 +425,9 @@ if (-not (Test-Path -LiteralPath $CanaryOpeningPy)) {
     Refuse "missing INF-1b canary opening: $CanaryOpeningPy"
     if (-not $DryRun) { exit 2 }
 }
-$CanaryOut = Join-Path $SessionRoot "_canary_opening"
+# Per-run, gitignored. The tracked derived/h1_hybrid/_canary_opening/ (d482c621,
+# ff09628) is left as it is. A dry run is --logic-only and writes nothing.
+$CanaryOut = Join-Path $SessionLaunchDir "canary_opening"
 $canaryArgs = @("-u", $CanaryOpeningPy, "--out", $CanaryOut, "--planned-probe-count", "300")
 if ($AllowUnguarded) {
     $canaryArgs += "--allow-unguarded"
@@ -464,7 +483,6 @@ if (-not (Test-Path -LiteralPath $SpawnPs1)) { Refuse "spawn_detached missing: $
 if (-not (Test-Path -LiteralPath $PythonExe)) { Refuse "PythonExe missing: $PythonExe"; exit 2 }
 if (-not (Test-Path -LiteralPath $W3Entries)) { Refuse "W3 entries pin missing: $W3Entries"; exit 2 }
 
-$sid = [guid]::NewGuid().ToString()
 if ($Interleaved) {
     $tagLaunch = "h1_interleaved_" + (Get-Date -Format "yyyyMMdd_HHmmss")
     $artifactDir = Join-Path $SessionRoot ("interleaved_" + $sid)
@@ -491,7 +509,8 @@ if ($Interleaved) {
     $resolvedCmd = $resolvedCmd +
         ' --out "' + $artifactDir + '"' +
         ' --run-id ' + $sid +
-        ' --entries "' + $RunEntries + '"'
+        ' --entries "' + $RunEntries + '"' +
+        ' --launch-evidence-dir "' + $SessionLaunchDir + '"'
 } else {
     $resolvedCmd = $envPrefix +
         '&& "' + $PythonExe + '" -u "' + $WorkerPy + '"' +
@@ -499,7 +518,8 @@ if ($Interleaved) {
         ' --max-usd ' + $MaxUsd +
         ' --out "' + $artifactDir + '"' +
         ' --run-id ' + $sid +
-        ' --entries "' + $RunEntries + '"'
+        ' --entries "' + $RunEntries + '"' +
+        ' --launch-evidence-dir "' + $SessionLaunchDir + '"'
 }
 
 if (-not [string]::IsNullOrWhiteSpace($LocalScript)) {
@@ -546,6 +566,7 @@ Write-Host ""
 Write-Host ("session_id (run_id) : {0}" -f $sid)
 Write-Host ("artifact_dir        : {0}" -f $artifactDir)
 Write-Host ("launch_log          : {0}" -f $log)
+Write-Host ("launch_evidence_dir : {0}" -f $SessionLaunchDir)
 if ($Interleaved) {
     Write-Host ("session_max_usd     : {0}" -f $SessionMaxUsd)
     Write-Host ("arm_order           : {0}" -f ($resolvedInterleavePolicies -join ","))

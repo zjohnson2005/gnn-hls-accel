@@ -36,6 +36,41 @@ def seal_git_record(*, allow_dirty: bool, root: Path) -> dict[str, Any]:
     }
 
 
+def launch_evidence_record(evidence_dir: Path, *, root: Path) -> dict[str, Any]:
+    """Every file the launcher wrote for this run (gate JSON, opening canary).
+
+    The launcher writes them under derived/h1_hybrid/_launches/<run_id>/,
+    which is gitignored, before it spawns the worker. Each file is recorded
+    by repo-relative path, size and sha256, so the plan and the seal fix
+    their bytes. A missing or empty directory refuses: the evidence is lost.
+    """
+    root = root.resolve()
+    base = Path(evidence_dir).resolve()
+    if not base.is_dir():
+        raise SystemExit(f"REFUSED -- launch evidence dir missing: {base}")
+    files = sorted(p for p in base.rglob("*") if p.is_file())
+    if not files:
+        raise SystemExit(f"REFUSED -- launch evidence dir is empty: {base}")
+
+    def shown(path: Path) -> str:
+        try:
+            return path.relative_to(root).as_posix()
+        except ValueError:
+            return path.as_posix()
+
+    return {
+        "dir": shown(base),
+        "files": [
+            {
+                "path": shown(path),
+                "bytes": path.stat().st_size,
+                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            }
+            for path in files
+        ],
+    }
+
+
 def _git_diff_head(root: Path) -> bytes:
     try:
         proc = subprocess.run(

@@ -27,7 +27,10 @@ function Invoke-SeamMeasurementGates {
         # T2S is not rebooted: skip only the uptime gate; the gate JSON records
         # the UNCOLD_UPTIME deviation (seam.measurement_gates --skip-uptime).
         [switch]$SkipUptime,
-        [switch]$DryRun
+        [switch]$DryRun,
+        # A launcher whose worker checks for a clean tree passes its per-session,
+        # gitignored launch dir here, so the probe is kept and the tree stays clean.
+        [string]$ProbeDir = ""
     )
 
     if (-not (Test-Path -LiteralPath $PythonExe)) {
@@ -38,6 +41,7 @@ function Invoke-SeamMeasurementGates {
 
     $probeDir = Join-Path $RepoRoot "derived\_gate_probes"
     if ($DryRun) { $probeDir = Join-Path $probeDir "_dryrun" }
+    if (-not [string]::IsNullOrWhiteSpace($ProbeDir)) { $probeDir = $ProbeDir }
     New-Item -ItemType Directory -Force -Path $probeDir | Out-Null
     $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
     $outJson = Join-Path $probeDir ("gates_" + $stamp + ".json")
