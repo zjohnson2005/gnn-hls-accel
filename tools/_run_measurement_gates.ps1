@@ -5,7 +5,14 @@
 #   Invoke-SeamMeasurementGates -RepoRoot $root -PythonExe $PythonExe -PlatformId $PlatformId -DryRun:$DryRun
 #
 # Refuses (exit 1) when any pass/fail gate fails, unless -DryRun (report-only).
-# Writes gate JSON under derived/_gate_probes/ for seal attachment.
+# Writes gate JSON under derived/_gate_probes/ for seal attachment. A -DryRun
+# writes under derived/_gate_probes/_dryrun/ (gitignored), so a dry run does
+# not leave the tree dirty for the next real launch.
+#
+# Get-SeamGateRefusals reads the refusal_reasons of a gate JSON, for the
+# launchers' dry-run summary:
+#   $gateJson = Invoke-SeamMeasurementGates ...
+#   $gateFails = @(Get-SeamGateRefusals -GateJson $gateJson)
 
 Set-StrictMode -Version Latest
 
@@ -30,6 +37,7 @@ function Invoke-SeamMeasurementGates {
     }
 
     $probeDir = Join-Path $RepoRoot "derived\_gate_probes"
+    if ($DryRun) { $probeDir = Join-Path $probeDir "_dryrun" }
     New-Item -ItemType Directory -Force -Path $probeDir | Out-Null
     $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
     $outJson = Join-Path $probeDir ("gates_" + $stamp + ".json")
@@ -76,4 +84,30 @@ function Invoke-SeamMeasurementGates {
         Write-Host "GATES: all pass/fail gates PASS"
     }
     return $outJson
+}
+
+function Get-SeamGateRefusals {
+    # refusal_reasons from a gate JSON written by Invoke-SeamMeasurementGates.
+    # Report-only: it reads the gate result and changes no gate.
+    [CmdletBinding()]
+    param([string]$GateJson = "")
+
+    if ([string]::IsNullOrWhiteSpace($GateJson) -or -not (Test-Path -LiteralPath $GateJson)) {
+        return @("gates: no gate JSON (the gates did not run)")
+    }
+    $text = Get-Content -LiteralPath $GateJson -Raw -Encoding UTF8
+    $start = $text.IndexOf("{")
+    $end = $text.LastIndexOf("}")
+    if ($start -lt 0 -or $end -le $start) {
+        return @("gates: gate JSON unreadable: $GateJson")
+    }
+    try {
+        $doc = $text.Substring($start, $end - $start + 1) | ConvertFrom-Json
+    } catch {
+        return @("gates: gate JSON unreadable: $GateJson")
+    }
+    if ($null -eq $doc.PSObject.Properties["refusal_reasons"]) {
+        return @("gates: gate JSON has no refusal_reasons: $GateJson")
+    }
+    return @($doc.refusal_reasons | ForEach-Object { [string]$_ })
 }

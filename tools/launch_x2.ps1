@@ -183,8 +183,9 @@ $pythonForGates = if (Test-Path -LiteralPath $PythonExe) { $PythonExe } `
         Join-Path $root ".venv-seam\Scripts\python.exe"
     } else { Join-Path $root ".venv-seam\Scripts\python.exe" }
 $platformId = if ($env:SEAM_PLATFORM_ID) { $env:SEAM_PLATFORM_ID } else { "" }
-Invoke-SeamMeasurementGates -RepoRoot $root -PythonExe $pythonForGates `
+$gateJson = Invoke-SeamMeasurementGates -RepoRoot $root -PythonExe $pythonForGates `
     -PlatformId $platformId -DryRun:$DryRun
+$gateFails = @(Get-SeamGateRefusals -GateJson $gateJson)
 Write-Host ""
 
 # ---------------------------------------------------------------------------

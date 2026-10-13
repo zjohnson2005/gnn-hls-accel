@@ -928,6 +928,9 @@ function Invoke-BootGates {
     param([string]$Label, [switch]$ReportOnly, [switch]$UptimeReportOnly)
     if ($Rehearsal) {
         $probeDir = Join-Path $LaunchDir "gate_probes"
+    } elseif ($DryRun) {
+        # A dry run must not leave a tracked file behind (gitignored).
+        $probeDir = Join-Path $root "derived\_gate_probes\_dryrun"
     } else {
         $probeDir = Join-Path $root "derived\_gate_probes"
     }
