@@ -66,6 +66,8 @@
 #                       derived/h1_hybrid/demo1/DEMO1_LONGCTX_30.json. Default W-3.
 #   -Placement cpu-p    hybrid local arm on CPU (delta_n arm A). Default gpu_only.
 #   -Residency NON_RESIDENT   full prefill every step. Default RESIDENT.
+#   -Kv u8|u4|f16       KV cache precision of the gpu_only local arm (DEMO-1 V5b).
+#                       Default u8 (unchanged); the readback refuses a mismatch.
 #   -PolicyCapUsd "p=usd,..."   interleaved per-policy caps (default table above).
 #   -EntryOffset <i> -EntryCount <n>   one boot's chunk of the pinned entries
 #                       (H1-CPU chunking); the plan records the chunk.
@@ -117,6 +119,8 @@ param(
     [string]$Placement = "",
     [ValidateSet("", "RESIDENT", "NON_RESIDENT")]
     [string]$Residency = "",
+    [ValidateSet("", "u8", "u4", "f16")]
+    [string]$Kv = "",
     [Nullable[int]]$ObsMaskK = $null,
     [Nullable[int]]$EntryOffset = $null,
     [Nullable[int]]$EntryCount = $null,
@@ -591,6 +595,13 @@ if (-not [string]::IsNullOrWhiteSpace($Placement)) {
 }
 if (-not [string]::IsNullOrWhiteSpace($Residency)) {
     $resolvedCmd = $resolvedCmd + ' --residency ' + $Residency
+}
+if (-not [string]::IsNullOrWhiteSpace($Kv)) {
+    if ($Placement -eq "cpu-p") {
+        Refuse "-Kv applies to the gpu_only arm; -Placement cpu-p loads delta_n arm A, whose KV is not pinned"
+        exit 1
+    }
+    $resolvedCmd = $resolvedCmd + ' --kv ' + $Kv
 }
 if ($null -ne $ObsMaskK) {
     $resolvedCmd = $resolvedCmd + ' --obs-mask-k ' + $ObsMaskK

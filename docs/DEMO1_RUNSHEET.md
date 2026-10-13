@@ -117,6 +117,20 @@ Where to look and what to look for:
   `ssh <host> 'Get-Content -Tail 20 <repo>\derived\h1_hybrid\_launches\h1_slo_escalate_<stamp>.log'`.
   Do not touch the host until it is complete.
 
+## V5 cells (DEMO-1 amendment 2026-10-13c; XPS, each after a cold reboot)
+Caps $15 each come from the $55 reserve: need Zach's written OK first.
+Predictions: analysis/demo1/V5_PREDICTIONS.json (all 15 entries indeterminate
+from sealed data; upper bound: 15/15 escalate, local share 0.164).
+```
+# V5a RESIDENT u8
+ssh zjohn@100.101.81.6 'cd C:\Users\zjohn\Projects\gnn-hls-accel; git pull --ff-only; .\tools\launch_h1.ps1 -Policy slo_escalate -Residency RESIDENT -Kv u8 -ObsMaskK 1024 -Entries derived\h1_hybrid\demo1\DEMO1_PAIRED_15.json -MaxUsd 15'
+# V5b RESIDENT u4
+ssh zjohn@100.101.81.6 'cd C:\Users\zjohn\Projects\gnn-hls-accel; git pull --ff-only; .\tools\launch_h1.ps1 -Policy slo_escalate -Residency RESIDENT -Kv u4 -ObsMaskK 1024 -Entries derived\h1_hybrid\demo1\DEMO1_PAIRED_15.json -MaxUsd 15'
+```
+Dry runs: append -DryRun (one cloud ping under $0.001 unless -NoCloudPing).
+Log `h1_slo_escalate_<stamp>.log`; artifact `slo_escalate_<run_id>\`; plan.json
+arm_config.kv must read u8 / u4.
+
 ## H1-CPU amendment 2 boots (XPS, all after a reboot; RESIDENT as registered)
 ```
 # boot 1

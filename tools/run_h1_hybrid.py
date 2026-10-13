@@ -313,18 +313,21 @@ def local_model_identity(local: Any) -> dict[str, str]:
 
 LOCAL_PLACEMENTS = ("gpu_only", "cpu-p")
 LOCAL_RESIDENCIES = ("RESIDENT", "NON_RESIDENT")
+# KV cache precision of the gpu_only local arm (DEMO-1 amendment 2026-10-13c,
+# V5b). Default stays ARM_CONFIG (u8); the readback still refuses a mismatch.
+LOCAL_KVS = ("u8", "u4", "f16")
 
 
 def arm_config_for(policy: str, local: Any) -> dict[str, str]:
     """ARM_CONFIG[policy] with model, tier, placement and residency from ``local``.
 
-    A backend built with --placement / --residency records what it loaded;
-    stubs without those attributes keep the ARM_CONFIG values.
+    A backend built with --placement / --residency / --kv records what it
+    loaded; stubs without those attributes keep the ARM_CONFIG values.
     """
     arm = dict(ARM_CONFIG[policy])
     if arm["placement"] != "cloud":
         arm.update(local_model_identity(local))
-        for key in ("placement", "residency"):
+        for key in ("placement", "residency", "kv"):
             value = getattr(local, key, None)
             if isinstance(value, str) and value:
                 arm[key] = value
@@ -3830,6 +3833,13 @@ def build_argparser() -> argparse.ArgumentParser:
         "NON_RESIDENT prefills the full prompt every step.",
     )
     p.add_argument(
+        "--kv",
+        choices=LOCAL_KVS,
+        default=None,
+        help="KV cache precision of the gpu_only local arm (default: ARM_CONFIG, u8). "
+        "The pipeline readback refuses a mismatch.",
+    )
+    p.add_argument(
         "--entries", type=Path, default=None, help="BFCL entries JSON (default: W-3 seal)"
     )
     p.add_argument(
@@ -4153,7 +4163,11 @@ def run_turnwise_lifecycle_smoke(
 
 
 def local_arm_settings(
-    policy: str, *, placement: str | None = None, residency: str | None = None
+    policy: str,
+    *,
+    placement: str | None = None,
+    residency: str | None = None,
+    kv: str | None = None,
 ) -> dict[str, str]:
     """Placement, residency and kv for a hybrid local arm. Defaults are ARM_CONFIG.
 
@@ -4166,8 +4180,15 @@ def local_arm_settings(
     out = {
         "placement": placement or arm["placement"],
         "residency": (residency or arm["residency"]).upper(),
-        "kv": arm["kv"],
+        "kv": (kv or arm["kv"]).lower(),
     }
+    if out["kv"] not in LOCAL_KVS:
+        raise SystemExit(f"REFUSED -- kv {out['kv']!r} not in {LOCAL_KVS}")
+    if kv is not None and out["placement"] != "gpu_only":
+        raise SystemExit(
+            "REFUSED -- --kv applies to the gpu_only arm; cpu-p loads delta_n arm A, "
+            "whose KV is not pinned"
+        )
     if out["placement"] not in LOCAL_PLACEMENTS:
         raise SystemExit(f"REFUSED -- placement {out['placement']!r} not in {LOCAL_PLACEMENTS}")
     if out["residency"] not in LOCAL_RESIDENCIES:
@@ -4207,8 +4228,9 @@ def _make_openvino_local(
     *,
     placement: str | None = None,
     residency: str | None = None,
+    kv: str | None = None,
 ) -> OpenVinoLocalBackend:
-    settings = local_arm_settings(policy, placement=placement, residency=residency)
+    settings = local_arm_settings(policy, placement=placement, residency=residency, kv=kv)
     spec = model_spec or (ROOT / "configs" / "models" / "Qwen3-4B-int4-ov.yaml")
     return OpenVinoLocalBackend(
         model_spec=spec,
@@ -4309,7 +4331,11 @@ def main(argv: list[str] | None = None) -> int:
         local = ScriptedLiveLocalBackend(script=script)
     else:
         local = _make_openvino_local(
-            args.policy, args.model_spec, placement=args.placement, residency=args.residency
+            args.policy,
+            args.model_spec,
+            placement=args.placement,
+            residency=args.residency,
+            kv=args.kv,
         )
 
     retention, obs_mask = attach_obs_mask(args.obs_mask_k, local, cloud)
@@ -4402,7 +4428,11 @@ def _main_interleaved(args: argparse.Namespace) -> int:
     else:
         # Selected arms share gpu_only RESIDENT u8 int4-4B (match 86d0f4cf).
         local = _make_openvino_local(
-            "slo_escalate", args.model_spec, placement=args.placement, residency=args.residency
+            "slo_escalate",
+            args.model_spec,
+            placement=args.placement,
+            residency=args.residency,
+            kv=args.kv,
         )
 
     retention, obs_mask = attach_obs_mask(args.obs_mask_k, local, cloud)
