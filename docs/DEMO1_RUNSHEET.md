@@ -105,6 +105,12 @@ Where to look and what to look for:
   `cloud_dead_events.json`: the guard events and each request's ok, error
   (redacted), error class, HTTP status, request id, model, tokens and
   latency. It is inside the sealed tree.
+- In-worker ping (since 2026-10-13): the detached worker repeats the same ping
+  from its own process before the first entry and writes
+  `cloud_ping_worker.json` into the artifact (sealed); plan.json
+  `cloud_ping_worker` says it ran and passed. If it fails, the run ends with
+  status `refused_cloud_ping`, no entry runs, $0, and the dir is sealed as a
+  record. Skipped when no selected policy reaches the cloud (local_only).
 - Done when the log ends with the runner's JSON block `{"ok": true, "summary": ...}`
   containing `"status": "complete"`, and the artifact has `.sealed`.
 - Poll:

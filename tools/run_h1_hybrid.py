@@ -2042,6 +2042,52 @@ class CloudDeadPathGuard:
             )
 
 
+CLOUD_PING_WORKER_FILE = "cloud_ping_worker.json"
+REFUSED_CLOUD_PING = "refused_cloud_ping"
+
+
+def policy_reaches_cloud(policy: str) -> bool:
+    """Every H1 policy can send a turn to the cloud except local_only."""
+    return policy != "local_only"
+
+
+def run_worker_cloud_ping(
+    preflight: Callable[[], dict[str, Any]], out_dir: Path
+) -> dict[str, Any]:
+    """The tools/cloud_ping.py request, made from inside this worker process.
+
+    launch_h1 pings from the ssh session; the worker runs as a WMI child and
+    can see a different environment. The record (already redacted by
+    cloud_ping) is written to <run dir>/cloud_ping_worker.json, inside the
+    sealed tree. Returns the plan.json block.
+    """
+    import os
+
+    from tools.h1_cloud_accounting import exception_fields
+
+    try:
+        record = dict(preflight())
+    except Exception as exc:
+        record = {"ok": False, "exit_code": 1, **exception_fields(exc)}
+    record["process"] = "worker"
+    record["pid"] = os.getpid()
+    path = out_dir / CLOUD_PING_WORKER_FILE
+    _write_json(path, record)
+    return {
+        "ran": True,
+        "ok": bool(record.get("ok")),
+        "path": CLOUD_PING_WORKER_FILE,
+        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        "model": record.get("model"),
+        "http_status": record.get("http_status"),
+        "error_class": record.get("error_class"),
+        "anthropic_sdk_version": record.get("anthropic_sdk_version"),
+        "api_key_present": record.get("api_key_present"),
+        "usd": record.get("usd"),
+        "note": "Ping cost is recorded here and is not charged to the policy or session caps.",
+    }
+
+
 def load_checkpoint(path: Path) -> dict[str, Any]:
     if not path.is_file():
         return {"completed_entry_ids": [], "running_usd": 0.0, "entries": []}
@@ -2760,6 +2806,7 @@ def run_session(
     seal_git: dict[str, Any] | None = None,
     entry_pin: dict[str, Any] | None = None,
     retention: dict[str, Any] | None = None,
+    cloud_preflight: Callable[[], dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     if max_usd is None:
         raise SystemExit("REFUSED -- --max-usd is required (cost guard)")
@@ -2833,6 +2880,23 @@ def run_session(
     cloud_dead_guard = CloudDeadPathGuard(
         n=CLOUD_DEAD_CONSECUTIVE_N, events_path=out_dir / "cloud_dead_events.json"
     )
+    ping_refused = False
+    if cloud_preflight is not None:
+        if policy_reaches_cloud(policy):
+            plan["cloud_ping_worker"] = run_worker_cloud_ping(cloud_preflight, out_dir)
+            if not plan["cloud_ping_worker"]["ok"]:
+                ping_refused = True
+                status = REFUSED_CLOUD_PING
+                abort_reason = (
+                    "REFUSED -- in-worker cloud ping failed "
+                    f"(http_status={plan['cloud_ping_worker']['http_status']} "
+                    f"error_class={plan['cloud_ping_worker']['error_class']}); no entry run"
+                )
+                abort_verbatim = abort_reason
+                print(f"REFUSED_CLOUD_PING {abort_reason}")
+        else:
+            plan["cloud_ping_worker"] = {"ran": False, "reason": "policy does not reach the cloud"}
+        _write_json(out_dir / "plan.json", plan)
 
     def _write_session_summary() -> dict[str, Any]:
         nonlocal summary_written
@@ -2874,7 +2938,7 @@ def run_session(
         return doc
 
     try:
-        for entry in entries:
+        for entry in [] if ping_refused else entries:
             eid = str(entry["id"])
             if eid in completed:
                 print(f"RESUME_SKIP entry={eid} running_usd={cost.running_usd:.6f}")
@@ -3023,6 +3087,7 @@ def run_interleaved_session(
     arm_order_seed: int = 0,
     entry_pin: dict[str, Any] | None = None,
     retention: dict[str, Any] | None = None,
+    cloud_preflight: Callable[[], dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Entry-by-entry interleave of selected H1 policy arms (INF-5 session_design=interleaved).
 
@@ -3215,10 +3280,35 @@ def run_interleaved_session(
             },
         )
 
+    ping_refused = False
+    if cloud_preflight is not None:
+        if any(policy_reaches_cloud(p) for p in policies):
+            plan["cloud_ping_worker"] = run_worker_cloud_ping(cloud_preflight, out_dir)
+            if not plan["cloud_ping_worker"]["ok"]:
+                ping_refused = True
+                session_status = REFUSED_CLOUD_PING
+                session_abort = (
+                    "REFUSED -- in-worker cloud ping failed "
+                    f"(http_status={plan['cloud_ping_worker']['http_status']} "
+                    f"error_class={plan['cloud_ping_worker']['error_class']}); no entry run"
+                )
+                for p in policies:
+                    state[p]["status"] = REFUSED_CLOUD_PING
+                    state[p]["abort_reason"] = session_abort
+                    _persist_policy(p)
+                _persist_session()
+                print(f"REFUSED_CLOUD_PING {session_abort}")
+        else:
+            plan["cloud_ping_worker"] = {
+                "ran": False,
+                "reason": "no selected policy reaches the cloud",
+            }
+        _write_json(out_dir / "plan.json", plan)
+
     try:
         from tools.h1_provenance import latin_square_order
 
-        for entry in entries:
+        for entry in [] if ping_refused else entries:
             eid = str(entry["id"])
             order = latin_square_order(policies, eid, seed=int(arm_order_seed))
             for policy in order:
@@ -4223,6 +4313,8 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     retention, obs_mask = attach_obs_mask(args.obs_mask_k, local, cloud)
+    from tools.cloud_ping import ping as cloud_ping
+
     summary = run_session(
         policy=args.policy,
         entries=entries,
@@ -4237,6 +4329,9 @@ def main(argv: list[str] | None = None) -> int:
         seal_git=args.seal_git,
         entry_pin=entry_pin,
         retention=retention,
+        cloud_preflight=lambda: cloud_ping(
+            cloud_model=args.cloud_model, backend_factory=lambda _model: cloud
+        ),
     )
     write_obs_mask_ledger(args.out, obs_mask)
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
@@ -4311,6 +4406,8 @@ def _main_interleaved(args: argparse.Namespace) -> int:
         )
 
     retention, obs_mask = attach_obs_mask(args.obs_mask_k, local, cloud)
+    from tools.cloud_ping import ping as cloud_ping
+
     summary = run_interleaved_session(
         entries=entries,
         out_dir=args.out,
@@ -4326,6 +4423,9 @@ def _main_interleaved(args: argparse.Namespace) -> int:
         seal_git=args.seal_git,
         entry_pin=entry_pin,
         retention=retention,
+        cloud_preflight=lambda: cloud_ping(
+            cloud_model=args.cloud_model, backend_factory=lambda _model: cloud
+        ),
     )
     write_obs_mask_ledger(args.out, obs_mask)
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
