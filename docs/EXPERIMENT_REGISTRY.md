@@ -220,7 +220,7 @@ time after Wednesday; this list does not fit in the window.
 | P2 DSE / replay | fdr_replay predictor, cross-platform prediction (D-1c, T2-3) | C | PLANNED (paper 2) |
 | CORRECTIONS | KV claim wording, OPLIMIT colours | B | PARTIAL (KV wording in derived/WITHDRAWN.md 2026-09-23 and 2026-09-25; OPLIMIT colours NOT FOUND (searched: docs/, derived/)) |
 | RELATED-LOG | docs/RELATED_SEARCHES.md before any "first" claim | A | DONE (docs/RELATED_SEARCHES.md, search date 2026-09-23) |
-| P1 slow canary | f16 canary turn-2 0.86-0.96 s vs 0.70-0.76 | B | OPEN |
+| P1 slow canary | f16 canary turn-2 0.86-0.96 s vs 0.70-0.76 | B | OPEN (audit 2026-10-13, band unchanged: HEALTHY_REF_T2_LOW/HIGH in tools/run_p1_quality.py, added in 127db99 with the comment "pooled healthy sessions" and no run_ids; nearest source is the five lowest session refs in derived/c2_ttft/analysis/canary_threshold_pool.json, a427233b 0.6956, fea55e0c 0.6998, e9264a0a 0.7193, c2246b1f 0.7303, d3dcbd3b 0.7433, same fixed cell; the band is only checked by --canary-calibrate, i.e. rehearsals, never inside a live P1 cell, so no sealed P1 boot was gated by it; in-run calibration refs: 8a529053 0.964, 385cd4f6 0.862, 3b4d8207 0.864, e31a0a89 0.947, 824cad12 0.758, bdc32a87 0.919, 26118b6c 0.964 (drift trip); rehearsal 2026-10-13 ~19:35Z refused at 0.823993) |
 | WRITE-DRAFT | draft to Dr. Hao | A | PLANNED (due 2026-11-02; data freeze 2026-11-16) |
 
 ---
