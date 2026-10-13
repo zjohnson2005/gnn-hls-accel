@@ -72,8 +72,8 @@ def test_gate_payload_carries_refusal_reasons() -> None:
 
 def test_dry_run_probes_go_to_the_ignored_dir() -> None:
     text = GATES_PS1.read_text(encoding="utf-8")
-    assert '$probeDir = Join-Path $RepoRoot "derived\\_gate_probes"' in text
-    assert 'if ($DryRun) { $probeDir = Join-Path $probeDir "_dryrun" }' in text
+    assert '$outDir = Join-Path $RepoRoot "derived\\_gate_probes\\_dryrun"' in text
+    assert '$outDir = Join-Path $RepoRoot "derived\\_gate_probes"\n' in text
     boot = (TOOLS / "launch_boot1.ps1").read_text(encoding="utf-8")
     block = boot[boot.index("function Invoke-BootGates") :]
     block = block[: block.index("New-Item")]

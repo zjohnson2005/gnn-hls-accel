@@ -208,6 +208,6 @@ def test_launcher_writes_evidence_to_the_run_dir() -> None:
             assert "AllowDirty" in line or line.strip().startswith("#") or "allow-dirty'" in line
     gates_text = GATES_PS1.read_text(encoding="utf-8")
     assert '[string]$ProbeDir = ""' in gates_text
-    assert "if (-not [string]::IsNullOrWhiteSpace($ProbeDir)) { $probeDir = $ProbeDir }" in (
+    assert "if (-not [string]::IsNullOrWhiteSpace($ProbeDir)) {\n        $outDir = $ProbeDir" in (
         gates_text
     )

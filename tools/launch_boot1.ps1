@@ -1016,12 +1016,12 @@ function Invoke-DetProbe {
     $lines = & $PythonExe @detArgs 2>&1
     $exit = $LASTEXITCODE
     $lines | ForEach-Object { Write-Host $_ }
-    $runId = ""
+    $detRunId = ""
     foreach ($line in $lines) {
         $text = [string]$line
-        if ($text.StartsWith("RUN_ID ")) { $runId = $text.Substring(7).Trim() }
+        if ($text.StartsWith("RUN_ID ")) { $detRunId = $text.Substring(7).Trim() }
     }
-    return @{ Exit = $exit; RunId = $runId }
+    return @{ Exit = $exit; RunId = $detRunId }
 }
 
 function Invoke-NpuCell {
@@ -1050,11 +1050,11 @@ function Invoke-NpuCell {
     $low = Get-BootCellField -Cell $Cell -Name "Low"
     $resolution = Get-BootCellField -Cell $Cell -Name "Resolution"
     $mpl = Get-BootCellField -Cell $Cell -Name "MaxPromptLen"
-    $loadOnly = Get-BootCellField -Cell $Cell -Name "LoadOnly"
+    $cellLoadOnly = Get-BootCellField -Cell $Cell -Name "LoadOnly"
     if ($null -ne $low) { $workerArgs += @("--low", [string]$low) }
     if ($null -ne $resolution) { $workerArgs += @("--resolution", [string]$resolution) }
     if ($null -ne $mpl) { $workerArgs += @("--max-prompt-len", [string]$mpl) }
-    if ($loadOnly) { $workerArgs += "--load-only" }
+    if ($cellLoadOnly) { $workerArgs += "--load-only" }
     if (Get-BootCellField -Cell $Cell -Name "Envelope") { $workerArgs += "--envelope" }
     if ($stubWorker) { $workerArgs += "--smoke" }
     $workerLines = New-Object System.Collections.Generic.List[string]
@@ -1063,8 +1063,8 @@ function Invoke-NpuCell {
         Write-Host $_
     }
     $exit = $LASTEXITCODE
-    $summaryPath = Join-Path $out "summary.json"
-    return Get-BootCeilingResult -SummaryPath $summaryPath -Stdout @($workerLines) `
+    $cellSummaryPath = Join-Path $out "summary.json"
+    return Get-BootCeilingResult -SummaryPath $cellSummaryPath -Stdout @($workerLines) `
         -ExitCode $exit -RunId $sid -Out $out
 }
 
@@ -1133,8 +1133,8 @@ function Invoke-CeilingCell {
             Write-Host $_
         }
     $exit = $LASTEXITCODE
-    $summaryPath = Join-Path $out "summary.json"
-    return Get-BootCeilingResult -SummaryPath $summaryPath -Stdout @($workerLines) -ExitCode $exit -RunId $sid -Out $out
+    $cellSummaryPath = Join-Path $out "summary.json"
+    return Get-BootCeilingResult -SummaryPath $cellSummaryPath -Stdout @($workerLines) -ExitCode $exit -RunId $sid -Out $out
 }
 
 function Assert-BootTree {
@@ -1206,11 +1206,11 @@ function Get-BootCellCommand {
         $low = Get-BootCellField -Cell $Cell -Name "Low"
         $resolution = Get-BootCellField -Cell $Cell -Name "Resolution"
         $mpl = Get-BootCellField -Cell $Cell -Name "MaxPromptLen"
-        $loadOnly = Get-BootCellField -Cell $Cell -Name "LoadOnly"
+        $cellLoadOnly = Get-BootCellField -Cell $Cell -Name "LoadOnly"
         if ($null -ne $low) { $args += @("--low", [string]$low) }
         if ($null -ne $resolution) { $args += @("--resolution", [string]$resolution) }
         if ($null -ne $mpl) { $args += @("--max-prompt-len", [string]$mpl) }
-        if ($loadOnly) { $args += "--load-only" }
+        if ($cellLoadOnly) { $args += "--load-only" }
         if (Get-BootCellField -Cell $Cell -Name "Envelope") { $args += "--envelope" }
         $smokeArgs = @($PythonExe, "-u", $NpuPy, "--smoke", "--cell", $phase, "--out", (Get-RehearsalSmokeOut -Cell $Cell))
         return [ordered]@{

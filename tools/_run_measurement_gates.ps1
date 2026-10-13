@@ -39,12 +39,19 @@ function Invoke-SeamMeasurementGates {
         return $null
     }
 
-    $probeDir = Join-Path $RepoRoot "derived\_gate_probes"
-    if ($DryRun) { $probeDir = Join-Path $probeDir "_dryrun" }
-    if (-not [string]::IsNullOrWhiteSpace($ProbeDir)) { $probeDir = $ProbeDir }
-    New-Item -ItemType Directory -Force -Path $probeDir | Out-Null
+    # PowerShell names are case-insensitive: a local named like the -ProbeDir
+    # parameter would overwrite it. Precedence: -ProbeDir, else _dryrun under
+    # -DryRun, else derived\_gate_probes.
+    if (-not [string]::IsNullOrWhiteSpace($ProbeDir)) {
+        $outDir = $ProbeDir
+    } elseif ($DryRun) {
+        $outDir = Join-Path $RepoRoot "derived\_gate_probes\_dryrun"
+    } else {
+        $outDir = Join-Path $RepoRoot "derived\_gate_probes"
+    }
+    New-Item -ItemType Directory -Force -Path $outDir | Out-Null
     $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-    $outJson = Join-Path $probeDir ("gates_" + $stamp + ".json")
+    $outJson = Join-Path $outDir ("gates_" + $stamp + ".json")
 
     $pyArgs = @(
         "-m", "seam.measurement_gates",
