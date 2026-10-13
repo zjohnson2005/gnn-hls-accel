@@ -407,7 +407,9 @@ def test_launcher_shape() -> None:
 
 def test_run_dir_is_derived_npu_natstop() -> None:
     assert ns.DEFAULT_OUT == ROOT / "derived" / "npu"
-    assert "natstop_{run_id}" in (ROOT / "tools" / "npu_natstop.py").read_text(encoding="utf-8")
+    source = (ROOT / "tools" / "npu_natstop.py").read_text(encoding="utf-8")
+    assert '"filler": "natstop_", "chat": "natstop_b_", "f1": "natstop_f1_"' in source
+    assert 'out_dir = Path(args.out) / f"{prefix}{run_id}"' in source
 
 
 # ---------------------------------------------------------------- NPU-NATSTOP-B
@@ -541,6 +543,6 @@ def test_chat_prompts_and_constants_are_the_amendment_text() -> None:
 
 def test_launcher_passes_the_prompt_set() -> None:
     text = LAUNCHER.read_text(encoding="ascii")
-    assert '[ValidateSet("filler", "chat")]' in text
+    assert '[ValidateSet("filler", "chat", "f1")]' in text
     assert '"--prompt-set", $PromptSet' in text
     assert '"npu-natstop-b_"' in text

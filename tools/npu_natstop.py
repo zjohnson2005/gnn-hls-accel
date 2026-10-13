@@ -18,12 +18,22 @@ real-token validity rule. Its final stdout line is
 NATSTOP_B_VERDICT <B1|B2|B3|B4> <out_dir>. The prompt texts and the validity
 constants are written here and in the amendment; this script does not open
 the amendment.
+
+--prompt-set f1 is the export-format test F1 (amendment 2026-10-13): the
+chat prompts on another IR (--model-spec; the int4 default is refused), each
+cell judged by the validity rule plus a fixed content check, classified
+FA/FB/FC. Final stdout line: NATSTOP_F1_VERDICT <FA|FB|FC> <out_dir>.
+
+Every run records the IR's quantization metadata in plan.json, read from the
+IR (seam.ir_quantization), and a real run refuses when openvino_model.xml is
+absent or does not match the spec's pin.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import socket
 import subprocess
 import sys
@@ -37,6 +47,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from seam.ir_quantization import ir_quantization  # noqa: E402
 from seam.npu_validity import REPEAT_FRACTION_MAX, fourgram_repeat_fraction  # noqa: E402
 from seam.tools.boot4_text import id_count, render_user, rendered_exact_prompt  # noqa: E402
 from tools.npu_maxlen_diag import (  # noqa: E402
@@ -70,7 +81,8 @@ DEFAULT_MODEL_SPEC = ROOT / "configs" / "models" / "Qwen3-4B-int4-ov.yaml"
 DEFAULT_OUT = ROOT / "derived" / "npu"
 DEFAULT_WATCHDOG_LOG = r"C:\apu\ovn\watchdog.log"
 
-PROMPT_SETS = ("filler", "chat")
+PROMPT_SETS = ("filler", "chat", "f1")
+CHAT_SETS = ("chat", "f1")
 # NPU-NATSTOP-B prompts (fixed text, user turn, thinking disabled).
 CHAT_PROMPTS = {
     "chat1": "What is the capital of France? Answer in one sentence.",
@@ -82,6 +94,15 @@ CHAT_PROMPTS = {
 # DOUBLE 64, which quotes the repeated filler).
 VALID_MIN_REAL_TOKENS = 62
 VALID_REPEAT_MAX = 27 / 61
+
+# F1 content check (amendment 2026-10-13), on real_text:
+# chat1 contains "paris" (case-insensitive); chat2 has at least 2 distinct tip
+# lines, each a numeral or bullet line whose remainder has at least 5 words
+# (whitespace pieces with an ASCII letter).
+CHAT1_KEYWORD = "paris"
+TIP_LINE = re.compile(r"^(?:#{1,6}\s*)?(?:\*\*)?(?:\d{1,2}[.)]|[-*+]|\u2022)(?:\*\*)?\s+(.+)$")
+TIP_MIN_WORDS = 5
+TIP_MIN_LINES = 2
 
 
 def items_for(prompt_set: str = "filler") -> tuple[Any, ...]:
@@ -285,6 +306,99 @@ def classify_scope(cells: dict[str, Any]) -> str:
     return "B3"
 
 
+def tip_lines(text: str | None) -> list[str]:
+    """Distinct tip-line remainders (lowercased, whitespace collapsed)."""
+    found: list[str] = []
+    for line in real_text(text).splitlines():
+        match = TIP_LINE.match(line.strip())
+        if match is None:
+            continue
+        body = match.group(1)
+        words = [w for w in body.split() if re.search("[A-Za-z]", w)]
+        key = " ".join(body.lower().split())
+        if len(words) >= TIP_MIN_WORDS and key not in found:
+            found.append(key)
+    return found
+
+
+def content_ok(prompt_id: str | None, text: str | None) -> bool:
+    """F1 content check on the real text (think tags removed)."""
+    if prompt_id == "chat1":
+        return CHAT1_KEYWORD in real_text(text).lower()
+    if prompt_id == "chat2":
+        return len(tip_lines(text)) >= TIP_MIN_LINES
+    return False
+
+
+def passes(cell: dict[str, Any] | None, reference: dict[str, Any] | None) -> bool:
+    """F1: valid under the 2026-10-12 rule and the content check holds."""
+    if not valid(cell, reference):
+        return False
+    assert cell is not None
+    return content_ok(cell.get("prompt_id"), cell.get("text"))
+
+
+def classify_format(cells: dict[str, Any]) -> str:
+    """F1 rule, by code. First match wins.
+
+    FA: under some template the NPU cell passes on both prompts.
+    FB: all NPU cells ok, none passes, and GPU SINGLE passes on both prompts.
+    FC: anything else (an NPU cell not ok, a failing GPU reference, mixed).
+    """
+
+    def get(device: str, template: str, item: str) -> dict[str, Any] | None:
+        cell = cells.get(cell_key(device, template, item))
+        return cell if isinstance(cell, dict) else None
+
+    prompts = tuple(CHAT_PROMPTS)
+
+    def npu_passes(template: str, p: str) -> bool:
+        return passes(get("NPU", template, p), get("GPU", template, p))
+
+    if any(all(npu_passes(t, p) for p in prompts) for t in TEMPLATES):
+        return "FA"
+    npu_ok = all(cell_ok(get("NPU", t, p)) for t in TEMPLATES for p in prompts)
+    none_pass = not any(npu_passes(t, p) for t in TEMPLATES for p in prompts)
+    gpu_ref = all(passes(get("GPU", "SINGLE", p), get("GPU", "SINGLE", p)) for p in prompts)
+    if npu_ok and none_pass and gpu_ref:
+        return "FB"
+    return "FC"
+
+
+def ir_record(model_spec: Path) -> dict[str, Any]:
+    """Spec pin plus the quantization metadata read from the IR itself."""
+    from seam.model_provenance import load_local_spec
+
+    try:
+        spec = load_local_spec(Path(model_spec))
+    except Exception as exc:
+        return {"spec_error": f"{type(exc).__name__}: {exc}", "ir_quantization": None}
+    ir = Path(str(spec["ir_dir"]))
+    if not ir.is_absolute():
+        ir = ROOT / ir
+    pin = (spec.get("ir_files") or {}).get("openvino_model.xml")
+    return {
+        "spec_error": None,
+        "name": spec.get("name"),
+        "revision": spec.get("revision"),
+        "ir_sha256": spec.get("ir_sha256"),
+        "spec_publisher_quantization": spec.get("publisher_quantization"),
+        "ir_quantization": ir_quantization(ir, pin),
+    }
+
+
+def ir_refusal(record: dict[str, Any]) -> str | None:
+    """Why a real run must not start on this IR, or None."""
+    if record.get("spec_error"):
+        return f"model spec unreadable: {record['spec_error']}"
+    quant = record.get("ir_quantization") or {}
+    if not quant.get("xml_present"):
+        return f"openvino_model.xml absent in {quant.get('ir_dir')}"
+    if quant.get("xml_matches_pin") is not True:
+        return "openvino_model.xml does not match the spec pin"
+    return None
+
+
 # ---------------------------------------------------------------- child
 
 
@@ -484,7 +598,7 @@ def run_cell(
 ) -> dict[str, Any]:
     key = cell_key(device, template, n)
     result_path = out_dir / f"cell_{key}.json"
-    chat = args.prompt_set == "chat"
+    chat = args.prompt_set in CHAT_SETS
     argv = [
         sys.executable,
         "-u",
@@ -552,12 +666,23 @@ def run_parent(args: argparse.Namespace) -> int:
         if not watchdog["idle"]:
             print(f"REFUSED -- watchdog not idle: {watchdog.get('last_line') or watchdog}")
             return 1
+    f1 = args.prompt_set == "f1"
+    if f1 and Path(args.model_spec).resolve() == DEFAULT_MODEL_SPEC.resolve():
+        print("REFUSED -- f1 runs on another IR; pass --model-spec (the int4 default is the basis)")
+        return 1
+    ir = ir_record(Path(args.model_spec))
+    refusal = ir_refusal(ir)
+    if refusal and not args.smoke:
+        print(f"REFUSED -- {refusal}")
+        return 1
     run_id = str(uuid.uuid4())
-    chat = args.prompt_set == "chat"
-    out_dir = Path(args.out) / (f"natstop_b_{run_id}" if chat else f"natstop_{run_id}")
+    chat = args.prompt_set in CHAT_SETS
+    prefix = {"filler": "natstop_", "chat": "natstop_b_", "f1": "natstop_f1_"}[args.prompt_set]
+    out_dir = Path(args.out) / f"{prefix}{run_id}"
     out_dir.mkdir(parents=True, exist_ok=False)
+    diagnostic = {"filler": DIAGNOSTIC, "chat": "NPU-NATSTOP-B", "f1": "NPU-FORMAT-F1"}
     plan: dict[str, Any] = {
-        "diagnostic": "NPU-NATSTOP-B" if chat else DIAGNOSTIC,
+        "diagnostic": diagnostic[args.prompt_set],
         "run_id": run_id,
         "prompt_set": args.prompt_set,
         "measurement": False,
@@ -569,6 +694,7 @@ def run_parent(args: argparse.Namespace) -> int:
         "versions": {} if args.smoke else live_versions(),
         "watchdog": watchdog,
         "model_spec": str(args.model_spec),
+        "model": ir,
         "devices": list(DEVICES),
         "templates": list(TEMPLATES),
         "lengths": [] if chat else list(LENGTHS),
@@ -592,7 +718,16 @@ def run_parent(args: argparse.Namespace) -> int:
             "min_real_tokens": VALID_MIN_REAL_TOKENS,
             "repeat_max": VALID_REPEAT_MAX,
         }
+    if f1:
+        plan["content_check"] = {
+            "chat1_keyword": CHAT1_KEYWORD,
+            "tip_line": TIP_LINE.pattern,
+            "tip_min_words": TIP_MIN_WORDS,
+            "tip_min_lines": TIP_MIN_LINES,
+        }
     _write(out_dir / "plan.json", plan)
+    quant = ir.get("ir_quantization") or {}
+    print("IR_QUANT " + json.dumps({"summary": quant.get("summary"), "error": quant.get("error")}))
     cells: dict[str, Any] = {}
     summary: dict[str, Any] = {**plan, "cells": cells, "status": "running"}
     for device, template, n in cell_order(args.prompt_set):
@@ -605,25 +740,41 @@ def run_parent(args: argparse.Namespace) -> int:
             cell = cells[cell_key(device, template, n)]
             reference = cells.get(cell_key("GPU", template, n))
             cell["derived"]["valid"] = valid(cell, reference)
-    verdict = classify_scope(cells) if chat else classify(cells)
+            if f1:
+                cell["derived"]["content_ok"] = content_ok(n, cell.get("text"))
+                cell["derived"]["passes"] = passes(cell, reference)
+    if f1:
+        verdict = classify_format(cells)
+        summary["scope_verdict"] = classify_scope(cells)
+    else:
+        verdict = classify_scope(cells) if chat else classify(cells)
     summary["verdict"] = verdict
     summary["status"] = "complete"
     summary["ended_utc"] = datetime.now(UTC).isoformat()
     _write(out_dir / "summary.json", summary)
-    tag = "NATSTOP_B_VERDICT" if chat else "NATSTOP_VERDICT"
-    print(f"{tag} {verdict} {out_dir}")
+    print(f"{verdict_tag(args.prompt_set)} {verdict} {out_dir}")
     return 0
+
+
+def verdict_tag(prompt_set: str) -> str:
+    return {"filler": "NATSTOP_VERDICT", "chat": "NATSTOP_B_VERDICT", "f1": "NATSTOP_F1_VERDICT"}[
+        prompt_set
+    ]
 
 
 def classify_file(path: Path) -> int:
     """Re-read a finished summary.json and print its verdict."""
     doc = json.loads(Path(path).read_text(encoding="utf-8"))
-    chat = doc.get("prompt_set") == "chat"
+    prompt_set = doc.get("prompt_set") or "filler"
     cells = doc.get("cells") or {}
-    verdict = classify_scope(cells) if chat else classify(cells)
-    tag = "NATSTOP_B_VERDICT" if chat else "NATSTOP_VERDICT"
+    if prompt_set == "f1":
+        verdict = classify_format(cells)
+    elif prompt_set == "chat":
+        verdict = classify_scope(cells)
+    else:
+        verdict = classify(cells)
     print(f"recorded {doc.get('verdict')}")
-    print(f"{tag} {verdict} {Path(path).parent}")
+    print(f"{verdict_tag(prompt_set)} {verdict} {Path(path).parent}")
     return 0 if doc.get("verdict") == verdict else 1
 
 
@@ -643,7 +794,10 @@ def main(argv: list[str] | None = None) -> int:
         "--prompt-set",
         choices=PROMPT_SETS,
         default="filler",
-        help="filler: the 16-cell NATSTOP run (default); chat: NPU-NATSTOP-B, 8 cells",
+        help=(
+            "filler: the 16-cell NATSTOP run (default); chat: NPU-NATSTOP-B, 8 cells; "
+            "f1: the export-format test on --model-spec, 8 cells"
+        ),
     )
     parser.add_argument("--prompt-id", choices=tuple(CHAT_PROMPTS))
     parser.add_argument("--result", type=Path)

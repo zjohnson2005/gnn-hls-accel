@@ -16,6 +16,11 @@
 # -PromptSet chat runs NPU-NATSTOP-B (8 cells, 2 fixed chat prompts; log
 #   npu-natstop-b_<UTC stamp>.log, run dir derived\npu\natstop_b_<run_id>\,
 #   final line NATSTOP_B_VERDICT). Default filler is the 16-cell NATSTOP run.
+# -PromptSet f1 -ModelSpec <spec> runs the export-format test F1 (amendment
+#   2026-10-13; 8 cells on that IR; log npu-natstop-f1_<UTC stamp>.log, run dir
+#   derived\npu\natstop_f1_<run_id>\, final line NATSTOP_F1_VERDICT).
+#   -ModelSpec is passed to npu_natstop.py --model-spec; when empty the script
+#   default (the int4 g128 spec) applies, which f1 refuses.
 # From the Mac (rehearsal, then real):
 #   ssh zach@100.72.40.24 'cd C:\Users\zach\Projects\gnn-hls-accel; git pull --ff-only; .\tools\launch_t2s_natstop.ps1 -Detach -Rehearsal'
 #   ssh zach@100.72.40.24 'cd C:\Users\zach\Projects\gnn-hls-accel; git pull --ff-only; .\tools\launch_t2s_natstop.ps1 -Detach'
@@ -24,8 +29,9 @@
 param(
     [switch]$Detach,
     [switch]$Rehearsal,
-    [ValidateSet("filler", "chat")]
+    [ValidateSet("filler", "chat", "f1")]
     [string]$PromptSet = "filler",
+    [string]$ModelSpec = "",
     [string]$WatchdogLog = "C:\apu\ovn\watchdog.log"
 )
 
@@ -70,12 +76,14 @@ if ($Detach) {
     $stamp = (Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ")
     $logBase = "npu-natstop_"
     if ($PromptSet -eq "chat") { $logBase = "npu-natstop-b_" }
+    if ($PromptSet -eq "f1") { $logBase = "npu-natstop-f1_" }
     $log = Join-Path $launchDir ($logBase + $stamp + ".log")
     if (Test-Path -LiteralPath $log) {
         Write-Host ("REFUSED -- log exists: {0}" -f $log)
         exit 1
     }
     $cmd = "powershell -NoProfile -File `"$PSCommandPath`" -WatchdogLog `"$WatchdogLog`" -PromptSet $PromptSet"
+    if ($ModelSpec) { $cmd += " -ModelSpec `"$ModelSpec`"" }
     if ($Rehearsal) { $cmd += " -Rehearsal" }
     $json = & $spawn -CommandLine $cmd -LogPath $log -WorkingDirectory $root
     Write-Host $json
@@ -91,10 +99,11 @@ if (-not (Test-SeamProcessAncestor -Names @("WmiPrvSE.exe") -Depth 4)) {
     exit 1
 }
 
-Write-Host ("npu-natstop rehearsal={0} prompt_set={1} utc={2}" -f [bool]$Rehearsal, $PromptSet, (Get-Date).ToUniversalTime().ToString("o"))
+Write-Host ("npu-natstop rehearsal={0} prompt_set={1} model_spec={2} utc={3}" -f [bool]$Rehearsal, $PromptSet, $ModelSpec, (Get-Date).ToUniversalTime().ToString("o"))
 Assert-SeamMachineLockClear -RepoRoot $root
 
 $pyArgs = @("-u", $natstopPy, "--watchdog-log", $WatchdogLog, "--prompt-set", $PromptSet)
+if ($ModelSpec) { $pyArgs += @("--model-spec", $ModelSpec) }
 if ($Rehearsal) {
     $pyArgs += @("--smoke", "--out", (Join-Path $launchDir "runs"))
 }
