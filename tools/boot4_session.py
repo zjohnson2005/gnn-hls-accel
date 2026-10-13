@@ -367,7 +367,13 @@ def _finish(
     return cell_exit_code(str(summary["status"]))
 
 
-def run_warm_smoke(*, arm: str, model_spec: Path) -> int:
+def run_warm_smoke(
+    *,
+    arm: str,
+    model_spec: Path,
+    turn2_path: str = "user_followup",
+    record_prefix: bool = False,
+) -> int:
     from seam.tools.delta_n import run_child
 
     harness = load_harness(model_spec)
@@ -380,6 +386,9 @@ def run_warm_smoke(*, arm: str, model_spec: Path) -> int:
         spec["turn2_repeats"] = 1
         spec["turn1_max_new_tokens"] = 1
         spec["turn2_max_new_tokens"] = 1
+        if turn2_path != "user_followup" or record_prefix:
+            spec["turn2_path"] = turn2_path
+            spec["record_prefix"] = record_prefix
         record = run_child(
             root=ROOT,
             work_dir=work,
@@ -403,6 +412,9 @@ def run_warm_smoke(*, arm: str, model_spec: Path) -> int:
                 ),
                 "turn2_prefill_s": (turn2[0].get("prefill_s") if turn2 else None),
                 "turn2_prompt_tokens": (turn2[0].get("prompt_tokens_reported") if turn2 else None),
+                "turn2_path": generation.get("turn2_path"),
+                "common_prefix_tokens": (turn2[0].get("common_prefix_tokens") if turn2 else None),
+                "measured_delta_tokens": (turn2[0].get("measured_delta_tokens") if turn2 else None),
                 "failure_mode": record.get("failure_mode"),
             },
             sort_keys=True,
@@ -493,29 +505,57 @@ def _warm_advantages(out_dir: Path, this_summary: dict[str, Any]) -> dict[str, A
     return out
 
 
-def run_warm(*, arm: str, model_spec: Path, session_id: str, out_dir: Path) -> int:
+def run_warm(
+    *,
+    arm: str,
+    model_spec: Path,
+    session_id: str,
+    out_dir: Path,
+    n_cached: tuple[int, ...] | None = None,
+    delta_tokens: int | None = None,
+    turn2_path: str = "user_followup",
+    record_prefix: bool = False,
+) -> int:
+    """WARM-KV cell. Defaults are the sealed WARM-KV configuration.
+
+    Any override (DEMO-1 V5-CAL: n_cached, delta_tokens, turn2_path,
+    record_prefix) writes kind warm_kv_v5cal and skips the cross-arm f16
+    advantage table, which only applies to the WARM-KV points.
+    """
     from seam.tools.delta_n import measured_repeat
     from tools.ttft_slo_canary import CanaryDriftAbort
 
+    points_n = tuple(int(n) for n in (n_cached or N_CACHED))
+    delta = int(delta_tokens if delta_tokens is not None else DELTA_TOKENS)
+    custom = (
+        points_n != tuple(N_CACHED)
+        or delta != DELTA_TOKENS
+        or turn2_path != "user_followup"
+        or record_prefix
+    )
+    kind = "warm_kv_v5cal" if custom else "warm_kv"
+    planned = max(WARM_PLANNED_PROBES, len(points_n))
     gates = require_gates()
     harness = load_harness(model_spec)
     out_dir.mkdir(parents=True, exist_ok=True)
     _publish_cell_status("running", session_id)
     plan: dict[str, Any] = {
-        "kind": "warm_kv",
+        "kind": kind,
         "session_id": session_id,
         "started_utc": _utc(),
         "arm": arm,
         "model_spec": str(harness["model_spec"]),
         "model_name": harness["model_name"],
-        "n_cached": list(N_CACHED),
-        "delta_tokens": DELTA_TOKENS,
+        "n_cached": list(points_n),
+        "delta_tokens": delta,
+        "turn2_path": turn2_path,
+        "record_prefix": record_prefix,
         "turn2_repeats": TURN2_REPEATS,
         "turn1_max_new_tokens": 1,
         "turn2_max_new_tokens": 1,
         "residency": "RESIDENT",
-        "executed_points": len(N_CACHED),
-        "planned_probe_count": WARM_PLANNED_PROBES,
+        "executed_points": len(points_n),
+        "planned_probe_count": planned,
         "canary_budget_note": (
             "planned_probe_count is 4 so floor(planned/(C+1)) >= 1 with C=3. "
             "The cell executes the two n_cached points."
@@ -529,7 +569,7 @@ def run_warm(*, arm: str, model_spec: Path, session_id: str, out_dir: Path) -> i
         model_spec=_canary_model([harness["model_spec"]]),
         work=out_dir / "work",
         plan_path=plan_path,
-        planned=WARM_PLANNED_PROBES,
+        planned=planned,
     )
     plan["canary"] = guard.plan_fragment()
     _write(plan_path, plan)
@@ -537,12 +577,15 @@ def run_warm(*, arm: str, model_spec: Path, session_id: str, out_dir: Path) -> i
     probes_log: list[dict[str, Any]] = []
     try:
         guard.opening()
-        for n_cached in N_CACHED:
+        for n_cached in points_n:
             work = out_dir / "work"
             spec = _child_spec(harness, arm, work)
             spec["resident_two_turn"] = True
             spec["n_cached"] = int(n_cached)
-            spec["delta_tokens"] = DELTA_TOKENS
+            spec["delta_tokens"] = delta
+            if custom:
+                spec["turn2_path"] = turn2_path
+                spec["record_prefix"] = record_prefix
             spec["turn2_repeats"] = TURN2_REPEATS
             spec["turn1_max_new_tokens"] = 1
             spec["turn2_max_new_tokens"] = 1
@@ -579,13 +622,18 @@ def run_warm(*, arm: str, model_spec: Path, session_id: str, out_dir: Path) -> i
                     item.get("prompt_tokens_reported") for item in turn2
                 ],
             }
+            if custom:
+                point["delta_tokens"] = delta
+                point["turn2_path"] = turn2_path
+                for key in ("common_prefix_tokens", "measured_delta_tokens"):
+                    point[key] = [item.get(key) for item in turn2]
             _write(out_dir / "points" / f"n{n_cached}.json", point)
             points.append(point)
             probes_log.append({"wall_s": child.get("parent_wall_s")})
             guard.after_probe(probes_log)
     except CanaryDriftAbort as exc:
         summary = {
-            "kind": "warm_kv",
+            "kind": kind,
             "session_id": session_id,
             "arm": arm,
             "status": "FAIL_CANARY_DRIFT",
@@ -603,17 +651,21 @@ def run_warm(*, arm: str, model_spec: Path, session_id: str, out_dir: Path) -> i
     }
     status = cell_status(points)
     summary = {
-        "kind": "warm_kv",
+        "kind": kind,
         "session_id": session_id,
         "arm": arm,
         "model_name": harness["model_name"],
         "status": status,
         "points": points,
         "turn2_median_prefill_s": medians,
-        "delta_tokens": DELTA_TOKENS,
-        "n_cached": list(N_CACHED),
+        "delta_tokens": delta,
+        "n_cached": list(points_n),
     }
-    summary["f16_advantage_percent"] = _warm_advantages(out_dir, summary)
+    if custom:
+        summary["turn2_path"] = turn2_path
+        summary["f16_advantage_percent"] = None
+    else:
+        summary["f16_advantage_percent"] = _warm_advantages(out_dir, summary)
     return _finish(guard=guard, out_dir=out_dir, summary=summary, plan=plan)
 
 

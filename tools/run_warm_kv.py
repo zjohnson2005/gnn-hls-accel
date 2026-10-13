@@ -30,17 +30,38 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--session-id", default="")
     parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--smoke", action="store_true")
+    # DEMO-1 V5-CAL overrides; defaults are the sealed WARM-KV points.
+    parser.add_argument("--n-cached", default="", help="comma list, e.g. 2200,3320")
+    parser.add_argument("--delta-tokens", type=int, default=None)
+    parser.add_argument(
+        "--turn2-path", choices=("user_followup", "assistant_then_user"), default="user_followup"
+    )
+    parser.add_argument("--record-prefix", action="store_true")
     args = parser.parse_args(argv)
     if args.smoke:
-        return run_warm_smoke(arm=str(args.arm), model_spec=args.model_spec)
+        return run_warm_smoke(
+            arm=str(args.arm),
+            model_spec=args.model_spec,
+            turn2_path=str(args.turn2_path),
+            record_prefix=bool(args.record_prefix),
+        )
     session_id = str(args.session_id) or new_session_id()
     out = args.out or (ROOT / "derived" / "delta_prefill" / session_id)
+    n_cached = tuple(int(x) for x in str(args.n_cached).split(",") if x.strip()) or N_CACHED
     print(
-        f"warm_kv arm={args.arm} n_cached={','.join(str(n) for n in N_CACHED)} session={session_id}",
+        f"warm_kv arm={args.arm} n_cached={','.join(str(n) for n in n_cached)} "
+        f"delta={args.delta_tokens or 'default'} path={args.turn2_path} session={session_id}",
         flush=True,
     )
     return run_warm(
-        arm=str(args.arm), model_spec=args.model_spec, session_id=session_id, out_dir=out
+        arm=str(args.arm),
+        model_spec=args.model_spec,
+        session_id=session_id,
+        out_dir=out,
+        n_cached=n_cached,
+        delta_tokens=args.delta_tokens,
+        turn2_path=str(args.turn2_path),
+        record_prefix=bool(args.record_prefix),
     )
 
 

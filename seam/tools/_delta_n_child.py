@@ -448,8 +448,36 @@ def _fail_turn(writer: _Writer, turn: str, exc: BaseException) -> int:
     return 1
 
 
+TURN2_PATHS = ("user_followup", "assistant_then_user")
+
+
+def common_prefix_len(a: list[int], b: list[int]) -> int:
+    n = min(len(a), len(b))
+    for i in range(n):
+        if a[i] != b[i]:
+            return i
+    return n
+
+
+def _rendered_ids(tokenizer: Any, history: Any) -> list[int] | None:
+    """Token ids of the rendered history (generation prompt on); None if unavailable."""
+    try:
+        text = str(tokenizer.apply_chat_template(history, True))
+        ids = tokenizer.encode(text).input_ids.data
+        return [int(x) for x in ids.flatten().tolist()]
+    except Exception:
+        return None
+
+
 def _resident_two_turn(spec: dict[str, Any], writer: _Writer, pipe: Any, ov_genai: Any) -> int:
-    """One turn-1 fill, then turn-2 repeats on histories that share only that prefix."""
+    """One turn-1 fill, then turn-2 repeats on histories that share only that prefix.
+
+    turn2_path "user_followup" (default, sealed WARM-KV): turn 2 = turn-1 user
+    message + a new user message. "assistant_then_user" (DEMO-1 V5-CAL): turn 2
+    = turn-1 user message + the turn-1 reply as an assistant message + a new
+    user message, the H1 agent's shape. With record_prefix, each repeat records
+    the rendered token prefix it shares with turn 1 and the tokens after it.
+    """
     from seam.tools.boot4_text import raw_exact_text, user_content_for_rendered_tokens
 
     tokenizer = pipe.get_tokenizer()
@@ -457,6 +485,10 @@ def _resident_two_turn(spec: dict[str, Any], writer: _Writer, pipe: Any, ov_gena
     n_cached = int(spec["n_cached"])
     delta_tokens = int(spec["delta_tokens"])
     repeats = int(spec["turn2_repeats"])
+    turn2_path = str(spec.get("turn2_path") or "user_followup")
+    if turn2_path not in TURN2_PATHS:
+        raise RuntimeError(f"unknown turn2_path {turn2_path!r}")
+    record_prefix = bool(spec.get("record_prefix"))
     turn1_content = user_content_for_rendered_tokens(tokenizer, n_cached, unit=unit, salt="f")
     deltas = [
         raw_exact_text(tokenizer, delta_tokens, unit=unit, salt=f"d{i}") for i in range(repeats)
@@ -489,18 +521,35 @@ def _resident_two_turn(spec: dict[str, Any], writer: _Writer, pipe: Any, ov_gena
             RuntimeError(f"turn-1 prompt tokens {reported} do not equal n_cached {n_cached}"),
         )
     base = json.loads(json.dumps(history.get_messages()))
+    if turn2_path == "assistant_then_user":
+        base = [*base, {"role": "assistant", "content": str(turn1.get("text_head") or "")}]
+    turn1_ids = _rendered_ids(tokenizer, history) if record_prefix else None
     turn2s: list[dict[str, Any]] = []
     for i, delta in enumerate(deltas):
         branch = ov_genai.ChatHistory()
         branch.set_extra_context({"enable_thinking": False})
         branch.set_messages(base)
         branch.append({"role": "user", "content": delta})
+        prefix_rec: dict[str, Any] = {}
+        if record_prefix:
+            ids2 = _rendered_ids(tokenizer, branch)
+            if turn1_ids is not None and ids2 is not None:
+                common = common_prefix_len(turn1_ids, ids2)
+                prefix_rec = {
+                    "turn1_rendered_tokens": len(turn1_ids),
+                    "turn2_rendered_tokens": len(ids2),
+                    "common_prefix_tokens": common,
+                    "measured_delta_tokens": len(ids2) - common,
+                }
+            else:
+                prefix_rec = {"prefix_record_error": "rendered ids unavailable"}
         try:
             rec = _chat_once(pipe, branch, cfg2, ov_genai)
         except Exception as exc:
             return _fail_turn(writer, "turn2", exc)
         rec["repeat"] = i
         rec["delta_tokens"] = delta_tokens
+        rec.update(prefix_rec)
         turn2s.append(rec)
     writer.update(
         phase="done",
@@ -510,6 +559,7 @@ def _resident_two_turn(spec: dict[str, Any], writer: _Writer, pipe: Any, ov_gena
             "resident_two_turn": True,
             "n_cached": n_cached,
             "delta_tokens": delta_tokens,
+            "turn2_path": turn2_path,
             "turn1": turn1,
             "turn2": turn2s,
         },

@@ -27,7 +27,7 @@ param(
     [switch]$NoRebootDeviation,
     [switch]$Rehearsal,
     [string]$WatchdogLog = "",
-    [ValidateSet("boot1", "boot2", "boot3", "boot4", "resident-limit", "resident-limit-2", "p0-v2", "p1-a0", "p1-a4", "p1-a5", "p1-sweep", "p1-a1", "t2s-boot1", "npu-1")]
+    [ValidateSet("boot1", "boot2", "boot3", "boot4", "resident-limit", "resident-limit-2", "p0-v2", "p1-a0", "p1-a4", "p1-a5", "p1-sweep", "p1-a1", "t2s-boot1", "npu-1", "v5-cal")]
     [string]$Profile = "boot1",
     [int]$MaxPromptLen = 0,
     [switch]$Npu2,
@@ -85,6 +85,7 @@ $SummaryName = switch ($Profile) {
     "boot2" { "BOOT2_SUMMARY.json" }
     "boot3" { "BOOT3_SUMMARY.json" }
     "boot4" { "BOOT4_SUMMARY.json" }
+    "v5-cal" { "V5CAL_SUMMARY.json" }
     "resident-limit" { "RESIDENT_LIMIT_SUMMARY.json" }
     "resident-limit-2" { "RESIDENT_LIMIT_2_SUMMARY.json" }
     "p0-v2" { "P0_V2_SUMMARY.json" }
@@ -101,6 +102,7 @@ $DeferredName = switch ($Profile) {
     "boot2" { "DEFERRED_TO_BOOT3.json" }
     "boot3" { "DEFERRED_TO_BOOT4.json" }
     "boot4" { "DEFERRED_TO_BOOT5.json" }
+    "v5-cal" { "DEFERRED_TO_V5CAL_2.json" }
     "resident-limit" { "DEFERRED_TO_RESIDENT_LIMIT_2.json" }
     "resident-limit-2" { "DEFERRED_TO_RESIDENT_LIMIT_3.json" }
     "p0-v2" { "DEFERRED_TO_P0_V3.json" }
@@ -123,6 +125,7 @@ $script:DeferredStatus = switch ($Profile) {
     "p1-a4" { "DEFERRED_TO_P1_A5" }
     "p1-a5" { "DEFERRED_TO_P1_SWEEP" }
     "p1-sweep" { "DEFERRED_TO_P1_A2" }
+    "v5-cal" { "DEFERRED_TO_V5CAL_2" }
     "p1-a1" { "DEFERRED_TO_P1_A1_NEXT" }
     default { "DEFERRED_TO_BOOT2" }
 }
@@ -150,6 +153,7 @@ $script:RehearsalMac = switch ($Profile) {
     "p1-a4" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a4.ps1 -Detach -Rehearsal"' }
     "p1-a5" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a5.ps1 -Detach -Rehearsal"' }
     "p1-sweep" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_sweep.ps1 -Detach -Rehearsal"' }
+    "v5-cal" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_v5_cal.ps1 -Detach -Rehearsal"' }
     "p1-a1" { 'ssh zjohn@100.101.81.6 "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_p1_a1.ps1 -Detach -Rehearsal"' }
     "npu-1" { 'ssh zach@100.72.40.24 ''cd C:\Users\zach\Projects\gnn-hls-accel; .\tools\launch_t2s_npu1.ps1 -Detach -Rehearsal''' }
     default { 'ssh xps "cd C:/Users/zjohn/Projects/gnn-hls-accel; powershell -NoProfile -File tools\launch_boot4.ps1 -Detach -Rehearsal"' }
@@ -322,6 +326,38 @@ if ($Profile -eq "boot2") {
             Name = "DECODE-MATCH"; Kind = "decode"; EstimateS = 1023
             Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
             Model2 = "configs\models\Qwen3-4B-int8-ov.yaml"
+        }
+    )
+} elseif ($Profile -eq "v5-cal") {
+    # DEMO-1 V5-CAL (prereg design 2026-10-14): RESIDENT turn-2 TTFT
+    # at delta 8500 tokens on n_cached 2200/3320/4080/6290/7380, u8 and u4,
+    # plus one V5-path point (u8, n_cached 4080, assistant_then_user). Same
+    # WARM-KV child path, 3 turn-2 repeats, canary. Estimate as boot 4:
+    # base_s = 2 x 13.504825195 (warm-up bound) + per point cold(n_cached) +
+    # 3 x cold(n_cached + 8532), sealed cold medians (u8 c2246b1f + 2b3316b6,
+    # u4 c647f0c7 + 2b3316b6; tools/v5_cal_plan.py); estimate_s = base_s +
+    # 752.1359013 canary overhead, next whole second. Sum 2933 s, under 6000.
+    $v5Points = "2200,3320,4080,6290,7380"
+    $script:EstimateDerivation = [ordered]@{
+        formula = "estimate_s = base_s + canary_overhead_s (boot-4 method)"
+        note = "V5-CAL: one boot, three cells, sum 2933 s (cap 6000 s)."
+        source = "tools/v5_cal_plan.py"
+    }
+    $Cells = @(
+        @{
+            Name = "V5-CAL u8"; Kind = "warm"; EstimateS = 1050
+            Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+            NCached = $v5Points; DeltaTokens = 8500; Turn2Path = "user_followup"; RecordPrefix = $true
+        },
+        @{
+            Name = "V5-CAL u4"; Kind = "warm"; EstimateS = 1054
+            Arm = "gpu_only_u4"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+            NCached = $v5Points; DeltaTokens = 8500; Turn2Path = "user_followup"; RecordPrefix = $true
+        },
+        @{
+            Name = "V5-CAL u8 V5-path"; Kind = "warm"; EstimateS = 829
+            Arm = "gpu_only_u8"; Model = "configs\models\Qwen3-4B-int4-ov.yaml"
+            NCached = "4080"; DeltaTokens = 8500; Turn2Path = "assistant_then_user"; RecordPrefix = $true
         }
     )
 } elseif ($Profile -eq "resident-limit") {
@@ -1241,12 +1277,23 @@ function Get-BootCellCommand {
         if ($kind -eq "resident") { $script = $ResidentPy }
         $modelPath = Join-Path $root $model
         $args = @($PythonExe, "-u", $script, "--arm", $arm, "--model-spec", $modelPath)
+        $nCached = Get-BootCellField -Cell $Cell -Name "NCached"
+        if ($kind -eq "warm" -and $nCached) {
+            $args += @("--n-cached", [string]$nCached)
+            $args += @("--delta-tokens", [string](Get-BootCellField -Cell $Cell -Name "DeltaTokens"))
+            $args += @("--turn2-path", [string](Get-BootCellField -Cell $Cell -Name "Turn2Path"))
+            if (Get-BootCellField -Cell $Cell -Name "RecordPrefix") { $args += "--record-prefix" }
+        }
         if ($kind -eq "decode") {
             $args += @("--n", "2000,4000,8000")
             $model2 = Get-BootCellField -Cell $Cell -Name "Model2"
             if ($model2) { $args += @("--model-spec", (Join-Path $root $model2)) }
         }
         $smokeArgs = @($PythonExe, "-u", $script, "--smoke", "--arm", $arm, "--model-spec", $modelPath)
+        if ($kind -eq "warm" -and $nCached) {
+            $smokeArgs += @("--turn2-path", [string](Get-BootCellField -Cell $Cell -Name "Turn2Path"))
+            if (Get-BootCellField -Cell $Cell -Name "RecordPrefix") { $smokeArgs += "--record-prefix" }
+        }
         return [ordered]@{
             kind = $kind; arm = $arm; model = $model; low = $low; high = $high
             expect_kv = $kv; command = ($args -join " "); smoke = ($smokeArgs -join " ")
@@ -1392,7 +1439,7 @@ function Invoke-ResidentLimitSmokes {
 }
 
 function Invoke-Boot4Smokes {
-    if ($Profile -ne "boot4") { return }
+    if ($Profile -ne "boot4" -and $Profile -ne "v5-cal") { return }
     Assert-Boot4Bodies
     $sum = 0
     foreach ($cell in $Cells) { $sum += [int]$cell.EstimateS }
