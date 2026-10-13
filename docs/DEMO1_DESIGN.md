@@ -1,4 +1,4 @@
-# DEMO-1 v2 design: what hardware configuration buys in hybrid execution
+# DEMO-1 design: what inference configuration buys in hybrid execution
 
 Design only. This file contains no predictions; they go in the DEMO-1
 preregistration, committed before any DEMO-1 run. Registry row: DEMO-1
@@ -6,19 +6,42 @@ preregistration, committed before any DEMO-1 run. Registry row: DEMO-1
 
 ## Thesis
 
-Every cloud turn in hybrid execution buys one of three things:
+Headline (amendment docs/amendments/DEMO1_AMEND_2026-10-13c_CONFIG.md,
+2026-10-13):
 
-- Capability: the local model cannot do the turn. Triggers: no parseable
-  tool call, step budget, tool execution error.
-- Latency: the local model could answer, but this configuration is too
-  slow at this n_ctx (the turn exceeds the latency target).
-- Context: n_ctx lies beyond every consumer configuration's envelope.
+"On a fixed device, the inference configuration (placement, residency, KV
+precision, weight precision, retention, model export) sets the context range
+in which a local turn meets the latency SLO. A hybrid agent's routing, cloud
+spend and latency follow from where its trajectory lands relative to that
+range. Configuration changes on the same hardware move hybrid outcomes by
+amounts comparable to a hardware upgrade, and the size of each effect,
+including when it is zero, can be predicted before the run from sealed
+limits and the workload's trajectory."
 
-Hardware configuration changes only the latency purchase, and only for
-turns whose n_ctx lies between configurations' envelopes. It also changes
-local-turn speed everywhere. Through test-time compute (C4) it can buy back
-capability: a faster configuration fits more retries or thinking inside the
-same budget.
+Hypothesis, not a finding: these knobs are commonly held fixed or unreported
+in hybrid-execution studies. It needs search evidence in
+docs/RELATED_SEARCHES.md before any paper use.
+
+Primary axis: one-factor configuration contrasts on the XPS GPU 4B
+(placement V1/V2, retention V3/V4, residency V4 -> V5a, KV precision V5a ->
+V5b); the XPS vs T2S platform pairs at matched configuration are the
+yardstick.
+
+Previous thesis (2026-10-12, kept for the record; the cloud-turn taxonomy
+below still holds):
+> Every cloud turn in hybrid execution buys one of three things:
+>
+> - Capability: the local model cannot do the turn. Triggers: no parseable
+>   tool call, step budget, tool execution error.
+> - Latency: the local model could answer, but this configuration is too
+>   slow at this n_ctx (the turn exceeds the latency target).
+> - Context: n_ctx lies beyond every consumer configuration's envelope.
+>
+> Hardware configuration changes only the latency purchase, and only for
+> turns whose n_ctx lies between configurations' envelopes. It also changes
+> local-turn speed everywhere. Through test-time compute (C4) it can buy back
+> capability: a faster configuration fits more retries or thinking inside the
+> same budget.
 
 ## Model: envelope x trajectory
 

@@ -455,6 +455,7 @@ def test_runner_sources_do_not_name_the_prereg() -> None:
     for path in NO_READ_SOURCES:
         text = path.read_text(encoding="utf-8")
         assert "DEMO_PREREG" not in text and "DEMO1_DESIGN" not in text, path
+        assert "DEMO1_AMEND" not in text and "V5_PREDICTIONS" not in text, path
 
 
 def test_runner_never_opens_the_prereg(monkeypatch, tmp_path: Path) -> None:
@@ -464,7 +465,13 @@ def test_runner_never_opens_the_prereg(monkeypatch, tmp_path: Path) -> None:
     real_open = builtins.open
 
     def guarded(file, *args, **kwargs):
-        if "DEMO_PREREG" in str(file) or "PREREG" in Path(str(file)).name.upper():
+        name = Path(str(file)).name.upper()
+        if (
+            "DEMO_PREREG" in str(file)
+            or "PREREG" in name
+            or "DEMO1_AMEND" in name
+            or "V5_PREDICTIONS" in name
+        ):
             raise AssertionError(f"runner opened {file}")
         return real_open(file, *args, **kwargs)
 
@@ -496,3 +503,31 @@ def test_runner_never_opens_the_prereg(monkeypatch, tmp_path: Path) -> None:
         skip_entry_assert=True,
         seal=False,
     )
+
+
+# ---------------------------------------------------------------- amendment 2026-10-13c
+
+AMEND_C = ROOT / "docs" / "amendments" / "DEMO1_AMEND_2026-10-13c_CONFIG.md"
+V5_PRED = ROOT / "analysis" / "demo1" / "V5_PREDICTIONS.json"
+
+
+def test_amendment_c_pins_its_inputs_and_outputs() -> None:
+    import hashlib
+
+    text = AMEND_C.read_text(encoding="ascii")
+    prefix = ROOT / "analysis" / "demo1" / "PREFIX_CHECK_K1024.json"
+    script = ROOT / "tools" / "demo1_v5_predict.py"
+    for path in (prefix, script, V5_PRED):
+        assert hashlib.sha256(path.read_bytes()).hexdigest() in text, path.name
+    doc = json.loads(V5_PRED.read_text(encoding="utf-8"))
+    for name in ("V5a_xps_gpu_4b_RESIDENT_u8", "V5b_xps_gpu_4b_RESIDENT_u4"):
+        low = doc["cells"][name]["block_low"]
+        assert low["local_share"] == 0.164 and low["usd_per_task"] == 0.766
+        assert low["bracket_status"] == {"local": 0, "indeterminate": 15, "escalates": 0}
+    assert "| V5a RESIDENT u8 | 0.164 | 0.766 (0.829) |" in text
+
+
+def test_v5_predictions_are_current() -> None:
+    from tools import demo1_v5_predict
+
+    assert demo1_v5_predict.predictions() == json.loads(V5_PRED.read_text(encoding="utf-8"))
