@@ -1,0 +1,246 @@
+{
+  "id": "LOCAL-QUALITY-AMENDMENT-9",
+  "kind": "operational",
+  "amends": "derived/h1_hybrid/LOCAL_QUALITY_AMENDMENT_8.json",
+  "amended_file_sha256": "292ac69df1cf87d25b24c5a50fb8c37ee5b97049d379ba180482d0c7822da408",
+  "registered_before_any_a4_rerun": true,
+  "runner_must_not_read_this_file": true,
+  "prior_amendments_unchanged": true,
+  "unchanged": [
+    "arm A0 and fixed A4 procedure",
+    "seed 20260930",
+    "budgets_s [10, 20, 30]",
+    "entries lexicographic [:100] then [100:200]",
+    "every prediction (sweep floor, crossing, close_fraction)",
+    "A0 boots and their estimates",
+    "run order: every [:100] budget before [100:200]"
+  ],
+  "changed": "Only the A4 slice table: each A4 boot is a contiguous slice whose estimate is at most 6000 s.",
+  "why": "launch_boot1.ps1 defers a cell when 7200 s minus uptime is below its estimate. Amendment 8's A4|10|0|83 is 7168 s, so it could launch only below 32 s of uptime, which no cold boot reaches; A4|20|0|43 (7198), A4|20|43|40 (7138), A4|30|0|27 (7088), A4|30|27|30 (7178), A4|30|57|25 (6998) and the [100:200] slices have the same problem. 6000 s leaves 1200 s for the reboot, login, gates and smokes before the cell starts.",
+  "estimator": {
+    "formula": "ceil(step_count * B + load_s + canary_overhead_s), amendment 8 a4_ceiling; a step cannot outlast the per-step budget",
+    "load_s": 5.211120400010259,
+    "canary_overhead_s": 752.1359013,
+    "step_count_source": "per entry, the larger step count of sealed A0 8a529053 and sealed sweep A0 bdc32a87 (B=10, [0:100], 788 steps vs 785); [100:200] has only 8a529053. Taking the larger is a conservative bound.",
+    "cap_s": 6000,
+    "split_rule": "for each budget and half, the fewest contiguous chunks with every chunk at or below cap_s, then the split that minimizes the largest chunk",
+    "reproduces_amendment_8": "with 8a529053 counts alone the same formula gives A4|10|0|83 = 7168 and A4|30|82|18 = 5318, as in amendment 8"
+  },
+  "boots": [
+    {
+      "arm": "A0",
+      "budget_s": 10,
+      "entry_offset": 0,
+      "entry_count": 100,
+      "estimate_s": 2891,
+      "status": "done",
+      "run_id": "bdc32a87-8f91-4cd5-9cb0-2daafe659fc8"
+    },
+    {
+      "arm": "A4",
+      "budget_s": 10,
+      "entry_offset": 0,
+      "entry_count": 53,
+      "step_count": 396,
+      "estimate_s": 4718
+    },
+    {
+      "arm": "A4",
+      "budget_s": 10,
+      "entry_offset": 53,
+      "entry_count": 47,
+      "step_count": 393,
+      "estimate_s": 4688
+    },
+    {
+      "arm": "A0",
+      "budget_s": 20,
+      "entry_offset": 0,
+      "entry_count": 100,
+      "estimate_s": 2941
+    },
+    {
+      "arm": "A4",
+      "budget_s": 20,
+      "entry_offset": 0,
+      "entry_count": 25,
+      "step_count": 196,
+      "estimate_s": 4678
+    },
+    {
+      "arm": "A4",
+      "budget_s": 20,
+      "entry_offset": 25,
+      "entry_count": 28,
+      "step_count": 200,
+      "estimate_s": 4758
+    },
+    {
+      "arm": "A4",
+      "budget_s": 20,
+      "entry_offset": 53,
+      "entry_count": 24,
+      "step_count": 195,
+      "estimate_s": 4658
+    },
+    {
+      "arm": "A4",
+      "budget_s": 20,
+      "entry_offset": 77,
+      "entry_count": 23,
+      "step_count": 198,
+      "estimate_s": 4718
+    },
+    {
+      "arm": "A0",
+      "budget_s": 30,
+      "entry_offset": 0,
+      "entry_count": 100,
+      "estimate_s": 2991
+    },
+    {
+      "arm": "A4",
+      "budget_s": 30,
+      "entry_offset": 0,
+      "entry_count": 21,
+      "step_count": 160,
+      "estimate_s": 5558
+    },
+    {
+      "arm": "A4",
+      "budget_s": 30,
+      "entry_offset": 21,
+      "entry_count": 21,
+      "step_count": 157,
+      "estimate_s": 5468
+    },
+    {
+      "arm": "A4",
+      "budget_s": 30,
+      "entry_offset": 42,
+      "entry_count": 19,
+      "step_count": 154,
+      "estimate_s": 5378
+    },
+    {
+      "arm": "A4",
+      "budget_s": 30,
+      "entry_offset": 61,
+      "entry_count": 20,
+      "step_count": 158,
+      "estimate_s": 5498
+    },
+    {
+      "arm": "A4",
+      "budget_s": 30,
+      "entry_offset": 81,
+      "entry_count": 19,
+      "step_count": 160,
+      "estimate_s": 5558
+    },
+    {
+      "arm": "A0",
+      "budget_s": 10,
+      "entry_offset": 100,
+      "entry_count": 100,
+      "estimate_s": 2787
+    },
+    {
+      "arm": "A4",
+      "budget_s": 10,
+      "entry_offset": 100,
+      "entry_count": 47,
+      "step_count": 371,
+      "estimate_s": 4468
+    },
+    {
+      "arm": "A4",
+      "budget_s": 10,
+      "entry_offset": 147,
+      "entry_count": 53,
+      "step_count": 374,
+      "estimate_s": 4498
+    },
+    {
+      "arm": "A0",
+      "budget_s": 20,
+      "entry_offset": 100,
+      "entry_count": 100,
+      "estimate_s": 2877
+    },
+    {
+      "arm": "A4",
+      "budget_s": 20,
+      "entry_offset": 100,
+      "entry_count": 31,
+      "step_count": 250,
+      "estimate_s": 5758
+    },
+    {
+      "arm": "A4",
+      "budget_s": 20,
+      "entry_offset": 131,
+      "entry_count": 33,
+      "step_count": 250,
+      "estimate_s": 5758
+    },
+    {
+      "arm": "A4",
+      "budget_s": 20,
+      "entry_offset": 164,
+      "entry_count": 36,
+      "step_count": 245,
+      "estimate_s": 5658
+    },
+    {
+      "arm": "A0",
+      "budget_s": 30,
+      "entry_offset": 100,
+      "entry_count": 100,
+      "estimate_s": 2967
+    },
+    {
+      "arm": "A4",
+      "budget_s": 30,
+      "entry_offset": 100,
+      "entry_count": 15,
+      "step_count": 149,
+      "estimate_s": 5228
+    },
+    {
+      "arm": "A4",
+      "budget_s": 30,
+      "entry_offset": 115,
+      "entry_count": 21,
+      "step_count": 149,
+      "estimate_s": 5228
+    },
+    {
+      "arm": "A4",
+      "budget_s": 30,
+      "entry_offset": 136,
+      "entry_count": 21,
+      "step_count": 149,
+      "estimate_s": 5228
+    },
+    {
+      "arm": "A4",
+      "budget_s": 30,
+      "entry_offset": 157,
+      "entry_count": 22,
+      "step_count": 145,
+      "estimate_s": 5108
+    },
+    {
+      "arm": "A4",
+      "budget_s": 30,
+      "entry_offset": 179,
+      "entry_count": 21,
+      "step_count": 153,
+      "estimate_s": 5348
+    }
+  ],
+  "a4_boot_count": 21,
+  "max_estimate_s": 5758,
+  "risk": "The estimate prices A4 at A0's step count. Fixed A4 can change trajectories (an accepted thinking answer replaces greedy), so a slice can take more steps than A0 did; the 1200 s margin under the window covers some of that, not all."
+}
