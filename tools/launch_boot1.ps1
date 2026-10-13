@@ -32,6 +32,8 @@ param(
     [int]$MaxPromptLen = 0,
     [switch]$Npu2,
     [switch]$LoadOnly,
+    [string]$ModelSpec = "",
+    [switch]$Envelope,
     [int]$P1Seed = 20260930,
     [int]$P1EntryOffset = 0,
     [int]$P1EntryCount = 100,
@@ -176,6 +178,8 @@ if ($Detach) {
         if ($Npu2) { $cmd += " -Npu2" }
         if ($LoadOnly) { $cmd += " -LoadOnly" }
         if ($MaxPromptLen -gt 0) { $cmd += " -MaxPromptLen $MaxPromptLen" }
+        if ($ModelSpec) { $cmd += " -ModelSpec `"$ModelSpec`"" }
+        if ($Envelope) { $cmd += " -Envelope" }
     }
     if ($WatchdogLog) { $cmd += " -WatchdogLog `"$WatchdogLog`"" }
     $log = Join-Path $LaunchDir "$Profile.log"
@@ -648,6 +652,23 @@ if ($Profile -eq "boot2") {
     }
     Write-Host ("npu_ladder_sum_s={0} fits_one_session={1} tail_start={2}" -f $npuPlan.sum_s, $npuPlan.fits_one_session, $npuPlan.tail_start)
     $int4 = "configs\models\Qwen3-4B-int4-ov.yaml"
+    # NPU amendment 2026-10-13b: -ModelSpec picks the NPU-1 setting IR (default
+    # int4, unchanged). A non-default spec runs only as the int8 envelope
+    # (-Envelope), and -Envelope needs a non-default spec.
+    $npuModel = $int4
+    if ($ModelSpec) { $npuModel = $ModelSpec }
+    $defaultSpec = ($npuModel -replace "/", "\") -ieq $int4
+    if ($Envelope -and $defaultSpec) {
+        throw "REFUSED -- -Envelope needs -ModelSpec other than $int4"
+    }
+    if (-not $Envelope -and -not $defaultSpec) {
+        throw "REFUSED -- -ModelSpec $npuModel runs only with -Envelope (NPU amendment 2026-10-13b)"
+    }
+    if ($Envelope) {
+        $script:EstimateDerivation["formula"] = "NPU amendment 2026-10-13b envelope bound (run_npu_profile.envelope_estimate_s)"
+        $script:EstimateDerivation["estimate_s_status"] = "recorded_not_cited_extrapolation"
+        $script:EstimateDerivation["ir"] = $npuModel
+    }
     $built = @()
     if ($Npu2 -or ($MaxPromptLen -eq 0 -and ($DryRun -or $Rehearsal))) {
         $built += @{
@@ -670,6 +691,11 @@ if ($Profile -eq "boot2") {
         foreach ($row in @($npuPlan.settings)) {
             if ([int]$row.max_prompt_len -eq $n) { $est = [int]$row.estimate_s }
         }
+        if ($Envelope) {
+            $estRaw = & $PythonExe -c "from tools.run_npu_profile import envelope_estimate_s; print(envelope_estimate_s($n))"
+            if ($LASTEXITCODE -ne 0) { throw "REFUSED -- NPU envelope estimate failed" }
+            $est = [int]($estRaw | Select-Object -Last 1)
+        }
         if ($null -eq $est) {
             $estRaw = & $PythonExe -c "from tools.run_npu_profile import setting_estimate_s; print(setting_estimate_s($n))"
             if ($LASTEXITCODE -ne 0) { throw "REFUSED -- NPU setting estimate failed" }
@@ -681,9 +707,17 @@ if ($Profile -eq "boot2") {
         }
         $cellEstimate = $est
         if ($loadOnlyCell) { $cellEstimate = [int]$npuPlan.pilot_load_s }
+        if ($loadOnlyCell -and $Envelope) {
+            $estRaw = & $PythonExe -c "from tools.run_npu_profile import envelope_load_only_estimate_s; print(envelope_load_only_estimate_s($n))"
+            if ($LASTEXITCODE -ne 0) { throw "REFUSED -- NPU envelope load-only estimate failed" }
+            $cellEstimate = [int]($estRaw | Select-Object -Last 1)
+        }
+        $cellName = "NPU-1 MAX_PROMPT_LEN=$n"
+        if ($Envelope) { $cellName = "NPU-INT8 MAX_PROMPT_LEN=$n" }
         $built += @{
-            Name = "NPU-1 MAX_PROMPT_LEN=$n"; Kind = "npu"; Phase = "npu1-setting"; EstimateS = $cellEstimate
-            Model = $int4; MaxPromptLen = $n; Low = 64; Resolution = 64; LoadOnly = [bool]$loadOnlyCell
+            Name = $cellName; Kind = "npu"; Phase = "npu1-setting"; EstimateS = $cellEstimate
+            Model = $npuModel; MaxPromptLen = $n; Low = 64; Resolution = 64; LoadOnly = [bool]$loadOnlyCell
+            Envelope = [bool]$Envelope
         }
     }
     if ($built.Count -eq 0) {
@@ -1018,6 +1052,7 @@ function Invoke-NpuCell {
     if ($null -ne $resolution) { $workerArgs += @("--resolution", [string]$resolution) }
     if ($null -ne $mpl) { $workerArgs += @("--max-prompt-len", [string]$mpl) }
     if ($loadOnly) { $workerArgs += "--load-only" }
+    if (Get-BootCellField -Cell $Cell -Name "Envelope") { $workerArgs += "--envelope" }
     if ($stubWorker) { $workerArgs += "--smoke" }
     $workerLines = New-Object System.Collections.Generic.List[string]
     & $PythonExe @workerArgs 2>&1 | ForEach-Object {
@@ -1173,6 +1208,7 @@ function Get-BootCellCommand {
         if ($null -ne $resolution) { $args += @("--resolution", [string]$resolution) }
         if ($null -ne $mpl) { $args += @("--max-prompt-len", [string]$mpl) }
         if ($loadOnly) { $args += "--load-only" }
+        if (Get-BootCellField -Cell $Cell -Name "Envelope") { $args += "--envelope" }
         $smokeArgs = @($PythonExe, "-u", $NpuPy, "--smoke", "--cell", $phase, "--out", (Get-RehearsalSmokeOut -Cell $Cell))
         return [ordered]@{
             kind = $kind; arm = $arm; model = $model; low = $low; high = $high

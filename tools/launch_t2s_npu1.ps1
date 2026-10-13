@@ -4,6 +4,9 @@
 # -NoRebootDeviation is always passed: this host is not rebooted.
 # This script does not open the NPU preregistration.
 # This script does not register a logon task or a scheduled task.
+# NPU amendment 2026-10-13b: -ModelSpec (default int4, unchanged) with
+# -Envelope runs the NPU-INT8 envelope on that IR. Example, 1024:
+#   ssh zach@100.72.40.24 'cd C:\Users\zach\Projects\gnn-hls-accel; .\tools\launch_t2s_npu1.ps1 -Detach -Envelope -ModelSpec configs\models\Qwen3-4B-int8-ov.yaml -MaxPromptLen 1024'
 
 [CmdletBinding()]
 param(
@@ -13,6 +16,8 @@ param(
     [switch]$Npu2,
     [switch]$LoadOnly,
     [int]$MaxPromptLen = 0,
+    [string]$ModelSpec = "",
+    [switch]$Envelope,
     [string]$WatchdogLog = "C:\apu\ovn\watchdog.log"
 )
 
@@ -52,5 +57,7 @@ if ($DryRun) { $launchArgs += "-DryRun" }
 if ($Npu2) { $launchArgs += "-Npu2" }
 if ($LoadOnly) { $launchArgs += "-LoadOnly" }
 if ($MaxPromptLen -gt 0) { $launchArgs += @("-MaxPromptLen", [string]$MaxPromptLen) }
+if ($ModelSpec) { $launchArgs += @("-ModelSpec", $ModelSpec) }
+if ($Envelope) { $launchArgs += "-Envelope" }
 & powershell @launchArgs
 exit $LASTEXITCODE

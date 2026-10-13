@@ -11,11 +11,18 @@ runner bisects
 the 10 s TTFT SLO from 64 up to that setting, records decode tok/s at the
 highest passing rung, and records MAX_PROMPT_LEN + 1 as infeasible without
 generating it.
+
+--envelope (NPU amendment 2026-10-13b) runs the same ladder on an int8 IR:
+pinned IR read before load, bisection to cap - 64, a paired 64-token
+validity generate per rung (2026-10-12 rule), TTFT-only repeats, binding
+TOOLCHAIN_CAP / LATENCY / VALIDITY, and an untimed content check at the
+limit rung. Without it the int4 path is unchanged.
 """
 
 from __future__ import annotations
 
 import argparse
+import itertools
 import json
 import math
 import sys
@@ -34,6 +41,7 @@ from seam.backends.local_openvino import (  # noqa: E402
     _text_from_generate_result,
     resolve_ttft_ns,
 )
+from seam.ir_quantization import ir_quantization as read_ir_quantization  # noqa: E402
 from seam.model_provenance import load_local_spec  # noqa: E402
 from seam.npu_validity import (  # noqa: E402
     REPEAT_FRACTION_MAX,
@@ -42,7 +50,12 @@ from seam.npu_validity import (  # noqa: E402
     output_parses,
     whitespace_tokens,
 )
-from seam.tools.boot4_text import id_count, rendered_exact_prompt  # noqa: E402
+from seam.tools.boot4_text import (  # noqa: E402
+    _exact_body,
+    id_count,
+    render_user,
+    rendered_exact_prompt,
+)
 from tools.run_c1_ceiling import classify_c1_failure  # noqa: E402
 
 SLO_S = 10.0
@@ -224,7 +237,7 @@ def scheduling_plan() -> dict[str, Any]:
     }
 
 
-def over_max_record(max_prompt_len: int) -> dict[str, Any]:
+def over_max_record(max_prompt_len: int, *, weight_precision: str = "int4") -> dict[str, Any]:
     """MAX_PROMPT_LEN + 1 is infeasible. The caller must not generate."""
     length = max_prompt_len + 1
     decision = decide_npu_cell(
@@ -235,6 +248,9 @@ def over_max_record(max_prompt_len: int) -> dict[str, Any]:
         weight_precision="int4",
         prompt_tokens=length,
     )
+    # decide_npu_cell labels int8 infeasible at load; MAX_PROMPT_LEN + 1 is a
+    # length refusal for either IR, so only the label follows the IR.
+    decision["weight_precision"] = weight_precision
     decision["generated"] = False
     decision["error_class"] = None
     decision["max_prompt_len_property"] = MAX_PROMPT_LEN_PROPERTY
@@ -570,6 +586,323 @@ def slo_bisect(
     return visited
 
 
+# ---------------------------------------------------------------- int8 envelope
+# NPU amendment 2026-10-13b. Used only with --envelope; the int4 path above is
+# unchanged. The constants are written here and in the amendment, and a test
+# checks they agree. This runner does not open the amendment.
+
+ENVELOPE_MAX_NEW_TOKENS = 64
+ENVELOPE_TIMING_MAX_NEW_TOKENS = 1
+ENVELOPE_HIGH_MARGIN = 64
+VALID_MIN_REAL_TOKENS = 62
+VALID_REPEAT_MAX = 27 / 61
+THINK_TAGS = ("<think>", "</think>")
+CONTENT_QUESTION = "What is the capital of France? Answer in one sentence."
+CONTENT_KEYWORD = "paris"
+CONTENT_SEPARATOR = "\n\n"
+
+# Estimate inputs. Recorded, not cited; they only size the scheduling bound.
+# int8 NPU load at 2048 and TTFT at 21-32 tokens: the four F1 NPU cells
+# (natstop_f1_b172b287). Decode: F1 child walls, (189.235 - 26.634) / 56.
+INT8_LOAD_S_AT_2048 = 139.4185
+INT8_TTFT_S_SHORT = 4.150
+INT8_DECODE_S_PER_TOKEN = 2.9035892857142853
+# int4 loads per setting (34c2240f, f704d565/ca3467ad mean, 47630f52,
+# 413d4a2e, d626d0bc, 3a672cd5) and int4 prefill points (34c2240f rung at 64
+# and P1 at 960; load-only P1 prefills above).
+INT4_LOAD_S = {
+    1024: 81.87166820000857,
+    2048: 95.07,
+    4096: 117.09,
+    8192: 195.05,
+    16384: 508.77,
+    32768: 1963.26,
+}
+INT4_PREFILL_S = {
+    64: 1.2872927333333333,
+    960: 1.3240669,
+    1984: 2.77,
+    4032: 6.54,
+    8128: 15.94,
+    16320: 58.61,
+    32704: 245.76,
+}
+INT8_LOAD_RATIO = INT8_LOAD_S_AT_2048 / INT4_LOAD_S[2048]
+INT8_TTFT_RATIO = INT8_TTFT_S_SHORT / INT4_PREFILL_S[64]
+ENVELOPE_GPU_GENERATE_S = 4.0
+ENVELOPE_GPU_SETUP_S = 10.0
+ENVELOPE_CANARY_S = 12.0
+ENVELOPE_OVERHEAD_S = 30.0
+ENVELOPE_TIMING_OVERHEAD_S = 0.5
+
+
+def envelope_ttft_estimate_s(n_tokens: int) -> float:
+    """int4 prefill interpolated linearly, times the F1 short-prompt ratio."""
+    points = sorted(INT4_PREFILL_S)
+    if n_tokens <= points[0]:
+        base = INT4_PREFILL_S[points[0]]
+    elif n_tokens >= points[-1]:
+        base = INT4_PREFILL_S[points[-1]]
+    else:
+        base = INT4_PREFILL_S[points[-1]]
+        for lo, hi in itertools.pairwise(points):
+            if n_tokens <= hi:
+                span = (n_tokens - lo) / float(hi - lo)
+                base = INT4_PREFILL_S[lo] + (INT4_PREFILL_S[hi] - INT4_PREFILL_S[lo]) * span
+                break
+    return INT8_TTFT_RATIO * base
+
+
+def envelope_high(cap: int) -> int:
+    """MIN_RESPONSE_LEN leaves cap + 8 - n tokens; 64 need n <= cap - 56."""
+    return int(cap) - ENVELOPE_HIGH_MARGIN
+
+
+def envelope_load_estimate_s(cap: int) -> float:
+    if cap not in INT4_LOAD_S:
+        raise SystemExit(f"REFUSED -- no recorded int4 load at {cap} to scale")
+    return INT4_LOAD_S[cap] * INT8_LOAD_RATIO
+
+
+def envelope_estimate_s(cap: int, *, low: int = SHORT_PROMPT_TOKENS, resolution: int = 64) -> int:
+    """Upper bound for one envelope session; every rung priced at the high rung."""
+    high = envelope_high(cap)
+    points = 2 + math.ceil(math.log2(max(1.0, (high - low) / float(resolution))))
+    planned = points * REPEATS
+    ttft = envelope_ttft_estimate_s(high)
+    generate64 = ttft + (ENVELOPE_MAX_NEW_TOKENS - 1) * INT8_DECODE_S_PER_TOKEN
+    rung = (generate64 + ENVELOPE_GPU_GENERATE_S) + (REPEATS - 1) * (
+        ttft + ENVELOPE_TIMING_OVERHEAD_S
+    )
+    interval = max(1, planned // 4)
+    canaries = 3 + math.ceil(planned / interval) + 1
+    capacity = envelope_ttft_estimate_s(cap - CAPACITY_MARGIN) + (
+        (MAX_NEW_TOKENS - 1) * INT8_DECODE_S_PER_TOKEN
+    )
+    content = generate64 + ENVELOPE_GPU_GENERATE_S
+    total = (
+        envelope_load_estimate_s(cap)
+        + capacity
+        + ENVELOPE_GPU_SETUP_S
+        + points * rung
+        + canaries * ENVELOPE_CANARY_S
+        + content
+        + ENVELOPE_OVERHEAD_S
+    )
+    return math.ceil(total)
+
+
+def envelope_load_only_estimate_s(cap: int) -> int:
+    capacity = envelope_ttft_estimate_s(cap - CAPACITY_MARGIN) + (
+        (MAX_NEW_TOKENS - 1) * INT8_DECODE_S_PER_TOKEN
+    )
+    return math.ceil(
+        envelope_load_estimate_s(cap) + capacity + ENVELOPE_OVERHEAD_S + 4 * ENVELOPE_CANARY_S
+    )
+
+
+def strip_think(text: str | None) -> str:
+    out = text or ""
+    for tag in THINK_TAGS:
+        out = out.replace(tag, "")
+    return out.strip()
+
+
+def stop_set_of(pipe: Any) -> dict[str, Any]:
+    """eos and stop ids from the pipeline's generation config."""
+    try:
+        cfg = pipe.get_generation_config()
+    except Exception as exc:
+        return {"ids": [], "error": f"{type(exc).__name__}: {exc}"}
+    found: set[int] = set()
+    eos = getattr(cfg, "eos_token_id", None)
+    if isinstance(eos, int) and eos >= 0:
+        found.add(int(eos))
+    for value in getattr(cfg, "stop_token_ids", None) or []:
+        found.add(int(value))
+    return {"ids": sorted(found), "error": None}
+
+
+def real_token_count(ids: list[int], stop_ids: list[int], decode: Callable[[int], str]) -> int:
+    """Ids not in the stop set whose text, think tags removed, is not whitespace."""
+    stops = set(stop_ids)
+    count = 0
+    for token in ids:
+        if token in stops:
+            continue
+        piece = decode(token) or ""
+        for tag in THINK_TAGS:
+            piece = piece.replace(tag, "")
+        if piece.strip():
+            count += 1
+    return count
+
+
+def envelope_generation(
+    out: dict[str, Any], *, realized: int, stop_ids: list[int], decode: Callable[[int], str]
+) -> dict[str, Any]:
+    """One validity or content generate, reduced to the fields the rule reads."""
+    returned = bool(out.get("ok", True))
+    ids = [int(i) for i in out.get("token_ids") or []][:ENVELOPE_MAX_NEW_TOKENS]
+    count = real_token_count(ids, stop_ids, decode) if returned else 0
+    return {
+        "generate_returned": returned,
+        "error": out.get("error"),
+        "error_class": out.get("error_class"),
+        "realized_tokens": realized,
+        "pipeline_input_tokens": out.get("prompt_tokens"),
+        "prefill_s": out.get("prefill_s"),
+        "decode_tok_s": out.get("decode_tok_s"),
+        "decode_reason": out.get("decode_reason"),
+        "generated_ids": ids,
+        "stop": "max" if len(ids) >= ENVELOPE_MAX_NEW_TOKENS else "EOS",
+        "real_token_count": count,
+        "id_repeat_fraction": fourgram_repeat_fraction(ids),
+        "text": out.get("text") if returned else None,
+        "metric_error": out.get("metric_error"),
+    }
+
+
+def envelope_valid(gen: dict[str, Any] | None, reference: dict[str, Any] | None) -> dict[str, Any]:
+    """2026-10-12 rule. Floor: the reference's real tokens when it stopped by EOS."""
+    if not isinstance(gen, dict) or not gen.get("generate_returned"):
+        return {"valid": False, "reason": "generate_failed", "k_eff": None}
+    if gen.get("pipeline_input_tokens") != gen.get("realized_tokens"):
+        return {"valid": False, "reason": "input_count_mismatch", "k_eff": None}
+    k_eff = VALID_MIN_REAL_TOKENS
+    if (
+        isinstance(reference, dict)
+        and reference.get("generate_returned")
+        and reference.get("stop") == "EOS"
+        and isinstance(reference.get("real_token_count"), int)
+    ):
+        k_eff = min(k_eff, int(reference["real_token_count"]))
+    k_eff = max(1, k_eff)
+    if int(gen.get("real_token_count") or 0) < k_eff:
+        return {"valid": False, "reason": "too_few_real_tokens", "k_eff": k_eff}
+    fraction = gen.get("id_repeat_fraction")
+    if fraction is not None and float(fraction) > VALID_REPEAT_MAX:
+        return {"valid": False, "reason": "id_4gram_repeat", "k_eff": k_eff}
+    return {"valid": True, "reason": None, "k_eff": k_eff}
+
+
+def envelope_binding(*, rungs: list[dict[str, Any]], high: int) -> dict[str, Any]:
+    """TOOLCHAIN_CAP, LATENCY or VALIDITY from the lowest failing rung above the limit."""
+    passing = [row for row in rungs if row.get("slo_pass")]
+    chosen = max(passing, key=lambda row: int(row["n_tokens"])) if passing else None
+    limit = None if chosen is None else int(chosen["n_tokens"])
+    decode = None
+    if chosen is not None:
+        decode = (chosen.get("validity") or {}).get("npu", {}).get("decode_tok_s")
+    if limit is not None and limit >= int(high):
+        return {
+            "binding": "TOOLCHAIN_CAP",
+            "ttft_limit_n": limit,
+            "deciding_rung": None,
+            "decode_tok_s_at_limit": decode,
+        }
+    above = sorted(
+        (
+            row
+            for row in rungs
+            if not row.get("slo_pass") and (limit is None or row["n_tokens"] > limit)
+        ),
+        key=lambda row: int(row["n_tokens"]),
+    )
+    first = above[0] if above else None
+    binding = None
+    if first is not None:
+        binding = "LATENCY" if first.get("valid") else "VALIDITY"
+    return {
+        "binding": binding,
+        "ttft_limit_n": limit,
+        "deciding_rung": None if first is None else int(first["n_tokens"]),
+        "decode_tok_s_at_limit": decode,
+    }
+
+
+def content_passes(gen: dict[str, Any] | None, reference: dict[str, Any] | None) -> bool:
+    if not envelope_valid(gen, reference)["valid"]:
+        return False
+    assert gen is not None
+    return CONTENT_KEYWORD in strip_think(gen.get("text")).lower()
+
+
+def content_outcome(npu: dict[str, Any] | None, gpu: dict[str, Any] | None) -> str:
+    if not content_passes(gpu, gpu):
+        return "CONTENT_REFERENCE_UNUSABLE"
+    return "CONTENT_OK" if content_passes(npu, gpu) else "CONTENT_FAIL"
+
+
+def content_prompt(tokenizer: Any, target: int, *, unit: str, salt: str) -> str:
+    """Filler of exactly ``target`` rendered tokens ending with the chat1 question."""
+    suffix = CONTENT_SEPARATOR + CONTENT_QUESTION
+    body = _exact_body(
+        lambda text: id_count(tokenizer, render_user(tokenizer, text + suffix)),
+        target,
+        prefix=f"{salt} ",
+        unit=unit,
+    )
+    rendered = render_user(tokenizer, body + suffix)
+    if id_count(tokenizer, rendered) != target:
+        raise SystemExit(f"REFUSED -- content prompt is not {target} tokens")
+    return rendered
+
+
+def run_content_check(
+    *,
+    limit: int | None,
+    build: Callable[[int], str],
+    npu_generate: Callable[[str], dict[str, Any]],
+    gpu_generate: Callable[[str], dict[str, Any]],
+    npu_stops: list[int],
+    gpu_stops: list[int],
+    decode: Callable[[int], str],
+) -> dict[str, Any]:
+    """Item 7: untimed, after the closing canary, at the limit rung."""
+    if limit is None:
+        return {"outcome": "NO_LIMIT", "n_tokens": None, "timed": False}
+    try:
+        prompt = build(int(limit))
+    except (Exception, SystemExit) as exc:
+        return {
+            "outcome": "CONTENT_PROMPT_ERROR",
+            "n_tokens": int(limit),
+            "error": f"{type(exc).__name__}: {exc}",
+            "timed": False,
+        }
+    npu = envelope_generation(
+        npu_generate(prompt), realized=int(limit), stop_ids=npu_stops, decode=decode
+    )
+    gpu = envelope_generation(
+        gpu_generate(prompt), realized=int(limit), stop_ids=gpu_stops, decode=decode
+    )
+    return {
+        "outcome": content_outcome(npu, gpu),
+        "n_tokens": int(limit),
+        "question": CONTENT_QUESTION,
+        "keyword": CONTENT_KEYWORD,
+        "npu": npu,
+        "gpu": gpu,
+        "npu_valid": envelope_valid(npu, gpu),
+        "gpu_valid": envelope_valid(gpu, gpu),
+        "timed": False,
+    }
+
+
+def envelope_ir_refusal(record: dict[str, Any]) -> str | None:
+    if record.get("error") and not record.get("xml_present"):
+        return f"IR unreadable: {record['error']}"
+    if not record.get("xml_present"):
+        return "openvino_model.xml absent"
+    if record.get("xml_matches_pin") is not True:
+        return "openvino_model.xml does not match the spec pin"
+    mode = str((record.get("summary") or {}).get("mode") or "")
+    if not mode.startswith("INT8"):
+        return f"IR mode {mode or 'unknown'} is not INT8"
+    return None
+
+
 def _write(path: Path, doc: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -656,7 +989,10 @@ def run_hardware(args: argparse.Namespace) -> int:
     ir = Path(str(spec["ir_dir"]))
     if not ir.is_absolute():
         ir = ROOT / ir
-    weight = "int8" if args.cell == "npu2-load" else "int4"
+    envelope = bool(getattr(args, "envelope", False))
+    if envelope and args.cell != "npu1-setting":
+        raise SystemExit("REFUSED -- --envelope applies to npu1-setting only")
+    weight = "int8" if args.cell == "npu2-load" or envelope else "int4"
     out = args.out
     out.mkdir(parents=True, exist_ok=True)
     session_id = str(uuid.uuid4())
@@ -672,11 +1008,42 @@ def run_hardware(args: argparse.Namespace) -> int:
         "min_response_len": MIN_RESPONSE_LEN,
         "apply_chat_template": False,
         "generate_call_form": "list",
-        "amendment": "NPU 2026-10-07",
+        "amendment": "NPU 2026-10-13b int8 envelope" if envelope else "NPU 2026-10-07",
         "requested_max_prompt_len": args.max_prompt_len,
         "ir_quantization": ir_quantization(spec) if weight == "int4" else None,
     }
+    ir_read: dict[str, Any] | None = None
+    if envelope:
+        pin = (spec.get("ir_files") or {}).get("openvino_model.xml")
+        ir_read = read_ir_quantization(ir, pin)
+        plan["ir_quantization"] = ir_read
+        plan["envelope"] = {
+            "max_new_tokens": ENVELOPE_MAX_NEW_TOKENS,
+            "timing_max_new_tokens": ENVELOPE_TIMING_MAX_NEW_TOKENS,
+            "high": None if args.max_prompt_len is None else envelope_high(args.max_prompt_len),
+            "valid_min_real_tokens": VALID_MIN_REAL_TOKENS,
+            "valid_repeat_max": VALID_REPEAT_MAX,
+            "content_question": CONTENT_QUESTION,
+            "content_keyword": CONTENT_KEYWORD,
+        }
     _write(out / "plan.json", plan)
+    if ir_read is not None:
+        refusal = envelope_ir_refusal(ir_read)
+        if refusal:
+            _write(
+                out / "summary.json",
+                {
+                    "session_id": session_id,
+                    "cell": args.cell,
+                    "status": "REFUSED_IR",
+                    "detail": refusal,
+                    "ir_quantization": ir_read,
+                    "generated": False,
+                    "timed": False,
+                },
+            )
+            print(f"REFUSED -- {refusal}")
+            return 1
 
     guard_holder: dict[str, Any] = {"guard": None}
 
@@ -738,7 +1105,7 @@ def run_hardware(args: argparse.Namespace) -> int:
 
     core = ov.Core()
     props: dict[str, Any] = {}
-    if weight == "int4":
+    if args.cell == "npu1-setting":
         if args.max_prompt_len is None:
             raise SystemExit("REFUSED -- MAX_PROMPT_LEN is required")
         props = npu_load_props(int(args.max_prompt_len), int(args.prefill_chunk_size))
@@ -755,7 +1122,7 @@ def run_hardware(args: argparse.Namespace) -> int:
     load_s = time.perf_counter() - load_t0
     rss_after = process_rss_mb()
     read_errors: list[str] = []
-    if pipe is not None and weight == "int4":
+    if pipe is not None and args.cell == "npu1-setting":
         try:
             max_prompt_len = int(pipe.get_property("NPUW_LLM_MAX_PROMPT_LEN"))
         except Exception as exc:
@@ -787,7 +1154,7 @@ def run_hardware(args: argparse.Namespace) -> int:
         print(json.dumps({"ok": True, "status": "infeasible", "generated": False}))
         return 0
 
-    quant = ir_quantization(spec)
+    quant = ir_read if envelope else ir_quantization(spec)
     if load_error or pipe is None:
         if not arm(4):
             return 1
@@ -824,9 +1191,19 @@ def run_hardware(args: argparse.Namespace) -> int:
         count_tokens=lambda text: id_count(tokenizer, text),
         generate=lambda prompt: generate_once(ov_genai, pipe, prompt),
     )
+    if envelope:
+        # Amendment 2026-10-13b item 1: P1 validity is recorded, not a gate.
+        p1, p2 = capacity["P1"], capacity["P2"]
+        capacity["envelope_passed"] = bool(
+            p1.get("ok")
+            and isinstance(p1.get("realized_tokens"), int)
+            and p1.get("pipeline_input_tokens") == p1.get("realized_tokens")
+            and p2.get("pass")
+        )
+    capacity_ok = capacity["envelope_passed"] if envelope else capacity["passed"]
     plan["capacity_check"] = capacity
     _write(out / "plan.json", plan)
-    if not capacity["passed"]:
+    if not capacity_ok:
         summary = {
             "session_id": session_id,
             "cell": args.cell,
@@ -848,7 +1225,10 @@ def run_hardware(args: argparse.Namespace) -> int:
     if args.load_only:
         if not arm(4):
             return 1
-        bound = setting_estimate_s(cap, low=int(args.low), resolution=int(args.resolution))
+        if envelope:
+            bound = envelope_estimate_s(cap, low=int(args.low), resolution=int(args.resolution))
+        else:
+            bound = setting_estimate_s(cap, low=int(args.low), resolution=int(args.resolution))
         summary = {
             "session_id": session_id,
             "cell": args.cell,
@@ -871,10 +1251,11 @@ def run_hardware(args: argparse.Namespace) -> int:
 
     from tools.ttft_slo_canary import estimate_bisect_planned_probes
 
+    high = envelope_high(cap) if envelope else cap
     planned = estimate_bisect_planned_probes(
         n_arms=1,
         low=int(args.low),
-        high=cap,
+        high=high,
         resolution=int(args.resolution),
         repeats=REPEATS,
     )
@@ -968,6 +1349,97 @@ def run_hardware(args: argparse.Namespace) -> int:
         row["decode_reason"] = npu_row.get("decode_reason")
         return row
 
+    cfg64 = generation_config(ov_genai, max_new_tokens=ENVELOPE_MAX_NEW_TOKENS, min_new_tokens=None)
+    cfg_timing = generation_config(
+        ov_genai, max_new_tokens=ENVELOPE_TIMING_MAX_NEW_TOKENS, min_new_tokens=None
+    )
+    npu_stops = stop_set_of(pipe) if envelope else {"ids": [], "error": None}
+    gpu_stops = stop_set_of(gpu) if envelope else {"ids": [], "error": None}
+
+    def decode(token: int) -> str:
+        try:
+            return str(tokenizer.decode([int(token)]))
+        except Exception:
+            return ""
+
+    if envelope:
+        plan["envelope"]["stop_ids"] = {"NPU": npu_stops, "GPU": gpu_stops}
+        _write(out / "plan.json", plan)
+    rung_state: dict[int, dict[str, Any]] = {}
+
+    def envelope_paired(n_tokens: int) -> dict[str, Any]:
+        """Repeat 1: paired 64-token validity generate. Repeats 2-3: NPU TTFT only."""
+        state = rung_state.setdefault(n_tokens, {"repeat": 0, "valid": False})
+        state["repeat"] += 1
+        row: dict[str, Any] = {"n_tokens": n_tokens, "repeat": state["repeat"], "generated": True}
+        prompt = build_prompt(n_tokens)
+        if state["repeat"] == 1:
+            npu_gen = envelope_generation(
+                generate_once(ov_genai, pipe, prompt, cfg64),
+                realized=n_tokens,
+                stop_ids=npu_stops["ids"],
+                decode=decode,
+            )
+            gpu_gen = envelope_generation(
+                generate_once(ov_genai, gpu, prompt, cfg64),
+                realized=n_tokens,
+                stop_ids=gpu_stops["ids"],
+                decode=decode,
+            )
+            verdict = envelope_valid(npu_gen, gpu_gen)
+            gpu_verdict = envelope_valid(gpu_gen, gpu_gen)
+            state["valid"] = bool(verdict["valid"])
+            state["validity"] = {
+                "npu": npu_gen,
+                "gpu": gpu_gen,
+                **verdict,
+                "gpu_valid": gpu_verdict["valid"],
+                "exact_match_vs_gpu": npu_gen["generated_ids"] == gpu_gen["generated_ids"],
+            }
+            row["kind"] = "validity"
+            measured = npu_gen
+            row["decode_tok_s"] = npu_gen.get("decode_tok_s")
+            row["decode_reason"] = npu_gen.get("decode_reason")
+            row["exact_match_vs_gpu"] = state["validity"]["exact_match_vs_gpu"]
+        else:
+            row["kind"] = "timing"
+            row["decode_tok_s"] = None
+            row["exact_match_vs_gpu"] = None
+            if not state["valid"]:
+                row.update(timed=False, prefill_s=None, prompt_length=None, reason="rung_not_valid")
+                row["slo_pass"] = False
+                return row
+            raw = generate_once(ov_genai, pipe, prompt, cfg_timing)
+            measured = {
+                "generate_returned": bool(raw.get("ok", True)),
+                "pipeline_input_tokens": raw.get("prompt_tokens"),
+                "prefill_s": raw.get("prefill_s"),
+                "error": raw.get("error"),
+                "metric_error": raw.get("metric_error"),
+            }
+        count = measured.get("pipeline_input_tokens")
+        timed = bool(
+            state["valid"]
+            and measured.get("generate_returned")
+            and count == n_tokens
+            and isinstance(measured.get("prefill_s"), (int, float))
+        )
+        reason = None
+        if not state["valid"]:
+            reason = (state.get("validity") or {}).get("reason") or "rung_not_valid"
+        elif not timed:
+            reason = "not_timed"
+        row.update(
+            timed=timed,
+            prefill_s=measured.get("prefill_s") if timed else None,
+            prompt_length=count,
+            reason=reason,
+            error=measured.get("error"),
+            metric_error=measured.get("metric_error"),
+        )
+        row["slo_pass"] = slo_pass([row])
+        return row
+
     guard = guard_holder["guard"]
     probes_log: list[dict[str, Any]] = []
     series = new_npu_series(None if guard is None else guard.n_derivation)
@@ -993,16 +1465,19 @@ def run_hardware(args: argparse.Namespace) -> int:
         rung = drive_npu_rung(
             n_tokens,
             repeats=REPEATS,
-            one_repeat=paired,
+            one_repeat=envelope_paired if envelope else paired,
             guard=guard,
             probes_log=probes_log,
             on_interval=None if guard is None else on_interval,
         )
         if guard is not None:
             series["n_derivation"] = guard.n_derivation
+        if envelope:
+            state = rung_state.get(n_tokens) or {}
+            rung["valid"] = bool(state.get("valid"))
+            rung["validity"] = state.get("validity")
         return rung
 
-    high = cap
     from tools.ttft_slo_canary import CanaryDriftAbort, CanaryUnarmedSealRefuse
 
     try:
@@ -1023,8 +1498,21 @@ def run_hardware(args: argparse.Namespace) -> int:
         write_summary(summary)
         print(f"REFUSED -- canary drift: {exc.detail}")
         return 1
-    bound = bind_setting(load_ok=True, cap=high, rungs=rungs)
-    over = over_max_record(high)
+    content: dict[str, Any] | None = None
+    if envelope:
+        bound = envelope_binding(rungs=rungs, high=high)
+        content = run_content_check(
+            limit=bound["ttft_limit_n"],
+            build=lambda n: content_prompt(tokenizer, n, unit=filler, salt="npu"),
+            npu_generate=lambda prompt: generate_once(ov_genai, pipe, prompt, cfg64),
+            gpu_generate=lambda prompt: generate_once(ov_genai, gpu, prompt, cfg64),
+            npu_stops=npu_stops["ids"],
+            gpu_stops=gpu_stops["ids"],
+            decode=decode,
+        )
+    else:
+        bound = bind_setting(load_ok=True, cap=high, rungs=rungs)
+    over = over_max_record(cap, weight_precision=weight)
     summary = {
         "session_id": session_id,
         "cell": args.cell,
@@ -1035,6 +1523,8 @@ def run_hardware(args: argparse.Namespace) -> int:
         "rungs": rungs,
         "capacity_check": capacity,
         "over_max": over,
+        "envelope": envelope,
+        "content_check": content,
         "ir_quantization": quant,
         "measurement": True,
         **load_fields,
@@ -1050,6 +1540,14 @@ def run_hardware(args: argparse.Namespace) -> int:
             write_summary(summary)
             print(f"REFUSED -- {exc.detail}")
             return 1
+    if envelope:
+        armed = False if guard is None else canary_marker(guard.plan_fragment())["armed"]
+        summary["limit_citable"] = bool(
+            armed
+            and summary["status"] == "complete"
+            and isinstance(content, dict)
+            and content.get("outcome") == "CONTENT_OK"
+        )
     write_summary(summary)
     print(json.dumps({"ok": True, "status": "complete", "rungs": len(rungs)}))
     return 0
@@ -1071,6 +1569,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--resolution", type=int, default=64)
     parser.add_argument("--prefill-chunk-size", type=int, default=1024)
     parser.add_argument("--no-canary", action="store_true")
+    parser.add_argument(
+        "--envelope",
+        action="store_true",
+        help="NPU-INT8 envelope (amendment 2026-10-13b); npu1-setting on an int8 IR",
+    )
     args = parser.parse_args(argv)
     if args.smoke:
         _write(
@@ -1081,6 +1584,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.model_spec is None:
         raise SystemExit("REFUSED -- model spec is required")
+    if args.envelope and args.cell != "npu1-setting":
+        raise SystemExit("REFUSED -- --envelope applies to npu1-setting only")
     return run_hardware(args)
 
 
