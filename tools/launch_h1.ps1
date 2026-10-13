@@ -82,9 +82,17 @@
 # clean-tree check then passes without --allow-dirty, and the worker records
 # every file there with its sha256 in plan.json git.launch_evidence.
 #
+# Cloud ping (step 5b): when any selected policy can reach the cloud (every
+# policy except local_only), tools/cloud_ping.py sends one max_tokens 8 request
+# through the runner's own client and model id, in the foreground, before the
+# spawn. A failed ping refuses the spawn. The JSON goes to the run's launch
+# dir (cloud_ping.json; hashed into plan.json git.launch_evidence on a live
+# run). -DryRun pings too (the cheap check, under $0.001) unless -NoCloudPing;
+# -NoCloudPing is refused on a live launch.
+#
 # Steps: (1) non-persistent host clean  (2) five gates  (3) INF-1b canary guard
 #        (4) machine-lock / alive-worker check  (5) TURNWISE lifecycle smoke
-#        (6) spawn_detached  (7) print run_id + artifact dir; exit without waiting.
+#        (5b) cloud ping  (6) spawn_detached  (7) print run_id + artifact dir; exit without waiting.
 
 [CmdletBinding()]
 param(
@@ -114,7 +122,9 @@ param(
     [Nullable[int]]$EntryCount = $null,
     # Interleaved per-policy caps, overriding the defaults, e.g.
     # "emission_escalate=3,full_signal_bounceback=2,local_only=0" (H1-CPU amendment 2).
-    [string]$PolicyCapUsd = ""
+    [string]$PolicyCapUsd = "",
+    # Skip the cloud ping on a -DryRun only. A live launch always pings.
+    [switch]$NoCloudPing
 )
 
 $ErrorActionPreference = "Stop"
@@ -474,6 +484,42 @@ if ($lifeRc -ne 0) {
     if (-not $DryRun) { exit $lifeRc }
 }
 Write-Host "Lifecycle smoke PASS."
+Write-Host ""
+
+# ---------------------------------------------------------------------------
+# 5b. Cloud ping (foreground; same client and model id as the worker)
+# ---------------------------------------------------------------------------
+Write-Host "=== 5b. cloud ping ==="
+$cloudPolicies = @()
+if ($Interleaved) {
+    $cloudPolicies = @($resolvedInterleavePolicies | Where-Object { $_ -ne "local_only" })
+} elseif ($Policy -ne "local_only") {
+    $cloudPolicies = @($Policy)
+}
+if ($NoCloudPing -and -not $DryRun) {
+    Refuse "-NoCloudPing is only for -DryRun; a live launch always pings the cloud first"
+    exit 1
+}
+if ($cloudPolicies.Count -eq 0) {
+    Write-Host "cloud ping: skipped (no selected policy reaches the cloud)"
+} elseif ($NoCloudPing) {
+    Write-Host "DRY-RUN: cloud ping skipped (-NoCloudPing)"
+} else {
+    $CloudPingPy = Join-Path $root "tools\cloud_ping.py"
+    if (-not (Test-Path -LiteralPath $CloudPingPy)) { Refuse "cloud ping missing: $CloudPingPy"; exit 2 }
+    New-Item -ItemType Directory -Force -Path $SessionLaunchDir | Out-Null
+    $CloudPingJson = Join-Path $SessionLaunchDir "cloud_ping.json"
+    Write-Host ("cloud ping for: {0}" -f ($cloudPolicies -join ","))
+    & $PythonExe -u $CloudPingPy --out $CloudPingJson
+    $pingRc = $LASTEXITCODE
+    Write-Host ("cloud_ping_json: {0}" -f $CloudPingJson)
+    if ($pingRc -ne 0) {
+        Refuse "cloud ping failed (exit $pingRc; see $CloudPingJson); refuse spawn"
+        if (-not $DryRun) { exit $pingRc }
+    } else {
+        Write-Host "Cloud ping PASS."
+    }
+}
 Write-Host ""
 
 # ---------------------------------------------------------------------------

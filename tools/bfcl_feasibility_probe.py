@@ -3763,13 +3763,19 @@ def run_cloud_multi_turn_agent_entry(
                 latency_s = time.perf_counter() - t0
             except Exception as exc:
                 latency_s = time.perf_counter() - t0
-                abort_error = f"api_error: {type(exc).__name__}: {exc}"
+                from tools.h1_cloud_accounting import exception_fields
+
+                failure = exception_fields(exc)
+                abort_error = f"api_error: {failure['error_class']}: {failure['error_message']}"
                 call_records.append(
                     {
                         "turn": turn_idx,
                         "step": step,
                         "ok": False,
                         "error": abort_error,
+                        "error_class": failure["error_class"],
+                        "http_status": failure["http_status"],
+                        "request_id": failure["request_id"],
                         "prompt_tokens": None,
                         "completion_tokens": None,
                         **cloud_request_record(

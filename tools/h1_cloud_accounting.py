@@ -6,12 +6,49 @@ which leaves the Anthropic request without cache_control.
 
 from __future__ import annotations
 
+import os
+import re
 from typing import Any
 
 CACHING_POLICIES = ("none", "ephemeral")
 # Sealed run d482c621-4292-4281-b6a1-8635e5eeb6da: harness set no cache_control.
 DEFAULT_CACHING_POLICY = "none"
 TOKEN_COUNT_METHOD = "char_proportional_split_of_input_tokens"
+
+# Anything that looks like an API key or a bearer token is replaced before an
+# error string is written to disk. The key itself is never read into a record.
+_KEY_LIKE = re.compile(
+    r"(sk-ant-[A-Za-z0-9_\-]+|sk-[A-Za-z0-9_\-]{16,}|Bearer\s+[A-Za-z0-9._\-]+"
+    r"|x-api-key['\"]?\s*[:=]\s*['\"]?[A-Za-z0-9._\-]+)",
+    re.IGNORECASE,
+)
+
+
+def redact_secrets(text: str | None) -> str | None:
+    """Mask key-like substrings, and the live ANTHROPIC_API_KEY value if present."""
+    if text is None:
+        return None
+    out = str(text)
+    key = os.environ.get("ANTHROPIC_API_KEY") or ""
+    if len(key) >= 8:
+        out = out.replace(key, "[REDACTED]")
+    return _KEY_LIKE.sub("[REDACTED]", out)
+
+
+def exception_fields(exc: BaseException) -> dict[str, Any]:
+    """Error class, HTTP status and request id of an SDK exception, redacted.
+
+    anthropic.APIStatusError carries status_code and request_id; connection
+    and timeout errors carry neither. Headers are never copied.
+    """
+    status = getattr(exc, "status_code", None)
+    request_id = getattr(exc, "request_id", None)
+    return {
+        "error_class": type(exc).__name__,
+        "http_status": status if isinstance(status, int) else None,
+        "request_id": request_id if isinstance(request_id, str) else None,
+        "error_message": redact_secrets(str(exc)),
+    }
 
 
 def apply_caching_policy(kwargs: dict[str, Any], policy: str) -> dict[str, Any]:

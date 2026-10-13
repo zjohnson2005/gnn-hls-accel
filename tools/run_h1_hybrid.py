@@ -1919,9 +1919,50 @@ def cloud_turn_is_dead(bt: BackendTurn) -> bool:
     return int(bt.cloud_tokens_in or 0) == 0 and int(bt.cloud_tokens_out or 0) == 0
 
 
+# Per-request fields copied into cloud_dead_events.json. An allow-list, so no
+# header, key or request text can reach the file.
+CLOUD_EVENT_REQUEST_FIELDS = (
+    "turn",
+    "step",
+    "user_turn",
+    "request_index_within_turn",
+    "ok",
+    "error",
+    "error_class",
+    "http_status",
+    "request_id",
+    "model",
+    "prompt_tokens",
+    "completion_tokens",
+    "input_tokens",
+    "output_tokens",
+    "latency_s",
+    "usd",
+)
+
+
+def cloud_event_request_row(row: dict[str, Any]) -> dict[str, Any]:
+    """One request row for the events file: allow-listed fields, error redacted."""
+    from tools.h1_cloud_accounting import redact_secrets
+
+    out = {name: row.get(name) for name in CLOUD_EVENT_REQUEST_FIELDS if name in row}
+    if out.get("error") is not None:
+        out["error"] = redact_secrets(str(out["error"]))
+    if "error_class" not in out and out.get("error"):
+        # Rows written before error_class existed: "api_error: <Class>: <msg>".
+        parts = str(out["error"]).split(": ", 2)
+        out["error_class"] = parts[1] if len(parts) >= 2 and parts[0] == "api_error" else None
+    return out
+
+
 @dataclass
 class CloudDeadPathGuard:
-    """Abort after N consecutive dead cloud turns (any policy / entry)."""
+    """Abort after N consecutive dead cloud turns (any policy / entry).
+
+    With ``events_path`` set, every dead turn and the abort rewrite
+    ``cloud_dead_events.json`` (guard events plus the allow-listed request rows
+    of every observed turn), so the error text survives the abort.
+    """
 
     n: int = CLOUD_DEAD_CONSECUTIVE_N
     consecutive: int = 0
@@ -1929,6 +1970,35 @@ class CloudDeadPathGuard:
     requests_by_turn: dict[tuple[str, str, int], list[dict[str, Any]]] = field(
         default_factory=dict
     )
+    events_path: Path | None = None
+
+    def events_doc(self, *, status: str | None = None, abort: str | None = None) -> dict[str, Any]:
+        from tools.h1_cloud_accounting import redact_secrets
+
+        return {
+            "status": status,
+            "abort": redact_secrets(abort),
+            "threshold_n": self.n,
+            "consecutive": self.consecutive,
+            "events": [
+                {**ev, "cloud_error": redact_secrets(ev.get("cloud_error"))} for ev in self.events
+            ],
+            "requests": [
+                {
+                    "policy": policy,
+                    "entry_id": entry_id,
+                    "turn": turn,
+                    "rows": [cloud_event_request_row(r) for r in rows],
+                }
+                for (policy, entry_id, turn), rows in self.requests_by_turn.items()
+            ],
+            "written_utc": _utc_now(),
+            "note": "No API key or headers. Errors are redacted. Written on each dead cloud turn and on abort.",
+        }
+
+    def write_events(self, *, status: str | None = None, abort: str | None = None) -> None:
+        if self.events_path is not None:
+            _write_json(self.events_path, self.events_doc(status=status, abort=abort))
 
     def observe(
         self,
@@ -1956,6 +2026,8 @@ class CloudDeadPathGuard:
         self.events.append(rec)
         if bt.cloud_requests is not None:
             self.requests_by_turn[(policy, entry_id, turn)] = list(bt.cloud_requests)
+        if dead:
+            self.write_events(status="dead_turn")
         return rec
 
     def raise_if_refused(self) -> None:
@@ -2758,7 +2830,9 @@ def run_session(
     abort_reason: str | None = None
     abort_verbatim: str | None = None
     summary_written = False
-    cloud_dead_guard = CloudDeadPathGuard(n=CLOUD_DEAD_CONSECUTIVE_N)
+    cloud_dead_guard = CloudDeadPathGuard(
+        n=CLOUD_DEAD_CONSECUTIVE_N, events_path=out_dir / "cloud_dead_events.json"
+    )
 
     def _write_session_summary() -> dict[str, Any]:
         nonlocal summary_written
@@ -2820,6 +2894,7 @@ def run_session(
                 status = "aborted_cloud_dead"
                 abort_reason = str(exc)
                 abort_verbatim = str(exc)
+                cloud_dead_guard.write_events(status=status, abort=abort_reason)
                 print(f"ABORT_CLOUD_DEAD {exc}")
                 save_checkpoint(
                     ckpt_path,
@@ -3071,7 +3146,9 @@ def run_interleaved_session(
     cell_log: list[dict[str, Any]] = list(session_ckpt.get("cell_log") or [])
     prefix_cache_control_failures: list[dict[str, Any]] = []
     n_entries_finished = 0
-    cloud_dead_guard = CloudDeadPathGuard(n=CLOUD_DEAD_CONSECUTIVE_N)
+    cloud_dead_guard = CloudDeadPathGuard(
+        n=CLOUD_DEAD_CONSECUTIVE_N, events_path=out_dir / "cloud_dead_events.json"
+    )
 
     def _persist_policy(policy: str) -> None:
         st = state[policy]
@@ -3186,6 +3263,7 @@ def run_interleaved_session(
                 except CloudDeadPathError as exc:
                     session_status = "aborted_cloud_dead"
                     session_abort = str(exc)
+                    cloud_dead_guard.write_events(status=session_status, abort=session_abort)
                     st["status"] = "aborted_cloud_dead"
                     st["abort_reason"] = session_abort
                     for p in policies:

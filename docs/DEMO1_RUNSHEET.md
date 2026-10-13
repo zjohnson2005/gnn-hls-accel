@@ -95,6 +95,16 @@ Where to look and what to look for:
   file's path, size and sha256 in plan.json `git.launch_evidence`. The shared
   `derived\h1_hybrid\_canary_opening\` (d482c621) and `derived\_gate_probes\`
   are no longer written by a live launch_h1.
+- Cloud ping (since 2026-10-13): before the spawn, launch_h1 sends one
+  max_tokens 8 request through the worker's own client and model id
+  (tools/cloud_ping.py) and refuses the spawn if it fails. The record is
+  `_launches\<run_id>\cloud_ping.json` (model, SDK and python versions, HTTP
+  status, error class, latency, cost; no key). -DryRun pings too unless
+  -NoCloudPing.
+- On a dead cloud turn or a cloud-dead abort the artifact also holds
+  `cloud_dead_events.json`: the guard events and each request's ok, error
+  (redacted), error class, HTTP status, request id, model, tokens and
+  latency. It is inside the sealed tree.
 - Done when the log ends with the runner's JSON block `{"ok": true, "summary": ...}`
   containing `"status": "complete"`, and the artifact has `.sealed`.
 - Poll:
