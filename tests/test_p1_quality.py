@@ -408,7 +408,7 @@ def test_sweep_dry_run_fits_one_window() -> None:
     assert "fits_one_window=true" in combined
     first_a4 = (
         "Set-StrictMode -Version Latest; "
-        f"& '{ROOT / 'tools' / 'launch_p1_sweep.ps1'}' -DryRun -Arm A4 -EntryCount 83; "
+        f"& '{ROOT / 'tools' / 'launch_p1_sweep.ps1'}' -DryRun -Arm A4 -EntryCount 53; "
         "exit $LASTEXITCODE"
     )
     a4 = subprocess.run(
@@ -424,8 +424,8 @@ def test_sweep_dry_run_fits_one_window() -> None:
     assert "DRY_RUN_OK" in a4_text
     assert "--arm A4" in a4_text
     assert "--budget-s 10" in a4_text
-    assert "--entry-count 83" in a4_text
-    assert "p1_sweep_estimate_s=7168" in a4_text
+    assert "--entry-count 53" in a4_text
+    assert "p1_sweep_estimate_s=4718" in a4_text
     assert "fits_one_window=true" in a4_text
     wide = (
         "Set-StrictMode -Version Latest; "

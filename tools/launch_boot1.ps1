@@ -481,38 +481,55 @@ if ($Profile -eq "boot2") {
     )
 } elseif ($Profile -eq "p1-sweep") {
     # After A5. Fixed A0 and fixed A4 at per-step budgets 10, 20, and 30 s.
-    # Seed 20260930, lexicographic entries [:100], split so each boot's
-    # ceiling fits in 7200 s. A4's ceiling is every A0 step on that slice
-    # times the budget, plus load 5.211120400010259 s and canary overhead
-    # 752.1359013 s, then the next whole second. A step cannot run longer
-    # than the budget. A0's ceiling is the sealed [:100] wall from
-    # 8a529053, plus 10 s for each of the 5 steps already at 10 s when the
-    # budget grows, plus the same load and canary. This script does not
-    # open the amendment file.
+    # Seed 20260930, lexicographic entries [:100] then [100:200]. Slice table
+    # from amendment 9 (operational): every boot is at most 6000 s, so it fits
+    # the cold window (a cell defers when 7200 s minus uptime is below its
+    # estimate) with 1200 s for reboot, login and gates. A4's ceiling is the
+    # slice's A0 step count (per entry, the larger of sealed 8a529053 and
+    # bdc32a87) times the budget, plus load 5.211120400010259 s and canary
+    # overhead 752.1359013 s, then the next whole second. A0's ceiling is the
+    # sealed half wall from 8a529053, plus 10 s for each step already at 10 s
+    # when the budget grows, plus the same load and canary (amendment 8).
+    # This script does not open the amendment file.
     if ($P1Seed -ne 20260930) {
         throw "REFUSED -- P1 sweep seed $P1Seed is not registered"
     }
     $sweepKey = "$P1Arm|$P1BudgetS|$P1EntryOffset|$P1EntryCount"
     $sweepEstimates = @{
         "A0|10|0|100" = 2891
+        "A4|10|0|53" = 4718
+        "A4|10|53|47" = 4688
         "A0|20|0|100" = 2941
+        "A4|20|0|25" = 4678
+        "A4|20|25|28" = 4758
+        "A4|20|53|24" = 4658
+        "A4|20|77|23" = 4718
         "A0|30|0|100" = 2991
-        "A4|10|0|83" = 7168
-        "A4|10|83|17" = 2198
-        "A4|20|0|43" = 7198
-        "A4|20|43|40" = 7138
-        "A4|20|83|17" = 3638
-        "A4|30|0|27" = 7088
-        "A4|30|27|30" = 7178
-        "A4|30|57|25" = 6998
-        "A4|30|82|18" = 5318
+        "A4|30|0|21" = 5558
+        "A4|30|21|21" = 5468
+        "A4|30|42|19" = 5378
+        "A4|30|61|20" = 5498
+        "A4|30|81|19" = 5558
+        "A0|10|100|100" = 2787
+        "A4|10|100|47" = 4468
+        "A4|10|147|53" = 4498
+        "A0|20|100|100" = 2877
+        "A4|20|100|31" = 5758
+        "A4|20|131|33" = 5758
+        "A4|20|164|36" = 5658
+        "A0|30|100|100" = 2967
+        "A4|30|100|15" = 5228
+        "A4|30|115|21" = 5228
+        "A4|30|136|21" = 5228
+        "A4|30|157|22" = 5108
+        "A4|30|179|21" = 5348
     }
     if (-not $sweepEstimates.ContainsKey($sweepKey)) {
         throw "REFUSED -- P1 sweep cell $sweepKey is not a registered boot"
     }
     $p1Estimate = [int]$sweepEstimates[$sweepKey]
     $script:EstimateDerivation = [ordered]@{
-        formula = "A4 ceiling is slice step count times the per-step budget, plus load, plus canary overhead, then the next whole second. A0 ceiling is the sealed half wall plus 10 s per step already at the 10 s cap."
+        formula = "A4 ceiling is slice step count times the per-step budget, plus load, plus canary overhead, then the next whole second; every slice is at most 6000 s. A0 ceiling is the sealed half wall plus 10 s per step already at the 10 s cap."
         note = "The sweep runs after A5. Fixed A4 streams greedy first, then samples thinking inside the time that remains."
         arm = $P1Arm
         budget_s = $P1BudgetS
