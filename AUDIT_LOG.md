@@ -3092,3 +3092,19 @@ the already-committed `analysis/demo1/SCORE_XPS_20261013.json` (first
 committed in 0b55a6e) to add a `gold_edge_tokens` field; every scored value
 was unchanged. Under the new wording that would be a new file instead. It is
 recorded here, not reverted.
+
+---
+
+## 2026-10-14 - DEMO-2 decisions (Zach)
+
+**Class:** design decisions before any DEMO-2 run
+**Approved:** Zach, 2026-10-14
+
+Recorded verbatim:
+
+> (1) control placement GPU; (2) n = 60 (30 base + 30 long_context held-out pin), non-inferiority margin 0.15 on paired pass rate, report point estimate and CI and state the claim as "within 15 points"; (3) DEMO-2 spend ceiling $150 for the main 2x2 only; ablations decided after the 2x2's measured cost; (4) TTFT/decode trigger at step 0 only (as DEMO-1); window overflow checked before every local generate; (5) build now; (6) T2S Windows Update pause pending Rithwik.
+
+Context: docs/amendments/DEMO2_DESIGN_2026-10-14.md (0d5ce95). The build
+(hybrid_full, --context-window, held-out pin DEMO2_HELDOUT_60) followed the
+same day, with golden ledgers for every existing policy committed first
+(69ad626). No DEMO-2 prereg is registered and nothing has run.

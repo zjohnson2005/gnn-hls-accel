@@ -1774,6 +1774,9 @@ class MultiTurnAgentSession:
 
     force_quit: bool = field(default=False, init=False)
     stop_reason: str = field(default="completed", init=False)
+    # DEMO-2 --context-window: checked before each generate; None = off.
+    context_window: int | None = field(default=None, init=False)
+    ctx_overflow: dict[str, Any] | None = field(default=None, init=False)
     session_generated_once: bool = field(default=False, init=False)
     p1: Any = field(default=None, init=False, repr=False)
     p1_enable_thinking: bool = field(default=False, init=False)
@@ -1871,6 +1874,7 @@ class MultiTurnAgentSession:
         self.context_growth = []
         self.force_quit = False
         self.stop_reason = "completed"
+        self.ctx_overflow = None
         self.session_generated_once = False
         self.first_turn_equiv = None
         self.prev_turn0_prompt_tokens = None
@@ -2096,6 +2100,21 @@ class MultiTurnAgentSession:
                     "residency_mode": mode,
                 }
             )
+
+            if self.context_window is not None:
+                from tools.context_window import context_overflow
+
+                overflow = context_overflow(
+                    gen_input_tokens,
+                    max_new_tokens=max_new,
+                    window=self.context_window,
+                    step=step,
+                )
+                if overflow is not None:
+                    # Not generated: the caller escalates this turn (sticky).
+                    self.ctx_overflow = {"turn": turn_idx, **overflow}
+                    self.stop_reason = "ctx_overflow"
+                    break
 
             prompt_tokens_reported: int | None = None
             if mode is None:
@@ -2375,6 +2394,9 @@ class MultiTurnAgentSession:
             "tool_exec_error_class": turn_tool_err_class,
             **phases,
         }
+        if self.ctx_overflow is not None and self.ctx_overflow.get("turn") == turn_idx:
+            # Present only when the window stopped this turn (DEMO-2).
+            turn_metric["ctx_overflow"] = dict(self.ctx_overflow)
         self.turn_metrics.append(turn_metric)
         self._next_turn_idx = turn_idx + 1
         return turn_metric

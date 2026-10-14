@@ -8,6 +8,15 @@ Policies (``--policy``):
   emission_escalate local; escalate when no parseable tool call; stay on cloud
                     for the rest of that entry
   full_signal_bounceback  R2c: one-turn cloud bounce then resume local
+  hybrid_full       DEMO-2 (design of 2026-10-14):
+                    mechanical (ctx_overflow, step-0 ttft>10s / decode<6,
+                    local generation_error; sticky) then quality
+                    (no parseable call, tool_exec_error, n_steps >= 5;
+                    one-turn bounce)
+
+``--context-window N`` (default off): before each local generate, a prompt
+plus max_new_tokens above N is not generated; the turn escalates (sticky,
+trigger ctx_overflow) under every policy that can reach the cloud.
 
 Interleaved (``--interleaved`` / INF-5 session_design=interleaved):
   Same 200 entries, entry-by-entry. Default arm order is slo_escalate ->
@@ -43,6 +52,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tools.context_window import context_overflow  # noqa: E402
 from tools.h1_seal_git import launch_evidence_record, seal_git_record  # noqa: E402
 from tools.phase_timers import finalize_phase_timers, phases_sum_to_wall  # noqa: E402
 
@@ -65,6 +75,7 @@ DEMO1_LONGCTX_OBSK1024_15_SHA256 = (
     "3d6dc25f574019025a915c434ec4e7f284fca888e2e3935f0520b2385b939995"
 )
 DEMO1_PAIRED_15_SHA256 = "71faf5455559887cf0aa3c7a8317fab641b27c939b0643e501eeab5f63f9c080"
+DEMO2_HELDOUT_60_SHA256 = "cc74a37ed84ed95b0f4dd4b8d7eb774f2737230dcfca01321fe136cdbfbca447"
 ENTRY_PINS: dict[str, dict[str, Any]] = {
     W3_ENTRIES_SHA256: {"name": "W3_multi_turn_base_200", "n": 200, "seal_refs": list(W3_SEAL_REFS)},
     DEMO1_LONGCTX_30_SHA256: {
@@ -106,6 +117,15 @@ ENTRY_PINS: dict[str, dict[str, Any]] = {
         "category": "multi_turn_long_context",
         "seed": 20260930,
     },
+    # DEMO-2 held-out pin: 30 multi_turn_base then 30 multi_turn_long_context,
+    # none in a DEMO-1 pin (tools/demo2_heldout.py).
+    DEMO2_HELDOUT_60_SHA256: {
+        "name": "DEMO2_HELDOUT_60",
+        "n": 60,
+        "path": "derived/h1_hybrid/demo2/DEMO2_HELDOUT_60.json",
+        "category": "multi_turn_base+multi_turn_long_context",
+        "seed": 20261014,
+    },
 }
 ENTRY_PIN_DEFAULT: dict[str, Any] = {"sha256": W3_ENTRIES_SHA256, **ENTRY_PINS[W3_ENTRIES_SHA256]}
 
@@ -134,6 +154,7 @@ POLICIES = (
     "emission_escalate",
     "full_signal_bounceback",  # R2c
     "local_only",
+    "hybrid_full",  # DEMO-2
 )
 
 # H1-3POLICY interleaved arm order (INF-5 session_design=interleaved).
@@ -211,6 +232,10 @@ BOUNCE_TRIGGERS = (
     "tool_exec_error",
 )
 
+# DEMO-2 hybrid_full trigger classes, recorded on every escalation row.
+MECHANICAL = "mechanical"
+QUALITY = "quality"
+
 # Local agent-loop stop reasons (entry-level). Distinct events - do not collapse.
 # completed:       all turns_in_entry ran (or cloud_only finished the entry)
 # no_tool_call:    decode_execute_qwen raised (unparseable tool call)
@@ -269,6 +294,15 @@ ARM_CONFIG: dict[str, dict[str, str]] = {
         "model": "Qwen3-4B-int4-ov",
     },
     "full_signal_bounceback": {
+        "placement": "gpu_only",
+        "residency": "RESIDENT",
+        "kv": "u8",
+        "weight": "int4",
+        "tier": "4B",
+        "model": "Qwen3-4B-int4-ov",
+    },
+    # DEMO-2: wiring defaults only; --placement/--residency/--kv set each cell.
+    "hybrid_full": {
         "placement": "gpu_only",
         "residency": "RESIDENT",
         "kv": "u8",
@@ -422,11 +456,17 @@ class TurnLedger:
     decoded_steps: list[list[str]] | None = None
     # Local attempt that triggered this bounce. Absent on rows that are not a bounce.
     local_attempt: dict[str, Any] | None = None
+    # DEMO-2: "mechanical" | "quality" on hybrid_full / context-window escalations.
+    # Absent otherwise, so existing ledgers are unchanged.
+    trigger_class: str | None = None
+    # DEMO-2: {"n_ctx", "window", "max_new_tokens", "step"} when a turn overflowed.
+    ctx_overflow: dict[str, Any] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         d = asdict(self)
-        if d.get("local_attempt") is None:
-            d.pop("local_attempt", None)
+        for optional in ("local_attempt", "trigger_class", "ctx_overflow"):
+            if d.get(optional) is None:
+                d.pop(optional, None)
         assert phases_sum_to_wall(
             {
                 "turn_wall_s": self.turn_wall_s,
@@ -686,6 +726,27 @@ def decide_bounceback(
     return False, None
 
 
+def decide_hybrid_mechanical(
+    *,
+    ttft_s: float | None,
+    decode_tok_s: float | None,
+    generation_error: bool,
+) -> tuple[bool, str | None]:
+    """hybrid_full mechanical triggers other than ctx_overflow (checked first).
+
+    Step-0 TTFT / decode as slo_escalate (DEMO-1 rule), then a local
+    generation error. Sticky in the caller.
+    """
+    escalate, reason = decide_slo_escalate(
+        already_on_cloud=False, ttft_s=ttft_s, decode_tok_s=decode_tok_s
+    )
+    if escalate:
+        return True, reason
+    if generation_error:
+        return True, "generation_error"
+    return False, None
+
+
 def local_attempt_record(bt: BackendTurn, *, stop_reason: str) -> dict[str, Any]:
     """Signals from the local attempt that triggered a bounce, before the cloud row.
 
@@ -733,6 +794,10 @@ class BackendTurn:
     cloud_requests: list[dict[str, Any]] | None = None
     # Per user-turn execute steps. One inner list per agent step.
     decoded_steps: list[list[str]] | None = None
+    # DEMO-2: set when --context-window stopped a local step before generate.
+    ctx_overflow: dict[str, Any] | None = None
+    # DEMO-2: a local generate in this turn returned not ok.
+    generation_error: bool = False
 
 
 def attach_local_probe_quality(
@@ -895,6 +960,11 @@ class StubLocalBackend:
     BACKEND_KIND = "stub"
     # Shared BFCL tool state (same object cloud bounce turns must use).
     shared_tools: Any = None
+    # DEMO-2 --context-window on the stub: a row whose generate input
+    # (``gen_input_tokens``, default ``n_ctx``) plus max_new_tokens exceeds the
+    # window is not generated. None = off.
+    context_window: int | None = None
+    max_new_tokens: int = 512
     # Cell-keyed state: "{entry_id}\\0{policy}" when begin_entry is used.
     _history: dict[str, list[dict[str, Any]]] = field(default_factory=dict, repr=False)
     _cloud_context: dict[str, dict[int, str]] = field(default_factory=dict, repr=False)
@@ -985,6 +1055,33 @@ class StubLocalBackend:
                 f"(n_script={len(rows)}); hybrid must stop at turns_executed"
             )
         row = rows[turn_idx]
+        overflow = context_overflow(
+            int(row.get("gen_input_tokens", row["n_ctx"])),
+            max_new_tokens=int(self.max_new_tokens),
+            window=self.context_window,
+            step=0,
+        )
+        if overflow is not None:
+            phases = finalize_phase_timers(
+                turn_wall_s=0.01,
+                t_tool_exec=0.0,
+                t_template_build=0.005,
+                t_tokenize=0.005,
+                t_generate=0.0,
+            )
+            return BackendTurn(
+                n_ctx=int(row["n_ctx"]),
+                ttft_s=None,
+                decode_tok_s=None,
+                emitted_parseable_tool_call=False,
+                turn_wall_s=phases["turn_wall_s"],
+                t_tool_exec=phases["t_tool_exec"],
+                t_template_build=phases["t_template_build"],
+                t_tokenize=phases["t_tokenize"],
+                t_generate=phases["t_generate"],
+                n_steps=0,
+                ctx_overflow=overflow,
+            )
         # Mirror RESIDENT: user turn enters history before local generate.
         hist = self._history.setdefault(key, [])
         hist.append({"role": "user", "content": f"[stub_user_turn_{turn_idx}]"})
@@ -1051,6 +1148,7 @@ class StubLocalBackend:
                 if row.get("tool_exec_error_class") is not None
                 else None
             ),
+            generation_error=bool(row.get("generation_error", False)),
         )
 
     def accept_cloud_context(
@@ -1211,6 +1309,8 @@ class OpenVinoLocalBackend:
     max_new_tokens: int = 512
     # OBS_MASK arm (tools.h1_obs_mask.ObservationMask); None = FULL observations.
     obs_mask: Any = field(default=None, repr=False)
+    # DEMO-2 --context-window; None = off (no check, unchanged behavior).
+    context_window: int | None = None
     arm_id: str = field(init=False)
     pipe: Any = field(init=False, repr=False)
     tokenizer: Any = field(init=False, repr=False)
@@ -1466,6 +1566,8 @@ class OpenVinoLocalBackend:
             ov_genai=self.ov_genai,
         )
         session.begin(entry)
+        if self.context_window is not None:
+            session.context_window = int(self.context_window)
         if self.obs_mask is not None:
             from tools.h1_obs_mask import install_on_session
 
@@ -1663,6 +1765,10 @@ class OpenVinoLocalBackend:
             tool_exec_error=tool_err,
             tool_exec_error_class=tool_err_class,
             decoded_steps=[list(step) for step in decoded_steps],
+            ctx_overflow=tm.get("ctx_overflow"),
+            generation_error=any(
+                step.get("ok") is False for step in (tm.get("steps") or []) if "ok" in step
+            ),
         )
 
     def accept_cloud_context(
@@ -2384,8 +2490,30 @@ def _run_hybrid_entry_body(
         # Local turn (must exist in span)
         bt = local.run_turn(entry, turn_idx, model=model)
 
+        # --- DEMO-2: mechanical triggers first (sticky) ---
+        # ctx_overflow only occurs with --context-window; hybrid_full adds the
+        # step-0 TTFT / decode and generation_error triggers. With neither,
+        # mech_reason stays None and every existing path below is unchanged.
+        mech_reason: str | None = None
+        if bt.ctx_overflow is not None:
+            if policy in ("local_only", "agnostic_default"):
+                raise SystemExit(
+                    f"REFUSED -- ctx_overflow under {policy}, which cannot escalate "
+                    f"(entry {entry['id']} turn {turn_idx})"
+                )
+            mech_reason = "ctx_overflow"
+        elif policy == "hybrid_full":
+            at_end = turn_idx == local_span.turns_executed - 1
+            _mech, mech_reason = decide_hybrid_mechanical(
+                ttft_s=bt.ttft_s,
+                decode_tok_s=bt.decode_tok_s,
+                generation_error=bool(bt.generation_error)
+                or (at_end and local_span.stop_reason == "generation_error"),
+            )
+        quality_class = QUALITY if policy == "hybrid_full" else None
+
         # --- R2c bounceback: one-turn cloud, then resume local ---
-        if policy == "full_signal_bounceback":
+        if mech_reason is None and policy in ("full_signal_bounceback", "hybrid_full"):
             bounce, trigger = decide_bounceback(
                 emitted_parseable_tool_call=bt.emitted_parseable_tool_call,
                 n_steps=bt.n_steps,
@@ -2433,6 +2561,7 @@ def _run_hybrid_entry_body(
                             local_attempt=local_attempt_record(
                                 bt, stop_reason=local_span.stop_reason
                             ),
+                            trigger_class=quality_class,
                         )
                     )
                     result.bounces.append(BounceEvent(turn=turn_idx, trigger=trigger))
@@ -2470,6 +2599,7 @@ def _run_hybrid_entry_body(
                         local_attempt=local_attempt_record(
                             bt, stop_reason=local_span.stop_reason
                         ),
+                        trigger_class=quality_class,
                     )
                 )
                 result.cloud_usd_entry += bt_c.cloud_usd
@@ -2572,7 +2702,11 @@ def _run_hybrid_entry_body(
 
         escalate = False
         reason: str | None = None
-        if policy == "agnostic_default":
+        mech_class = MECHANICAL if mech_reason is not None else None
+        overflow_rec = bt.ctx_overflow if mech_reason == "ctx_overflow" else None
+        if mech_reason is not None:
+            escalate, reason = True, mech_reason
+        elif policy == "agnostic_default":
             escalate, reason = False, None
         elif policy == "local_only":
             escalate, reason = decide_local_only()
@@ -2633,6 +2767,8 @@ def _run_hybrid_entry_body(
                         decoded_steps=[list(s) for s in (bt_c.decoded_steps or [])],
                         tool_exec_error=bool(bt.tool_exec_error),
                         tool_exec_error_class=bt.tool_exec_error_class,
+                        trigger_class=mech_class,
+                        ctx_overflow=overflow_rec,
                     )
                 )
                 result.cloud_usd_entry += bt_c.cloud_usd
@@ -2665,6 +2801,8 @@ def _run_hybrid_entry_body(
                     decoded_steps=[list(s) for s in (bt_c.decoded_steps or [])],
                     tool_exec_error=bool(bt.tool_exec_error),
                     tool_exec_error_class=bt.tool_exec_error_class,
+                    trigger_class=mech_class,
+                    ctx_overflow=overflow_rec,
                 )
             )
             result.cloud_usd_entry += bt_c.cloud_usd
@@ -2811,6 +2949,7 @@ def run_session(
     retention: dict[str, Any] | None = None,
     cloud_preflight: Callable[[], dict[str, Any]] | None = None,
     obs_mask: Any = None,
+    context_window: int | None = None,
 ) -> dict[str, Any]:
     if max_usd is None:
         raise SystemExit("REFUSED -- --max-usd is required (cost guard)")
@@ -2859,6 +2998,13 @@ def run_session(
         "platform_id": run_platform_id(),
         "git": git_rec,
     }
+    if context_window is not None:
+        # DEMO-2 only; absent otherwise so existing plans are unchanged.
+        plan["context_window"] = {
+            "tokens": int(context_window),
+            "rule": "prompt + max_new_tokens > tokens before a local generate: "
+            "not generated, escalate (sticky, ctx_overflow)",
+        }
     from tools.h1_provenance import provenance_block
 
     plan.update(provenance_block(cloud, local))
@@ -3827,6 +3973,13 @@ def build_argparser() -> argparse.ArgumentParser:
         "observation (local and cloud). Default: off (FULL).",
     )
     p.add_argument(
+        "--context-window",
+        type=int,
+        default=None,
+        help="DEMO-2: before each local generate, a prompt plus max_new_tokens above N "
+        "is not generated and the turn escalates (sticky, ctx_overflow). Default: off.",
+    )
+    p.add_argument(
         "--placement",
         choices=LOCAL_PLACEMENTS,
         default=None,
@@ -4223,6 +4376,22 @@ def attach_obs_mask(
     return mask.plan_record(), mask
 
 
+def attach_context_window(window: int | None, policy: str, local: Any) -> int | None:
+    """DEMO-2 --context-window: give N to the local backend (None = off)."""
+    if window is None:
+        return None
+    if policy in ("cloud_only", "local_only", "agnostic_default"):
+        raise SystemExit(f"REFUSED -- --context-window needs a policy that can escalate, not {policy}")
+    if int(window) <= 0:
+        raise SystemExit("REFUSED -- --context-window must be positive")
+    if isinstance(local, ScriptedLiveLocalBackend):
+        raise SystemExit("REFUSED -- --context-window cannot apply to --local-script turns")
+    if not hasattr(local, "context_window"):
+        raise SystemExit(f"REFUSED -- local backend {type(local).__name__} has no context_window")
+    local.context_window = int(window)
+    return int(window)
+
+
 def write_obs_mask_ledger(out_dir: Path, mask: Any) -> None:
     """Every observation's original and kept sizes, beside the turn ledgers."""
     if mask is not None:
@@ -4275,6 +4444,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.interleaved:
+        if args.context_window is not None:
+            raise SystemExit("REFUSED -- --context-window is single-arm only (DEMO-2)")
         return _main_interleaved(args)
 
     if args.policy is None:
@@ -4298,6 +4469,7 @@ def main(argv: list[str] | None = None) -> int:
             tokens_in=int(fix.get("cloud_tokens_in", 1000)),
             tokens_out=int(fix.get("cloud_tokens_out", 200)),
         )
+        fixture_window = attach_context_window(args.context_window, args.policy, local)
         summary = run_session(
             policy=args.policy,
             entries=entries,
@@ -4310,6 +4482,7 @@ def main(argv: list[str] | None = None) -> int:
             seal=False,
             caching_policy=args.caching_policy,
             seal_git=args.seal_git,
+            context_window=fixture_window,
         )
         print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
         return 0 if summary["status"] == "complete" else 2
@@ -4346,6 +4519,7 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     retention, obs_mask = attach_obs_mask(args.obs_mask_k, local, cloud)
+    context_window = attach_context_window(args.context_window, args.policy, local)
     from tools.cloud_ping import ping as cloud_ping
 
     summary = run_session(
@@ -4366,6 +4540,7 @@ def main(argv: list[str] | None = None) -> int:
             cloud_model=args.cloud_model, backend_factory=lambda _model: cloud
         ),
         obs_mask=obs_mask,
+        context_window=context_window,
     )
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
     return 0 if summary["status"] == "complete" else 2

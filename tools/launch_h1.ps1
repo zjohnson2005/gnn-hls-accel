@@ -73,6 +73,10 @@
 #                       (H1-CPU chunking); the plan records the chunk.
 #   -ObsMaskK <K>       OBS_MASK arm: keep the first K whitespace tokens of every tool
 #                       observation (local and cloud). Default off. Ledger: obs_mask_ledger.json.
+#   -ContextWindow <N>  DEMO-2: a local step whose prompt plus max_new_tokens exceeds N is not
+#                       generated; the turn escalates (sticky, ctx_overflow). Single-arm only.
+#                       Default off.
+#   -Policy hybrid_full DEMO-2 policy (mechanical then quality triggers). -MaxUsd is required.
 #
 # Dry-run (gates report-only; spawn suppressed):
 #   powershell -NoProfile -File tools/launch_h1.ps1 -Policy cloud_only -DryRun
@@ -98,7 +102,7 @@
 
 [CmdletBinding()]
 param(
-    [ValidateSet("slo_escalate", "emission_escalate", "cloud_only", "agnostic_default", "full_signal_bounceback")]
+    [ValidateSet("slo_escalate", "emission_escalate", "cloud_only", "agnostic_default", "full_signal_bounceback", "hybrid_full")]
     [string]$Policy = "",
     [switch]$Interleaved,
     # Comma-separated subset of interleaved arms (order preserved). Empty = full 3-policy.
@@ -122,6 +126,7 @@ param(
     [ValidateSet("", "u8", "u4", "f16")]
     [string]$Kv = "",
     [Nullable[int]]$ObsMaskK = $null,
+    [Nullable[int]]$ContextWindow = $null,
     [Nullable[int]]$EntryOffset = $null,
     [Nullable[int]]$EntryCount = $null,
     # Interleaved per-policy caps, overriding the defaults, e.g.
@@ -320,6 +325,14 @@ if (-not $Interleaved -and $Policy -eq "agnostic_default") {
     exit 1
 }
 
+if ($Interleaved -and $null -ne $ContextWindow) {
+    Refuse "-ContextWindow is single-arm only (DEMO-2)"
+    exit 1
+}
+if (-not $Interleaved -and $Policy -eq "hybrid_full" -and $null -eq $MaxUsd) {
+    Refuse "-MaxUsd is required for hybrid_full (per-cell cap from the DEMO-2 prereg)"
+    exit 1
+}
 if (-not $Interleaved) {
     if ($null -eq $MaxUsd) {
         $MaxUsd = [double]$DefaultMaxUsd[$Policy]
@@ -605,6 +618,9 @@ if (-not [string]::IsNullOrWhiteSpace($Kv)) {
 }
 if ($null -ne $ObsMaskK) {
     $resolvedCmd = $resolvedCmd + ' --obs-mask-k ' + $ObsMaskK
+}
+if ($null -ne $ContextWindow) {
+    $resolvedCmd = $resolvedCmd + ' --context-window ' + $ContextWindow
 }
 if ($null -ne $EntryOffset) {
     $resolvedCmd = $resolvedCmd + ' --entry-offset ' + $EntryOffset
