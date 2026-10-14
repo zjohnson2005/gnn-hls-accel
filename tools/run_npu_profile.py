@@ -51,7 +51,6 @@ from seam.npu_validity import (  # noqa: E402
     whitespace_tokens,
 )
 from seam.tools.boot4_text import (  # noqa: E402
-    _exact_body,
     id_count,
     render_user,
     rendered_exact_prompt,
@@ -600,6 +599,7 @@ THINK_TAGS = ("<think>", "</think>")
 CONTENT_QUESTION = "What is the capital of France? Answer in one sentence."
 CONTENT_KEYWORD = "paris"
 CONTENT_SEPARATOR = "\n\n"
+CONTENT_PAD = " a"
 
 # Estimate inputs. Recorded, not cited; they only size the scheduling bound.
 # int8 NPU load at 2048 and TTFT at 21-32 tokens: the four F1 NPU cells
@@ -835,17 +835,46 @@ def content_outcome(npu: dict[str, Any] | None, gpu: dict[str, Any] | None) -> s
 
 
 def content_prompt(tokenizer: Any, target: int, *, unit: str, salt: str) -> str:
-    """Filler of exactly ``target`` rendered tokens ending with the chat1 question."""
+    """Filler prompt of ``target`` rendered tokens ending with the chat1 question.
+
+    Padding goes between the salt and the filler units, never before the
+    suffix: on Qwen3 the filler's final "." and the "\n\n" separator merge
+    into one token, so padding there splits it and overshoots by one (task X,
+    1e79daa3: "overshot while padding to 960: reached 961"). Returns the exact
+    length when reachable, else the longest prompt below it; the caller
+    records any shortfall.
+    """
     suffix = CONTENT_SEPARATOR + CONTENT_QUESTION
-    body = _exact_body(
-        lambda text: id_count(tokenizer, render_user(tokenizer, text + suffix)),
-        target,
-        prefix=f"{salt} ",
-        unit=unit,
-    )
-    rendered = render_user(tokenizer, body + suffix)
-    if id_count(tokenizer, rendered) != target:
-        raise SystemExit(f"REFUSED -- content prompt is not {target} tokens")
+
+    def text(pad: int, k: int) -> str:
+        return salt + CONTENT_PAD * pad + " " + unit * k + suffix
+
+    def total(pad: int, k: int) -> int:
+        return id_count(tokenizer, render_user(tokenizer, text(pad, k)))
+
+    if total(0, 0) > target:
+        raise SystemExit(f"REFUSED -- content prompt is above {target} tokens with no filler")
+    low, high = 0, target + 2
+    while low < high:
+        mid = (low + high + 1) // 2
+        if total(0, mid) <= target:
+            low = mid
+        else:
+            high = mid - 1
+    best_pad, best_n = 0, total(0, low)
+    pad = 0
+    for _ in range(64):
+        current = total(pad, low)
+        if current > target:
+            break
+        if current > best_n:
+            best_pad, best_n = pad, current
+        if current == target:
+            break
+        pad += target - current
+    rendered = render_user(tokenizer, text(best_pad, low))
+    if id_count(tokenizer, rendered) > target:
+        raise SystemExit(f"REFUSED -- content prompt is above {target} tokens")
     return rendered
 
 
@@ -858,8 +887,14 @@ def run_content_check(
     npu_stops: list[int],
     gpu_stops: list[int],
     decode: Callable[[int], str],
+    count: Callable[[str], int] | None = None,
 ) -> dict[str, Any]:
-    """Item 7: untimed, after the closing canary, at the limit rung."""
+    """Item 7: untimed, after the closing canary, at the limit rung.
+
+    ``count`` gives the realized token count of the built prompt; a prompt
+    shorter than the limit is recorded as a shortfall (item 7 asks for
+    exactly L tokens, so the limit is then not citable).
+    """
     if limit is None:
         return {"outcome": "NO_LIMIT", "n_tokens": None, "timed": False}
     try:
@@ -871,15 +906,18 @@ def run_content_check(
             "error": f"{type(exc).__name__}: {exc}",
             "timed": False,
         }
+    realized = int(limit) if count is None else int(count(prompt))
     npu = envelope_generation(
-        npu_generate(prompt), realized=int(limit), stop_ids=npu_stops, decode=decode
+        npu_generate(prompt), realized=realized, stop_ids=npu_stops, decode=decode
     )
     gpu = envelope_generation(
-        gpu_generate(prompt), realized=int(limit), stop_ids=gpu_stops, decode=decode
+        gpu_generate(prompt), realized=realized, stop_ids=gpu_stops, decode=decode
     )
     return {
         "outcome": content_outcome(npu, gpu),
-        "n_tokens": int(limit),
+        "n_tokens": realized,
+        "target_tokens": int(limit),
+        "shortfall_tokens": int(limit) - realized,
         "question": CONTENT_QUESTION,
         "keyword": CONTENT_KEYWORD,
         "npu": npu,
@@ -1504,6 +1542,7 @@ def run_hardware(args: argparse.Namespace) -> int:
         content = run_content_check(
             limit=bound["ttft_limit_n"],
             build=lambda n: content_prompt(tokenizer, n, unit=filler, salt="npu"),
+            count=lambda prompt: id_count(tokenizer, prompt),
             npu_generate=lambda prompt: generate_once(ov_genai, pipe, prompt, cfg64),
             gpu_generate=lambda prompt: generate_once(ov_genai, gpu, prompt, cfg64),
             npu_stops=npu_stops["ids"],
@@ -1547,6 +1586,7 @@ def run_hardware(args: argparse.Namespace) -> int:
             and summary["status"] == "complete"
             and isinstance(content, dict)
             and content.get("outcome") == "CONTENT_OK"
+            and content.get("shortfall_tokens") == 0
         )
     write_summary(summary)
     print(json.dumps({"ok": True, "status": "complete", "rungs": len(rungs)}))
