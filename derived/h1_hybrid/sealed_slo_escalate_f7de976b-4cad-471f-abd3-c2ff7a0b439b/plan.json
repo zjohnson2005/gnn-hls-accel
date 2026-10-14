@@ -1,0 +1,153 @@
+{
+  "arm_config": {
+    "kv": "u8",
+    "model": "Qwen3-4B-int4-ov",
+    "placement": "gpu_only",
+    "residency": "NON_RESIDENT",
+    "tier": "4B",
+    "weight": "int4"
+  },
+  "caching_policy": "none",
+  "chat_template": {
+    "enable_thinking": false,
+    "renderer": "tools.bfcl_feasibility_probe.render_bfcl_tools_style"
+  },
+  "cloud_model": "claude-sonnet-5",
+  "entry_assert": {
+    "mode": "caller_supplied",
+    "n": 15
+  },
+  "entry_pin": {
+    "category": "multi_turn_long_context",
+    "n": 15,
+    "name": "DEMO1_PAIRED_15",
+    "path": "derived/h1_hybrid/demo1/DEMO1_PAIRED_15.json",
+    "seed": 20260930,
+    "sha256": "71faf5455559887cf0aa3c7a8317fab641b27c939b0643e501eeab5f63f9c080"
+  },
+  "generation_config": {
+    "apply_chat_template": false,
+    "do_sample": false,
+    "max_new_tokens": 512,
+    "seed": null,
+    "temperature": null,
+    "top_k": null,
+    "top_p": null
+  },
+  "git": {
+    "dirty": false,
+    "git_diff_head_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "git_head": "4281755accecab4fc78cd7b3ad70fb41df7755d7",
+    "launch_evidence": {
+      "dir": "derived/h1_hybrid/_launches/f7de976b-4cad-471f-abd3-c2ff7a0b439b",
+      "files": [
+        {
+          "bytes": 13082,
+          "path": "derived/h1_hybrid/_launches/f7de976b-4cad-471f-abd3-c2ff7a0b439b/canary_opening/canaries/canary.0.json",
+          "sha256": "15d76be4a8cb2fbd1fb813cadec6a26139580e7e032a0aded0c23e590823928e"
+        },
+        {
+          "bytes": 9416,
+          "path": "derived/h1_hybrid/_launches/f7de976b-4cad-471f-abd3-c2ff7a0b439b/canary_opening/opening_plan.json",
+          "sha256": "b62f5753baac015cbc20ea56550141c717b0dcad14d1bcf41937aed953b8617f"
+        },
+        {
+          "bytes": 4668,
+          "path": "derived/h1_hybrid/_launches/f7de976b-4cad-471f-abd3-c2ff7a0b439b/gates_20261013_095508.json",
+          "sha256": "baeda7f1c4fa2092c5d8e6529e9e0f86b72dd28f43a705ff7123c64a4cbec025"
+        }
+      ]
+    },
+    "tree_status": "CLEAN"
+  },
+  "local_backend": "openvino",
+  "max_usd": 10.0,
+  "measurement_kind": "MEASURED",
+  "n_entries": 15,
+  "openvino": {
+    "arm_id": "gpu_only_u8",
+    "kv": "u8",
+    "load_meta": {
+      "device_config": {
+        "arm_id": "gpu_only_u8",
+        "generate_device": "GPU",
+        "label": "gpu only (KV_CACHE_PRECISION=u8)",
+        "load_sequence": [
+          {
+            "device": "GPU",
+            "properties": {
+              "KV_CACHE_PRECISION": "u8"
+            }
+          }
+        ]
+      },
+      "loads": [
+        {
+          "device": "GPU",
+          "kv_cache_precision": {
+            "enforced": true,
+            "failure_mode": null,
+            "match": true,
+            "readback": {
+              "device": "GPU",
+              "error": null,
+              "normalized": "u8",
+              "ok": true,
+              "property": "KV_CACHE_PRECISION",
+              "raw": "<Type: 'uint8_t'>",
+              "to_string": "u8"
+            },
+            "requested": "u8"
+          },
+          "properties": {
+            "KV_CACHE_PRECISION": "u8"
+          },
+          "scheduler_config": {
+            "enable_prefix_caching": false,
+            "source": "explicit_SchedulerConfig"
+          }
+        }
+      ],
+      "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+      "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+      "scheduler_config": {
+        "enable_prefix_caching": false,
+        "source": "explicit_SchedulerConfig"
+      }
+    },
+    "max_new_tokens": 512,
+    "model_spec": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+    "prefix_block_clear": "ov_genai.LLMPipeline",
+    "residency": "NON_RESIDENT"
+  },
+  "platform_id": "evo-t2",
+  "policy": "slo_escalate",
+  "resume_from_completed": [],
+  "retention": {
+    "applies_to": [
+      "local session tool observations",
+      "cloud agent tool results"
+    ],
+    "arm": "OBS_MASK",
+    "k": 1024,
+    "transform": "seam.retention_prompt.mask_observation",
+    "unit": "whitespace tokens"
+  },
+  "run_id": "f7de976b-4cad-471f-abd3-c2ff7a0b439b",
+  "scorer": {
+    "bfcl_eval_version": "2025.12.17",
+    "checker": "bfcl_eval.eval_checker.multi_turn_eval.multi_turn_checker",
+    "w3_seal_refs": [
+      "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+      "1d8db970-4c18-4bcf-824d-d9c141b6eb22"
+    ],
+    "wrapper": "apu_characterization.cap01.bfcl_cap01_multi_turn_checker"
+  },
+  "seal": true,
+  "started_utc": "2026-10-13T16:55:44.800011+00:00",
+  "w3_entry_pin": null,
+  "w3_seal_refs": [
+    "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+    "1d8db970-4c18-4bcf-824d-d9c141b6eb22"
+  ]
+}
