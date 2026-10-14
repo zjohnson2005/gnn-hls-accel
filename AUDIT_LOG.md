@@ -3056,3 +3056,39 @@ Write-once artifacts (do not edit after 8B measurement starts):
 **Pre/post data:** PRE-DATA. No 8B IR, load, or generate has been started in this session.
 A criterion written after seeing 8B numbers is not a substitute for this freeze.
 
+
+---
+
+## 2026-10-14 - Analysis-directory rule reworded (CLAUDE.md)
+
+**Class:** governance wording
+**Approved:** Zach, 2026-10-14
+
+### Change
+
+In CLAUDE.md ("Number prohibitions and analysis integrity", ported from the
+retired `.cursor/rules/seam.mdc` on 2026-10-14, commit 8ddb903), the rule
+
+> Never edit `analysis/` except documented AF-001
+
+is replaced by
+
+> Never edit a committed file under `analysis/`; add a new file instead
+> (AF-001 remains the documented exception).
+
+### Why
+
+The old wording forbade any change under `analysis/`, while committed work
+since 2026-10-13 adds new score and analysis files there (for example
+`analysis/demo1/SCORE_T2S_20261013.json`,
+`analysis/canary/CANARY_DRIFT_20261014.md`). The new wording keeps committed
+analysis files immutable and allows new files. No existing analysis file was
+edited by this change.
+
+### Prior instance recorded
+
+Before this rule existed in CLAUDE.md, commit b45d268 (2026-10-13) regenerated
+the already-committed `analysis/demo1/SCORE_XPS_20261013.json` (first
+committed in 0b55a6e) to add a `gold_edge_tokens` field; every scored value
+was unchanged. Under the new wording that would be a new file instead. It is
+recorded here, not reverted.

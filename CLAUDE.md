@@ -88,7 +88,8 @@ Number prohibitions:
   `configs/repo.yaml`); above that, external archive + `raw/MANIFEST.sha256`
 
 Integrity:
-- `raw/` is **write-once**. Never edit `analysis/` except documented AF-001
+- `raw/` is **write-once**. Never edit a committed file under `analysis/`;
+  add a new file instead (AF-001 remains the documented exception).
 - No comparison before A/A + noise floor (`derived/noise_floor.json`)
 - Analysis consumes `blinded_label`, never `condition_label`
 - Discard policy: log in `AUDIT_LOG.md`; no silent discards
@@ -187,17 +188,21 @@ session start; update it in the same commit as the work. Never delete a row.
   - NPU-INT8 1024 (1e79daa3: TOOLCHAIN_CAP 960) and 4096 (63d35555:
     LATENCY 2048) are recorded, not citable: their content check ran before
     the fix (d300223).
-  - 2048: REFUSED twice (0fd9cd8c, 4f6a9102) plus VOID e8a27848. 8192:
-    REFUSED (evidence not yet sealed).
-  - The next guarded NPU session runs under amendment 2026-10-14 (canary
-    state, 3367974).
+  - 2048: limit 1984, citable (9acabbf7, first session under amendment
+    2026-10-14, reading B). Earlier 2048 attempts: REFUSED 0fd9cd8c and
+    4f6a9102, VOID e8a27848.
+  - 8192: REFUSED pre-amendment (3b36e9e4); a rerun under the amendment
+    was launched 2026-10-14. 16384 load-only done (8850e64a).
+  - The T2S was rebooted at about 12:29Z 2026-10-14. NPU timings are about
+    2x faster after it; do not pool them with earlier sessions.
   - Canary diagnosis: analysis/canary/CANARY_DRIFT_20261014.md.
 - P1 budget-quality:
   - Sealed A0 8a529053: 23/200 in budget.
   - Sweep B=10 (CROSSING_B10_20261014.json): A0 bdc32a87 14 vs A4
     a766bd0b + 78dbf4c3 13. No crossing; floor and close fraction MISS.
   - Next: B=20, per amendment 9.
-- T2S window 1 ended 2026-10-14; window 2 is Oct 19-25. The T2S is not
-  rebooted (UNCOLD_UPTIME deviation).
+- T2S window 1 ended 2026-10-14; window 2 is Oct 19-25. The T2S runs
+  with the UNCOLD_UPTIME deviation (no reboot before sessions); it was
+  rebooted once, on 2026-10-14, for a reason not recorded.
 - DEMO-1 cloud spend so far: about $4.40 (V4 XPS $2.77, V3 T2S $1.44,
   V4 T2S rerun $0.19, pings).
