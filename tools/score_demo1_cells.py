@@ -18,7 +18,9 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 PREREG = ROOT / "derived" / "h1_hybrid" / "demo1" / "DEMO_PREREG_v2.json"
 ATLAS = ROOT / "analysis" / "demo1" / "atlas"
-XPS_EDGE = 10_000  # c2246b1f sealed cold limit, the gold escalation edge
+# Gold escalation edge per config: the sealed cold limit in DEMO_PREREG_v2
+# envelopes (xps c2246b1f 10,000; t2s d2d5cc4a 18,500).
+EDGES = {"xps_gpu_4b_u8": 10_000, "t2s_gpu_4b_u8": 18_500}
 
 CELLS = {
     "V1_xps_gpu_4b_u8": {
@@ -33,6 +35,28 @@ CELLS = {
         "run": "slo_escalate_a678926e-2681-4851-a386-8b7c83e971a3",
         "atlas": "multi_turn_long_context_OBS_MASK_K1024",
     },
+    "V1_t2s_gpu_4b_u8": {
+        "cell": "V1",
+        "config": "t2s_gpu_4b_u8",
+        "run": "slo_escalate_b026f3fd-004e-4419-91bd-80c79f94e0f1",
+        "atlas": "multi_turn_base_FULL",
+    },
+    "V4_t2s_gpu_4b_u8": {
+        "cell": "V4",
+        "config": "t2s_gpu_4b_u8",
+        "run": "slo_escalate_f7de976b-4cad-471f-abd3-c2ff7a0b439b",
+        "atlas": "multi_turn_long_context_OBS_MASK_K1024",
+    },
+    "V3_t2s_gpu_4b_u8": {
+        "cell": "V3",
+        "config": "t2s_gpu_4b_u8",
+        "run": "slo_escalate_a4284ab0-7bb4-497a-8ff7-cc4d54817dd8",
+        "atlas": "multi_turn_long_context_FULL",
+    },
+}
+GROUPS = {
+    "xps": ("V1_xps_gpu_4b_u8", "V4_xps_gpu_4b_u8"),
+    "t2s": ("V1_t2s_gpu_4b_u8", "V4_t2s_gpu_4b_u8", "V3_t2s_gpu_4b_u8"),
 }
 
 
@@ -50,7 +74,7 @@ def _called(turn: dict[str, Any], name: str | None) -> bool:
     )
 
 
-def entry_table(run_dir: Path, atlas: str) -> list[dict[str, Any]]:
+def entry_table(run_dir: Path, atlas: str, edge: int = 10_000) -> list[dict[str, Any]]:
     ledger = json.loads((run_dir / "turn_ledger.json").read_text(encoding="utf-8"))["entries"]
     gold = {
         r["entry_id"]: r
@@ -60,7 +84,7 @@ def entry_table(run_dir: Path, atlas: str) -> list[dict[str, Any]]:
     for e in ledger:
         g = gold[e["entry_id"]]["turns"]
         gold_nctx = [t["n_ctx"] for t in g]
-        jump = next((i for i, n in enumerate(gold_nctx) if n > XPS_EDGE), None)
+        jump = next((i for i, n in enumerate(gold_nctx) if n > edge), None)
         jump_call = g[jump - 1]["max_observation_call"] if jump else None
         live_turns = e["turns"]
         local_turns = [t for t in live_turns if t["placement"] == "local"]
@@ -98,7 +122,7 @@ def score_cell(key: str) -> dict[str, Any]:
     pred = prereg["cells"][spec["cell"]]["configs"][spec["config"]]["prediction"]
     run_dir = ROOT / "derived" / "h1_hybrid" / spec["run"]
     summary = json.loads((run_dir / "summary.json").read_text(encoding="utf-8"))
-    rows = entry_table(run_dir, spec["atlas"])
+    rows = entry_table(run_dir, spec["atlas"], EDGES[spec["config"]])
     ledger = json.loads((run_dir / "turn_ledger.json").read_text(encoding="utf-8"))["entries"]
     n_turns = sum(len(e["turns"]) for e in ledger)
     local = sum(1 for e in ledger for t in e["turns"] if t["placement"] == "local")
@@ -122,6 +146,7 @@ def score_cell(key: str) -> dict[str, Any]:
     reached = [r for r in rows if r["gold_jump_turn"] is not None]
     return {
         "run_id": spec["run"],
+        "gold_edge_tokens": EDGES[spec["config"]],
         "prediction": {k: pred[k] for k in ("local_share", "usd_per_task", "escalations_ttft")},
         "measured": measured,
         "verdict": verdict,
@@ -136,9 +161,10 @@ def score_cell(key: str) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--group", choices=tuple(GROUPS), default="xps")
     args = parser.parse_args(argv)
     doc = {"kind": "demo1_cell_scores", "rule": __doc__.split("\n\n")[1], "cells": {}}
-    for key in CELLS:
+    for key in GROUPS[args.group]:
         doc["cells"][key] = score_cell(key)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")

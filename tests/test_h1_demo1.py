@@ -574,3 +574,24 @@ def test_xps_scores() -> None:
     assert v4["measured"]["local_share"] == 0.673 and v4["measured"]["escalations_ttft"] == 9
     assert len(v4["gold_jump_entries_not_escalated"]) == 6
     assert score_demo1_cells.score_cell("V4_xps_gpu_4b_u8") == v4
+
+
+SCORES_T2S = ROOT / "analysis" / "demo1" / "SCORE_T2S_20261013.json"
+
+
+def test_t2s_scores() -> None:
+    from tools import score_demo1_cells
+
+    doc = json.loads(SCORES_T2S.read_text(encoding="utf-8"))
+    v1 = doc["cells"]["V1_t2s_gpu_4b_u8"]
+    v4 = doc["cells"]["V4_t2s_gpu_4b_u8"]
+    v3 = doc["cells"]["V3_t2s_gpu_4b_u8"]
+    assert set(v1["verdict"].values()) == {"MATCH"}
+    assert set(v4["verdict"].values()) == {"MATCH"}
+    assert set(v3["verdict"].values()) == {"MISS"}
+    assert v3["gold_edge_tokens"] == 18_500
+    assert v3["measured"]["escalations_ttft"] == 5
+    assert v4["entries_with_gold_jump"] == 0
+    assert len(v3["gold_jump_entries_not_escalated"]) == 10
+    for key, cell in doc["cells"].items():
+        assert score_demo1_cells.score_cell(key) == cell
