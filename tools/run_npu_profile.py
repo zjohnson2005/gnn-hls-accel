@@ -600,6 +600,7 @@ CONTENT_QUESTION = "What is the capital of France? Answer in one sentence."
 CONTENT_KEYWORD = "paris"
 CONTENT_SEPARATOR = "\n\n"
 CONTENT_PAD = " a"
+CANARY_STATE_AMENDMENT = "NPU amendment 2026-10-14 (canary state)"
 
 # Estimate inputs. Recorded, not cited; they only size the scheduling bound.
 # int8 NPU load at 2048 and TTFT at 21-32 tokens: the four F1 NPU cells
@@ -662,6 +663,51 @@ def envelope_load_estimate_s(cap: int) -> float:
     if cap not in INT4_LOAD_S:
         raise SystemExit(f"REFUSED -- no recorded int4 load at {cap} to scale")
     return INT4_LOAD_S[cap] * INT8_LOAD_RATIO
+
+
+def canary_warmup_rung_estimate_s(low: int = SHORT_PROMPT_TOKENS) -> int:
+    """Wall bound of the 2026-10-14 warm-up rung plus its record-only canary.
+
+    Not part of envelope_estimate_s (2026-10-13b registered figures).
+    """
+    ttft = envelope_ttft_estimate_s(low)
+    generate64 = ttft + (ENVELOPE_MAX_NEW_TOKENS - 1) * INT8_DECODE_S_PER_TOKEN
+    rung = (generate64 + ENVELOPE_GPU_GENERATE_S) + (REPEATS - 1) * (
+        ttft + ENVELOPE_TIMING_OVERHEAD_S
+    )
+    return math.ceil(rung + ENVELOPE_CANARY_S)
+
+
+def canary_warmup_rung(ov_genai: Any, npu: Any, gpu: Any, prompt: str) -> dict[str, Any]:
+    """Untimed low rung before calibration (amendment 2026-10-14).
+
+    Same calls as one envelope rung: a paired 64-token NPU and GPU generate,
+    then two NPU 1-token generates. Nothing here is a probe or is scored.
+    """
+    cfg64 = generation_config(ov_genai, max_new_tokens=ENVELOPE_MAX_NEW_TOKENS, min_new_tokens=None)
+    cfg_timing = generation_config(
+        ov_genai, max_new_tokens=ENVELOPE_TIMING_MAX_NEW_TOKENS, min_new_tokens=None
+    )
+    started = time.perf_counter()
+    calls = []
+    for device, pipe, cfg in (
+        ("NPU", npu, cfg64),
+        ("GPU", gpu, cfg64),
+        ("NPU", npu, cfg_timing),
+        ("NPU", npu, cfg_timing),
+    ):
+        row = generate_once(ov_genai, pipe, prompt, cfg)
+        calls.append(
+            {
+                "device": device,
+                "ok": bool(row.get("ok", True)),
+                "error": row.get("error"),
+                "prompt_tokens": row.get("prompt_tokens"),
+                "prefill_s": row.get("prefill_s"),
+                "completion_tokens": row.get("completion_tokens"),
+            }
+        )
+    return {"calls": calls, "wall_s": time.perf_counter() - started}
 
 
 def envelope_estimate_s(cap: int, *, low: int = SHORT_PROMPT_TOKENS, resolution: int = 64) -> int:
@@ -989,7 +1035,13 @@ def _metrics(result: object) -> dict[str, Any]:
 
 
 def _arm_canary(
-    out: Path, model_spec: Path, planned: int, *, before_probes: bool = False
+    out: Path,
+    model_spec: Path,
+    planned: int,
+    *,
+    before_probes: bool = False,
+    telemetry: Any = None,
+    before_calibration: Callable[[], None] | None = None,
 ) -> dict[str, Any]:
     from tools.ttft_slo_canary import (
         CanaryBudgetRefuse,
@@ -1006,11 +1058,18 @@ def _arm_canary(
             planned_probe_count=planned,
             allow_unguarded=False,
             arm_before_probes=before_probes,
+            telemetry=telemetry,
         )
     except CanaryBudgetRefuse as exc:
         raise SystemExit(f"REFUSED -- {exc.detail}") from exc
     tripped: str | None = None
     try:
+        if before_calibration is not None:
+            # NPU amendment 2026-10-14: one record-only canary (warm-up flag:
+            # discarded from calibration, never trips), then the warm-up NPU
+            # rung, then the C calibration canaries.
+            guard.run_canary(after_probe_count=-1, warmup=True)
+            before_calibration()
         guard.opening()
     except CanaryDriftAbort as exc:
         tripped = exc.detail
@@ -1096,14 +1155,27 @@ def run_hardware(args: argparse.Namespace) -> int:
         _write(out / "plan.json", plan)
         _write(out / "summary.json", summary)
 
-    def arm(planned: int, *, before_probes: bool = False) -> bool:
+    def arm(
+        planned: int,
+        *,
+        before_probes: bool = False,
+        telemetry: Any = None,
+        before_calibration: Callable[[], None] | None = None,
+    ) -> bool:
         if args.no_canary:
             plan["canary"] = {"armed": False, "smoke_skip": True}
             plan.update(canary_marker(plan["canary"]))
             _write(out / "plan.json", plan)
             return True
         try:
-            armed = _arm_canary(out, args.model_spec, planned, before_probes=before_probes)
+            armed = _arm_canary(
+                out,
+                args.model_spec,
+                planned,
+                before_probes=before_probes,
+                telemetry=telemetry,
+                before_calibration=before_calibration,
+            )
         except SystemExit as exc:
             summary = {"session_id": session_id, "status": "REFUSED_CANARY", "detail": str(exc)}
             write_summary(summary)
@@ -1334,7 +1406,38 @@ def run_hardware(args: argparse.Namespace) -> int:
     plan["guard_schedule"] = (
         "gpu pipeline + warm-up, then arm_before_probes (amendments 2026-10-08, 2026-10-08b)"
     )
-    if not arm(planned, before_probes=True):
+    telemetry = None
+    before_calibration = None
+    if envelope and not args.no_canary:
+        # NPU amendment 2026-10-14 (canary state): calibrate after one
+        # untimed warm-up NPU rung; per-canary telemetry. Thresholds, floors
+        # and the drift rule are unchanged.
+        from tools.canary_telemetry import CanaryTelemetry
+
+        telemetry = CanaryTelemetry()
+        warm_record: dict[str, Any] = {
+            "amendment": CANARY_STATE_AMENDMENT,
+            "n_tokens": int(args.low),
+            "timed": False,
+            "is_probe": False,
+            "estimate_s": canary_warmup_rung_estimate_s(int(args.low)),
+        }
+
+        def before_calibration() -> None:
+            warm_record.update(canary_warmup_rung(ov_genai, pipe, gpu, build_prompt(int(args.low))))
+            plan["canary_warmup_rung"] = warm_record
+            _write(out / "plan.json", plan)
+
+        plan["guard_schedule"] = (
+            "gpu pipeline + warm-up, record-only canary, warm-up NPU rung, then "
+            "arm_before_probes (amendments 2026-10-08, 2026-10-08b, 2026-10-14)"
+        )
+    if not arm(
+        planned,
+        before_probes=True,
+        telemetry=telemetry,
+        before_calibration=before_calibration,
+    ):
         return 1
 
     def paired(n_tokens: int) -> dict[str, Any]:

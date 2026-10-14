@@ -516,6 +516,8 @@ class TtftSloCanaryGuard:
     opening_done: bool = False
     budget_preflight: dict[str, Any] = field(default_factory=dict)
     last_power_snapshot: dict[str, Any] | None = None
+    # NPU amendment 2026-10-14: optional per-canary host telemetry (record only).
+    telemetry: Any = None
 
     def __post_init__(self) -> None:
         self.gate = new_canary_gate(
@@ -686,12 +688,21 @@ class TtftSloCanaryGuard:
         from seam.run_environment import snapshot_workloads_session_host
 
         wsh = snapshot_workloads_session_host()
+        # Taken before the canary cell so its own child process is not counted.
+        tele: dict[str, Any] | None = None
+        if self.telemetry is not None:
+            try:
+                tele = self.telemetry()
+            except Exception as exc:
+                tele = {"error": f"{type(exc).__name__}: {exc}"}
         rec = self._run_cell()
         rec["power"] = power
         rec["power_transition"] = transition
         rec["workloads_session_host"] = wsh
         rec["after_probe_count"] = after_probe_count
         rec["warmup"] = bool(warmup)
+        if tele is not None:
+            rec["telemetry"] = tele
         prior_ok = [
             c
             for c in self.canaries
