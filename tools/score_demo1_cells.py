@@ -1,0 +1,157 @@
+"""Score sealed DEMO-1 cells against DEMO_PREREG_v2 and tabulate live vs gold.
+
+Reads sealed H1 run dirs and the committed atlas only. Opens the prereg (this
+is a scorer, not a runner). Prereg v2 states each prediction as a band
+[low, high]; a measured value inside the band (inclusive) is MATCH, else MISS.
+
+  python tools/score_demo1_cells.py --out analysis/demo1/SCORE_XPS_20261013.json
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+PREREG = ROOT / "derived" / "h1_hybrid" / "demo1" / "DEMO_PREREG_v2.json"
+ATLAS = ROOT / "analysis" / "demo1" / "atlas"
+XPS_EDGE = 10_000  # c2246b1f sealed cold limit, the gold escalation edge
+
+CELLS = {
+    "V1_xps_gpu_4b_u8": {
+        "cell": "V1",
+        "config": "xps_gpu_4b_u8",
+        "run": "slo_escalate_f7343708-a4a5-4984-93e5-ce5412a6c981",
+        "atlas": "multi_turn_base_FULL",
+    },
+    "V4_xps_gpu_4b_u8": {
+        "cell": "V4",
+        "config": "xps_gpu_4b_u8",
+        "run": "slo_escalate_a678926e-2681-4851-a386-8b7c83e971a3",
+        "atlas": "multi_turn_long_context_OBS_MASK_K1024",
+    },
+}
+
+
+def _band(value: float, band: list[float]) -> str:
+    return "MATCH" if band[0] <= value <= band[1] else "MISS"
+
+
+def _called(turn: dict[str, Any], name: str | None) -> bool:
+    if not name:
+        return False
+    return any(
+        str(call).startswith(name + "(")
+        for step in turn.get("decoded_steps") or []
+        for call in step
+    )
+
+
+def entry_table(run_dir: Path, atlas: str) -> list[dict[str, Any]]:
+    ledger = json.loads((run_dir / "turn_ledger.json").read_text(encoding="utf-8"))["entries"]
+    gold = {
+        r["entry_id"]: r
+        for r in json.loads((ATLAS / f"{atlas}.json").read_text(encoding="utf-8"))["entries"]
+    }
+    rows = []
+    for e in ledger:
+        g = gold[e["entry_id"]]["turns"]
+        gold_nctx = [t["n_ctx"] for t in g]
+        jump = next((i for i, n in enumerate(gold_nctx) if n > XPS_EDGE), None)
+        jump_call = g[jump - 1]["max_observation_call"] if jump else None
+        live_turns = e["turns"]
+        local_turns = [t for t in live_turns if t["placement"] == "local"]
+        esc = next((t for t in live_turns if t["escalated"]), None)
+        made_call = None
+        if jump is not None and jump - 1 < len(live_turns):
+            prior = live_turns[jump - 1]
+            made_call = _called(prior, jump_call) if prior["placement"] == "local" else None
+        rows.append(
+            {
+                "entry_id": e["entry_id"],
+                "live_nctx_local_max": max((t["n_ctx"] for t in local_turns), default=None),
+                "live_nctx_per_turn": [t["n_ctx"] for t in live_turns],
+                "gold_nctx_per_turn": gold_nctx,
+                "gold_max_nctx": max(gold_nctx),
+                "gold_jump_turn": jump,
+                "gold_jump_call": jump_call,
+                "live_made_jump_call_locally": made_call,
+                "escalated_turn": None if esc is None else esc["turn"],
+                "escalate_reason": None if esc is None else esc["escalate_reason"],
+                "escalation_nctx": None if esc is None else esc["n_ctx"],
+                "escalation_ttft_s": None if esc is None else esc["ttft_s"],
+                "usd": round(float(e["cloud_usd_entry"]), 4),
+                "hybrid_pass": e["hybrid_pass"],
+                "local_pass": e["local_pass"],
+                "trajectory_pass": e["trajectory_pass"],
+            }
+        )
+    return rows
+
+
+def score_cell(key: str) -> dict[str, Any]:
+    spec = CELLS[key]
+    prereg = json.loads(PREREG.read_text(encoding="utf-8"))
+    pred = prereg["cells"][spec["cell"]]["configs"][spec["config"]]["prediction"]
+    run_dir = ROOT / "derived" / "h1_hybrid" / spec["run"]
+    summary = json.loads((run_dir / "summary.json").read_text(encoding="utf-8"))
+    rows = entry_table(run_dir, spec["atlas"])
+    ledger = json.loads((run_dir / "turn_ledger.json").read_text(encoding="utf-8"))["entries"]
+    n_turns = sum(len(e["turns"]) for e in ledger)
+    local = sum(1 for e in ledger for t in e["turns"] if t["placement"] == "local")
+    n = len(ledger)
+    usd = float(summary["running_usd"])
+    measured = {
+        "local_share": round(local / n_turns, 3),
+        "usd": round(usd, 4),
+        "usd_per_task": round(usd / n, 4),
+        "escalations_ttft": sum(1 for r in rows if r["escalated_turn"] is not None),
+        "n_entries": n,
+        "n_turns": n_turns,
+        "n_hybrid_pass": summary["quality"]["hybrid"]["n_hybrid_pass"],
+        "n_local_pass": summary["quality"]["local_probe"]["n_local_pass"],
+    }
+    verdict = {
+        "local_share": _band(measured["local_share"], pred["local_share"]),
+        "usd_per_task": _band(measured["usd_per_task"], pred["usd_per_task"]),
+        "escalations_ttft": _band(measured["escalations_ttft"], pred["escalations_ttft"]),
+    }
+    reached = [r for r in rows if r["gold_jump_turn"] is not None]
+    return {
+        "run_id": spec["run"],
+        "prediction": {k: pred[k] for k in ("local_share", "usd_per_task", "escalations_ttft")},
+        "measured": measured,
+        "verdict": verdict,
+        "entries_with_gold_jump": len(reached),
+        "gold_jump_entries_not_escalated": [
+            r["entry_id"] for r in reached if r["escalated_turn"] is None
+        ],
+        "entries": rows,
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--out", type=Path, required=True)
+    args = parser.parse_args(argv)
+    doc = {"kind": "demo1_cell_scores", "rule": __doc__.split("\n\n")[1], "cells": {}}
+    for key in CELLS:
+        doc["cells"][key] = score_cell(key)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
+    for key, c in doc["cells"].items():
+        print(
+            key,
+            c["measured"],
+            c["verdict"],
+            "not escalated despite gold jump:",
+            c["gold_jump_entries_not_escalated"],
+        )
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

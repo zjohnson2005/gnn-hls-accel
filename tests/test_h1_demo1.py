@@ -456,6 +456,7 @@ def test_runner_sources_do_not_name_the_prereg() -> None:
         text = path.read_text(encoding="utf-8")
         assert "DEMO_PREREG" not in text and "DEMO1_DESIGN" not in text, path
         assert "DEMO1_AMEND" not in text and "V5_PREDICTIONS" not in text, path
+        assert "V5_ADDENDUM" not in text and "V5CAL_PREREG" not in text, path
 
 
 def test_runner_never_opens_the_prereg(monkeypatch, tmp_path: Path) -> None:
@@ -531,3 +532,45 @@ def test_v5_predictions_are_current() -> None:
     from tools import demo1_v5_predict
 
     assert demo1_v5_predict.predictions() == json.loads(V5_PRED.read_text(encoding="utf-8"))
+
+
+# ---------------------------------------------------------------- V5 addendum 2026-10-14
+
+ADDENDUM = ROOT / "docs" / "amendments" / "DEMO1_V5_ADDENDUM_2026-10-14.md"
+ADD_PRED = ROOT / "analysis" / "demo1" / "V5_ADDENDUM_PREDICTIONS.json"
+SCORES = ROOT / "analysis" / "demo1" / "SCORE_XPS_20261013.json"
+
+
+def test_v5_addendum_pins_and_verdict() -> None:
+    import hashlib
+
+    text = ADDENDUM.read_text(encoding="ascii")
+    for path in (ADD_PRED, ROOT / "tools" / "demo1_v5_addendum.py"):
+        assert hashlib.sha256(path.read_bytes()).hexdigest() in text, path.name
+    doc = json.loads(ADD_PRED.read_text(encoding="utf-8"))
+    for cell in ("V5a_u8", "V5b_u4"):
+        for bound in ("block_low", "block_high"):
+            got = doc["registered_per_step"][cell][bound]
+            assert got["escalations"] == 15 and got["escalations_outside_grid"] == 0
+        assert doc["runner_trigger_per_turn"][cell]["block_low"]["escalations"] == 0
+    assert "V5 is NOT worth running" in text
+
+
+def test_v5_addendum_predictions_are_current() -> None:
+    from tools import demo1_v5_addendum
+
+    fresh = json.loads(json.dumps(demo1_v5_addendum.predictions()))
+    assert fresh == json.loads(ADD_PRED.read_text(encoding="utf-8"))
+
+
+def test_xps_scores() -> None:
+    from tools import score_demo1_cells
+
+    doc = json.loads(SCORES.read_text(encoding="utf-8"))
+    v1 = doc["cells"]["V1_xps_gpu_4b_u8"]
+    v4 = doc["cells"]["V4_xps_gpu_4b_u8"]
+    assert set(v1["verdict"].values()) == {"MATCH"}
+    assert set(v4["verdict"].values()) == {"MISS"}
+    assert v4["measured"]["local_share"] == 0.673 and v4["measured"]["escalations_ttft"] == 9
+    assert len(v4["gold_jump_entries_not_escalated"]) == 6
+    assert score_demo1_cells.score_cell("V4_xps_gpu_4b_u8") == v4

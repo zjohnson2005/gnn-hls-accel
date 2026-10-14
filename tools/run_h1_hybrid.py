@@ -2810,6 +2810,7 @@ def run_session(
     entry_pin: dict[str, Any] | None = None,
     retention: dict[str, Any] | None = None,
     cloud_preflight: Callable[[], dict[str, Any]] | None = None,
+    obs_mask: Any = None,
 ) -> dict[str, Any]:
     if max_usd is None:
         raise SystemExit("REFUSED -- --max-usd is required (cost guard)")
@@ -3029,6 +3030,10 @@ def run_session(
         else:
             summary = json.loads((out_dir / "summary.json").read_text(encoding="utf-8-sig"))
 
+    # The OBS_MASK ledger is part of the run: write it before the seal so the
+    # tree hash covers it (a678926e wrote it 46 ms after .sealed).
+    write_obs_mask_ledger(out_dir, obs_mask)
+
     from tools.h1_provenance import stamp_seal
 
     if seal and status == "complete":
@@ -3091,6 +3096,7 @@ def run_interleaved_session(
     entry_pin: dict[str, Any] | None = None,
     retention: dict[str, Any] | None = None,
     cloud_preflight: Callable[[], dict[str, Any]] | None = None,
+    obs_mask: Any = None,
 ) -> dict[str, Any]:
     """Entry-by-entry interleave of selected H1 policy arms (INF-5 session_design=interleaved).
 
@@ -3530,6 +3536,7 @@ def run_interleaved_session(
         **excl,
     }
     _write_json(out_dir / "summary.json", summary)
+    write_obs_mask_ledger(out_dir, obs_mask)
 
     if seal:
         from tools.h1_provenance import stamp_seal
@@ -4358,8 +4365,8 @@ def main(argv: list[str] | None = None) -> int:
         cloud_preflight=lambda: cloud_ping(
             cloud_model=args.cloud_model, backend_factory=lambda _model: cloud
         ),
+        obs_mask=obs_mask,
     )
-    write_obs_mask_ledger(args.out, obs_mask)
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
     return 0 if summary["status"] == "complete" else 2
 
@@ -4456,8 +4463,8 @@ def _main_interleaved(args: argparse.Namespace) -> int:
         cloud_preflight=lambda: cloud_ping(
             cloud_model=args.cloud_model, backend_factory=lambda _model: cloud
         ),
+        obs_mask=obs_mask,
     )
-    write_obs_mask_ledger(args.out, obs_mask)
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
     ok_statuses = {"complete", "partial_policy_cap"}
     return 0 if summary["status"] in ok_statuses else 2
