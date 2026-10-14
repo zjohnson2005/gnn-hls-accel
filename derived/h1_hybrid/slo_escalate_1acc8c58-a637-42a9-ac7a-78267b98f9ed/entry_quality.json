@@ -1,0 +1,1787 @@
+{
+  "entries": [
+    {
+      "cloud_usd_entry": 0.374043,
+      "entry_id": "multi_turn_base_5",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "find(name='analysis_report.csv',path='.')"
+          ],
+          [
+            "cd(folder='project')"
+          ],
+          [
+            "ls(a=True)"
+          ],
+          [
+            "mv(source='analysis_report.csv',destination='archive')"
+          ]
+        ],
+        [
+          [
+            "sort(file_name='archive_summary.txt')"
+          ]
+        ],
+        [
+          [
+            "authenticate_twitter(username='dr_smith',password='securePass123')"
+          ],
+          [
+            "post_tweet(content='Managed to archive important data files!',tags=['#DataManagement', '#Efficiency'])"
+          ]
+        ],
+        [
+          [
+            "comment(tweet_id=0,comment_content='Another successful task completed today!')"
+          ]
+        ]
+      ],
+      "hybrid_pass": false,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": "Model response execution results so far does not contain all the ground truth response execution results for turn 1.",
+      "hybrid_score_error_type": "multi_turn:execution_response_mismatch",
+      "local_model_result_decoded": [
+        [
+          [
+            "find(path='.',name='analysis_report.csv')"
+          ],
+          [
+            "mv(source='analysis_report.csv',destination='archive/analysis_report.csv')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "find(path='.',name='analysis_report.csv')"
+          ],
+          [
+            "mv(source='analysis_report.csv',destination='archive/analysis_report.csv')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=4 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.309927,
+      "entry_id": "multi_turn_base_6",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "ls(a=True)"
+          ],
+          [
+            "cd(folder='communal')"
+          ],
+          [
+            "touch(file_name='Annual_Report_2023.docx')"
+          ]
+        ],
+        [
+          [
+            "echo(content='Company Earning: 2000\\nCompany Expenditure: 500\\nCompany Name: Gorilla',file_name='Annual_Report_2023.docx')"
+          ]
+        ],
+        [
+          [
+            "cat(file_name='Annual_Report_2023.docx')"
+          ]
+        ],
+        [
+          [
+            "wc(file_name='Annual_Report_2023.docx',mode='w')"
+          ]
+        ],
+        [
+          [
+            "cd(folder='..')"
+          ],
+          [
+            "cd(folder='shared')"
+          ],
+          [
+            "echo(content='9',file_name='report_word_count.txt')"
+          ],
+          [
+            "touch(file_name='report_word_count.txt')"
+          ],
+          [
+            "echo(content='9',file_name='report_word_count.txt')"
+          ]
+        ]
+      ],
+      "hybrid_pass": false,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "hybrid_score_error_type": "multi_turn:instance_state_mismatch",
+      "local_model_result_decoded": [
+        [
+          [
+            "touch(file_name='Annual_Report_2023.docx')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "touch(file_name='Annual_Report_2023.docx')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=5 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.367002,
+      "entry_id": "multi_turn_base_10",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "pwd()"
+          ],
+          [
+            "ls(a=True)"
+          ],
+          [
+            "cd(folder='workspace')"
+          ],
+          [
+            "mkdir(dir_name='Projects')"
+          ]
+        ],
+        [
+          [
+            "find(name='proposal',path='.')"
+          ],
+          [
+            "mv(source='proposal.docx',destination='Projects/final_proposal_2024.docx')"
+          ],
+          [
+            "mv(source='proposal.docx',destination='Projects')"
+          ],
+          [
+            "cd(folder='Projects')"
+          ],
+          [
+            "mv(source='proposal.docx',destination='final_proposal_2024.docx')"
+          ]
+        ],
+        [
+          [
+            "touch(file_name='notes.md')"
+          ]
+        ],
+        [
+          [
+            "touch(file_name='summary.txt')"
+          ],
+          [
+            "echo(content='Hello',file_name='summary.txt')"
+          ],
+          [
+            "diff(file_name1='summary.txt',file_name2='notes.md')"
+          ]
+        ],
+        [
+          [
+            "wc(file_name='summary.txt',mode='c')"
+          ]
+        ]
+      ],
+      "hybrid_pass": false,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": "Model instance for GorillaFileSystem does not match the state with ground truth instance.",
+      "hybrid_score_error_type": "multi_turn:instance_state_mismatch",
+      "local_model_result_decoded": [
+        [
+          [
+            "mkdir(dir_name='Projects')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "mkdir(dir_name='Projects')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=5 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.14121,
+      "entry_id": "multi_turn_base_12",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "cd(folder='Documents')"
+          ],
+          [
+            "ls()"
+          ],
+          [
+            "touch(file_name='summary.txt')"
+          ]
+        ],
+        [
+          [
+            "echo(content='quantum computing',file_name='summary.txt')"
+          ]
+        ],
+        [
+          [
+            "wc(file_name='summary.txt',mode='w')"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "cd(folder='Documents')",
+            "touch(file_name='summary.txt')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "cd(folder='Documents')",
+            "touch(file_name='summary.txt')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=3 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.285816,
+      "entry_id": "multi_turn_base_19",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "find(name='test_document.txt',path='.')"
+          ]
+        ],
+        [
+          [
+            "cp(source='test_document.txt',destination='archives')"
+          ],
+          [
+            "cd(folder='archives')"
+          ],
+          [
+            "mv(source='test_document.txt',destination='final_document.txt')"
+          ],
+          [
+            "cd(folder='..')"
+          ]
+        ],
+        [
+          [
+            "cd(folder='archives')"
+          ],
+          [
+            "cat(file_name='final_document.txt')"
+          ],
+          [
+            "cd(folder='..')"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "find(path='.',name='test_document.txt')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "find(path='.',name='test_document.txt')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=3 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.228453,
+      "entry_id": "multi_turn_base_21",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "echo(content='To be discussed',file_name='ProjectOverview.txt')"
+          ]
+        ],
+        [
+          [
+            "diff(file_name1='ProjectOverview.txt',file_name2='Draft.txt')"
+          ]
+        ],
+        [
+          [
+            "authenticate_twitter(username='tech_guru',password='securePass123')"
+          ],
+          [
+            "post_tweet(content='Initial summary of the project. To be discussed.',tags=['#ProjectUpdate'],mentions=['@manager', '@team_lead'])"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "echo(content='To be discussed',file_name='ProjectOverview.txt')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "echo(content='To be discussed',file_name='ProjectOverview.txt')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=3 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.176409,
+      "entry_id": "multi_turn_base_45",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "find(name='draft',path='ResearchDocs')"
+          ]
+        ],
+        [
+          [
+            "pwd()"
+          ],
+          [
+            "cd(folder='ResearchDocs')"
+          ],
+          [
+            "cp(source='summary_draft.docx',destination='ultimate_draft.docx')"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "find(path='ResearchDocs',name='draft')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "find(path='ResearchDocs',name='draft')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=2 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.32406,
+      "entry_id": "multi_turn_base_56",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_zipcode_based_on_city(city='San Francisco')",
+            "get_zipcode_based_on_city(city='Rivermist')"
+          ],
+          [
+            "estimate_distance(cityA='94016',cityB='83214')"
+          ]
+        ],
+        [
+          [
+            "displayCarStatus(option='fuel')"
+          ],
+          [
+            "fillFuelTank(fuelAmount=40)"
+          ]
+        ],
+        [
+          [
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "pressBrakePedal(pedalPosition=1.0)"
+          ],
+          [
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "releaseBrakePedal()"
+          ]
+        ]
+      ],
+      "hybrid_pass": false,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": "Model instance for VehicleControlAPI does not match the state with ground truth instance.",
+      "hybrid_score_error_type": "multi_turn:instance_state_mismatch",
+      "local_model_result_decoded": [
+        []
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=3 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.303345,
+      "entry_id": "multi_turn_base_70",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "liter_to_gallon(liter=38)"
+          ],
+          [
+            "fillFuelTank(fuelAmount=10)",
+            "startEngine(ignitionMode='START')",
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+            "activateParkingBrake(mode='engage')"
+          ],
+          [
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "pressBrakePedal(pedalPosition=1.0)"
+          ],
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ],
+        [
+          [
+            "check_tire_pressure()"
+          ],
+          [
+            "find_nearest_tire_shop()"
+          ],
+          [
+            "set_navigation(destination='456 Oakwood Avenue, Rivermist, 83214')"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "fillFuelTank(fuelAmount=38)",
+            "startEngine(ignitionMode='START')",
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+            "activateParkingBrake(mode='engage')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "fillFuelTank(fuelAmount=38)",
+            "startEngine(ignitionMode='START')",
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+            "activateParkingBrake(mode='engage')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=2 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.24918600000000002,
+      "entry_id": "multi_turn_base_78",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "check_tire_pressure()"
+          ],
+          [
+            "find_nearest_tire_shop()"
+          ]
+        ],
+        [
+          [
+            "posting_get_login_status()"
+          ],
+          [
+            "post_tweet(content='Ensuring my wheels are well-maintained. Maintenance is key to success!',tags=['#BusinessOnTheMove'])"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "check_tire_pressure()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=2 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.384531,
+      "entry_id": "multi_turn_base_89",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_zipcode_based_on_city(city='Rivermist')",
+            "get_zipcode_based_on_city(city='Stonebrook')"
+          ],
+          [
+            "estimate_distance(cityA='83214',cityB='74532')"
+          ]
+        ],
+        [
+          [
+            "displayCarStatus(option='fuel')",
+            "estimate_drive_feasibility_by_mileage(distance=466.03)"
+          ]
+        ],
+        [
+          [
+            "fillFuelTank(fuelAmount=30)"
+          ]
+        ],
+        [
+          [
+            "displayCarStatus(option='parkingBrake')",
+            "displayCarStatus(option='brakePedal')"
+          ],
+          [
+            "pressBrakePedal(pedalPosition=1.0)"
+          ],
+          [
+            "startEngine(ignitionMode='START')"
+          ],
+          [
+            "lockDoors(unlock=False,door=['driver', 'passenger', 'rear_left', 'rear_right'])"
+          ],
+          [
+            "startEngine(ignitionMode='START')"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        []
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=4 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.36308399999999996,
+      "entry_id": "multi_turn_base_103",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_symbol_by_name(name='Omega Industries')"
+          ],
+          [
+            "add_to_watchlist(stock='OMEG')"
+          ]
+        ],
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "get_stock_info(symbol='OMEG')"
+          ],
+          [
+            "place_order(order_type='Buy',symbol='OMEG',price=457.23,amount=150)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "get_user_id(user='Jane')"
+          ],
+          [
+            "send_message(receiver_id='USR002',message='Dear Customer Service, please confirm the successful execution of my order for 150 shares of Omega Industries at the current market price, and verify the order details under reference ID USR002. Thank you.')"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "get_symbol_by_name(name='Omega Industries')"
+          ],
+          [
+            "add_to_watchlist(stock='OMEG')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_symbol_by_name(name='Omega Industries')"
+          ],
+          [
+            "add_to_watchlist(stock='OMEG')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=5 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.245007,
+      "entry_id": "multi_turn_base_107",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_symbol_by_name(name='Zeta Corp')"
+          ],
+          [
+            "get_stock_info(symbol='ZETA')"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='ZETA',price=150.75,amount=50)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "get_account_info()"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        []
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=5 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.43035899999999994,
+      "entry_id": "multi_turn_base_110",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "get_stock_info(symbol='AAPL')"
+          ],
+          [
+            "place_order(order_type='Buy',symbol='AAPL',price=227.16,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "get_account_info()"
+          ]
+        ],
+        [
+          [
+            "ticket_login(username='user123',password='12345')"
+          ],
+          [
+            "create_ticket(title='Urgent: Transaction Issue',description='There is an issue with a recent transaction involving a canceled buy order for 100 shares of AAPL and I am requesting confirmation of the cancellation along with an account summary.',priority=3)"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=6 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.234645,
+      "entry_id": "multi_turn_base_118",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "remove_stock_from_watchlist(symbol='NVDA')"
+          ]
+        ],
+        [
+          [
+            "get_stock_info(symbol='AAPL')",
+            "get_account_info()"
+          ],
+          [
+            "place_order(order_type='Buy',symbol='AAPL',price=227.16,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=5 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.257073,
+      "entry_id": "multi_turn_base_119",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_symbol_by_name(name='Zeta Corp')"
+          ],
+          [
+            "get_stock_info(symbol='ZETA')"
+          ]
+        ],
+        [
+          [
+            "get_available_stocks(sector='Technology')"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "ticket_get_login_status()"
+          ]
+        ]
+      ],
+      "hybrid_pass": false,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": "Model instance for TicketAPI does not match the state with ground truth instance.",
+      "hybrid_score_error_type": "multi_turn:instance_state_mismatch",
+      "local_model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='Zeta Corp')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='Zeta Corp')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=4 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.18321899999999997,
+      "entry_id": "multi_turn_base_127",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "remove_stock_from_watchlist(symbol='BDX')"
+          ]
+        ],
+        [
+          [
+            "get_stock_info(symbol='BDX')"
+          ],
+          [
+            "place_order(order_type='Buy',symbol='BDX',price=250.0,amount=150)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=4 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.191064,
+      "entry_id": "multi_turn_base_128",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_current_time()",
+            "get_available_stocks(sector='Technology')"
+          ]
+        ],
+        [
+          [
+            "get_stock_info(symbol='MSFT')"
+          ],
+          [
+            "place_order(order_type='Buy',symbol='MSFT',price=310.23,amount=150)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "get_current_time()",
+            "get_available_stocks(sector='Technology')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_current_time()",
+            "get_available_stocks(sector='Technology')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=4 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.323589,
+      "entry_id": "multi_turn_base_136",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_symbol_by_name(name='Zeta Corp')"
+          ],
+          [
+            "get_stock_info(symbol='ZETA')"
+          ],
+          [
+            "place_order(order_type='Buy',symbol='ZETA',price=150.75,amount=50)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "get_account_info()"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='ZT')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='ZT')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=4 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.37441800000000003,
+      "entry_id": "multi_turn_base_145",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_symbol_by_name(name='Zeta Corp')"
+          ],
+          [
+            "get_stock_info(symbol='ZETA')"
+          ]
+        ],
+        [
+          [
+            "add_to_watchlist(stock='ZETA')"
+          ]
+        ],
+        [
+          [
+            "get_order_history()"
+          ],
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "message_get_login_status()"
+          ],
+          [
+            "send_message(receiver_id='USR003',message='Zeta Corp seems to have potential. What do you think of their recent financial report?')"
+          ]
+        ],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        []
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        []
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=5 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.351267,
+      "entry_id": "multi_turn_base_149",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_symbol_by_name(name='Zeta Corp')"
+          ],
+          [
+            "get_stock_info(symbol='ZETA')",
+            "remove_stock_from_watchlist(symbol='ZETA')"
+          ]
+        ],
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "message_get_login_status()"
+          ],
+          [
+            "send_message(receiver_id='USR003',message=\"I've decided to drop those dipping stocks from my line-up.\")"
+          ]
+        ],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ],
+        [
+          [
+            "delete_message(receiver_id='USR003')"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='ZT')",
+            "remove_stock_from_watchlist(symbol='ZT')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='ZT')",
+            "remove_stock_from_watchlist(symbol='ZT')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=5 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.251106,
+      "entry_id": "multi_turn_base_157",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "list_all_airports()"
+          ]
+        ],
+        [
+          [
+            "get_nearest_airport_by_city(location='Crescent Hollow')"
+          ]
+        ],
+        [
+          [
+            "get_nearest_airport_by_city(location='Pinehaven')"
+          ],
+          [
+            "get_flight_cost(travel_from='CRH',travel_to='PHV',travel_date='2026-03-03',travel_class='business')"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "list_all_airports()"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "list_all_airports()"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=3 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.26214899999999997,
+      "entry_id": "multi_turn_base_161",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "authenticate_travel(client_id='client_520',client_secret='rise_to_sky',refresh_token='token990125',grant_type='read_write',user_first_name='Michael',user_last_name='Thompson')"
+          ]
+        ],
+        [
+          [
+            "authenticate_travel(client_id='client_520',client_secret='rise_to_sky',refresh_token='token990125',grant_type='read_write',user_first_name='Michael',user_last_name='Thompson')"
+          ],
+          [
+            "get_credit_card_balance(access_token='966117',card_id='card_4455')"
+          ]
+        ],
+        [
+          [
+            "mean(numbers=[45.99, 78.25, 102.5, 38.75, 92.1])"
+          ]
+        ]
+      ],
+      "hybrid_pass": false,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": "Model instance for TravelAPI does not match the state with ground truth instance.",
+      "hybrid_score_error_type": "multi_turn:instance_state_mismatch",
+      "local_model_result_decoded": [
+        [
+          [
+            "authenticate_travel(client_id='client_520',client_secret='rise_to_sky',refresh_token='token990125',grant_type='read_write',user_first_name='Michael',user_last_name='Thompson')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "authenticate_travel(client_id='client_520',client_secret='rise_to_sky',refresh_token='token990125',grant_type='read_write',user_first_name='Michael',user_last_name='Thompson')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=3 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.170466,
+      "entry_id": "multi_turn_base_163",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_nearest_airport_by_city(location='San Francisco')",
+            "get_nearest_airport_by_city(location='Los Angeles')",
+            "get_credit_card_balance()"
+          ],
+          [
+            "get_credit_card_balance(access_token='abc123xyz',card_id='AMEX123456789')",
+            "get_flight_cost(travel_from='SFO',travel_to='LAX',travel_date='2026-11-16',travel_class='business')"
+          ],
+          [
+            "book_flight(access_token='abc123xyz',card_id='AMEX123456789',travel_date='2026-11-16',travel_from='SFO',travel_to='LAX',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='abc123xyz',booking_id='3426812')"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='SFO',travel_to='LAX',travel_date='2026-11-15',travel_class='business')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='SFO',travel_to='LAX',travel_date='2026-11-15',travel_class='business')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=2 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.21013800000000002,
+      "entry_id": "multi_turn_base_164",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_nearest_airport_by_city(location='Rivermist')",
+            "get_nearest_airport_by_city(location='New York')"
+          ],
+          [
+            "get_flight_cost(travel_from='RMS',travel_to='JFK',travel_date='2026-12-01',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "compute_exchange_rate(base_currency='RMB',target_currency='USD',value=10000)"
+          ],
+          [
+            "set_budget_limit(access_token='abc123',budget_limit=1428.57)"
+          ]
+        ],
+        [],
+        []
+      ],
+      "hybrid_pass": false,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": "Model response list is empty for turn 2",
+      "hybrid_score_error_type": "multi_turn:empty_turn_model_response",
+      "local_model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='RIV',travel_to='JFK',travel_date='2026-12-01',travel_class='first')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='RIV',travel_to='JFK',travel_date='2026-12-01',travel_class='first')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=4 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.364857,
+      "entry_id": "multi_turn_base_172",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "authenticate_travel(client_id='trav3lMaxID2023',client_secret='M@xSecret!',refresh_token='r3freshM3n0w',grant_type='read_write',user_first_name='Maxwell',user_last_name='Edison')"
+          ]
+        ],
+        [
+          [
+            "register_credit_card(access_token='251675',card_number='2345-6789-1234-5678',expiration_date='08/2025',cardholder_name='Maxwell Edison',card_verification_number=567)",
+            "get_flight_cost()"
+          ],
+          [
+            "get_flight_cost(travel_from='SFO',travel_to='LAX',travel_date='2026-12-15',travel_class='business')",
+            "book_flight(access_token='251675',card_id='391310425148',travel_date='2026-12-15',travel_from='SFO',travel_to='LAX',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "message_get_login_status()"
+          ],
+          [
+            "send_message(receiver_id='m0llyTr@vel2k24',message=\"Everything for our trip is sorted and ready! Here's our itinerary: Flight from SFO to LAX on December 15, 2026, Business Class. Booking ID: 4191922. Looking forward to the trip!\")"
+          ]
+        ],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ]
+      ],
+      "hybrid_pass": false,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": "Model instance for MessageAPI does not match the state with ground truth instance.",
+      "hybrid_score_error_type": "multi_turn:instance_state_mismatch",
+      "local_model_result_decoded": [
+        [
+          [
+            "authenticate_travel(client_id='trav3lMaxID2023',client_secret='M@xSecret!',refresh_token='r3freshM3n0w',grant_type='read_write',user_first_name='Maxwell',user_last_name='Edison')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "authenticate_travel(client_id='trav3lMaxID2023',client_secret='M@xSecret!',refresh_token='r3freshM3n0w',grant_type='read_write',user_first_name='Maxwell',user_last_name='Edison')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=4 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.42820199999999997,
+      "entry_id": "multi_turn_base_181",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "verify_traveler_information(first_name='Carlos',last_name='Martinez',date_of_birth='1968-03-23',passport_number='123456')"
+          ]
+        ],
+        [
+          [
+            "get_nearest_airport_by_city(location='New York')",
+            "get_nearest_airport_by_city(location='Los Angeles')"
+          ],
+          [
+            "get_flight_cost(travel_from='JFK',travel_to='LAX',travel_date='2026-10-10',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='abc123xyz',card_id='card_3456',travel_date='2026-10-10',travel_from='JFK',travel_to='LAX',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='abc123xyz',booking_id='3426812')"
+          ]
+        ],
+        [
+          [
+            "ticket_login(username='cmartinez',password='SecurePass123')"
+          ],
+          [
+            "create_ticket(title='Flight Cancellation Experience',description='The abrupt cancellation caused significant inconvenience, disrupting my travel plans and causing financial loss.')"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "verify_traveler_information(first_name='Carlos',last_name='Martinez',date_of_birth='1968-03-23',passport_number='123456')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "verify_traveler_information(first_name='Carlos',last_name='Martinez',date_of_birth='1968-03-23',passport_number='123456')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=5 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.09668399999999999,
+      "entry_id": "multi_turn_base_182",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='ORD',travel_to='SVP',travel_date='2026-07-14',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "set_budget_limit(access_token='abc123xyz456',budget_limit=20000.0)"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='ORD',travel_to='SVP',travel_date='2026-07-14',travel_class='business')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='ORD',travel_to='SVP',travel_date='2026-07-14',travel_class='business')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=2 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.441276,
+      "entry_id": "multi_turn_base_184",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='JFK',travel_to='LAX',travel_date='2026-12-15',travel_class='business')"
+          ],
+          [
+            "book_flight(access_token='abc123xyz',card_id='card_2108',travel_date='2026-12-15',travel_from='JFK',travel_to='LAX',travel_class='business')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='abc123xyz',booking_id='3426812')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='abc123xyz',booking_id='3426812')"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='USR006',message=\"Hi Sam, my travel plans have changed. I'll update you soon.\")"
+          ]
+        ],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ],
+        [
+          [
+            "delete_message(receiver_id='USR006')"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='JFK',travel_to='LAX',travel_date='2026-12-15',travel_class='business')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='JFK',travel_to='LAX',travel_date='2026-12-15',travel_class='business')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=6 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.5804940000000001,
+      "entry_id": "multi_turn_base_186",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_nearest_airport_by_city(location='Rivermist')"
+          ],
+          [
+            "get_flight_cost(travel_from='RMS',travel_to='JFK',travel_date='2026-12-15',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "book_flight(access_token='secure_access_token_987654321',card_id='card_4526',travel_date='2026-12-15',travel_from='RMS',travel_to='JFK',travel_class='first')"
+          ]
+        ],
+        [
+          [
+            "retrieve_invoice(access_token='secure_access_token_987654321',booking_id='3426812')"
+          ]
+        ],
+        [
+          [
+            "contact_customer_support(booking_id='3426812',message='Hello, I previously reached out regarding an issue with my booking (ID: 3426812, Transaction ID: 45451592) for a first-class flight from RMS to JFK on December 15, 2026, but have not yet received a response. As a high-ranking government official, it is imperative that my travel arrangements proceed smoothly and without further delay. I kindly request urgent attention to resolve this matter and ensure my upcoming trip is handled seamlessly. Please advise on the status of my booking and any steps needed to rectify the issue at your earliest convenience. Thank you for your prompt assistance.')"
+          ]
+        ],
+        [
+          [
+            "cancel_booking(access_token='secure_access_token_987654321',booking_id='3426812')"
+          ]
+        ],
+        [
+          [
+            "authenticate_twitter(username='john',password='john1234')"
+          ],
+          [
+            "post_tweet(content='Postponing my plans.',tags=['#Travel', '#PlansChanged'],mentions=['@AirlineSupport'])"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='RIV',travel_to='JFK',travel_date='2026-12-15',travel_class='first')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_flight_cost(travel_from='RIV',travel_to='JFK',travel_date='2026-12-15',travel_class='first')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=6 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    }
+  ]
+}

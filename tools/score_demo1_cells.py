@@ -19,8 +19,8 @@ ROOT = Path(__file__).resolve().parents[1]
 PREREG = ROOT / "derived" / "h1_hybrid" / "demo1" / "DEMO_PREREG_v2.json"
 ATLAS = ROOT / "analysis" / "demo1" / "atlas"
 # Gold escalation edge per config: the sealed cold limit in DEMO_PREREG_v2
-# envelopes (xps c2246b1f 10,000; t2s d2d5cc4a 18,500).
-EDGES = {"xps_gpu_4b_u8": 10_000, "t2s_gpu_4b_u8": 18_500}
+# envelopes (xps c2246b1f 10,000; t2s d2d5cc4a 18,500; xps cpu 7f232f86 468).
+EDGES = {"xps_gpu_4b_u8": 10_000, "t2s_gpu_4b_u8": 18_500, "xps_cpu_4b": 468}
 
 CELLS = {
     "V1_xps_gpu_4b_u8": {
@@ -34,6 +34,12 @@ CELLS = {
         "config": "xps_gpu_4b_u8",
         "run": "slo_escalate_a678926e-2681-4851-a386-8b7c83e971a3",
         "atlas": "multi_turn_long_context_OBS_MASK_K1024",
+    },
+    "V2_xps_cpu_4b": {
+        "cell": "V2",
+        "config": "xps_cpu_4b",
+        "run": "slo_escalate_1acc8c58-a637-42a9-ac7a-78267b98f9ed",
+        "atlas": "multi_turn_base_FULL",
     },
     "V1_t2s_gpu_4b_u8": {
         "cell": "V1",
@@ -66,6 +72,7 @@ GROUPS = {
     "xps": ("V1_xps_gpu_4b_u8", "V4_xps_gpu_4b_u8"),
     "t2s": ("V1_t2s_gpu_4b_u8", "V4_t2s_gpu_4b_u8", "V3_t2s_gpu_4b_u8"),
     "v4_pair": ("V4_xps_gpu_4b_u8", "V4_t2s_gpu_4b_u8_rerun"),
+    "v1v2_xps": ("V1_xps_gpu_4b_u8", "V2_xps_cpu_4b"),
 }
 
 

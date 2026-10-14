@@ -612,3 +612,27 @@ def test_v4_pair_scores() -> None:
     assert set(doc["cells"]["V4_xps_gpu_4b_u8"]["verdict"].values()) == {"MISS"}
     for key, cell in doc["cells"].items():
         assert score_demo1_cells.score_cell(key) == cell
+
+
+SCORES_V1V2 = ROOT / "analysis" / "demo1" / "SCORE_V1V2_XPS_20261014.json"
+KNOB_TABLE = ROOT / "analysis" / "demo1" / "KNOB_VS_UPGRADE_20261014.json"
+
+
+def test_v2_scores_and_knob_table() -> None:
+    from tools import demo1_knob_table, score_demo1_cells
+
+    doc = json.loads(SCORES_V1V2.read_text(encoding="utf-8"))
+    v2 = doc["cells"]["V2_xps_cpu_4b"]
+    assert v2["run_id"].startswith("slo_escalate_1acc8c58")
+    assert v2["verdict"] == {
+        "local_share": "MATCH",
+        "usd_per_task": "MISS",
+        "escalations_ttft": "MATCH",
+    }
+    assert v2["measured"]["n_hybrid_pass"] == 22
+    for key, cell in doc["cells"].items():
+        assert score_demo1_cells.score_cell(key) == cell
+    table = demo1_knob_table.table()
+    assert table == json.loads(KNOB_TABLE.read_text(encoding="utf-8"))
+    placement = table["rows"][0]["descriptive_paired_passes"]
+    assert (placement["b_a_pass_b_fail"], placement["c_a_fail_b_pass"]) == (1, 20)

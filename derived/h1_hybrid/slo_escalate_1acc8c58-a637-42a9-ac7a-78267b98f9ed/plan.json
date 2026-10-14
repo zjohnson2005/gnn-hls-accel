@@ -1,0 +1,168 @@
+{
+  "arm_config": {
+    "kv": "u8",
+    "model": "Qwen3-4B-int4-ov",
+    "placement": "cpu-p",
+    "residency": "NON_RESIDENT",
+    "tier": "4B",
+    "weight": "int4"
+  },
+  "caching_policy": "none",
+  "chat_template": {
+    "enable_thinking": false,
+    "renderer": "tools.bfcl_feasibility_probe.render_bfcl_tools_style"
+  },
+  "cloud_model": "claude-sonnet-5",
+  "cloud_ping_worker": {
+    "anthropic_sdk_version": "0.120.2",
+    "api_key_present": true,
+    "error_class": null,
+    "http_status": 200,
+    "model": "claude-sonnet-5",
+    "note": "Ping cost is recorded here and is not charged to the policy or session caps.",
+    "ok": true,
+    "path": "cloud_ping_worker.json",
+    "ran": true,
+    "sha256": "bc33ec4eecee7ca417c85306b98d64588371afdd882ed2809032f873dba29ef9",
+    "usd": 9.9e-05
+  },
+  "entry_assert": {
+    "mode": "caller_supplied",
+    "n": 30
+  },
+  "entry_pin": {
+    "category": "multi_turn_base",
+    "n": 30,
+    "name": "DEMO1_BASE_30",
+    "path": "derived/h1_hybrid/demo1/DEMO1_BASE_30.json",
+    "seed": 20260930,
+    "sha256": "7842d7d960b4acb5d5b09614fbf5a2b06fe752407f766d8df57ddd02e1f0260c"
+  },
+  "generation_config": {
+    "apply_chat_template": false,
+    "do_sample": false,
+    "max_new_tokens": 512,
+    "seed": null,
+    "temperature": null,
+    "top_k": null,
+    "top_p": null
+  },
+  "git": {
+    "dirty": false,
+    "git_diff_head_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "git_head": "ed292054f3da158cdef92eeb67d263f2dbfac7fb",
+    "launch_evidence": {
+      "dir": "derived/h1_hybrid/_launches/1acc8c58-a637-42a9-ac7a-78267b98f9ed",
+      "files": [
+        {
+          "bytes": 17284,
+          "path": "derived/h1_hybrid/_launches/1acc8c58-a637-42a9-ac7a-78267b98f9ed/canary_opening/canaries/canary.0.json",
+          "sha256": "c0eb9f17f42c6d2f5536954f5b1c9ca2536ee170b0e59eee08152afbd0274597"
+        },
+        {
+          "bytes": 9506,
+          "path": "derived/h1_hybrid/_launches/1acc8c58-a637-42a9-ac7a-78267b98f9ed/canary_opening/opening_plan.json",
+          "sha256": "04a09b0442a5ab3cfc2bf25ca1f85548036489125a5a4fb27b770b0c2bd45635"
+        },
+        {
+          "bytes": 1077,
+          "path": "derived/h1_hybrid/_launches/1acc8c58-a637-42a9-ac7a-78267b98f9ed/cloud_ping.json",
+          "sha256": "371f721a4538d71850c93023f0de134ae033c8b8b12396b171f5c2c07be0544f"
+        },
+        {
+          "bytes": 3982,
+          "path": "derived/h1_hybrid/_launches/1acc8c58-a637-42a9-ac7a-78267b98f9ed/gates_20261014_120132.json",
+          "sha256": "23d705a8fa2c3de1a59ed491bc0559a2918c1d4cfd49a94eea89eedd39df032d"
+        }
+      ]
+    },
+    "tree_status": "CLEAN"
+  },
+  "local_backend": "openvino",
+  "max_usd": 15.0,
+  "measurement_kind": "MEASURED",
+  "n_entries": 30,
+  "openvino": {
+    "arm_id": "A",
+    "kv": "u8",
+    "load_meta": {
+      "device_config": {
+        "arm_id": "A",
+        "generate_device": "CPU",
+        "label": "cpu-p only",
+        "load_sequence": [
+          {
+            "device": "CPU",
+            "properties": {
+              "ENABLE_CPU_PINNING": true,
+              "INFERENCE_NUM_THREADS": 4,
+              "SCHEDULING_CORE_TYPE": "PCORE_ONLY"
+            }
+          }
+        ]
+      },
+      "loads": [
+        {
+          "device": "CPU",
+          "kv_cache_precision": {
+            "enforced": false,
+            "failure_mode": null,
+            "match": true,
+            "readback": {
+              "device": "CPU",
+              "error": null,
+              "normalized": "u8",
+              "ok": true,
+              "property": "KV_CACHE_PRECISION",
+              "raw": "<Type: 'uint8_t'>",
+              "to_string": "u8"
+            },
+            "requested": null
+          },
+          "properties": {
+            "ENABLE_CPU_PINNING": true,
+            "INFERENCE_NUM_THREADS": 4,
+            "SCHEDULING_CORE_TYPE": "PCORE_ONLY"
+          },
+          "scheduler_config": {
+            "enable_prefix_caching": false,
+            "source": "explicit_SchedulerConfig"
+          }
+        }
+      ],
+      "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+      "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+      "scheduler_config": {
+        "enable_prefix_caching": false,
+        "source": "explicit_SchedulerConfig"
+      }
+    },
+    "max_new_tokens": 512,
+    "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+    "prefix_block_clear": "ov_genai.LLMPipeline",
+    "residency": "NON_RESIDENT"
+  },
+  "platform_id": "aipc-c1",
+  "policy": "slo_escalate",
+  "resume_from_completed": [],
+  "retention": {
+    "arm": "FULL"
+  },
+  "run_id": "1acc8c58-a637-42a9-ac7a-78267b98f9ed",
+  "scorer": {
+    "bfcl_eval_version": "2025.12.17",
+    "checker": "bfcl_eval.eval_checker.multi_turn_eval.multi_turn_checker",
+    "w3_seal_refs": [
+      "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+      "1d8db970-4c18-4bcf-824d-d9c141b6eb22"
+    ],
+    "wrapper": "apu_characterization.cap01.bfcl_cap01_multi_turn_checker"
+  },
+  "seal": true,
+  "started_utc": "2026-10-14T16:02:21.577091+00:00",
+  "w3_entry_pin": null,
+  "w3_seal_refs": [
+    "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+    "1d8db970-4c18-4bcf-824d-d9c141b6eb22"
+  ]
+}
