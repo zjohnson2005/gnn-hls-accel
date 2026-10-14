@@ -601,6 +601,19 @@ CONTENT_KEYWORD = "paris"
 CONTENT_SEPARATOR = "\n\n"
 CONTENT_PAD = " a"
 CANARY_STATE_AMENDMENT = "NPU amendment 2026-10-14 (canary state)"
+CANARY_CHILD_AMENDMENT = "NPU amendment 2026-10-14b (canary child process)"
+CANARY_CHILD_CONFIG = ROOT / "configs" / "npu_canary_child.yaml"
+
+
+def canary_child_config() -> dict[str, Any]:
+    """configs/npu_canary_child.yaml (timeout, transition-record switch)."""
+    import yaml
+
+    doc = yaml.safe_load(CANARY_CHILD_CONFIG.read_text(encoding="utf-8")) or {}
+    return {
+        "child_timeout_s": float(doc.get("child_timeout_s", 180)),
+        "inprocess_transition_record": bool(doc.get("inprocess_transition_record", False)),
+    }
 
 # Estimate inputs. Recorded, not cited; they only size the scheduling bound.
 # int8 NPU load at 2048 and TTFT at 21-32 tokens: the four F1 NPU cells
@@ -1042,6 +1055,7 @@ def _arm_canary(
     before_probes: bool = False,
     telemetry: Any = None,
     before_calibration: Callable[[], None] | None = None,
+    child: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     from tools.ttft_slo_canary import (
         CanaryBudgetRefuse,
@@ -1059,6 +1073,15 @@ def _arm_canary(
             allow_unguarded=False,
             arm_before_probes=before_probes,
             telemetry=telemetry,
+            **(
+                {}
+                if child is None
+                else {
+                    "child_process": True,
+                    "child_timeout_s": float(child["child_timeout_s"]),
+                    "inprocess_transition": bool(child["inprocess_transition_record"]),
+                }
+            ),
         )
     except CanaryBudgetRefuse as exc:
         raise SystemExit(f"REFUSED -- {exc.detail}") from exc
@@ -1161,6 +1184,7 @@ def run_hardware(args: argparse.Namespace) -> int:
         before_probes: bool = False,
         telemetry: Any = None,
         before_calibration: Callable[[], None] | None = None,
+        child: dict[str, Any] | None = None,
     ) -> bool:
         if args.no_canary:
             plan["canary"] = {"armed": False, "smoke_skip": True}
@@ -1175,6 +1199,7 @@ def run_hardware(args: argparse.Namespace) -> int:
                 before_probes=before_probes,
                 telemetry=telemetry,
                 before_calibration=before_calibration,
+                child=child,
             )
         except SystemExit as exc:
             summary = {"session_id": session_id, "status": "REFUSED_CANARY", "detail": str(exc)}
@@ -1408,6 +1433,7 @@ def run_hardware(args: argparse.Namespace) -> int:
     )
     telemetry = None
     before_calibration = None
+    child = None
     if envelope and not args.no_canary:
         # NPU amendment 2026-10-14 (canary state): calibrate after one
         # untimed warm-up NPU rung; per-canary telemetry. Thresholds, floors
@@ -1428,15 +1454,20 @@ def run_hardware(args: argparse.Namespace) -> int:
             plan["canary_warmup_rung"] = warm_record
             _write(out / "plan.json", plan)
 
+        # NPU amendment 2026-10-14b: every canary cell in a child process.
+        child = canary_child_config()
+        plan["canary_child"] = {"amendment": CANARY_CHILD_AMENDMENT, **child}
         plan["guard_schedule"] = (
             "gpu pipeline + warm-up, record-only canary, warm-up NPU rung, then "
-            "arm_before_probes (amendments 2026-10-08, 2026-10-08b, 2026-10-14)"
+            "arm_before_probes; canary cells in child processes "
+            "(amendments 2026-10-08, 2026-10-08b, 2026-10-14, 2026-10-14b)"
         )
     if not arm(
         planned,
         before_probes=True,
         telemetry=telemetry,
         before_calibration=before_calibration,
+        child=child,
     ):
         return 1
 

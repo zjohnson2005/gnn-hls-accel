@@ -518,6 +518,15 @@ class TtftSloCanaryGuard:
     last_power_snapshot: dict[str, Any] | None = None
     # NPU amendment 2026-10-14: optional per-canary host telemetry (record only).
     telemetry: Any = None
+    # NPU amendment 2026-10-14b: run each canary cell in a fresh child process.
+    child_process: bool = False
+    child_timeout_s: float = 180.0
+    # Callable (result_path, model_spec) -> argv; None = tools.canary_child.
+    child_command: Any = None
+    # 2026-10-14b transition record: also run in-process (record only) at the
+    # record-only point and the first post-arm point.
+    inprocess_transition: bool = False
+    _transition_post_done: bool = field(default=False, repr=False)
 
     def __post_init__(self) -> None:
         self.gate = new_canary_gate(
@@ -614,18 +623,18 @@ class TtftSloCanaryGuard:
         )
 
     def _run_cell(self) -> dict[str, Any]:
-        from tools.smoke_delta_prefill import run_cell
+        from tools.canary_child import cell_inprocess, child_command, run_child
 
         self.work_dir.mkdir(parents=True, exist_ok=True)
-        raw = run_cell(
-            "ttft_slo_canary",
-            arm_id=CANARY_ARM,
-            mode=CANARY_MODE,
-            n_cached=CANARY_N_CACHED,
-            delta=CANARY_DELTA,
-            model_spec=self.model_spec,
-            pipeline_type="llm",
-        )
+        child: dict[str, Any] | None = None
+        if self.child_process:
+            out = self.work_dir / f"child.{len(self.canaries)}.json"
+            build = self.child_command or child_command
+            raw, child = run_child(
+                list(build(out, self.model_spec)), out, timeout_s=float(self.child_timeout_s)
+            )
+        else:
+            raw = cell_inprocess(self.model_spec)
         t1 = (raw.get("turn1") or {}).get("prefill_s")
         t2 = (raw.get("turn2") or {}).get("prefill_s")
         classification = raw.get("classification") or "OTHER"
@@ -648,12 +657,31 @@ class TtftSloCanaryGuard:
             "execute_ok": raw.get("execute_ok"),
             "execute_error": raw.get("execute_error"),
         }
+        if child is not None:
+            rec["child"] = child
         out = self.work_dir / f"canary.{rec['canary_index']}.json"
         out.write_text(
             json.dumps({"record": rec, "cell": raw}, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
         return rec
+
+    def _inprocess_record(self, point: str) -> dict[str, Any]:
+        """2026-10-14b transition record: the cell in-process, after the gating run."""
+        from tools.canary_child import cell_inprocess
+
+        try:
+            raw = cell_inprocess(self.model_spec)
+        except Exception as exc:
+            return {"point": point, "error": f"{type(exc).__name__}: {exc}"}
+        return {
+            "point": point,
+            "classification": raw.get("classification"),
+            "turn1_prefill_s": (raw.get("turn1") or {}).get("prefill_s"),
+            "turn2_prefill_s": (raw.get("turn2") or {}).get("prefill_s"),
+            "execute_error": raw.get("execute_error"),
+            "gates": False,
+        }
 
     def _write_canary_record(self, rec: dict[str, Any]) -> None:
         path = self.work_dir / f"canary.{rec['canary_index']}.json"
@@ -703,6 +731,15 @@ class TtftSloCanaryGuard:
         rec["warmup"] = bool(warmup)
         if tele is not None:
             rec["telemetry"] = tele
+        point = None
+        if self.inprocess_transition:
+            if warmup:
+                point = "record_only"
+            elif after_probe_count >= 0 and not self._transition_post_done:
+                point = "first_post_arm"
+                self._transition_post_done = True
+        if point is not None:
+            rec["inprocess_transition"] = self._inprocess_record(point)
         prior_ok = [
             c
             for c in self.canaries
