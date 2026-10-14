@@ -23,18 +23,20 @@ Deadlines: draft to Dr. Hao Nov 2, data freeze Nov 16, ISPASS in December.
   not expand `$`. Inside, use double quotes. Do not use `''` inside WQL
   filters; filter with Where-Object instead.
 
-## Two workspaces, one origin
+## One workspace (Cursor retired 2026-10-14)
 
-Work happens in two places: Cursor on the XPS repo (when the XPS is
-reachable) and Claude Code in this Mac clone (when it is not, or to spread
-usage). Both push to the same origin. To avoid divergence:
+Claude Code in this Mac clone is the only editing workspace. The
+measurement hosts (XPS, T2S) only pull from origin; nothing is edited,
+committed or pushed from them.
 
 - Start every session with `git pull --ff-only`; end it with commit + push.
-- Never have both workspaces editing at the same time. Before handing off,
-  push and say which commit is current.
 - If a pull is not fast-forward, stop and report; never force-push and
-  never resolve by discarding the other workspace's commits.
-- Cursor on the XPS must never be open during an XPS measurement.
+  never resolve by discarding commits.
+- Cursor and Claude (desktop app or Claude Code) must never be open on the
+  XPS or the T2S. The tier-1 gate refuses `cursor.exe` and `claude.exe`
+  (seam/isolation.py), but a CLI session may not show up under either
+  name, so do not rely on the gate for this.
+- `.cursor/rules/seam.mdc` is retired; this file is authoritative.
 
 ## Non-negotiable rules
 
@@ -58,6 +60,59 @@ usage). Both push to the same origin. To avoid divergence:
 8. Do not revive withdrawn directions. Search before any "first" or novelty
    claim and log the search in docs/RELATED_SEARCHES.md.
 9. Concise, plain language in reports. State errors plainly.
+
+## Number prohibitions and analysis integrity
+
+Ported from `.cursor/rules/seam.mdc` (retired 2026-10-14), wording kept.
+
+Governing docs (re-read the relevant section before implementing):
+`docs/SEAM_research_blueprint.md`, `docs/PHASE_MINUS1_IMPLEMENTATION_SPEC.md`,
+`docs/hybrid_execution_dse_positioning.md`, `AMENDMENTS.md`, `AUDIT_LOG.md`.
+
+Platform A (aipc-c1), fixed facts:
+- Dell XPS 16 DA16260, Intel Core Ultra 5 325 (**Panther Lake**, not Lunar Lake)
+- 4 P + 4 LP-E, **8 logical CPUs, no SMT**, Xe3 iGPU, NPU 5, 16 GB LPDDR5X
+  unified, no dGPU
+- Windows build 26200; never size worker pools by heuristic / `cpu_count()`
+
+Number prohibitions:
+- Never report **50 TOPS** as achieved NPU throughput (peak INT8 only)
+- Never state **~120 GB/s** bandwidth until M2.4 measures it (unverified)
+- **180 TOPS** is Platform B aggregate only - never as Platform A or NPU-alone
+- Figures read only from `derived/`
+- Never cite `topology.measured.cluster_separation_ratio` (~1.38x from
+  `python_intfp_v1`) as a P-core vs LP-E-core **performance** figure - it is
+  an interpreter-bound clustering discriminant only. Representative
+  throughput comes from M5 microbenchmarks.
+- `raw/` payloads are committed while under the AM-014 ceiling (100 MB in
+  `configs/repo.yaml`); above that, external archive + `raw/MANIFEST.sha256`
+
+Integrity:
+- `raw/` is **write-once**. Never edit `analysis/` except documented AF-001
+- No comparison before A/A + noise floor (`derived/noise_floor.json`)
+- Analysis consumes `blinded_label`, never `condition_label`
+- Discard policy: log in `AUDIT_LOG.md`; no silent discards
+- **No silent retries, exception swallowing, or execution-target fallbacks**
+  (log as events)
+- **No per-model prompt tailoring** - invalidates H1
+- Configs YAML, hashed into manifests; no magic numbers in code
+
+Tooling:
+- Python **3.11+**, full type hints, **ruff + mypy** clean, **pytest** for
+  non-hardware logic
+
+Milestone gates:
+- M1 is **ACCEPTED** (`a3d2323`, citing `fb5cd2d5`). Topology mapping is
+  committed.
+- Do **not** start M2 telemetry / LHM / RAPL until the governance pass lands
+  elevation requirements in the Phase -1 spec and a battery-pinned profile
+  is defined
+- Work M0->M1->M2->... in order; show evidence before advancing
+- From M2 onward, agreement and acceptance criteria are **pre-registered
+  before data collection** for that milestone (M1 AM-012/AM-013 are the
+  worked example of the cost)
+- Amendments to pre-registered gates require `AMENDMENTS.md` + owner
+  authorization (see AM-004)
 
 ## Measurement hygiene (why runs refuse)
 
@@ -106,12 +161,43 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-- Plan of record: docs/EXPERIMENT_REGISTRY.md. Read at session start; update in the same commit as the work. Never delete a row.
+As of 2026-10-14. Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+session start; update it in the same commit as the work. Never delete a row.
+
 - Key sealed results: placement 21.4x (GPU 10000 vs CPU 468 tokens;
   c2246b1f, 7f232f86); resident-session limits f16/u8/u4 = 15000/20000/
   26500 (553b3a5c, cf3555d5, e4a22dac); warm turn-2 at 12k f16 0.639 s vs
   u8 1.003 s vs u4 0.946 s (72776603, 1587d2f4, dd2b0779); int8 decodes
   ~30-34% slower than int4 (180dfbb9); P0-v2 exchange rate ac4e5472
   (warm TTA GPU 2.47/3.26 s, CPU 9.29/11.17 s at 4k/6k).
-- P1 budget-quality: docs/EXPERIMENT_REGISTRY.md.
-- T2S window: Fri Oct 2 1 am ET to Tue Oct 6; back to Rithwik Wed.
+- DEMO-1 (prereg v2, scored, analysis/demo1/):
+  - XPS V1 f7343708: MATCH x3.
+  - XPS V4 a678926e: MISS x3 (local 0.673, $0.184/task, 9 escalations).
+  - T2S V1 b026f3fd: MATCH x3.
+  - T2S V3 a4284ab0: MISS x3 (local 0.891, $0.0958/task, 5 escalations).
+  - T2S V4 30caa847: MATCH x3 (local 0.982, $0.0129/task). f7de976b is
+    cited for local share only: its cloud cost was not measured.
+  - The trigger stays step 0 of each user turn; a per-step trigger is row
+    PER-STEP-SLO.
+  - V5 not run (addendum rule).
+  - V5-CAL (a178e9c5, e1ed06b4): delta prefill at D ~8.5k is slower than a
+    cold prefill of the full prompt on the XPS.
+- NPU:
+  - F1 verdict FA (natstop_f1_b172b287). NPU-1-CW planned.
+  - NPU-INT8 1024 (1e79daa3: TOOLCHAIN_CAP 960) and 4096 (63d35555:
+    LATENCY 2048) are recorded, not citable: their content check ran before
+    the fix (d300223).
+  - 2048: REFUSED twice (0fd9cd8c, 4f6a9102) plus VOID e8a27848. 8192:
+    REFUSED (evidence not yet sealed).
+  - The next guarded NPU session runs under amendment 2026-10-14 (canary
+    state, 3367974).
+  - Canary diagnosis: analysis/canary/CANARY_DRIFT_20261014.md.
+- P1 budget-quality:
+  - Sealed A0 8a529053: 23/200 in budget.
+  - Sweep B=10 (CROSSING_B10_20261014.json): A0 bdc32a87 14 vs A4
+    a766bd0b + 78dbf4c3 13. No crossing; floor and close fraction MISS.
+  - Next: B=20, per amendment 9.
+- T2S window 1 ended 2026-10-14; window 2 is Oct 19-25. The T2S is not
+  rebooted (UNCOLD_UPTIME deviation).
+- DEMO-1 cloud spend so far: about $4.40 (V4 XPS $2.77, V3 T2S $1.44,
+  V4 T2S rerun $0.19, pings).
