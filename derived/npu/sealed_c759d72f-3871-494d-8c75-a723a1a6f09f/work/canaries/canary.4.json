@@ -1,0 +1,377 @@
+{
+  "cell": {
+    "arm_id": "gpu_only_f16",
+    "cache_retention": null,
+    "classification": "OTHER",
+    "compile_error": null,
+    "compile_ok": true,
+    "delta": 400,
+    "device_config": {
+      "arm_id": "gpu_only_f16",
+      "arm_properties": {
+        "KV_CACHE_PRECISION": "f16"
+      },
+      "cpu_properties": {
+        "ENABLE_CPU_PINNING": true,
+        "INFERENCE_NUM_THREADS": 4,
+        "SCHEDULING_CORE_TYPE": "PCORE_ONLY"
+      },
+      "generate_device": "GPU",
+      "label": "gpu only (KV_CACHE_PRECISION=f16)",
+      "load_sequence": [
+        {
+          "device": "GPU",
+          "properties": {
+            "KV_CACHE_PRECISION": "f16"
+          }
+        }
+      ]
+    },
+    "diagnostics": {
+      "chat_api": {
+        "apply_chat_template_default": true,
+        "deprecation_warnings_on_inspect": [],
+        "finish_chat_doc": "finish_chat(self: openvino_genai.py_openvino_genai.LLMPipeline) -> None",
+        "genai_version": "2026.2.1.0-3123-7dea0459b2a",
+        "has_ChatHistory": true,
+        "has_finish_chat": true,
+        "has_start_chat": true,
+        "note": "openvino_genai 2026.2.1 deprecates start_chat/finish_chat in favour of generate(ChatHistory); this diagnostic still uses start_chat/finish_chat.",
+        "ok": true,
+        "ov_version": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+        "start_chat_doc": "start_chat(self: openvino_genai.py_openvino_genai.LLMPipeline, system_message: str = '') -> None"
+      },
+      "config_path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\configs\\delta_n.yaml",
+      "context_field_errors": {
+        "is_interactive": "GetUserObjectInformationW(UOI_FLAGS) size query returned 0, GetLastError=0"
+      },
+      "ir_sha256": "f7d323d0eb94a6bc9a1bf807416877cbb988cfbd95e7f9ef12403951b90886ae",
+      "loads": [
+        {
+          "device": "GPU",
+          "kv_cache_precision": {
+            "enforced": true,
+            "failure_mode": null,
+            "match": true,
+            "readback": {
+              "device": "GPU",
+              "error": null,
+              "normalized": "f16",
+              "ok": true,
+              "property": "KV_CACHE_PRECISION",
+              "raw": "<Type: 'float16'>",
+              "to_string": "f16"
+            },
+            "requested": "f16"
+          },
+          "ok": true,
+          "properties": {
+            "KV_CACHE_PRECISION": "f16"
+          }
+        }
+      ],
+      "model_spec": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int8-ov.yaml",
+      "pipeline_construction": {
+        "class": "LLMPipeline",
+        "note": "plain LLMPipeline (corpus path); no SchedulerConfig passed",
+        "scheduler_config_explicit": false,
+        "use_cache_eviction": null
+      },
+      "prompt_meta_turn1": {
+        "chars": 17995,
+        "n_tokens_realized": 4000,
+        "n_tokens_requested": 4000,
+        "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt",
+        "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3"
+      },
+      "prompt_meta_turn2": {
+        "chars": 1795,
+        "n_tokens_realized": 400,
+        "n_tokens_requested": 400,
+        "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt",
+        "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498"
+      },
+      "prompt_mode": "ladder_exact",
+      "traceback": null,
+      "working_set_lock": {
+        "after": {
+          "flags": 9,
+          "hard_min_enabled": true,
+          "maximum_bytes": 12884901888,
+          "minimum_bytes": 4294967296,
+          "read": true
+        },
+        "before": {
+          "flags": 9,
+          "hard_min_enabled": true,
+          "maximum_bytes": 12884901888,
+          "minimum_bytes": 4294967296,
+          "read": true
+        },
+        "call": "SetProcessWorkingSetSizeEx",
+        "flags": 1,
+        "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+        "granted": true,
+        "last_error": 0,
+        "privilege": {
+          "attempted": true,
+          "granted": true,
+          "last_error": 0,
+          "last_error_meaning": "ERROR_SUCCESS",
+          "privilege": "SeIncreaseWorkingSetPrivilege",
+          "step": "AdjustTokenPrivileges"
+        },
+        "requested": true,
+        "requested_maximum_bytes": 12884901888,
+        "requested_minimum_bytes": 4294967296,
+        "returned": true
+      }
+    },
+    "environment_peak": {
+      "available_mb": 26593.0,
+      "available_mb_method": "win32pdh:Memory/Available MBytes",
+      "available_mb_source": "at_rss_peak_hotter_turn",
+      "committed_mb": 38925.0859375,
+      "pool_nonpaged_mb": 671.58203125,
+      "pool_paged_mb": 406.20703125,
+      "probe_error": null,
+      "process_count": 88,
+      "sum_private_mb": 12777.63671875,
+      "tier2_private_mb": 0.0,
+      "tier2_processes": [],
+      "uptime_s": 15209.218108415604
+    },
+    "environment_start": {
+      "available_mb": 39548.0,
+      "available_mb_method": "win32pdh:Memory/Available MBytes",
+      "committed_mb": 25362.98828125,
+      "pool_nonpaged_mb": 654.796875,
+      "pool_paged_mb": 402.3046875,
+      "probe_error": null,
+      "process_count": 88,
+      "sum_private_mb": 12054.7109375,
+      "tier2_private_mb": 0.0,
+      "tier2_processes": [],
+      "uptime_s": 15206.924127578735
+    },
+    "execute_error": "RuntimeError: Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.\n\n\n",
+    "execute_ok": false,
+    "hostname": "EVO-T2S",
+    "is_interactive": null,
+    "kind": "delta_prefill_cell",
+    "kv_bytes_expected_turn1": 589824000.0,
+    "kv_bytes_expected_turn2": 58982400.0,
+    "kv_bytes_per_token": 147456.0,
+    "kv_cache_precision_readback": [
+      {
+        "enforced": true,
+        "failure_mode": null,
+        "match": true,
+        "readback": {
+          "device": "GPU",
+          "error": null,
+          "normalized": "f16",
+          "ok": true,
+          "property": "KV_CACHE_PRECISION",
+          "raw": "<Type: 'float16'>",
+          "to_string": "f16"
+        },
+        "requested": "f16"
+      }
+    ],
+    "launch_context": "ttft_slo_canary",
+    "max_new_tokens": 64,
+    "mode": "RESIDENT",
+    "model_id": "Qwen3-4B-int8-ov",
+    "n_cached": 4000,
+    "ov_version": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+    "path_head": [
+      "C:\\Program Files\\OpenSSH\\",
+      "C:\\windows\\system32",
+      "C:\\windows",
+      "C:\\windows\\System32\\Wbem",
+      "C:\\windows\\System32\\WindowsPowerShell\\v1.0\\",
+      "C:\\windows\\System32\\OpenSSH\\"
+    ],
+    "pipeline_type": "llm",
+    "power_request": {
+      "clear_last_error": 0,
+      "cleared": true,
+      "close_last_error": 0,
+      "closed": true,
+      "create_last_error": null,
+      "created": true,
+      "error": null,
+      "handle_repr": "0x3f8c",
+      "mechanism": "PowerCreateRequest/PowerSetRequest",
+      "platform": "Windows",
+      "reason": "SEAM delta_prefill; PowerRequestSystemRequired for compile+generate",
+      "request_type": "PowerRequestSystemRequired",
+      "request_type_id": 1,
+      "role": "delta_prefill",
+      "set": true,
+      "set_last_error": 0,
+      "succeeded": true
+    },
+    "process_id": 6424,
+    "python_exe": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\.venv-seam\\Scripts\\python.exe",
+    "python_version": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+    "session_id": 0,
+    "timestamp_utc": "2026-10-14T16:42:35.066216+00:00",
+    "turn1": {
+      "decode_tok_s": null,
+      "end_ws_bytes": 16670859264,
+      "error": "RuntimeError: Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.\n\n\n",
+      "kv_bytes_expected": 589824000.0,
+      "ok": false,
+      "peak_ws_bytes": 16670879744,
+      "prefill_s": null,
+      "prompt_tokens_reported": null,
+      "prompt_tokens_requested": 4000,
+      "role": "turn1_n_cached",
+      "rss_window": {
+        "available_mb_at_peak": 26593.0,
+        "available_mb_min": 26580.0,
+        "available_mb_start": 39548.0,
+        "commit_bytes_end": 12285845504,
+        "commit_bytes_start": 11527503872,
+        "free_memory_mb_end": 26593.0,
+        "free_memory_mb_min": 26579.54296875,
+        "free_memory_mb_start": 39548.12109375,
+        "free_physical_mb_at_peak": 26593.0,
+        "free_physical_mb_min": 26579.79296875,
+        "free_physical_mb_start": 39548.12109375,
+        "n_rss_samples": 16,
+        "peak_commit_bytes": 12285845504,
+        "peak_rss_bytes": 16670879744,
+        "rss_bytes_end": 16670879744,
+        "rss_bytes_start": 16536678400,
+        "rss_interval_s": 0.05,
+        "rss_sampler_overhead_s": 0.0025704
+      },
+      "text_head": null,
+      "tokens_generated": null,
+      "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\tools\\smoke_delta_prefill.py\", line 288, in _run_generate\n    result = pipe.generate([prompt], gen_cfg, streamer)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.\n\n\n\n",
+      "ttft_ns": null,
+      "ttft_ns_perf_metrics": null,
+      "ttft_ns_streamer": null,
+      "ttft_source": null,
+      "wall_ns": 2276105200,
+      "wall_s": 2.2761052
+    },
+    "turn2": null,
+    "turn2_prompt_tokens": 400,
+    "window_station": "Service-0x0-13baaac$",
+    "wslock_granted": true
+  },
+  "record": {
+    "after_probe_count": 5,
+    "arm_id": "gpu_only_f16",
+    "available_mb_start": 39548.0,
+    "canary_index": 4,
+    "classification": "OTHER",
+    "delta": 400,
+    "discarded_from_calibration": false,
+    "drift_tripped": true,
+    "execute_error": "RuntimeError: Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.\n\n\n",
+    "execute_ok": false,
+    "gate_armed": true,
+    "is_canary": true,
+    "mode": "RESIDENT",
+    "n_cached": 4000,
+    "power": {
+      "battery_present": false,
+      "battery_status_values": null,
+      "estimated_charge_remaining_pct": null,
+      "note": "no_battery_mains_only_assume_ac",
+      "on_ac": true,
+      "probe_error": null
+    },
+    "power_transition": {
+      "action": "pass_no_battery",
+      "current_on_ac": true,
+      "note": "no_battery_mains_only_assume_ac",
+      "ok": true,
+      "previous_on_ac": true
+    },
+    "raw_classification": "OTHER",
+    "rel_drift_t1": null,
+    "rel_drift_t2": null,
+    "telemetry": {
+      "cpu_clock": {
+        "current_mhz": 1900.0,
+        "max_mhz": 1900.0,
+        "min_mhz": 0.0
+      },
+      "gpu_clock": {
+        "error": "not read: no portable GPU clock reader on openvino-genai 2026.2.1 hosts"
+      },
+      "memory": {
+        "available_mb": 43467.44140625,
+        "total_mb": 65018.0
+      },
+      "power_plan": {
+        "returncode": 0,
+        "text": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+      },
+      "processes": {
+        "added_since_previous": {},
+        "count": 88,
+        "names": {
+          "?": 1,
+          "LogonUI.exe": 1,
+          "LsaIso.exe": 1,
+          "MSPCManagerService.exe": 1,
+          "MicrosoftEdgeUpdate.exe": 1,
+          "MpDefenderCoreService.exe": 1,
+          "MsMpEng.exe": 1,
+          "NisSrv.exe": 1,
+          "Registry": 1,
+          "System": 1,
+          "System Idle Process": 1,
+          "WMIRegistrationService.exe": 1,
+          "WindowsService.exe": 1,
+          "WmiPrvSE.exe": 1,
+          "cmd.exe": 1,
+          "conhost.exe": 1,
+          "csrss.exe": 2,
+          "dasHost.exe": 1,
+          "dwm.exe": 1,
+          "fontdrvhost.exe": 2,
+          "lsass.exe": 1,
+          "powershell.exe": 1,
+          "python.exe": 2,
+          "services.exe": 1,
+          "smss.exe": 1,
+          "ssh-agent.exe": 1,
+          "sshd.exe": 1,
+          "svchost.exe": 53,
+          "tailscaled.exe": 2,
+          "wininit.exe": 1,
+          "winlogon.exe": 1,
+          "wlanext.exe": 1
+        },
+        "removed_since_previous": {
+          "conhost.exe": 1,
+          "powershell.exe": 2,
+          "sshd-session.exe": 2
+        }
+      }
+    },
+    "threshold_t1": 0.10891817982071463,
+    "threshold_t2": 0.1642942216508742,
+    "trip_detail": "canary classification='OTHER' (no usable turn1/turn2 after gate armed)",
+    "turn1_prefill_s": null,
+    "turn2_prefill_s": null,
+    "utc": "2026-10-14T16:42:44.762154+00:00",
+    "warmup": false,
+    "workloads_session_host": {
+      "CPU_s": [],
+      "WS_MB": [],
+      "instance_count": 0,
+      "pids": [],
+      "process": "WorkloadsSessionHost",
+      "read_errors": []
+    }
+  }
+}
