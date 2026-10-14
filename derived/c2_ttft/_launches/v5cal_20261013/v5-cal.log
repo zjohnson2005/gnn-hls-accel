@@ -1,0 +1,110 @@
+json_ok
+boot4_estimate_sum_s=2933 window_s=7200 fits_one_window=true
+smoke_run C:\Users\zjohn\Projects\gnn-hls-accel\.venv-seam\Scripts\python.exe -u C:\Users\zjohn\Projects\gnn-hls-accel\tools\run_warm_kv.py --smoke --arm gpu_only_u8 --model-spec C:\Users\zjohn\Projects\gnn-hls-accel\configs\models\Qwen3-4B-int4-ov.yaml --turn2-path user_followup --record-prefix
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "smoke", "ts": "2026-10-13T22:58:20.844793+00:00", "wall_s": 7.64}
+{"arm": "gpu_only_u8", "common_prefix_tokens": 58, "delta_tokens": 8, "event": "warm_smoke", "failure_mode": null, "measured_delta_tokens": 19, "n_cached": 64, "outcome": "pass", "turn1_prefill_s": 0.477650695, "turn1_prompt_tokens": 64, "turn2_path": "user_followup", "turn2_prefill_s": 0.120291206, "turn2_prompt_tokens": 77}
+smoke_run C:\Users\zjohn\Projects\gnn-hls-accel\.venv-seam\Scripts\python.exe -u C:\Users\zjohn\Projects\gnn-hls-accel\tools\run_warm_kv.py --smoke --arm gpu_only_u4 --model-spec C:\Users\zjohn\Projects\gnn-hls-accel\configs\models\Qwen3-4B-int4-ov.yaml --turn2-path user_followup --record-prefix
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "smoke", "ts": "2026-10-13T22:58:26.051372+00:00", "wall_s": 5.02}
+{"arm": "gpu_only_u4", "common_prefix_tokens": 58, "delta_tokens": 8, "event": "warm_smoke", "failure_mode": null, "measured_delta_tokens": 19, "n_cached": 64, "outcome": "pass", "turn1_prefill_s": 0.470677581, "turn1_prompt_tokens": 64, "turn2_path": "user_followup", "turn2_prefill_s": 0.119497695, "turn2_prompt_tokens": 77}
+smoke_run C:\Users\zjohn\Projects\gnn-hls-accel\.venv-seam\Scripts\python.exe -u C:\Users\zjohn\Projects\gnn-hls-accel\tools\run_warm_kv.py --smoke --arm gpu_only_u8 --model-spec C:\Users\zjohn\Projects\gnn-hls-accel\configs\models\Qwen3-4B-int4-ov.yaml --turn2-path assistant_then_user --record-prefix
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "smoke", "ts": "2026-10-13T22:58:31.285223+00:00", "wall_s": 5.03}
+{"arm": "gpu_only_u8", "common_prefix_tokens": 60, "delta_tokens": 8, "event": "warm_smoke", "failure_mode": null, "measured_delta_tokens": 23, "n_cached": 64, "outcome": "pass", "turn1_prefill_s": 0.464854675, "turn1_prompt_tokens": 64, "turn2_path": "assistant_then_user", "turn2_prefill_s": 0.132809112, "turn2_prompt_tokens": 83}
+time_check V5-CAL u8: uptime_s=527 remaining_s=6673 estimate_s=1050
+tier1_clear
+
+=== preamble V5-CAL u8 ===
+WorkloadsSessionHost: cleared instances=4
+=== machine-lock / alive-worker check ===
+machine.lock: absent
+C:\Users\zjohn\Projects\gnn-hls-accel\.venv-seam\Scripts\python.exe -u C:\Users\zjohn\Projects\gnn-hls-accel\tools\run_warm_kv.py --arm gpu_only_u8 --model-spec C:\Users\zjohn\Projects\gnn-hls-accel\configs\models\Qwen3-4B-int4-ov.yaml --n-cached 2200,3320,4080,6290,7380 --delta-tokens 8500 --turn2-path user_followup --record-prefix
+warm_kv arm=gpu_only_u8 n_cached=2200,3320,4080,6290,7380 delta=8500 path=user_followup session=a178e9c5-193e-4221-8f22-d4ffe0803749
+[c2_canary] index=0 after_probes=-1 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T22:58:48.203242+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T22:58:49.044430+00:00"}
+[c2_canary] index=1 after_probes=-1 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T22:59:04.683398+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T22:59:05.633057+00:00"}
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "n2200.a0", "ts": "2026-10-13T23:01:02.832452+00:00", "wall_s": 73.74}
+[c2_canary] index=2 after_probes=0 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T23:01:06.780550+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T23:01:07.618428+00:00"}
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "n3320.a0", "ts": "2026-10-13T23:03:33.232017+00:00", "wall_s": 102.27}
+[c2_canary] index=3 after_probes=1 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T23:03:37.270713+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T23:03:38.093415+00:00"}
+[c2_canary] gate ARMED: calib_n=3; ref_t1=2.600496 ref_t2=0.725757; early_max_rel_t1=0.035978 early_max_rel_t2=0.071459; threshold_t1=max(2*early_max_t1,healthy_floor_t1=0.07709453214145699)=0.077095; threshold_t2=max(2*early_max_t2,healthy_floor_t2=0.1642942216508742)=0.164294
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "n4080.a0", "ts": "2026-10-13T23:06:15.137406+00:00", "wall_s": 113.56}
+[c2_canary] index=4 after_probes=2 armed=True every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T23:06:19.353271+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T23:06:20.171883+00:00"}
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "n6290.a0", "ts": "2026-10-13T23:08:39.078809+00:00", "wall_s": 95.63}
+[c2_canary] index=5 after_probes=3 armed=True every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T23:08:43.200378+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T23:08:44.007849+00:00"}
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "n7380.a0", "ts": "2026-10-13T23:11:13.577791+00:00", "wall_s": 106.27}
+[c2_canary] index=6 after_probes=4 armed=True every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T23:11:17.791329+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T23:11:18.613953+00:00"}
+{"dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_prefill\\sealed_a178e9c5-193e-4221-8f22-d4ffe0803749", "event": "sealed"}
+json_ok
+time_check V5-CAL u4: uptime_s=1308 remaining_s=5892 estimate_s=1054
+tier1_clear
+
+=== preamble V5-CAL u4 ===
+WorkloadsSessionHost: none resident
+=== machine-lock / alive-worker check ===
+machine.lock: absent
+C:\Users\zjohn\Projects\gnn-hls-accel\.venv-seam\Scripts\python.exe -u C:\Users\zjohn\Projects\gnn-hls-accel\tools\run_warm_kv.py --arm gpu_only_u4 --model-spec C:\Users\zjohn\Projects\gnn-hls-accel\configs\models\Qwen3-4B-int4-ov.yaml --n-cached 2200,3320,4080,6290,7380 --delta-tokens 8500 --turn2-path user_followup --record-prefix
+warm_kv arm=gpu_only_u4 n_cached=2200,3320,4080,6290,7380 delta=8500 path=user_followup session=e1ed06b4-a2c2-4de2-b27b-b7b5e3190122
+[c2_canary] index=0 after_probes=-1 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T23:11:44.108764+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T23:11:44.959265+00:00"}
+[c2_canary] index=1 after_probes=-1 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T23:11:59.932579+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T23:12:00.896085+00:00"}
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "n2200.a0", "ts": "2026-10-13T23:13:42.105128+00:00", "wall_s": 57.88}
+[c2_canary] index=2 after_probes=0 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T23:13:46.165142+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T23:13:47.005189+00:00"}
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "n3320.a0", "ts": "2026-10-13T23:15:39.947840+00:00", "wall_s": 69.72}
+[c2_canary] index=3 after_probes=1 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T23:15:43.895083+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T23:15:44.712785+00:00"}
+[c2_canary] gate ARMED: calib_n=3; ref_t1=2.576781 ref_t2=0.702512; early_max_rel_t1=0.051386 early_max_rel_t2=0.011104; threshold_t1=max(2*early_max_t1,healthy_floor_t1=0.07709453214145699)=0.102771; threshold_t2=max(2*early_max_t2,healthy_floor_t2=0.1642942216508742)=0.164294
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "n4080.a0", "ts": "2026-10-13T23:17:45.791677+00:00", "wall_s": 77.61}
+[c2_canary] index=4 after_probes=2 armed=True every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T23:17:50.024974+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T23:17:50.847565+00:00"}
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "n6290.a0", "ts": "2026-10-13T23:20:17.389093+00:00", "wall_s": 103.14}
+[c2_canary] index=5 after_probes=3 armed=True every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T23:20:21.500644+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T23:20:22.308654+00:00"}
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "n7380.a0", "ts": "2026-10-13T23:23:00.901791+00:00", "wall_s": 115.32}
+[c2_canary] index=6 after_probes=4 armed=True every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T23:23:05.143465+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T23:23:05.967342+00:00"}
+{"dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_prefill\\sealed_e1ed06b4-a2c2-4de2-b27b-b7b5e3190122", "event": "sealed"}
+json_ok
+time_check V5-CAL u8 V5-path: uptime_s=2016 remaining_s=5184 estimate_s=829
+tier1_clear
+
+=== preamble V5-CAL u8 V5-path ===
+WorkloadsSessionHost: none resident
+=== machine-lock / alive-worker check ===
+machine.lock: absent
+C:\Users\zjohn\Projects\gnn-hls-accel\.venv-seam\Scripts\python.exe -u C:\Users\zjohn\Projects\gnn-hls-accel\tools\run_warm_kv.py --arm gpu_only_u8 --model-spec C:\Users\zjohn\Projects\gnn-hls-accel\configs\models\Qwen3-4B-int4-ov.yaml --n-cached 4080 --delta-tokens 8500 --turn2-path assistant_then_user --record-prefix
+warm_kv arm=gpu_only_u8 n_cached=4080 delta=8500 path=assistant_then_user session=15993163-d636-4008-beb7-869221a59a85
+[c2_canary] index=0 after_probes=-1 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T23:23:31.483406+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T23:23:32.319206+00:00"}
+[c2_canary] index=1 after_probes=-1 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T23:23:47.661556+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T23:23:48.625766+00:00"}
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "n4080.a0", "ts": "2026-10-13T23:26:17.516042+00:00", "wall_s": 105.52}
+[c2_canary] index=2 after_probes=0 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-13T23:26:21.626975+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-13T23:26:22.460282+00:00"}
+REFUSED -- canary gate armed==false; refuse to seal without -AllowUnguarded / --allow-unguarded (would write UNGUARDED into summary and seal)
+json_ok
+json_ok
+json_ok
