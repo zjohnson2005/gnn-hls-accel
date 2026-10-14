@@ -65,3 +65,36 @@ before any "first" claim. Do not strengthen a verdict without a new dated sectio
 - Allowed wording: quote 35.25% and 34% only with this TO CONFIRM mark until the URL is recorded.
 - Forbidden wording: citing those percentages as a confirmed published source.
 - Citations: source URL NOT YET RECORDED.
+
+## DEMO-2 default-control runtime settings
+
+- Claim: the "default hybrid" control uses runtime defaults: a 4096-token
+  context window, OpenVINO GenAI default KV precision, backend and device.
+- Date searched: 2026-10-14
+- Verdict: PARTLY CONFIRMED (per item below).
+- Findings:
+  - 4096 window: CONFIRMED. Ollama FAQ (https://docs.ollama.com/faq): "By
+    default, Ollama uses a context window size of 4096 tokens." Third-party
+    guides and the Open WebUI docs note older builds used 2048.
+  - GPU KV precision: CONFIRMED for 2025.1 only. OpenVINO 2025.1 release
+    notes
+    (https://www.intel.com/content/www/us/en/developer/articles/release-notes/openvino/2025-1.html):
+    "Int8 compressed KV-cache is enabled for LLMs by default on all GPU
+    platforms." The OpenVINO nightly Optimum Intel page, as summarized by
+    search, says GPU KV quantization is default only on platforms without
+    XMX. That conflicts, and the page text was not read. The default on
+    2026.2.1 (our runtime) is NOT CONFIRMED; it must be read back on the
+    host.
+  - LLMPipeline backend: CONFIRMED for 2025.1 ("LLMPipeline now uses Paged
+    Attention backend by default.", same release notes).
+  - Prefix caching default for LLMPipeline: NOT FOUND. The SchedulerConfig
+    docs describe enable_prefix_caching without a default in the text read;
+    the OVMS docs give false for the server, which is not LLMPipeline.
+  - Default device: CONFIRMED for the GenAI chat sample
+    (openvino.genai samples/python/text_generation/chat_sample.py, master):
+    `parser.add_argument("device", nargs="?", default="CPU", ...)`.
+- Allowed wording: "Ollama's default 4096-token window"; "the GenAI chat
+  sample's default device (CPU)"; "int8 KV by default on GPU as of OpenVINO
+  2025.1".
+- Forbidden wording: "the OpenVINO 2026.2 GPU default is int8 KV" and any
+  claim about the default prefix-caching state, until read back on the host.
