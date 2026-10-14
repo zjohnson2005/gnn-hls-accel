@@ -47,6 +47,14 @@ CELLS = {
         "run": "slo_escalate_f7de976b-4cad-471f-abd3-c2ff7a0b439b",
         "atlas": "multi_turn_long_context_OBS_MASK_K1024",
     },
+    # V4 T2S rerun (approved 2026-10-14): same cell; f7de976b's only cloud
+    # turn was dead, so its cloud cost was not measured.
+    "V4_t2s_gpu_4b_u8_rerun": {
+        "cell": "V4",
+        "config": "t2s_gpu_4b_u8",
+        "run": "slo_escalate_30caa847-d97a-4e4b-aa22-f152b95d08e9",
+        "atlas": "multi_turn_long_context_OBS_MASK_K1024",
+    },
     "V3_t2s_gpu_4b_u8": {
         "cell": "V3",
         "config": "t2s_gpu_4b_u8",
@@ -57,6 +65,7 @@ CELLS = {
 GROUPS = {
     "xps": ("V1_xps_gpu_4b_u8", "V4_xps_gpu_4b_u8"),
     "t2s": ("V1_t2s_gpu_4b_u8", "V4_t2s_gpu_4b_u8", "V3_t2s_gpu_4b_u8"),
+    "v4_pair": ("V4_xps_gpu_4b_u8", "V4_t2s_gpu_4b_u8_rerun"),
 }
 
 

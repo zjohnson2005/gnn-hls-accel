@@ -595,3 +595,20 @@ def test_t2s_scores() -> None:
     assert len(v3["gold_jump_entries_not_escalated"]) == 10
     for key, cell in doc["cells"].items():
         assert score_demo1_cells.score_cell(key) == cell
+
+
+SCORES_V4_PAIR = ROOT / "analysis" / "demo1" / "SCORE_V4_PAIR_20261014.json"
+
+
+def test_v4_pair_scores() -> None:
+    from tools import score_demo1_cells
+
+    doc = json.loads(SCORES_V4_PAIR.read_text(encoding="utf-8"))
+    t2s = doc["cells"]["V4_t2s_gpu_4b_u8_rerun"]
+    assert t2s["run_id"].startswith("slo_escalate_30caa847")
+    assert set(t2s["verdict"].values()) == {"MATCH"}
+    assert t2s["measured"]["usd"] == 0.1931 and t2s["measured"]["escalations_ttft"] == 1
+    assert t2s["measured"]["n_hybrid_pass"] == 2
+    assert set(doc["cells"]["V4_xps_gpu_4b_u8"]["verdict"].values()) == {"MISS"}
+    for key, cell in doc["cells"].items():
+        assert score_demo1_cells.score_cell(key) == cell

@@ -1,0 +1,135 @@
+{
+  "all_passed": true,
+  "gates": [
+    {
+      "detail": {
+        "ac_ok": true,
+        "battery_present": false,
+        "recorded_reason": "platform power.has_battery is false; mains-only; Win32_Battery was not consulted"
+      },
+      "name": "ac",
+      "passed": true,
+      "reason": "no_battery_platform_mains_only"
+    },
+    {
+      "detail": {
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "required_ac_max": 100,
+        "required_ac_min": 100,
+        "scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+        "scheme_name": "High performance",
+        "scheme_text": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+      },
+      "name": "processor_ac",
+      "passed": true,
+      "reason": "processor_ac_100_100"
+    },
+    {
+      "detail": {
+        "citation": "DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate ~36\u201340 GB => Available target ~24\u201328 GB; floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.",
+        "floor_mb": 24000.0,
+        "observed_mb": 59049.0
+      },
+      "name": "available_mb",
+      "passed": true,
+      "reason": "available_mb_ok"
+    },
+    {
+      "detail": {
+        "citation": "CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.",
+        "deviation": {
+          "kind": "UNCOLD_UPTIME",
+          "reason": "remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access",
+          "uptime_s": 1937290.5992295742
+        },
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 1937290.5992295742
+      },
+      "name": "uptime",
+      "passed": true,
+      "reason": "uptime_skipped_noreboot_deviation"
+    },
+    {
+      "detail": {
+        "onset_citation": "UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed. Sessions on this platform must record onset_status=unknown in run_environment.",
+        "onset_s": null,
+        "onset_status": "unknown",
+        "seal_note": "platform onset_s is unknown; recorded in run_environment; canary N must not assume aipc-c1's 657 s"
+      },
+      "name": "onset",
+      "passed": true,
+      "reason": "onset_unknown"
+    },
+    {
+      "detail": {
+        "resident": []
+      },
+      "name": "tier1_processes",
+      "passed": true,
+      "reason": "tier1_clear"
+    }
+  ],
+  "platform_id": "evo-t2",
+  "refusal_reasons": [],
+  "run_environment_fields": {
+    "measurement_gates": {
+      "ac": {
+        "detail": {
+          "ac_ok": true,
+          "battery_present": false,
+          "recorded_reason": "platform power.has_battery is false; mains-only; Win32_Battery was not consulted"
+        },
+        "passed": true,
+        "reason": "no_battery_platform_mains_only"
+      },
+      "all_passed": true,
+      "available_mb": {
+        "citation": "DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate ~36\u201340 GB => Available target ~24\u201328 GB; floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.",
+        "floor_mb": 24000.0,
+        "observed_mb": 59049.0,
+        "passed": true
+      },
+      "onset_citation": "UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed. Sessions on this platform must record onset_status=unknown in run_environment.",
+      "onset_s": null,
+      "onset_seal_note": "platform onset_s is unknown; recorded in run_environment; canary N must not assume aipc-c1's 657 s",
+      "onset_status": "unknown",
+      "platform_id": "evo-t2",
+      "processor_ac": {
+        "passed": true,
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "reason": "processor_ac_100_100",
+        "scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+        "scheme_name": "High performance"
+      },
+      "tier1_processes": {
+        "passed": true,
+        "reason": "tier1_clear",
+        "resident": []
+      },
+      "uptime": {
+        "citation": "CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.",
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 1937290.5992295742,
+        "passed": true
+      },
+      "workloads_session_host": {
+        "CPU_s": [],
+        "WS_MB": [],
+        "instance_count": 0,
+        "pids": [],
+        "process": "WorkloadsSessionHost",
+        "read_errors": []
+      }
+    }
+  },
+  "workloads_session_host": {
+    "CPU_s": [],
+    "WS_MB": [],
+    "instance_count": 0,
+    "pids": [],
+    "process": "WorkloadsSessionHost",
+    "read_errors": []
+  }
+}

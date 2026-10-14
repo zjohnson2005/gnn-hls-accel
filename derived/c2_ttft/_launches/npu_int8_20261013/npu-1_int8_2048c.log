@@ -1,0 +1,178 @@
+npu_setting max_prompt_len=1024 estimate_s=666
+npu_setting max_prompt_len=2048 estimate_s=1238
+npu_setting max_prompt_len=4096 estimate_s=2490
+npu_setting max_prompt_len=8192 estimate_s=5234
+npu_ladder_sum_s=9628 fits_one_session=False tail_start=16384
+platform_id=evo-t2 config=configs/platforms/evo-t2.yaml
+watchdog_log=C:\apu\ovn\watchdog.log
+free_memory_floor_mb=24000 provenance=derived_unmeasured CAP-4-class peak on 64 GB; floor keeps Available at or above 24000 MB
+canary=must_arm UNGUARDED=false
+npu_cells=NPU-INT8 MAX_PROMPT_LEN=2048
+deviation kind=UNCOLD_UPTIME uptime_s=1937328 reason=remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access
+uptime_gate=skipped other_gates=enforced watchdog=enforced machine_lock=enforced canary=must_arm
+battery_present=false ac=pass reason=platform power.has_battery is false (evo-t2 mains-only)
+json_ok
+time_check NPU-INT8 MAX_PROMPT_LEN=2048: uptime_s=1937329 remaining_s=-1930129 estimate_s=2016
+uptime_gate=skipped deviation=UNCOLD_UPTIME uptime_s=1937329
+battery_present=false ac=pass reason=platform power.has_battery is false (evo-t2 mains-only)
+tier1_clear
+
+=== preamble NPU-INT8 MAX_PROMPT_LEN=2048 ===
+WorkloadsSessionHost: none resident
+{
+  "all_passed": true,
+  "gates": [
+    {
+      "detail": {
+        "ac_ok": true,
+        "battery_present": false,
+        "recorded_reason": "platform power.has_battery is false; mains-only; Win32_Battery was not consulted"
+      },
+      "name": "ac",
+      "passed": true,
+      "reason": "no_battery_platform_mains_only"
+    },
+    {
+      "detail": {
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "required_ac_max": 100,
+        "required_ac_min": 100,
+        "scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+        "scheme_name": "High performance",
+        "scheme_text": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+      },
+      "name": "processor_ac",
+      "passed": true,
+      "reason": "processor_ac_100_100"
+    },
+    {
+      "detail": {
+        "citation": "DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate ~36\u201340 GB => Available target ~24\u201328 GB; floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.",
+        "floor_mb": 24000.0,
+        "observed_mb": 59049.0
+      },
+      "name": "available_mb",
+      "passed": true,
+      "reason": "available_mb_ok"
+    },
+    {
+      "detail": {
+        "citation": "CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.",
+        "deviation": {
+          "kind": "UNCOLD_UPTIME",
+          "reason": "remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access",
+          "uptime_s": 1937290.5992295742
+        },
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 1937290.5992295742
+      },
+      "name": "uptime",
+      "passed": true,
+      "reason": "uptime_skipped_noreboot_deviation"
+    },
+    {
+      "detail": {
+        "onset_citation": "UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed. Sessions on this platform must record onset_status=unknown in run_environment.",
+        "onset_s": null,
+        "onset_status": "unknown",
+        "seal_note": "platform onset_s is unknown; recorded in run_environment; canary N must not assume aipc-c1's 657 s"
+      },
+      "name": "onset",
+      "passed": true,
+      "reason": "onset_unknown"
+    },
+    {
+      "detail": {
+        "resident": []
+      },
+      "name": "tier1_processes",
+      "passed": true,
+      "reason": "tier1_clear"
+    }
+  ],
+  "platform_id": "evo-t2",
+  "refusal_reasons": [],
+  "run_environment_fields": {
+    "measurement_gates": {
+      "ac": {
+        "detail": {
+          "ac_ok": true,
+          "battery_present": false,
+          "recorded_reason": "platform power.has_battery is false; mains-only; Win32_Battery was not consulted"
+        },
+        "passed": true,
+        "reason": "no_battery_platform_mains_only"
+      },
+      "all_passed": true,
+      "available_mb": {
+        "citation": "DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate ~36\u201340 GB => Available target ~24\u201328 GB; floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.",
+        "floor_mb": 24000.0,
+        "observed_mb": 59049.0,
+        "passed": true
+      },
+      "onset_citation": "UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed. Sessions on this platform must record onset_status=unknown in run_environment.",
+      "onset_s": null,
+      "onset_seal_note": "platform onset_s is unknown; recorded in run_environment; canary N must not assume aipc-c1's 657 s",
+      "onset_status": "unknown",
+      "platform_id": "evo-t2",
+      "processor_ac": {
+        "passed": true,
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "reason": "processor_ac_100_100",
+        "scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+        "scheme_name": "High performance"
+      },
+      "tier1_processes": {
+        "passed": true,
+        "reason": "tier1_clear",
+        "resident": []
+      },
+      "uptime": {
+        "citation": "CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.",
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 1937290.5992295742,
+        "passed": true
+      },
+      "workloads_session_host": {
+        "CPU_s": [],
+        "WS_MB": [],
+        "instance_count": 0,
+        "pids": [],
+        "process": "WorkloadsSessionHost",
+        "read_errors": []
+      }
+    }
+  },
+  "workloads_session_host": {
+    "CPU_s": [],
+    "WS_MB": [],
+    "instance_count": 0,
+    "pids": [],
+    "process": "WorkloadsSessionHost",
+    "read_errors": []
+  }
+}
+json_ok
+=== machine-lock / alive-worker check ===
+machine.lock: absent
+cell_invoke kind=npu
+[c2_canary] index=0 after_probes=-1 armed=False every_n=5 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-14T02:51:00.127339+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-14T02:51:01.216891+00:00"}
+[c2_canary] index=1 after_probes=-1 armed=False every_n=5 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-14T02:51:17.036136+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-14T02:51:18.044930+00:00"}
+[c2_canary] index=2 after_probes=-1 armed=False every_n=5 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-14T02:51:32.854774+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-14T02:51:33.730649+00:00"}
+[c2_canary] gate ARMED: calib_n=3; ref_t1=1.173169 ref_t2=0.497527; early_max_rel_t1=0.029311 early_max_rel_t2=0.025530; threshold_t1=max(2*early_max_t1,healthy_floor_t1=0.07709453214145699)=0.077095; threshold_t2=max(2*early_max_t2,healthy_floor_t2=0.1642942216508742)=0.164294
+[c2_canary] index=3 after_probes=4 armed=True every_n=5 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-14T02:58:28.872636+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-14T02:58:29.871143+00:00"}
+REFUSED -- FAIL_CANARY_DRIFT: turn2 rel_drift=0.569942 > threshold_t2=0.164294 (t2=0.781088867 ref=0.497527099)
+REFUSED -- canary drift: turn2 rel_drift=0.569942 > threshold_t2=0.164294 (t2=0.781088867 ref=0.497527099)
+json_ok
+json_ok
+json_ok
