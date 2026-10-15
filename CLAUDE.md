@@ -193,12 +193,13 @@ session start; update it in the same commit as the work. Never delete a row.
   - NPU-INT8 1024 (1e79daa3: TOOLCHAIN_CAP 960) and 4096 (63d35555:
     LATENCY 2048) are recorded, not citable: their content check ran before
     the fix (d300223).
-  - Citable limits: 1024 -> 960 (faa14a31), 2048 -> 1984 (9acabbf7).
-    Earlier 2048 attempts: REFUSED 0fd9cd8c and 4f6a9102, VOID e8a27848.
-    4096: REFUSED under both canary schedules (63d35555 is not citable;
-    0965a50b REFUSED).
-  - Next guarded NPU sessions run under amendment 2026-10-14b (canary
-    cell in a child process; first two sessions also record in-process).
+  - Citable limits (all post-reboot): 1024 -> 960 (faa14a31),
+    2048 -> 1984 (9acabbf7, 2ffbd61c), 4096 -> 4032 TOOLCHAIN_CAP
+    (2972e8c4). P-INT8-d (decode < 1.0 tok/s) misses at every post-reboot
+    setting (1.03-1.08).
+  - Guarded NPU sessions run under amendment 2026-10-14b (canary cell in a
+    child process). Reading rule: 2048 C-confirmed, 4096 inconclusive
+    (child +3.3%); in-process dip recurred in both. Transition record off.
   - 8192: REFUSED twice, drift question unanswered. 3b36e9e4: t1 drift.
     c759d72f: canary CL_OUT_OF_RESOURCES (OTHER), then a teardown crash
     0xC0000409. 16384 load-only done (8850e64a).
