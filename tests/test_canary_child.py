@@ -165,7 +165,8 @@ def test_config_file() -> None:
     import yaml
 
     cfg = yaml.safe_load((ROOT / "configs" / "npu_canary_child.yaml").read_text(encoding="utf-8"))
-    assert cfg["inprocess_transition_record"] is True
+    # Off after the two transition sessions (2972e8c4, 2ffbd61c), per the amendment.
+    assert cfg["inprocess_transition_record"] is False
     assert cfg["child_timeout_s"] == 180
 
 
@@ -176,7 +177,7 @@ def test_guarded_envelope_session_uses_child_canary(monkeypatch, tmp_path) -> No
     assert code == 0, summary
     assert guard.kwargs["child_process"] is True
     assert guard.kwargs["child_timeout_s"] == 180.0
-    assert guard.kwargs["inprocess_transition"] is True
+    assert guard.kwargs["inprocess_transition"] is False
     assert plan["canary_child"]["amendment"].startswith("NPU amendment 2026-10-14b")
     assert "2026-10-14b" in plan["guard_schedule"]
 
