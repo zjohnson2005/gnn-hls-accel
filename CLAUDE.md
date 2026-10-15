@@ -175,7 +175,9 @@ session start; update it in the same commit as the work. Never delete a row.
   - XPS V1 f7343708: MATCH x3.
   - XPS V2 CPU 1acc8c58: local 0.0 and 30 escalations MATCH, $/task 0.297
     MISS (band 0.320-0.347); 22/30 hybrid passes vs V1's 3/30
-    (descriptive). V3a XPS running (launched about 1:25 PM ET 2026-10-14).
+    (descriptive).
+  - XPS V3 (71d33f7a + ab88f47f, one cell): MISS x3 (local 0.673, $0.308/task,
+    9 escalations). All v2 V cells are done.
   - XPS V4 a678926e: MISS x3 (local 0.673, $0.184/task, 9 escalations).
   - T2S V1 b026f3fd: MATCH x3.
   - T2S V3 a4284ab0: MISS x3 (local 0.891, $0.0958/task, 5 escalations).
@@ -213,6 +215,9 @@ session start; update it in the same commit as the work. Never delete a row.
   Update rebooted it at 08:29 AM ET 2026-10-14 (event 1074, MoUsoCoreWorker
   then TrustedInstaller, Upgrade (Planned)); same pattern 2026-09-21. ssh
   came back with no user logged in (tailscaled runs as a service at boot).
-- DEMO-1 cloud spend so far: about $13.30 (V4 XPS $2.77, V3 T2S $1.44,
-  V4 T2S rerun $0.19, V2 XPS $8.90, pings); V3a XPS in progress.
-- Knob-vs-upgrade table: analysis/demo1/KNOB_VS_UPGRADE_20261014.json.
+- DEMO-1 cloud spend total: about $17.92 (V4 XPS $2.77, V3 T2S $1.44,
+  V4 T2S rerun $0.19, V2 XPS $8.90, V3 XPS $4.62, pings).
+- Knob-vs-upgrade table: analysis/demo1/KNOB_VS_UPGRADE_20261014b.json
+  (placement, upgrade, retention rows).
+- DEMO-2: prereg registered (derived/h1_hybrid/demo2/DEMO2_PREREG_v1.json);
+  not run; host rehearsals next.

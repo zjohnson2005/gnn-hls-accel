@@ -1,0 +1,170 @@
+{
+  "arm_config": {
+    "kv": "u8",
+    "model": "Qwen3-4B-int4-ov",
+    "placement": "gpu_only",
+    "residency": "NON_RESIDENT",
+    "tier": "4B",
+    "weight": "int4"
+  },
+  "caching_policy": "none",
+  "chat_template": {
+    "enable_thinking": false,
+    "renderer": "tools.bfcl_feasibility_probe.render_bfcl_tools_style"
+  },
+  "cloud_model": "claude-sonnet-5",
+  "cloud_ping_worker": {
+    "anthropic_sdk_version": "0.120.2",
+    "api_key_present": true,
+    "error_class": null,
+    "http_status": 200,
+    "model": "claude-sonnet-5",
+    "note": "Ping cost is recorded here and is not charged to the policy or session caps.",
+    "ok": true,
+    "path": "cloud_ping_worker.json",
+    "ran": true,
+    "sha256": "9bd5a62b51171633a498d8fbe064d982e7582af84194ab50293d1038ec38c7ee",
+    "usd": 9.9e-05
+  },
+  "entry_assert": {
+    "mode": "caller_supplied",
+    "n": 7
+  },
+  "entry_pin": {
+    "category": "multi_turn_long_context",
+    "chunk": {
+      "count": 7,
+      "first_entry_id": "multi_turn_long_context_132",
+      "last_entry_id": "multi_turn_long_context_146",
+      "offset": 8
+    },
+    "n": 15,
+    "name": "DEMO1_PAIRED_15",
+    "path": "derived/h1_hybrid/demo1/DEMO1_PAIRED_15.json",
+    "seed": 20260930,
+    "sha256": "71faf5455559887cf0aa3c7a8317fab641b27c939b0643e501eeab5f63f9c080"
+  },
+  "generation_config": {
+    "apply_chat_template": false,
+    "do_sample": false,
+    "max_new_tokens": 512,
+    "seed": null,
+    "temperature": null,
+    "top_k": null,
+    "top_p": null
+  },
+  "git": {
+    "dirty": false,
+    "git_diff_head_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "git_head": "2258074553c7894f95e06ae1eaa29416ee4a7415",
+    "launch_evidence": {
+      "dir": "derived/h1_hybrid/_launches/ab88f47f-3067-4d79-bf1e-ce533ed41fd2",
+      "files": [
+        {
+          "bytes": 17288,
+          "path": "derived/h1_hybrid/_launches/ab88f47f-3067-4d79-bf1e-ce533ed41fd2/canary_opening/canaries/canary.0.json",
+          "sha256": "61fe8ee825063f2e9975cab8619d022bafbb25c3781cfee55f2e9f371363a473"
+        },
+        {
+          "bytes": 9506,
+          "path": "derived/h1_hybrid/_launches/ab88f47f-3067-4d79-bf1e-ce533ed41fd2/canary_opening/opening_plan.json",
+          "sha256": "8db640993b648afb7beea6b565e906fbec9c399d8c14afe3fe5653c20c1ff866"
+        },
+        {
+          "bytes": 1078,
+          "path": "derived/h1_hybrid/_launches/ab88f47f-3067-4d79-bf1e-ce533ed41fd2/cloud_ping.json",
+          "sha256": "fb9a6d7b4f7a610083686ac8d035e917e48924393825f7b45ca603f8bb884b10"
+        },
+        {
+          "bytes": 3982,
+          "path": "derived/h1_hybrid/_launches/ab88f47f-3067-4d79-bf1e-ce533ed41fd2/gates_20261014_144043.json",
+          "sha256": "9c187337db653529e1e265f522888532f6453daebd81bba57ecb15b9345c849a"
+        }
+      ]
+    },
+    "tree_status": "CLEAN"
+  },
+  "local_backend": "openvino",
+  "max_usd": 21.0,
+  "measurement_kind": "MEASURED",
+  "n_entries": 7,
+  "openvino": {
+    "arm_id": "gpu_only_u8",
+    "kv": "u8",
+    "load_meta": {
+      "device_config": {
+        "arm_id": "gpu_only_u8",
+        "generate_device": "GPU",
+        "label": "gpu only (KV_CACHE_PRECISION=u8)",
+        "load_sequence": [
+          {
+            "device": "GPU",
+            "properties": {
+              "KV_CACHE_PRECISION": "u8"
+            }
+          }
+        ]
+      },
+      "loads": [
+        {
+          "device": "GPU",
+          "kv_cache_precision": {
+            "enforced": true,
+            "failure_mode": null,
+            "match": true,
+            "readback": {
+              "device": "GPU",
+              "error": null,
+              "normalized": "u8",
+              "ok": true,
+              "property": "KV_CACHE_PRECISION",
+              "raw": "<Type: 'uint8_t'>",
+              "to_string": "u8"
+            },
+            "requested": "u8"
+          },
+          "properties": {
+            "KV_CACHE_PRECISION": "u8"
+          },
+          "scheduler_config": {
+            "enable_prefix_caching": false,
+            "source": "explicit_SchedulerConfig"
+          }
+        }
+      ],
+      "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+      "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+      "scheduler_config": {
+        "enable_prefix_caching": false,
+        "source": "explicit_SchedulerConfig"
+      }
+    },
+    "max_new_tokens": 512,
+    "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+    "prefix_block_clear": "ov_genai.LLMPipeline",
+    "residency": "NON_RESIDENT"
+  },
+  "platform_id": "aipc-c1",
+  "policy": "slo_escalate",
+  "resume_from_completed": [],
+  "retention": {
+    "arm": "FULL"
+  },
+  "run_id": "ab88f47f-3067-4d79-bf1e-ce533ed41fd2",
+  "scorer": {
+    "bfcl_eval_version": "2025.12.17",
+    "checker": "bfcl_eval.eval_checker.multi_turn_eval.multi_turn_checker",
+    "w3_seal_refs": [
+      "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+      "1d8db970-4c18-4bcf-824d-d9c141b6eb22"
+    ],
+    "wrapper": "apu_characterization.cap01.bfcl_cap01_multi_turn_checker"
+  },
+  "seal": true,
+  "started_utc": "2026-10-14T18:41:35.035373+00:00",
+  "w3_entry_pin": null,
+  "w3_seal_refs": [
+    "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+    "1d8db970-4c18-4bcf-824d-d9c141b6eb22"
+  ]
+}

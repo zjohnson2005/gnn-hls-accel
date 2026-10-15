@@ -1,0 +1,249 @@
+{
+  "id": "DEMO2_PREREG_v1",
+  "status": "REGISTERED 2026-10-14 (task AL), before any DEMO-2 run",
+  "readbacks": {
+    "date": "2026-10-14",
+    "tool": "tools/demo2_readback.ps1 (no properties passed)",
+    "XPS": {
+      "gpu": "Intel(R) Graphics",
+      "openvino": "2026.2.1",
+      "openvino_genai": "2026.2.1",
+      "KV_CACHE_PRECISION_before_load": "dynamic",
+      "KV_CACHE_PRECISION_after_load": "dynamic",
+      "KEY_VALUE_CACHE_PRECISION": "not supported",
+      "SchedulerConfig_default_enable_prefix_caching": false
+    },
+    "T2S": {
+      "gpu": "Intel(R) Arc(TM) B390",
+      "openvino": "2026.2.1",
+      "openvino_genai": "2026.2.1",
+      "KV_CACHE_PRECISION_before_load": "dynamic",
+      "KV_CACHE_PRECISION_after_load": "dynamic",
+      "KEY_VALUE_CACHE_PRECISION": "not supported",
+      "SchedulerConfig_default_enable_prefix_caching": false
+    }
+  },
+  "runner_must_not_read_this_file": true,
+  "design": "docs/amendments/DEMO2_DESIGN_2026-10-14.md",
+  "decisions_zach_2026_10_14": [
+    "(1) control placement GPU",
+    "(2) n = 60 (30 base + 30 long_context held-out pin), non-inferiority margin 0.15 on paired pass rate; report point estimate and CI; claim stated as 'within 15 points'",
+    "(3) DEMO-2 spend ceiling $150 for the main 2x2 only; ablations decided after the 2x2's measured cost",
+    "(4) TTFT/decode trigger at step 0 only (as DEMO-1); window overflow checked before every local generate",
+    "(5) build now",
+    "(6) T2S Windows Update pause pending Rithwik"
+  ],
+  "pin": {
+    "name": "DEMO2_HELDOUT_60",
+    "path": "derived/h1_hybrid/demo2/DEMO2_HELDOUT_60.json",
+    "sha256": "cc74a37ed84ed95b0f4dd4b8d7eb774f2737230dcfca01321fe136cdbfbca447",
+    "seed": 20261014,
+    "long_jump_note": "3 of 30 long_context entries have a gold turn above 18,500 (category 0.195; DEMO-1 pins used 36 of 39)"
+  },
+  "policy": {
+    "name": "hybrid_full",
+    "mechanical_sticky": [
+      "ctx_overflow: step prompt + max_new_tokens > window, before every local generate",
+      "step-0 ttft_s > 10 or decode_tok_s < 6",
+      "local generation_error"
+    ],
+    "quality_one_turn_bounce": [
+      "no_parseable_tool_call",
+      "tool_exec_error",
+      "n_steps >= 5"
+    ],
+    "order": "mechanical first; every escalation row records trigger_class"
+  },
+  "profiles": {
+    "control": {
+      "placement": "gpu_only (Zach 2026-10-14)",
+      "context_window": 4096,
+      "kv": "runtime default: no KV_CACHE_PRECISION passed (--kv default, delta_n arm gpu_only); readback 'dynamic' on XPS and T2S (2026-10-14); the load refuses any other readback",
+      "prefix_caching": "off: NON_RESIDENT passes SchedulerConfig(enable_prefix_caching=False); the SchedulerConfig default read back as false on both hosts",
+      "residency": "NON_RESIDENT",
+      "retention": "FULL",
+      "weights": "Qwen3-4B int4 (configs/models/Qwen3-4B-int4-ov.yaml)",
+      "policy": "hybrid_full",
+      "edge": null
+    },
+    "tuned_XPS": {
+      "placement": "gpu_only",
+      "context_window": 40960,
+      "kv": "u4 (largest sealed RESIDENT limit 26,500, e4a22dac)",
+      "prefix_caching": "not passed (RESIDENT keeps the session's chat history; SchedulerConfig default false)",
+      "residency": "RESIDENT (turn-boundary D median 50.5 <= 400)",
+      "retention": "OBS_MASK K=1024 on the whole pin (long_context needs it; base is identical under FULL and K=1024 in ENV-ATLAS)",
+      "weights": "Qwen3-4B int4 (int8 decodes 30-34% slower, 180dfbb9)",
+      "policy": "hybrid_full",
+      "edge": [
+        9750,
+        "c647f0c7 u4 cold curve: largest n with TTFT <= 10 s"
+      ]
+    },
+    "tuned_T2S": {
+      "placement": "gpu_only",
+      "context_window": 40960,
+      "kv": "u8 (only sealed T2S precision, d2d5cc4a)",
+      "prefix_caching": "not passed (RESIDENT keeps the session's chat history; SchedulerConfig default false)",
+      "residency": "RESIDENT (turn-boundary D median 50.5 <= 400)",
+      "retention": "OBS_MASK K=1024 on the whole pin (as tuned_XPS)",
+      "weights": "Qwen3-4B int4",
+      "policy": "hybrid_full",
+      "edge": [
+        18500,
+        "d2d5cc4a u8 cold limit"
+      ]
+    }
+  },
+  "selection_rule_frozen": [
+    "placement GPU: XPS cold limit 21.4x CPU (c2246b1f 10,000 vs 7f232f86 468); NPU excluded (only citable NPU-INT8 limit 1984, 9acabbf7)",
+    "weights int4 (180dfbb9)",
+    "window = max_position_embeddings 40,960",
+    "KV = largest sealed RESIDENT limit on the device: XPS u4 (e4a22dac 26,500 > cf3555d5 20,000 > 553b3a5c 15,000); T2S u8 (only sealed, d2d5cc4a)",
+    "retention OBS_MASK K=1024 where the category has observations above K (long_context), else FULL",
+    "RESIDENT if turn-boundary D <= 400 (sealed small-D points 72776603, 1587d2f4, dd2b0779); DEMO-1 D median 50.5, so RESIDENT",
+    "uses sealed limits only; no held-out entry"
+  ],
+  "cells": {
+    "D-X": {
+      "host": "XPS",
+      "profile": "control",
+      "cap_usd": 32.8,
+      "launch_flags": "-Policy hybrid_full -Placement gpu_only -Kv default -Residency NON_RESIDENT -ContextWindow 4096 -Entries derived\\h1_hybrid\\demo2\\DEMO2_HELDOUT_60.json -MaxUsd 32.8"
+    },
+    "T-X": {
+      "host": "XPS",
+      "profile": "tuned_XPS",
+      "cap_usd": 10.06,
+      "launch_flags": "-Policy hybrid_full -Placement gpu_only -Kv u4 -Residency RESIDENT -ObsMaskK 1024 -ContextWindow 40960 -Entries derived\\h1_hybrid\\demo2\\DEMO2_HELDOUT_60.json -MaxUsd 10.06"
+    },
+    "D-T": {
+      "host": "T2S",
+      "profile": "control",
+      "cap_usd": 32.8,
+      "launch_flags": "-T2S -Policy hybrid_full -Placement gpu_only -Kv default -Residency NON_RESIDENT -ContextWindow 4096 -Entries derived\\h1_hybrid\\demo2\\DEMO2_HELDOUT_60.json -MaxUsd 32.8"
+    },
+    "T-T": {
+      "host": "T2S",
+      "profile": "tuned_T2S",
+      "cap_usd": 8.23,
+      "launch_flags": "-T2S -Policy hybrid_full -Placement gpu_only -Kv u8 -Residency RESIDENT -ObsMaskK 1024 -ContextWindow 40960 -Entries derived\\h1_hybrid\\demo2\\DEMO2_HELDOUT_60.json -MaxUsd 8.23"
+    }
+  },
+  "run_order": [
+    "D-X",
+    "T-X",
+    "D-T",
+    "T-T"
+  ],
+  "ablations": "DEFERRED: decided after the 2x2's measured cost (Zach 2026-10-14)",
+  "predictions": {
+    "model": "  python tools/demo2_predict.py --out derived/h1_hybrid/demo2/DEMO2_PREREG_v1.json",
+    "per_cell": {
+      "D-X": {
+        "lo": {
+          "usd_per_task": 0.3524,
+          "usd_total": 21.14,
+          "local_share": 0.258,
+          "mechanical_escalations": 48.0
+        },
+        "point": {
+          "usd_per_task": 0.3564,
+          "usd_total": 21.39,
+          "local_share": 0.241,
+          "mechanical_escalations": 48.0
+        },
+        "hi": {
+          "usd_per_task": 0.3645,
+          "usd_total": 21.87,
+          "local_share": 0.206,
+          "mechanical_escalations": 48.0
+        }
+      },
+      "T-X": {
+        "lo": {
+          "usd_per_task": 0.0229,
+          "usd_total": 1.37,
+          "local_share": 0.938,
+          "mechanical_escalations": 0.0
+        },
+        "point": {
+          "usd_per_task": 0.0457,
+          "usd_total": 2.74,
+          "local_share": 0.875,
+          "mechanical_escalations": 0.0
+        },
+        "hi": {
+          "usd_per_task": 0.1118,
+          "usd_total": 6.71,
+          "local_share": 0.733,
+          "mechanical_escalations": 3.0
+        }
+      },
+      "D-T": {
+        "lo": {
+          "usd_per_task": 0.3524,
+          "usd_total": 21.14,
+          "local_share": 0.258,
+          "mechanical_escalations": 48.0
+        },
+        "point": {
+          "usd_per_task": 0.3564,
+          "usd_total": 21.39,
+          "local_share": 0.241,
+          "mechanical_escalations": 48.0
+        },
+        "hi": {
+          "usd_per_task": 0.3645,
+          "usd_total": 21.87,
+          "local_share": 0.206,
+          "mechanical_escalations": 48.0
+        }
+      },
+      "T-T": {
+        "lo": {
+          "usd_per_task": 0.0229,
+          "usd_total": 1.37,
+          "local_share": 0.938,
+          "mechanical_escalations": 0.0
+        },
+        "point": {
+          "usd_per_task": 0.0457,
+          "usd_total": 2.74,
+          "local_share": 0.875,
+          "mechanical_escalations": 0.0
+        },
+        "hi": {
+          "usd_per_task": 0.0914,
+          "usd_total": 5.49,
+          "local_share": 0.75,
+          "mechanical_escalations": 0.0
+        }
+      }
+    },
+    "registered_bands": "[lo, hi] per quantity; point is the band's centre estimate"
+  },
+  "tests": {
+    "primary": "per host: $/task tuned vs default, paired by entry; one-sided Wilcoxon signed-rank (tuned < default), alpha 0.05; bootstrap 95% CI of the mean difference (10,000 resamples, seed 20261014)",
+    "non_inferiority": "paired hybrid pass rate, tuned - default; lower bound of the one-sided 95% CI (Newcombe paired score interval) must exceed -0.15; report point estimate and CI; claim worded 'within 15 points'",
+    "win": "primary significant AND non-inferiority holds, per host",
+    "secondary": [
+      "local share",
+      "TTA per turn",
+      "cloud input tokens per task",
+      "trigger counts by class"
+    ]
+  },
+  "spend": {
+    "ceiling_usd": 150.0,
+    "caps_sum_usd": 83.89,
+    "rule": "cap = 1.5 x the cell's hi-band total, scaled to sum to <= $150"
+  },
+  "rehearsal_oct17": [
+    "both hosts: git pull --ff-only to the prereg commit; tools/demo2_readback.ps1 results recorded in the prereg before this point",
+    "XPS: fixture dry-run: python tools/run_h1_hybrid.py --policy hybrid_full --fixture <stub> --context-window 4096 --max-usd 1 --no-seal --out <tmp>",
+    "XPS and T2S: launch_h1.ps1 -Policy hybrid_full -ContextWindow 4096 -MaxUsd 1 -Entries derived/h1_hybrid/demo2/DEMO2_HELDOUT_60.json -EntryCount 2 -DryRun, then the same via tools/spawn_detached.ps1 until REHEARSAL_COMPLETE",
+    "tuned profile smoke on each host (-Kv u4 on XPS / u8 on T2S, -Residency RESIDENT, -ObsMaskK 1024 on long_context entries, -ContextWindow 40960), 2 entries, $1 cap",
+    "check: plan.json context_window, trigger_class on escalation rows, seal MATCH"
+  ]
+}

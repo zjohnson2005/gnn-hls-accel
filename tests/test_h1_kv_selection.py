@@ -108,7 +108,8 @@ def test_readback_refusal_is_kept() -> None:
 
 def test_launcher_kv_parameter() -> None:
     text = LAUNCHER.read_text(encoding="utf-8")
-    assert '[ValidateSet("", "u8", "u4", "f16")]\n    [string]$Kv = ""' in text
+    # DEMO-2 added "default" (no KV property; readback must be dynamic).
+    assert '[ValidateSet("", "u8", "u4", "f16", "default")]\n    [string]$Kv = ""' in text
     assert "$resolvedCmd = $resolvedCmd + ' --kv ' + $Kv" in text
     assert "if (-not [string]::IsNullOrWhiteSpace($Kv)) {" in text
     assert 'Refuse "-Kv applies to the gpu_only arm' in text

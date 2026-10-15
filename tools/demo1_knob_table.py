@@ -5,7 +5,10 @@ pair: the knob's effect next to the upgrade effect. Pairs not yet run are
 listed as pending. Pass counts and paired tests are descriptive: passes
 were recorded, not predicted.
 
-  python tools/demo1_knob_table.py --out analysis/demo1/KNOB_VS_UPGRADE_20261014.json
+  python tools/demo1_knob_table.py --out analysis/demo1/KNOB_VS_UPGRADE_20261014b.json
+
+(KNOB_VS_UPGRADE_20261014.json is the earlier version without the retention
+rows; committed analysis files are not edited.)
 """
 
 from __future__ import annotations
@@ -30,9 +33,23 @@ PAIRS: tuple[dict[str, Any], ...] = (
         "a": "V4_xps_gpu_4b_u8",
         "b": "V4_t2s_gpu_4b_u8_rerun",
     },
+    {
+        "knob": "upgrade under FULL retention (V3 XPS -> V3 T2S)",
+        "a": "V3_xps_gpu_4b_u8",
+        "b": "V3_t2s_gpu_4b_u8",
+    },
+    {
+        "knob": "retention on XPS (V3 FULL -> V4 OBS_MASK K=1024)",
+        "a": "V3_xps_gpu_4b_u8",
+        "b": "V4_xps_gpu_4b_u8",
+    },
+    {
+        "knob": "retention on T2S (V3 FULL -> V4 OBS_MASK K=1024)",
+        "a": "V3_t2s_gpu_4b_u8",
+        "b": "V4_t2s_gpu_4b_u8_rerun",
+    },
 )
 PENDING = (
-    {"knob": "retention (V3 vs V4, XPS)", "status": "pending: V3 XPS running"},
     {"knob": "residency (V4 XPS vs V5a)", "status": "not run: V5 addendum rule"},
     {"knob": "KV precision (V5a vs V5b)", "status": "not run: V5 addendum rule"},
 )
@@ -74,8 +91,11 @@ def pair_row(spec: dict[str, Any]) -> dict[str, Any]:
             "p_two_sided_exact": exact_binomial_two_sided(len(lost), len(gained)),
             "lost": lost,
             "gained": gained,
-            "usd_per_net_pass": None if net <= 0 else round(dusd / net, 4),
-            "usd_per_gained_pass": None if not gained else round(dusd / len(gained), 4),
+            # $ per recovered pass only when the change costs money and gains passes.
+            "usd_per_net_pass": None if net <= 0 or dusd <= 0 else round(dusd / net, 4),
+            "usd_per_gained_pass": None
+            if not gained or dusd <= 0
+            else round(dusd / len(gained), 4),
             "label": "descriptive: passes were recorded, not predicted",
         },
     }
@@ -85,7 +105,8 @@ def table() -> dict[str, Any]:
     return {
         "kind": "demo1_knob_vs_upgrade",
         "amendment": "DEMO-1 amendment 2026-10-13c section 5",
-        "note": "Placement uses DEMO1_BASE_30; upgrade uses DEMO1_PAIRED_15. Rows are not on the same entries.",
+        "note": "Placement uses DEMO1_BASE_30; every other row uses DEMO1_PAIRED_15. "
+        "Placement is not on the same entries as the others.",
         "rows": [pair_row(p) for p in PAIRS],
         "pending": list(PENDING),
     }

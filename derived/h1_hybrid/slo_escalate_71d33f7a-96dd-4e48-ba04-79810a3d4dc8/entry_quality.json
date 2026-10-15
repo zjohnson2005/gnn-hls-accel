@@ -1,0 +1,525 @@
+{
+  "entries": [
+    {
+      "cloud_usd_entry": 0.243462,
+      "entry_id": "multi_turn_long_context_100",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='NVDA')"
+          ]
+        ],
+        [
+          [
+            "trading_login(username='Ramkumar',password='hello123')"
+          ],
+          [
+            "fund_account(amount=2203.4)"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='NVDA')"
+          ]
+        ],
+        [
+          [
+            "trading_login(username='Ramkumar',password='hello123')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='NVDA')"
+          ]
+        ],
+        [
+          [
+            "trading_login(username='Ramkumar',password='hello123')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "score_error_type": "multi_turn:instance_state_mismatch",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.441813,
+      "entry_id": "multi_turn_long_context_101",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='XTC')"
+          ]
+        ],
+        [
+          [
+            "message_get_login_status()"
+          ],
+          [
+            "send_message(receiver_id='USR003',message='The latest stock price of XTC is $150.75.')"
+          ]
+        ],
+        [
+          [
+            "view_messages_sent()"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='XTC')"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='USR003',message='The latest stock price of XTC is $150.75.')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_stock_info(symbol='XTC')"
+          ]
+        ],
+        [
+          [
+            "send_message(receiver_id='USR003',message='The latest stock price of XTC is $150.75.')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=2 turns_gt=3 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 1.333614,
+      "entry_id": "multi_turn_long_context_110",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "get_stock_info(symbol='AAPL')"
+          ],
+          [
+            "place_order(order_type='Buy',symbol='AAPL',price=227.16,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "get_account_info()"
+          ]
+        ],
+        [
+          [
+            "ticket_login(username='user123',password='12345')"
+          ],
+          [
+            "create_ticket(title='Urgent: Transaction Issue',description='There is an issue with a recent transaction involving a canceled buy order for 100 shares of AAPL and I am requesting confirmation of the cancellation along with an account summary.',priority=3)"
+          ]
+        ]
+      ],
+      "hybrid_pass": true,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": null,
+      "hybrid_score_error_type": null,
+      "local_model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='AAPL',price=199.99,amount=100)"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='AAPL',price=199.99,amount=100)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=2 turns_gt=6 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_long_context_119",
+      "hybrid_model_result_decoded": [
+        [],
+        [],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "close_ticket(ticket_id=3)"
+          ]
+        ]
+      ],
+      "hybrid_pass": false,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": "Model response list is empty for turn 0",
+      "hybrid_score_error_type": "multi_turn:empty_turn_model_response",
+      "local_model_result_decoded": [
+        [],
+        [],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "close_ticket(ticket_id=3)"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [],
+        [],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "close_ticket(ticket_id=3)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_long_context_120",
+      "hybrid_model_result_decoded": [
+        [],
+        [
+          [
+            "get_order_details(order_id=12345)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12345)"
+          ]
+        ]
+      ],
+      "hybrid_pass": false,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": "Model response list is empty for turn 0",
+      "hybrid_score_error_type": "multi_turn:empty_turn_model_response",
+      "local_model_result_decoded": [
+        [],
+        [
+          [
+            "get_order_details(order_id=12345)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12345)"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "get_order_details(order_id=12345)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12345)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_long_context_125",
+      "hybrid_model_result_decoded": [
+        [],
+        [
+          [
+            "place_order(order_type='Buy',symbol='ALPH',price=150.75,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "get_ticket(ticket_id=12345)"
+          ]
+        ],
+        [
+          [
+            "close_ticket(ticket_id=12345)"
+          ]
+        ]
+      ],
+      "hybrid_pass": false,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": "Model response list is empty for turn 0",
+      "hybrid_score_error_type": "multi_turn:empty_turn_model_response",
+      "local_model_result_decoded": [
+        [],
+        [
+          [
+            "place_order(order_type='Buy',symbol='ALPH',price=150.75,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "get_ticket(ticket_id=12345)"
+          ]
+        ],
+        [
+          [
+            "close_ticket(ticket_id=12345)"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [],
+        [
+          [
+            "place_order(order_type='Buy',symbol='ALPH',price=150.75,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "get_ticket(ticket_id=12345)"
+          ]
+        ],
+        [
+          [
+            "close_ticket(ticket_id=12345)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.427941,
+      "entry_id": "multi_turn_long_context_126",
+      "hybrid_model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='XYZ',price=100.0,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ],
+        [
+          [
+            "cancel_order(order_id=12446)"
+          ]
+        ]
+      ],
+      "hybrid_pass": false,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": "Model instance for TradingBot does not match the state with ground truth instance.",
+      "hybrid_score_error_type": "multi_turn:instance_state_mismatch",
+      "local_model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='XYZ',price=100.0,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [
+          [
+            "get_watchlist()"
+          ]
+        ],
+        [
+          [
+            "place_order(order_type='Buy',symbol='XYZ',price=100.0,amount=100)"
+          ]
+        ],
+        [
+          [
+            "get_order_details(order_id=12446)"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=3 turns_gt=4 force_quit=False stop_reason=no_tool_call",
+      "score_error_type": "multi_turn:force_terminated",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    },
+    {
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_long_context_129",
+      "hybrid_model_result_decoded": [
+        [],
+        [],
+        [
+          [
+            "get_ticket(ticket_id=1)"
+          ]
+        ],
+        [
+          [
+            "resolve_ticket(ticket_id=1,resolution='The issue related to the previous transaction inquiry has been resolved by verifying the accuracy of the NVDA stock order, and the ticket has been marked as completed with no further action required.')"
+          ]
+        ]
+      ],
+      "hybrid_pass": false,
+      "hybrid_quality_scope": "hybrid",
+      "hybrid_score_error_message": "Model response list is empty for turn 0",
+      "hybrid_score_error_type": "multi_turn:empty_turn_model_response",
+      "local_model_result_decoded": [
+        [],
+        [],
+        [
+          [
+            "get_ticket(ticket_id=1)"
+          ]
+        ],
+        [
+          [
+            "resolve_ticket(ticket_id=1,resolution='The issue related to the previous transaction inquiry has been resolved by verifying the accuracy of the NVDA stock order, and the ticket has been marked as completed with no further action required.')"
+          ]
+        ]
+      ],
+      "local_pass": false,
+      "local_quality_scope": "local_probe",
+      "model_result_decoded": [
+        [],
+        [],
+        [
+          [
+            "get_ticket(ticket_id=1)"
+          ]
+        ],
+        [
+          [
+            "resolve_ticket(ticket_id=1,resolution='The issue related to the previous transaction inquiry has been resolved by verifying the accuracy of the NVDA stock order, and the ticket has been marked as completed with no further action required.')"
+          ]
+        ]
+      ],
+      "quality_scope": "local_probe",
+      "score_error_message": "Model response list is empty for turn 0",
+      "score_error_type": "multi_turn:empty_turn_model_response",
+      "status": "complete",
+      "stop_reason": "completed",
+      "trajectory_pass": false
+    }
+  ]
+}

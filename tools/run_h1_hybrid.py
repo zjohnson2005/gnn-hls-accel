@@ -349,7 +349,16 @@ LOCAL_PLACEMENTS = ("gpu_only", "cpu-p")
 LOCAL_RESIDENCIES = ("RESIDENT", "NON_RESIDENT")
 # KV cache precision of the gpu_only local arm (DEMO-1 amendment 2026-10-13c,
 # V5b). Default stays ARM_CONFIG (u8); the readback still refuses a mismatch.
-LOCAL_KVS = ("u8", "u4", "f16")
+LOCAL_KVS = ("u8", "u4", "f16", "default")
+# DEMO-2 control: --kv default passes no KV_CACHE_PRECISION (delta_n arm
+# gpu_only). The 2026-10-14 readbacks on both hosts (OpenVINO 2026.2.1)
+# read KV_CACHE_PRECISION = dynamic before and after the load.
+RUNTIME_DEFAULT_KV_READBACK = "dynamic"
+
+
+def expected_kv_readback(kv: str) -> str:
+    """KV readback the load must show: the pin, or the runtime default."""
+    return RUNTIME_DEFAULT_KV_READBACK if kv == "default" else kv
 
 
 def arm_config_for(policy: str, local: Any) -> dict[str, str]:
@@ -1274,6 +1283,7 @@ def arm_id_for_h1(arm: dict[str, str]) -> str:
             return "gpu_only_f16"
         if kv == "u4":
             return "gpu_only_u4"
+        # "default" (DEMO-2 control) and an unset kv: no KV property.
         return "gpu_only"
     raise ValueError(f"unsupported placement {placement!r}")
 
@@ -1351,7 +1361,7 @@ class OpenVinoLocalBackend:
         pipe, meta, _load_s = probe.load_arm_pipeline(self.arm_id, enable_prefix_caching=enable_pc)
         # load_arm_pipeline already raises on KV_PRECISION_MISMATCH when the arm
         # requests a pin. Re-check expected kv against readback for H-1 arm_config.
-        self._assert_kv_readback(meta, expected=self.kv)
+        self._assert_kv_readback(meta, expected=expected_kv_readback(self.kv))
         self.pipe = pipe
         self.tokenizer = probe._hf_tokenizer()
         self.ov_genai = ov_genai
@@ -1523,7 +1533,7 @@ class OpenVinoLocalBackend:
         pipe, meta, _load_s = probe.load_arm_pipeline(
             self.arm_id, enable_prefix_caching=enable_pc
         )
-        self._assert_kv_readback(meta, expected=self.kv)
+        self._assert_kv_readback(meta, expected=expected_kv_readback(self.kv))
         self.pipe = pipe
         self.load_meta = meta
         return PREFIX_BLOCK_CLEAR_CALL

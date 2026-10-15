@@ -1,0 +1,272 @@
+{
+  "kind": "demo1_knob_vs_upgrade",
+  "amendment": "DEMO-1 amendment 2026-10-13c section 5",
+  "note": "Placement uses DEMO1_BASE_30; every other row uses DEMO1_PAIRED_15. Placement is not on the same entries as the others.",
+  "rows": [
+    {
+      "knob": "placement (XPS GPU -> XPS CPU)",
+      "a": {
+        "cell": "V1_xps_gpu_4b_u8",
+        "run_id": "slo_escalate_f7343708-a4a5-4984-93e5-ce5412a6c981",
+        "local_share": 1.0,
+        "usd": 0.0,
+        "usd_per_task": 0.0,
+        "escalations_ttft": 0,
+        "n_entries": 30,
+        "n_turns": 118,
+        "n_hybrid_pass": 3,
+        "n_local_pass": 3
+      },
+      "b": {
+        "cell": "V2_xps_cpu_4b",
+        "run_id": "slo_escalate_1acc8c58-a637-42a9-ac7a-78267b98f9ed",
+        "local_share": 0.0,
+        "usd": 8.9031,
+        "usd_per_task": 0.2968,
+        "escalations_ttft": 30,
+        "n_entries": 30,
+        "n_turns": 118,
+        "n_hybrid_pass": 22,
+        "n_local_pass": 0
+      },
+      "delta": {
+        "local_share": -1.0,
+        "usd_per_task": 0.2968,
+        "usd": 8.9031,
+        "hybrid_passes": 19
+      },
+      "descriptive_paired_passes": {
+        "b_a_pass_b_fail": 1,
+        "c_a_fail_b_pass": 20,
+        "both_pass": 2,
+        "p_two_sided_exact": 2.09808349609375e-05,
+        "lost": [
+          "multi_turn_base_161"
+        ],
+        "gained": [
+          "multi_turn_base_103",
+          "multi_turn_base_107",
+          "multi_turn_base_110",
+          "multi_turn_base_118",
+          "multi_turn_base_127",
+          "multi_turn_base_128",
+          "multi_turn_base_136",
+          "multi_turn_base_145",
+          "multi_turn_base_149",
+          "multi_turn_base_157",
+          "multi_turn_base_163",
+          "multi_turn_base_181",
+          "multi_turn_base_184",
+          "multi_turn_base_186",
+          "multi_turn_base_19",
+          "multi_turn_base_21",
+          "multi_turn_base_45",
+          "multi_turn_base_70",
+          "multi_turn_base_78",
+          "multi_turn_base_89"
+        ],
+        "usd_per_net_pass": 0.4686,
+        "usd_per_gained_pass": 0.4452,
+        "label": "descriptive: passes were recorded, not predicted"
+      }
+    },
+    {
+      "knob": "upgrade (XPS GPU -> T2S GPU)",
+      "a": {
+        "cell": "V4_xps_gpu_4b_u8",
+        "run_id": "slo_escalate_a678926e-2681-4851-a386-8b7c83e971a3",
+        "local_share": 0.673,
+        "usd": 2.7651,
+        "usd_per_task": 0.1843,
+        "escalations_ttft": 9,
+        "n_entries": 15,
+        "n_turns": 55,
+        "n_hybrid_pass": 6,
+        "n_local_pass": 0
+      },
+      "b": {
+        "cell": "V4_t2s_gpu_4b_u8_rerun",
+        "run_id": "slo_escalate_30caa847-d97a-4e4b-aa22-f152b95d08e9",
+        "local_share": 0.982,
+        "usd": 0.1931,
+        "usd_per_task": 0.0129,
+        "escalations_ttft": 1,
+        "n_entries": 15,
+        "n_turns": 55,
+        "n_hybrid_pass": 2,
+        "n_local_pass": 1
+      },
+      "delta": {
+        "local_share": 0.309,
+        "usd_per_task": -0.1714,
+        "usd": -2.572,
+        "hybrid_passes": -4
+      },
+      "descriptive_paired_passes": {
+        "b_a_pass_b_fail": 4,
+        "c_a_fail_b_pass": 0,
+        "both_pass": 2,
+        "p_two_sided_exact": 0.125,
+        "lost": [
+          "multi_turn_long_context_100",
+          "multi_turn_long_context_110",
+          "multi_turn_long_context_141",
+          "multi_turn_long_context_146"
+        ],
+        "gained": [],
+        "usd_per_net_pass": null,
+        "usd_per_gained_pass": null,
+        "label": "descriptive: passes were recorded, not predicted"
+      }
+    },
+    {
+      "knob": "upgrade under FULL retention (V3 XPS -> V3 T2S)",
+      "a": {
+        "cell": "V3_xps_gpu_4b_u8",
+        "run_id": "slo_escalate_71d33f7a-96dd-4e48-ba04-79810a3d4dc8+slo_escalate_ab88f47f-3067-4d79-bf1e-ce533ed41fd2",
+        "local_share": 0.673,
+        "usd": 4.6192,
+        "usd_per_task": 0.3079,
+        "escalations_ttft": 9,
+        "n_entries": 15,
+        "n_turns": 55,
+        "n_hybrid_pass": 4,
+        "n_local_pass": 0
+      },
+      "b": {
+        "cell": "V3_t2s_gpu_4b_u8",
+        "run_id": "slo_escalate_a4284ab0-7bb4-497a-8ff7-cc4d54817dd8",
+        "local_share": 0.891,
+        "usd": 1.4372,
+        "usd_per_task": 0.0958,
+        "escalations_ttft": 5,
+        "n_entries": 15,
+        "n_turns": 55,
+        "n_hybrid_pass": 3,
+        "n_local_pass": 0
+      },
+      "delta": {
+        "local_share": 0.218,
+        "usd_per_task": -0.2121,
+        "usd": -3.182,
+        "hybrid_passes": -1
+      },
+      "descriptive_paired_passes": {
+        "b_a_pass_b_fail": 1,
+        "c_a_fail_b_pass": 0,
+        "both_pass": 3,
+        "p_two_sided_exact": 1.0,
+        "lost": [
+          "multi_turn_long_context_110"
+        ],
+        "gained": [],
+        "usd_per_net_pass": null,
+        "usd_per_gained_pass": null,
+        "label": "descriptive: passes were recorded, not predicted"
+      }
+    },
+    {
+      "knob": "retention on XPS (V3 FULL -> V4 OBS_MASK K=1024)",
+      "a": {
+        "cell": "V3_xps_gpu_4b_u8",
+        "run_id": "slo_escalate_71d33f7a-96dd-4e48-ba04-79810a3d4dc8+slo_escalate_ab88f47f-3067-4d79-bf1e-ce533ed41fd2",
+        "local_share": 0.673,
+        "usd": 4.6192,
+        "usd_per_task": 0.3079,
+        "escalations_ttft": 9,
+        "n_entries": 15,
+        "n_turns": 55,
+        "n_hybrid_pass": 4,
+        "n_local_pass": 0
+      },
+      "b": {
+        "cell": "V4_xps_gpu_4b_u8",
+        "run_id": "slo_escalate_a678926e-2681-4851-a386-8b7c83e971a3",
+        "local_share": 0.673,
+        "usd": 2.7651,
+        "usd_per_task": 0.1843,
+        "escalations_ttft": 9,
+        "n_entries": 15,
+        "n_turns": 55,
+        "n_hybrid_pass": 6,
+        "n_local_pass": 0
+      },
+      "delta": {
+        "local_share": 0.0,
+        "usd_per_task": -0.1236,
+        "usd": -1.8541,
+        "hybrid_passes": 2
+      },
+      "descriptive_paired_passes": {
+        "b_a_pass_b_fail": 0,
+        "c_a_fail_b_pass": 2,
+        "both_pass": 4,
+        "p_two_sided_exact": 0.5,
+        "lost": [],
+        "gained": [
+          "multi_turn_long_context_141",
+          "multi_turn_long_context_146"
+        ],
+        "usd_per_net_pass": null,
+        "usd_per_gained_pass": null,
+        "label": "descriptive: passes were recorded, not predicted"
+      }
+    },
+    {
+      "knob": "retention on T2S (V3 FULL -> V4 OBS_MASK K=1024)",
+      "a": {
+        "cell": "V3_t2s_gpu_4b_u8",
+        "run_id": "slo_escalate_a4284ab0-7bb4-497a-8ff7-cc4d54817dd8",
+        "local_share": 0.891,
+        "usd": 1.4372,
+        "usd_per_task": 0.0958,
+        "escalations_ttft": 5,
+        "n_entries": 15,
+        "n_turns": 55,
+        "n_hybrid_pass": 3,
+        "n_local_pass": 0
+      },
+      "b": {
+        "cell": "V4_t2s_gpu_4b_u8_rerun",
+        "run_id": "slo_escalate_30caa847-d97a-4e4b-aa22-f152b95d08e9",
+        "local_share": 0.982,
+        "usd": 0.1931,
+        "usd_per_task": 0.0129,
+        "escalations_ttft": 1,
+        "n_entries": 15,
+        "n_turns": 55,
+        "n_hybrid_pass": 2,
+        "n_local_pass": 1
+      },
+      "delta": {
+        "local_share": 0.091,
+        "usd_per_task": -0.0829,
+        "usd": -1.2441,
+        "hybrid_passes": -1
+      },
+      "descriptive_paired_passes": {
+        "b_a_pass_b_fail": 1,
+        "c_a_fail_b_pass": 0,
+        "both_pass": 2,
+        "p_two_sided_exact": 1.0,
+        "lost": [
+          "multi_turn_long_context_100"
+        ],
+        "gained": [],
+        "usd_per_net_pass": null,
+        "usd_per_gained_pass": null,
+        "label": "descriptive: passes were recorded, not predicted"
+      }
+    }
+  ],
+  "pending": [
+    {
+      "knob": "residency (V4 XPS vs V5a)",
+      "status": "not run: V5 addendum rule"
+    },
+    {
+      "knob": "KV precision (V5a vs V5b)",
+      "status": "not run: V5 addendum rule"
+    }
+  ]
+}

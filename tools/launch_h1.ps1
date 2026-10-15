@@ -66,7 +66,8 @@
 #                       derived/h1_hybrid/demo1/DEMO1_LONGCTX_30.json. Default W-3.
 #   -Placement cpu-p    hybrid local arm on CPU (delta_n arm A). Default gpu_only.
 #   -Residency NON_RESIDENT   full prefill every step. Default RESIDENT.
-#   -Kv u8|u4|f16       KV cache precision of the gpu_only local arm (DEMO-1 V5b).
+#   -Kv u8|u4|f16|default  KV cache precision of the gpu_only local arm (DEMO-1 V5b);
+#                       default = no KV property (DEMO-2 control; readback must be dynamic).
 #                       Default u8 (unchanged); the readback refuses a mismatch.
 #   -PolicyCapUsd "p=usd,..."   interleaved per-policy caps (default table above).
 #   -EntryOffset <i> -EntryCount <n>   one boot's chunk of the pinned entries
@@ -123,7 +124,7 @@ param(
     [string]$Placement = "",
     [ValidateSet("", "RESIDENT", "NON_RESIDENT")]
     [string]$Residency = "",
-    [ValidateSet("", "u8", "u4", "f16")]
+    [ValidateSet("", "u8", "u4", "f16", "default")]
     [string]$Kv = "",
     [Nullable[int]]$ObsMaskK = $null,
     [Nullable[int]]$ContextWindow = $null,

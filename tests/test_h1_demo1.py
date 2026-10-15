@@ -615,7 +615,7 @@ def test_v4_pair_scores() -> None:
 
 
 SCORES_V1V2 = ROOT / "analysis" / "demo1" / "SCORE_V1V2_XPS_20261014.json"
-KNOB_TABLE = ROOT / "analysis" / "demo1" / "KNOB_VS_UPGRADE_20261014.json"
+KNOB_TABLE = ROOT / "analysis" / "demo1" / "KNOB_VS_UPGRADE_20261014b.json"
 
 
 def test_v2_scores_and_knob_table() -> None:
@@ -636,3 +636,18 @@ def test_v2_scores_and_knob_table() -> None:
     assert table == json.loads(KNOB_TABLE.read_text(encoding="utf-8"))
     placement = table["rows"][0]["descriptive_paired_passes"]
     assert (placement["b_a_pass_b_fail"], placement["c_a_fail_b_pass"]) == (1, 20)
+
+
+SCORES_V3_PAIR = ROOT / "analysis" / "demo1" / "SCORE_V3_PAIR_20261014.json"
+
+
+def test_v3_xps_two_chunks_scored_as_one_cell() -> None:
+    from tools import score_demo1_cells
+
+    doc = json.loads(SCORES_V3_PAIR.read_text(encoding="utf-8"))
+    x = doc["cells"]["V3_xps_gpu_4b_u8"]
+    assert x["run_id"].count("+") == 1
+    assert x["measured"]["n_entries"] == 15 and x["measured"]["usd"] == 4.6192
+    assert set(x["verdict"].values()) == {"MISS"}
+    for key, cell in doc["cells"].items():
+        assert score_demo1_cells.score_cell(key) == cell

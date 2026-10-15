@@ -61,6 +61,16 @@ CELLS = {
         "run": "slo_escalate_30caa847-d97a-4e4b-aa22-f152b95d08e9",
         "atlas": "multi_turn_long_context_OBS_MASK_K1024",
     },
+    # V3 XPS in two chunks of DEMO1_PAIRED_15 (V3a [0:8], V3b [8:15]), one cell.
+    "V3_xps_gpu_4b_u8": {
+        "cell": "V3",
+        "config": "xps_gpu_4b_u8",
+        "runs": (
+            "slo_escalate_71d33f7a-96dd-4e48-ba04-79810a3d4dc8",
+            "slo_escalate_ab88f47f-3067-4d79-bf1e-ce533ed41fd2",
+        ),
+        "atlas": "multi_turn_long_context_FULL",
+    },
     "V3_t2s_gpu_4b_u8": {
         "cell": "V3",
         "config": "t2s_gpu_4b_u8",
@@ -73,6 +83,7 @@ GROUPS = {
     "t2s": ("V1_t2s_gpu_4b_u8", "V4_t2s_gpu_4b_u8", "V3_t2s_gpu_4b_u8"),
     "v4_pair": ("V4_xps_gpu_4b_u8", "V4_t2s_gpu_4b_u8_rerun"),
     "v1v2_xps": ("V1_xps_gpu_4b_u8", "V2_xps_cpu_4b"),
+    "v3_pair": ("V3_xps_gpu_4b_u8", "V3_t2s_gpu_4b_u8"),
 }
 
 
@@ -90,8 +101,17 @@ def _called(turn: dict[str, Any], name: str | None) -> bool:
     )
 
 
-def entry_table(run_dir: Path, atlas: str, edge: int = 10_000) -> list[dict[str, Any]]:
-    ledger = json.loads((run_dir / "turn_ledger.json").read_text(encoding="utf-8"))["entries"]
+def _ledger(run_dirs: Path | list[Path]) -> list[dict[str, Any]]:
+    """Ledger entries of one run, or of a cell run in chunks (in chunk order)."""
+    dirs = [run_dirs] if isinstance(run_dirs, Path) else list(run_dirs)
+    out: list[dict[str, Any]] = []
+    for d in dirs:
+        out += json.loads((d / "turn_ledger.json").read_text(encoding="utf-8"))["entries"]
+    return out
+
+
+def entry_table(run_dir: Path | list[Path], atlas: str, edge: int = 10_000) -> list[dict[str, Any]]:
+    ledger = _ledger(run_dir)
     gold = {
         r["entry_id"]: r
         for r in json.loads((ATLAS / f"{atlas}.json").read_text(encoding="utf-8"))["entries"]
@@ -136,14 +156,15 @@ def score_cell(key: str) -> dict[str, Any]:
     spec = CELLS[key]
     prereg = json.loads(PREREG.read_text(encoding="utf-8"))
     pred = prereg["cells"][spec["cell"]]["configs"][spec["config"]]["prediction"]
-    run_dir = ROOT / "derived" / "h1_hybrid" / spec["run"]
-    summary = json.loads((run_dir / "summary.json").read_text(encoding="utf-8"))
-    rows = entry_table(run_dir, spec["atlas"], EDGES[spec["config"]])
-    ledger = json.loads((run_dir / "turn_ledger.json").read_text(encoding="utf-8"))["entries"]
+    runs = list(spec["runs"]) if "runs" in spec else [spec["run"]]
+    run_dirs = [ROOT / "derived" / "h1_hybrid" / r for r in runs]
+    summaries = [json.loads((d / "summary.json").read_text(encoding="utf-8")) for d in run_dirs]
+    rows = entry_table(run_dirs, spec["atlas"], EDGES[spec["config"]])
+    ledger = _ledger(run_dirs)
     n_turns = sum(len(e["turns"]) for e in ledger)
     local = sum(1 for e in ledger for t in e["turns"] if t["placement"] == "local")
     n = len(ledger)
-    usd = float(summary["running_usd"])
+    usd = sum(float(x["running_usd"]) for x in summaries)
     measured = {
         "local_share": round(local / n_turns, 3),
         "usd": round(usd, 4),
@@ -151,8 +172,8 @@ def score_cell(key: str) -> dict[str, Any]:
         "escalations_ttft": sum(1 for r in rows if r["escalated_turn"] is not None),
         "n_entries": n,
         "n_turns": n_turns,
-        "n_hybrid_pass": summary["quality"]["hybrid"]["n_hybrid_pass"],
-        "n_local_pass": summary["quality"]["local_probe"]["n_local_pass"],
+        "n_hybrid_pass": sum(x["quality"]["hybrid"]["n_hybrid_pass"] for x in summaries),
+        "n_local_pass": sum(x["quality"]["local_probe"]["n_local_pass"] for x in summaries),
     }
     verdict = {
         "local_share": _band(measured["local_share"], pred["local_share"]),
@@ -161,7 +182,7 @@ def score_cell(key: str) -> dict[str, Any]:
     }
     reached = [r for r in rows if r["gold_jump_turn"] is not None]
     return {
-        "run_id": spec["run"],
+        "run_id": "+".join(runs),
         "gold_edge_tokens": EDGES[spec["config"]],
         "prediction": {k: pred[k] for k in ("local_share", "usd_per_task", "escalations_ttft")},
         "measured": measured,

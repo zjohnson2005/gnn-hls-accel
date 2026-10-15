@@ -1,9 +1,9 @@
-"""DEMO-2 prereg draft: profiles, selection rule, cells, predictions, caps.
+"""DEMO-2 prereg: profiles, selection rule, cells, predictions, caps.
 
-Sealed and committed data only; runs nothing. Writes the DRAFT prereg (not a
-prereg until Zach commits it):
+Sealed and committed data only; runs nothing. Writes DEMO2_PREREG_v1.json,
+committed with its sha256 before any DEMO-2 run (task AL, 2026-10-14):
 
-  python tools/demo2_predict.py --out derived/h1_hybrid/demo2/DEMO2_PREREG_v1.draft.json
+  python tools/demo2_predict.py --out derived/h1_hybrid/demo2/DEMO2_PREREG_v1.json
 
 Prediction model (per held-out entry, gold trajectories from ENV-ATLAS):
 - mechanical, sticky: the first turn whose max step prompt + 512 exceeds the
@@ -46,8 +46,11 @@ PROFILES: dict[str, dict[str, Any]] = {
     "control": {
         "placement": "gpu_only (Zach 2026-10-14)",
         "context_window": 4096,
-        "kv": "READBACK_PENDING (runtime default; no KV property passed)",
-        "prefix_caching": "READBACK_PENDING (runtime default)",
+        "kv": "runtime default: no KV_CACHE_PRECISION passed (--kv default, delta_n arm "
+        "gpu_only); readback 'dynamic' on XPS and T2S (2026-10-14); the load refuses any "
+        "other readback",
+        "prefix_caching": "off: NON_RESIDENT passes SchedulerConfig(enable_prefix_caching="
+        "False); the SchedulerConfig default read back as false on both hosts",
         "residency": "NON_RESIDENT",
         "retention": "FULL",
         "weights": "Qwen3-4B int4 (configs/models/Qwen3-4B-int4-ov.yaml)",
@@ -60,9 +63,11 @@ PROFILES: dict[str, dict[str, Any]] = {
         "placement": "gpu_only",
         "context_window": 40_960,
         "kv": "u4 (largest sealed RESIDENT limit 26,500, e4a22dac)",
-        "prefix_caching": "as control (not a tuned knob)",
+        "prefix_caching": "not passed (RESIDENT keeps the session's chat history; "
+        "SchedulerConfig default false)",
         "residency": "RESIDENT (turn-boundary D median 50.5 <= 400)",
-        "retention": "base FULL; long_context OBS_MASK K=1024",
+        "retention": "OBS_MASK K=1024 on the whole pin (long_context needs it; base is "
+        "identical under FULL and K=1024 in ENV-ATLAS)",
         "weights": "Qwen3-4B int4 (int8 decodes 30-34% slower, 180dfbb9)",
         "policy": "hybrid_full",
         "edge": (9_750, "c647f0c7 u4 cold curve: largest n with TTFT <= 10 s"),
@@ -73,9 +78,10 @@ PROFILES: dict[str, dict[str, Any]] = {
         "placement": "gpu_only",
         "context_window": 40_960,
         "kv": "u8 (only sealed T2S precision, d2d5cc4a)",
-        "prefix_caching": "as control (not a tuned knob)",
+        "prefix_caching": "not passed (RESIDENT keeps the session's chat history; "
+        "SchedulerConfig default false)",
         "residency": "RESIDENT (turn-boundary D median 50.5 <= 400)",
-        "retention": "base FULL; long_context OBS_MASK K=1024",
+        "retention": "OBS_MASK K=1024 on the whole pin (as tuned_XPS)",
         "weights": "Qwen3-4B int4",
         "policy": "hybrid_full",
         "edge": (18_500, "d2d5cc4a u8 cold limit"),
@@ -88,6 +94,37 @@ CELLS = {
     "T-X": ("XPS", "tuned_XPS"),
     "D-T": ("T2S", "control"),
     "T-T": ("T2S", "tuned_T2S"),
+}
+PIN_FLAG = "-Entries derived\\h1_hybrid\\demo2\\DEMO2_HELDOUT_60.json"
+FLAGS = {
+    "control": "-Policy hybrid_full -Placement gpu_only -Kv default -Residency NON_RESIDENT "
+    "-ContextWindow 4096",
+    "tuned_XPS": "-Policy hybrid_full -Placement gpu_only -Kv u4 -Residency RESIDENT "
+    "-ObsMaskK 1024 -ContextWindow 40960",
+    "tuned_T2S": "-Policy hybrid_full -Placement gpu_only -Kv u8 -Residency RESIDENT "
+    "-ObsMaskK 1024 -ContextWindow 40960",
+}
+READBACKS = {
+    "date": "2026-10-14",
+    "tool": "tools/demo2_readback.ps1 (no properties passed)",
+    "XPS": {
+        "gpu": "Intel(R) Graphics",
+        "openvino": "2026.2.1",
+        "openvino_genai": "2026.2.1",
+        "KV_CACHE_PRECISION_before_load": "dynamic",
+        "KV_CACHE_PRECISION_after_load": "dynamic",
+        "KEY_VALUE_CACHE_PRECISION": "not supported",
+        "SchedulerConfig_default_enable_prefix_caching": False,
+    },
+    "T2S": {
+        "gpu": "Intel(R) Arc(TM) B390",
+        "openvino": "2026.2.1",
+        "openvino_genai": "2026.2.1",
+        "KV_CACHE_PRECISION_before_load": "dynamic",
+        "KV_CACHE_PRECISION_after_load": "dynamic",
+        "KEY_VALUE_CACHE_PRECISION": "not supported",
+        "SchedulerConfig_default_enable_prefix_caching": False,
+    },
 }
 
 
@@ -168,7 +205,8 @@ def draft() -> dict[str, Any]:
     }
     return {
         "id": "DEMO2_PREREG_v1",
-        "status": "DRAFT, not registered (task AI, 2026-10-14). Commit only after readbacks.",
+        "status": "REGISTERED 2026-10-14 (task AL), before any DEMO-2 run",
+        "readbacks": READBACKS,
         "runner_must_not_read_this_file": True,
         "design": "docs/amendments/DEMO2_DESIGN_2026-10-14.md",
         "decisions_zach_2026_10_14": [
@@ -221,8 +259,16 @@ def draft() -> dict[str, Any]:
             "uses sealed limits only; no held-out entry",
         ],
         "cells": {
-            c: {"host": h, "profile": p, "cap_usd": cell_caps[c]} for c, (h, p) in CELLS.items()
+            c: {
+                "host": h,
+                "profile": p,
+                "cap_usd": cell_caps[c],
+                "launch_flags": f"{'-T2S ' if h == 'T2S' else ''}{FLAGS[p]} {PIN_FLAG} "
+                f"-MaxUsd {cell_caps[c]}",
+            }
+            for c, (h, p) in CELLS.items()
         },
+        "run_order": ["D-X", "T-X", "D-T", "T-T"],
         "ablations": "DEFERRED: decided after the 2x2's measured cost (Zach 2026-10-14)",
         "predictions": {
             "model": __doc__.split("\n\n")[2],

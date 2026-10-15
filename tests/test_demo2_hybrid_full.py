@@ -222,3 +222,51 @@ def test_launcher_passthrough() -> None:
     assert '"full_signal_bounceback", "hybrid_full")]' in text
     assert "-MaxUsd is required for hybrid_full" in text
     assert "-ContextWindow is single-arm only" in text
+
+
+def test_kv_default_maps_to_bare_gpu_arm_and_expects_dynamic() -> None:
+    from tools.run_h1_hybrid import (
+        LOCAL_KVS,
+        RUNTIME_DEFAULT_KV_READBACK,
+        arm_id_for_h1,
+        expected_kv_readback,
+        local_arm_settings,
+    )
+
+    assert "default" in LOCAL_KVS
+    assert RUNTIME_DEFAULT_KV_READBACK == "dynamic"
+    assert arm_id_for_h1({"placement": "gpu_only", "kv": "default"}) == "gpu_only"
+    assert expected_kv_readback("default") == "dynamic"
+    for kv in ("u8", "u4", "f16"):
+        assert expected_kv_readback(kv) == kv
+        assert arm_id_for_h1({"placement": "gpu_only", "kv": kv}) == f"gpu_only_{kv}"
+    s = local_arm_settings("hybrid_full", residency="NON_RESIDENT", kv="default")
+    assert s == {"placement": "gpu_only", "residency": "NON_RESIDENT", "kv": "default"}
+
+
+def test_kv_default_readback_check() -> None:
+    from tools.run_h1_hybrid import OpenVinoLocalBackend
+
+    def meta(normalized: str) -> dict[str, Any]:
+        return {
+            "loads": [
+                {
+                    "kv_cache_precision": {
+                        "requested": None,
+                        "readback": {"normalized": normalized, "device": "GPU", "ok": True},
+                        "match": True,
+                        "enforced": False,
+                        "failure_mode": None,
+                    }
+                }
+            ]
+        }
+
+    OpenVinoLocalBackend._assert_kv_readback(meta("dynamic"), expected="dynamic")
+    with pytest.raises(SystemExit):
+        OpenVinoLocalBackend._assert_kv_readback(meta("u8"), expected="dynamic")
+
+
+def test_launcher_accepts_kv_default() -> None:
+    text = (ROOT / "tools" / "launch_h1.ps1").read_text(encoding="utf-8")
+    assert '[ValidateSet("", "u8", "u4", "f16", "default")]' in text
