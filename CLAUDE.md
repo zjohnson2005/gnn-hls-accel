@@ -193,7 +193,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-15. Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-16. Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -204,14 +204,25 @@ session start; update it in the same commit as the work. Never delete a row.
   (corrected 2026-10-16, Task AS: measured by us, not Rithwik side); check
   the baseline against 10,000; SEM-IMPL is built but has no sealed run here,
   RET-0/RET-1 are blocked here; "Arrow Lake" vs our Panther Lake.
-- Open before DEMO-2 rehearsals: KV-DEFAULT-READBACK (2026.2.1 source:
-  the default compiles i8 on a PA model, not u4 - corrected 2026-10-16;
-  confirm on both hosts, tools/kv_compiled_readback.ps1) and the PREFIX-CACHE-AUDIT
-  control decision (NON_RESIDENT passes a bare SchedulerConfig: prefix
-  caching off and struct-default batch tokens, not the runtime default).
-  Draft addendum in _agent_reports/drafts/ (not committed).
-- XPS queue: pin restore, back up be91e69d, DEMO-2 2-entry rehearsals,
-  D-X, T-X, H1-CPU (draft amendment 3 first), P1 B=20 A0, rest.
+- 2026-10-16 (Task AS): DEMO-2 redesigned before any run against the true
+  runtime default (docs/amendments/DEMO2_AMEND_2026-10-16_TRUE_DEFAULT.md):
+  arms A true default (primary control; invalid if SDPA fallback or KV not
+  i8), B device-only tuned, C full tuned, D ecosystem 4096 (XPS only);
+  material-win threshold and pivot rule into the registered SEARCH phase
+  (DEMO2_SEARCH_PHASE_2026-10-16.md); second pin DEMO2_HELDOUT_60_B
+  (long_context half only; base half BLOCKED, rules R1-R3 for Zach) for one
+  confirmation run. Pilots P0-P9 registered (DEMO2_PILOTS_2026-10-16.md),
+  harness built, all flags default off; nothing run. Tuned values come
+  from the pilots via an arm-spec addendum before any held-out run.
+- KV default on 2026.2.1 is i8 by source (not u4), NOT YET MEASURED on the
+  hosts: pilot P0 (tools/kv_compiled_readback.ps1 -Mode all). The
+  2026-10-15 9:22 PM ET P0 attempt timed out on both hosts.
+- Spend open: DEMO-2 caps $108.35 (1 replicate) / $216.70 (2) vs the $150
+  ceiling; pilots P7+P5 caps $54.81 on top. Not approved.
+- XPS queue (registry section 7): pin restore, back up be91e69d, P0 both
+  hosts, remaining pilots, arm spec, DEMO-2 rehearsals, held-out cells,
+  H1-CPU (amendment 3 awaiting approval), P1 B=20 A0, rest. T2S block
+  Oct 19-25 pending Rithwik. Oct 26 showing: arms D and A, SEARCH plan next.
 - Sealed $0 analyses: analysis/aq_20261015/ (silent failures 122/141
   non-escalated under emission in d482c621; DEMO-1 spend 100% step-0 TTFT;
   no router beats matched-rate random escalation on BASE_30).
@@ -273,5 +284,5 @@ session start; update it in the same commit as the work. Never delete a row.
   V4 T2S rerun $0.19, V2 XPS $8.90, V3 XPS $4.62, pings).
 - Knob-vs-upgrade table: analysis/demo1/KNOB_VS_UPGRADE_20261014b.json
   (placement, upgrade, retention rows).
-- DEMO-2: prereg registered (derived/h1_hybrid/demo2/DEMO2_PREREG_v1.json);
-  not run; host rehearsals next.
+- DEMO-2: prereg registered (derived/h1_hybrid/demo2/DEMO2_PREREG_v1.json),
+  amended 2026-10-16 (true default); not run; pilot P0 next.
