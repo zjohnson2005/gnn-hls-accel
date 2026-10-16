@@ -188,8 +188,24 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-14. Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-15. Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
+
+- 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
+  docs/PAPER_*_ABSTRACT.md, docs/PAPER_EVIDENCE_MAP.md; literature sweep
+  docs/literature/2026-10-15/ (wording rules in docs/RELATED_SEARCHES.md).
+  ISPASS flags: 9,750 is HELD (cite 10,000 c2246b1f); ~46,000 combined
+  limit NOT YET MEASURED; "Arrow Lake" vs our Panther Lake.
+- Open before DEMO-2 rehearsals: KV-DEFAULT-READBACK (default KV may
+  compile to u4; tools/kv_compiled_readback.ps1) and the PREFIX-CACHE-AUDIT
+  control decision (NON_RESIDENT passes a bare SchedulerConfig: prefix
+  caching off and struct-default batch tokens, not the runtime default).
+  Draft addendum in _agent_reports/drafts/ (not committed).
+- XPS queue: pin restore, back up be91e69d, DEMO-2 2-entry rehearsals,
+  D-X, T-X, H1-CPU (draft amendment 3 first), P1 B=20 A0, rest.
+- Sealed $0 analyses: analysis/aq_20261015/ (silent failures 122/141
+  non-escalated under emission in d482c621; DEMO-1 spend 100% step-0 TTFT;
+  no router beats matched-rate random escalation on BASE_30).
 
 - Key sealed results: placement 21.4x (GPU 10000 vs CPU 468 tokens;
   c2246b1f, 7f232f86); resident-session limits f16/u8/u4 = 15000/20000/
@@ -237,7 +253,9 @@ session start; update it in the same commit as the work. Never delete a row.
   - Sweep B=10 (CROSSING_B10_20261014.json): A0 bdc32a87 14 vs A4
     a766bd0b + 78dbf4c3 13. No crossing; floor and close fraction MISS.
   - Next: B=20, per amendment 9.
-- T2S window 1 ended 2026-10-14; window 2 is Oct 19-25. The T2S runs
+- T2S window 1 ended 2026-10-14; window 2 requested Oct 19-25 (Windows
+  Update pause pending Rithwik; Tailscale unattended likely works, needs his
+  confirmation before any deliberate reboot; Dr. Hao meeting Oct 29). The T2S runs
   with the UNCOLD_UPTIME deviation (no reboot before sessions). Windows
   Update rebooted it at 08:29 AM ET 2026-10-14 (event 1074, MoUsoCoreWorker
   then TrustedInstaller, Upgrade (Planned)); same pattern 2026-09-21. ssh
