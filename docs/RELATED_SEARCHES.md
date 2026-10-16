@@ -315,3 +315,71 @@ Copied from the report. Nothing below is cited in a paper on this evidence.
 | LaTune, llm-tuna, MTRouter, Workload-Router-Pool, TRACE-ROUTER, Agentic Routing, Agent Memory Below the Prompt, FlexSpec, GPU Goldmines | Seen only as search results |
 | RouteLLM, Lost in the Middle | Not re-read |
 | Nguyen et al. on remote-fetch energy | Known only second-hand |
+
+## 2026-10-16 true default and tuned profile
+
+Sources: docs/literature/2026-10-16/ (DEMO2_CONTROL: OpenVINO source read at
+the 2026.2.1 tags and default-baseline norms; TUNED_PROFILE: report and three
+notes). Searched 2026-10-15/16 by Zach and Claude (Cowork).
+
+### Verdicts
+- Default-vs-tuned local runtime inside a hybrid study: OPEN (looks new).
+  No hybrid device-cloud paper found compares a default local runtime setup
+  with a tuned one; they report one local configuration
+  (DEMO2_CONTROL/default_baseline_norms.md Q2).
+- Hybrid papers on Ollama inherit its context default: SUPPORTED, with a
+  caveat. ECO-LLM (2507.09003) integrates Ollama for the edge and sweeps
+  context length only as a parameter; Minions (Ollama blog, 2025-02-25)
+  shows OllamaClient with no num_ctx. Neither states a context setting, and
+  whether the Minions library sets num_ctx internally was not checked.
+  Ollama's default is tiered by VRAM per docs.ollama.com/context-length:
+  < 24 GiB 4k, 24-48 GiB 32k, >= 48 GiB 256k. Cite that page and the
+  Ollama version checked; the older FAQ "4096" line may be stale.
+- Autotuning norms: CONFIRMED. OtterTune (SIGMOD'17) compares shipped
+  defaults, rule-based tools (MySQLTuner, PGTune), human experts and RDS
+  configurations on the same hardware. Van Aken et al. (VLDB'21, section
+  2.2): tuning two knobs gives 75-95% of the ML-tuned gain. Consequence: a
+  shipped default is a fair "what users get" baseline but not the only one;
+  pair it with a strong simple baseline (DEMO-2 arm B).
+- Handoff Tax (2608.24358): full raw trajectory handoff is the worst
+  cost/quality point; for Claude it recovers 47% of the gap at more than 2x
+  the strong-model-only cost. Supports compact handoff and asymmetric
+  retention as search angles (DEMO2_SEARCH_PHASE), not as primary-arm
+  changes.
+- Constraint Tax (2605.26128): grammar-constrained decoding raised
+  well-formed-but-wrong tool calls from 8.5% to 52% (Qwen2.5-1.5B calendar
+  task). It would turn our loud no-parse failures into silent ones.
+  Grammar decoding is rejected for DEMO-2.
+
+### Source facts (openvino / openvino.genai 2026.2.1 tags)
+- KV default: i8 on a PA model (auto_enable_4bit_kv = false); f16 on
+  stateful/SDPA on Xe2/Xe3; u8 requests become i8; automatic u4 only from
+  2026.3.x. The 2026.2 release-note line "INT4 KV-cache compression is
+  enabled for GPUs" conflicts with the source; read it as opt-in support.
+- LLMPipeline with nothing passed: PA, prefix caching on, unlimited batch
+  tokens, dynamic cache, no eviction; SDPA fallback only when PA setup
+  throws (one WARN line). Any SchedulerConfig forces PA and replaces, not
+  merges, those defaults. Bare SchedulerConfig(): 256 tokens, split-fuse,
+  prefix caching off. No context cap on GPU/CPU.
+- Hardware: Core Ultra 5 325 = 4-Xe3 "Intel Graphics", LPDDR5X-7467 on
+  128 bits, ~119.5 GB/s theoretical (Notebookcheck); B390 = 12 Xe3 cores,
+  16 MB L2. 2603.23640: 37.3% (Warm) and 44.1% (Hot) on an iPhone 16 Pro.
+
+### Allowed wording
+- "the true runtime default: LLMPipeline(model, \"GPU\") on OpenVINO GenAI
+  2026.2.1 with nothing passed (PagedAttention, prefix caching on, i8 KV)"
+  - only after pilot P0 confirms it on the host.
+- "the configuration typical hybrid studies inherit (Ollama's 4k tier below
+  24 GiB)" for DEMO-2 arm D.
+- "u4 KV: the vendor's 2026.3 default, applied early on 2026.2.1".
+- "~119.5 GB/s theoretical, per Notebookcheck, unmeasured".
+
+### Forbidden wording
+- "the default KV on 2026.2.1 is u4" (it is i8 by source; u4 only 2026.3.x).
+- "the T2S u8 setting differs from the default" (u8 = i8 on GPU).
+- "the runtime default has prefix caching off" or "256-token chunks"
+  (that is a bare SchedulerConfig, not the default).
+- "~120 GB/s" as achieved or measured bandwidth.
+- "41.5% thermal loss" for 2603.23640, or any Intel thermal number from it.
+- "first default-vs-tuned comparison" without "in the hybrid papers we
+  searched (docs/RELATED_SEARCHES.md, 2026-10-16)".
