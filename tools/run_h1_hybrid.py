@@ -76,6 +76,9 @@ DEMO1_LONGCTX_OBSK1024_15_SHA256 = (
 )
 DEMO1_PAIRED_15_SHA256 = "71faf5455559887cf0aa3c7a8317fab641b27c939b0643e501eeab5f63f9c080"
 DEMO2_HELDOUT_60_SHA256 = "cc74a37ed84ed95b0f4dd4b8d7eb774f2737230dcfca01321fe136cdbfbca447"
+DEMO2_HELDOUT_60_B_LONG30_SHA256 = (
+    "46aa65098a4f704d07cd8037168ad48a04269b6731b0118bfb195a50b032c37c"
+)
 ENTRY_PINS: dict[str, dict[str, Any]] = {
     W3_ENTRIES_SHA256: {"name": "W3_multi_turn_base_200", "n": 200, "seal_refs": list(W3_SEAL_REFS)},
     DEMO1_LONGCTX_30_SHA256: {
@@ -125,6 +128,17 @@ ENTRY_PINS: dict[str, dict[str, Any]] = {
         "path": "derived/h1_hybrid/demo2/DEMO2_HELDOUT_60.json",
         "category": "multi_turn_base+multi_turn_long_context",
         "seed": 20261014,
+    },
+    # Second DEMO-2 held-out pin, long_context half (tools/demo2_heldout_b.py;
+    # base half blocked). Reserved: the runner refuses it without
+    # --confirmation-run.
+    DEMO2_HELDOUT_60_B_LONG30_SHA256: {
+        "name": "DEMO2_HELDOUT_60_B_LONG30",
+        "n": 30,
+        "path": "derived/h1_hybrid/demo2/DEMO2_HELDOUT_60_B_LONG30.json",
+        "category": "multi_turn_long_context",
+        "seed": 20261016,
+        "reserved_for": "one DEMO-2 SEARCH confirmation run (final searched profile vs arm A)",
     },
 }
 ENTRY_PIN_DEFAULT: dict[str, Any] = {"sha256": W3_ENTRIES_SHA256, **ENTRY_PINS[W3_ENTRIES_SHA256]}
@@ -2220,8 +2234,12 @@ def save_checkpoint(path: Path, state: dict[str, Any]) -> None:
 # ---------------------------------------------------------------------------
 # Entry / scorer asserts
 # ---------------------------------------------------------------------------
-def assert_entry_set_pinned(entries_path: Path) -> dict[str, Any]:
-    """Refuse an entries file whose sha256 is not in ENTRY_PINS, or whose count differs."""
+def assert_entry_set_pinned(entries_path: Path, *, allow_reserved: bool = False) -> dict[str, Any]:
+    """Refuse an entries file whose sha256 is not in ENTRY_PINS, or whose count differs.
+
+    A pin with ``reserved_for`` is refused unless ``allow_reserved``
+    (--confirmation-run).
+    """
     digest = _sha256_file(entries_path)
     pin = ENTRY_PINS.get(digest)
     if pin is None:
@@ -2229,6 +2247,11 @@ def assert_entry_set_pinned(entries_path: Path) -> dict[str, Any]:
             f"REFUSED -- multi_turn entries sha256 {digest} is not a pinned entry set "
             f"(W-3 {W3_ENTRIES_SHA256}, seals {', '.join(W3_SEAL_REFS)}; "
             f"DEMO1_LONGCTX_30 {DEMO1_LONGCTX_30_SHA256})"
+        )
+    if pin.get("reserved_for") and not allow_reserved:
+        raise SystemExit(
+            f"REFUSED -- entry pin {pin['name']} is reserved for {pin['reserved_for']}; "
+            "pass --confirmation-run only for that run"
         )
     entries = json.loads(entries_path.read_text(encoding="utf-8-sig"))
     if not isinstance(entries, list) or len(entries) != int(pin["n"]):
@@ -3899,7 +3922,9 @@ def derive_r1_from_cb781(
     return doc
 
 
-def load_w3_entries(path: Path | None = None) -> tuple[list[dict[str, Any]], Path]:
+def load_w3_entries(
+    path: Path | None = None, *, allow_reserved: bool = False
+) -> tuple[list[dict[str, Any]], Path]:
     if path is None:
         path = (
             ROOT
@@ -3910,7 +3935,7 @@ def load_w3_entries(path: Path | None = None) -> tuple[list[dict[str, Any]], Pat
             / "artifacts"
             / "multi_turn_probe_entries.json"
         )
-    assert_entry_set_pinned(path)
+    assert_entry_set_pinned(path, allow_reserved=allow_reserved)
     entries = json.loads(path.read_text(encoding="utf-8-sig"))
     return entries, path
 
@@ -4066,6 +4091,12 @@ def build_argparser() -> argparse.ArgumentParser:
         "--allow-dirty",
         action="store_true",
         help="Permit a dirty tree. Plan and seal record DIRTY and the sha256 of git diff HEAD.",
+    )
+    p.add_argument(
+        "--confirmation-run",
+        action="store_true",
+        help="Allow an entry pin marked reserved_for (DEMO2_HELDOUT_60_B: the one SEARCH "
+        "confirmation run). Default: reserved pins are refused.",
     )
     p.add_argument(
         "--launch-evidence-dir",
@@ -4497,8 +4528,9 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
         return 0 if summary["status"] == "complete" else 2
 
-    entries, entries_path = load_w3_entries(args.entries)
-    entry_pin = assert_entry_set_pinned(entries_path)
+    allow_reserved = bool(getattr(args, "confirmation_run", False))
+    entries, entries_path = load_w3_entries(args.entries, allow_reserved=allow_reserved)
+    entry_pin = assert_entry_set_pinned(entries_path, allow_reserved=allow_reserved)
     entries, entry_pin = slice_entries(
         entries, entry_pin, offset=args.entry_offset, count=args.entry_count
     )
@@ -4600,8 +4632,9 @@ def _main_interleaved(args: argparse.Namespace) -> int:
         ok_statuses = {"complete", "partial_policy_cap"}
         return 0 if summary["status"] in ok_statuses else 2
 
-    entries, entries_path = load_w3_entries(args.entries)
-    entry_pin = assert_entry_set_pinned(entries_path)
+    allow_reserved = bool(getattr(args, "confirmation_run", False))
+    entries, entries_path = load_w3_entries(args.entries, allow_reserved=allow_reserved)
+    entry_pin = assert_entry_set_pinned(entries_path, allow_reserved=allow_reserved)
     entries, entry_pin = slice_entries(
         entries, entry_pin, offset=args.entry_offset, count=args.entry_count
     )

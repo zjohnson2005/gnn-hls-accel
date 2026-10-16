@@ -1,0 +1,3753 @@
+[
+  {
+    "id": "multi_turn_long_context_4",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "Could you kindly show me the list of files in tmp directory in my file system including the hidden one?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "There is a report in my current directory. I have noticed the report appears somewhat cluttered; it could benefit from having its lines sorted."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "I would appreciate it if you could share the sorted result as the message body on social media, ensuring to tag 'currenttechtrend' and mention Julia, our insightful team."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "ls(a=True)"
+      ],
+      [
+        "sort(file_name='report.txt')"
+      ],
+      [
+        "post_tweet(content='Initial report content More unsorted data Unsorted data', mentions=['@Julia'], tags=['#currenttechtrend'])"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_4",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "Could you kindly show me the list of files in tmp directory in my file system including the hidden one?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "There is a report in my current directory. I have noticed the report appears somewhat cluttered; it could benefit from having its lines sorted."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "I would appreciate it if you could share the sorted result as the message body on social media, ensuring to tag 'currenttechtrend' and mention Julia, our insightful team."
+          }
+        ]
+      ],
+      "initial_config": {
+        "GorillaFileSystem": {
+          "root": {
+            "tmp": {
+              "type": "directory",
+              "contents": {
+                "report.txt": {
+                  "type": "file",
+                  "content": "Initial report content Unsorted data More unsorted data"
+                }
+              }
+            }
+          }
+        },
+        "TwitterAPI": {
+          "username": "tech_guru",
+          "password": "securePass123",
+          "authenticated": true,
+          "tweets": {
+            "0": {
+              "id": 0,
+              "username": "tech_guru",
+              "content": "Our refined findings on tech trends",
+              "tags": [
+                "#TechTrends",
+                "#InsightfulTeam"
+              ],
+              "mentions": [
+                "@InsightfulTeam"
+              ]
+            }
+          },
+          "comments": {
+            "1": [
+              {
+                "username": "tech_guru",
+                "comment": "Excited to share our insights!"
+              }
+            ]
+          },
+          "retweets": {},
+          "following_list": [
+            "tech_innovator",
+            "future_visionary"
+          ],
+          "tweet_counter": 2
+        }
+      },
+      "path": [
+        "GorillaFileSystem.cd",
+        "GorillaFileSystem.echo",
+        "GorillaFileSystem.sort",
+        "TwitterAPI.post_tweet",
+        "TwitterAPI.comment"
+      ],
+      "involved_classes": [
+        "TwitterAPI",
+        "GorillaFileSystem"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_10",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "Hey, can you set up a new directory named 'Projects' right in workspace folder?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Let's move over the project's proposal document into this 'Projects' folder, but we'll go ahead and rename it to 'final_proposal_2024'."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Inside this directory, get cracking on a new file, call it 'notes.md', to capture all the highlights from our meetings."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Also, create a file named 'summary.txt' and write 'Hello' into it. After that, do a quick comparison between this one and 'notes.md' to spot any disparities in information."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Finally, tally up the number of characters in 'summary.txt'."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "cd(folder='workspace')",
+        "mkdir(dir_name='Projects')"
+      ],
+      [
+        "mv(source='proposal.docx',destination='Projects')",
+        "cd(folder='Projects')",
+        "mv(source='proposal.docx',destination='final_proposal_2024')"
+      ],
+      [
+        "touch(file_name='notes.md')"
+      ],
+      [
+        "touch(file_name='summary.txt')",
+        "echo(content='Hello',file_name='summary.txt')",
+        "diff(file_name1='notes.md',file_name2='summary.txt')"
+      ],
+      [
+        "wc(file_name='summary.txt',mode='c')"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_10",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "Hey, can you set up a new directory named 'Projects' right in workspace folder?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Let's move over the project's proposal document into this 'Projects' folder, but we'll go ahead and rename it to 'final_proposal_2024'."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Inside this directory, get cracking on a new file, call it 'notes.md', to capture all the highlights from our meetings."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Also, create a file named 'summary.txt' and write 'Hello' into it. After that, do a quick comparison between this one and 'notes.md' to spot any disparities in information."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Finally, tally up the number of characters in 'summary.txt'."
+          }
+        ]
+      ],
+      "initial_config": {
+        "GorillaFileSystem": {
+          "root": {
+            "alex": {
+              "type": "directory",
+              "contents": {
+                "workspace": {
+                  "type": "directory",
+                  "contents": {
+                    "proposal.docx": {
+                      "type": "file",
+                      "content": "Initial project proposal document content."
+                    },
+                    "notes.md": {
+                      "type": "file",
+                      "content": "Meeting highlights and notes."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "path": [
+        "GorillaFileSystem.mkdir",
+        "GorillaFileSystem.touch",
+        "GorillaFileSystem.diff",
+        "GorillaFileSystem.cp",
+        "GorillaFileSystem.mv",
+        "GorillaFileSystem.cat",
+        "GorillaFileSystem.wc"
+      ],
+      "involved_classes": [
+        "GorillaFileSystem"
+      ],
+      "excluded_function": [
+        "cp"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_11",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "Display all the available files located within the '/temp' directory including hidden one using the terminal interface ."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "With the information presented on the terminal, draft a post on Twitter mentioning only the file names seperated them by comma and space, and include the hashtag '#fileshowcase' to spread the word."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "ls(a=True)"
+      ],
+      [
+        "post_tweet(content='file1.txt, file2.txt, image_9171836320808556539.jpg, image_1135008470282996872.jpg, image_2869912722692241568.jpg, image_7986542436865978268.jpg, image_3645655156626111462.jpg, image_6704793011976777041.jpg, image_7107047432022392470.jpg, image_8603093719065384660.jpg, image_727202759131266052.jpg, image_2692200417198159553.jpg, image_1204131254429381568.jpg, image_4418900427093961980.jpg, image_6635769590719699364.jpg, image_1177363041199041309.jpg, image_7932012185616217607.jpg, image_9175777831251456489.jpg, image_2803759970066013882.jpg, image_2553427121164371255.jpg, image_2878593564549311190.jpg, image_7150710853607171541.jpg, image_3538562015489608382.jpg, image_7471010661551037781.jpg, image_7549526020839804711.jpg, image_1574066122364479353.jpg, image_8534663788086463195.jpg, image_2373154649617629635.jpg, image_7443554608617120134.jpg, image_7121622347784954466.jpg, image_7754685758991778308.jpg, image_8876835042071009857.jpg',tags=['#fileshowcase'])"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_11",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "Display all the available files located within the '/temp' directory including hidden one using the terminal interface ."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "With the information presented on the terminal, draft a post on Twitter mentioning only the file names seperated them by comma and space, and include the hashtag '#fileshowcase' to spread the word."
+          }
+        ]
+      ],
+      "initial_config": {
+        "GorillaFileSystem": {
+          "root": {
+            "temp": {
+              "type": "directory",
+              "contents": {
+                "file1.txt": {
+                  "type": "file",
+                  "content": "Sample content of file1"
+                },
+                "file2.txt": {
+                  "type": "file",
+                  "content": "Sample content of file2"
+                }
+              }
+            }
+          }
+        },
+        "TwitterAPI": {
+          "username": "michael",
+          "password": "michaelSecurePass123",
+          "authenticated": true,
+          "tweets": {},
+          "comments": {},
+          "retweets": {},
+          "following_list": [
+            "charlie",
+            "diana"
+          ],
+          "tweet_counter": 1
+        }
+      },
+      "path": [
+        "GorillaFileSystem.cd",
+        "GorillaFileSystem.echo",
+        "TwitterAPI.post_tweet",
+        "TwitterAPI.comment"
+      ],
+      "involved_classes": [
+        "TwitterAPI",
+        "GorillaFileSystem"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_18",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "Copy all the text files of the 'Quarter1_Reports' directory and place it in a new directory naming it 'Archived_Quarter1."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Within the 'MonthlySummary.docx' file, display the content and sort it alphabetically by line to organize the information neatly."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Compare the educational material differences between 'History101.txt' and 'History202.txt', then post the differences to my Twitter account for my followers to see, mentioning Jerry."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "mkdir(dir_name='Archived_Quarter1')",
+        "cp(source='report1.txt',destination='Archived_Quarter1')",
+        "cp(source='report2.txt',destination='Archived_Quarter1')",
+        "cp(source='History101.txt',destination='Archived_Quarter1')",
+        "cp(source='History202.txt',destination='Archived_Quarter1')"
+      ],
+      [
+        "cat(file_name='MonthlySummary.docx')",
+        "sort(file_name='MonthlySummary.docx')"
+      ],
+      [
+        "diff(file_name1='History101.txt',file_name2='History202.txt')",
+        "post_tweet(content='- Introduction to History. Ancient civilizations.The company\\'s financials for the year reflect a period of steady growth and consistent revenue generation, with both top-line and bottom-line figures showing improvement compared to the previous year. Total revenue increased at a modest pace, driven primarily by strong performance in the company\\u2019s core markets. Despite some fluctuations in demand, the business maintained healthy margins, with cost controls and efficiency measures helping to offset any increase in operational expenses. As a result, gross profit grew at a stable rate, keeping in line with management\\u2019s expectations. The company\\u2019s operating income saw an uptick, indicating that the firm was able to manage its administrative and selling expenses effectively, while also benefiting from a more streamlined supply chain. This contributed to a higher operating margin, suggesting that the company\\u2019s core operations were becoming more efficient and profitable. Net income also rose, bolstered by favorable tax conditions and reduced interest expenses due to a restructuring of long-term debt. The company managed to reduce its financial leverage, leading to an improvement in its interest coverage ratio. On the balance sheet, the company maintained a solid financial position, with total assets increasing year over year. The growth in assets was largely due to strategic investments in new technology and facilities, aimed at expanding production capacity and improving operational efficiency. Cash reserves remained robust, supported by positive cash flow from operations. The company also reduced its short-term liabilities, improving its liquidity ratios, and signaling a stronger ability to meet near-term obligations.Shareholders\\u2019 equity grew as a result of retained earnings, reflecting the company\\u2019s profitability and its strategy of reinvesting profits back into the business rather than paying out large dividends. The company maintained a conservative approach to debt, with its debt-to-equity ratio remaining within industry norms, which reassured investors about the company\\u2019s long-term solvency and risk management practices. The cash flow statement highlighted the company\\u2019s ability to generate cash from its core operations, which remained a strong indicator of the business\\'s health. Cash from operating activities was sufficient to cover both investing and financing needs, allowing the company to continue its capital expenditure plans without increasing its reliance on external financing. The company\\u2019s investment activities included expanding its production facilities and acquiring new technology to improve future productivity and efficiency. Meanwhile, the company\\u2019s financing activities reflected a balanced approach, with some debt repayments and a modest issuance of new equity, allowing for flexible capital management.Overall, the company\\'s financials indicate a well-managed business with a clear focus on sustainable growth. Profitability remains strong, operational efficiency is improving, and the company\\u2019s balance sheet reflects a stable, low-risk financial structure. The management\\u2019s strategy of cautious expansion, combined with a disciplined approach to debt and investment, has positioned the company well for future growth and profitability.\\n+ Advanced History. Modern world events.The company\\'s financials for the year reflect a period of steady growth and consistent revenue generation, with both top-line and bottom-line figures showing improvement compared to the previous year. Total revenue increased at a modest pace, driven primarily by strong performance in the company\\u2019s core markets. Despite some fluctuations in demand, the business maintained healthy margins, with cost controls and efficiency measures helping to offset any increase in operational expenses. As a result, gross profit grew at a stable rate, keeping in line with management\\u2019s expectations. The company\\u2019s operating income saw an uptick, indicating that the firm was able to manage its administrative and selling expenses effectively, while also benefiting from a more streamlined supply chain. This contributed to a higher operating margin, suggesting that the company\\u2019s core operations were becoming more efficient and profitable. Net income also rose, bolstered by favorable tax conditions and reduced interest expenses due to a restructuring of long-term debt. The company managed to reduce its financial leverage, leading to an improvement in its interest coverage ratio. On the balance sheet, the company maintained a solid financial position, with total assets increasing year over year. The growth in assets was largely due to strategic investments in new technology and facilities, aimed at expanding production capacity and improving operational efficiency. Cash reserves remained robust, supported by positive cash flow from operations. The company also reduced its short-term liabilities, improving its liquidity ratios, and signaling a stronger ability to meet near-term obligations.Shareholders\\u2019 equity grew as a result of retained earnings, reflecting the company\\u2019s profitability and its strategy of reinvesting profits back into the business rather than paying out large dividends. The company maintained a conservative approach to debt, with its debt-to-equity ratio remaining within industry norms, which reassured investors about the company\\u2019s long-term solvency and risk management practices. The cash flow statement highlighted the company\\u2019s ability to generate cash from its core operations, which remained a strong indicator of the business\\'s health. Cash from operating activities was sufficient to cover both investing and financing needs, allowing the company to continue its capital expenditure plans without increasing its reliance on external financing. The company\\u2019s investment activities included expanding its production facilities and acquiring new technology to improve future productivity and efficiency. Meanwhile, the company\\u2019s financing activities reflected a balanced approach, with some debt repayments and a modest issuance of new equity, allowing for flexible capital management.Overall, the company\\'s financials indicate a well-managed business with a clear focus on sustainable growth. Profitability remains strong, operational efficiency is improving, and the company\\u2019s balance sheet reflects a stable, low-risk financial structure. The management\\u2019s strategy of cautious expansion, combined with a disciplined approach to debt and investment, has positioned the company well for future growth and profitability.',mentions=['@Jerry'])"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_18",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "Copy all the text files of the 'Quarter1_Reports' directory and place it in a new directory naming it 'Archived_Quarter1."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Within the 'MonthlySummary.docx' file, display the content and sort it alphabetically by line to organize the information neatly."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Compare the educational material differences between 'History101.txt' and 'History202.txt', then post the differences to my Twitter account for my followers to see, mentioning Jerry."
+          }
+        ]
+      ],
+      "initial_config": {
+        "GorillaFileSystem": {
+          "root": {
+            "Quarter1_Reports": {
+              "type": "directory",
+              "contents": {
+                "report1.txt": {
+                  "type": "file",
+                  "content": "Quarter 1 financial report."
+                },
+                "report2.txt": {
+                  "type": "file",
+                  "content": "Quarter 1 sales report."
+                },
+                "Backup": {
+                  "type": "directory",
+                  "contents": {}
+                },
+                "MonthlySummary.docx": {
+                  "type": "file",
+                  "content": "Summary of monthly activities and achievements."
+                },
+                "History101.txt": {
+                  "type": "file",
+                  "content": "Introduction to History. Ancient civilizations."
+                },
+                "History202.txt": {
+                  "type": "file",
+                  "content": "Advanced History. Modern world events."
+                }
+              }
+            }
+          }
+        },
+        "TwitterAPI": {
+          "tweet_counter": 3,
+          "tweets": {
+            "0": {
+              "id": 0,
+              "username": "techie_sarah",
+              "content": "Excited to share my latest project!",
+              "tags": [
+                "#coding",
+                "#project",
+                "#excited"
+              ],
+              "mentions": []
+            },
+            "1": {
+              "id": 1,
+              "username": "techie_sarah",
+              "content": "Check out my new blog post!",
+              "tags": [
+                "#blog",
+                "#writing"
+              ],
+              "mentions": []
+            },
+            "2": {
+              "id": 2,
+              "username": "techie_sarah",
+              "content": "Just finished a great book on history.",
+              "tags": [
+                "#reading",
+                "#history",
+                "#books"
+              ],
+              "mentions": []
+            }
+          },
+          "authenticated": true,
+          "username": "techie_sarah",
+          "password": "Kj8#mP9$vL2"
+        }
+      },
+      "path": [
+        "GorillaFileSystem.cp",
+        "GorillaFileSystem.mv",
+        "GorillaFileSystem.cat",
+        "GorillaFileSystem.sort",
+        "GorillaFileSystem.diff",
+        "TwitterAPI.post_tweet",
+        "TwitterAPI.mention"
+      ],
+      "involved_classes": [
+        "TwitterAPI",
+        "GorillaFileSystem"
+      ],
+      "excluded_function": [
+        "mv"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_31",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "Hey there, I need to set up a directory titled 'Reports' in my current workspace. Once that's in place, could you help me locate a file called 'summary.doc' in this vicinity and transfer it to the new 'Reports' folder? After that, I'd appreciate if you could find and open up 'data.txt', then scan through it to identify lines that mention 'Q4 financials'. Also, could you let me know the total number of lines in 'data.txt'?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "On a different note,Could you get the mean of character number of all files in Reports directory?"
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "mkdir(dir_name='Reports')",
+        "mv(source='summary.doc', destination='Reports')",
+        "cat(file_name='data.txt')",
+        "grep(pattern='Q4 financials', file_name='data.txt')",
+        "wc(file_name='data.txt',mode='l')"
+      ],
+      [
+        "cd('Reports')",
+        "wc(file_name='summary.doc',mode='c')",
+        "mean([3288])"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_31",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "Hey there, I need to set up a directory titled 'Reports' in my current workspace. Once that's in place, could you help me locate a file called 'summary.doc' in this vicinity and transfer it to the new 'Reports' folder? After that, I'd appreciate if you could find and open up 'data.txt', then scan through it to identify lines that mention 'Q4 financials'. Also, could you let me know the total number of lines in 'data.txt'?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "On a different note,Could you get the mean of character number of all files in Reports directory?"
+          }
+        ]
+      ],
+      "initial_config": {
+        "GorillaFileSystem": {
+          "root": {
+            "workspace": {
+              "type": "directory",
+              "contents": {
+                "summary.doc": {
+                  "type": "file",
+                  "content": "This is the summary document content."
+                },
+                "data.txt": {
+                  "type": "file",
+                  "content": "Q1 results Q2 results Q3 results Q4 financials Q4 financials analysis End of year summary"
+                }
+              }
+            }
+          }
+        }
+      },
+      "path": [
+        "GorillaFileSystem.mkdir",
+        "GorillaFileSystem.find",
+        "GorillaFileSystem.mv",
+        "GorillaFileSystem.grep",
+        "GorillaFileSystem.wc",
+        "MathAPI.standard_deviation"
+      ],
+      "involved_classes": [
+        "GorillaFileSystem",
+        "MathAPI"
+      ],
+      "excluded_function": [
+        "cp"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_42",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "In my existing folder called 'Lectures', I'd like to set up a new file called 'Notes2023.txt'."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Inside 'Notes2023.txt', I shall jot down some pivotal reminders: 'Study diligently, practice programming, master algorithms.'"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Ascertain for me how many characters of text remain in this alphabetically sorted version of 'Notes2023.txt'."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "touch(file_name='Notes2023.txt')"
+      ],
+      [
+        "echo(content='Study diligently, practice programming, master algorithms.',file_name='Notes2023.txt')"
+      ],
+      [
+        "wc(file_name='Notes2023.txt',mode='c')"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_42",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "In my existing folder called 'Lectures', I'd like to set up a new file called 'Notes2023.txt'."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Inside 'Notes2023.txt', I shall jot down some pivotal reminders: 'Study diligently, practice programming, master algorithms.'"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Ascertain for me how many characters of text remain in this alphabetically sorted version of 'Notes2023.txt'."
+          }
+        ]
+      ],
+      "initial_config": {
+        "GorillaFileSystem": {
+          "root": {
+            "Lectures": {
+              "type": "directory",
+              "contents": {}
+            }
+          }
+        },
+        "MathAPI": {}
+      },
+      "path": [
+        "GorillaFileSystem.cd",
+        "GorillaFileSystem.touch",
+        "GorillaFileSystem.echo",
+        "GorillaFileSystem.cat",
+        "GorillaFileSystem.sort",
+        "GorillaFileSystem.wc",
+        "MathAPI.standard_deviation"
+      ],
+      "involved_classes": [
+        "GorillaFileSystem",
+        "MathAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_47",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I have a list of student record in this directory, could you find me where is it by telling me its name and using 'find'?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Look at the student_record.txt and tell me the average score."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "What about the standard deviation?"
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "find(path='.')"
+      ],
+      [
+        "cat(file_name='student_record.txt')",
+        "mean(numbers=[100, 95, 85, 90, 88, 92])"
+      ],
+      [
+        "standard_deviation(numbers=[100, 95, 85, 90, 88, 92])"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_47",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "I have a list of student record in this directory, could you find me where is it by telling me its name and using 'find'?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Look at the student_record.txt and tell me the average score."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "What about the standard deviation?"
+          }
+        ]
+      ],
+      "initial_config": {
+        "GorillaFileSystem": {
+          "root": {
+            "project_directory": {
+              "type": "directory",
+              "contents": {
+                "student_record.txt": {
+                  "type": "file",
+                  "content": "John: 100 Jane: 95 Alice: 85 Bob: 90 Tom: 88 Olivia: 92"
+                }
+              }
+            }
+          }
+        },
+        "MathAPI": {}
+      },
+      "path": [
+        "GorillaFileSystem.touch",
+        "GorillaFileSystem.echo",
+        "GorillaFileSystem.sort",
+        "GorillaFileSystem.wc",
+        "MathAPI.mean"
+      ],
+      "involved_classes": [
+        "GorillaFileSystem",
+        "MathAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_58",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I am planning a road trip from Rivermist to San Francisco, and I need to know how far I will be traveling. This would help me ensure that my car is sufficiently fueled for the journey."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Given that the trip spans almost a thousand kilometers, could you help me make sure the fuel tank is full? Btw, I have a 30-gallon drum handy. How much is that in liters?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Now that the tank is completely filled, I'm keen on ensuring that the engine starts without a hitch. Could you help me get the engine running, ensuring it's all set for the long journey ahead?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Before I set off, I want to share my travel excitement with friends on Twitter by describing the wonderful places I'll be exploring during this adventure. Would you be able to post a tweet saying 'Excited for the trip!'?"
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "get_zipcode_based_on_city('San Francisco')",
+        "get_zipcode_based_on_city('Rivermist')",
+        "estimate_distance(cityA='94016', cityB='83214')"
+      ],
+      [
+        "gallon_to_liter(gallon=30)",
+        "fillFuelTank(fuelAmount=50)"
+      ],
+      [
+        "lockDoors(unlock=False, door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+        "pressBrakePedal(pedalPosition=1.0)",
+        "startEngine(ignitionMode='START')"
+      ],
+      [
+        "post_tweet(content='Excited for the trip!')"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_58",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "I am planning a road trip from Rivermist to San Francisco, and I need to know how far I will be traveling. This would help me ensure that my car is sufficiently fueled for the journey."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Given that the trip spans almost a thousand kilometers, could you help me make sure the fuel tank is full? Btw, I have a 30-gallon drum handy. How much is that in liters?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Now that the tank is completely filled, I'm keen on ensuring that the engine starts without a hitch. Could you help me get the engine running, ensuring it's all set for the long journey ahead?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Before I set off, I want to share my travel excitement with friends on Twitter by describing the wonderful places I'll be exploring during this adventure. Would you be able to post a tweet saying 'Excited for the trip!'?"
+          }
+        ]
+      ],
+      "initial_config": {
+        "VehicleControlAPI": {
+          "fuelLevel": 0.0,
+          "batteryVoltage": 12.6,
+          "engineState": "stopped",
+          "doorStatus": {
+            "driver": "unlocked",
+            "passenger": "unlocked",
+            "rear_left": "unlocked",
+            "rear_right": "unlocked"
+          },
+          "acTemperature": 25.0,
+          "fanSpeed": 50,
+          "acMode": "auto",
+          "humidityLevel": 50.0,
+          "headLightStatus": "off",
+          "parkingBrakeStatus": "released",
+          "parkingBrakeForce": 0.0,
+          "slopeAngle": 0.0,
+          "distanceToNextVehicle": 50.0,
+          "cruiseStatus": "inactive",
+          "destination": "San Francisco",
+          "frontLeftTirePressure": 32.0,
+          "frontRightTirePressure": 32.0,
+          "rearLeftTirePressure": 30.0,
+          "rearRightTirePressure": 30.0
+        },
+        "TwitterAPI": {
+          "authenticated": true,
+          "tweet_counter": 0,
+          "tweets": {}
+        }
+      },
+      "path": [
+        "VehicleControlAPI.gallon_to_liter",
+        "VehicleControlAPI.fillFuelTank",
+        "VehicleControlAPI.startEngine",
+        "VehicleControlAPI.get_zipcode_based_on_city",
+        "VehicleControlAPI.estimate_distance",
+        "TwitterAPI.post_tweet",
+        "TwitterAPI.mention"
+      ],
+      "involved_classes": [
+        "TwitterAPI",
+        "VehicleControlAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_86",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "Lock all doors and engage the parking brake, then start the vehicle's engine in preparation for a trip. Afterward, check if our tire pressure condition is safe to proceed."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "The tire pressure seems worrying, kindly find the nearest tire shop to address the issue and set our navigation to that location."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "I have the tire issue fixed. Thinking aloud, since it's been a successful start to this journey, I'd like to send a thank you tweet 'Thank you to our vehicle for a smooth start!' about our vehicle with a few hashtags '#Journey, #SmoothRide, #Grateful' added."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "lockDoors(unlock=False, door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+        "activateParkingBrake(mode='engage')",
+        "pressBrakePedal(pedalPosition=1.0)",
+        "startEngine(ignitionMode='START')",
+        "check_tire_pressure()"
+      ],
+      [
+        "find_nearest_tire_shop()",
+        "set_navigation(destination='456 Oakwood Avenue, Rivermist, 83214')"
+      ],
+      [
+        "post_tweet(content='Thank you to our vehicle for a smooth start!', tags=['#Journey', '#SmoothRide', '#Grateful'])"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_86",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "Lock all doors and engage the parking brake, then start the vehicle's engine in preparation for a trip. Afterward, check if our tire pressure condition is safe to proceed."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "The tire pressure seems worrying, kindly find the nearest tire shop to address the issue and set our navigation to that location."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "I have the tire issue fixed. Thinking aloud, since it's been a successful start to this journey, I'd like to send a thank you tweet 'Thank you to our vehicle for a smooth start!' about our vehicle with a few hashtags '#Journey, #SmoothRide, #Grateful' added."
+          }
+        ]
+      ],
+      "initial_config": {
+        "VehicleControlAPI": {
+          "fuelLevel": 15.5,
+          "batteryVoltage": 12.8,
+          "engineState": "stopped",
+          "doorStatus": {
+            "driver": "unlocked",
+            "passenger": "unlocked",
+            "rear_left": "unlocked",
+            "rear_right": "unlocked"
+          },
+          "acTemperature": 22.0,
+          "fanSpeed": 60,
+          "acMode": "auto",
+          "humidityLevel": 45.0,
+          "headLightStatus": "off",
+          "parkingBrakeStatus": "engaged",
+          "parkingBrakeForce": 0.0,
+          "slopeAngle": 0.0,
+          "distanceToNextVehicle": 100.0,
+          "cruiseStatus": "inactive",
+          "destination": "None",
+          "frontLeftTirePressure": 32.0,
+          "frontRightTirePressure": 22.0,
+          "rearLeftTirePressure": 30.0,
+          "rearRightTirePressure": 30.0
+        },
+        "TwitterAPI": {
+          "authenticated": true,
+          "tweet_counter": 3,
+          "tweets": {
+            "0": {
+              "id": 0,
+              "username": "traveler123",
+              "content": "Just started our journey!",
+              "tags": [
+                "#journey",
+                "#adventure",
+                "#travel"
+              ],
+              "mentions": []
+            },
+            "1": {
+              "id": 1,
+              "username": "traveler123",
+              "content": "Loving the smooth ride!",
+              "tags": [
+                "#smoothride",
+                "#travel",
+                "#comfort"
+              ],
+              "mentions": []
+            },
+            "2": {
+              "id": 2,
+              "username": "traveler123",
+              "content": "Thankful for the great service!",
+              "tags": [
+                "#grateful",
+                "#service",
+                "#happy"
+              ],
+              "mentions": [
+                "@serviceTeam"
+              ]
+            }
+          },
+          "username": "traveler123",
+          "password": "Tr@v3l2023Secure"
+        }
+      },
+      "path": [
+        "VehicleControlAPI.startEngine",
+        "VehicleControlAPI.check_tire_pressure",
+        "VehicleControlAPI.find_nearest_tire_shop",
+        "VehicleControlAPI.set_navigation",
+        "TwitterAPI.post_tweet",
+        "TwitterAPI.mention"
+      ],
+      "involved_classes": [
+        "TwitterAPI",
+        "VehicleControlAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_97",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I've heard a friend of mine in Rivermist recently visited Stonebrook, and she mentioned the journey felt quite extensive. I'm curious, do you happen to have an idea about the actual distance between the two places?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Covering the distance from Rivermist to Stonebrook sure seems like a long trip. I'm a bit worried if my vehicle can endure the journey with the current fuel level. I'm not entirely sure how far my car can travel on the remaining fuel. What do you think?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Thanks a lot! Before I embark on this journey, it makes sense to ensure I won't be left stranded due to an empty tank. Just add to the tank fully."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Great, with my tank now full, let's embark on this journey. Once I'm set to go, I'd appreciate it if you could start the car for me."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "By the way, as I travel, there are some updates I need to communicate to my friend Michael. Would you be able to send message 'I am on my way.'?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Lastly, while I'm on the road, I want to make sure I have informed everyone that should be aware. Could you display what messages I've send thus far?"
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "get_zipcode_based_on_city(city='Rivermist')",
+        "get_zipcode_based_on_city(city='Stonebrook')",
+        "estimate_distance(cityA='83214', cityB='74532')"
+      ],
+      [
+        "estimate_drive_feasibility_by_mileage(distance=750.0)"
+      ],
+      [
+        "fillFuelTank(fuelAmount=45.0)"
+      ],
+      [
+        "lockDoors(unlock=False, door=['driver', 'passenger', 'rear_left', 'rear_right'])",
+        "pressBrakePedal(pedalPosition=1.0)",
+        "startEngine(ignitionMode='START')"
+      ],
+      [
+        "send_message(receiver_id='BD732D1888B94DAA', message='I am on my way.')"
+      ],
+      [
+        "view_messages_sent()"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_97",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "I've heard a friend of mine in Rivermist recently visited Stonebrook, and she mentioned the journey felt quite extensive. I'm curious, do you happen to have an idea about the actual distance between the two places?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Covering the distance from Rivermist to Stonebrook sure seems like a long trip. I'm a bit worried if my vehicle can endure the journey with the current fuel level. I'm not entirely sure how far my car can travel on the remaining fuel. What do you think?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Thanks a lot! Before I embark on this journey, it makes sense to ensure I won't be left stranded due to an empty tank. Just add to the tank fully."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Great, with my tank now full, let's embark on this journey. Once I'm set to go, I'd appreciate it if you could start the car for me."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "By the way, as I travel, there are some updates I need to communicate to my friend Michael. Would you be able to send message 'I am on my way.'?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Lastly, while I'm on the road, I want to make sure I have informed everyone that should be aware. Could you display what messages I've send thus far?"
+          }
+        ]
+      ],
+      "initial_config": {
+        "VehicleControlAPI": {
+          "fuelLevel": 5.0,
+          "batteryVoltage": 12.6,
+          "engineState": "stopped",
+          "doorStatus": {
+            "driver": "unlocked",
+            "passenger": "unlocked",
+            "rear_left": "unlocked",
+            "rear_right": "unlocked"
+          },
+          "acTemperature": 25.0,
+          "fanSpeed": 50,
+          "acMode": "auto",
+          "humidityLevel": 50.0,
+          "headLightStatus": "off",
+          "parkingBrakeStatus": "released",
+          "parkingBrakeForce": 0.0,
+          "slopeAngle": 0.0,
+          "distanceToNextVehicle": 50.0,
+          "cruiseStatus": "inactive",
+          "destination": "Stonebrook",
+          "frontLeftTirePressure": 32.0,
+          "frontRightTirePressure": 32.0,
+          "rearLeftTirePressure": 30.0,
+          "rearRightTirePressure": 30.0
+        },
+        "MessageAPI": {
+          "user_count": 4,
+          "user_map": {
+            "Michael": "BD732D1888B94DAA",
+            "Sarah": "USR002",
+            "David": "USR003",
+            "Emma": "USR004"
+          },
+          "inbox": [
+            {
+              "USR002": "Safe travels!"
+            }
+          ],
+          "message_count": 1,
+          "current_user": "USR003"
+        }
+      },
+      "path": [
+        "VehicleControlAPI.get_zipcode_based_on_city",
+        "VehicleControlAPI.estimate_distance",
+        "VehicleControlAPI.estimate_drive_feasibility_by_mileage",
+        "VehicleControlAPI.fillFuelTank",
+        "VehicleControlAPI.startEngine",
+        "MessageAPI.send_message",
+        "MessageAPI.view_messages_received"
+      ],
+      "involved_classes": [
+        "MessageAPI",
+        "VehicleControlAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_122",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I noticed some promising trends and want to proceed with a 'Buy' order for 100 shares of AAPL at a price of $150 each. Let's ensure the order is placed correctly."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "I received a notification about the order placement but want a detailed look at the transaction. Provide me with the full details of my recent order."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Upon further consideration, I think it's better to hold off on this purchase. Please cancel my recent order for the AAPL shares."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "I've handled all necessary trading decisions for today, and I want to make sure my account is securely logged out. Confirm my logout from the trading system."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "place_order(order_type='Buy',symbol='AAPL',price=150,amount=100)"
+      ],
+      [
+        "get_order_details(order_id=12446)"
+      ],
+      [
+        "cancel_order(order_id=12446)"
+      ],
+      [
+        "trading_logout()"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_122",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "I noticed some promising trends and want to proceed with a 'Buy' order for 100 shares of AAPL at a price of $150 each. Let's ensure the order is placed correctly."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "I received a notification about the order placement but want a detailed look at the transaction. Provide me with the full details of my recent order."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Upon further consideration, I think it's better to hold off on this purchase. Please cancel my recent order for the AAPL shares."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "I've handled all necessary trading decisions for today, and I want to make sure my account is securely logged out. Confirm my logout from the trading system."
+          }
+        ]
+      ],
+      "initial_config": {
+        "TradingBot": {
+          "orders": {
+            "12345": {
+              "symbol": "AAPL",
+              "price": 210.65,
+              "num_shares": 10,
+              "status": "Completed"
+            },
+            "order_type": "Buy"
+          },
+          "account_info": {
+            "account_id": 12345,
+            "balance": 16000.0,
+            "binding_card": 1974202140965533
+          },
+          "authenticated": true,
+          "market_status": "Open",
+          "order_counter": 12446,
+          "stocks": {
+            "AAPL": {
+              "price": 227.16,
+              "percent_change": 0.17,
+              "volume": 2.552,
+              "MA(5)": 227.11,
+              "MA(20)": 227.09
+            },
+            "GOOG": {
+              "price": 2840.34,
+              "percent_change": 0.24,
+              "volume": 1.123,
+              "MA(5)": 2835.67,
+              "MA(20)": 2842.15
+            },
+            "TSLA": {
+              "price": 667.92,
+              "percent_change": -0.12,
+              "volume": 1.654,
+              "MA(5)": 671.15,
+              "MA(20)": 668.2
+            },
+            "MSFT": {
+              "price": 310.23,
+              "percent_change": 0.09,
+              "volume": 3.234,
+              "MA(5)": 309.88,
+              "MA(20)": 310.11
+            },
+            "NVDA": {
+              "price": 220.34,
+              "percent_change": 0.34,
+              "volume": 1.234,
+              "MA(5)": 220.45,
+              "MA(20)": 220.67
+            },
+            "ALPH": {
+              "price": 1320.45,
+              "percent_change": -0.08,
+              "volume": 1.567,
+              "MA(5)": 1321.12,
+              "MA(20)": 1325.78
+            },
+            "OMEG": {
+              "price": 457.23,
+              "percent_change": 0.12,
+              "volume": 2.345,
+              "MA(5)": 456.78,
+              "MA(20)": 458.12
+            },
+            "QUAS": {
+              "price": 725.89,
+              "percent_change": -0.03,
+              "volume": 1.789,
+              "MA(5)": 726.45,
+              "MA(20)": 728.0
+            },
+            "NEPT": {
+              "price": 88.34,
+              "percent_change": 0.19,
+              "volume": 0.654,
+              "MA(5)": 88.21,
+              "MA(20)": 88.67
+            },
+            "SYNX": {
+              "price": 345.67,
+              "percent_change": 0.11,
+              "volume": 2.112,
+              "MA(5)": 345.34,
+              "MA(20)": 346.12
+            }
+          },
+          "watch_list": [
+            "NVDA"
+          ],
+          "transaction_history": []
+        }
+      },
+      "path": [
+        "TradingBot.get_current_time",
+        "TradingBot.update_market_status",
+        "TradingBot.place_order",
+        "TradingBot.get_order_details",
+        "TradingBot.cancel_order",
+        "TradingBot.logout"
+      ],
+      "involved_classes": [
+        "TradingBot"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_130",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "Having established the market scenario, imagine you're poised to place an order to acquire 150 shares of 'NEPT' at 25.50 USD per share. Would you initiate this order for me?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Once you've positioned this order, curiosity strikes about its intricate details. Would you mind fetching those details for me now?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "After a detailed inspection of the order, a change of heart leads you to rescind the transaction. Would you revoke the placed order?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Post cancellation, you're driven to survey your financial standing. Would you compile and relay a summary of your current account particulars?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Armed with the account overview, you've resolved to infuse 5000 USD into your trading account for potential ventures ahead. Could you arrange for this deposit to be processed efficiently?"
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "place_order(order_type='Buy',symbol='NEPT',price=25.5,amount=150)"
+      ],
+      [
+        "get_order_details(order_id=12446)"
+      ],
+      [
+        "cancel_order(order_id=12446)"
+      ],
+      [
+        "get_account_info()"
+      ],
+      [
+        "fund_account(amount=5000.0)"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_130",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "Having established the market scenario, imagine you're poised to place an order to acquire 150 shares of 'NEPT' at 25.50 USD per share. Would you initiate this order for me?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Once you've positioned this order, curiosity strikes about its intricate details. Would you mind fetching those details for me now?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "After a detailed inspection of the order, a change of heart leads you to rescind the transaction. Would you revoke the placed order?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Post cancellation, you're driven to survey your financial standing. Would you compile and relay a summary of your current account particulars?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Armed with the account overview, you've resolved to infuse 5000 USD into your trading account for potential ventures ahead. Could you arrange for this deposit to be processed efficiently?"
+          }
+        ]
+      ],
+      "initial_config": {
+        "TradingBot": {
+          "orders": {
+            "order_type": "Buy"
+          },
+          "account_info": {
+            "account_id": 98765,
+            "balance": 15000.0,
+            "binding_card": 9876543210123456
+          },
+          "authenticated": true,
+          "market_status": "Open",
+          "order_counter": 12446,
+          "stocks": {
+            "AAPL": {
+              "price": 227.16,
+              "percent_change": 0.17,
+              "volume": 2.552,
+              "MA(5)": 227.11,
+              "MA(20)": 227.09
+            },
+            "GOOG": {
+              "price": 2840.34,
+              "percent_change": 0.24,
+              "volume": 1.123,
+              "MA(5)": 2835.67,
+              "MA(20)": 2842.15
+            },
+            "TSLA": {
+              "price": 667.92,
+              "percent_change": -0.12,
+              "volume": 1.654,
+              "MA(5)": 671.15,
+              "MA(20)": 668.2
+            },
+            "MSFT": {
+              "price": 310.23,
+              "percent_change": 0.09,
+              "volume": 3.234,
+              "MA(5)": 309.88,
+              "MA(20)": 310.11
+            },
+            "NVDA": {
+              "price": 220.34,
+              "percent_change": 0.34,
+              "volume": 1.234,
+              "MA(5)": 220.45,
+              "MA(20)": 220.67
+            },
+            "ALPH": {
+              "price": 1320.45,
+              "percent_change": -0.08,
+              "volume": 1.567,
+              "MA(5)": 1321.12,
+              "MA(20)": 1325.78
+            },
+            "OMEG": {
+              "price": 457.23,
+              "percent_change": 0.12,
+              "volume": 2.345,
+              "MA(5)": 456.78,
+              "MA(20)": 458.12
+            },
+            "QUAS": {
+              "price": 725.89,
+              "percent_change": -0.03,
+              "volume": 1.789,
+              "MA(5)": 726.45,
+              "MA(20)": 728.0
+            },
+            "NEPT": {
+              "price": 88.34,
+              "percent_change": 0.19,
+              "volume": 0.654,
+              "MA(5)": 88.21,
+              "MA(20)": 88.67
+            },
+            "SYNX": {
+              "price": 345.67,
+              "percent_change": 0.11,
+              "volume": 2.112,
+              "MA(5)": 345.34,
+              "MA(20)": 346.12
+            }
+          },
+          "watch_list": [
+            "NVDA"
+          ],
+          "transaction_history": []
+        }
+      },
+      "path": [
+        "TradingBot.get_current_time",
+        "TradingBot.update_market_status",
+        "TradingBot.place_order",
+        "TradingBot.get_order_details",
+        "TradingBot.cancel_order",
+        "TradingBot.get_account_info",
+        "TradingBot.fund_account"
+      ],
+      "involved_classes": [
+        "TradingBot"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_133",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "Could you kindly integrate Apple's stock into my current watchlist and subsequently provide me with a detailed breakdown of the watchlist's contents?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Please retrieve and delivery of comprehensive information about the stock NVDA."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "add_to_watchlist(stock='AAPL')",
+        "get_watchlist()"
+      ],
+      [
+        "get_stock_info(symbol='NVDA')"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_133",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "Could you kindly integrate Apple's stock into my current watchlist and subsequently provide me with a detailed breakdown of the watchlist's contents?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Please retrieve and delivery of comprehensive information about the stock NVDA."
+          }
+        ]
+      ],
+      "initial_config": {
+        "TradingBot": {
+          "orders": {
+            "12345": {
+              "symbol": "AAPL",
+              "price": 210.65,
+              "num_shares": 10,
+              "status": "Completed"
+            },
+            "order_type": "Buy"
+          },
+          "account_info": {
+            "account_id": 12345,
+            "balance": 10000.0,
+            "binding_card": 1974202140965533
+          },
+          "authenticated": true,
+          "market_status": "Closed",
+          "order_counter": 12446,
+          "stocks": {
+            "AAPL": {
+              "price": 227.16,
+              "percent_change": 0.17,
+              "volume": 2.552,
+              "MA(5)": 227.11,
+              "MA(20)": 227.09
+            },
+            "GOOG": {
+              "price": 2840.34,
+              "percent_change": 0.24,
+              "volume": 1.123,
+              "MA(5)": 2835.67,
+              "MA(20)": 2842.15
+            },
+            "TSLA": {
+              "price": 667.92,
+              "percent_change": -0.12,
+              "volume": 1.654,
+              "MA(5)": 671.15,
+              "MA(20)": 668.2
+            },
+            "MSFT": {
+              "price": 310.23,
+              "percent_change": 0.09,
+              "volume": 3.234,
+              "MA(5)": 309.88,
+              "MA(20)": 310.11
+            },
+            "NVDA": {
+              "price": 220.34,
+              "percent_change": 0.34,
+              "volume": 1.234,
+              "MA(5)": 220.45,
+              "MA(20)": 220.67
+            },
+            "ALPH": {
+              "price": 1320.45,
+              "percent_change": -0.08,
+              "volume": 1.567,
+              "MA(5)": 1321.12,
+              "MA(20)": 1325.78
+            },
+            "OMEG": {
+              "price": 457.23,
+              "percent_change": 0.12,
+              "volume": 2.345,
+              "MA(5)": 456.78,
+              "MA(20)": 458.12
+            },
+            "QUAS": {
+              "price": 725.89,
+              "percent_change": -0.03,
+              "volume": 1.789,
+              "MA(5)": 726.45,
+              "MA(20)": 728.0
+            },
+            "NEPT": {
+              "price": 88.34,
+              "percent_change": 0.19,
+              "volume": 0.654,
+              "MA(5)": 88.21,
+              "MA(20)": 88.67
+            },
+            "SYNX": {
+              "price": 345.67,
+              "percent_change": 0.11,
+              "volume": 2.112,
+              "MA(5)": 345.34,
+              "MA(20)": 346.12
+            }
+          },
+          "watch_list": [
+            "NVDA"
+          ],
+          "transaction_history": []
+        }
+      },
+      "path": [
+        "TradingBot.get_symbol_by_name",
+        "TradingBot.add_stock_to_watchlist",
+        "TradingBot.get_watchlist",
+        "TradingBot.get_stock_info",
+        "TicketAPI.close_ticket"
+      ],
+      "involved_classes": [
+        "TradingBot",
+        "TicketAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_139",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "It'd be great if you could pop Zeta Corp's stock onto my watchlist. I've come across some fascinating insights into their recent performance that I want to monitor."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "With Zeta Corp's stock now on my radar, let's pull up the complete list of stocks I'm watching. I want to double-check that all my chosen stocks are properly listed for my review."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "add_to_watchlist(stock='ZETA')"
+      ],
+      [
+        "get_watchlist()"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_139",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "It'd be great if you could pop Zeta Corp's stock onto my watchlist. I've come across some fascinating insights into their recent performance that I want to monitor."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "With Zeta Corp's stock now on my radar, let's pull up the complete list of stocks I'm watching. I want to double-check that all my chosen stocks are properly listed for my review."
+          }
+        ]
+      ],
+      "initial_config": {
+        "TradingBot": {
+          "orders": {
+            "12345": {
+              "symbol": "AAPL",
+              "price": 210.65,
+              "num_shares": 10,
+              "status": "Completed"
+            },
+            "order_type": "Buy"
+          },
+          "account_info": {
+            "account_id": 12345,
+            "balance": 10000.0,
+            "binding_card": 1974202140965533
+          },
+          "authenticated": true,
+          "market_status": "Closed",
+          "order_counter": 12446,
+          "stocks": {
+            "AAPL": {
+              "price": 227.16,
+              "percent_change": 0.17,
+              "volume": 2.552,
+              "MA(5)": 227.11,
+              "MA(20)": 227.09
+            },
+            "GOOG": {
+              "price": 2840.34,
+              "percent_change": 0.24,
+              "volume": 1.123,
+              "MA(5)": 2835.67,
+              "MA(20)": 2842.15
+            },
+            "TSLA": {
+              "price": 667.92,
+              "percent_change": -0.12,
+              "volume": 1.654,
+              "MA(5)": 671.15,
+              "MA(20)": 668.2
+            },
+            "MSFT": {
+              "price": 310.23,
+              "percent_change": 0.09,
+              "volume": 3.234,
+              "MA(5)": 309.88,
+              "MA(20)": 310.11
+            },
+            "NVDA": {
+              "price": 220.34,
+              "percent_change": 0.34,
+              "volume": 1.234,
+              "MA(5)": 220.45,
+              "MA(20)": 220.67
+            },
+            "ALPH": {
+              "price": 1320.45,
+              "percent_change": -0.08,
+              "volume": 1.567,
+              "MA(5)": 1321.12,
+              "MA(20)": 1325.78
+            },
+            "OMEG": {
+              "price": 457.23,
+              "percent_change": 0.12,
+              "volume": 2.345,
+              "MA(5)": 456.78,
+              "MA(20)": 458.12
+            },
+            "QUAS": {
+              "price": 725.89,
+              "percent_change": -0.03,
+              "volume": 1.789,
+              "MA(5)": 726.45,
+              "MA(20)": 728.0
+            },
+            "NEPT": {
+              "price": 88.34,
+              "percent_change": 0.19,
+              "volume": 0.654,
+              "MA(5)": 88.21,
+              "MA(20)": 88.67
+            },
+            "SYNX": {
+              "price": 345.67,
+              "percent_change": 0.11,
+              "volume": 2.112,
+              "MA(5)": 345.34,
+              "MA(20)": 346.12
+            },
+            "ZETA": {
+              "price": 150.0,
+              "percent_change": 0.1,
+              "volume": 1.5,
+              "MA(5)": 149.5,
+              "MA(20)": 150.2
+            }
+          },
+          "watch_list": [
+            "NVDA",
+            "ZETA"
+          ],
+          "transaction_history": []
+        }
+      },
+      "path": [
+        "TradingBot.get_symbol_by_name",
+        "TradingBot.add_stock_to_watchlist",
+        "TradingBot.get_watchlist",
+        "TwitterAPI.post_tweet"
+      ],
+      "involved_classes": [
+        "TwitterAPI",
+        "TradingBot"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_150",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "Wanderlust is calling, and I'm mapping out my travel from Rivermist to Stonebrook in the month of October\u2014the skies above must know my next destination! Share with me, if you will, what coin I must trade for a humble economy class seat on the 6th day of October in 2026."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Let's anchor my daily spend at 15400 GBP\u2014an expedient conversion\u2014per my esteemed authorization. I appreciate your assistance in tethering my budget to this new mooring. My access token is 'abc123token'."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "get_flight_cost(travel_from='RMS', travel_to='SBK', travel_date='2026-10-06', travel_class='economy')"
+      ],
+      [
+        "compute_exchange_rate(base_currency='GBP', target_currency='USD', value=15400.0)",
+        "set_budget_limit(access_token='abc123token', budget_limit=22000.0)"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_150",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "Wanderlust is calling, and I'm mapping out my travel from Rivermist to Stonebrook in the month of October\u2014the skies above must know my next destination! Share with me, if you will, what coin I must trade for a humble economy class seat on the 6th day of October in 2026."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Let's anchor my daily spend at 15400 GBP\u2014an expedient conversion\u2014per my esteemed authorization. I appreciate your assistance in tethering my budget to this new mooring. My access token is 'abc123token'."
+          }
+        ]
+      ],
+      "initial_config": {
+        "TravelAPI": {
+          "credit_card_list": {
+            "1234-5678-9012-3456": {
+              "card_type": "Visa",
+              "expiry_date": "12/26",
+              "balance": 5000.0
+            }
+          },
+          "booking_record": {},
+          "access_token": "abc123token",
+          "token_type": "Bearer",
+          "token_expires_in": 3600,
+          "token_scope": "read_write",
+          "user_first_name": "Evelyn",
+          "user_last_name": "Montgomery",
+          "budget_limit": 15400.0
+        }
+      },
+      "path": [
+        "TravelAPI.get_nearest_airport_by_city",
+        "TravelAPI.get_flight_cost",
+        "TravelAPI.compute_exchange_rate",
+        "TravelAPI.set_budget_limit"
+      ],
+      "involved_classes": [
+        "TravelAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_154",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I need you to verify my travel documents before I embark on this journey. Confirm if my personal details match the required criteria. Once all checks are done, I'll proceed. For reference, my birthdate is February 14st 1962 ans passport number is P87654321, my first name is Michael and last name is Smith"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "I'm considering flying but need to know the cost of traveling from here. Let's identify the nearest airport to Chicago first, then we'll continue to check airfare from there to Los Angeles for Aug 10th 2026."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Now that I have the flight cost, please set a budget of $1500 for my trip using my account token 'token_ABC123XYZ' to make sure everything's in order."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Book this flight for me, please. I am flexible with travel classes but would prefer to keep it within my budget. I'll promptly handle the payment using my saved card details with id 'card1'."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "If any details are overlooked, please retrieve any recent messages I sent concerning this trip."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "verify_traveler_information(first_name='Michael', last_name='Smith', date_of_birth='1962-02-14', passport_number='P87654321')"
+      ],
+      [
+        "get_nearest_airport_by_city(location='Chicago')",
+        "get_nearest_airport_by_city(location='Los Angeles')",
+        "get_flight_cost(travel_from='ORD', travel_to='LAX', travel_date='2026-08-10', travel_class='economy')"
+      ],
+      [
+        "set_budget_limit(access_token='token_ABC123XYZ', budget_limit=1500)"
+      ],
+      [
+        "book_flight(access_token='token_ABC123XYZ', card_id='card1', travel_date='2026-08-10', travel_from='ORD', travel_to='LAX', travel_class='economy')"
+      ],
+      [
+        "view_messages_sent()"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_154",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "I need you to verify my travel documents before I embark on this journey. Confirm if my personal details match the required criteria. Once all checks are done, I'll proceed. For reference, my birthdate is February 14st 1962 ans passport number is P87654321, my first name is Michael and last name is Smith"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "I'm considering flying but need to know the cost of traveling from here. Let's identify the nearest airport to Chicago first, then we'll continue to check airfare from there to Los Angeles for Aug 10th 2026."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Now that I have the flight cost, please set a budget of $1500 for my trip using my account token 'token_ABC123XYZ' to make sure everything's in order."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Book this flight for me, please. I am flexible with travel classes but would prefer to keep it within my budget. I'll promptly handle the payment using my saved card details with id 'card1'."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "If any details are overlooked, please retrieve any recent messages I sent concerning this trip."
+          }
+        ]
+      ],
+      "initial_config": {
+        "TravelAPI": {
+          "credit_card_list": {
+            "card1": {
+              "card_number": "1234-5678-9012-3456",
+              "expiry": "12/26",
+              "cvv": 123,
+              "balance": 12400
+            }
+          },
+          "booking_record": {},
+          "access_token": "token_ABC123XYZ",
+          "token_type": "Bearer",
+          "token_expires_in": 3600,
+          "token_scope": "full_access",
+          "user_first_name": "Michael",
+          "user_last_name": "Smith",
+          "budget_limit": 1500.0
+        },
+        "MessageAPI": {
+          "user_count": 4,
+          "current_user": "USR001"
+        }
+      },
+      "path": [
+        "TravelAPI.verify_traveler_information",
+        "TravelAPI.get_nearest_airport_by_city",
+        "TravelAPI.get_flight_cost",
+        "TravelAPI.set_budget_limit",
+        "TravelAPI.book_flight",
+        "MessageAPI.send_message",
+        "MessageAPI.view_messages_received"
+      ],
+      "involved_classes": [
+        "MessageAPI",
+        "TravelAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_157",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "List all international airports currently accessible for travel."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "I'm based in Crescent Hollow. Determine which airport is closest to my location from the previously listed options."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "I'm organizing a trip soon and need the flight cost from my nearest airport to Pinehaven on March 3, 2026, traveling in business class."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "list_all_airports()"
+      ],
+      [
+        "get_nearest_airport_by_city(location='Crescent Hollow')"
+      ],
+      [
+        "get_flight_cost(travel_from='CRH', travel_to='PHV', travel_date='2026-03-03', travel_class='business')"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_157",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "List all international airports currently accessible for travel."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "I'm based in Crescent Hollow. Determine which airport is closest to my location from the previously listed options."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "I'm organizing a trip soon and need the flight cost from my nearest airport to Pinehaven on March 3, 2026, traveling in business class."
+          }
+        ]
+      ],
+      "initial_config": {
+        "TravelAPI": {
+          "credit_card_list": {
+            "card9999": {
+              "card_number": "1234-5678-9012-3456",
+              "cardholder_name": "Evelyn Harper",
+              "expiry_date": "12/26",
+              "balance": 5000.0
+            }
+          },
+          "booking_record": {
+            "BR123456": {
+              "flight_number": "FL123",
+              "cost": 1200.0
+            }
+          },
+          "access_token": "abc123xyz",
+          "token_type": "Bearer",
+          "token_expires_in": 3600,
+          "token_scope": "read_write",
+          "user_first_name": "Evelyn",
+          "user_last_name": "Harper",
+          "budget_limit": 3000.0
+        },
+        "MathAPI": {}
+      },
+      "path": [
+        "TravelAPI.list_all_airports",
+        "TravelAPI.get_nearest_airport_by_city",
+        "TravelAPI.get_flight_cost",
+        "MathAPI.mean"
+      ],
+      "involved_classes": [
+        "MathAPI",
+        "TravelAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_159",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "Imagine planning a trip and you're curious about the flight costs between various airports. Opt to fly from the first airport to the second one in the system's list. Could you provide the expected fare for an economy class ticket on the date 2026-11-15?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Good news! You've discovered a fare that won't break the bank. Next, let's arrange a flight from San Francisco International (SFO) to Los Angeles International (LAX). Utilize a distinctive access token 'abc123xyz', the credit card with id 'card_3456', and the traveler details of our intrepid voyager, Elizabeth Montgomery."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Finally, Elizabeth seeks some tranquility during her adventure. Please acquire travel insurance for this booked flight, selecting a plan that offers up to $500 coverage. You are welcome to use the same credit card and access token for this purchase."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "list_all_airports()",
+        "get_flight_cost(travel_from='RMS', travel_to='SBK', travel_date='2026-11-15', travel_class='economy')"
+      ],
+      [
+        "book_flight(access_token='abc123xyz', card_id='card_3456', travel_date='2026-11-15', travel_from='SFO', travel_to='LAX', travel_class='economy')"
+      ],
+      [
+        "purchase_insurance(access_token='abc123xyz', insurance_type='comprehensive', booking_id='3426812', insurance_cost=500.0, card_id='card_3456')"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_159",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "Imagine planning a trip and you're curious about the flight costs between various airports. Opt to fly from the first airport to the second one in the system's list. Could you provide the expected fare for an economy class ticket on the date 2026-11-15?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Good news! You've discovered a fare that won't break the bank. Next, let's arrange a flight from San Francisco International (SFO) to Los Angeles International (LAX). Utilize a distinctive access token 'abc123xyz', the credit card with id 'card_3456', and the traveler details of our intrepid voyager, Elizabeth Montgomery."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Finally, Elizabeth seeks some tranquility during her adventure. Please acquire travel insurance for this booked flight, selecting a plan that offers up to $500 coverage. You are welcome to use the same credit card and access token for this purchase."
+          }
+        ]
+      ],
+      "initial_config": {
+        "TravelAPI": {
+          "credit_card_list": {
+            "card_3456": {
+              "card_number": "6754 9823 6519 3456",
+              "cardholder_name": "Elizabeth Montgomery",
+              "expiry_date": "12/26",
+              "cvv": 123,
+              "balance": 15000.0
+            }
+          },
+          "booking_record": {},
+          "access_token": "abc123xyz",
+          "token_type": "Bearer",
+          "token_expires_in": 3600,
+          "token_scope": "read_write",
+          "user_first_name": "Theodore",
+          "user_last_name": "Collins",
+          "budget_limit": 5000.0
+        }
+      },
+      "path": [
+        "TravelAPI.list_all_airports",
+        "TravelAPI.get_flight_cost",
+        "TravelAPI.book_flight",
+        "TravelAPI.purchase_insurance"
+      ],
+      "involved_classes": [
+        "TravelAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_161",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "In attempting to log into my travel account using both my established client id 'client_520', secret 'rise_to_sky' and refresh token 'token990125', I seem to be at a bit of an impasse, allow for read_write. My first name is Michael, last name Thompson. Assistance with the authentication process would be immensely appreciated."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "I've recently linked a newly registered credit card with the ID 'card_4455', set to expire in 2026, and it's under my name. Accessing my account to ascertain my current balance is my next goal. Could this information be retrieved for me?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Having reviewed my financial standing, I now need to compute the average amount spent in my last quintet of purchases, which are 45.99, 78.25, 102.50, 38.75, and 92.10. Guidance in deriving this mean value would be beneficial."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "authenticate_travel(client_id='client_520', client_secret='rise_to_sky', refresh_token='token990125', grant_type='read_write', user_first_name='Michael', user_last_name='Thompson')"
+      ],
+      [
+        "get_credit_card_balance(access_token='251675', card_id='card_4455')"
+      ],
+      [
+        "mean(numbers=[45.99, 78.25, 102.5, 38.75, 92.1])"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_161",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "In attempting to log into my travel account using both my established client id 'client_520', secret 'rise_to_sky' and refresh token 'token990125', I seem to be at a bit of an impasse, allow for read_write. My first name is Michael, last name Thompson. Assistance with the authentication process would be immensely appreciated."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "I've recently linked a newly registered credit card with the ID 'card_4455', set to expire in 2026, and it's under my name. Accessing my account to ascertain my current balance is my next goal. Could this information be retrieved for me?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Having reviewed my financial standing, I now need to compute the average amount spent in my last quintet of purchases, which are 45.99, 78.25, 102.50, 38.75, and 92.10. Guidance in deriving this mean value would be beneficial."
+          }
+        ]
+      ],
+      "initial_config": {
+        "TravelAPI": {
+          "credit_card_list": {
+            "card_4455": {
+              "card_number": "2378 8753 9012 4455",
+              "expiry_date": "2026",
+              "cardholder_name": "Michael Thompson",
+              "balance": 1500.75
+            }
+          },
+          "booking_record": {},
+          "access_token": "251675",
+          "token_type": "Bearer",
+          "token_expires_in": 3600,
+          "token_scope": "read_write",
+          "user_first_name": "Michael",
+          "user_last_name": "Thompson",
+          "budget_limit": 5000.0
+        },
+        "MathAPI": {
+          "numbers": [
+            45.99,
+            78.25,
+            102.5,
+            38.75,
+            92.1
+          ]
+        }
+      },
+      "path": [
+        "TravelAPI.authenticate",
+        "TravelAPI.register_credit_card",
+        "TravelAPI.get_credit_card_balance",
+        "MathAPI.mean"
+      ],
+      "involved_classes": [
+        "MathAPI",
+        "TravelAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_167",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "Hey there! Since I'm currently residing in Rivermist but planning a grand getaway to Los Angeles, I'm curious about the price of a business class flight for December 15th, 2026. What's the current rate you can find?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "After figuring out the flight expenses, could you tweak my budget to accommodate an equivalence of 20,000 RMB in US dollars using access token 'abc123xyz456' for my settings? Got to keep track of all these costs."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Alright, it's time to take the plunge and book that flight for December 15th. Go ahead and charge it to my card with id 'card_0064'. Please confirm the booking under my account. I have my fingers crossed everything goes smoothly!"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Well, things have taken a turn! Could you cancel that booking for me, please? Much appreciated!"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Could you also provide me with an invoice for the recent flight booking that we decided to cancel? I'd like to make sure all the details are neatly documented."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "get_flight_cost(travel_from='RMS', travel_to='LAX', travel_date='2026-12-15', travel_class='business')"
+      ],
+      [
+        "compute_exchange_rate(base_currency='RMB', target_currency='USD', value=20000.0)",
+        "set_budget_limit(access_token='abc123xyz456', budget_limit=2857.14)"
+      ],
+      [
+        "book_flight(access_token='abc123xyz456', card_id='card_0064', travel_date='2026-12-15', travel_from='RMS', travel_to='LAX', travel_class='business')"
+      ],
+      [
+        "cancel_booking(access_token='abc123xyz456', booking_id='3426812')"
+      ],
+      []
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_167",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "Hey there! Since I'm currently residing in Rivermist but planning a grand getaway to Los Angeles, I'm curious about the price of a business class flight for December 15th, 2026. What's the current rate you can find?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "After figuring out the flight expenses, could you tweak my budget to accommodate an equivalence of 20,000 RMB in US dollars using access token 'abc123xyz456' for my settings? Got to keep track of all these costs."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Alright, it's time to take the plunge and book that flight for December 15th. Go ahead and charge it to my card with id 'card_0064'. Please confirm the booking under my account. I have my fingers crossed everything goes smoothly!"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Well, things have taken a turn! Could you cancel that booking for me, please? Much appreciated!"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Could you also provide me with an invoice for the recent flight booking that we decided to cancel? I'd like to make sure all the details are neatly documented."
+          }
+        ]
+      ],
+      "initial_config": {
+        "TravelAPI": {
+          "credit_card_list": {
+            "card_0064": {
+              "card_number": "8293-1765-9823-0064",
+              "cardholder_name": "Michael Thompson",
+              "expiry_date": "12/26",
+              "cvv": 123,
+              "balance": 4500.0
+            }
+          },
+          "booking_record": {
+            "LA12345": {
+              "flight_date": "2026-12-10",
+              "destination": "Los Angeles",
+              "class": "Business",
+              "price": 1500.0
+            }
+          },
+          "access_token": "abc123xyz456",
+          "token_type": "Bearer",
+          "token_expires_in": 3600,
+          "token_scope": "read write",
+          "user_first_name": "Michael",
+          "user_last_name": "Thompson",
+          "budget_limit": 20000.0
+        }
+      },
+      "path": [
+        "TravelAPI.get_nearest_airport_by_city",
+        "TravelAPI.get_flight_cost",
+        "TravelAPI.compute_exchange_rate",
+        "TravelAPI.set_budget_limit",
+        "TravelAPI.book_flight",
+        "TravelAPI.cancel_booking",
+        "TravelAPI.retrieve_invoice"
+      ],
+      "involved_classes": [
+        "TravelAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_169",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I just relocated to Rivermist and I'm looking to book a flight to Los Angeles for a crucial business meeting. Could you arrange the flight for me, using my credit card with id 'card_6789'? I need it booked for next Tuesday 2026-11-10, in business class, with a cost under $1200. Additionally, I have received my new access token: 2278-9812-3456-4567. Once the flight is confirmed, please ensure you acquire the invoice for this transaction as it's necessary for my reimbursement."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "After securing my flight reservation, I've realized I have some clarifications needed about my travel itinerary. Would you be able to send an inquiry to customer support on my behalf? Please use my latest booking details and incorporate the concerns I have regarding my luggage restrictions."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "book_flight(access_token='2278-9812-3456-4567', card_id='card_6789', travel_date='2026-11-10', travel_from='RMS', travel_to='LAX', travel_class='business')",
+        "retrieve_invoice(access_token='2278-9812-3456-4567', booking_id='3426812')"
+      ],
+      [
+        "contact_customer_support(booking_id='3426812', message='Inquiry regarding luggage restrictions for my flight')"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_169",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "I just relocated to Rivermist and I'm looking to book a flight to Los Angeles for a crucial business meeting. Could you arrange the flight for me, using my credit card with id 'card_6789'? I need it booked for next Tuesday 2026-11-10, in business class, with a cost under $1200. Additionally, I have received my new access token: 2278-9812-3456-4567. Once the flight is confirmed, please ensure you acquire the invoice for this transaction as it's necessary for my reimbursement."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "After securing my flight reservation, I've realized I have some clarifications needed about my travel itinerary. Would you be able to send an inquiry to customer support on my behalf? Please use my latest booking details and incorporate the concerns I have regarding my luggage restrictions."
+          }
+        ]
+      ],
+      "initial_config": {
+        "TravelAPI": {
+          "credit_card_list": {
+            "card_6789": {
+              "card_number": "5479 8692 4312 6789",
+              "cardholder_name": "Michael Thompson",
+              "expiry_date": "12/26",
+              "cvv": 123,
+              "balance": 15000.0
+            }
+          },
+          "booking_record": {},
+          "access_token": "2278-9812-3456-4567",
+          "token_type": "Bearer",
+          "token_expires_in": 3600,
+          "token_scope": "booking",
+          "user_first_name": "Michael",
+          "user_last_name": "Thompson",
+          "budget_limit": 5000.0
+        }
+      },
+      "path": [
+        "TravelAPI.list_all_airports",
+        "TravelAPI.get_nearest_airport_by_city",
+        "TravelAPI.book_flight",
+        "TravelAPI.retrieve_invoice",
+        "TravelAPI.contact_customer_support",
+        "MessageAPI.send_message",
+        "MessageAPI.view_messages_received"
+      ],
+      "involved_classes": [
+        "MessageAPI",
+        "TravelAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_173",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I'm considering flying from Los Angeles Internationa (LAX) to John F. Kennedy (JFK) in business class on November 15, 2026. What would this flight typically cost?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Once I know the cost, I need that in pounds sterling \u2014 it's easier for my budget planning. Let's base future travel expenses on $10,000 using access token 'abc123xyz'."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Okay, I've sorted out my budget. Let's go ahead and book the flight as we discussed. Use my card \u2014 it's the one with id card_1496 \u2014."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "I noticed there's a ticket linked with this booking that I no longer find necessary. Can you cancel it on my behalf?"
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "get_flight_cost(travel_from='LAX', travel_to='JFK', travel_date='2026-11-15', travel_class='business')"
+      ],
+      [
+        "compute_exchange_rate(base_currency='USD', target_currency='GBP', value=2400.0)",
+        "set_budget_limit(access_token='abc123xyz', budget_limit=10000.0)"
+      ],
+      [
+        "book_flight(access_token='abc123xyz', card_id='card_1496', travel_date='2026-11-15', travel_from='LAX', travel_to='JFK', travel_class='business')"
+      ],
+      [
+        "close_ticket(ticket_id='ticket_001')"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_173",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "I'm considering flying from Los Angeles Internationa (LAX) to John F. Kennedy (JFK) in business class on November 15, 2026. What would this flight typically cost?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Once I know the cost, I need that in pounds sterling \u2014 it's easier for my budget planning. Let's base future travel expenses on $10,000 using access token 'abc123xyz'."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Okay, I've sorted out my budget. Let's go ahead and book the flight as we discussed. Use my card \u2014 it's the one with id card_1496 \u2014."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "I noticed there's a ticket linked with this booking that I no longer find necessary. Can you cancel it on my behalf?"
+          }
+        ]
+      ],
+      "initial_config": {
+        "TravelAPI": {
+          "credit_card_list": {
+            "card_1496": {
+              "card_number": "**** **** **** 1496",
+              "expiry_date": "12/26",
+              "cardholder_name": "Michael Thompson",
+              "balance": 15000.0
+            }
+          },
+          "booking_record": {},
+          "access_token": "abc123xyz",
+          "token_type": "Bearer",
+          "token_expires_in": 3600,
+          "token_scope": "read_write",
+          "user_first_name": "Michael",
+          "user_last_name": "Thompson",
+          "budget_limit": 10000.0
+        },
+        "TicketAPI": {
+          "ticket_queue": [
+            {
+              "id": "ticket_001",
+              "booking_id": "booking_001",
+              "issue": "Unnecessary ticket",
+              "status": "Open"
+            }
+          ]
+        }
+      },
+      "path": [
+        "TravelAPI.get_flight_cost",
+        "TravelAPI.compute_exchange_rate",
+        "TravelAPI.set_budget_limit",
+        "TravelAPI.book_flight",
+        "TicketAPI.close_ticket"
+      ],
+      "involved_classes": [
+        "TicketAPI",
+        "TravelAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_176",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I'm planning a business class trip from JFK in New York to LAX in Los Angeles on December 15, 2026. Alex Johnson will be my traveling companion. I intend to use my credit card with label 'id_1234' to cover the $4500 trip cost. I've got my access token here: ABCD1234."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "I'll need to cancel the trip immediately due to unexpected changes in my schedule. Additionally, I must file a priority 5 support ticket concerning the flight cancellation, labeled 'Urgent Flight Cancellation'. The ticket should thoroughly explain the abrupt changes leading to the cancellation and put description as Due to unexpected changes in schedule, the flight from JFK to LAX on December 15, 2023, needs to be canceled immediately."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "book_flight(access_token='ABCD1234', card_id='id_1234', travel_date='2026-12-15', travel_from='JFK', travel_to='LAX', travel_class='business')"
+      ],
+      [
+        "cancel_booking(access_token='ABCD1234', booking_id='3426812')",
+        "create_ticket(priority=5, title='Urgent Flight Cancellation', description='Due to unexpected changes in schedule, the flight from JFK to LAX on December 15, 2023, needs to be canceled immediately.')"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_176",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "I'm planning a business class trip from JFK in New York to LAX in Los Angeles on December 15, 2026. Alex Johnson will be my traveling companion. I intend to use my credit card with label 'id_1234' to cover the $4500 trip cost. I've got my access token here: ABCD1234."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "I'll need to cancel the trip immediately due to unexpected changes in my schedule. Additionally, I must file a priority 5 support ticket concerning the flight cancellation, labeled 'Urgent Flight Cancellation'. The ticket should thoroughly explain the abrupt changes leading to the cancellation and put description as Due to unexpected changes in schedule, the flight from JFK to LAX on December 15, 2023, needs to be canceled immediately."
+          }
+        ]
+      ],
+      "initial_config": {
+        "TravelAPI": {
+          "credit_card_list": {
+            "id_1234": {
+              "card_number": "4587123498761234",
+              "cardholder_name": "Alex Johnson",
+              "expiry_date": "12/26",
+              "cvv": 123,
+              "balance": 7000.0
+            }
+          },
+          "booking_record": {
+            "JFK-LAX-20261215": {
+              "passenger_name": "Alex Johnson",
+              "flight_class": "Business",
+              "departure": "JFK",
+              "arrival": "LAX",
+              "date": "2026-10-15",
+              "cost": 4500.0
+            }
+          },
+          "access_token": "ABCD1234",
+          "token_type": "Bearer",
+          "token_expires_in": 3600,
+          "token_scope": "booking",
+          "user_first_name": "Alex",
+          "user_last_name": "Johnson",
+          "budget_limit": 5000.0
+        },
+        "TicketAPI": {
+          "current_user": "john",
+          "ticket_queue": [
+            {
+              "ticket_001": {
+                "priority": 5,
+                "subject": "Urgent Flight Cancellation",
+                "description": "Due to unexpected changes in schedule, the flight from JFK to LAX on December 15, 2026, needs to be canceled immediately.",
+                "status": "Open"
+              }
+            }
+          ]
+        }
+      },
+      "path": [
+        "TravelAPI.register_credit_card",
+        "TravelAPI.book_flight",
+        "TravelAPI.cancel_booking",
+        "TicketAPI.create_ticket",
+        "TicketAPI.close_ticket"
+      ],
+      "involved_classes": [
+        "TicketAPI",
+        "TravelAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_178",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "For trip id flight_001, it seems that I booked my flight from Rome to New York without considering travel protection, especially given the uncertainties of winter travel. Would you assist in registering my new credit card, with access token 'abc123xyz' and card number 4012888888881881, expiring in December 2028 and a CVV of 465, to facilitate the purchase of a comprehensive travel insurance at the price $200 for this journey? My last name is Smith, first name is Michael."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "I need to verify the specifics and total costs of the travel insurance and booking I recently arranged, as the details escape me at the moment. Is it possible for you to provide me with the invoice linked to the insurance purchase?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "I\u2019ve encountered some problems requiring immediate help regarding my upcoming trip to New York. Could you facilitate fast contact with customer support to address these insurance-related issues that haven\u2019t been resolved?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "The response from customer support didn't resolve my issues, and I'm quite frustrated with the assistance I received. Would you mind drafting a formal complaint titled 'Unsatisfactory Customer Support' outlining the shortcomings of their service? My ticket username is msmith, password is SecurePass123. Left ticket description as empty string."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "I\u2019ve reached the decision to cancel my New York trip due to unforeseen personal circumstances. Could you proceed with the cancellation process as soon as possible?"
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "register_credit_card(access_token='abc123xyz', card_number='4012888888881881', expiration_date='12/2028', card_verification_number=465, cardholder_name='Michael Smith')",
+        "purchase_insurance(access_token='abc123xyz', insurance_type='comprehensive', booking_id='flight_001', insurance_cost=200.0, card_id='262919693687')"
+      ],
+      [
+        "retrieve_invoice(access_token='abc123xyz', booking_id='flight_001')"
+      ],
+      [
+        "contact_customer_support(booking_id='flight_001', message='Insurance-related issues that need resolution')"
+      ],
+      [
+        "ticket_login(username='msmith', password='SecurePass123')",
+        "create_ticket(priority=4, title='Unsatisfactory Customer Support', description='')"
+      ],
+      [
+        "cancel_booking(access_token='abc123xyz', booking_id='flight_001')"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_178",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "For trip id flight_001, it seems that I booked my flight from Rome to New York without considering travel protection, especially given the uncertainties of winter travel. Would you assist in registering my new credit card, with access token 'abc123xyz' and card number 4012888888881881, expiring in December 2028 and a CVV of 465, to facilitate the purchase of a comprehensive travel insurance at the price $200 for this journey? My last name is Smith, first name is Michael."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "I need to verify the specifics and total costs of the travel insurance and booking I recently arranged, as the details escape me at the moment. Is it possible for you to provide me with the invoice linked to the insurance purchase?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "I\u2019ve encountered some problems requiring immediate help regarding my upcoming trip to New York. Could you facilitate fast contact with customer support to address these insurance-related issues that haven\u2019t been resolved?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "The response from customer support didn't resolve my issues, and I'm quite frustrated with the assistance I received. Would you mind drafting a formal complaint titled 'Unsatisfactory Customer Support' outlining the shortcomings of their service? My ticket username is msmith, password is SecurePass123. Left ticket description as empty string."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "I\u2019ve reached the decision to cancel my New York trip due to unforeseen personal circumstances. Could you proceed with the cancellation process as soon as possible?"
+          }
+        ]
+      ],
+      "initial_config": {
+        "TravelAPI": {
+          "credit_card_list": {
+            "12345": {
+              "card_number": "123456",
+              "expiration_date": "12/2028",
+              "cardholder_name": "Michael Smith",
+              "card_verification_number": 465,
+              "balance": 50000.0
+            }
+          },
+          "booking_record": {
+            "flight_001": {
+              "travel_to": "Rome",
+              "travel_from": "New York",
+              "insurance": "none",
+              "travel_cost": 1200.5,
+              "travel_date": "2026-06-08",
+              "travel_class": "Business",
+              "transaction_id": "12345",
+              "card_id": "12345"
+            }
+          },
+          "access_token": "abc123xyz",
+          "token_type": "Bearer",
+          "token_expires_in": 3600,
+          "token_scope": "full_access",
+          "user_first_name": "Michael",
+          "user_last_name": "Smith",
+          "budget_limit": 5000.0
+        },
+        "TicketAPI": {
+          "ticket_queue": [
+            {
+              "ticket_001": {
+                "title": "Unsatisfactory Customer Support",
+                "status": "open",
+                "description": "The response from customer support didn't resolve my issues, and I'm quite frustrated with the assistance I received."
+              }
+            }
+          ]
+        }
+      },
+      "path": [
+        "TravelAPI.register_credit_card",
+        "TravelAPI.purchase_insurance",
+        "TravelAPI.retrieve_invoice",
+        "TravelAPI.contact_customer_support",
+        "TravelAPI.cancel_booking",
+        "TicketAPI.create_ticket",
+        "TicketAPI.close_ticket"
+      ],
+      "involved_classes": [
+        "TicketAPI",
+        "TravelAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_179",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I plan to book a flight from Crescent Hollow to New York, aimed at a business endeavor. Utilize my typical credit card (ID=card_6789) and access token 'abc123xyz' for the payment. Schedule it for economy class on November 12th 2026, making sure my frequent flyer discount is applied, ensuring the total fee is $850."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Post-booking, pondering added precautions, getting travel insurance seems wise, aiming for a 100 insurance. Proceed with organizing this with identical travel specifics, and the previously mentioned credit card should facilitate payment."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "For clarity on financial allocations, I need to gather the invoice that details my recently acquired flight and insurance."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Given sudden itinerary conflicts, there's a pivot. Inform customer support of my potential adjustments or explore full refund possibilities because of a family emergency."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "book_flight(access_token='abc123xyz', card_id='card_6789', travel_date='2026-11-12', travel_from='CRH', travel_to='JFK', travel_class='economy')"
+      ],
+      [
+        "purchase_insurance(access_token='abc123xyz', insurance_type='comprehensive', booking_id='3426812', insurance_cost=100.0, card_id='card_6789')"
+      ],
+      [
+        "retrieve_invoice(access_token='abc123xyz', booking_id='3426812')"
+      ],
+      [
+        "contact_customer_support(booking_id='3426812', message='Request for itinerary adjustments or refund due to family emergency.')"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_179",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "I plan to book a flight from Crescent Hollow to New York, aimed at a business endeavor. Utilize my typical credit card (ID=card_6789) and access token 'abc123xyz' for the payment. Schedule it for economy class on November 12th 2026, making sure my frequent flyer discount is applied, ensuring the total fee is $850."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Post-booking, pondering added precautions, getting travel insurance seems wise, aiming for a 100 insurance. Proceed with organizing this with identical travel specifics, and the previously mentioned credit card should facilitate payment."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "For clarity on financial allocations, I need to gather the invoice that details my recently acquired flight and insurance."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Given sudden itinerary conflicts, there's a pivot. Inform customer support of my potential adjustments or explore full refund possibilities because of a family emergency."
+          }
+        ]
+      ],
+      "initial_config": {
+        "TravelAPI": {
+          "credit_card_list": {
+            "card_6789": {
+              "card_number": "4938 5639 9827 6789",
+              "cardholder_name": "Ethan Hawke",
+              "expiry_date": "12/26",
+              "cvv": 123,
+              "balance": 17890
+            }
+          },
+          "booking_record": {},
+          "access_token": "abc123xyz",
+          "token_type": "Bearer",
+          "token_expires_in": 3600,
+          "token_scope": "read write",
+          "user_first_name": "Ethan",
+          "user_last_name": "Hawke",
+          "budget_limit": 2000.0
+        }
+      },
+      "path": [
+        "TravelAPI.get_nearest_airport_by_city",
+        "TravelAPI.book_flight",
+        "TravelAPI.purchase_insurance",
+        "TravelAPI.retrieve_invoice",
+        "TravelAPI.contact_customer_support",
+        "TravelAPI.cancel_booking"
+      ],
+      "involved_classes": [
+        "TravelAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_187",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I've been issued a new credit card with id 'card_4893', and it's set to expire sometime the next calendar year. I'm quite eager to use this card to purchase comprehensive travel insurance for an upcoming journey. I only have one past booking history and I think the booking id is insurance_12345. I believe my access privileges remain active as I recently acquired the token labeled 'token_abc123' yesterday. It's important that the coverage amounts to $1,500 which is what it will cost. Could we expedite this and use my booking record for booking_id, as I have an impending meeting?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "After finally carving out a moment in my schedule, I've noticed I'm unable to recall the expenses associated with the insurance I previously purchased. Would you be so kind as to locate and provide the invoice for that specific insurance transaction from my personal records?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "It seems there might be an error with my recent trip expenses, as they don't appear to be recorded correctly. Could you lend a hand by drafting a communication to customer support, highlighting these discrepancies in my travel-related costs?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "The reply I received from customer support was less than satisfactory. Let's take this a step further by submitting a high-priority ticket. The ticket should be titled 'Discrepancy in Travel Costs' and the description ought to include the feedback we got from customer support. My ticket username is 'mthompson' and password is 'SecurePass123"
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "purchase_insurance(access_token='token_abc123', insurance_type='comprehensive', booking_id='insurance_12345', insurance_cost=1500.0, card_id='card_4893')"
+      ],
+      [
+        "retrieve_invoice(access_token='token_abc123', booking_id='insurance_12345')"
+      ],
+      [
+        "contact_customer_support(booking_id='insurance_12345', message='There are discrepancies in my travel-related costs. Please assist.')"
+      ],
+      [
+        "ticket_login(username='mthompson', password='SecurePass123')",
+        "create_ticket(priority=4, title='Discrepancy in Travel Costs', description='Feedback from customer support was unsatisfactory regarding discrepancies in travel costs.')"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_187",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "I've been issued a new credit card with id 'card_4893', and it's set to expire sometime the next calendar year. I'm quite eager to use this card to purchase comprehensive travel insurance for an upcoming journey. I only have one past booking history and I think the booking id is insurance_12345. I believe my access privileges remain active as I recently acquired the token labeled 'token_abc123' yesterday. It's important that the coverage amounts to $1,500 which is what it will cost. Could we expedite this and use my booking record for booking_id, as I have an impending meeting?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "After finally carving out a moment in my schedule, I've noticed I'm unable to recall the expenses associated with the insurance I previously purchased. Would you be so kind as to locate and provide the invoice for that specific insurance transaction from my personal records?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "It seems there might be an error with my recent trip expenses, as they don't appear to be recorded correctly. Could you lend a hand by drafting a communication to customer support, highlighting these discrepancies in my travel-related costs?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "The reply I received from customer support was less than satisfactory. Let's take this a step further by submitting a high-priority ticket. The ticket should be titled 'Discrepancy in Travel Costs' and the description ought to include the feedback we got from customer support. My ticket username is 'mthompson' and password is 'SecurePass123"
+          }
+        ]
+      ],
+      "initial_config": {
+        "TravelAPI": {
+          "credit_card_list": {
+            "card_4893": {
+              "card_number": "4876-6834-6732-4893",
+              "expiry_date": "2026-12",
+              "cardholder_name": "Michael Thompson",
+              "credit_limit": 10000.0,
+              "balance": 8000
+            }
+          },
+          "booking_record": {
+            "insurance_12345": {
+              "travel_cost": 9500.0,
+              "travel_date": "2026-12-24",
+              "travel_from": "SFO",
+              "travel_to": "LAX",
+              "travel_class": "economy",
+              "transaction_id": "12345"
+            }
+          },
+          "access_token": "token_abc123",
+          "token_type": "Bearer",
+          "token_expires_in": 86400,
+          "token_scope": "full_access",
+          "user_first_name": "Michael",
+          "user_last_name": "Thompson",
+          "budget_limit": 5000.0
+        },
+        "TicketAPI": {
+          "ticket_queue": [],
+          "ticket_counter": 0
+        }
+      },
+      "path": [
+        "TravelAPI.register_credit_card",
+        "TravelAPI.purchase_insurance",
+        "TravelAPI.retrieve_invoice",
+        "TravelAPI.contact_customer_support",
+        "TravelAPI.cancel_booking",
+        "TicketAPI.create_ticket",
+        "TicketAPI.edit_ticket"
+      ],
+      "involved_classes": [
+        "TicketAPI",
+        "TravelAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_188",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "Hey, I'm in the mood for a last-minute getaway! I need some help figuring out how much it's going to cost for a first-class flight between the first two airports on your destination list. Planning to leave next Friday 19th Sept 2026 and want to make sure I can travel in style."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "So, I've been thinking about how much I want to spend on my travels. I'd like to set a budget cap. Can you, with my authorized access, set a limit of $10,000 for any travel expenses I might incur? access token is abc123xyz"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "I'm feeling a bit uneasy and decided it might be a good idea to get some travel insurance. Could you arrange this for my latest reservation (with id 'latest_reservation'), making sure it stays within my budget? Please use my credit card with ID 'primary' and access token 'abc123xyz'. I am willing to pay the $500 premium."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "The purchase is finally done, and I\u2019d appreciate it if you could help me look over the invoice details for my booking. I just want to double-check to ensure everything\u2019s correct."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "I can't wait to explore this new destination! I'm really excited to share my travel itinerary on Twitter. Could you post a tweet 'Excited for my upcoming adventure!' about the upcoming adventure for me? Make it interesting with the hashtag '#TravelGoals' and don't forget to mention '@TravelBuddy' to invite them along!"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Oh, I just noticed an amazing tweet from @TravelInsider about dream destinations. It\u2019s exactly what I\u2019ve been dreaming about, and I'd love to share it with my followers. Would you mind retweeting tweet id 0? "
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "list_all_airports()",
+        "get_flight_cost(travel_from='RMS', travel_to='SBK', travel_date='2026-09-19', travel_class='first')"
+      ],
+      [
+        "set_budget_limit(access_token='abc123xyz', budget_limit=10000.0)"
+      ],
+      [
+        "purchase_insurance(access_token='abc123xyz', booking_id='latest_reservation', insurance_type='comprehensive', insurance_cost=500.0, card_id='primary')"
+      ],
+      [
+        "retrieve_invoice(access_token='abc123xyz', booking_id='latest_reservation')"
+      ],
+      [
+        "authenticate_twitter(username='michael_smith', password='michael_cant_smith_smith')",
+        "post_tweet(content='Excited for my upcoming adventure!', tags=['#TravelGoals'], mentions=['@TravelBuddy'])"
+      ],
+      [
+        "retweet(tweet_id=0)"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_188",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "Hey, I'm in the mood for a last-minute getaway! I need some help figuring out how much it's going to cost for a first-class flight between the first two airports on your destination list. Planning to leave next Friday 19th Sept 2026 and want to make sure I can travel in style."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "So, I've been thinking about how much I want to spend on my travels. I'd like to set a budget cap. Can you, with my authorized access, set a limit of $10,000 for any travel expenses I might incur? access token is abc123xyz"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "I'm feeling a bit uneasy and decided it might be a good idea to get some travel insurance. Could you arrange this for my latest reservation (with id 'latest_reservation'), making sure it stays within my budget? Please use my credit card with ID 'primary' and access token 'abc123xyz'. I am willing to pay the $500 premium."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "The purchase is finally done, and I\u2019d appreciate it if you could help me look over the invoice details for my booking. I just want to double-check to ensure everything\u2019s correct."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "I can't wait to explore this new destination! I'm really excited to share my travel itinerary on Twitter. Could you post a tweet 'Excited for my upcoming adventure!' about the upcoming adventure for me? Make it interesting with the hashtag '#TravelGoals' and don't forget to mention '@TravelBuddy' to invite them along!"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Oh, I just noticed an amazing tweet from @TravelInsider about dream destinations. It\u2019s exactly what I\u2019ve been dreaming about, and I'd love to share it with my followers. Would you mind retweeting tweet id 0? "
+          }
+        ]
+      ],
+      "initial_config": {
+        "TravelAPI": {
+          "credit_card_list": {
+            "primary": {
+              "number": "4726351846298192",
+              "expiry": "12/26",
+              "cvv": "123",
+              "balance": 10000
+            }
+          },
+          "booking_record": {
+            "latest_reservation": {
+              "travel_cost": 9500.0,
+              "travel_date": "2026-12-24",
+              "travel_from": "SFO",
+              "travel_to": "LAX",
+              "travel_class": "economy",
+              "transaction_id": "12345"
+            }
+          },
+          "access_token": "abc123xyz",
+          "token_type": "Bearer",
+          "token_expires_in": 3600,
+          "token_scope": "read_write",
+          "user_first_name": "Michael",
+          "user_last_name": "Smith",
+          "budget_limit": 10000.0
+        },
+        "TwitterAPI": {
+          "username": "michael_smith",
+          "password": "michael1234",
+          "authenticated": true,
+          "tweets": {
+            "0": {
+              "id": 0,
+              "username": "michael_smith",
+              "content": "Excited for my upcoming adventure! #TravelGoals @TravelBuddy",
+              "tags": [
+                "#TravelGoals"
+              ],
+              "mentions": [
+                "@TravelBuddy"
+              ]
+            }
+          },
+          "comments": {},
+          "retweets": {},
+          "following_list": [
+            "alice",
+            "bob",
+            "TravelInsider"
+          ],
+          "tweet_counter": 2
+        }
+      },
+      "path": [
+        "TravelAPI.list_all_airports",
+        "TravelAPI.get_flight_cost",
+        "TravelAPI.set_budget_limit",
+        "TravelAPI.purchase_insurance",
+        "TravelAPI.retrieve_invoice",
+        "TwitterAPI.post_tweet",
+        "TwitterAPI.retweet"
+      ],
+      "involved_classes": [
+        "TwitterAPI",
+        "TravelAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_195",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I really really want to travel from Rivermist to Los Angeles on a specific date, ensuring preferred seating is 'business' and correct travel date '2026-11-15'; just double check the cost of that flight for me and then please pay using card with id '1_3456' and access token 'abc123xyz'."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Cancel the booked flight due to a schedule change."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Draft a social media update about recent flights for sharing. Use my account with username 'michael_t' and password 'michaelSecurePass123' with the message 'Just booked a flight to Los Angeles! Excited for the trip.'"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Retweet the tweet I just posted to widen its reach within my network."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "get_flight_cost(travel_from='RMS',travel_to='LAX',travel_date='2026-11-15',travel_class='business')",
+        "book_flight(access_token='abc123xyz', card_id='1_3456', travel_date='2026-11-15', travel_from='RMS', travel_to='LAX', travel_class='business')"
+      ],
+      [
+        "cancel_booking(access_token='abc123xyz', booking_id='3426812')"
+      ],
+      [
+        "authenticate_twitter(username='michael_t', password='michaelSecurePass123')",
+        "post_tweet(content='Just booked a flight to Los Angeles! Excited for the trip.')"
+      ],
+      [
+        "retweet(tweet_id=1)"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_195",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "I really really want to travel from Rivermist to Los Angeles on a specific date, ensuring preferred seating is 'business' and correct travel date '2026-11-15'; just double check the cost of that flight for me and then please pay using card with id '1_3456' and access token 'abc123xyz'."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Cancel the booked flight due to a schedule change."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Draft a social media update about recent flights for sharing. Use my account with username 'michael_t' and password 'michaelSecurePass123' with the message 'Just booked a flight to Los Angeles! Excited for the trip.'"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Retweet the tweet I just posted to widen its reach within my network."
+          }
+        ]
+      ],
+      "initial_config": {
+        "TravelAPI": {
+          "credit_card_list": {
+            "1_3456": {
+              "card_number": "1234-5678-9012-3456",
+              "balance": 20000.0,
+              "cardholder_name": "Michael Thompson",
+              "expiry_date": "12/26",
+              "cvv": 123
+            }
+          },
+          "booking_record": {},
+          "access_token": "abc123xyz",
+          "token_type": "Bearer",
+          "token_expires_in": 3600,
+          "token_scope": "read write",
+          "user_first_name": "Michael",
+          "user_last_name": "Thompson",
+          "budget_limit": 1000.0
+        },
+        "TwitterAPI": {
+          "username": "michael_t",
+          "password": "michaelSecurePass123",
+          "authenticated": true,
+          "tweets": {},
+          "comments": {
+            "1": [
+              {
+                "user": "jane_d",
+                "comment": "Safe travels!"
+              },
+              {
+                "user": "alex_k",
+                "comment": "Have fun!"
+              }
+            ]
+          },
+          "retweets": {
+            "michael_t": [
+              1
+            ]
+          },
+          "following_list": [
+            "jane_d",
+            "alex_k",
+            "travel_guru"
+          ],
+          "tweet_counter": 1
+        }
+      },
+      "path": [
+        "TravelAPI.get_nearest_airport_by_city",
+        "TravelAPI.book_flight",
+        "TravelAPI.cancel_booking",
+        "TwitterAPI.post_tweet",
+        "TwitterAPI.retweet"
+      ],
+      "involved_classes": [
+        "TwitterAPI",
+        "TravelAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_197",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I have a fabulous universal travel credit card that I want to register. The number is 1432-7890-6543-9876 with a CVV of 321 and expiration date '12/26'. Oh, and save the name under 'Michael Thompson'. Register with access token 'abc123xyz456'. Additionally, I need you to set it up and then procure travel insurance worth $2000 for my family vacation, which should comprehensively cover the journey from Munich all the way to Guangzhou. We start off at the remarkable Munich Massive Megatrip on December 24, 2026. Fingers crossed for a seamless experience! booking id is insurance_12345"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Once the travel insurance is successfully procured, I am at a loss remembering the aggregated expense involved. Could you retrieve an invoice for this insurance to ensure my financial records are precise?"
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "During this adventure, an unexpected hiccup arose. Kindly notify the customer support service about this incident to guarantee that our case receives immediate attention, ahead of others."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "register_credit_card(access_token='abc123xyz456', card_number='1432-7890-6543-9876', expiration_date='12/2025', card_verification_number=321, cardholder_name='Michael Thompson')",
+        "purchase_insurance(access_token='abc123xyz456', insurance_type='comprehensive', insurance_cost=2000.0, booking_id='insurance_12345',card_id='262919693687')"
+      ],
+      [
+        "retrieve_invoice(access_token='abc123xyz456', booking_id='insurance_12345')"
+      ],
+      [
+        "contact_customer_support(booking_id='insurance_12345', message='Unexpected hiccup during travel. Please prioritize our case for immediate attention.')"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_197",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "I have a fabulous universal travel credit card that I want to register. The number is 1432-7890-6543-9876 with a CVV of 321 and expiration date '12/26'. Oh, and save the name under 'Michael Thompson'. Register with access token 'abc123xyz456'. Additionally, I need you to set it up and then procure travel insurance worth $2000 for my family vacation, which should comprehensively cover the journey from Munich all the way to Guangzhou. We start off at the remarkable Munich Massive Megatrip on December 24, 2026. Fingers crossed for a seamless experience! booking id is insurance_12345"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Once the travel insurance is successfully procured, I am at a loss remembering the aggregated expense involved. Could you retrieve an invoice for this insurance to ensure my financial records are precise?"
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "During this adventure, an unexpected hiccup arose. Kindly notify the customer support service about this incident to guarantee that our case receives immediate attention, ahead of others."
+          }
+        ]
+      ],
+      "initial_config": {
+        "TravelAPI": {
+          "credit_card_list": {},
+          "booking_record": {
+            "insurance_12345": {
+              "travel_cost": 9500.0,
+              "travel_date": "2026-12-24",
+              "travel_from": "SFO",
+              "travel_to": "LAX",
+              "travel_class": "economy",
+              "transaction_id": "12345"
+            }
+          },
+          "access_token": "abc123xyz456",
+          "token_type": "Bearer",
+          "token_expires_in": 3600,
+          "token_scope": "full_access",
+          "user_first_name": "Michael",
+          "user_last_name": "Thompson",
+          "budget_limit": 5000.0
+        }
+      },
+      "path": [
+        "TravelAPI.register_credit_card",
+        "TravelAPI.purchase_insurance",
+        "TravelAPI.retrieve_invoice",
+        "TravelAPI.contact_customer_support",
+        "TravelAPI.book_flight",
+        "MessageAPI.send_message",
+        "MessageAPI.delete_message"
+      ],
+      "involved_classes": [
+        "MessageAPI",
+        "TravelAPI"
+      ]
+    },
+    "tools_from_docs": true
+  },
+  {
+    "id": "multi_turn_long_context_199",
+    "category": "multi_turn_long_context",
+    "kind": "multi_turn",
+    "question": [
+      [
+        {
+          "role": "user",
+          "content": "I'm planning a journey from Los Angeles to New York on the morning of April 15th 2026, preferring to fly business class. Check the flight cost and then please arrange this flight using my pre-linked credit card with id 'card_123456789' and access token 'abc123xyz'."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "With my flight now secured, I need to review the invoice outlining the costs involved. Retrieve that invoice for me, please."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "There were hiccups during the booking process. Reach out to customer support and detail the challenges I faced."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Loggin in as USR001 for messaging. Once you've reached out to them, please brief my colleague Catherine (id='USR003') on the situation using my sender id 'MichaelTpss', message to send be 'Update on flight issue and customer support contact.'."
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "content": "Finally, compile and present all the responses sent following the communications regarding the flight issue."
+        }
+      ]
+    ],
+    "function": [],
+    "reference": [
+      [
+        "get_flight_cost(travel_from='LAX', travel_to='JFK', travel_date='2026-04-15', travel_class='business')",
+        "book_flight(access_token='abc123xyz', card_id='card_123456789', travel_date='2026-04-15', travel_from='LAX', travel_to='JFK', travel_class='business')"
+      ],
+      [
+        "retrieve_invoice(access_token='abc123xyz', booking_id='3426812')"
+      ],
+      [
+        "contact_customer_support(booking_id='3426812', message='There were hiccups during the booking process. Please assist.')"
+      ],
+      [
+        "message_login(user_id='USR001')",
+        "send_message(receiver_id='USR003', message='Update on flight issue and customer support contact.')"
+      ],
+      [
+        "view_messages_sent()"
+      ]
+    ],
+    "raw_entry": {
+      "id": "multi_turn_long_context_199",
+      "question": [
+        [
+          {
+            "role": "user",
+            "content": "I'm planning a journey from Los Angeles to New York on the morning of April 15th 2026, preferring to fly business class. Check the flight cost and then please arrange this flight using my pre-linked credit card with id 'card_123456789' and access token 'abc123xyz'."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "With my flight now secured, I need to review the invoice outlining the costs involved. Retrieve that invoice for me, please."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "There were hiccups during the booking process. Reach out to customer support and detail the challenges I faced."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Loggin in as USR001 for messaging. Once you've reached out to them, please brief my colleague Catherine (id='USR003') on the situation using my sender id 'MichaelTpss', message to send be 'Update on flight issue and customer support contact.'."
+          }
+        ],
+        [
+          {
+            "role": "user",
+            "content": "Finally, compile and present all the responses sent following the communications regarding the flight issue."
+          }
+        ]
+      ],
+      "initial_config": {
+        "TravelAPI": {
+          "credit_card_list": {
+            "card_123456789": {
+              "card_number": "1234-5678-9876-5432",
+              "expiry_date": "12/26",
+              "cardholder_name": "Michael Thompson",
+              "currency": "EUR",
+              "balance": 5000.0
+            }
+          },
+          "booking_record": {
+            "booking_987654321": {
+              "flight_number": "LA1234",
+              "departure": "Los Angeles",
+              "destination": "New York",
+              "class": "Business",
+              "date": "2026-04-15",
+              "cost": 1200.0
+            }
+          },
+          "access_token": "abc123xyz",
+          "token_type": "Bearer",
+          "token_expires_in": 3600,
+          "token_scope": "read_write",
+          "user_first_name": "Michael",
+          "user_last_name": "Thompson",
+          "budget_limit": 3000.0
+        }
+      },
+      "path": [
+        "TravelAPI.compute_exchange_rate",
+        "TravelAPI.get_flight_cost",
+        "TravelAPI.book_flight",
+        "TravelAPI.retrieve_invoice",
+        "TravelAPI.contact_customer_support",
+        "MessageAPI.send_message",
+        "MessageAPI.view_messages_received"
+      ],
+      "involved_classes": [
+        "MessageAPI",
+        "TravelAPI"
+      ]
+    },
+    "tools_from_docs": true
+  }
+]

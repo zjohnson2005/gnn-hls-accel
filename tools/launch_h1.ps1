@@ -78,6 +78,8 @@
 #                       generated; the turn escalates (sticky, ctx_overflow). Single-arm only.
 #                       Default off.
 #   -Policy hybrid_full DEMO-2 policy (mechanical then quality triggers). -MaxUsd is required.
+#   -ConfirmationRun    allow a reserved entry pin (DEMO2_HELDOUT_60_B: one SEARCH confirmation
+#                       run only). Default off: the worker refuses reserved pins.
 #
 # Dry-run (gates report-only; spawn suppressed):
 #   powershell -NoProfile -File tools/launch_h1.ps1 -Policy cloud_only -DryRun
@@ -134,7 +136,10 @@ param(
     # "emission_escalate=3,full_signal_bounceback=2,local_only=0" (H1-CPU amendment 2).
     [string]$PolicyCapUsd = "",
     # Skip the cloud ping on a -DryRun only. A live launch always pings.
-    [switch]$NoCloudPing
+    [switch]$NoCloudPing,
+    # Allow an entry pin marked reserved_for (DEMO2_HELDOUT_60_B: the one SEARCH
+    # confirmation run). Default: the worker refuses reserved pins.
+    [switch]$ConfirmationRun
 )
 
 $ErrorActionPreference = "Stop"
@@ -630,6 +635,9 @@ if ($null -ne $EntryCount) {
     $resolvedCmd = $resolvedCmd + ' --entry-count ' + $EntryCount
 }
 
+if ($ConfirmationRun) {
+    $resolvedCmd = $resolvedCmd + ' --confirmation-run'
+}
 if ($AllowDirty) {
     $resolvedCmd = $resolvedCmd + ' --allow-dirty'
 }

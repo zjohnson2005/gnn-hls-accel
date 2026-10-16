@@ -231,7 +231,8 @@ def latency() -> dict[str, Any]:
         statistics.median([t["decode_tok_s"] for t in v1x if t.get("decode_tok_s")])
     )
     return {
-        "source": "d482c621 slo_escalate local turns (XPS GPU u8 = i8, RESIDENT, no SchedulerConfig)",
+        "source": "d482c621 slo_escalate local turns "
+        "(XPS GPU u8 = i8, RESIDENT, no SchedulerConfig)",
         "n_local_turns": len(loc),
         "XPS_arm_A": {
             "ttft_s_p50": round(statistics.median(ttft), 3),
