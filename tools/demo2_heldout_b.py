@@ -20,7 +20,17 @@ DEMO2_HELDOUT_60_B_LONG30.json now. When the base rule is approved, the full
 DEMO2_HELDOUT_60_B.json is base 30 (own seeded draw) followed by these 30
 unchanged.
 
+Base half, rule R1 (approved by Zach 2026-10-16,
+docs/amendments/APPROVALS_2026-10-16.md): eligible = the W-3 pin's
+multi_turn_base ids that are in no DEMO-1 pin and not in DEMO2_HELDOUT_60.
+Sample 30 with a fresh random.Random(SEED) stream (file order kept). The
+full pin DEMO2_HELDOUT_60_B.json is those 30 followed by the 30 entries of
+DEMO2_HELDOUT_60_B_LONG30.json, byte-for-byte the registered long half.
+Condition: the SEARCH phase never reads a W-3 / d482c621 per-entry outcome
+for the 30 base ids. Selection uses ids only; no outcome is read here.
+
   python tools/demo2_heldout_b.py --data-dir <bfcl_eval 2025.12.17>/bfcl_eval/data
+  python tools/demo2_heldout_b.py --data-dir <...> --full
 """
 
 from __future__ import annotations
@@ -42,6 +52,7 @@ from tools import demo2_heldout as h60  # noqa: E402
 SEED = 20261016
 N_PER_CATEGORY = 30
 OUT = ROOT / "derived" / "h1_hybrid" / "demo2" / "DEMO2_HELDOUT_60_B_LONG30.json"
+FULL_OUT = ROOT / "derived" / "h1_hybrid" / "demo2" / "DEMO2_HELDOUT_60_B.json"
 HELDOUT_60_META = ROOT / "derived" / "h1_hybrid" / "demo2" / "DEMO2_HELDOUT_60.meta.json"
 W3_ENTRIES = (
     ROOT
@@ -94,6 +105,90 @@ def select(base_ids: list[str], long_ids: list[str]) -> dict[str, Any]:
         "long_jump_category": sum(1 for v in largest.values() if v > h60.JUMP_N_CTX),
         "selected_long": [i for i in long_elig if i in pick],
     }
+
+
+def w3_ids() -> list[str]:
+    w3 = json.loads(W3_ENTRIES.read_text(encoding="utf-8-sig"))
+    return [str(e["id"]) for e in w3]
+
+
+def select_base_r1(base_ids: list[str]) -> dict[str, Any]:
+    """Rule R1 base draw from the id list (file order). Pure; ids only."""
+    ex = excluded()
+    w3 = set(ex.pop("W3_multi_turn_base_200"))
+    drop = {i for ids in ex.values() for i in ids}
+    elig = [i for i in base_ids if i in w3 and i not in drop]
+    rng = random.Random(SEED)
+    pick = set(rng.sample(elig, N_PER_CATEGORY))
+    return {"base_r1_eligible": len(elig), "selected_base": [i for i in elig if i in pick]}
+
+
+def build_full(data_dir: Path) -> dict[str, Any]:
+    """Write DEMO2_HELDOUT_60_B.json (R1 base 30 + registered long 30) and its meta."""
+    from tools import h1_context_sizing as hcs
+
+    base = hcs.load_entries("multi_turn_base", data_dir)
+    long_ = hcs.load_entries("multi_turn_long_context", data_dir)
+    by_id = {e["id"]: e for e in base + long_}
+    # Loader checks: the same data and loader rebuild DEMO2_HELDOUT_60 and the
+    # registered long half to their pins.
+    sel60 = h60.select([e["id"] for e in base], [e["id"] for e in long_])
+    rebuilt60 = hcs.entries_bytes([by_id[i] for i in sel60["selected_base"] + sel60["selected_long"]])
+    pinned60 = json.loads(HELDOUT_60_META.read_text(encoding="utf-8"))["entries_sha256"]
+    long_meta = json.loads(OUT.with_name(OUT.stem + ".meta.json").read_text(encoding="ascii"))
+    sel = select([e["id"] for e in base], [e["id"] for e in long_])
+    rebuilt_long = hcs.entries_bytes([by_id[i] for i in sel["selected_long"]])
+    for label, got, want in (
+        ("DEMO2_HELDOUT_60", hashlib.sha256(rebuilt60).hexdigest(), pinned60),
+        ("DEMO2_HELDOUT_60_B_LONG30", hashlib.sha256(rebuilt_long).hexdigest(),
+         long_meta["entries_sha256"]),
+        ("DEMO2_HELDOUT_60_B_LONG30 file", hashlib.sha256(OUT.read_bytes()).hexdigest(),
+         long_meta["entries_sha256"]),
+    ):
+        if got != want:
+            raise SystemExit(f"REFUSED -- loader check: rebuilt {label} {got} != {want}")
+    r1 = select_base_r1([e["id"] for e in base])
+    ids = r1["selected_base"] + sel["selected_long"]
+    payload = hcs.entries_bytes([by_id[i] for i in ids])
+    meta = {
+        "kind": "h1_entry_subset",
+        "name": "DEMO2_HELDOUT_60_B",
+        "categories": ["multi_turn_base", "multi_turn_long_context"],
+        "seed": SEED,
+        "n": len(ids),
+        "rule": __doc__.split("\n\n")[4].strip(),
+        "reserved_for": RESERVATION,
+        "base_rule": "R1 (approved by Zach 2026-10-16, docs/amendments/APPROVALS_2026-10-16.md)",
+        "base_r1_eligible": r1["base_r1_eligible"],
+        "search_barred_outcomes": {
+            "ids": r1["selected_base"],
+            "runs": "W-3 (W3_multi_turn_base_200) and d482c621: per-entry outcomes for these ids "
+            "must never be read by the SEARCH phase",
+        },
+        "long_half": {
+            "pin": "DEMO2_HELDOUT_60_B_LONG30",
+            "entries_sha256": long_meta["entries_sha256"],
+        },
+        "excluded_pins": excluded(),
+        "data": {
+            "bfcl_eval": "2025.12.17",
+            "files_sha256": {
+                name: hashlib.sha256((data_dir / name).read_bytes()).hexdigest()
+                for name in ("BFCL_v4_multi_turn_base.json", "BFCL_v4_multi_turn_long_context.json")
+            },
+            "check": f"this data rebuilds DEMO2_HELDOUT_60 ({pinned60}) and "
+            f"DEMO2_HELDOUT_60_B_LONG30 ({long_meta['entries_sha256']}) to their pins",
+        },
+        "selected_base": r1["selected_base"],
+        "selected_long": sel["selected_long"],
+        "selected": ids,
+        "entries_sha256": hashlib.sha256(payload).hexdigest(),
+    }
+    FULL_OUT.write_bytes(payload)
+    FULL_OUT.with_name(FULL_OUT.stem + ".meta.json").write_text(
+        json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="ascii"
+    )
+    return meta
 
 
 def build(data_dir: Path) -> dict[str, Any]:
@@ -158,7 +253,13 @@ def build(data_dir: Path) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--data-dir", type=Path, required=True)
+    parser.add_argument("--full", action="store_true", help="build DEMO2_HELDOUT_60_B.json (R1)")
     args = parser.parse_args(argv)
+    if args.full:
+        meta = build_full(args.data_dir)
+        print(f"PIN {FULL_OUT} n={meta['n']} sha256={meta['entries_sha256']}")
+        print(f"base R1 eligible {meta['base_r1_eligible']}")
+        return 0
     meta = build(args.data_dir)
     print(f"PIN {OUT} n={meta['n']} sha256={meta['entries_sha256']}")
     print(

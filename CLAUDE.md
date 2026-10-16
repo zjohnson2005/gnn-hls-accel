@@ -210,15 +210,19 @@ session start; update it in the same commit as the work. Never delete a row.
   i8), B device-only tuned, C full tuned, D ecosystem 4096 (XPS only);
   material-win threshold and pivot rule into the registered SEARCH phase
   (DEMO2_SEARCH_PHASE_2026-10-16.md); second pin DEMO2_HELDOUT_60_B
-  (long_context half only; base half BLOCKED, rules R1-R3 for Zach) for one
-  confirmation run. Pilots P0-P9 registered (DEMO2_PILOTS_2026-10-16.md),
+  (long_context half; base half by rule R1, below) for one
+  confirmation run. APPROVED by Zach 2026-10-16 (APPROVALS_2026-10-16.md):
+  amendment, SEARCH, pilots; ceiling $275; P7 spend approved, P5 not yet;
+  R1 base half, full pin DEMO2_HELDOUT_60_B sha256 9dfa9280 (reserved).
+  Pilots P0-P9 registered (DEMO2_PILOTS_2026-10-16.md),
   harness built, all flags default off; nothing run. Tuned values come
   from the pilots via an arm-spec addendum before any held-out run.
 - KV default on 2026.2.1 is i8 by source (not u4), NOT YET MEASURED on the
   hosts: pilot P0 (tools/kv_compiled_readback.ps1 -Mode all). The
   2026-10-15 9:22 PM ET P0 attempt timed out on both hosts.
-- Spend open: DEMO-2 caps $108.35 (1 replicate) / $216.70 (2) vs the $150
-  ceiling; pilots P7+P5 caps $54.81 on top. Not approved.
+- Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
+  $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
+  $27.54); P5 needs a separate OK after P7.
 - XPS queue (registry section 7): pin restore, back up be91e69d, P0 both
   hosts, remaining pilots, arm spec, DEMO-2 rehearsals, held-out cells,
   H1-CPU (amendment 3 awaiting approval), P1 B=20 A0, rest. T2S block

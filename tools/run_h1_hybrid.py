@@ -79,6 +79,7 @@ DEMO2_HELDOUT_60_SHA256 = "cc74a37ed84ed95b0f4dd4b8d7eb774f2737230dcfca01321fe13
 DEMO2_HELDOUT_60_B_LONG30_SHA256 = (
     "46aa65098a4f704d07cd8037168ad48a04269b6731b0118bfb195a50b032c37c"
 )
+DEMO2_HELDOUT_60_B_SHA256 = "9dfa9280c67ef799034338607ad5bbc34246fe02d21fc5882be2fc5a5cfa61ef"
 ENTRY_PINS: dict[str, dict[str, Any]] = {
     W3_ENTRIES_SHA256: {"name": "W3_multi_turn_base_200", "n": 200, "seal_refs": list(W3_SEAL_REFS)},
     DEMO1_LONGCTX_30_SHA256: {
@@ -137,6 +138,16 @@ ENTRY_PINS: dict[str, dict[str, Any]] = {
         "n": 30,
         "path": "derived/h1_hybrid/demo2/DEMO2_HELDOUT_60_B_LONG30.json",
         "category": "multi_turn_long_context",
+        "seed": 20261016,
+        "reserved_for": "one DEMO-2 SEARCH confirmation run (final searched profile vs arm A)",
+    },
+    # Full second DEMO-2 held-out pin: R1 base 30 (approved 2026-10-16) then the
+    # long half above, byte for byte (tools/demo2_heldout_b.py --full). Reserved.
+    DEMO2_HELDOUT_60_B_SHA256: {
+        "name": "DEMO2_HELDOUT_60_B",
+        "n": 60,
+        "path": "derived/h1_hybrid/demo2/DEMO2_HELDOUT_60_B.json",
+        "category": "multi_turn_base+multi_turn_long_context",
         "seed": 20261016,
         "reserved_for": "one DEMO-2 SEARCH confirmation run (final searched profile vs arm A)",
     },

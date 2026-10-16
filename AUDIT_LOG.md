@@ -3186,3 +3186,22 @@ against whichever run Rithwik's 46k measurement used.
    <source>, unmeasured". arXiv 2603.23640 reports 37.3% and 44.1% loss on
    an iPhone 16 Pro, not 41.5% and not Intel; the three 2026-10-15
    literature citations are marked corrected in place.
+
+## 2026-10-16 - DEMO-2 approvals, spend ceiling, R1 base half (Task AT part 1)
+
+- Zach approved in chat (2026-10-16 ET): the true-default amendment
+  (d76c1b08...), the SEARCH phase (72b12c1f...) and the pilots doc
+  (eac93a00...) as committed. Recorded in docs/amendments/APPROVALS_2026-10-16.md;
+  the approved files are not edited.
+- DEMO-2 cloud ceiling raised from $150 to $275 (arms at 2 replicates
+  $216.70 + pilot caps $54.81 = $271.51). Per-launch caps unchanged.
+- P7 approved now (caps XPS $18.54, T2S $9.00); P5 waits for P7 and a
+  separate OK.
+- DEMO2_HELDOUT_60_B base half by rule R1: full pin
+  derived/h1_hybrid/demo2/DEMO2_HELDOUT_60_B.json sha256
+  9dfa9280c67ef799034338607ad5bbc34246fe02d21fc5882be2fc5a5cfa61ef,
+  reserved for the one SEARCH confirmation run. Built from ids only; no
+  W-3 outcome of the chosen entries was read.
+- tests/test_fdr_replay_d1.py wrote derived/d1_replay/*.md and configs.json
+  on every run (only the "Generated:" stamp changed). The test now writes to
+  tmp_path; the six files were restored with git checkout.

@@ -5,11 +5,13 @@ from __future__ import annotations
 import math
 import sys
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tools import fdr_replay  # noqa: E402
 from tools.fdr_replay import (  # noqa: E402
     assert_all_tagged,
     assert_no_nan,
@@ -91,7 +93,8 @@ def test_no_nan_in_48_row_table() -> None:
     assert_no_nan(art["configs"]["rows"])
 
 
-def test_h1_no_zero_cloud_placeholders() -> None:
+def test_h1_no_zero_cloud_placeholders(tmp_path: Path, monkeypatch: Any) -> None:
+    monkeypatch.setattr(fdr_replay, "OUT_DIR", tmp_path)  # keep derived/d1_replay clean
     art = run(write_outputs=True)
     rows = {r["label"]: r for r in art["h1"]["rows"]}
     assert rows["R0"]["trace_n"] == 200
@@ -110,5 +113,11 @@ if __name__ == "__main__":
     test_x2_decomposition_holdout()
     test_source_tags_present()
     test_no_nan_in_48_row_table()
-    test_h1_no_zero_cloud_placeholders()
+    import tempfile
+
+    class _MP:
+        def setattr(self, obj: Any, name: str, value: Any) -> None:
+            setattr(obj, name, value)
+
+    test_h1_no_zero_cloud_placeholders(Path(tempfile.mkdtemp()), _MP())
     print("PASS tests/test_fdr_replay_d1.py")
