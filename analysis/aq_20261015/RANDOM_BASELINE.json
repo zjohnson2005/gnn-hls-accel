@@ -1,0 +1,103 @@
+{
+ "generated_by": "tools/aq_sealed_analyses.py",
+ "definitions": {
+  "baseline": "escalate k of the 30 entries uniformly at random at turn 0, k = the router's number of escalated entries on the same entries; an escalated entry takes its cloud outcome (V2 1acc8c58), the rest their local outcome (V1 f7343708). Exact distribution, no simulation."
+ },
+ "entry_set": "DEMO1_BASE_30",
+ "outcome_sources": [
+  "f7343708 (local)",
+  "1acc8c58 (cloud)"
+ ],
+ "caveats": [
+  "Routers escalate mid-entry; the baseline escalates at turn 0, so it gives the cloud the whole entry.",
+  "d482c621 local outcomes come from a different session (RESIDENT, 2026-09) than V1's; local pass counts differ between them.",
+  "W-3 200: not computable (no all-cloud run on the 200; R0 not run).",
+  "PAIRED_15: not computable (no all-local or all-cloud cell)."
+ ],
+ "comparisons": [
+  {
+   "router": "d482c621 slo_escalate on BASE_30",
+   "observed_passes": 4,
+   "observed_usd_per_task": 0.0,
+   "random_at_matched_rate": {
+    "k_escalated": 0,
+    "expected_passes": 3.0,
+    "passes_95pct_interval": [
+     3,
+     3
+    ],
+    "expected_usd_per_task": 0.0
+   }
+  },
+  {
+   "router": "d482c621 emission_escalate on BASE_30",
+   "observed_passes": 7,
+   "observed_usd_per_task": 0.0522,
+   "random_at_matched_rate": {
+    "k_escalated": 6,
+    "expected_passes": 6.8,
+    "passes_95pct_interval": [
+     4,
+     9
+    ],
+    "expected_usd_per_task": 0.0594
+   }
+  },
+  {
+   "router": "d482c621 full_signal_bounceback on BASE_30",
+   "observed_passes": 4,
+   "observed_usd_per_task": 0.028,
+   "random_at_matched_rate": {
+    "k_escalated": 6,
+    "expected_passes": 6.8,
+    "passes_95pct_interval": [
+     4,
+     9
+    ],
+    "expected_usd_per_task": 0.0594
+   }
+  },
+  {
+   "router": "DEMO-1 XPS_V1 slo_escalate",
+   "observed_passes": 3,
+   "observed_usd_per_task": 0.0,
+   "random_at_matched_rate": {
+    "k_escalated": 0,
+    "expected_passes": 3.0,
+    "passes_95pct_interval": [
+     3,
+     3
+    ],
+    "expected_usd_per_task": 0.0
+   }
+  },
+  {
+   "router": "DEMO-1 XPS_V2_CPU slo_escalate",
+   "observed_passes": 22,
+   "observed_usd_per_task": 0.2968,
+   "random_at_matched_rate": {
+    "k_escalated": 30,
+    "expected_passes": 22.0,
+    "passes_95pct_interval": [
+     22,
+     22
+    ],
+    "expected_usd_per_task": 0.2968
+   }
+  },
+  {
+   "router": "DEMO-1 T2S_V1 slo_escalate",
+   "observed_passes": 3,
+   "observed_usd_per_task": 0.0,
+   "random_at_matched_rate": {
+    "k_escalated": 0,
+    "expected_passes": 3.0,
+    "passes_95pct_interval": [
+     3,
+     3
+    ],
+    "expected_usd_per_task": 0.0
+   }
+  }
+ ]
+}

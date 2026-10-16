@@ -1,0 +1,312 @@
+{
+ "generated_by": "tools/aq_sealed_analyses.py",
+ "definitions": {
+  "passes": "hybrid passes (count, not rate; n differs by entry set)",
+  "usd_per_task": "cloud $ / entries",
+  "median_local_ttft_s": "median TTFT over local turns only; cloud latency is not a timing measurement in these ledgers and is excluded",
+  "same_entry_set_as_other_rows": "true for rows on DEMO1_BASE_30, which can be compared with each other; other rows cannot"
+ },
+ "caveats": [
+  "d482c621 ran RESIDENT on GPU in 2026-09; the DEMO-1 cells ran NON_RESIDENT in 2026-10 (PREFIX-CACHE-AUDIT). Same entries, different sessions and scheduler settings.",
+  "Single runs; no variance estimate. Descriptive only, not a test of H-B."
+ ],
+ "rows": [
+  {
+   "kind": "configuration",
+   "change": "placement GPU -> CPU (XPS)",
+   "entry_set": "BASE_30",
+   "same_entry_set_as_other_rows": true,
+   "runs": "f7343708 -> 1acc8c58",
+   "from": {
+    "n": 30,
+    "passes": 3,
+    "usd_per_task": 0.0,
+    "local_share": 1.0,
+    "median_local_ttft_s": 3.166,
+    "escalated_entries": 0
+   },
+   "to": {
+    "n": 30,
+    "passes": 22,
+    "usd_per_task": 0.2968,
+    "local_share": 0.0,
+    "median_local_ttft_s": null,
+    "escalated_entries": 30
+   },
+   "d_passes": 19,
+   "d_usd_per_task": 0.2968,
+   "d_local_share": -1.0,
+   "d_median_local_ttft_s": null
+  },
+  {
+   "kind": "configuration",
+   "change": "retention FULL -> OBS_MASK K=1024 (XPS)",
+   "entry_set": "PAIRED_15",
+   "same_entry_set_as_other_rows": false,
+   "runs": "71d33f7a+ab88f47f -> a678926e",
+   "from": {
+    "n": 15,
+    "passes": 4,
+    "usd_per_task": 0.3079,
+    "local_share": 0.6727,
+    "median_local_ttft_s": 3.054,
+    "escalated_entries": 9
+   },
+   "to": {
+    "n": 15,
+    "passes": 6,
+    "usd_per_task": 0.1843,
+    "local_share": 0.6727,
+    "median_local_ttft_s": 3.314,
+    "escalated_entries": 9
+   },
+   "d_passes": 2,
+   "d_usd_per_task": -0.1236,
+   "d_local_share": 0.0,
+   "d_median_local_ttft_s": 0.26
+  },
+  {
+   "kind": "configuration",
+   "change": "retention FULL -> OBS_MASK K=1024 (T2S)",
+   "entry_set": "PAIRED_15",
+   "same_entry_set_as_other_rows": false,
+   "runs": "a4284ab0 -> 30caa847",
+   "from": {
+    "n": 15,
+    "passes": 3,
+    "usd_per_task": 0.0958,
+    "local_share": 0.8909,
+    "median_local_ttft_s": 1.581,
+    "escalated_entries": 5
+   },
+   "to": {
+    "n": 15,
+    "passes": 2,
+    "usd_per_task": 0.0129,
+    "local_share": 0.9818,
+    "median_local_ttft_s": 1.606,
+    "escalated_entries": 1
+   },
+   "d_passes": -1,
+   "d_usd_per_task": -0.0829,
+   "d_local_share": 0.0909,
+   "d_median_local_ttft_s": 0.025
+  },
+  {
+   "kind": "yardstick",
+   "change": "hardware XPS -> T2S, V1 (GPU 4B u8)",
+   "entry_set": "BASE_30",
+   "same_entry_set_as_other_rows": true,
+   "runs": "f7343708 -> b026f3fd",
+   "from": {
+    "n": 30,
+    "passes": 3,
+    "usd_per_task": 0.0,
+    "local_share": 1.0,
+    "median_local_ttft_s": 3.166,
+    "escalated_entries": 0
+   },
+   "to": {
+    "n": 30,
+    "passes": 3,
+    "usd_per_task": 0.0,
+    "local_share": 1.0,
+    "median_local_ttft_s": 1.274,
+    "escalated_entries": 0
+   },
+   "d_passes": 0,
+   "d_usd_per_task": 0.0,
+   "d_local_share": 0.0,
+   "d_median_local_ttft_s": -1.892
+  },
+  {
+   "kind": "yardstick",
+   "change": "hardware XPS -> T2S, V4",
+   "entry_set": "PAIRED_15",
+   "same_entry_set_as_other_rows": false,
+   "runs": "a678926e -> 30caa847",
+   "from": {
+    "n": 15,
+    "passes": 6,
+    "usd_per_task": 0.1843,
+    "local_share": 0.6727,
+    "median_local_ttft_s": 3.314,
+    "escalated_entries": 9
+   },
+   "to": {
+    "n": 15,
+    "passes": 2,
+    "usd_per_task": 0.0129,
+    "local_share": 0.9818,
+    "median_local_ttft_s": 1.606,
+    "escalated_entries": 1
+   },
+   "d_passes": -4,
+   "d_usd_per_task": -0.1714,
+   "d_local_share": 0.3091,
+   "d_median_local_ttft_s": -1.708
+  },
+  {
+   "kind": "routing",
+   "change": "slo_escalate -> emission_escalate (W-3 200)",
+   "entry_set": "W-3 200",
+   "same_entry_set_as_other_rows": false,
+   "runs": "d482c621",
+   "from": {
+    "n": 200,
+    "passes": 21,
+    "usd_per_task": 0.0,
+    "local_share": 1.0,
+    "median_local_ttft_s": 0.3,
+    "escalated_entries": 0
+   },
+   "to": {
+    "n": 200,
+    "passes": 46,
+    "usd_per_task": 0.0806,
+    "local_share": 0.7503,
+    "median_local_ttft_s": 0.159,
+    "escalated_entries": 59
+   },
+   "d_passes": 25,
+   "d_usd_per_task": 0.0806,
+   "d_local_share": -0.2497,
+   "d_median_local_ttft_s": -0.141
+  },
+  {
+   "kind": "routing",
+   "change": "slo_escalate -> emission_escalate (BASE_30 subset)",
+   "entry_set": "BASE_30",
+   "same_entry_set_as_other_rows": true,
+   "runs": "d482c621 restricted to DEMO1_BASE_30",
+   "from": {
+    "n": 30,
+    "passes": 4,
+    "usd_per_task": 0.0,
+    "local_share": 1.0,
+    "median_local_ttft_s": 0.262,
+    "escalated_entries": 0
+   },
+   "to": {
+    "n": 30,
+    "passes": 7,
+    "usd_per_task": 0.0522,
+    "local_share": 0.8136,
+    "median_local_ttft_s": 0.111,
+    "escalated_entries": 6
+   },
+   "d_passes": 3,
+   "d_usd_per_task": 0.0522,
+   "d_local_share": -0.1864,
+   "d_median_local_ttft_s": -0.151
+  },
+  {
+   "kind": "routing",
+   "change": "slo_escalate -> full_signal_bounceback (W-3 200)",
+   "entry_set": "W-3 200",
+   "same_entry_set_as_other_rows": false,
+   "runs": "d482c621",
+   "from": {
+    "n": 200,
+    "passes": 21,
+    "usd_per_task": 0.0,
+    "local_share": 1.0,
+    "median_local_ttft_s": 0.3,
+    "escalated_entries": 0
+   },
+   "to": {
+    "n": 200,
+    "passes": 30,
+    "usd_per_task": 0.0408,
+    "local_share": 0.8747,
+    "median_local_ttft_s": 0.107,
+    "escalated_entries": 66
+   },
+   "d_passes": 9,
+   "d_usd_per_task": 0.0408,
+   "d_local_share": -0.1253,
+   "d_median_local_ttft_s": -0.193
+  },
+  {
+   "kind": "routing",
+   "change": "slo_escalate -> full_signal_bounceback (BASE_30 subset)",
+   "entry_set": "BASE_30",
+   "same_entry_set_as_other_rows": true,
+   "runs": "d482c621 restricted to DEMO1_BASE_30",
+   "from": {
+    "n": 30,
+    "passes": 4,
+    "usd_per_task": 0.0,
+    "local_share": 1.0,
+    "median_local_ttft_s": 0.262,
+    "escalated_entries": 0
+   },
+   "to": {
+    "n": 30,
+    "passes": 4,
+    "usd_per_task": 0.028,
+    "local_share": 0.8983,
+    "median_local_ttft_s": 0.103,
+    "escalated_entries": 6
+   },
+   "d_passes": 0,
+   "d_usd_per_task": 0.028,
+   "d_local_share": -0.1017,
+   "d_median_local_ttft_s": -0.159
+  },
+  {
+   "kind": "routing",
+   "change": "emission_escalate -> full_signal_bounceback (W-3 200)",
+   "entry_set": "W-3 200",
+   "same_entry_set_as_other_rows": false,
+   "runs": "d482c621",
+   "from": {
+    "n": 200,
+    "passes": 46,
+    "usd_per_task": 0.0806,
+    "local_share": 0.7503,
+    "median_local_ttft_s": 0.159,
+    "escalated_entries": 59
+   },
+   "to": {
+    "n": 200,
+    "passes": 30,
+    "usd_per_task": 0.0408,
+    "local_share": 0.8747,
+    "median_local_ttft_s": 0.107,
+    "escalated_entries": 66
+   },
+   "d_passes": -16,
+   "d_usd_per_task": -0.0398,
+   "d_local_share": 0.1244,
+   "d_median_local_ttft_s": -0.052
+  },
+  {
+   "kind": "routing",
+   "change": "emission_escalate -> full_signal_bounceback (BASE_30 subset)",
+   "entry_set": "BASE_30",
+   "same_entry_set_as_other_rows": true,
+   "runs": "d482c621 restricted to DEMO1_BASE_30",
+   "from": {
+    "n": 30,
+    "passes": 7,
+    "usd_per_task": 0.0522,
+    "local_share": 0.8136,
+    "median_local_ttft_s": 0.111,
+    "escalated_entries": 6
+   },
+   "to": {
+    "n": 30,
+    "passes": 4,
+    "usd_per_task": 0.028,
+    "local_share": 0.8983,
+    "median_local_ttft_s": 0.103,
+    "escalated_entries": 6
+   },
+   "d_passes": -3,
+   "d_usd_per_task": -0.0242,
+   "d_local_share": 0.0847,
+   "d_median_local_ttft_s": -0.008
+  }
+ ]
+}

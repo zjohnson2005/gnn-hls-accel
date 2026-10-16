@@ -1,0 +1,289 @@
+{
+ "generated_by": "tools/aq_sealed_analyses.py",
+ "definitions": {
+  "local": "XPS V1 GPU f7343708 (0 escalations: every entry ran fully local)",
+  "cloud": "XPS V2 CPU 1acc8c58 (every entry escalated at turn 0: cloud for the whole entry, so it stands in for cloud-only)",
+  "oracle_escalate_local_failures": "entries the local run passed stay local ($0); every other entry goes to the cloud",
+  "oracle_min_cost": "as above, but only entries the cloud passes are sent"
+ },
+ "entry_set": "DEMO1_BASE_30",
+ "run_ids": [
+  "f7343708",
+  "1acc8c58"
+ ],
+ "n": 30,
+ "all_local": {
+  "passes": 3,
+  "usd": 0.0
+ },
+ "all_cloud": {
+  "passes": 22,
+  "usd": 8.9031,
+  "usd_per_task": 0.2968
+ },
+ "both_pass": 2,
+ "local_only_pass": 1,
+ "cloud_only_pass": 20,
+ "oracle_escalate_local_failures": {
+  "passes": 23,
+  "usd": 8.403,
+  "usd_per_task": 0.2801,
+  "cloud_entries": 27
+ },
+ "oracle_min_cost": {
+  "passes": 23,
+  "usd": 6.1959,
+  "usd_per_task": 0.2065,
+  "cloud_entries": 20
+ },
+ "paired_15": {
+  "computable": false,
+  "reason": "no DEMO-1 cell runs DEMO1_PAIRED_15 fully local or fully cloud: V3/V4 cells escalate mid-entry, so per-entry outcomes are hybrid, not local-vs-cloud pairs. Needs an all-local and an all-cloud cell on the pin."
+ },
+ "caveats": [
+  "V1 ran on GPU and V2 on CPU; V2 never produced a local token, so its outcome is the cloud model's from turn 0.",
+  "Single runs; run-to-run variance not measured."
+ ],
+ "per_entry": [
+  {
+   "entry": "multi_turn_base_5",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": false,
+   "cloud_usd": 0.374043,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_6",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": false,
+   "cloud_usd": 0.309927,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_10",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": false,
+   "cloud_usd": 0.367002,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_12",
+   "local_pass": true,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.14121,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_19",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.285816,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_21",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.228453,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_45",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.176409,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_56",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": false,
+   "cloud_usd": 0.32406,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_70",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.303345,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_78",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.24918600000000002,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_89",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.384531,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_103",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.36308399999999996,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_107",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.245007,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_110",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.43035899999999994,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_118",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.234645,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_119",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": false,
+   "cloud_usd": 0.257073,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_127",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.18321899999999997,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_128",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.191064,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_136",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.323589,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_145",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.37441800000000003,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_149",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.351267,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_157",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.251106,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_161",
+   "local_pass": true,
+   "local_escalated": false,
+   "cloud_pass": false,
+   "cloud_usd": 0.26214899999999997,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_163",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.170466,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_164",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": false,
+   "cloud_usd": 0.21013800000000002,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_172",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": false,
+   "cloud_usd": 0.364857,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_181",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.42820199999999997,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_182",
+   "local_pass": true,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.09668399999999999,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_184",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.441276,
+   "cloud_escalated_turn0": true
+  },
+  {
+   "entry": "multi_turn_base_186",
+   "local_pass": false,
+   "local_escalated": false,
+   "cloud_pass": true,
+   "cloud_usd": 0.5804940000000001,
+   "cloud_escalated_turn0": true
+  }
+ ]
+}
