@@ -1,0 +1,622 @@
+{
+  "id": "DEMO2_AMEND_TRUE_DEFAULT_PREDICTIONS",
+  "status": "registered with docs/amendments/DEMO2_AMEND_2026-10-16_TRUE_DEFAULT.md, before any DEMO-2 run",
+  "generator": "tools/demo2_true_default_predict.py",
+  "runner_must_not_read_this_file": true,
+  "pin": {
+    "name": "DEMO2_HELDOUT_60",
+    "sha256": "cc74a37ed84ed95b0f4dd4b8d7eb774f2737230dcfca01321fe136cdbfbca447",
+    "n": 60
+  },
+  "limits": {
+    "xps_i8_resident": {
+      "tokens": 20000,
+      "source": "cf3555d5 (u8 = i8 on GPU)"
+    },
+    "xps_u4_resident": {
+      "tokens": 26500,
+      "source": "e4a22dac"
+    },
+    "xps_cold_edge": {
+      "tokens": 10000,
+      "source": "c2246b1f (u8 = i8)"
+    },
+    "t2s_cold_edge": {
+      "tokens": 18500,
+      "source": "d2d5cc4a (u8 = i8)"
+    },
+    "model_max": {
+      "tokens": 40960,
+      "source": "Qwen3-4B max_position_embeddings"
+    }
+  },
+  "xps_b_c_window_by_bound": {
+    "lo": 36864,
+    "point": 23850,
+    "hi": 23850
+  },
+  "cost_model": "tools/demo2_predict.py registered model (q bands, LIVE_JUMP, 3.20e-6 x 7.11 $ per n_ctx) with per-arm triggers (see generator docstring)",
+  "per_cell_usd": {
+    "A-X": {
+      "lo": {
+        "usd_per_task": 0.098,
+        "usd_total": 5.88,
+        "local_share": 0.903,
+        "mechanical_escalations": 3.0,
+        "triggers": {
+          "window": null,
+          "memory_limit": 20000,
+          "edge": 10000
+        }
+      },
+      "point": {
+        "usd_per_task": 0.119,
+        "usd_total": 7.14,
+        "local_share": 0.843,
+        "mechanical_escalations": 3.0,
+        "triggers": {
+          "window": null,
+          "memory_limit": 20000,
+          "edge": 10000
+        }
+      },
+      "hi": {
+        "usd_per_task": 0.161,
+        "usd_total": 9.66,
+        "local_share": 0.722,
+        "mechanical_escalations": 3.0,
+        "triggers": {
+          "window": null,
+          "memory_limit": 20000,
+          "edge": 10000
+        }
+      }
+    },
+    "B-X": {
+      "lo": {
+        "usd_per_task": 0.0711,
+        "usd_total": 4.27,
+        "local_share": 0.92,
+        "mechanical_escalations": 1.0,
+        "triggers": {
+          "window": 36864,
+          "memory_limit": null,
+          "edge": 10000
+        }
+      },
+      "point": {
+        "usd_per_task": 0.119,
+        "usd_total": 7.14,
+        "local_share": 0.843,
+        "mechanical_escalations": 3.0,
+        "triggers": {
+          "window": 23850,
+          "memory_limit": null,
+          "edge": 10000
+        }
+      },
+      "hi": {
+        "usd_per_task": 0.161,
+        "usd_total": 9.66,
+        "local_share": 0.722,
+        "mechanical_escalations": 3.0,
+        "triggers": {
+          "window": 23850,
+          "memory_limit": null,
+          "edge": 10000
+        }
+      }
+    },
+    "C-X": {
+      "lo": {
+        "usd_per_task": 0.0229,
+        "usd_total": 1.37,
+        "local_share": 0.938,
+        "mechanical_escalations": 0.0,
+        "triggers": {
+          "window": 36864,
+          "memory_limit": null,
+          "edge": 10000
+        }
+      },
+      "point": {
+        "usd_per_task": 0.0457,
+        "usd_total": 2.74,
+        "local_share": 0.875,
+        "mechanical_escalations": 0.0,
+        "triggers": {
+          "window": 23850,
+          "memory_limit": null,
+          "edge": 10000
+        }
+      },
+      "hi": {
+        "usd_per_task": 0.1118,
+        "usd_total": 6.71,
+        "local_share": 0.733,
+        "mechanical_escalations": 3.0,
+        "triggers": {
+          "window": 23850,
+          "memory_limit": null,
+          "edge": 10000
+        }
+      }
+    },
+    "D-X2": {
+      "lo": {
+        "usd_per_task": 0.3524,
+        "usd_total": 21.14,
+        "local_share": 0.258,
+        "mechanical_escalations": 48.0,
+        "triggers": {
+          "window": 4096,
+          "memory_limit": 20000,
+          "edge": 10000
+        }
+      },
+      "point": {
+        "usd_per_task": 0.3564,
+        "usd_total": 21.39,
+        "local_share": 0.241,
+        "mechanical_escalations": 48.0,
+        "triggers": {
+          "window": 4096,
+          "memory_limit": 20000,
+          "edge": 10000
+        }
+      },
+      "hi": {
+        "usd_per_task": 0.3645,
+        "usd_total": 21.87,
+        "local_share": 0.206,
+        "mechanical_escalations": 48.0,
+        "triggers": {
+          "window": 4096,
+          "memory_limit": 20000,
+          "edge": 10000
+        }
+      }
+    },
+    "A-T": {
+      "lo": {
+        "usd_per_task": 0.0258,
+        "usd_total": 1.55,
+        "local_share": 0.938,
+        "mechanical_escalations": 0.0,
+        "triggers": {
+          "window": null,
+          "memory_limit": null,
+          "edge": 18500
+        }
+      },
+      "point": {
+        "usd_per_task": 0.0516,
+        "usd_total": 3.1,
+        "local_share": 0.875,
+        "mechanical_escalations": 0.0,
+        "triggers": {
+          "window": null,
+          "memory_limit": null,
+          "edge": 18500
+        }
+      },
+      "hi": {
+        "usd_per_task": 0.1572,
+        "usd_total": 9.43,
+        "local_share": 0.733,
+        "mechanical_escalations": 3.0,
+        "triggers": {
+          "window": null,
+          "memory_limit": null,
+          "edge": 18500
+        }
+      }
+    },
+    "B-T": {
+      "lo": {
+        "usd_per_task": 0.0401,
+        "usd_total": 2.4,
+        "local_share": 0.933,
+        "mechanical_escalations": 0.3,
+        "triggers": {
+          "window": 40960,
+          "memory_limit": null,
+          "edge": 18500
+        }
+      },
+      "point": {
+        "usd_per_task": 0.0782,
+        "usd_total": 4.69,
+        "local_share": 0.867,
+        "mechanical_escalations": 0.7,
+        "triggers": {
+          "window": 40960,
+          "memory_limit": null,
+          "edge": 18500
+        }
+      },
+      "hi": {
+        "usd_per_task": 0.1572,
+        "usd_total": 9.43,
+        "local_share": 0.733,
+        "mechanical_escalations": 3.0,
+        "triggers": {
+          "window": 40960,
+          "memory_limit": null,
+          "edge": 18500
+        }
+      }
+    },
+    "C-T": {
+      "lo": {
+        "usd_per_task": 0.0229,
+        "usd_total": 1.37,
+        "local_share": 0.938,
+        "mechanical_escalations": 0.0,
+        "triggers": {
+          "window": 40960,
+          "memory_limit": null,
+          "edge": 18500
+        }
+      },
+      "point": {
+        "usd_per_task": 0.0457,
+        "usd_total": 2.74,
+        "local_share": 0.875,
+        "mechanical_escalations": 0.0,
+        "triggers": {
+          "window": 40960,
+          "memory_limit": null,
+          "edge": 18500
+        }
+      },
+      "hi": {
+        "usd_per_task": 0.0914,
+        "usd_total": 5.49,
+        "local_share": 0.75,
+        "mechanical_escalations": 0.0,
+        "triggers": {
+          "window": 40960,
+          "memory_limit": null,
+          "edge": 18500
+        }
+      }
+    }
+  },
+  "D_X2_prediction_of_record": {
+    "source": "DEMO2_PREREG_v1 D-X band, carried over unchanged (Task AS: the ~8x prediction is withdrawn against A and kept against D)",
+    "lo": {
+      "usd_per_task": 0.3524,
+      "usd_total": 21.14,
+      "local_share": 0.258,
+      "mechanical_escalations": 48.0
+    },
+    "point": {
+      "usd_per_task": 0.3564,
+      "usd_total": 21.39,
+      "local_share": 0.241,
+      "mechanical_escalations": 48.0
+    },
+    "hi": {
+      "usd_per_task": 0.3645,
+      "usd_total": 21.87,
+      "local_share": 0.206,
+      "mechanical_escalations": 48.0
+    }
+  },
+  "ratios": {
+    "XPS": {
+      "C_over_A_point": 0.384,
+      "B_over_A_point": 1.0,
+      "proxy_obs_over_full": 0.597
+    },
+    "T2S": {
+      "C_over_A_point": 0.886,
+      "B_over_A_point": 1.516,
+      "proxy_obs_over_full": 0.135
+    }
+  },
+  "proxy": {
+    "XPS": {
+      "FULL": {
+        "cell": "XPS_V3",
+        "run_ids": [
+          "71d33f7a-96dd-4e48-ba04-79810a3d4dc8",
+          "ab88f47f-3067-4d79-bf1e-ce533ed41fd2"
+        ],
+        "n": 15,
+        "usd_per_task": 0.308,
+        "hybrid_passes": 4,
+        "escalated_entries": 9
+      },
+      "OBS_MASK_K1024": {
+        "cell": "XPS_V4",
+        "run_ids": [
+          "a678926e-2681-4851-a386-8b7c83e971a3"
+        ],
+        "n": 15,
+        "usd_per_task": 0.184,
+        "hybrid_passes": 6,
+        "escalated_entries": 9
+      },
+      "ratio_obs_over_full": 0.597
+    },
+    "T2S": {
+      "FULL": {
+        "cell": "T2S_V3",
+        "run_ids": [
+          "a4284ab0-7bb4-497a-8ff7-cc4d54817dd8"
+        ],
+        "n": 15,
+        "usd_per_task": 0.096,
+        "hybrid_passes": 3,
+        "escalated_entries": 5
+      },
+      "OBS_MASK_K1024": {
+        "cell": "T2S_V4",
+        "run_ids": [
+          "30caa847-d97a-4e4b-aa22-f152b95d08e9"
+        ],
+        "n": 15,
+        "usd_per_task": 0.013,
+        "hybrid_passes": 2,
+        "escalated_entries": 1
+      },
+      "ratio_obs_over_full": 0.135
+    },
+    "caveat": "proxy cells ran NON_RESIDENT (prefix caching off, bare SchedulerConfig), u8 (= i8), slo_escalate, no window; arm A runs prefix caching on, i8, hybrid_full, no window"
+  },
+  "latency": {
+    "source": "d482c621 slo_escalate local turns (XPS GPU u8 = i8, RESIDENT, no SchedulerConfig)",
+    "n_local_turns": 732,
+    "XPS_arm_A": {
+      "ttft_s_p50": 0.3,
+      "ttft_s_p90": 2.517,
+      "turn_generate_s_p50": 4.56,
+      "turn_generate_s_p90": 9.22,
+      "n_ctx_p50": 3935.5,
+      "decode_tok_s_p50": 26.53,
+      "basis": "MEASURED analogue (d482c621, W-3 base entries, 2026-09)"
+    },
+    "T2S_arm_A": {
+      "turn_generate_s_p50": 3.47,
+      "basis": "DERIVED: XPS p50 / T2S-over-XPS decode ratio 1.312 (V1 b026f3fd vs f7343708, BASE_30, same config)",
+      "ttft": "NOT YET MEASURED (no sealed T2S RESIDENT hybrid cell)"
+    },
+    "bandwidth_model": {
+      "effective_GBps": 70.1,
+      "basis": "DERIVED: d482c621 decode p50 at n_ctx p50 with i8 KV and 2.353 GB weights; theoretical peak 119.5 GB/s per Notebookcheck, unmeasured",
+      "decode_tok_s_grid": {
+        "3500": {
+          "f16": 24.4,
+          "i8": 26.9,
+          "u4": 28.3
+        },
+        "12000": {
+          "f16": 17.0,
+          "i8": 21.7,
+          "u4": 25.1
+        },
+        "20000": {
+          "f16": 13.2,
+          "i8": 18.3,
+          "u4": 22.7
+        },
+        "30000": {
+          "f16": 10.3,
+          "i8": 15.4,
+          "u4": 20.3
+        }
+      }
+    },
+    "B_C_vs_A_local_turn_generate_reduction": {
+      "lo": 0.051,
+      "hi": 0.252,
+      "basis": "DERIVED: decode share 0.92 (d482c621), u4/i8 decode gain 1.058 at n_ctx p50, prompt lookup x1.0..x1.3 on decode"
+    }
+  },
+  "memory_derived": {
+    "kv_bytes_at_n_ctx_p50_GB": {
+      "i8": 0.29,
+      "u4": 0.145
+    },
+    "kv_bytes_at_40960_GB": {
+      "i8": 3.02,
+      "u4": 1.51
+    },
+    "peak_working_set": "NOT YET MEASURED (telemetry added in Task AS part 6)"
+  },
+  "context_held": {
+    "XPS_A": {
+      "tokens": 20000,
+      "source": "cf3555d5 i8 resident limit"
+    },
+    "XPS_B_C": {
+      "tokens": [
+        26500,
+        40960
+      ],
+      "source": "e4a22dac u4 resident limit; 40,960 only if the DERIVED P3 chunk-cap leap holds"
+    },
+    "XPS_D": {
+      "tokens": 4096,
+      "source": "window"
+    },
+    "T2S_A": {
+      "tokens": null,
+      "source": "memory not binding at 64 GB; uncapped (no window)"
+    },
+    "T2S_B_C": {
+      "tokens": 40960,
+      "source": "window = max_position_embeddings"
+    }
+  },
+  "passes": {
+    "base_half_rate": {
+      "lo": 0.105,
+      "hi": 0.15,
+      "basis": "d482c621 W-3 200 hybrid pass rate, full_signal_bounceback .. slo_escalate; same for A, B, C (base entries rarely reach a mechanical trigger)"
+    },
+    "XPS_long_half_FULL": {
+      "rate": 0.267,
+      "wilson95": [
+        0.109,
+        0.52
+      ],
+      "basis": "XPS_V3 71d33f7a-96dd-4e48-ba04-79810a3d4dc8+ab88f47f-3067-4d79-bf1e-ce533ed41fd2: 4/15"
+    },
+    "XPS_long_half_OBS_MASK_K1024": {
+      "rate": 0.4,
+      "wilson95": [
+        0.198,
+        0.643
+      ],
+      "basis": "XPS_V4 a678926e-2681-4851-a386-8b7c83e971a3: 6/15"
+    },
+    "T2S_long_half_FULL": {
+      "rate": 0.2,
+      "wilson95": [
+        0.07,
+        0.452
+      ],
+      "basis": "T2S_V3 a4284ab0-7bb4-497a-8ff7-cc4d54817dd8: 3/15"
+    },
+    "T2S_long_half_OBS_MASK_K1024": {
+      "rate": 0.133,
+      "wilson95": [
+        0.037,
+        0.379
+      ],
+      "basis": "T2S_V4 30caa847-d97a-4e4b-aa22-f152b95d08e9: 2/15"
+    }
+  },
+  "caps_usd": {
+    "A-X": 14.49,
+    "B-X": 14.49,
+    "C-X": 10.06,
+    "D-X2": 32.8,
+    "A-T": 14.14,
+    "B-T": 14.14,
+    "C-T": 8.23
+  },
+  "caps_rule": "cap = 1.5 x the cell's hi-band total (D-X2: registered D-X hi band)",
+  "caps_total_usd_one_replicate": 108.35,
+  "caps_total_usd_two_replicates": 216.7,
+  "ceiling_usd": 150.0,
+  "pilots": {
+    "P7_entries": "DEMO1_BASE_30 + DEMO1_PAIRED_15 (45 entries; DEMO1_LONGCTX_30 holds 36 of the 39 jump entries and is priced below for the record)",
+    "P7_discordance_trigger": "more than 25% of entries discordant (15 of 60 scaled: 12 of 45)",
+    "P7_arm_A_per_run": {
+      "XPS": {
+        "lo": {
+          "usd_per_task": 0.6399,
+          "usd_total": 28.79,
+          "local_share": 0.688,
+          "mechanical_escalations": 15.0,
+          "triggers": {
+            "window": null,
+            "memory_limit": 20000,
+            "edge": 10000
+          }
+        },
+        "point": {
+          "usd_per_task": 0.6541,
+          "usd_total": 29.44,
+          "local_share": 0.642,
+          "mechanical_escalations": 15.0,
+          "triggers": {
+            "window": null,
+            "memory_limit": 20000,
+            "edge": 10000
+          }
+        },
+        "hi": {
+          "usd_per_task": 0.6827,
+          "usd_total": 30.72,
+          "local_share": 0.551,
+          "mechanical_escalations": 15.0,
+          "triggers": {
+            "window": null,
+            "memory_limit": 20000,
+            "edge": 10000
+          }
+        }
+      },
+      "T2S": {
+        "lo": {
+          "usd_per_task": 0.0534,
+          "usd_total": 2.4,
+          "local_share": 0.938,
+          "mechanical_escalations": 0.0,
+          "triggers": {
+            "window": null,
+            "memory_limit": null,
+            "edge": 18500
+          }
+        },
+        "point": {
+          "usd_per_task": 0.1068,
+          "usd_total": 4.8,
+          "local_share": 0.875,
+          "mechanical_escalations": 0.0,
+          "triggers": {
+            "window": null,
+            "memory_limit": null,
+            "edge": 18500
+          }
+        },
+        "hi": {
+          "usd_per_task": 0.6562,
+          "usd_total": 29.53,
+          "local_share": 0.616,
+          "mechanical_escalations": 15.0,
+          "triggers": {
+            "window": null,
+            "memory_limit": null,
+            "edge": 18500
+          }
+        }
+      }
+    },
+    "P7_rejected_alternative_BASE_30_plus_LONGCTX_30_per_run": {
+      "XPS": {
+        "usd_per_task": 1.0473,
+        "usd_total": 62.84,
+        "local_share": 0.527,
+        "mechanical_escalations": 28.7,
+        "triggers": {
+          "window": null,
+          "memory_limit": 20000,
+          "edge": 10000
+        }
+      },
+      "T2S": {
+        "usd_per_task": 0.1549,
+        "usd_total": 9.29,
+        "local_share": 0.875,
+        "mechanical_escalations": 0.0,
+        "triggers": {
+          "window": null,
+          "memory_limit": null,
+          "edge": 18500
+        }
+      }
+    },
+    "P5_entries": "DEMO1_PAIRED_15, K in {512, 1024, 2048}, arm C settings, both hosts",
+    "P7_empirical_per_run_usd": {
+      "XPS": 6.18,
+      "T2S": 3.0,
+      "basis": "sealed costs on the same entries: BASE_30 = max over d482c621 policies {'slo_escalate': 0, 'emission_escalate': 1.56, 'full_signal_bounceback': 0.84} (XPS, RESIDENT); PAIRED_15 = DEMO-1 V3 FULL cells (XPS 71d33f7a+ab88f47f, T2S a4284ab0; NON_RESIDENT, so arm A should cost no more). The gold-trajectory model above over-predicts these jump-selected entries (DEMO-1 lesson)."
+    },
+    "P7_cap_usd": {
+      "XPS": 18.54,
+      "T2S": 9.0
+    },
+    "P7_cap_rule": "1.5 x 2 runs x the empirical per-run estimate; --max-usd stops a run at its cap",
+    "P5_estimate_usd": {
+      "XPS": 13.86,
+      "T2S": 4.32,
+      "basis": "upper estimate: 3 runs x 15 entries at the FULL proxy $/task (OBS_MASK at K <= 2048 costs less in both sealed pairs)"
+    }
+  }
+}
