@@ -694,24 +694,29 @@ def run_decode(
     model_specs: list[Path],
     session_id: str,
     out_dir: Path,
+    n_list: tuple[int, ...] = DECODE_N,
+    pilot: str | None = None,
 ) -> int:
+    """DECODE-MATCH cell. ``pilot`` (DEMO-2 P9/P2, tools/run_decode_match.py
+    --pilot) allows one model spec and its registered n list; point files then
+    carry the point index, since P9 repeats one n. Default output is unchanged."""
     from seam.tools.delta_n import measured_repeat
     from tools.ttft_slo_canary import CanaryDriftAbort
 
-    if len(model_specs) < 2:
+    if pilot is None and len(model_specs) < 2:
         raise SystemExit("REFUSED -- decode measurement requires both model specs")
     gates = require_gates()
     loaded = [load_harness(spec) for spec in model_specs]
     out_dir.mkdir(parents=True, exist_ok=True)
     _publish_cell_status("running", session_id)
-    planned = len(loaded) * len(DECODE_N) * DECODE_REPEATS
+    planned = len(loaded) * len(n_list) * DECODE_REPEATS
     plan: dict[str, Any] = {
         "kind": "decode_match",
         "session_id": session_id,
         "started_utc": _utc(),
         "arm": arm,
         "models": [item["model_name"] for item in loaded],
-        "n": list(DECODE_N),
+        "n": list(n_list),
         "repeats": DECODE_REPEATS,
         "max_new_tokens": loaded[0]["max_new_tokens"],
         "min_new_tokens": loaded[0]["max_new_tokens"],
@@ -721,6 +726,8 @@ def run_decode(
         "gates": gates,
         "status": "running",
     }
+    if pilot is not None:
+        plan["pilot"] = pilot
     plan_path = out_dir / "plan.json"
     _write(plan_path, plan)
     guard = _open_canary(
@@ -736,7 +743,7 @@ def run_decode(
     try:
         guard.opening()
         for harness in loaded:
-            for n_tokens in DECODE_N:
+            for point_index, n_tokens in enumerate(n_list):
                 repeats: list[dict[str, Any]] = []
                 for repeat in range(DECODE_REPEATS):
                     work = out_dir / "work"
@@ -785,7 +792,11 @@ def run_decode(
                     "median_decode_tok_s": _median(rates) if len(rates) == DECODE_REPEATS else None,
                 }
                 safe_name = harness["model_name"].replace(" ", "_")
-                _write(out_dir / "points" / f"{safe_name}_n{n_tokens}.json", point)
+                point_name = f"{safe_name}_n{n_tokens}.json"
+                if pilot is not None:
+                    point["point_index"] = point_index
+                    point_name = f"{safe_name}_i{point_index:02d}_n{n_tokens}.json"
+                _write(out_dir / "points" / point_name, point)
                 points.append(point)
     except CanaryDriftAbort as exc:
         summary = {
@@ -807,13 +818,21 @@ def run_decode(
         "arm": arm,
         "status": status,
         "models": [item["model_name"] for item in loaded],
-        "n": list(DECODE_N),
+        "n": list(n_list),
         "max_new_tokens": loaded[0]["max_new_tokens"],
         "points": points,
         "median_decode_tok_s": {
             f"{point['model']}:{point['n']}": point.get("median_decode_tok_s") for point in points
         },
     }
+    if pilot is not None:
+        summary["pilot"] = pilot
+        summary["median_decode_tok_s"] = {
+            f"{point['model']}:i{point['point_index']:02d}:n{point['n']}": point.get(
+                "median_decode_tok_s"
+            )
+            for point in points
+        }
     return _finish(guard=guard, out_dir=out_dir, summary=summary, plan=plan)
 
 

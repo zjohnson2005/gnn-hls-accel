@@ -3205,3 +3205,29 @@ against whichever run Rithwik's 46k measurement used.
 - tests/test_fdr_replay_d1.py wrote derived/d1_replay/*.md and configs.json
   on every run (only the "Generated:" stamp changed). The test now writes to
   tmp_path; the six files were restored with git checkout.
+
+## 2026-10-16 - Harness fixes found during Task AU; P0a recorded (Task AV)
+
+Harness fixes, not rule changes: no pilot decision rule, registered n list,
+threshold, entry set or prediction changed.
+- tools/launch_h1.ps1: the -PolicyCapUsd parser assigned `$kv`. PowerShell
+  names are case-insensitive, so this was the [ValidateSet] -Kv parameter
+  and every -PolicyCapUsd launch threw "local_only 0 is not a valid value
+  for the Kv variable" (broken since 3d9d6c4). Renamed `$capPair`.
+  tests/test_ps1_case_collisions.py missed it because it scanned only
+  function bodies; it now also scans top-level script code, and a pwsh
+  dry-run test passes -Kv with -PolicyCapUsd. Scan of every tools/*.ps1:
+  no other collision of this kind (remaining hits are function locals,
+  default fill-ins and same-variable assignments of allowed values).
+- tools/run_decode_match.py: it refused every --n except 2000,4000,8000 and
+  required two model specs, so the registered P9 drift and P2 commands
+  could not run. New --pilot {p9,p2} allows exactly the registered n lists
+  (p9: 12 x 3500; p2: 3500,12000,20000), one model spec, and writes under
+  derived/demo2_pilots/<pilot>_<session_id>. tools/boot4_session.run_decode
+  takes n_list/pilot (defaults DECODE_N/None: output unchanged). The
+  pilots doc is registered and not edited; its steps 3, 16 and 17 need
+  --pilot p9 / --pilot p2 (registry DEMO2-PILOTS row).
+- P0a (true-default readback, XPS) PASSED, run_id
+  597f40a9-98b1-4f58-b5f6-48ffabe08446, record
+  derived/demo2_pilots/p0a_readback_597f40a9/ (run by Zach by hand). P0b
+  (runner smoke) not yet run.

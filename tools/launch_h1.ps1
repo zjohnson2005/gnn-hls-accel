@@ -306,15 +306,17 @@ if ($Interleaved) {
     }
     if (-not [string]::IsNullOrWhiteSpace($PolicyCapUsd)) {
         foreach ($item in @($PolicyCapUsd -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" })) {
-            $kv = $item -split "=", 2
-            if ($kv.Count -ne 2) { Refuse ("-PolicyCapUsd item must be POLICY=USD: {0}" -f $item); exit 1 }
-            $capName = $kv[0].Trim()
+            # Not $kv: PowerShell names are case-insensitive, and $kv is the
+            # [ValidateSet] -Kv parameter (every -PolicyCapUsd launch threw).
+            $capPair = $item -split "=", 2
+            if ($capPair.Count -ne 2) { Refuse ("-PolicyCapUsd item must be POLICY=USD: {0}" -f $item); exit 1 }
+            $capName = $capPair[0].Trim()
             if ($resolvedInterleavePolicies -notcontains $capName) {
                 Refuse ("-PolicyCapUsd names a policy not in -InterleavedPolicies: {0}" -f $capName)
                 exit 1
             }
             $capValue = 0.0
-            if (-not [double]::TryParse($kv[1].Trim(), [ref]$capValue) -or $capValue -lt 0) {
+            if (-not [double]::TryParse($capPair[1].Trim(), [ref]$capValue) -or $capValue -lt 0) {
                 Refuse ("-PolicyCapUsd value must be a number >= 0: {0}" -f $item)
                 exit 1
             }

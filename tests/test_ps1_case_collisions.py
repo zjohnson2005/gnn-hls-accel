@@ -5,6 +5,10 @@ already assigned a local $probeDir, which is the same variable, so the
 argument was overwritten and a live launch_h1 still wrote its gate JSON to
 derived/_gate_probes/. These tests keep that class out of the launchers:
 a static scan (always), and pwsh runs when pwsh is installed.
+
+Task AV (2026-10-16): the scan also covers top-level script code. launch_h1.ps1
+assigned $kv in the -PolicyCapUsd parser, which is the [ValidateSet] -Kv
+parameter, so every -PolicyCapUsd launch threw (broken since 3d9d6c4).
 """
 
 from __future__ import annotations
@@ -76,11 +80,28 @@ def _script_params(text: str) -> list[str]:
     return params
 
 
+def _top_level(text: str) -> str:
+    """Script text with function bodies and the script param block removed."""
+    out = text
+    for match in reversed(list(re.finditer(r"(?im)^\s*function\s+[A-Za-z0-9_-]+\s*\{", out))):
+        start = match.end() - 1
+        out = out[: match.start()] + out[_close(out, start, "{", "}") + 1 :]
+    match = re.search(r"(?m)^\s*param\s*\(", out)
+    if match is not None:
+        out = out[: match.start()] + out[_close(out, match.end() - 1, "(", ")") + 1 :]
+    return out
+
+
 def collisions(text: str) -> list[str]:
     """Locals that are a param of the same function, or a script param in another case."""
     text = _strip_comments(text)
     script_params = _script_params(text)
     problems: list[str] = []
+    top_assigned = {a or b for a, b in _ASSIGN.findall(_top_level(text))}
+    for local in sorted(top_assigned):
+        for param in script_params:
+            if local.lower() == param.lower() and local != param:
+                problems.append(f"script: ${local} shadows script parameter ${param}")
     for name, params, rest in _functions(text):
         assigned = {a or b for a, b in _ASSIGN.findall(rest)}
         for local in sorted(assigned):
@@ -119,6 +140,20 @@ function Get-X {
 }
 """
     assert collisions(text) == ["Get-X: $loadOnly shadows script parameter $LoadOnly"]
+
+
+def test_scanner_catches_the_policycapusd_kv_bug() -> None:
+    text = """
+param(
+    [ValidateSet("", "default", "u8", "u4", "f16")]
+    [string]$Kv = "",
+    [string]$PolicyCapUsd = ""
+)
+foreach ($item in @($PolicyCapUsd -split ",")) {
+    $kv = $item -split "=", 2
+}
+"""
+    assert collisions(text) == ["script: $kv shadows script parameter $Kv"]
 
 
 @pytest.mark.parametrize("path", SCANNED, ids=lambda p: p.name)
@@ -179,6 +214,48 @@ def test_pwsh_probe_dir_precedence(tmp_path) -> None:
     assert _gate_dir(tmp_path, f"-DryRun -ProbeDir '{launch}'") == launch
     assert _gate_dir(tmp_path, "-DryRun") == repo / "derived" / "_gate_probes" / "_dryrun"
     assert _gate_dir(tmp_path, "") == repo / "derived" / "_gate_probes"
+
+
+@pytest.mark.skipif(PWSH is None, reason="pwsh not installed")
+def test_pwsh_policy_cap_parser_with_kv() -> None:
+    """-Kv and -PolicyCapUsd together get past the cap parser (dry run, no host)."""
+    done = subprocess.run(
+        [
+            PWSH,
+            "-NoProfile",
+            "-NonInteractive",
+            "-File",
+            str(TOOLS / "launch_h1.ps1"),
+            "-DryRun",
+            "-AllowDirty",
+            "-NoCloudPing",
+            "-Interleaved",
+            "-InterleavedPolicies",
+            "local_only",
+            "-PolicyCapUsd",
+            "local_only=0",
+            "-SessionMaxUsd",
+            "1",
+            "-Placement",
+            "gpu_only",
+            "-Kv",
+            "default",
+            "-Residency",
+            "RESIDENT",
+            "-Entries",
+            "derived/h1_hybrid/demo1/DEMO1_BASE_30.json",
+            "-EntryCount",
+            "2",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=180,
+        env={**os.environ, "POWERSHELL_TELEMETRY_OPTOUT": "1"},
+    )
+    out = done.stdout + done.stderr
+    assert "not a valid value for the Kv variable" not in out
+    assert "Mode           : INTERLEAVED" in out
 
 
 @pytest.mark.skipif(PWSH is None, reason="pwsh not installed")
