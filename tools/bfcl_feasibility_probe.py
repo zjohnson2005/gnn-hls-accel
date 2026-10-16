@@ -1579,6 +1579,9 @@ def load_arm_pipeline(
     arm_id: str,
     *,
     enable_prefix_caching: bool | None = None,
+    scheduler_overrides: dict[str, Any] | None = None,
+    extra_properties: dict[str, Any] | None = None,
+    compiled_readback: bool = False,
 ) -> tuple[Any, dict[str, Any], float]:
     """Compile the generate-device pipeline for a delta_n arm. Returns (pipe, meta, load_s).
 
@@ -1589,6 +1592,16 @@ def load_arm_pipeline(
               cold prefill (DISPATCH L): without this, string generate() reuses KV for the
               shared tools/conversation prefix on the same pipeline.
       True  - explicitly enable prefix caching via SchedulerConfig.
+
+    DEMO-2 (Task AS), all default off:
+      scheduler_overrides - a full SchedulerConfig with these fields (struct
+              defaults otherwise; it replaces GenAI's latency config, nothing is
+              merged). Not combinable with enable_prefix_caching.
+      extra_properties - added to the generate device's LLMPipeline properties
+              (CACHE_DIR, prompt_lookup).
+      compiled_readback - capture GenAI's load output at OPENVINO_LOG_LEVEL=3 and
+              record the backend (PA/SDPA) and compiled KV type per load
+              (seam.genai_runtime).
     """
     import openvino as ov
     import openvino_genai as ov_genai
@@ -1605,7 +1618,17 @@ def load_arm_pipeline(
     t0 = time.perf_counter()
     scheduler_config_meta: dict[str, Any] | None = None
     pipeline_config: dict[str, Any] = {}
-    if enable_prefix_caching is not None:
+    if scheduler_overrides is not None:
+        if enable_prefix_caching is not None:
+            raise ValueError("scheduler_overrides and enable_prefix_caching are exclusive")
+        from seam.genai_runtime import build_scheduler_config
+
+        pipeline_config["scheduler_config"] = build_scheduler_config(ov_genai, scheduler_overrides)
+        scheduler_config_meta = {
+            **scheduler_overrides,
+            "source": "explicit_SchedulerConfig_full",
+        }
+    elif enable_prefix_caching is not None:
         sc = ov_genai.SchedulerConfig()
         sc.enable_prefix_caching = bool(enable_prefix_caching)
         pipeline_config["scheduler_config"] = sc
@@ -1618,22 +1641,38 @@ def load_arm_pipeline(
         properties_raw = dict(entry.get("properties") or {})
         properties = materialize_pipeline_properties(properties_raw)
         requested_kv = requested_kv_cache_precision(properties_raw)
+        if extra_properties and device == str(device_config["generate_device"]):
+            properties = {**properties, **extra_properties}
         core = ov.Core()
         if requested_kv is not None:
             core.set_property(device, {"KV_CACHE_PRECISION": properties["KV_CACHE_PRECISION"]})
-        if pipeline_config:
-            pipes[device] = _make_llm_pipeline(ov_genai, device, pipeline_config, **properties)
-        else:
-            pipes[device] = _make_llm_pipeline(ov_genai, device, **properties)
+        capture: Any = contextlib.nullcontext({})
+        if compiled_readback:
+            from seam.genai_runtime import capture_native_output
+
+            capture = capture_native_output()
+        with capture as box:
+            if pipeline_config:
+                pipes[device] = _make_llm_pipeline(ov_genai, device, pipeline_config, **properties)
+            else:
+                pipes[device] = _make_llm_pipeline(ov_genai, device, **properties)
         kv_check = enforce_kv_cache_precision(device=device, requested=requested_kv, core=core)
-        loads.append(
-            {
-                "device": device,
-                "properties": properties_raw,
-                "kv_cache_precision": kv_check,
-                "scheduler_config": scheduler_config_meta,
-            }
-        )
+        load_rec: dict[str, Any] = {
+            "device": device,
+            "properties": properties_raw,
+            "kv_cache_precision": kv_check,
+            "scheduler_config": scheduler_config_meta,
+        }
+        if extra_properties and device == str(device_config["generate_device"]):
+            load_rec["extra_properties"] = dict(extra_properties)
+        if compiled_readback:
+            from seam.genai_runtime import parse_genai_load_log, rt_info_kv_override
+
+            load_rec["compiled_readback"] = parse_genai_load_log(box.get("text", ""))
+            load_rec["compiled_readback"]["ir_rt_info"] = rt_info_kv_override(
+                Path(MODEL_DIR) / "openvino_model.xml"
+            )
+        loads.append(load_rec)
         if not kv_check["match"]:
             raise RuntimeError(
                 f"KV_PRECISION_MISMATCH arm={arm_id} device={device}: "
@@ -1712,6 +1751,10 @@ def _timed_generate(
     ttft_ns, ttft_source = resolve_ttft_ns(metrics_ttft_ns, streamer.ttft_ns)
     out["ttft_ns"] = ttft_ns
     out["ttft_source"] = ttft_source
+    # Streamer writes vs tokens: with prompt lookup one write can carry several
+    # accepted tokens (DEMO-2 pilot P4). Read only by --debug-raw-text records.
+    out["streamer_writes"] = int(getattr(streamer, "tokens_written", 0) or 0)
+    out["streamer_tokens"] = len(getattr(streamer, "token_ids", []) or [])
     out["prompt_tokens_reported"] = prompt_tokens if prompt_tokens else None
     generated = int(tokens_from_metrics) if tokens_from_metrics else None
     out["generated_tokens"] = generated
@@ -1776,6 +1819,11 @@ class MultiTurnAgentSession:
     stop_reason: str = field(default="completed", init=False)
     # DEMO-2 --context-window: checked before each generate; None = off.
     context_window: int | None = field(default=None, init=False)
+    # DEMO-2 (Task AS), all off by default: extra GenerationConfig fields
+    # (prompt lookup), raw generated text per step, per-turn memory sampler.
+    gen_cfg_extra: dict[str, Any] | None = field(default=None, init=False)
+    debug_raw_text: bool = field(default=False, init=False)
+    turn_telemetry: Any = field(default=None, init=False, repr=False)
     ctx_overflow: dict[str, Any] | None = field(default=None, init=False)
     session_generated_once: bool = field(default=False, init=False)
     p1: Any = field(default=None, init=False, repr=False)
@@ -1984,6 +2032,8 @@ class MultiTurnAgentSession:
         entry = self.entry
         max_new = self.max_new
 
+        if self.turn_telemetry is not None:
+            self.turn_telemetry.start()
         t_turn0 = time.perf_counter()
         t_tool_exec = 0.0
         t_template_build = 0.0
@@ -2084,6 +2134,10 @@ class MultiTurnAgentSession:
                 gen_input_tokens = prompt_n
                 cfg_use = cfg
 
+            if self.gen_cfg_extra and mode is not None:
+                for key, value in self.gen_cfg_extra.items():
+                    setattr(cfg_use, key, value)
+
             self.context_growth.append(
                 {
                     "turn": turn_idx,
@@ -2124,6 +2178,8 @@ class MultiTurnAgentSession:
                 t_generate += wall_s
                 texts = getattr(gen, "texts", None)
                 text = str(texts[0]) if texts else str(gen)
+                raw_generated = text
+                stream_counts = None
                 metrics = getattr(gen, "perf_metrics", None)
                 completion_n = None
                 ttft_s = None
@@ -2156,6 +2212,11 @@ class MultiTurnAgentSession:
                 wall_s = float(timed["wall_s"])
                 t_generate += wall_s
                 text = timed.get("text") or ""
+                raw_generated = text
+                stream_counts = {
+                    "streamer_writes": timed.get("streamer_writes"),
+                    "streamer_tokens": timed.get("streamer_tokens"),
+                }
                 completion_n = timed.get("generated_tokens")
                 if completion_n is None:
                     completion_n = len(tokenizer(text)["input_ids"])
@@ -2210,6 +2271,11 @@ class MultiTurnAgentSession:
             }
             if self.p1 is not None:
                 step_rec["p1"] = self.p1.step_record()
+            if self.debug_raw_text:
+                # Debug only (pilot P1/P4): the text as generated, before any strip.
+                step_rec["raw_text"] = raw_generated
+                if stream_counts is not None:
+                    step_rec.update(stream_counts)
             turn_step_metrics.append(step_rec)
 
             if step == 0:
@@ -2397,6 +2463,9 @@ class MultiTurnAgentSession:
         if self.ctx_overflow is not None and self.ctx_overflow.get("turn") == turn_idx:
             # Present only when the window stopped this turn (DEMO-2).
             turn_metric["ctx_overflow"] = dict(self.ctx_overflow)
+        if self.turn_telemetry is not None:
+            # Present only with --mem-telemetry (DEMO-2).
+            turn_metric["memory"] = self.turn_telemetry.stop()
         self.turn_metrics.append(turn_metric)
         self._next_turn_idx = turn_idx + 1
         return turn_metric

@@ -78,6 +78,11 @@
 #                       generated; the turn escalates (sticky, ctx_overflow). Single-arm only.
 #                       Default off.
 #   -Policy hybrid_full DEMO-2 policy (mechanical then quality triggers). -MaxUsd is required.
+#   DEMO-2 runner options (Task AS; all default off; the worker validates and refuses
+#   bad combinations): -CacheDir <dir>, -CompiledReadback, -RequireTrueDefault (arm A/D),
+#   -SchedPrefixCaching on -SchedMaxBatchedTokens <N> [-SchedCacheSize <GB>] (explicit
+#   SchedulerConfig; replaces the latency defaults), -PromptLookup -NumAssistantTokens <K>
+#   -MaxNgramSize <n>, -MemTelemetry [-GpuMemCounters], -DebugRawText.
 #   -ConfirmationRun    allow a reserved entry pin (DEMO2_HELDOUT_60_B: one SEARCH confirmation
 #                       run only). Default off: the worker refuses reserved pins.
 #
@@ -139,7 +144,21 @@ param(
     [switch]$NoCloudPing,
     # Allow an entry pin marked reserved_for (DEMO2_HELDOUT_60_B: the one SEARCH
     # confirmation run). Default: the worker refuses reserved pins.
-    [switch]$ConfirmationRun
+    [switch]$ConfirmationRun,
+    # DEMO-2 runner options (Task AS). Every one defaults off; the worker validates them.
+    [string]$CacheDir = "",
+    [switch]$CompiledReadback,
+    [switch]$RequireTrueDefault,
+    [ValidateSet("", "on", "off")]
+    [string]$SchedPrefixCaching = "",
+    [Nullable[UInt64]]$SchedMaxBatchedTokens = $null,
+    [Nullable[int]]$SchedCacheSize = $null,
+    [switch]$PromptLookup,
+    [Nullable[int]]$NumAssistantTokens = $null,
+    [Nullable[int]]$MaxNgramSize = $null,
+    [switch]$MemTelemetry,
+    [switch]$GpuMemCounters,
+    [switch]$DebugRawText
 )
 
 $ErrorActionPreference = "Stop"
@@ -638,6 +657,30 @@ if ($null -ne $EntryCount) {
 if ($ConfirmationRun) {
     $resolvedCmd = $resolvedCmd + ' --confirmation-run'
 }
+if (-not [string]::IsNullOrWhiteSpace($CacheDir)) {
+    $resolvedCmd = $resolvedCmd + ' --cache-dir "' + $CacheDir + '"'
+}
+if ($CompiledReadback) { $resolvedCmd = $resolvedCmd + ' --compiled-readback' }
+if ($RequireTrueDefault) { $resolvedCmd = $resolvedCmd + ' --require-true-default' }
+if (-not [string]::IsNullOrWhiteSpace($SchedPrefixCaching)) {
+    $resolvedCmd = $resolvedCmd + ' --sched-prefix-caching ' + $SchedPrefixCaching
+}
+if ($null -ne $SchedMaxBatchedTokens) {
+    $resolvedCmd = $resolvedCmd + ' --sched-max-batched-tokens ' + $SchedMaxBatchedTokens
+}
+if ($null -ne $SchedCacheSize) {
+    $resolvedCmd = $resolvedCmd + ' --sched-cache-size ' + $SchedCacheSize
+}
+if ($PromptLookup) { $resolvedCmd = $resolvedCmd + ' --prompt-lookup' }
+if ($null -ne $NumAssistantTokens) {
+    $resolvedCmd = $resolvedCmd + ' --num-assistant-tokens ' + $NumAssistantTokens
+}
+if ($null -ne $MaxNgramSize) {
+    $resolvedCmd = $resolvedCmd + ' --max-ngram-size ' + $MaxNgramSize
+}
+if ($MemTelemetry) { $resolvedCmd = $resolvedCmd + ' --mem-telemetry' }
+if ($GpuMemCounters) { $resolvedCmd = $resolvedCmd + ' --gpu-mem-counters' }
+if ($DebugRawText) { $resolvedCmd = $resolvedCmd + ' --debug-raw-text' }
 if ($AllowDirty) {
     $resolvedCmd = $resolvedCmd + ' --allow-dirty'
 }

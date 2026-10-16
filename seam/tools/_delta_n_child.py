@@ -193,6 +193,11 @@ def _run_with_power(spec: dict[str, Any], writer: _Writer) -> int:
     writer.update(phase="imported", memory_after_import=_mem())
 
     model_dir = str(spec["model_dir"])
+    # DEMO-2 pilots (Task AS): an explicit SchedulerConfig from the spec; it replaces
+    # GenAI's latency defaults. Absent = plain LLMPipeline, unchanged.
+    sched_spec = spec.get("scheduler_config")
+    if sched_spec is not None and len(spec["load_sequence"]) != 1:
+        raise SystemExit("REFUSED -- scheduler_config needs a single-device load_sequence")
     loads: list[dict[str, Any]] = []
     pipes: dict[str, Any] = {}
     kv_precision_records: list[dict[str, Any]] = []
@@ -210,7 +215,13 @@ def _run_with_power(spec: dict[str, Any], writer: _Writer) -> int:
         core = ov.Core()
         if requested_kv is not None:
             core.set_property(device, {"KV_CACHE_PRECISION": properties["KV_CACHE_PRECISION"]})
-        pipes[device] = ov_genai.LLMPipeline(model_dir, device, **properties)
+        if sched_spec is not None:
+            from seam.genai_runtime import build_scheduler_config
+
+            sched = {"scheduler_config": build_scheduler_config(ov_genai, dict(sched_spec))}
+            pipes[device] = ov_genai.LLMPipeline(model_dir, device, sched, **properties)
+        else:
+            pipes[device] = ov_genai.LLMPipeline(model_dir, device, **properties)
         compile_s = time.perf_counter() - t0
         after = _mem()
         kv_check = enforce_kv_cache_precision(device=device, requested=requested_kv, core=core)
@@ -228,6 +239,8 @@ def _run_with_power(spec: dict[str, Any], writer: _Writer) -> int:
             "available_delta_mb": before["available_mb"] - after["available_mb"],
             "kv_cache_precision": kv_check,
         }
+        if sched_spec is not None:
+            load_rec["scheduler_config"] = dict(sched_spec)
         loads.append(load_rec)
         writer.update(
             phase=f"loaded:{device}",

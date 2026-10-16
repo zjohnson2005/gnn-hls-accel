@@ -35,6 +35,23 @@ RESIDENT_RESOLUTION = 500
 # floor(4 / (C + 1)) is 1, so a canary follows every probe. The search
 # itself visits at most low, high, and ceil(log2((high-low)/resolution)) mids.
 RESIDENT_PLANNED_PROBES = 4
+# DEMO-2 pilots P2/P3 (Task AS): an explicit SchedulerConfig for every child
+# spec (it replaces GenAI's latency defaults) and a higher resident-ladder top.
+# None = unchanged. Set only by tools/run_resident_limit.py / run_warm_kv.py flags.
+SCHEDULER_OVERRIDE: dict[str, Any] | None = None
+RESIDENT_HIGH_OVERRIDE: int | None = None
+
+
+def set_pilot_overrides(
+    *, scheduler: dict[str, Any] | None = None, resident_high: int | None = None
+) -> None:
+    global SCHEDULER_OVERRIDE, RESIDENT_HIGH_OVERRIDE
+    SCHEDULER_OVERRIDE = dict(scheduler) if scheduler else None
+    RESIDENT_HIGH_OVERRIDE = int(resident_high) if resident_high else None
+
+
+def _resident_high() -> int:
+    return RESIDENT_HIGH_OVERRIDE or RESIDENT_HIGH
 
 
 def runner_body_is_stub(path: Path) -> bool:
@@ -212,6 +229,8 @@ def _child_spec(harness: dict[str, Any], arm_id: str, work: Path) -> dict[str, A
         p_cpus=harness["p_cpus"],
     )
     spec["filler_unit"] = harness["filler_unit"]
+    if SCHEDULER_OVERRIDE is not None:
+        spec["scheduler_config"] = dict(SCHEDULER_OVERRIDE)
     return spec
 
 
@@ -856,7 +875,7 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
         "model_spec": str(harness["model_spec"]),
         "model_name": harness["model_name"],
         "low": RESIDENT_LOW,
-        "high": RESIDENT_HIGH,
+        "high": _resident_high(),
         "resolution": RESIDENT_RESOLUTION,
         "one_attempt_per_rung": True,
         "pass": "turn 1 completes and turn 2 runs",
@@ -867,6 +886,9 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
         "gates": gates,
         "status": "running",
     }
+    if SCHEDULER_OVERRIDE is not None:
+        # DEMO-2 pilot P3 only; absent otherwise so existing plans are unchanged.
+        plan["scheduler_config"] = dict(SCHEDULER_OVERRIDE)
     plan_path = out_dir / "plan.json"
     _write(plan_path, plan)
     guard = _open_canary(
@@ -932,7 +954,7 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
         guard.opening()
         found = bisect_holds(
             low=RESIDENT_LOW,
-            high=RESIDENT_HIGH,
+            high=_resident_high(),
             resolution=RESIDENT_RESOLUTION,
             attempt=attempt,
         )
@@ -961,7 +983,7 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
         "points": found["points"],
         "search": {
             "low": RESIDENT_LOW,
-            "high": RESIDENT_HIGH,
+            "high": _resident_high(),
             "resolution": RESIDENT_RESOLUTION,
             "one_attempt": True,
         },

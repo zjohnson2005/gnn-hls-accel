@@ -1335,6 +1335,10 @@ class OpenVinoLocalBackend:
     obs_mask: Any = field(default=None, repr=False)
     # DEMO-2 --context-window; None = off (no check, unchanged behavior).
     context_window: int | None = None
+    # DEMO-2 runner options (seam.genai_runtime.build_runtime_options); None = off.
+    runtime: dict[str, Any] | None = None
+    # Sidecar JSONL for per-turn telemetry / debug text; set by main when runtime is on.
+    telemetry_path: Path | None = None
     arm_id: str = field(init=False)
     pipe: Any = field(init=False, repr=False)
     tokenizer: Any = field(init=False, repr=False)
@@ -1371,8 +1375,7 @@ class OpenVinoLocalBackend:
         probe.apply_model_spec(self.model_spec)
         # NON_RESIDENT: SchedulerConfig(enable_prefix_caching=False).
         # RESIDENT: omit SchedulerConfig (CB default prefix caching ON).
-        enable_pc = False if residency == "NON_RESIDENT" else None
-        pipe, meta, _load_s = probe.load_arm_pipeline(self.arm_id, enable_prefix_caching=enable_pc)
+        pipe, meta = self._load_pipeline(probe)
         # load_arm_pipeline already raises on KV_PRECISION_MISMATCH when the arm
         # requests a pin. Re-check expected kv against readback for H-1 arm_config.
         self._assert_kv_readback(meta, expected=expected_kv_readback(self.kv))
@@ -1543,14 +1546,98 @@ class OpenVinoLocalBackend:
             return PREFIX_BLOCK_CLEAR_CALL
         import tools.bfcl_feasibility_probe as probe
 
-        enable_pc = False if self.residency == "NON_RESIDENT" else None
-        pipe, meta, _load_s = probe.load_arm_pipeline(
-            self.arm_id, enable_prefix_caching=enable_pc
-        )
+        pipe, meta = self._load_pipeline(probe)
         self._assert_kv_readback(meta, expected=expected_kv_readback(self.kv))
         self.pipe = pipe
         self.load_meta = meta
         return PREFIX_BLOCK_CLEAR_CALL
+
+    def _load_pipeline(self, probe: Any) -> tuple[Any, dict[str, Any]]:
+        """load_arm_pipeline for this arm; DEMO-2 runtime options only when set."""
+        enable_pc = False if self.residency == "NON_RESIDENT" else None
+        rt = getattr(self, "runtime", None)
+        if rt is None:
+            pipe, meta, _load_s = probe.load_arm_pipeline(
+                self.arm_id, enable_prefix_caching=enable_pc
+            )
+            return pipe, meta
+        if rt.get("scheduler_overrides") is not None:
+            enable_pc = None
+        pipe, meta, _load_s = probe.load_arm_pipeline(
+            self.arm_id,
+            enable_prefix_caching=enable_pc,
+            scheduler_overrides=rt.get("scheduler_overrides"),
+            extra_properties=rt.get("extra_properties") or None,
+            compiled_readback=bool(rt.get("compiled_readback")),
+        )
+        if rt.get("compiled_readback"):
+            self._check_compiled_readback(meta)
+        return pipe, meta
+
+    def _check_compiled_readback(self, meta: dict[str, Any]) -> None:
+        """Arm A stop rule and load-to-load invariance of backend and compiled KV."""
+        from seam.genai_runtime import true_default_verdict
+
+        rt = self.runtime or {}
+        loads = [ld for ld in meta.get("loads") or [] if "compiled_readback" in ld]
+        if not loads:
+            raise SystemExit("REFUSED -- compiled readback requested but missing from load meta")
+        cr = loads[-1]["compiled_readback"]
+        summary = {"backend": cr.get("backend"), "kv": cr.get("kv_cache_precision")}
+        if rt.get("require_true_default"):
+            verdict = true_default_verdict(cr, cr.get("ir_rt_info"))
+            meta["true_default_verdict"] = verdict
+            if not verdict["valid"]:
+                raise SystemExit(
+                    "REFUSED -- ARM_A_INVALID (DEMO-2 true default): "
+                    + "; ".join(verdict["reasons"])
+                )
+        first = getattr(self, "_first_readback", None)
+        if first is None:
+            self._first_readback = summary
+        elif summary != first:
+            raise SystemExit(
+                f"REFUSED -- compiled readback changed between loads: first {first} now {summary}"
+            )
+        self._n_readbacks = int(getattr(self, "_n_readbacks", 0)) + 1
+        self._last_readback = summary
+
+    def _write_telemetry(self, key: str, turn_idx: int, tm: dict[str, Any]) -> None:
+        """Append one JSON line per local turn to the sidecar (only when runtime is on)."""
+        path = getattr(self, "telemetry_path", None)
+        if path is None:
+            return
+        eid, _, policy = key.partition("\0")
+        steps = []
+        for st in tm.get("steps") or []:
+            keep = {
+                k: st[k]
+                for k in (
+                    "step",
+                    "generated_tokens",
+                    "ttft_s",
+                    "decode_tok_s",
+                    "wall_s",
+                    "raw_text",
+                    "streamer_writes",
+                    "streamer_tokens",
+                )
+                if k in st
+            }
+            steps.append(keep)
+        row = {
+            "entry_id": eid,
+            "policy": policy,
+            "turn": turn_idx,
+            "prompt_tokens": tm.get("prompt_tokens"),
+            "memory": tm.get("memory"),
+            "steps": steps,
+            "compiled_readback": getattr(self, "_last_readback", None),
+            "n_compiled_readbacks": getattr(self, "_n_readbacks", 0),
+        }
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        with Path(path).open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(row, default=str) + "\n")
 
     def begin_entry(self, entry: dict[str, Any], *, policy: str) -> None:
         """Own lifecycle: ``MultiTurnAgentSession.begin`` before the first turn.
@@ -1592,6 +1679,17 @@ class OpenVinoLocalBackend:
         session.begin(entry)
         if self.context_window is not None:
             session.context_window = int(self.context_window)
+        rt = getattr(self, "runtime", None) or {}
+        if rt.get("generation"):
+            session.gen_cfg_extra = dict(rt["generation"])
+        if rt.get("debug_raw_text"):
+            session.debug_raw_text = True
+        if rt.get("mem_telemetry"):
+            if getattr(self, "_mem_sampler", None) is None:
+                from seam.turn_memory import TurnMemorySampler
+
+                self._mem_sampler = TurnMemorySampler(gpu_counters=bool(rt.get("gpu_mem_counters")))
+            session.turn_telemetry = self._mem_sampler
         if self.obs_mask is not None:
             from tools.h1_obs_mask import install_on_session
 
@@ -1722,6 +1820,8 @@ class OpenVinoLocalBackend:
                 f"REFUSED -- turn_metrics for {eid}/t{turn_idx} not a dict: "
                 f"type={type(tm).__name__}"
             )
+        if getattr(self, "runtime", None) is not None:
+            self._write_telemetry(key, turn_idx, tm)
         # Progressive span: shorten on max_steps / force_quit.
         if session.force_quit:
             span = self.local_span(entry)
@@ -3051,6 +3151,9 @@ def run_session(
             "load_meta": local.load_meta,
             "prefix_block_clear": "ov_genai.LLMPipeline",
         }
+        if getattr(local, "runtime", None) is not None:
+            # DEMO-2 runner options; absent otherwise so existing plans are unchanged.
+            plan["openvino"]["runtime_options"] = local.runtime
     if not skip_entry_assert:
         # When entries were loaded from the W-3 pin file, hash is checked at load.
         plan["entry_assert"] = {"n": len(entries), "mode": "caller_supplied"}
@@ -3390,6 +3493,9 @@ def run_interleaved_session(
             "load_meta": local.load_meta,
             "prefix_block_clear": "ov_genai.LLMPipeline",
         }
+        if getattr(local, "runtime", None) is not None:
+            # DEMO-2 runner options; absent otherwise so existing plans are unchanged.
+            plan["openvino"]["runtime_options"] = local.runtime
     if not skip_entry_assert:
         plan["entry_assert"] = {"n": len(entries), "mode": "caller_supplied"}
     _write_json(out_dir / "plan.json", plan)
@@ -4092,6 +4198,62 @@ def build_argparser() -> argparse.ArgumentParser:
         action="store_true",
         help="Permit a dirty tree. Plan and seal record DIRTY and the sha256 of git diff HEAD.",
     )
+    g = p.add_argument_group("DEMO-2 runner options (Task AS; every one defaults off)")
+    g.add_argument(
+        "--cache-dir", type=str, default=None, help="CACHE_DIR property (load time only)."
+    )
+    g.add_argument(
+        "--compiled-readback",
+        action="store_true",
+        help="Capture GenAI's load output at OPENVINO_LOG_LEVEL=3; record backend (PA/SDPA) and "
+        "compiled KV per load in plan.json; refuse if they change between loads.",
+    )
+    g.add_argument(
+        "--require-true-default",
+        action="store_true",
+        help="DEMO-2 arm A/D: refuse at load unless PA ran, no SDPA fallback, compiled KV i8 and "
+        "no IR rt_info override. Needs --kv default, RESIDENT, gpu_only; implies "
+        "--compiled-readback.",
+    )
+    g.add_argument(
+        "--sched-prefix-caching",
+        choices=["on", "off"],
+        default=None,
+        help="Explicit SchedulerConfig (replaces GenAI's latency defaults): prefix caching.",
+    )
+    g.add_argument(
+        "--sched-max-batched-tokens",
+        type=int,
+        default=None,
+        help="Explicit SchedulerConfig max_num_batched_tokens (prefill chunk cap).",
+    )
+    g.add_argument(
+        "--sched-cache-size",
+        type=int,
+        default=None,
+        help="Explicit SchedulerConfig cache_size in whole GB (preallocated KV pool).",
+    )
+    g.add_argument("--prompt-lookup", action="store_true", help="prompt_lookup=True at load.")
+    g.add_argument("--num-assistant-tokens", type=int, default=None, help="Prompt lookup K.")
+    g.add_argument("--max-ngram-size", type=int, default=None, help="Prompt lookup n-gram size.")
+    g.add_argument(
+        "--mem-telemetry",
+        action="store_true",
+        help="Per-turn peak RSS, process peak working set and min available memory "
+        "(local_turn_telemetry.jsonl).",
+    )
+    g.add_argument(
+        "--gpu-mem-counters",
+        action="store_true",
+        help="With --mem-telemetry on Windows: GPU Process Memory shared/dedicated usage "
+        "at turn end.",
+    )
+    g.add_argument(
+        "--debug-raw-text",
+        action="store_true",
+        help="Record the raw generated text of every local step in local_turn_telemetry.jsonl "
+        "(pilot P1). No behavior change.",
+    )
     p.add_argument(
         "--confirmation-run",
         action="store_true",
@@ -4439,6 +4601,60 @@ def write_obs_mask_ledger(out_dir: Path, mask: Any) -> None:
         _write_json(Path(out_dir) / "obs_mask_ledger.json", mask.ledger())
 
 
+RUNTIME_FLAG_KEYS = (
+    "cache_dir",
+    "compiled_readback",
+    "require_true_default",
+    "sched_prefix_caching",
+    "sched_max_batched_tokens",
+    "sched_cache_size",
+    "prompt_lookup",
+    "num_assistant_tokens",
+    "max_ngram_size",
+    "mem_telemetry",
+    "gpu_mem_counters",
+    "debug_raw_text",
+)
+
+
+def runtime_flags(args: argparse.Namespace) -> dict[str, Any]:
+    """The DEMO-2 runner flags as given (all default off / None)."""
+    return {k: getattr(args, k, None) for k in RUNTIME_FLAG_KEYS}
+
+
+def runtime_flags_set(flags: dict[str, Any] | None) -> bool:
+    return bool(flags) and any(v not in (None, False) for v in flags.values())
+
+
+def resolve_runtime_options(settings: dict[str, Any], flags: dict[str, Any] | None) -> Any:
+    """seam.genai_runtime.build_runtime_options for the resolved arm; refusal -> SystemExit."""
+    if not runtime_flags_set(flags):
+        return None
+    from seam.genai_runtime import build_runtime_options
+
+    f = dict(flags or {})
+    try:
+        return build_runtime_options(
+            residency=str(settings["residency"]),
+            kv=str(settings["kv"]),
+            placement=str(settings["placement"]),
+            cache_dir=f.get("cache_dir"),
+            compiled_readback=bool(f.get("compiled_readback")),
+            require_true_default=bool(f.get("require_true_default")),
+            sched_prefix_caching=f.get("sched_prefix_caching"),
+            sched_max_batched_tokens=f.get("sched_max_batched_tokens"),
+            sched_cache_size_gb=f.get("sched_cache_size"),
+            prompt_lookup=bool(f.get("prompt_lookup")),
+            num_assistant_tokens=f.get("num_assistant_tokens"),
+            max_ngram_size=f.get("max_ngram_size"),
+            mem_telemetry=bool(f.get("mem_telemetry")),
+            gpu_mem_counters=bool(f.get("gpu_mem_counters")),
+            debug_raw_text=bool(f.get("debug_raw_text")),
+        )
+    except ValueError as exc:
+        raise SystemExit(f"REFUSED -- {exc}") from exc
+
+
 def _make_openvino_local(
     policy: str,
     model_spec: Path | None,
@@ -4446,16 +4662,36 @@ def _make_openvino_local(
     placement: str | None = None,
     residency: str | None = None,
     kv: str | None = None,
+    flags: dict[str, Any] | None = None,
 ) -> OpenVinoLocalBackend:
     settings = local_arm_settings(policy, placement=placement, residency=residency, kv=kv)
     spec = model_spec or (ROOT / "configs" / "models" / "Qwen3-4B-int4-ov.yaml")
+    runtime = resolve_runtime_options(settings, flags)
+    if runtime is None:
+        return OpenVinoLocalBackend(
+            model_spec=spec,
+            placement=settings["placement"],
+            residency=settings["residency"],
+            kv=settings["kv"],
+            max_new_tokens=512,
+        )
     return OpenVinoLocalBackend(
         model_spec=spec,
         placement=settings["placement"],
         residency=settings["residency"],
         kv=settings["kv"],
         max_new_tokens=512,
+        runtime=runtime,
     )
+
+
+def refuse_runtime_flags_without_openvino(args: argparse.Namespace, local: Any) -> None:
+    if runtime_flags_set(runtime_flags(args)) and not isinstance(local, OpenVinoLocalBackend):
+        raise SystemExit(
+            "REFUSED -- DEMO-2 runner flags (--cache-dir, --sched-*, --prompt-lookup, "
+            "--compiled-readback, --require-true-default, --mem-telemetry, --debug-raw-text) "
+            f"need the OpenVINO local backend, not {type(local).__name__}"
+        )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -4510,6 +4746,7 @@ def main(argv: list[str] | None = None) -> int:
             tokens_in=int(fix.get("cloud_tokens_in", 1000)),
             tokens_out=int(fix.get("cloud_tokens_out", 200)),
         )
+        refuse_runtime_flags_without_openvino(args, local)
         fixture_window = attach_context_window(args.context_window, args.policy, local)
         summary = run_session(
             policy=args.policy,
@@ -4558,7 +4795,11 @@ def main(argv: list[str] | None = None) -> int:
             placement=args.placement,
             residency=args.residency,
             kv=args.kv,
+            flags=runtime_flags(args),
         )
+    refuse_runtime_flags_without_openvino(args, local)
+    if getattr(local, "runtime", None) is not None:
+        local.telemetry_path = Path(args.out) / "local_turn_telemetry.jsonl"
 
     retention, obs_mask = attach_obs_mask(args.obs_mask_k, local, cloud)
     context_window = attach_context_window(args.context_window, args.policy, local)
@@ -4658,7 +4899,11 @@ def _main_interleaved(args: argparse.Namespace) -> int:
             placement=args.placement,
             residency=args.residency,
             kv=args.kv,
+            flags=runtime_flags(args),
         )
+    refuse_runtime_flags_without_openvino(args, local)
+    if getattr(local, "runtime", None) is not None:
+        local.telemetry_path = Path(args.out) / "local_turn_telemetry.jsonl"
 
     retention, obs_mask = attach_obs_mask(args.obs_mask_k, local, cloud)
     from tools.cloud_ping import ping as cloud_ping

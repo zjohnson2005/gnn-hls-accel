@@ -20,7 +20,9 @@ from tools.boot4_session import (  # noqa: E402
     new_session_id,
     run_warm,
     run_warm_smoke,
+    set_pilot_overrides,
 )
+
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -37,7 +39,30 @@ def main(argv: list[str] | None = None) -> int:
         "--turn2-path", choices=("user_followup", "assistant_then_user"), default="user_followup"
     )
     parser.add_argument("--record-prefix", action="store_true")
+    # DEMO-2 pilots P2/P3 (Task AS); defaults unchanged (plain LLMPipeline).
+    parser.add_argument(
+        "--sched-max-batched-tokens",
+        type=int,
+        default=None,
+        help="Explicit SchedulerConfig(enable_prefix_caching=True, max_num_batched_tokens=N); "
+        "it replaces GenAI's latency defaults.",
+    )
+    parser.add_argument(
+        "--sched-cache-size", type=int, default=None, help="SchedulerConfig cache_size, whole GB."
+    )
     args = parser.parse_args(argv)
+    sched = None
+    if args.sched_max_batched_tokens is not None or args.sched_cache_size is not None:
+        if args.sched_max_batched_tokens is None:
+            raise SystemExit("REFUSED -- --sched-cache-size needs --sched-max-batched-tokens")
+        sched = {
+            "enable_prefix_caching": True,
+            "max_num_batched_tokens": int(args.sched_max_batched_tokens),
+        }
+        if args.sched_cache_size is not None:
+            sched["cache_size"] = int(args.sched_cache_size)
+    set_pilot_overrides(scheduler=sched)
+
     if args.smoke:
         return run_warm_smoke(
             arm=str(args.arm),

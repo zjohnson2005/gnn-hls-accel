@@ -191,3 +191,131 @@ def capture_native_output(log_level: str | None = READBACK_LOG_LEVEL) -> Iterato
     if box["text"]:
         sys.stderr.write(box["text"])
         sys.stderr.flush()
+
+
+# --- DEMO-2 runner options (Task AS part 6). Every option defaults off. ---
+
+SIZE_MAX_U64 = 2**64 - 1
+
+
+def build_runtime_options(
+    *,
+    residency: str,
+    kv: str,
+    placement: str,
+    cache_dir: str | None = None,
+    compiled_readback: bool = False,
+    require_true_default: bool = False,
+    sched_prefix_caching: str | None = None,
+    sched_max_batched_tokens: int | None = None,
+    sched_cache_size_gb: int | None = None,
+    prompt_lookup: bool = False,
+    num_assistant_tokens: int | None = None,
+    max_ngram_size: int | None = None,
+    mem_telemetry: bool = False,
+    gpu_mem_counters: bool = False,
+    debug_raw_text: bool = False,
+) -> dict[str, Any] | None:
+    """Validate the DEMO-2 runner flags. None when no flag is set (behavior unchanged).
+
+    Raises ValueError with the refusal text. Rules:
+    - Any scheduler field needs both --sched-prefix-caching and
+      --sched-max-batched-tokens, because an explicit SchedulerConfig replaces
+      GenAI's latency defaults instead of merging with them; RESIDENT only,
+      with prefix caching on.
+    - cache_size is whole GB (SchedulerConfig.cache_size is size_t GB).
+    - Prompt lookup needs explicit --num-assistant-tokens and --max-ngram-size.
+    - --require-true-default (arm A, D): kv default, RESIDENT, gpu_only, no
+      scheduler or prompt-lookup flag; turns on the compiled readback.
+    """
+    sched_set = any(
+        v is not None for v in (sched_prefix_caching, sched_max_batched_tokens, sched_cache_size_gb)
+    )
+    flags = (
+        cache_dir is not None,
+        compiled_readback,
+        require_true_default,
+        sched_set,
+        prompt_lookup,
+        num_assistant_tokens is not None,
+        max_ngram_size is not None,
+        mem_telemetry,
+        gpu_mem_counters,
+        debug_raw_text,
+    )
+    if not any(flags):
+        return None
+    res = (residency or "").upper()
+    scheduler: dict[str, Any] | None = None
+    if sched_set:
+        if sched_prefix_caching is None or sched_max_batched_tokens is None:
+            raise ValueError(
+                "an explicit SchedulerConfig replaces the latency defaults: pass both "
+                "--sched-prefix-caching and --sched-max-batched-tokens"
+            )
+        if res != "RESIDENT":
+            raise ValueError("--sched-* applies to RESIDENT (NON_RESIDENT builds its own config)")
+        if sched_prefix_caching != "on":
+            raise ValueError("RESIDENT with --sched-prefix-caching off is not RESIDENT")
+        if int(sched_max_batched_tokens) <= 0 or int(sched_max_batched_tokens) > SIZE_MAX_U64:
+            raise ValueError("--sched-max-batched-tokens must be in 1..2**64-1")
+        scheduler = {
+            "enable_prefix_caching": True,
+            "max_num_batched_tokens": int(sched_max_batched_tokens),
+        }
+        if sched_cache_size_gb is not None:
+            if int(sched_cache_size_gb) <= 0:
+                raise ValueError("--sched-cache-size is whole GB > 0")
+            scheduler["cache_size"] = int(sched_cache_size_gb)
+    generation: dict[str, int] | None = None
+    if prompt_lookup:
+        if num_assistant_tokens is None or max_ngram_size is None:
+            raise ValueError("--prompt-lookup needs --num-assistant-tokens and --max-ngram-size")
+        if int(num_assistant_tokens) <= 0 or int(max_ngram_size) <= 0:
+            raise ValueError("--num-assistant-tokens and --max-ngram-size must be > 0")
+        generation = {
+            "num_assistant_tokens": int(num_assistant_tokens),
+            "max_ngram_size": int(max_ngram_size),
+        }
+    elif num_assistant_tokens is not None or max_ngram_size is not None:
+        raise ValueError("--num-assistant-tokens / --max-ngram-size need --prompt-lookup")
+    if gpu_mem_counters and not mem_telemetry:
+        raise ValueError("--gpu-mem-counters needs --mem-telemetry")
+    if require_true_default:
+        bad = []
+        if kv != "default":
+            bad.append(f"kv {kv!r} (needs default)")
+        if res != "RESIDENT":
+            bad.append(f"residency {residency!r} (needs RESIDENT)")
+        if placement != "gpu_only":
+            bad.append(f"placement {placement!r} (needs gpu_only)")
+        if sched_set:
+            bad.append("--sched-* set")
+        if prompt_lookup:
+            bad.append("--prompt-lookup set")
+        if bad:
+            raise ValueError("--require-true-default: " + "; ".join(bad))
+        compiled_readback = True
+    extra: dict[str, Any] = {}
+    if cache_dir is not None:
+        extra["CACHE_DIR"] = str(cache_dir)
+    if prompt_lookup:
+        extra["prompt_lookup"] = True
+    return {
+        "scheduler_overrides": scheduler,
+        "extra_properties": extra,
+        "generation": generation,
+        "compiled_readback": bool(compiled_readback),
+        "require_true_default": bool(require_true_default),
+        "mem_telemetry": bool(mem_telemetry),
+        "gpu_mem_counters": bool(gpu_mem_counters),
+        "debug_raw_text": bool(debug_raw_text),
+    }
+
+
+def build_scheduler_config(ov_genai: Any, overrides: dict[str, Any]) -> Any:
+    """A full SchedulerConfig: struct defaults plus the given fields (nothing merged from GenAI)."""
+    sc = ov_genai.SchedulerConfig()
+    for key, value in overrides.items():
+        setattr(sc, key, value)
+    return sc
