@@ -100,6 +100,8 @@ probe matched it to pinned u8 within 0.1% at three depths. A pinned `gpu_only_f1
 exists; **its ceiling has never been run.** See [Amendment 2026-08-31](#amendment-2026-08-31)
 § Retracted claims (2). Do not cite 36,500 as an f16 result.
 
+> Note 2026-10-15 (Task AQ): the "dynamic" = u8 equivalence above was measured on the August stack. On openvino 2026.2.1 the GPU plugin may resolve "dynamic" to u4 for 4-bit-weight PagedAttention models (docs/RELATED_SEARCHES.md, 2026-10-15). Do not assume the default is u8 until registry row KV-DEFAULT-READBACK reads the compiled cache ports.
+
 **u8 moved the bind from a memory wall to the model's position limit.** ~~That confirms
 Hypothesis A (padded / dtype-scaled KV dominates) for u8 and is the sharpest configuration
 result so far.~~ **RETRACTED (2026-08-31):** Hypothesis A **confirmed** is retracted — see

@@ -20,7 +20,7 @@ WITHDRAWN (derived/WITHDRAWN.md), RITHWIK, NOT YET MEASURED, NEEDS RUN_ID.
 | I-5 | combined limit "from 9,750 to approximately 46,000 tokens at the same service level objective and the same measured correctness" | No run measures a 46,000-token limit. 2b3316b6 is a cold 46k turn timing only (u8 230.4 s, u4 239.8 s, f16 252.7 s; far over the 10 s SLO). 46,000 matches arithmetic 9,750 / 0.21 = 46,429, i.e. a held anchor divided by Rithwik's span fraction. | NOT YET MEASURED |
 | I-6 | "tasks require roughly 21 percent of their artifact" | From 95-234-token probes only (registry R-SIZE, OPEN). No run in this repo. | RITHWIK (needs his run ids); R-SIZE open |
 | I-7 | "positional truncation retains 44 to 76 percent" | No run in this repo. | RITHWIK (needs his run ids) |
-| I-8 | three failure regimes (context-managed silent drop; unified-memory spill with latency; discrete VRAM explicit OOR) | Ours, unified memory: C-1 f16 to n = 44,742 by paging with Available 0 MB (83127e1b); CAP-3 8B allocation ceiling 3,312 CL_OUT_OF_RESOURCES (322b2f86); f16 ceiling 36,500 CL_OUT_OF_RESOURCES (2804d7fa, docs/README_characterizations.md); T2S B390 CL_OUT_OF_RESOURCES in the GPU canary with the NPU model loaded (c759d72f). Silent-drop and discrete-VRAM regimes: Rithwik side. | PARTIAL: unified side SEALED (83127e1b unsealed); others RITHWIK |
+| I-8 | three failure regimes (context-managed silent drop; unified-memory spill with latency; discrete VRAM explicit OOR) | Ours, unified memory: C-1 f16 to n = 44,742 by paging with Available 0 MB (83127e1b); CAP-3 8B allocation ceiling 3,312 CL_OUT_OF_RESOURCES (322b2f86); a 36,500 CL_OUT_OF_RESOURCES ceiling on the default ("dynamic") KV arm, once mislabelled f16 and matched to u8 in August (2804d7fa; docs/PROJECT_STATE.md retraction 2); T2S B390 CL_OUT_OF_RESOURCES in the GPU canary with the NPU model loaded (c759d72f). Silent-drop and discrete-VRAM regimes: Rithwik side. | PARTIAL: unified side SEALED (83127e1b unsealed); others RITHWIK |
 | I-9 | silent drop gives "confident, categorical wrong answers in every case measured, with no hedging language and no abstention in two of three model families" | No run in this repo. | RITHWIK (needs his run ids) |
 | I-10 | six-axis characterization with failure regime per run | Axes on our side: placement (c2246b1f, 7f232f86), residency (cb781dbf, 9fdedb46, afd1aa21, 0963168f), KV precision (553b3a5c, cf3555d5, e4a22dac), weight precision (a784f5ec, 6225d6e1, 1d8db970), model tier (a427233b, 69234ed5), context budget / retention (DEMO-1 V3 71d33f7a + ab88f47f vs V4 a678926e). Regime recorded per run: not a field today. | PARTIAL |
 
@@ -84,3 +84,25 @@ data. Run_ids below are where each number comes from today.
 | E-9 | "Every cell reads its cache precision back" | readback in delta_n / run_h1_hybrid (_assert_kv_readback) | Part 5a: the property reads "dynamic"; the compiled port type is the real readback (KV-DEFAULT-READBACK) |
 | E-10 | "no configuration wins on all four" | hypothesis | cite ConfigSpec 2604.09722 as precedent |
 | E-11 | 64 GB extension | T2S limits 5c714535, 051d2681, d2d5cc4a, 56c116a6; DEMO-1 T2S cells | SEALED (partial) |
+
+## Threats to validity (running list, 2026-10-15)
+
+- BFCL baseline gap (registry BFCL-BASELINE). Our multi_turn_base pass
+  rate is 10.0% (6225d6e1, int4) and 11.5% (1d8db970, int8). The official
+  leaderboard (last updated 2026-04-12) has no row for the model we run.
+  Its nearest row, Qwen3-4B-Instruct-2507 in FC mode, scores 26.50% on
+  multi-turn base and 22.12% on multi-turn overall. Our variant is base
+  Qwen3-4B, OpenVINO INT4 IR, thinking off, native <tool_call> format, own
+  harness with the official checker. These differences are not separated.
+- KV default (KV-DEFAULT-READBACK). The "default" KV precision is read
+  from a property that says "dynamic". The compiled precision is not yet
+  read; it may be u4.
+- Scheduler settings (PREFIX-CACHE-AUDIT, NONRES-CHUNK). The
+  NON_RESIDENT hybrid cells passed a bare SchedulerConfig. The sealed cold
+  limits used a plain LLMPipeline. The two may prefill in different batch
+  sizes.
+- Run-to-run variance. Fault-free BFCL multi-turn runs reach the same end
+  state only 63.3% of the time (2610.10062). Most of our hybrid cells are
+  single runs.
+- NPU timings split at the 2026-10-14 Windows Update reboot (NPU-DRIVER).
+- Retention numbers (21%, 44-76%) rest on 95-234-token probes (R-SIZE).
