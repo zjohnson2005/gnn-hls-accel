@@ -195,7 +195,8 @@ session start; update it in the same commit as the work. Never delete a row.
   docs/PAPER_*_ABSTRACT.md, docs/PAPER_EVIDENCE_MAP.md; literature sweep
   docs/literature/2026-10-15/ (wording rules in docs/RELATED_SEARCHES.md).
   ISPASS flags: 9,750 is HELD (cite 10,000 c2246b1f); ~46,000 combined
-  limit NOT YET MEASURED; "Arrow Lake" vs our Panther Lake.
+  limit MEASURED - external to this repo (Rithwik side; run id/source
+  pending from Zach), baseline to check against 10,000; "Arrow Lake" vs our Panther Lake.
 - Open before DEMO-2 rehearsals: KV-DEFAULT-READBACK (default KV may
   compile to u4; tools/kv_compiled_readback.ps1) and the PREFIX-CACHE-AUDIT
   control decision (NON_RESIDENT passes a bare SchedulerConfig: prefix

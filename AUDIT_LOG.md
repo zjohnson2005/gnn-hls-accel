@@ -3125,3 +3125,24 @@ DEMO_PREREG_v2 "thesis") are not edited. The blueprint (pinned, AM-009)
 gained a one-line supersede note; its pin moved d9b3f345 -> 21119d83 as a
 KNOWN SUPERSESSION under this amendment, old hash archived in
 GOVERNING_DOCS.sha256.
+
+---
+
+## 2026-10-15 - ISPASS combined limit and C2 headline: source status corrected (Task AR)
+
+**Class:** evidence-status correction; no number, prediction or threshold changed
+**Stated by:** Zach, 2026-10-15 (ET)
+
+Task AQ marked the ISPASS combined limit (9,750 -> ~46,000 tokens at the
+same SLO and measured correctness) NOT YET MEASURED and noted that 46,000
+matches 9,750 / 0.21. Zach confirms it WAS measured. It is not in this
+repo's sealed runs (SEM-IMPL has no sealed run; RET-0/RET-1 blocked), so it
+is most likely Rithwik's side. Status everywhere AQ wrote it
+(docs/PAPER_EVIDENCE_MAP.md I-5 and flag 5, registry R-SIZE note,
+CLAUDE.md current state, the AQ report): "MEASURED - external to this repo
+(Rithwik side; run id/source pending from Zach)". The 9,750 / 0.21 remark
+is removed as a basis for any status. The C2 "23-25x" retention headline
+is marked "source: external, pending". Separately: 9,750 (c647f0c7) is
+HELD in derived/WITHDRAWN.md and the citable XPS cold edge is 10,000
+(c2246b1f), so the combined-limit sentence needs its baseline checked
+against whichever run Rithwik's 46k measurement used.

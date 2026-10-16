@@ -58,7 +58,7 @@ not the thesis itself. Their text is unchanged.
 - C1 Operating limit: hardware configuration sets how much context an agent
   can serve inside the SLO, and which constraint binds (latency, memory wall,
   context window, toolchain).
-- C2 Retention: keeping only needed context moves the limit (23-25x headline).
+- C2 Retention: keeping only needed context moves the limit (23-25x headline; source: external, pending - Rithwik side, run id/source pending from Zach, 2026-10-15).
 - C3 Routing and cost: which routing triggers fire, and what the cloud bill
   is, depends on the device configuration.
 - C4 Budget-quality: hardware configuration sets the test-time compute budget
@@ -276,7 +276,7 @@ time after Wednesday; this list does not fit in the window.
 | id | what | gates | status |
 |---|---|---|---|
 | R-LABELS | span labels per trajectory [feeds: ISPASS 6] | RET-0 SEMANTIC, RET-1 | DATE NEEDED |
-| R-SIZE | artifact size sweep 100-8,000 tokens (the 21% is from 95-234 token probes) [feeds: ISPASS 6] | RET-1 headline | OPEN; RAISED 2026-10-15 to the top of the Rithwik asks: the ISPASS section 6 21% span figure and the 9,750 -> ~46,000 combined limit rest on 95-234-token probes (docs/PAPER_EVIDENCE_MAP.md I-5, I-6) |
+| R-SIZE | artifact size sweep 100-8,000 tokens (the 21% is from 95-234 token probes) [feeds: ISPASS 6] | RET-1 headline | OPEN; RAISED 2026-10-15 to the top of the Rithwik asks: the ISPASS section 6 21% span figure rests on 95-234-token probes (docs/PAPER_EVIDENCE_MAP.md I-6). The 9,750 -> ~46,000 combined limit (I-5) is MEASURED - external to this repo (Rithwik side; run id/source pending from Zach); its 9,750 baseline (c647f0c7) is HELD and the citable XPS cold edge is 10,000 (c2246b1f), so the baseline needs checking against the run Rithwik used |
 | R-SCORE | four-way scoring [feeds: ISPASS 5] | correctness numbers | OPEN |
 | R-LLAMA / RET-1L | llama.cpp arm on T2S [feeds: ISPASS 5, P2] | RET-1L | OPEN |
 | R-EVICT | published eviction methods vs ablation truth [feeds: ISPASS 6] | related work | OPEN |

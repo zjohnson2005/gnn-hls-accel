@@ -17,7 +17,7 @@ WITHDRAWN (derived/WITHDRAWN.md), RITHWIK, NOT YET MEASURED, NEEDS RUN_ID.
 | I-2 | "while memory remains uncommitted" at the latency limit | Memory binds far above the latency limit: resident-session limits f16/u8/u4 15,000/20,000/26,500 (553b3a5c, cf3555d5, e4a22dac); C-1 f16 completed n = 44,742 by paging (83127e1b, no seal in the census). c2246b1f canary free memory 7,143-7,189 MB at canary start; no committed-memory reading at the 10,000 rung was located. | PARTIAL; committed-memory at the limit NEEDS RUN_ID (read c2246b1f probes.ndjson) |
 | I-3 | placement: "service-level swing from zero to complete compliance" | x2 feasibility table (derived/bfcl_feasibility/x2_feasibility_table/x2_derived_table.json), BFCL multi-turn, SLO TTFT <= 10 s and decode >= 6 tok/s: cpu-p NON_RESIDENT 0.0 (cb781dbf) vs gpu_only NON_RESIDENT 1.0 (afd1aa21). Also cpu-p RESIDENT 0.729 (9fdedb46), gpu_only RESIDENT 1.0 (0963168f). Seals record WSH contamination, bounded at 6.6% / 7.5% of wall (cb781dbf / 9fdedb46). Note: docs/README_characterizations.md prints 95.7% for gpu_only no residency from the older a621ff7d session; the sealed x2 cell is 100%. | SEALED |
 | I-4 | residency "5.17-fold improvement" | cpu-p session wall NON_RESIDENT 8,148.5 s / RESIDENT 1,576.4 s = 5.169 (cb781dbf, 9fdedb46). It is a cpu-p result; on gpu_only the same ratio is 750.5 / 489.5 = 1.53 (afd1aa21, 0963168f). | SEALED (state "on CPU placement") |
-| I-5 | combined limit "from 9,750 to approximately 46,000 tokens at the same service level objective and the same measured correctness" | No run measures a 46,000-token limit. 2b3316b6 is a cold 46k turn timing only (u8 230.4 s, u4 239.8 s, f16 252.7 s; far over the 10 s SLO). 46,000 matches arithmetic 9,750 / 0.21 = 46,429, i.e. a held anchor divided by Rithwik's span fraction. | NOT YET MEASURED |
+| I-5 | combined limit "from 9,750 to approximately 46,000 tokens at the same service level objective and the same measured correctness" | Measured per Zach (2026-10-15), not in this repo's sealed runs (SEM-IMPL has no sealed run; RET-0/RET-1 blocked). Baseline check needed: the sentence's 9,750 (c647f0c7) is HELD in derived/WITHDRAWN.md and the citable XPS cold edge is 10,000 (c2246b1f); confirm which baseline run Rithwik's 46k measurement used. 2b3316b6 is an unrelated 46k cold-turn timing on our side (u8 230.4 s, u4 239.8 s, f16 252.7 s). | MEASURED - external to this repo (Rithwik side; run id/source pending from Zach) |
 | I-6 | "tasks require roughly 21 percent of their artifact" | From 95-234-token probes only (registry R-SIZE, OPEN). No run in this repo. | RITHWIK (needs his run ids); R-SIZE open |
 | I-7 | "positional truncation retains 44 to 76 percent" | No run in this repo. | RITHWIK (needs his run ids) |
 | I-8 | three failure regimes (context-managed silent drop; unified-memory spill with latency; discrete VRAM explicit OOR) | Ours, unified memory: C-1 f16 to n = 44,742 by paging with Available 0 MB (83127e1b); CAP-3 8B allocation ceiling 3,312 CL_OUT_OF_RESOURCES (322b2f86); a 36,500 CL_OUT_OF_RESOURCES ceiling on the default ("dynamic") KV arm, once mislabelled f16 and matched to u8 in August (2804d7fa; docs/PROJECT_STATE.md retraction 2); T2S B390 CL_OUT_OF_RESOURCES in the GPU canary with the NPU model loaded (c759d72f). Silent-drop and discrete-VRAM regimes: Rithwik side. | PARTIAL: unified side SEALED (83127e1b unsealed); others RITHWIK |
@@ -41,9 +41,10 @@ Flags for Zach (abstract not edited):
 4. Ollama default context is tiered by VRAM since Feb 2026 (< 24 GiB 4k,
    24-48 GiB 32k, >= 48 GiB 256k). Still 4096 on our machines; cite the
    Ollama version. num_ctx sent via /v1 is silently dropped.
-5. 9,750 is held (I-1) and 46,000 is not measured (I-5). The headline
-   sentence needs either the guarded 10,000 and a measured combined limit,
-   or rewording.
+5. The ~46,000 combined limit (I-5) is MEASURED - external to this repo (Rithwik side; run id/source pending from Zach).
+   Separately, 9,750 (c647f0c7) is HELD (I-1) and the citable XPS cold edge
+   is 10,000 (c2246b1f); check the sentence's baseline against whichever
+   run Rithwik's 46k measurement used.
 6. 5.17x is a CPU-placement number (I-4).
 
 ## Paper 2 (docs/PAPER2_ABSTRACT.md)
