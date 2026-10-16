@@ -1,5 +1,7 @@
 # SEAM — Meeting Brief
 
+> Supersede note (2026-10-15): the headline in section 1 ("The question") is superseded by docs/THESIS.md (docs/amendments/THESIS_AMEND_2026-10-15.md).
+
 **Silicon-aware Exploration of Agentic Model partitioning**
 Zach Johnson · Sharc Lab, Georgia Tech · 2026-08-03
 

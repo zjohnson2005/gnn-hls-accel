@@ -3108,3 +3108,20 @@ Context: docs/amendments/DEMO2_DESIGN_2026-10-14.md (0d5ce95). The build
 (hybrid_full, --context-window, held-out pin DEMO2_HELDOUT_60) followed the
 same day, with golden ledgers for every existing policy committed first
 (69ad626). No DEMO-2 prereg is registered and nothing has run.
+
+---
+
+## 2026-10-15 - Project thesis and paper framing (Task AQ, Part 2)
+
+**Class:** wording of the project thesis; no prediction, band, test,
+threshold or verdict changed
+**Decided:** Zach and Claude (Cowork), 2026-10-14/15
+
+New: docs/THESIS.md; paper abstracts docs/PAPER_ISPASS_ABSTRACT.md,
+docs/PAPER2_ABSTRACT.md, docs/PAPER_ERN_ABSTRACT.md (verbatim copies).
+Registered by docs/amendments/THESIS_AMEND_2026-10-15.md (sha256 ef1d59a2b58df77df71536c35e09407f10070f3bb4e9f02094ff859110967d69).
+Registered thesis lines (DEMO1_AMEND_2026-10-13c section 1,
+DEMO_PREREG_v2 "thesis") are not edited. The blueprint (pinned, AM-009)
+gained a one-line supersede note; its pin moved d9b3f345 -> 21119d83 as a
+KNOWN SUPERSESSION under this amendment, old hash archived in
+GOVERNING_DOCS.sha256.

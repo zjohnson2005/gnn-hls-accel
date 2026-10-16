@@ -1,0 +1,19 @@
+# ISPASS combined paper (with Rithwik) - abstract and structure as given by Zach, 2026-10-15 (verbatim)
+
+Where the operating limit comes from: configuration, retention, and failure regimes for local inference on consumer AI PCs
+
+Abstract
+Consumer AI PCs are marketed and evaluated for local language model inference primarily through throughput. Tokens per second, time to first token, and memory footprint are reported across quantization levels, device placements, and context lengths. This metric set assumes that the operating limit of such a platform is a capacity limit and that exceeding it produces a performance cost. Neither assumption holds uniformly.
+This work characterizes the operating limit of local inference across two memory architectures and two inference runtimes. We find, first, that the binding constraint is platform-dependent: on unified-memory hardware at a ten-second time-to-first-token service level objective, latency binds at approximately 9,750 tokens of context while memory remains uncommitted, so the platform never enters memory pressure at all. Second, that memory pressure, where it is reached, resolves into one of three distinct failure regimes selected by the memory architecture and the runtime's memory policy rather than by the model: context-managed runtimes silently drop context and the model answers from what remains, unified-memory platforms spill into the shared pool and pay latency with output intact, and discrete-VRAM platforms raise an explicit out-of-resources error. Only the first is unobservable to the host, and under artifact removal it produces confident, categorical wrong answers in every case measured, with no hedging language and no abstention in two of three model families tested.
+Third, and most consequentially, we find that configuration tuning moves the operating limit within a reachable space while context retention moves the space itself. Across six configuration axes, the largest single-axis effect is a service-level swing from zero to complete compliance under device placement and a 5.17-fold improvement under residency policy. Combining configuration with semantic retention raises the cold-start limit from 9,750 to approximately 46,000 tokens at the same service level objective and the same measured correctness, because tasks require roughly 21 percent of their artifact while positional truncation retains 44 to 76 percent of it. Retention is the axis that current practice does not turn.
+We report a six-axis characterization across placement, residency, KV precision, weight precision, model tier, and context budget, with the failure regime recorded per run, on Intel Arrow Lake with unified LPDDR5X and NVIDIA discrete VRAM, under both llama.cpp and OpenVINO. The practical consequence is that provisioning a local inference platform is a decision about which constraint will bind and whether its failure will be detectable, not only about how fast the platform runs.
+
+Structure
+1. Introduction. Throughput-only evaluation assumes a capacity limit and an observable failure. Neither holds.
+2. Background and related work. Local inference on unified-memory SoCs, KV quantization, routing benchmarks, the gap between systems work that omits quality and quality work that fixes hardware.
+3. Methodology. Configuration grid, four-way outcome classification, regime detection, seeds, determinism, replay cache, positive controls per knob.
+4. Configuration characterization. Six axes, main effects, interactions. The placement swing and the residency result.
+5. Where the space ends. Regime taxonomy, reachability per platform, the correctness measurements for the silent case.
+6. Retention as the unturned axis. The span requirement, positional versus semantic retention, the combined limit.
+7. Threats to validity.
+8. Conclusion and implications for provisioning.

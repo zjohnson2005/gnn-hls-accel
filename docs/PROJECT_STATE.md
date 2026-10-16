@@ -1,5 +1,7 @@
 # Project state — handoff document
 
+> Supersede note (2026-10-15): the project thesis is docs/THESIS.md (docs/amendments/THESIS_AMEND_2026-10-15.md); the "What this is" framing below is kept for the record.
+
 **Read this first.** It bootstraps a session with no prior context. Body below is the
 2026-08-17 snapshot. Claims later marked **RETRACTED** or superseded are left in place
 with pointers — do not treat unmarked 2026-08-17 prose as current. Standing picture:

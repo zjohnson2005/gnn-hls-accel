@@ -26,7 +26,34 @@ C = extends (paper 2 or appendix). Priority orders work; it never removes it.
 
 Deadlines: draft to Dr. Hao Nov 2; data freeze Nov 16; ISPASS December.
 
-## Claims the experiments serve
+## What the project is (2026-10-15)
+
+Thesis: docs/THESIS.md (docs/amendments/THESIS_AMEND_2026-10-15.md,
+sha256 ef1d59a2b58df77df71536c35e09407f10070f3bb4e9f02094ff859110967d69).
+Hybrid device-cloud research treats the local hardware configuration as
+fixed; we treat it as a design space, measured on fixed hardware, scored on
+four objectives (turn latency, memory cost, task quality, context held
+before failure), with cloud $ reported for hybrid cells. Six axes:
+placement, residency, KV precision, weight precision, model tier, context
+window/retention.
+
+Three papers and one demo; every active row is tagged with what it feeds
+(ISPASS 4/5/6, P2, ERN, DEMO):
+1. ISPASS combined paper with Rithwik Sharma (current priority):
+   docs/PAPER_ISPASS_ABSTRACT.md. Section 4 configuration, 5 where the space
+   ends (failure regimes), 6 retention.
+2. P2, Paper 2 after ISPASS (predictive, feasibility-aware routing; joint
+   provisioning + routing): docs/PAPER2_ABSTRACT.md.
+3. ERN, Zach's configuration DSE feeding P2: docs/PAPER_ERN_ABSTRACT.md.
+4. DEMO, shown Oct 26: DEMO-1 done; DEMO-2 registered, rehearsals pending.
+Evidence per paper: docs/PAPER_EVIDENCE_MAP.md. Working hypotheses H-A
+(attribution), H-B (lever size), H-C (rank reversal), H-D (substitution)
+are hypotheses, not findings (docs/THESIS.md).
+
+## Claims the experiments serve (relabeled 2026-10-15: mechanism / evidence)
+
+C1-C5 below are the mechanisms and evidence lines under the thesis above,
+not the thesis itself. Their text is unchanged.
 
 - C1 Operating limit: hardware configuration sets how much context an agent
   can serve inside the SLO, and which constraint binds (latency, memory wall,
@@ -39,7 +66,8 @@ Deadlines: draft to Dr. Hao Nov 2; data freeze Nov 16; ISPASS December.
 - C5 Space shape: the configuration space differs in shape across platforms
   (axes appear, flip, collapse), not just in values. NPU (2026-10-12, NATSTOP N3): the toolchain sets the cap; output validity sets what is usable. NPU (2026-10-13): the NPU's usable envelope may depend on the model export format; for the Qwen3-4B INT4_SYM group size 128 IR on openvino-genai 2026.2.1 there is none so far (N3, B3). Tested by NPU-FORMAT-F1 and NPU-1-CW.
 - P2 Paper 2: DSE / replay that predicts configurations.
-- Unifying thesis (2026-10-12, docs/DEMO1_DESIGN.md): every cloud turn buys
+- Unifying thesis (superseded 2026-10-15 by docs/THESIS.md, kept for the
+  record) (2026-10-12, docs/DEMO1_DESIGN.md): every cloud turn buys
   capability, latency or context. Hardware configuration changes only the
   latency purchase, for turns whose n_ctx lies between configurations'
   envelopes (envelope x trajectory). C1 sets the edge; C2 moves trajectories

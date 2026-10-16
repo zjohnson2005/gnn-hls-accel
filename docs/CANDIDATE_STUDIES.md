@@ -33,6 +33,8 @@ justifies a purchase, not a tool.
 
 ## 1. Direction B — the umbrella thesis
 
+> Supersede note (2026-10-15): the project thesis is docs/THESIS.md (docs/amendments/THESIS_AMEND_2026-10-15.md); the "umbrella thesis" below is kept for the record.
+
 > **A hybrid client is not a local-only client with some work removed. It is a different hardware
 > design target.**
 

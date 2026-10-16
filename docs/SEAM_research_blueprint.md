@@ -1,5 +1,7 @@
 # SEAM — Research Blueprint
 
+> Supersede note (2026-10-15): the thesis in section 1 ("Thesis and main line") is superseded by docs/THESIS.md (docs/amendments/THESIS_AMEND_2026-10-15.md); the rest of this protocol is unchanged.
+
 **Silicon-aware Exploration of Agentic Model partitioning**
 
 Sharc Lab, Georgia Institute of Technology

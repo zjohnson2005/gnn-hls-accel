@@ -1,11 +1,37 @@
 # SEAM / gnn-hls-accel - working rules for Claude Code
 
-This repo is a measurement study: how hardware configuration (placement,
-residency, KV precision, weight precision, model tier, retention, routing)
-changes hybrid device<->cloud agent execution on consumer AI PCs.
-Paper 1 (with Rithwik Sharma, SHARC Lab, Georgia Tech): characterization.
-Paper 2: design-space search over the same axes.
+This repo measures hardware configuration as a design space for local and
+hybrid device<->cloud agent execution on consumer AI PCs (docs/THESIS.md).
+Three papers and one demo:
+1. ISPASS combined paper with Rithwik Sharma (SHARC Lab, Georgia Tech),
+   "Where the operating limit comes from" (docs/PAPER_ISPASS_ABSTRACT.md).
+   Zach: configuration (Intel, OpenVINO); Rithwik: retention and the
+   NVIDIA/llama.cpp side. **This is the current priority.**
+2. Paper 2, after ISPASS: "Provisioning and routing when failure is
+   unobservable" (docs/PAPER2_ABSTRACT.md).
+3. ERN, Zach's configuration DSE that feeds Paper 2
+   (docs/PAPER_ERN_ABSTRACT.md; numbers dated 2026-09-07, to refresh).
+4. DEMO, shown Oct 26: DEMO-1 done; DEMO-2 (default vs tuned configuration
+   in a real hybrid) registered, rehearsals pending.
+Evidence per paper: docs/PAPER_EVIDENCE_MAP.md.
 Deadlines: draft to Dr. Hao Nov 2, data freeze Nov 16, ISPASS in December.
+
+## Thesis and decision rules
+
+Thesis: docs/THESIS.md (registered by
+docs/amendments/THESIS_AMEND_2026-10-15.md). Every future experiment:
+1. names the configuration axis it moves on fixed hardware;
+2. reports every objective it measures (latency, memory cost, quality,
+   context held), and cloud $ for hybrid cells;
+3. uses the default configuration run as a real hybrid as its control,
+   never an all-cloud or all-local run;
+4. treats a hardware change as a yardstick only;
+5. treats limits, canaries and gates as infrastructure;
+6. takes its priority from the papers: ISPASS first, then Paper 2 and ERN,
+   with DEMO-2 in time for Oct 26.
+Wording forced by the 2026-10-15 literature sweep is in docs/THESIS.md and
+docs/RELATED_SEARCHES.md (e.g. "configuration-aware", never "hardware-aware
+routing"; rank reversal only with the model fixed).
 
 ## Where things run
 

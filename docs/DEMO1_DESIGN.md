@@ -6,8 +6,16 @@ preregistration, committed before any DEMO-1 run. Registry row: DEMO-1
 
 ## Thesis
 
-Headline (amendment docs/amendments/DEMO1_AMEND_2026-10-13c_CONFIG.md,
-2026-10-13):
+Current thesis (2026-10-15): docs/THESIS.md, registered by
+docs/amendments/THESIS_AMEND_2026-10-15.md. DEMO-1 is evidence under it:
+its one-factor contrasts on the XPS GPU 4B (placement V1/V2, retention
+V3/V4) are configuration changes on fixed hardware, scored on local share,
+cloud $, latency and passes; the XPS vs T2S pairs are the yardstick. The
+"latency purchase" wording below is NOT the thesis. DEMO-1's predictions,
+bands and verdicts are unchanged.
+
+Superseded headline, kept for the record (amendment
+docs/amendments/DEMO1_AMEND_2026-10-13c_CONFIG.md, 2026-10-13):
 
 "On a fixed device, the inference configuration (placement, residency, KV
 precision, weight precision, retention, model export) sets the context range

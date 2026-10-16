@@ -2,6 +2,8 @@
 
 Baseline message-passing GNN accelerator in Vitis HLS, plus a **primary thesis
 track** for custom hardware agent orchestration in `orchestration_engine/`.
+
+> Supersede note (2026-10-15): the project thesis is docs/THESIS.md (docs/amendments/THESIS_AMEND_2026-10-15.md); the "primary thesis track" wording below is kept for the record.
 single **GCN layer** (PyG `GCNConv` ordering) that doubles as:
 
 - the concrete artifact to port into hls4ml's `ModelGraph` / multi-backend codegen (Phase A), and

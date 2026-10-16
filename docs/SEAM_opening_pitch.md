@@ -1,5 +1,7 @@
 # SEAM — opening pitch
 
+> Supersede note (2026-10-15): the project thesis is docs/THESIS.md (docs/amendments/THESIS_AMEND_2026-10-15.md); the pitch question below is kept for the record.
+
 Delivery script. ~7 minutes spoken. Written for the lab/advisor meeting on the new direction.
 Compression notes for other audiences at the end.
 
