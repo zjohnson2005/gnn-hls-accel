@@ -41,7 +41,8 @@ routing"; rank reversal only with the model fixed).
   repo `C:\Users\zjohn\Projects\gnn-hls-accel`. 16 GB unified, Arc iGPU,
   Windows 11 Home (no RDP). Default shell over ssh is PowerShell.
 - EVO-T2S (platform evo-t2): `ssh zach@100.72.40.24`,
-  repo `C:\Users\zach\Projects\gnn-hls-accel`. 64 GB unified, Arc B390.
+  repo `C:\Users\zach\Projects\gnn-hls-accel`. 64 GB unified, Arc B390
+  (12 Xe3 cores, 16 MB L2; LITERATURE: Wikipedia, Chips and Cheese).
   Shared with Rithwik: his queue watchdog is the scheduled task
   `APU-QueueWatchdog`, log `C:\apu\ovn\watchdog.log`. Never modify his
   task or files without his written OK. Clock is US Pacific.
@@ -97,13 +98,17 @@ Governing docs (re-read the relevant section before implementing):
 
 Platform A (aipc-c1), fixed facts:
 - Dell XPS 16 DA16260, Intel Core Ultra 5 325 (**Panther Lake**, not Lunar Lake)
-- 4 P + 4 LP-E, **8 logical CPUs, no SMT**, Xe3 iGPU, NPU 5, 16 GB LPDDR5X
-  unified, no dGPU
+- 4 P + 4 LP-E, **8 logical CPUs, no SMT**, Xe3 iGPU ("Intel(R) Graphics",
+  4 Xe3 cores; not an Arc B390), NPU 5, 16 GB LPDDR5X unified, no dGPU
+- Memory per Notebookcheck: LPDDR5X-7467 on a 128-bit bus, about 119.5 GB/s
+  theoretical (LITERATURE; our unit's memory speed is unconfirmed, pilot P9)
 - Windows build 26200; never size worker pools by heuristic / `cpu_count()`
 
 Number prohibitions:
 - Never report **50 TOPS** as achieved NPU throughput (peak INT8 only)
-- Never state **~120 GB/s** bandwidth until M2.4 measures it (unverified)
+- Never state **~120 GB/s** bandwidth until M2.4 measures it (unverified).
+  The figure may appear only as "theoretical, per <source>, unmeasured"
+  (e.g. 119.5 GB/s per Notebookcheck), never as achieved bandwidth
 - **180 TOPS** is Platform B aggregate only - never as Platform A or NPU-alone
 - Figures read only from `derived/`
 - Never cite `topology.measured.cluster_separation_ratio` (~1.38x from
@@ -194,11 +199,14 @@ session start; update it in the same commit as the work. Never delete a row.
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
   docs/PAPER_*_ABSTRACT.md, docs/PAPER_EVIDENCE_MAP.md; literature sweep
   docs/literature/2026-10-15/ (wording rules in docs/RELATED_SEARCHES.md).
-  ISPASS flags: 9,750 is HELD (cite 10,000 c2246b1f); ~46,000 combined
-  limit MEASURED - external to this repo (Rithwik side; run id/source
-  pending from Zach), baseline to check against 10,000; "Arrow Lake" vs our Panther Lake.
-- Open before DEMO-2 rehearsals: KV-DEFAULT-READBACK (default KV may
-  compile to u4; tools/kv_compiled_readback.ps1) and the PREFIX-CACHE-AUDIT
+  ISPASS flags: 9,750 is HELD (cite 10,000 c2246b1f); the ~46,000 combined
+  limit and the C2 23-25x headline are MEASURED (Zach), data location/run_id pending; not yet in this repo
+  (corrected 2026-10-16, Task AS: measured by us, not Rithwik side); check
+  the baseline against 10,000; SEM-IMPL is built but has no sealed run here,
+  RET-0/RET-1 are blocked here; "Arrow Lake" vs our Panther Lake.
+- Open before DEMO-2 rehearsals: KV-DEFAULT-READBACK (2026.2.1 source:
+  the default compiles i8 on a PA model, not u4 - corrected 2026-10-16;
+  confirm on both hosts, tools/kv_compiled_readback.ps1) and the PREFIX-CACHE-AUDIT
   control decision (NON_RESIDENT passes a bare SchedulerConfig: prefix
   caching off and struct-default batch tokens, not the runtime default).
   Draft addendum in _agent_reports/drafts/ (not committed).

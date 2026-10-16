@@ -4,9 +4,12 @@
 # Usage, from the repo root:
 #   powershell -NoProfile -File tools\kv_compiled_readback.ps1
 #   powershell -NoProfile -File tools\kv_compiled_readback.ps1 -Kv default
+#   powershell -NoProfile -File tools\kv_compiled_readback.ps1 -Mode genai   (DEMO-2 pilot P0)
 param(
     [ValidateSet("all", "default", "u8", "u4", "f16")]
-    [string]$Kv = "all"
+    [string]$Kv = "all",
+    [ValidateSet("all", "core", "genai")]
+    [string]$Mode = "all"
 )
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
@@ -17,7 +20,7 @@ if (-not (Test-Path -LiteralPath $PythonExe)) {
 }
 Push-Location $root
 try {
-    & $PythonExe (Join-Path $root "tools\kv_compiled_readback.py") --kv $Kv
+    & $PythonExe (Join-Path $root "tools\kv_compiled_readback.py") --kv $Kv --mode $Mode
     exit $LASTEXITCODE
 }
 finally {

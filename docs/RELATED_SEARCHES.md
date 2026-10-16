@@ -274,6 +274,9 @@ PREFIX-CACHE-AUDIT, V5-CAL-2, NPU-DRIVER, NPU-PROMPT-PLAIN, B390-OOR,
 BFCL-BASELINE, INT4-SCHEME)
 - OpenVINO 2026.2.1 GPU KV default: "dynamic" is the property placeholder;
   for PagedAttention models with 4-bit weights the plugin resolves u4.
+  [CORRECTED 2026-10-16: wrong. 2026.2.1 hard-codes auto_enable_4bit_kv =
+  false, so the PA default is i8; u4 becomes automatic only in 2026.3.x.
+  See the 2026-10-16 section.]
   Forbidden until read back from the compiled model's key_cache/value_cache
   ports: "the default KV is u8/f16"; "dynamic means no compression".
 - LLMPipeline with no SchedulerConfig: prefix caching ON, batch tokens

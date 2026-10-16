@@ -65,3 +65,11 @@ def test_no_openvino_import_at_module_level() -> None:
         n.module for n in top if isinstance(n, ast.ImportFrom) and n.module
     }
     assert not any(str(x).startswith("openvino") for x in names)
+
+
+def test_modes_and_child_flag() -> None:
+    assert kv.MODES == ("all", "core", "genai")
+    src = (ROOT / "tools" / "kv_compiled_readback.py").read_text(encoding="utf-8")
+    # The genai child passes nothing but the IR dir and the device.
+    assert "ov_genai.LLMPipeline(str(ir_dir), device)" in src
+    assert "i8" in src.split("from __future__")[0]

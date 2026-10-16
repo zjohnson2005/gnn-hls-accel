@@ -3146,3 +3146,43 @@ is marked "source: external, pending". Separately: 9,750 (c647f0c7) is
 HELD in derived/WITHDRAWN.md and the citable XPS cold edge is 10,000
 (c2246b1f), so the combined-limit sentence needs its baseline checked
 against whichever run Rithwik's 46k measurement used.
+
+---
+
+## 2026-10-16 - Corrections: 46k/23-25x source, KV default i8, true runtime default, hardware facts (Task AS part 1)
+
+**Class:** evidence-status and source corrections; no number, prediction or threshold changed
+**Stated by:** Zach (46k/23-25x), 2026-10-16 (ET); OpenVINO source read at the 2026.2.1 tags
+
+1. Task AR's wording was wrong. Zach says the ISPASS ~46,000-token
+   combined limit and the C2 "23-25x" retention headline were measured by
+   us, not on Rithwik's side. Their data is not in this repo or in
+   ~/seam_closeout_10{06,08,12,13}; Zach will supply the location or
+   run_ids. Every AR mention now reads "MEASURED (Zach), data
+   location/run_id pending; not yet in this repo". SEM-IMPL is built but has
+   no sealed run in this repo; RET-0/RET-1 are blocked here.
+2. KV default on openvino 2026.2.1 is i8, not u4 (corrects Task AQ part 5,
+   the KV-DEFAULT-READBACK row, the README_characterizations and
+   PROJECT_STATE notes and the uncommitted draft addendum).
+   execution_config.cpp L250 hard-codes auto_enable_4bit_kv = false, so a
+   PagedAttention model on GPU with no KV property compiles i8 (key
+   per-channel, value per-token); stateful/SDPA on Xe2/Xe3 compiles f16;
+   automatic u4 arrives in 2026.3.x. A u8 request maps to the same i8, so the
+   T2S "u8" tuned setting equals the default. "dynamic" is the pre-compile
+   placeholder. tools/kv_compiled_readback.py gained --mode genai: GenAI's
+   own compile at OPENVINO_LOG_LEVEL=3, parsed for the "Model: LLM with
+   Paged Attention" KV_CACHE_PRECISION line and the SDPA fallback warning,
+   plus the IR rt_info override check (seam/genai_runtime.py).
+3. True runtime default recorded in PREFIX-CACHE-AUDIT (genai utils.cpp
+   L794-813, pipeline.cpp L214-244): no SchedulerConfig = PA with prefix
+   caching on, unlimited batch tokens, dynamic cache, no eviction, SDPA
+   fallback only on PA failure (one WARN line); any SchedulerConfig forces
+   PA and replaces those defaults, it is not merged; a bare SchedulerConfig()
+   = 256 / split-fuse / prefix caching off; no context cap on GPU/CPU.
+4. Hardware facts (LITERATURE) in CLAUDE.md: Core Ultra 5 325 has a 4-Xe3
+   "Intel Graphics" iGPU, LPDDR5X-7467 on 128 bits, ~119.5 GB/s theoretical
+   per Notebookcheck; B390 has 12 Xe3 cores and 16 MB L2. The ~120 GB/s
+   prohibition stays; the figure may appear only as "theoretical, per
+   <source>, unmeasured". arXiv 2603.23640 reports 37.3% and 44.1% loss on
+   an iPhone 16 Pro, not 41.5% and not Intel; the three 2026-10-15
+   literature citations are marked corrected in place.

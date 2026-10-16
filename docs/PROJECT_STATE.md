@@ -101,6 +101,8 @@ exists; **its ceiling has never been run.** See [Amendment 2026-08-31](#amendmen
 § Retracted claims (2). Do not cite 36,500 as an f16 result.
 
 > Note 2026-10-15 (Task AQ): the "dynamic" = u8 equivalence above was measured on the August stack. On openvino 2026.2.1 the GPU plugin may resolve "dynamic" to u4 for 4-bit-weight PagedAttention models (docs/RELATED_SEARCHES.md, 2026-10-15). Do not assume the default is u8 until registry row KV-DEFAULT-READBACK reads the compiled cache ports.
+>
+> Correction 2026-10-16 (Task AS): the u4 sentence above is wrong. The 2026.2.1 source hard-codes auto_enable_4bit_kv = false, so a PagedAttention model on GPU with no KV property compiles i8 (key per-channel, value per-token); u8 requests normalize to the same i8; a stateful/SDPA model on Xe2/Xe3 gets f16. Automatic u4 arrives in 2026.3.x. The August "dynamic" = u8 match is consistent with i8 (docs/literature/2026-10-16/DEMO2_CONTROL/openvino_defaults.md Q4). Still to be read back on our hosts (KV-DEFAULT-READBACK = DEMO-2 pilot P0).
 
 **u8 moved the bind from a memory wall to the model's position limit.** ~~That confirms
 Hypothesis A (padded / dtype-scaled KV dominates) for u8 and is the sharpest configuration
