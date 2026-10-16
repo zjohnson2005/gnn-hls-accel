@@ -101,7 +101,8 @@ Platform A (aipc-c1), fixed facts:
 - 4 P + 4 LP-E, **8 logical CPUs, no SMT**, Xe3 iGPU ("Intel(R) Graphics",
   4 Xe3 cores; not an Arc B390), NPU 5, 16 GB LPDDR5X unified, no dGPU
 - Memory per Notebookcheck: LPDDR5X-7467 on a 128-bit bus, about 119.5 GB/s
-  theoretical (LITERATURE; our unit's memory speed is unconfirmed, pilot P9)
+  theoretical (LITERATURE). Our unit per WMI 2026-10-16: 8 x 2 GiB,
+  configured 7467 MT/s (rated 9600; record d67beb19); bandwidth unmeasured
 - Windows build 26200; never size worker pools by heuristic / `cpu_count()`
 
 Number prohibitions:
@@ -220,6 +221,9 @@ session start; update it in the same commit as the work. Never delete a row.
 - KV default on 2026.2.1 is i8 by source (not u4), NOT YET MEASURED on the
   hosts: pilot P0 (tools/kv_compiled_readback.ps1 -Mode all). The
   2026-10-15 9:22 PM ET P0 attempt timed out on both hosts.
+- Task AT 2026-10-16: XPS pin restored, be91e69d backed up, P9 read-only
+  done (d67beb19). P0 and later pilots NOT RUN: XPS had Chrome, Edge and
+  Claude desktop open (STOP rule). T2S pin is the CRLF 8b0844ef form.
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.
