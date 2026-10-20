@@ -2632,7 +2632,14 @@ def _run_hybrid_entry_body(
             break
 
         # Local turn (must exist in span)
-        bt = local.run_turn(entry, turn_idx, model=model)
+        watchdog = getattr(local, "turn_watchdog", None)
+        if watchdog is not None:
+            watchdog.arm(entry_id=str(entry["id"]), policy=policy, turn=turn_idx)
+        try:
+            bt = local.run_turn(entry, turn_idx, model=model)
+        finally:
+            if watchdog is not None:
+                watchdog.disarm()
 
         # --- DEMO-2: mechanical triggers first (sticky) ---
         # ctx_overflow only occurs with --context-window; hybrid_full adds the
@@ -3390,6 +3397,7 @@ def run_interleaved_session(
     retention: dict[str, Any] | None = None,
     cloud_preflight: Callable[[], dict[str, Any]] | None = None,
     obs_mask: Any = None,
+    turn_watchdog: Any = None,
 ) -> dict[str, Any]:
     """Entry-by-entry interleave of selected H1 policy arms (INF-5 session_design=interleaved).
 
@@ -3509,6 +3517,9 @@ def run_interleaved_session(
             plan["openvino"]["runtime_options"] = local.runtime
     if not skip_entry_assert:
         plan["entry_assert"] = {"n": len(entries), "mode": "caller_supplied"}
+    if turn_watchdog is not None:
+        # Task AW harness option; absent otherwise so existing plans are unchanged.
+        plan["turn_watchdog"] = turn_watchdog.config()
     _write_json(out_dir / "plan.json", plan)
 
     session_status = "complete"
@@ -3609,6 +3620,70 @@ def run_interleaved_session(
                 "reason": "no selected policy reaches the cloud",
             }
         _write_json(out_dir / "plan.json", plan)
+
+    if turn_watchdog is not None:
+
+        def _on_hang(rec: dict[str, Any]) -> None:
+            # Runs on the watchdog thread while the worker thread is stuck in a
+            # local turn; only that thread writes these files, at cell ends.
+            pol = str(rec["policy"])
+            st = state[pol]
+            reason = (
+                f"turn watchdog: entry {rec['entry_id']} turn {rec['turn']} ran "
+                f"{rec['elapsed_s']} s > {rec['limit_s']} s"
+            )
+            st["status"] = "aborted_hang"
+            st["abort_reason"] = reason
+            st["quality_rows"].append(
+                {
+                    "entry_id": rec["entry_id"],
+                    "outcome": "hang",
+                    "status": "hang",
+                    "turn": rec["turn"],
+                    "local_pass": None,
+                    "hybrid_pass": None,
+                }
+            )
+            cell_log.append(
+                {
+                    "entry_id": rec["entry_id"],
+                    "policy": pol,
+                    "status": "hang",
+                    "turn": rec["turn"],
+                    "running_usd_policy": st["cost"].running_usd,
+                    "running_usd_session": session_cost.running_usd,
+                }
+            )
+            _persist_policy(pol)
+            _persist_session()
+            _write_json(
+                out_dir / "summary.json",
+                {
+                    "run_id": run_id,
+                    "kind": kind,
+                    "session_design": "interleaved",
+                    "status": "aborted_hang",
+                    "abort_reason": reason,
+                    "measurement_kind": "MEASURED",
+                    "n_entries_planned": len(entries),
+                    "hang": rec,
+                    "policies": {
+                        p: {
+                            "status": state[p]["status"],
+                            "n_entries_completed": len(state[p]["completed"]),
+                            "running_usd": state[p]["cost"].running_usd,
+                        }
+                        for p in policies
+                    },
+                    "finished_utc": _utc_now(),
+                },
+            )
+
+        turn_watchdog.run_id = run_id
+        turn_watchdog.out_dir = out_dir
+        turn_watchdog.on_fire = _on_hang
+        local.turn_watchdog = turn_watchdog  # type: ignore[attr-defined]
+        turn_watchdog.start()
 
     try:
         from tools.h1_provenance import latin_square_order
@@ -3778,6 +3853,8 @@ def run_interleaved_session(
                 continue
             break  # session abort broke inner loop
     finally:
+        if turn_watchdog is not None:
+            turn_watchdog.stop()
         for policy in policies:
             if state[policy]["status"] == "running":
                 # Finished outer loop without abort -> complete if all entries done.
@@ -4266,6 +4343,21 @@ def build_argparser() -> argparse.ArgumentParser:
         "(pilot P1). No behavior change.",
     )
     p.add_argument(
+        "--turn-watchdog-s",
+        type=float,
+        default=None,
+        help="Interleaved only (Task AW, harness; default off): a local turn longer than this "
+        "records outcome hang (hang_events.json, stack dump), persists checkpoints and ends "
+        "the worker with exit code 86. The next launch starts at the next entry.",
+    )
+    p.add_argument(
+        "--hang-dump-py-spy",
+        type=str,
+        default=None,
+        help="With --turn-watchdog-s: py-spy executable; on a hang run "
+        "'py-spy dump --native --pid <worker>' into the run dir.",
+    )
+    p.add_argument(
         "--confirmation-run",
         action="store_true",
         help="Allow an entry pin marked reserved_for (DEMO2_HELDOUT_60_B: the one SEARCH "
@@ -4696,6 +4788,22 @@ def _make_openvino_local(
     )
 
 
+def build_turn_watchdog(args: argparse.Namespace) -> Any:
+    """seam.turn_watchdog.TurnWatchdog from --turn-watchdog-s, or None (default off)."""
+    limit = getattr(args, "turn_watchdog_s", None)
+    py_spy = getattr(args, "hang_dump_py_spy", None)
+    if limit is None:
+        if py_spy:
+            raise SystemExit("REFUSED -- --hang-dump-py-spy needs --turn-watchdog-s")
+        return None
+    if not float(limit) > 0:
+        raise SystemExit("REFUSED -- --turn-watchdog-s must be positive")
+    from seam.turn_watchdog import TurnWatchdog
+
+    dump = [str(py_spy), "dump", "--native", "--pid", "{pid}"] if py_spy else None
+    return TurnWatchdog(limit_s=float(limit), out_dir=Path(args.out), dump_cmd=dump)
+
+
 def refuse_runtime_flags_without_openvino(args: argparse.Namespace, local: Any) -> None:
     if runtime_flags_set(runtime_flags(args)) and not isinstance(local, OpenVinoLocalBackend):
         raise SystemExit(
@@ -4736,6 +4844,10 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit("REFUSED -- --context-window is single-arm only (DEMO-2)")
         return _main_interleaved(args)
 
+    if getattr(args, "turn_watchdog_s", None) is not None or getattr(
+        args, "hang_dump_py_spy", None
+    ):
+        raise SystemExit("REFUSED -- --turn-watchdog-s is interleaved only (Task AW)")
     if args.policy is None:
         raise SystemExit(
             "REFUSED -- --policy is required (or pass --interleaved / --derive-r1 "
@@ -4919,6 +5031,7 @@ def _main_interleaved(args: argparse.Namespace) -> int:
     retention, obs_mask = attach_obs_mask(args.obs_mask_k, local, cloud)
     from tools.cloud_ping import ping as cloud_ping
 
+    turn_watchdog = build_turn_watchdog(args)
     summary = run_interleaved_session(
         entries=entries,
         out_dir=args.out,
@@ -4938,6 +5051,7 @@ def _main_interleaved(args: argparse.Namespace) -> int:
             cloud_model=args.cloud_model, backend_factory=lambda _model: cloud
         ),
         obs_mask=obs_mask,
+        turn_watchdog=turn_watchdog,
     )
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
     ok_statuses = {"complete", "partial_policy_cap"}

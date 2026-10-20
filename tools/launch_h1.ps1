@@ -83,6 +83,8 @@
 #   -SchedPrefixCaching on -SchedMaxBatchedTokens <N> [-SchedCacheSize <GB>] (explicit
 #   SchedulerConfig; replaces the latency defaults), -PromptLookup -NumAssistantTokens <K>
 #   -MaxNgramSize <n>, -MemTelemetry [-GpuMemCounters], -DebugRawText.
+#   -TurnWatchdogS <s> [-HangDumpPySpy <py-spy.exe>] (Task AW; default off): a local turn
+#                       longer than <s> records outcome hang, dumps stacks, worker exits 86.
 #   -ConfirmationRun    allow a reserved entry pin (DEMO2_HELDOUT_60_B: one SEARCH confirmation
 #                       run only). Default off: the worker refuses reserved pins.
 #
@@ -158,7 +160,12 @@ param(
     [Nullable[int]]$MaxNgramSize = $null,
     [switch]$MemTelemetry,
     [switch]$GpuMemCounters,
-    [switch]$DebugRawText
+    [switch]$DebugRawText,
+    # Per-turn wall-clock watchdog (Task AW, harness only; default off). A local turn
+    # longer than this records outcome "hang", dumps stacks and ends the worker (exit 86).
+    [Nullable[double]]$TurnWatchdogS = $null,
+    # With -TurnWatchdogS: py-spy executable for a native stack dump of the hung worker.
+    [string]$HangDumpPySpy = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -683,6 +690,12 @@ if ($null -ne $MaxNgramSize) {
 if ($MemTelemetry) { $resolvedCmd = $resolvedCmd + ' --mem-telemetry' }
 if ($GpuMemCounters) { $resolvedCmd = $resolvedCmd + ' --gpu-mem-counters' }
 if ($DebugRawText) { $resolvedCmd = $resolvedCmd + ' --debug-raw-text' }
+if ($null -ne $TurnWatchdogS) {
+    $resolvedCmd = $resolvedCmd + ' --turn-watchdog-s ' + $TurnWatchdogS
+}
+if (-not [string]::IsNullOrWhiteSpace($HangDumpPySpy)) {
+    $resolvedCmd = $resolvedCmd + ' --hang-dump-py-spy "' + $HangDumpPySpy + '"'
+}
 if ($AllowDirty) {
     $resolvedCmd = $resolvedCmd + ' --allow-dirty'
 }

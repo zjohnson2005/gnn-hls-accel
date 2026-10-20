@@ -79,3 +79,43 @@ def test_p5_p7_p8(tmp_path: Path) -> None:
     assert v7["material_win_floors"]["usd"] == 0.3636  # 2 x 0.02 / 0.11 beats the 25% floor
     v8 = pa.p8(a1, a2)
     assert v8["n_paired"] == 4 and "keep_u4" in v8
+
+
+def _p9_dir(tmp: Path, medians: list[float]) -> Path:
+    d = tmp / "p9"
+    (d / "points").mkdir(parents=True)
+    for i, m in enumerate(medians):
+        doc = {
+            "point_index": i,
+            "median_decode_tok_s": m,
+            "repeats": [{"decode_tok_s": m}, {"decode_tok_s": m}, {"decode_tok_s": m}],
+        }
+        (d / "points" / f"x_i{i:02d}_n3500.json").write_text(json.dumps(doc), encoding="utf-8")
+    return d
+
+
+def test_p9_drift_rule(tmp_path: Path) -> None:
+    flat = pa.p9(_p9_dir(tmp_path / "a", [25.0] * 4 + [30.0] * 4 + [25.5] * 4))
+    assert flat["third"] == 4
+    assert flat["drift_point_medians"] == 0.02 and flat["warmup_rule"] is False
+    slow = pa.p9(_p9_dir(tmp_path / "b", [25.0] * 4 + [24.0] * 4 + [23.5] * 4))
+    assert slow["drift_point_medians"] == -0.06 and slow["warmup_rule"] is True
+
+
+def test_interleaved_root_reads_the_one_policy_ledger(tmp_path: Path) -> None:
+    root = tmp_path / "interleaved_x"
+    pol = root / "policies" / "local_only"
+    pol.mkdir(parents=True)
+    ents = [{"entry_id": "e1", "local_pass": True, "turns": [{"placement": "local", "n_ctx": 9}]}]
+    (pol / "turn_ledger.json").write_text(json.dumps({"entries": ents}), encoding="utf-8")
+    assert pa._entries(root) == ents
+    (root / "policies" / "slo_escalate").mkdir()
+    (root / "policies" / "slo_escalate" / "turn_ledger.json").write_text(
+        json.dumps({"entries": []}), encoding="utf-8"
+    )
+    try:
+        pa._entries(root)
+    except SystemExit as exc:
+        assert "several policies" in str(exc)
+    else:
+        raise AssertionError("expected a refusal")

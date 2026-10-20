@@ -10,6 +10,10 @@ Prints one JSON verdict per call:
   python tools/demo2_pilot_analysis.py p6 <run_dir>
   python tools/demo2_pilot_analysis.py p7 <a1_dir> <a2_dir>
   python tools/demo2_pilot_analysis.py p8 <i8_dir> <u4_dir>
+  python tools/demo2_pilot_analysis.py p9 <sealed run_decode_match --pilot p9 dir>
+
+A run dir may be an interleaved run root: when it has no turn_ledger.json, the
+one policy subdir policies/<policy>/ is read (refused if there are several).
 
 P1 splits output by characters (tool-call blocks, think blocks, the rest) and
 apportions each step's generated_tokens by those shares; it is an estimate,
@@ -39,6 +43,7 @@ P1_LEVER_SHARE = 0.50
 P4_MIN_SPEEDUP = 1.10
 P7_DISCORDANT_SHARE = 0.25
 NCTX_BUCKETS = (8_000, 16_000, 24_000, 32_000, 40_960)
+P9_MAX_DRIFT = 0.05
 
 
 def _telemetry(run_dir: Path) -> list[dict[str, Any]]:
@@ -48,8 +53,23 @@ def _telemetry(run_dir: Path) -> list[dict[str, Any]]:
     return [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
 
 
+def _ledger_path(run_dir: Path) -> Path:
+    path = Path(run_dir) / "turn_ledger.json"
+    if path.is_file():
+        return path
+    found = sorted((Path(run_dir) / "policies").glob("*/turn_ledger.json"))
+    if len(found) == 1:
+        return found[0]
+    if len(found) > 1:
+        raise SystemExit(f"REFUSED -- {run_dir} has several policies; pass policies/<policy>")
+    raise SystemExit(f"REFUSED -- no turn_ledger.json under {run_dir}")
+
+
 def _entries(run_dir: Path) -> list[dict[str, Any]]:
-    return json.loads((Path(run_dir) / "turn_ledger.json").read_text(encoding="utf-8"))["entries"]
+    rows: list[dict[str, Any]] = json.loads(_ledger_path(run_dir).read_text(encoding="utf-8"))[
+        "entries"
+    ]
+    return rows
 
 
 def split_text(text: str) -> dict[str, int]:
@@ -239,12 +259,46 @@ def p8(i8_dir: Path, u4_dir: Path) -> dict[str, Any]:
     }
 
 
+def p9(run_dir: Path) -> dict[str, Any]:
+    """Drift: median decode tok/s of the last third of points vs the first third."""
+    pts = [
+        json.loads(f.read_text(encoding="utf-8"))
+        for f in sorted((Path(run_dir) / "points").glob("*.json"))
+    ]
+    pts.sort(key=lambda d: int(d["point_index"]))
+    if len(pts) < 3:
+        raise SystemExit(f"REFUSED -- p9 needs at least 3 points, found {len(pts)}")
+    third = len(pts) // 3
+    first, last = pts[:third], pts[-third:]
+
+    def drift(a: list[float], b: list[float]) -> float:
+        return (statistics.median(b) - statistics.median(a)) / statistics.median(a)
+
+    by_point = drift(
+        [float(d["median_decode_tok_s"]) for d in first],
+        [float(d["median_decode_tok_s"]) for d in last],
+    )
+    by_repeat = drift(
+        [float(r["decode_tok_s"]) for d in first for r in d["repeats"]],
+        [float(r["decode_tok_s"]) for d in last for r in d["repeats"]],
+    )
+    return {
+        "pilot": "P9",
+        "n_points": len(pts),
+        "third": third,
+        "drift_point_medians": round(by_point, 4),
+        "drift_all_repeats": round(by_repeat, 4),
+        "rule": f"warm-up rule for every cell if |drift| > {P9_MAX_DRIFT}",
+        "warmup_rule": abs(by_point) > P9_MAX_DRIFT or abs(by_repeat) > P9_MAX_DRIFT,
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("pilot", choices=("p1", "p4", "p5", "p6", "p7", "p8"))
+    ap.add_argument("pilot", choices=("p1", "p4", "p5", "p6", "p7", "p8", "p9"))
     ap.add_argument("dirs", nargs="+", type=Path)
     args = ap.parse_args(argv)
-    arity = {"p4": 2, "p5": 3, "p6": 1, "p7": 2, "p8": 2}
+    arity = {"p4": 2, "p5": 3, "p6": 1, "p7": 2, "p8": 2, "p9": 1}
     if args.pilot in arity and len(args.dirs) != arity[args.pilot]:
         raise SystemExit(f"REFUSED -- {args.pilot} takes {arity[args.pilot]} run dirs")
     fn = {
@@ -254,6 +308,7 @@ def main(argv: list[str] | None = None) -> int:
         "p6": lambda d: p6(*d),
         "p7": lambda d: p7(*d),
         "p8": lambda d: p8(*d),
+        "p9": lambda d: p9(*d),
     }[args.pilot]
     print(json.dumps(fn(list(args.dirs)), indent=2, default=str))
     return 0
