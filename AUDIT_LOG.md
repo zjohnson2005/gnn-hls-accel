@@ -3231,3 +3231,67 @@ threshold, entry set or prediction changed.
   597f40a9-98b1-4f58-b5f6-48ffabe08446, record
   derived/demo2_pilots/p0a_readback_597f40a9/ (run by Zach by hand). P0b
   (runner smoke) not yet run.
+
+## 2026-10-20 - XPS window 2026-10-19 closeout, LONGCTX hang, refusals (Task AW)
+
+Closeout (Mac; runs moved off the XPS by park_untracked.ps1 into
+pending_closeout and copied to ~/seam_closeout_1013/xps/window_20261019_1624/):
+- Restored and verified with tools/seal_verify.py:
+  - interleaved_640ec474 (P0b): MATCH;
+  - interleaved_39c1c131 (P6 BASE_30): MATCH;
+  - demo2_pilots/sealed_687bbb9f (P9): MATCH_MANIFEST. Its working dir
+    p9_687bbb9f is committed beside it; points and summary are identical.
+  - Launch evidence for 640ec474 and 39c1c131 matches plan.json
+    git.launch_evidence (3/3 each).
+  - All files are CRLF, so -text. No host listing was taken; the seals and
+    launch-evidence hashes are the integrity check.
+- 841b84e4 (P6 LONGCTX_30) is not sealed. It is committed as an UNSEALED
+  partial under derived/demo2_pilots/hung_841b84e4/ with a README and the
+  hang evidence. It is not a 30-entry measurement. Its launch evidence dir
+  and full worker log are not on the Mac (open).
+- The P9 drift log stays on the XPS
+  (derived\c2_ttft\_launches\demo2_p9\drift_20261018.log); the tail is in the
+  window dir.
+
+Refusals recorded (no measurement, $0):
+- 3a03221e-c54d-4c57-8ee6-c5811a2cf497 (2026-10-16 4:34 PM ET, commit
+  63feb2a, uptime 1,803 s): the P0b attempt with -CacheDir C:\ovcache\qwen3-4b
+  as registered (pilots step 5).
+  - The worker's first load read back PA / i8 (valid).
+  - A later load in the same worker printed KV_CACHE_PRECISION dynamic and
+    DYNAMIC_QUANTIZATION_GROUP_SIZE 0 under CACHE_DIR, so the worker refused
+    with ARM_A_INVALID before any entry.
+  - Conclusion: CACHE_DIR breaks the true-default check.
+  - Record kept off-repo: ~/seam_closeout_1013/xps/refused_3a03221e/ and
+    p0_smoke_status.txt.
+- Uptime refusals 2026-10-16: 7fb02594-d648-407e-9c9e-1318da3cd65f (dry run,
+  uptime 82,632 s) and a4a7de1e-0bc2-48fa-a66b-3adbcf74ae0d (live, 9:39 PM ET,
+  uptime 7,521 s > 7,200 s; no spawn).
+- Deviation: P0b, P6 BASE_30 and P6 LONGCTX ran without -CacheDir (the
+  registered steps 5, 7 and 8 include it). Note for the arm-spec addendum:
+  -CacheDir must not be used for arm A; recommend dropping it for every arm
+  for parity.
+
+LONGCTX hang (841b84e4), facts only
+(analysis/demo2_pilots/AW_20261019/LONGCTX_HANG_841b84e4.md):
+- Timeline: last turn row (entry 121) at 6:14:03 PM ET; load for entry 123
+  finished 6:14:08 PM; no turn of entry 123 written; stopped by Zach at
+  9:31 PM.
+- Counters: worker about 0.75-0.8 cores, GPU 3D 0%, 22 pages/s, 3,019 MB
+  available. The memory-thrash explanation is not supported.
+- Code read: the step loop, tool execution, regexes, sampler and streamer are
+  bounded. The native pipe.generate is the one unbounded call. Cause not
+  identified.
+- Entry 123's turn-0 prompt is 2,189 tokens (20 TradingBot tools), as in the
+  committed sizing. No sealed run has executed 123.
+
+Harness changes, not rule changes:
+- seam/turn_watchdog.py, run_h1_hybrid --turn-watchdog-s /
+  --hang-dump-py-spy, launch_h1 -TurnWatchdogS / -HangDumpPySpy. Default off.
+  On a local turn over the limit it records outcome hang, dumps stacks
+  (optional py-spy --native), persists the checkpoints and exits 86. Tests:
+  tests/test_turn_watchdog.py.
+- tools/demo2_pilot_analysis.py:
+  - p9 codes the registered drift rule;
+  - an interleaved run root now reads its one policies/<policy>/turn_ledger.json.
+    The pilots doc step 9 command (p6 <run dir>) failed on a run root.

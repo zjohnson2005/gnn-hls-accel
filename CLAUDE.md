@@ -194,7 +194,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-16. Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-20. Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -224,6 +224,20 @@ session start; update it in the same commit as the work. Never delete a row.
 - Task AT 2026-10-16: XPS pin restored, be91e69d backed up, P9 read-only
   done (d67beb19). P0 and later pilots NOT RUN: XPS had Chrome, Edge and
   Claude desktop open (STOP rule). T2S pin is the CRLF 8b0844ef form.
+- XPS window 2026-10-19 (Task AW, all $0, no -CacheDir):
+  - P0b PASSED (640ec474): arm A valid on the XPS.
+  - P9 drift +1.52% (687bbb9f): no warm-up rule.
+  - P6/P1 BASE_30 (39c1c131): local pass 3/30, the same 3 entries as DEMO-1 V1.
+  - P1: lever exists (65% non-tool-call). Median 91 generated tokens per
+    turn, not 130-255.
+  - LONGCTX_30 841b84e4 hung after 14/30. It stopped after the load for
+    entry 123, with the GPU idle and about 0.8 cores busy, not paging. It is
+    recorded UNSEALED in derived/demo2_pilots/hung_841b84e4/. The cause is
+    not identified; the native generate is the one unbounded call.
+  - Per-turn watchdog built (-TurnWatchdogS, default off).
+  - -CacheDir breaks arm A (3a03221e: compiled KV 'dynamic'); do not use it.
+  - Next: P8-u4, then arm A LONGCTX entries 15-30 with the watchdog, then
+    P4 (run_window_20261020.sh).
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.
