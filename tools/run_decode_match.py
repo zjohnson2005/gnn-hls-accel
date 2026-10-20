@@ -14,6 +14,7 @@ the behaviour is unchanged (n must be DECODE_N, both model specs).
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -48,6 +49,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--smoke", action="store_true")
     parser.add_argument("--pilot", choices=sorted(PILOT_N), default=None)
+    parser.add_argument(
+        "--uncold-uptime-deviation",
+        action="store_true",
+        help="--pilot on evo-t2 only (Task AY; default off): skip only the uptime gate and "
+        "record UNCOLD_UPTIME in the gates and the plan, as launch_h1 -T2S does.",
+    )
     args = parser.parse_args(argv)
     specs = list(args.model_spec)
     if args.smoke:
@@ -62,6 +69,11 @@ def main(argv: list[str] | None = None) -> int:
         what = f"pilot {args.pilot}" if args.pilot else "decode"
         raise SystemExit(f"REFUSED -- {what} n must be {_fmt(allowed)}")
     session_id = str(args.session_id) or new_session_id()
+    if args.uncold_uptime_deviation:
+        if not args.pilot:
+            raise SystemExit("REFUSED -- --uncold-uptime-deviation needs --pilot")
+        if os.environ.get("SEAM_PLATFORM_ID") != "evo-t2":
+            raise SystemExit("REFUSED -- --uncold-uptime-deviation is for SEAM_PLATFORM_ID=evo-t2")
     if args.pilot:
         if args.out is not None:
             raise SystemExit("REFUSED -- --pilot writes under derived/demo2_pilots/; no --out")
@@ -75,6 +87,7 @@ def main(argv: list[str] | None = None) -> int:
             out_dir=out,
             n_list=requested,
             pilot=str(args.pilot),
+            uncold_uptime=bool(args.uncold_uptime_deviation),
         )
     out = args.out or (ROOT / "derived" / "c2_ttft" / session_id)
     return run_decode(

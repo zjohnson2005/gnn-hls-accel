@@ -85,6 +85,10 @@
 #   -MaxNgramSize <n>, -MemTelemetry [-GpuMemCounters], -DebugRawText.
 #   -TurnWatchdogS <s> [-HangDumpPySpy <py-spy.exe>] (Task AW; default off): a local turn
 #                       longer than <s> records outcome hang, dumps stacks, worker exits 86.
+#   -SkipEntries <id[,id]> -SkipHangRecord <hang_events.json> (Task AY; default off): count
+#                       entries with a recorded hang as local fails (outcome hang), not run.
+#   -SchedDynamicSplitFuse on|off, -SchedExploratory (Task AY; P10-HANG123 isolation only;
+#                       -SchedExploratory allows -SchedPrefixCaching off under RESIDENT).
 #   -ConfirmationRun    allow a reserved entry pin (DEMO2_HELDOUT_60_B: one SEARCH confirmation
 #                       run only). Default off: the worker refuses reserved pins.
 #
@@ -155,6 +159,9 @@ param(
     [string]$SchedPrefixCaching = "",
     [Nullable[UInt64]]$SchedMaxBatchedTokens = $null,
     [Nullable[int]]$SchedCacheSize = $null,
+    [ValidateSet("", "on", "off")]
+    [string]$SchedDynamicSplitFuse = "",
+    [switch]$SchedExploratory,
     [switch]$PromptLookup,
     [Nullable[int]]$NumAssistantTokens = $null,
     [Nullable[int]]$MaxNgramSize = $null,
@@ -165,7 +172,10 @@ param(
     # longer than this records outcome "hang", dumps stacks and ends the worker (exit 86).
     [Nullable[double]]$TurnWatchdogS = $null,
     # With -TurnWatchdogS: py-spy executable for a native stack dump of the hung worker.
-    [string]$HangDumpPySpy = ""
+    [string]$HangDumpPySpy = "",
+    # Resume past a recorded hang (Task AY, harness only; default off).
+    [string]$SkipEntries = "",
+    [string]$SkipHangRecord = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -680,6 +690,10 @@ if ($null -ne $SchedMaxBatchedTokens) {
 if ($null -ne $SchedCacheSize) {
     $resolvedCmd = $resolvedCmd + ' --sched-cache-size ' + $SchedCacheSize
 }
+if (-not [string]::IsNullOrWhiteSpace($SchedDynamicSplitFuse)) {
+    $resolvedCmd = $resolvedCmd + ' --sched-dynamic-split-fuse ' + $SchedDynamicSplitFuse
+}
+if ($SchedExploratory) { $resolvedCmd = $resolvedCmd + ' --sched-exploratory' }
 if ($PromptLookup) { $resolvedCmd = $resolvedCmd + ' --prompt-lookup' }
 if ($null -ne $NumAssistantTokens) {
     $resolvedCmd = $resolvedCmd + ' --num-assistant-tokens ' + $NumAssistantTokens
@@ -695,6 +709,13 @@ if ($null -ne $TurnWatchdogS) {
 }
 if (-not [string]::IsNullOrWhiteSpace($HangDumpPySpy)) {
     $resolvedCmd = $resolvedCmd + ' --hang-dump-py-spy "' + $HangDumpPySpy + '"'
+}
+if (-not [string]::IsNullOrWhiteSpace($SkipEntries)) {
+    $resolvedCmd = $resolvedCmd + ' --skip-entries ' + $SkipEntries
+}
+if (-not [string]::IsNullOrWhiteSpace($SkipHangRecord)) {
+    if ([System.IO.Path]::IsPathRooted($SkipHangRecord)) { $skipRec = $SkipHangRecord } else { $skipRec = Join-Path $root $SkipHangRecord }
+    $resolvedCmd = $resolvedCmd + ' --skip-hang-record "' + $skipRec + '"'
 }
 if ($AllowDirty) {
     $resolvedCmd = $resolvedCmd + ' --allow-dirty'

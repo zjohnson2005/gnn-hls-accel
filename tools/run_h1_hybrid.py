@@ -3398,6 +3398,7 @@ def run_interleaved_session(
     cloud_preflight: Callable[[], dict[str, Any]] | None = None,
     obs_mask: Any = None,
     turn_watchdog: Any = None,
+    skip_hangs: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Entry-by-entry interleave of selected H1 policy arms (INF-5 session_design=interleaved).
 
@@ -3452,6 +3453,7 @@ def run_interleaved_session(
             "quality_rows": quality_rows,
             "status": str(ckpt.get("status") or "running"),
             "abort_reason": ckpt.get("abort_reason"),
+            "skipped_hang": set(ckpt.get("skipped_hang_entry_ids") or []),
             "arm": arm,
             "model": model or arm["model"],
         }
@@ -3520,6 +3522,10 @@ def run_interleaved_session(
     if turn_watchdog is not None:
         # Task AW harness option; absent otherwise so existing plans are unchanged.
         plan["turn_watchdog"] = turn_watchdog.config()
+    if skip_hangs is not None:
+        # Task AY harness option; absent otherwise so existing plans are unchanged.
+        plan["skip_entries"] = skip_hangs
+    skip_map: dict[str, Any] = dict((skip_hangs or {}).get("entries") or {})
     _write_json(out_dir / "plan.json", plan)
 
     session_status = "complete"
@@ -3535,17 +3541,17 @@ def run_interleaved_session(
         st = state[policy]
         pdir: Path = st["dir"]
         cost: CostGuard = st["cost"]
-        save_checkpoint(
-            pdir / "checkpoint.json",
-            {
-                "completed_entry_ids": sorted(st["completed"]),
-                "running_usd": cost.running_usd,
-                "entries": st["ledger_rows"],
-                "status": st["status"],
-                "abort_reason": st["abort_reason"],
-                "updated_utc": _utc_now(),
-            },
-        )
+        ckpt_doc: dict[str, Any] = {
+            "completed_entry_ids": sorted(st["completed"]),
+            "running_usd": cost.running_usd,
+            "entries": st["ledger_rows"],
+            "status": st["status"],
+            "abort_reason": st["abort_reason"],
+            "updated_utc": _utc_now(),
+        }
+        if skip_map:
+            ckpt_doc["skipped_hang_entry_ids"] = sorted(st["skipped_hang"])
+        save_checkpoint(pdir / "checkpoint.json", ckpt_doc)
         _write_json(pdir / "turn_ledger.json", {"entries": _annotate_cloud_requests(st["ledger_rows"], cloud_dead_guard, policy)})
         _write_json(pdir / "entry_quality.json", {"entries": st["quality_rows"]})
         rows = st["quality_rows"]
@@ -3553,6 +3559,13 @@ def run_interleaved_session(
         n_pass = sum(1 for q in rows if q.get("local_pass") is True)
         n_hybrid_scored = sum(1 for q in rows if q.get("hybrid_pass") is not None)
         n_hybrid_pass = sum(1 for q in rows if q.get("hybrid_pass") is True)
+        skip_fields: dict[str, Any] = {}
+        if skip_map:
+            # Hung entries carried from an earlier run: counted as local fails, not run.
+            skip_fields = {
+                "n_entries_skipped_hang": len(st["skipped_hang"]),
+                "skipped_hang_entry_ids": sorted(st["skipped_hang"]),
+            }
         _write_json(
             pdir / "summary.json",
             {
@@ -3563,6 +3576,7 @@ def run_interleaved_session(
                 "measurement_kind": "MEASURED",
                 "n_entries_planned": len(entries),
                 "n_entries_completed": len(st["completed"]),
+                **skip_fields,
                 "running_usd": cost.running_usd,
                 "max_usd": cost.max_usd,
                 "finished_utc": _utc_now(),
@@ -3695,8 +3709,43 @@ def run_interleaved_session(
                 st = state[policy]
                 if st["status"] in ("aborted_cap", "aborted_session_cap"):
                     continue
-                if eid in st["completed"]:
+                if eid in st["completed"] or eid in st["skipped_hang"]:
                     print(f"RESUME_SKIP policy={policy} entry={eid}")
+                    continue
+                if eid in skip_map:
+                    ref = skip_map[eid]
+                    st["skipped_hang"].add(eid)
+                    st["quality_rows"].append(
+                        {
+                            "entry_id": eid,
+                            "outcome": "hang",
+                            "status": "skipped_hang",
+                            "local_pass": False,
+                            "trajectory_pass": False,
+                            # local_only has no cloud path, so its hybrid score is the
+                            # local one; other arms never ran the entry.
+                            "hybrid_pass": False if policy == "local_only" else None,
+                            "score_error_type": "hang",
+                            "hang_ref": ref,
+                        }
+                    )
+                    _persist_policy(policy)
+                    cell_log.append(
+                        {
+                            "entry_id": eid,
+                            "policy": policy,
+                            "arm_order_this_entry": list(order),
+                            "status": "skipped_hang",
+                            "hang_ref": ref,
+                            "running_usd_policy": st["cost"].running_usd,
+                            "running_usd_session": session_cost.running_usd,
+                        }
+                    )
+                    _persist_session()
+                    print(
+                        f"SKIP_HANG policy={policy} entry={eid} "
+                        f"source_run_id={ref.get('source_run_id')} turn={ref.get('turn')}"
+                    )
                     continue
                 if session_cost.running_usd > session_cost.max_usd + 1e-12:
                     session_status = "aborted_cap"
@@ -3858,13 +3907,12 @@ def run_interleaved_session(
         for policy in policies:
             if state[policy]["status"] == "running":
                 # Finished outer loop without abort -> complete if all entries done.
-                if len(state[policy]["completed"]) >= len(entries):
+                done_ids = state[policy]["completed"] | state[policy]["skipped_hang"]
+                if len(done_ids) >= len(entries):
                     state[policy]["status"] = "complete"
                 else:
                     # Partial (other arms still) - leave as running unless all done.
-                    remaining = [
-                        e for e in entries if str(e["id"]) not in state[policy]["completed"]
-                    ]
+                    remaining = [e for e in entries if str(e["id"]) not in done_ids]
                     if not remaining:
                         state[policy]["status"] = "complete"
             _persist_policy(policy)
@@ -3895,6 +3943,7 @@ def run_interleaved_session(
                 "status": state[p]["status"],
                 "abort_reason": state[p]["abort_reason"],
                 "n_entries_completed": len(state[p]["completed"]),
+                **({"n_entries_skipped_hang": len(state[p]["skipped_hang"])} if skip_map else {}),
                 "running_usd": state[p]["cost"].running_usd,
                 "max_usd": state[p]["cost"].max_usd,
                 "path": str(_policy_subdir(out_dir, p).relative_to(out_dir)).replace("\\", "/"),
@@ -4321,6 +4370,18 @@ def build_argparser() -> argparse.ArgumentParser:
         default=None,
         help="Explicit SchedulerConfig cache_size in whole GB (preallocated KV pool).",
     )
+    g.add_argument(
+        "--sched-dynamic-split-fuse",
+        choices=["on", "off"],
+        default=None,
+        help="Explicit SchedulerConfig dynamic_split_fuse (unset: struct default).",
+    )
+    g.add_argument(
+        "--sched-exploratory",
+        action="store_true",
+        help="Pilot P10-HANG123 isolation cells only (Task AY): allow --sched-prefix-caching "
+        "off under RESIDENT. Recorded in the plan's runtime options.",
+    )
     g.add_argument("--prompt-lookup", action="store_true", help="prompt_lookup=True at load.")
     g.add_argument("--num-assistant-tokens", type=int, default=None, help="Prompt lookup K.")
     g.add_argument("--max-ngram-size", type=int, default=None, help="Prompt lookup n-gram size.")
@@ -4356,6 +4417,21 @@ def build_argparser() -> argparse.ArgumentParser:
         default=None,
         help="With --turn-watchdog-s: py-spy executable; on a hang run "
         "'py-spy dump --native --pid <worker>' into the run dir.",
+    )
+    p.add_argument(
+        "--skip-entries",
+        type=str,
+        default=None,
+        help="Interleaved only (Task AY, harness; default off): comma-separated entry ids "
+        "with a recorded hang to count as local fails (outcome hang) instead of running. "
+        "Needs --skip-hang-record.",
+    )
+    p.add_argument(
+        "--skip-hang-record",
+        type=Path,
+        default=None,
+        help="hang_events.json of the earlier run that recorded the hang for each "
+        "--skip-entries id (path and sha256 go in plan.json).",
     )
     p.add_argument(
         "--confirmation-run",
@@ -4711,6 +4787,8 @@ RUNTIME_FLAG_KEYS = (
     "sched_prefix_caching",
     "sched_max_batched_tokens",
     "sched_cache_size",
+    "sched_dynamic_split_fuse",
+    "sched_exploratory",
     "prompt_lookup",
     "num_assistant_tokens",
     "max_ngram_size",
@@ -4747,6 +4825,8 @@ def resolve_runtime_options(settings: dict[str, Any], flags: dict[str, Any] | No
             sched_prefix_caching=f.get("sched_prefix_caching"),
             sched_max_batched_tokens=f.get("sched_max_batched_tokens"),
             sched_cache_size_gb=f.get("sched_cache_size"),
+            sched_dynamic_split_fuse=f.get("sched_dynamic_split_fuse"),
+            sched_exploratory=bool(f.get("sched_exploratory")),
             prompt_lookup=bool(f.get("prompt_lookup")),
             num_assistant_tokens=f.get("num_assistant_tokens"),
             max_ngram_size=f.get("max_ngram_size"),
@@ -4786,6 +4866,62 @@ def _make_openvino_local(
         max_new_tokens=512,
         runtime=runtime,
     )
+
+
+def load_skip_hangs(
+    skip_ids: str | None,
+    record: Path | None,
+    entries: list[dict[str, Any]],
+    *,
+    root: Path = ROOT,
+) -> dict[str, Any] | None:
+    """--skip-entries / --skip-hang-record (Task AY, harness; default off).
+
+    Each skipped entry must be in this run's entry set and must have a
+    recorded hang (outcome "hang") in the given hang_events.json from an
+    earlier run. The run then counts it as a local fail with outcome hang
+    instead of running it, so totals stay complete. None when neither is set.
+    """
+    if skip_ids is None and record is None:
+        return None
+    if not skip_ids or record is None:
+        raise SystemExit("REFUSED -- --skip-entries and --skip-hang-record go together")
+    ids = [x.strip() for x in str(skip_ids).split(",") if x.strip()]
+    if not ids or len(set(ids)) != len(ids):
+        raise SystemExit(f"REFUSED -- --skip-entries needs distinct entry ids, got {skip_ids!r}")
+    planned = {str(e["id"]) for e in entries}
+    missing = [i for i in ids if i not in planned]
+    if missing:
+        raise SystemExit(f"REFUSED -- --skip-entries not in this run's entry set: {missing}")
+    path = Path(record)
+    if not path.is_file():
+        raise SystemExit(f"REFUSED -- --skip-hang-record not found: {path}")
+    raw = path.read_bytes()
+    doc = json.loads(raw.decode("utf-8-sig"))
+    events = [ev for ev in doc.get("events") or [] if ev.get("outcome") == "hang"]
+    found: dict[str, Any] = {}
+    for eid in ids:
+        hits = [ev for ev in events if str(ev.get("entry_id")) == eid]
+        if not hits:
+            raise SystemExit(f"REFUSED -- no recorded hang for {eid} in {path}")
+        ev = hits[0]
+        found[eid] = {
+            "source_run_id": ev.get("run_id"),
+            "policy": ev.get("policy"),
+            "turn": ev.get("turn"),
+            "elapsed_s": ev.get("elapsed_s"),
+            "limit_s": ev.get("limit_s"),
+            "fired_utc": ev.get("fired_utc"),
+        }
+    try:
+        shown = str(path.resolve().relative_to(root.resolve())).replace("\\", "/")
+    except ValueError:
+        shown = str(path)
+    return {
+        "entries": found,
+        "hang_record": {"path": shown, "sha256": hashlib.sha256(raw).hexdigest()},
+        "rule": "skipped entry counted as a local fail with outcome hang (not run)",
+    }
 
 
 def build_turn_watchdog(args: argparse.Namespace) -> Any:
@@ -4848,6 +4984,11 @@ def main(argv: list[str] | None = None) -> int:
         args, "hang_dump_py_spy", None
     ):
         raise SystemExit("REFUSED -- --turn-watchdog-s is interleaved only (Task AW)")
+    if (
+        getattr(args, "skip_entries", None) is not None
+        or getattr(args, "skip_hang_record", None) is not None
+    ):
+        raise SystemExit("REFUSED -- --skip-entries is interleaved only (Task AY)")
     if args.policy is None:
         raise SystemExit(
             "REFUSED -- --policy is required (or pass --interleaved / --derive-r1 "
@@ -5032,6 +5173,7 @@ def _main_interleaved(args: argparse.Namespace) -> int:
     from tools.cloud_ping import ping as cloud_ping
 
     turn_watchdog = build_turn_watchdog(args)
+    skip_hangs = load_skip_hangs(args.skip_entries, args.skip_hang_record, entries)
     summary = run_interleaved_session(
         entries=entries,
         out_dir=args.out,
@@ -5052,6 +5194,7 @@ def _main_interleaved(args: argparse.Namespace) -> int:
         ),
         obs_mask=obs_mask,
         turn_watchdog=turn_watchdog,
+        skip_hangs=skip_hangs,
     )
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
     ok_statuses = {"complete", "partial_policy_cap"}

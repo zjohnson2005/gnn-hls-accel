@@ -209,6 +209,8 @@ def build_runtime_options(
     sched_prefix_caching: str | None = None,
     sched_max_batched_tokens: int | None = None,
     sched_cache_size_gb: int | None = None,
+    sched_dynamic_split_fuse: str | None = None,
+    sched_exploratory: bool = False,
     prompt_lookup: bool = False,
     num_assistant_tokens: int | None = None,
     max_ngram_size: int | None = None,
@@ -224,13 +226,26 @@ def build_runtime_options(
       GenAI's latency defaults instead of merging with them; RESIDENT only,
       with prefix caching on.
     - cache_size is whole GB (SchedulerConfig.cache_size is size_t GB).
+    - --sched-exploratory (Task AY, pilot P10-HANG123 isolation only): allows
+      prefix caching off under RESIDENT, so one cell can differ from the
+      latency default in a single field. Needs a scheduler field; recorded as
+      ``sched_exploratory`` in the options. --sched-dynamic-split-fuse on|off
+      sets SchedulerConfig.dynamic_split_fuse (unset: struct default).
     - Prompt lookup needs explicit --num-assistant-tokens and --max-ngram-size.
     - --require-true-default (arm A, D): kv default, RESIDENT, gpu_only, no
       scheduler or prompt-lookup flag; turns on the compiled readback.
     """
     sched_set = any(
-        v is not None for v in (sched_prefix_caching, sched_max_batched_tokens, sched_cache_size_gb)
+        v is not None
+        for v in (
+            sched_prefix_caching,
+            sched_max_batched_tokens,
+            sched_cache_size_gb,
+            sched_dynamic_split_fuse,
+        )
     )
+    if sched_exploratory and not sched_set:
+        raise ValueError("--sched-exploratory needs an explicit SchedulerConfig (--sched-*)")
     flags = (
         cache_dir is not None,
         compiled_readback,
@@ -255,14 +270,21 @@ def build_runtime_options(
             )
         if res != "RESIDENT":
             raise ValueError("--sched-* applies to RESIDENT (NON_RESIDENT builds its own config)")
-        if sched_prefix_caching != "on":
-            raise ValueError("RESIDENT with --sched-prefix-caching off is not RESIDENT")
+        if sched_prefix_caching != "on" and not sched_exploratory:
+            raise ValueError(
+                "RESIDENT with --sched-prefix-caching off is not RESIDENT "
+                "(isolation cells only: --sched-exploratory)"
+            )
         if int(sched_max_batched_tokens) <= 0 or int(sched_max_batched_tokens) > SIZE_MAX_U64:
             raise ValueError("--sched-max-batched-tokens must be in 1..2**64-1")
         scheduler = {
-            "enable_prefix_caching": True,
+            "enable_prefix_caching": sched_prefix_caching == "on",
             "max_num_batched_tokens": int(sched_max_batched_tokens),
         }
+        if sched_dynamic_split_fuse is not None:
+            if sched_dynamic_split_fuse not in ("on", "off"):
+                raise ValueError("--sched-dynamic-split-fuse is on or off")
+            scheduler["dynamic_split_fuse"] = sched_dynamic_split_fuse == "on"
         if sched_cache_size_gb is not None:
             if int(sched_cache_size_gb) <= 0:
                 raise ValueError("--sched-cache-size is whole GB > 0")
@@ -301,7 +323,7 @@ def build_runtime_options(
         extra["CACHE_DIR"] = str(cache_dir)
     if prompt_lookup:
         extra["prompt_lookup"] = True
-    return {
+    out: dict[str, Any] = {
         "scheduler_overrides": scheduler,
         "extra_properties": extra,
         "generation": generation,
@@ -311,6 +333,10 @@ def build_runtime_options(
         "gpu_mem_counters": bool(gpu_mem_counters),
         "debug_raw_text": bool(debug_raw_text),
     }
+    if sched_exploratory:
+        # Absent otherwise so existing plans are unchanged.
+        out["sched_exploratory"] = True
+    return out
 
 
 def build_scheduler_config(ov_genai: Any, overrides: dict[str, Any]) -> Any:

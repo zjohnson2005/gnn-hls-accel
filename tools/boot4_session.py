@@ -170,10 +170,12 @@ def _write(path: Path, doc: dict[str, Any]) -> None:
     path.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def require_gates() -> dict[str, Any]:
+def require_gates(*, skip_uptime: bool = False) -> dict[str, Any]:
+    """All measurement gates. ``skip_uptime`` skips only the uptime gate; the gate
+    record then carries the UNCOLD_UPTIME deviation (T2S, not rebooted)."""
     from seam.measurement_gates import evaluate_measurement_gates
 
-    report = evaluate_measurement_gates(ROOT)
+    report = evaluate_measurement_gates(ROOT, skip_uptime=skip_uptime)
     if not report.all_passed:
         raise SystemExit("REFUSED -- gates: " + "; ".join(report.refusal_reasons))
     return report.to_dict()
@@ -696,6 +698,7 @@ def run_decode(
     out_dir: Path,
     n_list: tuple[int, ...] = DECODE_N,
     pilot: str | None = None,
+    uncold_uptime: bool = False,
 ) -> int:
     """DECODE-MATCH cell. ``pilot`` (DEMO-2 P9/P2, tools/run_decode_match.py
     --pilot) allows one model spec and its registered n list; point files then
@@ -705,7 +708,7 @@ def run_decode(
 
     if pilot is None and len(model_specs) < 2:
         raise SystemExit("REFUSED -- decode measurement requires both model specs")
-    gates = require_gates()
+    gates = require_gates(skip_uptime=uncold_uptime)
     loaded = [load_harness(spec) for spec in model_specs]
     out_dir.mkdir(parents=True, exist_ok=True)
     _publish_cell_status("running", session_id)
@@ -728,6 +731,9 @@ def run_decode(
     }
     if pilot is not None:
         plan["pilot"] = pilot
+    if uncold_uptime:
+        # Task AY; absent otherwise so existing plans are unchanged.
+        plan["deviation"] = {"kind": "UNCOLD_UPTIME", "reason": "T2S is not rebooted"}
     plan_path = out_dir / "plan.json"
     _write(plan_path, plan)
     guard = _open_canary(
