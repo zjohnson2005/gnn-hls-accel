@@ -194,7 +194,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-20. Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-20 (Task AY). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -243,6 +243,24 @@ session start; update it in the same commit as the work. Never delete a row.
   - cf3555d5's 20,000 is a plain-LLMPipeline (latency scheduler) limit, not
     a bare-SchedulerConfig one. The DERIVED effect of a higher A limit is in
     docs/amendments/DRAFT_DEMO2_ARM_SPEC_ADDENDUM.md (pending Zach).
+- XPS window 2026-10-20 (Task AY, $0):
+  - P8-u4 sealed: BASE_30 1f3a261a, LONGCTX 1-14 162a9b5c.
+  - Arm A LONGCTX 15-30 24c1abc0 hung again at entry 123 turn 0, this time
+    from a fresh worker. The watchdog stopped it at 1,800 s; it is recorded
+    UNSEALED in derived/demo2_pilots/hung_24c1abc0/.
+  - py-spy: the stall is an OpenCL enqueue waiting on a GPU sync object,
+    with no error. Regime: "silent device stall"
+    (analysis/demo2_pilots/AY/GPU_HANG_ENTRY123.md).
+  - P8 so far: u4 23/44 silent vs i8 22/44 (keep_u4 false, not final).
+  - Harness additions, all default off:
+    - run_h1_hybrid --skip-entries/--skip-hang-record (a hung entry counts
+      as a local fail);
+    - --sched-exploratory/--sched-dynamic-split-fuse (P10 only);
+    - run_decode_match --uncold-uptime-deviation (T2S).
+  - Added pilot P10-HANG123 (registered; entry-123 isolation matrix).
+  - Next: window 2 (run_window_w2.sh), window 3 (run_window_w3.sh), then
+    P3_FROM=1 and P4.
+  - T2S block: run_window_t2s.sh.
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.

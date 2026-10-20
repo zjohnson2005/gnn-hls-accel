@@ -3333,3 +3333,45 @@ changed.
 Hung run 841b84e4: its launch evidence (3/3 matching plan.json) and full
 worker log are added to the record. The log adds no new fact about entry
 123 beyond a completed load identical to entry 121's.
+
+## 2026-10-20 - XPS window 1 closeout; entry-123 GPU hang; resume past a hang (Task AY)
+
+Window 1 (2026-10-20 2:20-3:57 PM ET, be82cb1, $0, approved in Task AX):
+- 1f3a261a-b28f-4e87-b3bf-aa8ccca6c3f1, P8-u4 on BASE_30: seal MATCH. Its
+  launch evidence matches plan.json 3/3.
+- 162a9b5c-1e43-4e43-a315-f1c84135cb37, P8-u4 on LONGCTX_30 entries 1-14:
+  seal MATCH, launch evidence 3/3.
+- 24c1abc0-0613-4890-87b6-3da05350beda, arm A on LONGCTX_30 entries 15-30:
+  the turn watchdog fired on entry 123 turn 0 at 1,800.45 s (exit 86). Not
+  sealed. Committed as an UNSEALED record in
+  derived/demo2_pilots/hung_24c1abc0/ with the hang files.
+
+Incident: a silent GPU stall, deterministic on this XPS. It is the second
+stop at the same entry and turn, and this time the worker was fresh at 123.
+py-spy shows the main thread in an OpenCL enqueue waiting on a GPU sync
+object (D3DKMT), with no error and no timeout. Analysis:
+analysis/demo2_pilots/AY/GPU_HANG_ENTRY123.md. The GPU driver version at the
+time is not recorded; the window-2 script records it.
+
+Harness changes (not rule changes; all default off; existing plans
+unchanged):
+- run_h1_hybrid --skip-entries/--skip-hang-record (launch_h1
+  -SkipEntries/-SkipHangRecord). A skipped entry must have a recorded hang in
+  the given hang_events.json, whose path and sha256 go in plan.json. It is
+  counted as a local fail with outcome hang, so totals stay complete.
+- --sched-exploratory and --sched-dynamic-split-fuse, for the P10 isolation
+  cells only.
+- run_decode_match --uncold-uptime-deviation (--pilot on evo-t2 only). It
+  skips only the uptime gate and records UNCOLD_UPTIME, as launch_h1 -T2S
+  does.
+
+Registered before any run: added pilot P10-HANG123,
+docs/amendments/DEMO2_PILOT_P10_HANG123_2026-10-20.md (sha256 5a666a0f091e29c9763ac396f1622cacf734d03f3ed8afa0be10333a1dfbfc40),
+EXPLORATORY, $0.
+
+P8 (registered rule; data so far, not final; analysis/demo2_pilots/AY/):
+- BASE_30: silent 20/30 for both u4 and i8.
+- LONGCTX 1-14: u4 3/14 vs i8 2/14 (entry 120: loud under i8, silent under
+  u4).
+- Pooled 44: u4 23 vs i8 22, so "keep u4" is false on the data so far.
+  LONGCTX 15-30 is not run on either side.
