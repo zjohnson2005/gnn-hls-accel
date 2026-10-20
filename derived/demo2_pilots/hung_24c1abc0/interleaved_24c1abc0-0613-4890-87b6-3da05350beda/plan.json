@@ -1,0 +1,214 @@
+{
+  "arm_order": [
+    "local_only"
+  ],
+  "arm_order_rule": "seeded_latin_square",
+  "arm_order_seed": 0,
+  "caching_policy": "none",
+  "chat_template": {
+    "enable_thinking": false,
+    "renderer": "tools.bfcl_feasibility_probe.render_bfcl_tools_style"
+  },
+  "cloud_model": "claude-sonnet-5",
+  "cloud_ping_worker": {
+    "ran": false,
+    "reason": "no selected policy reaches the cloud"
+  },
+  "entry_assert": {
+    "mode": "caller_supplied",
+    "n": 16
+  },
+  "entry_pin": {
+    "category": "multi_turn_long_context",
+    "chunk": {
+      "count": 16,
+      "first_entry_id": "multi_turn_long_context_123",
+      "last_entry_id": "multi_turn_long_context_148",
+      "offset": 14
+    },
+    "n": 30,
+    "name": "DEMO1_LONGCTX_30",
+    "path": "derived/h1_hybrid/demo1/DEMO1_LONGCTX_30.json",
+    "seed": 20260930,
+    "sha256": "7a71fa6ab4a649bdc18b2c994c9904e44f5667a680abadf2f79147f6ed2513cb"
+  },
+  "excluded_from_interleave": [
+    "slo_escalate",
+    "emission_escalate",
+    "full_signal_bounceback"
+  ],
+  "excluded_policies": {
+    "full_signal_bounceback": {
+      "blocked_on": "R2C-TURNWISE",
+      "reason": "R2c (full_signal_bounceback) excluded from this interleaved session (H1-2POLICY = slo_escalate + emission_escalate only). Not the full three-policy comparison. R2C-TURNWISE is available for dedicated R2c / H1-3POLICY seals."
+    }
+  },
+  "full_three_policy_comparison": false,
+  "generation_config": {
+    "apply_chat_template": false,
+    "do_sample": false,
+    "max_new_tokens": 512,
+    "seed": null,
+    "temperature": null,
+    "top_k": null,
+    "top_p": null
+  },
+  "git": {
+    "dirty": false,
+    "git_diff_head_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "git_head": "be82cb1dcb18e3dbef98f4f0ef8ad39ac45cfbce",
+    "launch_evidence": {
+      "dir": "derived/h1_hybrid/_launches/24c1abc0-0613-4890-87b6-3da05350beda",
+      "files": [
+        {
+          "bytes": 17294,
+          "path": "derived/h1_hybrid/_launches/24c1abc0-0613-4890-87b6-3da05350beda/canary_opening/canaries/canary.0.json",
+          "sha256": "131da6d36b6aac3cb642d46c8602c86213ca08b8ab8098c73315978ad885cc73"
+        },
+        {
+          "bytes": 9506,
+          "path": "derived/h1_hybrid/_launches/24c1abc0-0613-4890-87b6-3da05350beda/canary_opening/opening_plan.json",
+          "sha256": "89ddc550ac446824f5a570645589ae7d7ed286b8c344634e6494b7cc7e80e205"
+        },
+        {
+          "bytes": 3986,
+          "path": "derived/h1_hybrid/_launches/24c1abc0-0613-4890-87b6-3da05350beda/gates_20261020_152637.json",
+          "sha256": "0ba47f91d059b9f4aafc6e2a4241797dab24e139833e6463ad4d6bcd582da19d"
+        }
+      ]
+    },
+    "tree_status": "CLEAN"
+  },
+  "kind": "h1_interleaved",
+  "kv_match_seal": "86d0f4cf-e8c2-4ce5-96da-04c6a9c129f3",
+  "local_backend": "openvino",
+  "measurement_kind": "MEASURED",
+  "model": "Qwen3-4B-int4-ov",
+  "n_entries": 16,
+  "openvino": {
+    "arm_id": "gpu_only",
+    "kv": "default",
+    "load_meta": {
+      "device_config": {
+        "arm_id": "gpu_only",
+        "generate_device": "GPU",
+        "label": "gpu only (single pipeline)",
+        "load_sequence": [
+          {
+            "device": "GPU",
+            "properties": {}
+          }
+        ]
+      },
+      "loads": [
+        {
+          "compiled_readback": {
+            "backend": "PA",
+            "captured_chars": 2811,
+            "ir_rt_info": {
+              "checked": true,
+              "kv_cache_precision": null,
+              "override": false,
+              "runtime_options_present": true
+            },
+            "key_cache_quant_mode": null,
+            "kv_cache_precision": "i8",
+            "n_pa_properties": 25,
+            "pa_property_dump_seen": true,
+            "sdpa_fallback_warning": false,
+            "value_cache_quant_mode": null
+          },
+          "device": "GPU",
+          "kv_cache_precision": {
+            "enforced": false,
+            "failure_mode": null,
+            "match": true,
+            "readback": {
+              "device": "GPU",
+              "error": null,
+              "normalized": "dynamic",
+              "ok": true,
+              "property": "KV_CACHE_PRECISION",
+              "raw": "<Type: 'dynamic'>",
+              "to_string": "dynamic"
+            },
+            "requested": null
+          },
+          "properties": {},
+          "scheduler_config": null
+        }
+      ],
+      "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+      "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+      "scheduler_config": {
+        "enable_prefix_caching": null,
+        "source": "LLMPipeline_default_CB_prefix_caching_on"
+      },
+      "true_default_verdict": {
+        "reasons": [],
+        "valid": true
+      }
+    },
+    "max_new_tokens": 512,
+    "model_spec": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+    "prefix_block_clear": "ov_genai.LLMPipeline",
+    "residency": "RESIDENT",
+    "runtime_options": {
+      "compiled_readback": true,
+      "debug_raw_text": true,
+      "extra_properties": {},
+      "generation": null,
+      "gpu_mem_counters": true,
+      "mem_telemetry": true,
+      "require_true_default": true,
+      "scheduler_overrides": null
+    }
+  },
+  "placement": "gpu_only",
+  "platform_id": "aipc-c1",
+  "policy_caps_usd": {
+    "local_only": 0.0
+  },
+  "r2c_excluded": true,
+  "r2c_exclusion_reason": "R2c (full_signal_bounceback) excluded from this interleaved session (H1-2POLICY = slo_escalate + emission_escalate only). Not the full three-policy comparison. R2C-TURNWISE is available for dedicated R2c / H1-3POLICY seals.",
+  "residency": "RESIDENT",
+  "resume_completed_by_policy": {
+    "local_only": []
+  },
+  "retention": {
+    "arm": "FULL"
+  },
+  "run_id": "24c1abc0-0613-4890-87b6-3da05350beda",
+  "scorer": {
+    "bfcl_eval_version": "2025.12.17",
+    "checker": "bfcl_eval.eval_checker.multi_turn_eval.multi_turn_checker",
+    "w3_seal_refs": [
+      "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+      "1d8db970-4c18-4bcf-824d-d9c141b6eb22"
+    ],
+    "wrapper": "apu_characterization.cap01.bfcl_cap01_multi_turn_checker"
+  },
+  "seal": true,
+  "session_design": "interleaved",
+  "session_max_usd": 1.0,
+  "started_utc": "2026-10-20T19:27:21.716052+00:00",
+  "tier": "4B",
+  "turn_watchdog": {
+    "dump_cmd": [
+      "C:\\Users\\zjohn\\seam_tools\\py-spy.exe",
+      "dump",
+      "--native",
+      "--pid",
+      "{pid}"
+    ],
+    "exit_code": 86,
+    "limit_s": 1800.0,
+    "poll_s": 1.0
+  },
+  "w3_entry_pin": null,
+  "w3_seal_refs": [
+    "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+    "1d8db970-4c18-4bcf-824d-d9c141b6eb22"
+  ],
+  "weight": "int4"
+}
