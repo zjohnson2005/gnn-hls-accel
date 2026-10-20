@@ -1,5 +1,7 @@
 # Physics of the data path: local LLM agent inference on Intel Panther Lake (Xe3) unified-memory iGPUs
 
+> Correction 2026-10-20 (Task AX): measured on XPS run 39c1c131 (arm A local_only, DEMO1_BASE_30, 118 local turns), a local turn generates a median of 91 tokens (p90 157), not 130-255.
+
 Scope: Qwen3-4B INT4 under OpenVINO GenAI on (a) Core Ultra 5 325 laptop (16 GB) and (b) Arc B390 mini PC (64 GB). All "derived" numbers below are ESTIMATES computed by the researcher from the team's own measurements plus cited specs; they are labeled as such. Researched through Oct 2026.
 
 Note on access: arXiv 2605.10380 ("Agent-X: Full Pipeline Acceleration of On-device AI Agents") could not be read (the fetch proxy rate-limited it), so its contents are not reflected here.
@@ -158,7 +160,7 @@ Agent turns have huge raw input:output ratios (54–560× in Claude Code-driven 
 - Other agent-workload characterizations surfaced but were not read in full: [TraceLab: coding agent workloads (arXiv 2606.30560)](https://arxiv.org/html/2606.30560v1); [Agentic Coding in the Wild: GitHub Copilot (arXiv 2608.00101)](https://arxiv.org/html/2608.00101v1); [Stateful Inference for Multi-Agent Tool Calling (arXiv 2605.26289)](https://arxiv.org/html/2605.26289v1)
 
 ### Inferences
-- Our workload has about 3.5k input and 130–255 output per turn, a raw ratio of roughly 14–27×. That is far lower than the H100 traces because our contexts are short. With prefix reuse, new input per turn is probably a few hundred tokens (tool result plus user message), so the append-to-output ratio would sit in the same 1.5–7× band.
+- Our workload has about 3.5k input (median step-0 prompt 3,412) and a median of 91 output tokens per turn (p90 157), a raw ratio of about 38× (run 39c1c131; the 130–255 and 14–27× first written here were not measured). That is far lower than the H100 traces because our contexts are short. With prefix reuse, new input per turn is probably a few hundred tokens (tool result plus user message), so the append-to-output ratio would sit in the same 1.5–7× band.
 - The literature's "agentic = prefill-heavy" framing holds in raw token counts. It does not hold in time once prefix caching works. On a bandwidth-starved iGPU decoding at about 26 tok/s, decode dominance is stronger still. Each output token costs about 38 ms; each prefilled token costs about 1 ms at ~1,000 tok/s cold.
 - One output token costs roughly as much wall time as about 35–40 prefill tokens on the XPS (DERIVED: 1000 / 26).
 

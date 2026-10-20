@@ -49,8 +49,25 @@ measurement of 30 entries and is not cited as one.
 - longctx_kill.txt (9:31 PM ET): GPU 3D utilization 0 (6 x 5 s samples),
   22 pages/s, pagefile 18%, worker CPU 9,985.6 s, WS 7,392 MB; python_left=0.
 - p6_longctx30_launch.txt, steps.txt, run_ids.txt (window record).
-- Not on the Mac (open): the full worker log and the launch evidence dir
-  derived/h1_hybrid/_launches/841b84e4-.../ (plan.json lists its 3 files and
-  their sha256).
+- Added 2026-10-20 (Task AX):
+  - launch_841b84e4-0eb8-436d-89f6-c5b558848991/: the launch evidence dir
+    (gates_20261019_171832.json, canary_opening/opening_plan.json,
+    canary_opening/canaries/canary.0.json). All 3 match plan.json
+    git.launch_evidence by bytes and sha256.
+  - h1_interleaved_20261019_171903.log: the full worker log (1,613 lines).
+
+## What the full worker log says about entry 123
+- Layout: a 99-line pipeline load dump at start, then per entry `CELL_START`,
+  a 99-line load dump (the per-entry reload) and `CELL_DONE`. That is 14
+  CELL_DONE lines (59 ... 121).
+- The last lines are `CELL_START policy=local_only entry=multi_turn_long_context_123`
+  (line 1514) and that entry's 99-line load dump (lines 1515-1613), ending
+  "[XAttention]: DISABLED on GPU device.".
+- 123's load dump is byte-identical to 121's: PA, KV i8, CACHE_DIR empty,
+  DYNAMIC_QUANTIZATION_GROUP_SIZE 18446744073709551615.
+- No WARN, error, exception or fallback line anywhere in the log.
+- The runner prints nothing per turn, so the log cannot place the stall
+  inside turn 0. It confirms only that the load returned and nothing came
+  after.
 
 The analysis is in analysis/demo2_pilots/AW_20261019/LONGCTX_HANG_841b84e4.md.

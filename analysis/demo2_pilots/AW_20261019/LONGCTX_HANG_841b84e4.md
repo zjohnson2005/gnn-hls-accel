@@ -145,3 +145,12 @@ with.
   run. The faulthandler dump and the exit would then not happen, and the
   window script's 4 h wait stays the backstop. py-spy reads the process from
   outside and needs no GIL.
+
+## 7. Addendum 2026-10-20 (Task AX): full worker log and launch evidence
+- Both are now in derived/demo2_pilots/hung_841b84e4/evidence/. The launch
+  evidence matches plan.json (3/3).
+- The log ends with CELL_START for entry 123 and its 99-line load dump. That
+  dump is byte-identical to entry 121's.
+- No WARN, error, exception or fallback line appears anywhere in the log.
+- Nothing more about 123 is in the log: the runner does not log per turn.
+  Section 1's reading stands.

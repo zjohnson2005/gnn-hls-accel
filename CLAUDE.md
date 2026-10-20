@@ -236,8 +236,13 @@ session start; update it in the same commit as the work. Never delete a row.
     not identified; the native generate is the one unbounded call.
   - Per-turn watchdog built (-TurnWatchdogS, default off).
   - -CacheDir breaks arm A (3a03221e: compiled KV 'dynamic'); do not use it.
-  - Next: P8-u4, then arm A LONGCTX entries 15-30 with the watchdog, then
-    P4 (run_window_20261020.sh).
+  - Next: P8-u4, then arm A LONGCTX entries 15-30 with the watchdog
+    (py-spy 0.4.2 standalone, approved). Then P3, with an added
+    true-default resident-limit cell first, then P4 (run_window_20261020.sh;
+    Task AX).
+  - cf3555d5's 20,000 is a plain-LLMPipeline (latency scheduler) limit, not
+    a bare-SchedulerConfig one. The DERIVED effect of a higher A limit is in
+    docs/amendments/DRAFT_DEMO2_ARM_SPEC_ADDENDUM.md (pending Zach).
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.

@@ -26,3 +26,16 @@ Reading notes:
   one of our run_ids. The ~68 GB/s effective bandwidth, the 147 KB/token
   transient fit and the 40,960 chunk-cap leap are DERIVED and untested
   (DEMO-2 pilots P2, P3).
+
+## Corrections after copy (2026-10-20, Task AX, approved by Zach)
+
+The sha256 values above are of the files as copied (also in git history at
+cac79ee and in ~/seam_closeout_1013/research_20261016/). Three notes now
+carry a dated correction: the measured median of 91 generated tokens per
+local turn (p90 157, XPS run 39c1c131) replaces the unmeasured 130-255.
+
+| File | sha256 after the correction |
+|---|---|
+| TUNED_PROFILE/STRENGTHENING_THE_TUNED_PROFILE.md | 1184d65d69781bda3b914820931aa2e8b2406a4c3413fb270e62e835a7f8a0f5 |
+| TUNED_PROFILE/openvino_latency_features.md | 10fb4f291322b2ba54dc9b5f27cd9263acd5112a9ff378deeb441677d7665d8d |
+| TUNED_PROFILE/physics_data_path.md | fe987e75a26e4b9db1af1136adf0bb687cb1dae6457b444f51476e9ecb4dd711 |

@@ -3295,3 +3295,41 @@ Harness changes, not rule changes:
   - p9 codes the registered drift rule;
   - an interleaved run root now reads its one policies/<policy>/turn_ledger.json.
     The pilots doc step 9 command (p6 <run dir>) failed on a run root.
+
+## 2026-10-20 - Zach's decisions on Task AW; py-spy; P3 moved up (Task AX)
+
+Decisions recorded (Zach, 2026-10-20 ET, in chat):
+- Window 1 approved as written in run_window_20261020.sh.
+- py-spy is approved as a standalone exe, not installed into .venv-seam.
+  - tools/get_pyspy.ps1 runs only `pip download py-spy==0.4.2 --no-deps
+    --only-binary=:all:`.
+  - It checks the wheel sha256 (8b06a353..., read from PyPI on the Mac),
+    extracts py-spy.exe from *.data/scripts/, and records the exe sha256 and
+    version.
+  - It exits 4 if the venv's pip freeze hash changes.
+  - The window script runs it before the reboot and passes -HangDumpPySpy
+    only to the arm A LONGCTX launch. A failure is logged and the window
+    continues without py-spy.
+- -CacheDir is dropped for every arm. This is recorded in the addendum
+  draft; no registered doc is edited.
+- Literature notes STRENGTHENING_THE_TUNED_PROFILE.md, openvino_latency_features.md
+  and physics_data_path.md now carry the measured 91 / p90 157 (39c1c131)
+  with a dated correction line. Their as-copied sha256 values stay in
+  docs/literature/2026-10-16/README.md, with the new values added below
+  them.
+- P3 moves ahead of P4. The added P3 cell 0 (true-default resident limit,
+  i8, no scheduler override, ladder top 50,000) is a plan change, not a rule
+  change.
+
+Correction: the 20,000 XPS i8 limit (cf3555d5) was measured with a plain
+LLMPipeline plus a KV u8 property (the latency scheduler), not under the
+bare SchedulerConfig control. The Task AX prompt said otherwise; the code at
+0e8aa5a shows no SchedulerConfig.
+
+Sensitivity of the registered A-X prediction to the A limit: DERIVED, in
+the addendum draft section 4. No registered prediction or threshold
+changed.
+
+Hung run 841b84e4: its launch evidence (3/3 matching plan.json) and full
+worker log are added to the record. The log adds no new fact about entry
+123 beyond a completed load identical to entry 121's.

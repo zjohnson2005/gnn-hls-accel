@@ -1,5 +1,7 @@
 # OpenVINO GenAI / GPU-plugin features for a stronger "tuned" Qwen3-4B INT4 agent profile on Xe3 iGPU (2026.2.x, with 2026.1/2026.3 deltas)
 
+> Correction 2026-10-20 (Task AX): measured on XPS run 39c1c131 (arm A local_only, DEMO1_BASE_30, 118 local turns), a local turn generates a median of 91 tokens (p90 157), not 130-255.
+
 **Method.** Most claims come from reading source at release tags. I cloned these tags in this session:
 
 - openvino.genai `2026.2.1.0` (commit 7dea045), `2026.3.1.0` (56d9685) and `2026.1.2.0` (adc69c5).
@@ -100,7 +102,7 @@ The candidate worth an A/B is XAttention for cold, long (10k+ token) prompts onl
   - The 256-token KV block (vs 16) coarsens cache allocation, though GenAI does restore partial blocks for prefix caching.
   - It cannot be combined with u4 KV (CM kernel accepts only f16/i8), which matters on 2026.3 where u4 becomes the auto default for INT4-weight PA models.
   - It cannot be combined with speculative decoding.
-- **Cache eviction is counter-productive for latency here.** It does not reduce prefill (and so not TTFT) or the prompt's KV footprint. On GPU it enables score outputs, which disables the XMX micro-SDPA prefill path, so prefill likely gets slower. Decode savings are minimal at about 3.5k context with 130-255 generated tokens, because decode on a 4B INT4 model is dominated by streaming the weights, not attention over 3.5k tokens. Its only clear use is capping KV memory for very long generations.
+- **Cache eviction is counter-productive for latency here.** It does not reduce prefill (and so not TTFT) or the prompt's KV footprint. On GPU it enables score outputs, which disables the XMX micro-SDPA prefill path, so prefill likely gets slower. Decode savings are minimal at about 3.5k context with a median of 91 generated tokens per turn (p90 157, run 39c1c131), because decode on a 4B INT4 model is dominated by streaming the weights, not attention over 3.5k tokens. Its only clear use is capping KV memory for very long generations.
 
 ### Gaps
 - No primary-source TTFT numbers for OpenVINO XAttention on Xe2/Xe3 at any context length. Release notes and the blog are qualitative, and the openvino.genai GitHub issues/PR search was unavailable.
@@ -292,7 +294,7 @@ Prompt lookup is draft-free and copies n-gram continuations from prompt + genera
 - **How the mismatch arises (my reading of the template; to be verified by tokenizing turn N's prompt + output against turn N+1's prompt).**
   - In an agent loop the sequence is user → assistant(tool_call) → tool → assistant…, and `last_query_index` points at the real user turn.
   - Every prior assistant turn after it has `reasoning_content == ''`, because the think block was in the prompt, not the output. It is not `loop.last`, so it renders as `<|im_start|>assistant\n` + content without `<think>\n\n</think>\n\n`.
-  - The KV cache holds the version with the 4-6 think tokens, so reuse ends at the start of the previous assistant message. The previous output (about 130-255 tokens), the tool response and the new turn are all recomputed.
+  - The KV cache holds the version with the 4-6 think tokens, so reuse ends at the start of the previous assistant message. The previous output (median 91 tokens, p90 157, run 39c1c131), the tool response and the new turn are all recomputed.
   - Appending the raw think block to the stored assistant content does not help, because the template strips it via `split('</think>')`.
 - **Fixes, in order of preference.**
   - (a) Supply a modified chat template (tokenizer `chat_template` override or IR rt_info) that renders prior assistant turns with the same empty think block.

@@ -1,5 +1,7 @@
 # Rebuild the tuned profile around bytes moved
 
+> Correction 2026-10-20 (Task AX): measured on XPS run 39c1c131 (arm A local_only, DEMO1_BASE_30, 118 local turns), a local turn generates a median of 91 tokens (p90 157), not 130-255.
+
 The true OpenVINO default takes over three of the five knobs registered for DEMO-2's tuned profile. Against `LLMPipeline(model, "GPU")` on 2026.2.1, **RESIDENT, the 40,960 window and T2S's u8 KV are no longer differences**. The default already runs prefix caching with unlimited batch tokens. It has no window cap, and the trained context is 40,960 anyway. The GPU plugin also turns a u8 request into the same i8 it picks by default. What still separates the arms is **OBS_MASK retention on both hosts and u4 KV on the XPS**. The registered prediction of ~8× ($0.046 vs $0.356) therefore has to be withdrawn: 48 of its 60 control escalations came from a window overflow that no longer exists. The best internal proxy is the same 15 entries run with FULL retention and then OBS_MASK. It suggests the advantage that survives is about **1.7× on the XPS ($0.308→$0.184) and about 7× on the T2S ($0.096→$0.013)**. On the XPS that gain came with the same 9 escalated entries, so it comes from **cheaper escalations rather than fewer**. I recommend strengthening the profile with output-preserving runtime levers. Each is aimed at a byte stream the physics says dominates:
 
 - **prompt-lookup decoding**, because decode is 67–91% of turn time;
@@ -59,7 +61,7 @@ Intel's own table for a Core Ultra 5 "330" lists Qwen3-4B INT4 at 17.6–18.1 to
 
 Turn time is decode-dominated. On the XPS, 176 tokens at 27.1 tok/s is **6.5 s of a 10.0 s generate**. On the T2S, 133 tokens at 35.5 tok/s is 3.7 s. Under prefix caching TTFT falls to 9–20% of generate time (V3 71d33f7a, V4 a678926e). This matches H100 agent traces, where decode is 91–98.6% of LLM time once prefix caching works ([arXiv 2605.26297](https://arxiv.org/html/2605.26297v1)). On our iGPU one output token costs about as much wall time as 35–40 prefill tokens (DERIVED).
 
-The output-token budget is therefore where turn latency lives. One finding reframes it. A turn emits 130–255 tokens, but the tool call is only about 15–20 of them. BFCL ends a turn at the first step with no decodable function call ([BFCL multi-turn blog](https://gorilla.cs.berkeley.edu/blogs/13_bfcl_v3_multi_turn.html)). My hypothesis, which needs the ledger inspection in pilot P1, is that most of the excess is the **end-of-turn prose step**. BFCL's state and response checks never score that text.
+The output-token budget is therefore where turn latency lives. One finding reframes it. A turn emits a median of 91 tokens (p90 157; measured, run 39c1c131; the 130–255 first cited here was not measured), and tool-call blocks are about 35% of them (character-apportioned ESTIMATE, pilot P1). BFCL ends a turn at the first step with no decodable function call ([BFCL multi-turn blog](https://gorilla.cs.berkeley.edu/blogs/13_bfcl_v3_multi_turn.html)). My hypothesis, which needs the ledger inspection in pilot P1, is that most of the excess is the **end-of-turn prose step**. BFCL's state and response checks never score that text.
 
 Trimming it is the largest raw latency lever available. A 200-token turn cut to about 60 tokens saves about 5.4 s on the XPS (DERIVED). But trimming output is an agent-level change. It has to be applied to both arms, so it lowers absolute latency without creating an advantage.
 
@@ -245,7 +247,7 @@ On BFCL multi-turn, two fault-free agent runs reached the same end state only 63
 | # | Measurement | Decision rule |
 |---|---|---|
 | P0 | Read back the true default on both hosts: no "Falling back to SDPA" warning, i8 in the compiled `KV_CACHE_PRECISION` dump (`OPENVINO_LOG_LEVEL`≥INFO), no rt_info override | The control is valid only if confirmed ([pipeline.cpp](https://github.com/openvinotoolkit/openvino.genai/blob/2026.2.1.0/src/cpp/src/llm/pipeline.cpp#L214-L244)) |
-| P1 | Break down the 130–255 output tokens per turn (tool call vs end-of-turn prose vs chatter) | Decides whether an output lever applies to both arms |
+| P1 | Break down the output tokens per turn (measured median 91, p90 157, run 39c1c131; earlier cited as 130–255) (tool call vs end-of-turn prose vs chatter) | Decides whether an output lever applies to both arms |
 | P2 | Warm decode tok/s at 3.5k, 12k and 20k for i8 vs u4 (and f16) on both hosts | Validates the 68 GB/s model and the u4 decode gain |
 | P3 | XPS resident limit and peak memory across chunk sizes {unlimited, 4096, 2048} × {i8, u4} × cache_size {0, sized}; cold 10k TTFT; re-run V5-CAL under the latency default | Adopt the chunk cap if the limit rises ≥20% at ≤10% cold-TTFT cost |
 | P4 | Prompt lookup with K = 3 or 5: accepted tokens per step, decode speedup, byte-identical outputs under greedy decoding | Adopt if ≥1.1× and outputs are identical |
