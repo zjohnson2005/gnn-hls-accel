@@ -3430,3 +3430,22 @@ Literature correction (Rithwik item 3): docs/literature/2026-10-20/OLLAMA_DEFAUL
 "Hybrid studies inherit Ollama's default" is withdrawn. The registered arm D label in
 DEMO2_AMEND_2026-10-16_TRUE_DEFAULT.md L63/L89-92 and DEMO2_DESIGN_2026-10-14.md L78 are flagged
 for a superseding addendum (not edited).
+
+## 2026-10-21 - AZ push decision; T2S-only hang window prepared (Task BA)
+
+Mac only, no ssh, $0, no launches. Zach's decisions (Task BA prompt): push AZ; run P11 and an added
+P10-T2S cell set on the T2S before the hand-back (REBOOT_OK=1; Tailscale unattended confirmed;
+py-spy approved on the T2S); arm D label "the 4096 window Minions configures for its local model
+(Ollama's current default on a < 24 GiB machine)"; provenance re-measures and P8 XPS deferred to the
+next XPS window. The XPS is off AC (unavailable).
+- Push: NOT DONE. git push (and git fetch) were refused by the Claude Code permission classifier in
+  this session; commits stay local until Zach pushes or allows it.
+- XPS window 3 resume (2026-10-20 9:14 PM ET, W3_FROM=1): STOP at 10:01 PM ET, the XPS did not
+  come back on ssh within 45 min of its window-start reboot. No cell ran.
+- Registered before any run: P10-T2S (docs/amendments/DEMO2_PILOT_P10_T2S_2026-10-21.md, sha256
+  3ad21f9f4007fc9707d9ed3496784d1f5c53bea7f2ea35ab351fdac214402c5e) and the P11 variants note (docs/amendments/DEMO2_PILOT_P11_VARIANTS_2026-10-21.md, sha256
+  f1992b2ebff000c939c8dd27bcd3a488694fb0161c8b1842d22b45d7fa3bca47; index sha256 30b7092b9269918f5ab718a5e601a6195c66c01d66a711d3247e1d462d3405f1).
+- Harness (default off): tools/repro_hang123.py variants (tools/repro_hang123_variants.py) and run
+  --watchdog-s/--out-dir/--py-spy/--label (the runner's TurnWatchdog per generate; exit 86).
+- Arm D label recorded in the DRAFT arm-spec addendum (section 5); registered docs not edited.
+- Re-export bundle: CHANGES_SINCE_20261020.md added (Ollama withdrawal; DEMO-1 REPLACED_SCHEDULER).

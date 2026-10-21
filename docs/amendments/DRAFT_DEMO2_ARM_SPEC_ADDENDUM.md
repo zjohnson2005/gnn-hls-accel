@@ -122,3 +122,32 @@ Proposed addendum changes, for Zach to decide after P3 cell 0 is sealed:
 - (e) Record whether context held can still serve as a material-win
   criterion on the XPS.
 Nothing above changes until a final addendum is registered.
+
+## 5. Arm D label (decided by Zach 2026-10-21, Task BA decision 4)
+This section supersedes the arm D label of the registered amendment when the
+final addendum is registered. It does not edit that file.
+- Registered text being superseded:
+  DEMO2_AMEND_2026-10-16_TRUE_DEFAULT.md L63 ("A plus a 4096 window, labeled
+  'the configuration typical hybrid studies inherit'") and L89-92 ("ECO-LLM
+  ... and Minions run Ollama locally and state no context setting").
+  DEMO2_DESIGN_2026-10-14.md L78 (the unversioned Ollama FAQ "4096" quote).
+- New label: **"the 4096 window Minions configures for its local model
+  (Ollama's current default on a < 24 GiB machine)"**.
+- Basis: docs/literature/2026-10-20/OLLAMA_DEFAULT_INHERITANCE.md.
+  - Minions' OllamaClient sends num_ctx 4096 at publication (5c2c9c2f,
+    minions/clients/ollama.py L16, L59-66).
+  - Ollama's default is 4096 below 24 GiB VRAM from v0.15.5 (0334ffa6), and
+    4096 for v0.6.7-v0.15.4.
+- Arm D's configuration (A plus a 4096 window, XPS only) is unchanged. Only
+  its label and justification change. The word "inherit" is not used.
+
+## 6. Pilot results added 2026-10-20 (Task AZ; analysis/demo2_pilots/AZ/)
+- P6 NO_CHANGE (0 of 60 in the band).
+- The XPS true-default resident limit is 18,000 (a5d19dcc). Item 4's premise
+  ("A limit above 20,000") does not hold, so changes (a)-(e) use 18,000.
+- T2S:
+  - arm A valid;
+  - P8 keep_u4 false;
+  - P4 no prompt lookup;
+  - P9 no warm-up;
+  - P2 u4 gain supported (1.082 at 12k).

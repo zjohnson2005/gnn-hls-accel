@@ -194,7 +194,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-20 night (Task AZ). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-21 (Task BA). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -275,8 +275,14 @@ session start; update it in the same commit as the work. Never delete a row.
     went 8622 -> 8724 -> 8860.
   - "Hybrid studies inherit Ollama's default" withdrawn
     (docs/literature/2026-10-20/).
-  - Task AZ commits are local, not pushed (Zach: wait while window 3 pulls
-    3aa9e27).
+- 2026-10-21 (Task BA): the XPS is off AC (unavailable); window 3's resume
+  stopped (XPS not back within 45 min). T2S-only hang window ready:
+  ~/seam_closeout_1013/xps/run_window_t2s_hang.sh (P11 + added P10-T2S,
+  registered docs/amendments/DEMO2_PILOT_P10_T2S_2026-10-21.md and
+  DEMO2_PILOT_P11_VARIANTS_2026-10-21.md; stop by 10:00 PM ET Oct 25).
+  Arm D label decided (DRAFT addendum section 5). The AZ and BA commits
+  were not pushed (the push was refused by the session's permission
+  classifier).
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.
