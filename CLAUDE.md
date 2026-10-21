@@ -194,7 +194,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-21 (Task BA). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-21 (Task BB). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -267,8 +267,8 @@ session start; update it in the same commit as the work. Never delete a row.
     (P0a record 5e190568, P0b 03632ad3).
   - T2S: P8 keep_u4 false (27/59 vs 26/59); P4 no prompt lookup (not
     byte-identical); P9 no warm-up; P2 model holds, u4 gain 1.08.
-  - Entry 123 stalled 4 of 4 times on 2 devices / 2 drivers (+ 027a07b7 P10
-    C1, bbdd1c0d T2S). P11-HANG-REGIME registered, not approved;
+  - Entry 123 "stalled 4 of 4 times on 2 devices" (+ 027a07b7 P10 C1, bbdd1c0d
+    T2S): overstated, corrected in Task BB. P11-HANG-REGIME registered, not approved;
     --step-log and tools/repro_hang123.py built.
   - Config audit: derived/audit/CONFIG_PROVENANCE.md. The cited limits are
     plain pipeline + KV property; DEMO-1 is REPLACED_SCHEDULER; the XPS driver
@@ -280,9 +280,15 @@ session start; update it in the same commit as the work. Never delete a row.
   ~/seam_closeout_1013/xps/run_window_t2s_hang.sh (P11 + added P10-T2S,
   registered docs/amendments/DEMO2_PILOT_P10_T2S_2026-10-21.md and
   DEMO2_PILOT_P11_VARIANTS_2026-10-21.md; stop by 10:00 PM ET Oct 25).
-  Arm D label decided (DRAFT addendum section 5). The AZ and BA commits
-  were not pushed (the push was refused by the session's permission
-  classifier).
+  Arm D label decided (DRAFT addendum section 5). Zach pushed the AZ and BA
+  commits (origin 9d67c18) before the 2026-10-21 T2S window.
+- 2026-10-21 (Task BB, analysis/demo2_pilots/BB/): T2S window 12:09 PM ET: L1 9b4cdefb completed;
+  L2 8af10211 turn 0 step 1 = 87,392 tokens on the model's own path, steps still progressing when the
+  600 s per-turn watchdog fired. Entry-123 "4 of 4 stalls" withdrawn: 841b84e4 STALL, 24c1abc0 /
+  027a07b7 / bbdd1c0d UNKNOWN, 8af10211 over budget while progressing. 43 local generates above
+  Qwen3-4B's 40,960 positions (8 runs); GenAI enforces no limit by default; "context held" is not
+  valid above 40,960. Stall watchdog (--stall-watchdog-s) built. P11-B registered; T2S script
+  run_window_t2s_hang.sh now runs P11-B; X0-XPS queued (run_window_xps_x0.sh).
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.

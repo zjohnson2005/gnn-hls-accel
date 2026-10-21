@@ -3449,3 +3449,32 @@ next XPS window. The XPS is off AC (unavailable).
   --watchdog-s/--out-dir/--py-spy/--label (the runner's TurnWatchdog per generate; exit 86).
 - Arm D label recorded in the DRAFT arm-spec addendum (section 5); registered docs not edited.
 - Re-export bundle: CHANGES_SINCE_20261020.md added (Ollama withdrawal; DEMO-1 REPLACED_SCHEDULER).
+
+## 2026-10-21 - Entry 123 reclassified; context past 40,960; stall watchdog; P11-B registered (Task BB)
+
+Mac only, no ssh, $0, no launches. Zach approved continuing ("ok lets continue"). Commits local (push blocked
+for Claude in this session; Zach pushes).
+- Closeout of the T2S window 2026-10-21 12:09 PM ET (head 9d67c18): L1 9b4cdefb completed (2,189 tokens 3.9 s,
+  34,050 tokens 54.9 s); L2 8af10211 per-turn watchdog at 601 s with steps still ~59 s apart (step 1 87,392
+  tokens). Both committed (derived/demo2_pilots/p11_l1_9b4cdefb/, p11_l2_8af10211/ UNSEALED,
+  windows_20261021/); launch evidence 3/3.
+- Error corrected: "entry 123 stalled 4 of 4 times on 2 devices" (Task AZ) and "silent device stall" (Task AY)
+  were overstated. Reclassified: 841b84e4 STALL; 24c1abc0, 027a07b7, bbdd1c0d UNKNOWN (no progress signal);
+  8af10211 TURN_BUDGET_EXCEEDED_PROGRESSING. Native stacks of a progressing generate look the same as the
+  "stalled" ones. Analysis analysis/demo2_pilots/BB/ENTRY123_RECLASSIFIED.md; framing note
+  docs/amendments/DEMO2_HANG_FRAMING_CORRECTION_2026-10-21.md (registered files not edited).
+- Step-0 calls on the model's path reconstructed by size (DERIVED; text not recorded): account, stock,
+  transaction history (49,314 tokens, no dates), available stocks, place_order.
+- Context past the model: 43 local generates above 40,960 in 8 runs (XPS and T2S, arm A and u4), all in
+  local-fail entries; OpenVINO GenAI 2026.2.1 enforces no maximum by default (source cited in
+  analysis/demo2_pilots/BB/CONTEXT_OVER_LIMIT.md). "Context held" is not valid above 40,960.
+- Harness (default off; existing plans unchanged): --stall-watchdog-s (outcome stall, with phase;
+  --turn-watchdog-s then records turn_budget_exceeded), --local-turn-limit, --ctx-overflow-local-fail with
+  --context-window (interleaved local_only), post_generate step-log lines (raw text with --debug-raw-text),
+  repro --chain-steps/--stall-s, p11b-inputs builder; launch_h1 -StallWatchdogS -LocalTurnLimit
+  -CtxOverflowLocalFail.
+- ADDED pilot P11-B, registered before any run (docs/amendments/DEMO2_PILOT_P11B_2026-10-21.md, sha256
+  be6facf521b52a02c475b7f34a8823b096d2e67a34722f3c65b771412afbcfce). Stall limit 900 s, not the 300 s in the
+  task text: the step-1 prefill took ~340 s with no token (DERIVED), so 300 s would record a stall inside a
+  healthy prefill (Decision for Zach).
+

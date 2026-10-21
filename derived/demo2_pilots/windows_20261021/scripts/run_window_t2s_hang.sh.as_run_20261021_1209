@@ -1,0 +1,246 @@
+#!/bin/bash
+# T2S hang window (Task BA; approved by Zach 2026-10-21; $0, local only, entry 123 only).
+#   P11-HANG-REGIME: docs/amendments/DEMO2_PILOT_P11_HANG_REGIME_2026-10-20.md
+#                    + DEMO2_PILOT_P11_VARIANTS_2026-10-21.md (inputs pinned by sha256)
+#   P10-T2S:         docs/amendments/DEMO2_PILOT_P10_T2S_2026-10-21.md
+# Registered before any run. The rules are applied at closeout, not here.
+# Safety as run_window_t2s.sh:
+#   - before every launch: Rithwik check ($PID excluded), banned apps, watchdog launch-check, clean tree;
+#   - park/copy to ~/seam_closeout_1013/t2s/window_<stamp>/;
+#   - nothing that is not ours is killed. A stalled repro or runner ends itself (exit 86, in-process
+#     watchdog, 600 s per generate / per turn).
+# REBOOT_OK=1 is required (Tailscale unattended confirmed). Reboot at window start and after every
+#   hang or generate error; reboot wait up to 20 min.
+# Order:
+#   L1 repro (all steps) | L2 runner arm A -StepLog | P10-T2S C2, C3 |
+#   M4 M1 M2 M3 [M5] S-sweep (ascending f, random before real) M6 | P10-T2S C4 C5 C6 C1.
+#   M/S use the stalling step S from L1 (else L2's step_log). With no hang in L1 or L2, M/S are skipped.
+# Hard stop: no cell starts after 21:44 ET 2026-10-25. The script stops by 22:00 ET, then runs the
+#   hand-back check (no python of ours, clean tree).
+# Time (DERIVED from the 2026-10-20 T2S timings):
+#   a completing cell is about 2 min (repro) or 3-5 min (runner, whole entry);
+#   a hang is 600 s + about 1.5 min of overhead + a reboot (90 s + 120 s settle), about 15 min.
+#   Start (checks, py-spy, reboot, pull): ~8 min.
+#   L ~30 min (both expected to hang). C2+C3 6-30 min. M+S (20 cells at S1) 40 min - 5 h.
+#   C4-C1 12-60 min. Total ~1.5-7 h.
+# Run with:  REBOOT_OK=1 caffeinate -i bash ~/seam_closeout_1013/xps/run_window_t2s_hang.sh
+# Resume:    REBOOT_OK=1 HANG_FROM=<index from cells_plan.txt> [STALL_STEP=<0|1>] caffeinate -i bash ...
+#            (STALL_STEP is required when HANG_FROM skips past L1/L2.)
+set -u
+HANG_FROM=${HANG_FROM:-0}
+STALL_STEP=${STALL_STEP:-}
+REBOOT_OK=${REBOOT_OK:-0}
+EXPECT_HEAD=9d67c18
+PIN_SHA=CC74A37ED84ED95B0F4DD4B8D7EB774F2737230DCFCA01321FE136CDBFBCA447
+WATCHDOG_S=600
+X=zach@100.72.40.24
+R='C:\Users\zach\Projects\gnn-hls-accel'
+PY="$R\\.venv-seam\\Scripts\\python.exe"
+PYSPY_EXE='C:\Users\zach\seam_tools\py-spy.exe'
+PYSPY=""
+MAC_REPO=~/gnn-hls-accel
+VAR_INDEX="$MAC_REPO/derived/repro_hang123/variants/INDEX.json"
+BASE_INPUTS='derived\repro_hang123\inputs_e123_t0.json'
+BASE_SHA=d12142f89702f0ab92a48148abaa034760bb20c87558b58945a92a29a405f2f0
+DEADLINE=$(TZ=America/New_York date -j -f "%Y-%m-%d %H:%M:%S" "2026-10-25 22:00:00" +%s)
+CELL_MAX_S=960   # a hang cell plus its reboot; no cell starts later than DEADLINE - CELL_MAX_S
+OUT=~/seam_closeout_1013/t2s/window_$(date +%Y%m%d_%H%M)_hang
+mkdir -p "$OUT"
+log(){ echo "[$(TZ=America/New_York date '+%m-%d %H:%M:%S ET')] $*" | tee -a "$OUT/steps.txt"; }
+xs(){ ssh -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 "$X" "$1" 2>&1 | tr -d '\r'; }
+handback(){
+  log "hand-back check (no python of ours, tree clean; Rithwik has the T2S Oct 26 - Nov 8)"
+  xs "cd $R; git status --short; \"PYTHON_COUNT=\" + @(Get-Process python -ErrorAction SilentlyContinue).Count" | tee "$OUT/handback.txt"
+}
+stop(){ log "STOP: $*"; handback; exit 1; }
+banned(){ xs 'Get-Process | Where-Object { $_.ProcessName -match "^(cursor|chrome|msedge|code|claude|python|ollama.*)$" } | Select-Object -ExpandProperty ProcessName' | sort -u | tr '\n' ' '; }
+drv_summary(){ tr -d '\r' < "$1" | awk '/^DeviceName/{n=$0; sub(/^DeviceName *: */,"",n)} /^DriverVersion/{v=$0; sub(/^DriverVersion *: */,"",v); if (n ~ /Graphics|GPU|Arc|NPU/ && n !~ /Input/) printf "%s %s; ", n, v}'; }
+rithwik(){ xs 'Get-CimInstance Win32_Process | Where-Object { $_.ProcessId -ne $PID -and ($_.CommandLine -match "t2s_r2_agent" -or $_.Name -match "^ollama") } | ForEach-Object { "{0} {1}" -f $_.ProcessId, $_.Name }' | tr '\n' ' '; }
+watchdog_ok(){ xs "cd $R; \$n = @(Get-Process -Name python, llama-server -ErrorAction SilentlyContinue | ForEach-Object { \$_.ProcessName }); if (\$n.Count -eq 0) { \$j = '[]' } else { \$j = ConvertTo-Json -InputObject @(\$n) -Compress }; & '$PY' tools\\t2s_queue_watchdog.py launch-check --log C:\\apu\\ovn\\watchdog.log --running-json \$j; \"RC=\$LASTEXITCODE\"" > "$OUT/watchdog_check_$1.txt"; grep -q '^RC=0' "$OUT/watchdog_check_$1.txt"; }
+guard(){
+  local r=$(rithwik); [ -z "${r// }" ] || stop "Rithwik's process running before $1: $r"
+  local b=$(banned); [ -z "${b// }" ] || stop "banned/foreign process before $1: $b (nothing is killed on the T2S)"
+  watchdog_ok "$1" || stop "T2S watchdog launch-check refused before $1 (see watchdog_check_$1.txt)"
+}
+deadline_ok(){ [ $(( $(date +%s) + CELL_MAX_S )) -lt $DEADLINE ] || { log "DEADLINE: no cell starts after 21:44 ET Oct 25 (next was $1; resume index $2)"; handback; exit 0; }; }
+uptime_s(){ xs '[int]((Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime).TotalSeconds' | tr -dc '0-9'; }
+wait_python(){ local t0=$(date +%s); while true; do n=$(xs '@(Get-Process python -ErrorAction SilentlyContinue).Count' | tr -dc '0-9'); [ "${n:-0}" = "0" ] && break; [ $(( $(date +%s) - t0 )) -gt 5400 ] && stop "python still running after 90 min (the in-process watchdog should have ended it; nothing is killed)"; sleep 20; done; }
+clean_tree(){ s=$(xs "cd $R; git status --porcelain"); [ -z "$s" ] || stop "dirty tree: $s"; }
+park(){ log "park $1"; xs "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\zach\\seam_tools\\park_untracked_t2s.ps1 -Label $1" | tee "$OUT/park_$1.txt"; grep -q '^MODIFIED' "$OUT/park_$1.txt" && stop "tracked file modified after $1"; { scp -q -r "$X:C:/Users/zach/gnn_backup_demo2/pending_closeout/$1" "$OUT/" || scp -O -q -r "$X:C:/Users/zach/gnn_backup_demo2/pending_closeout/$1" "$OUT/"; } && log "copied $1 to Mac" || log "WARN copy of $1 failed; it is safe on the T2S in pending_closeout"; }
+field(){ grep -m1 "^$1" "$2" | sed 's/^[^:]*: //' | tr -d '\r'; }
+reboot_t2s(){
+  [ "$REBOOT_OK" = "1" ] || stop "reboot needed ($1) but REBOOT_OK is not set"
+  log "reboot ($1)"; xs 'shutdown /r /t 5' >/dev/null; sleep 90
+  T0=$(date +%s); until ssh -o BatchMode=yes -o ConnectTimeout=5 "$X" hostname >/dev/null 2>&1; do [ $(( $(date +%s) - T0 )) -gt 1200 ] && { log "STOP: T2S did not come back on ssh within 20 min of reboot"; exit 1; }; sleep 10; done; log "T2S back (uptime $(uptime_s) s)"; sleep 120
+}
+stall_from_log(){ # repro log -> step of the last PRE_GENERATE with no POST_GENERATE after it (or empty)
+  python3 - "$1" <<'PYEOF'
+import json, sys
+pre = None
+for line in open(sys.argv[1], encoding="utf-8", errors="replace"):
+    if line.startswith("PRE_GENERATE "):
+        pre = json.loads(line.split(" ", 1)[1])["step"]
+    elif line.startswith("POST_GENERATE ") and pre is not None:
+        if json.loads(line.split(" ", 1)[1])["step"] == pre:
+            pre = None
+print("" if pre is None else pre)
+PYEOF
+}
+var_sha(){ python3 -c "import json,sys; r=json.load(open(sys.argv[1])); print(r['sets']['S'+sys.argv[2]]['cells'][sys.argv[3]]['file_sha256'])" "$VAR_INDEX" "$1" "$2"; }
+var_cells(){ python3 -c "import json,sys; r=json.load(open(sys.argv[1])); print(' '.join(r['sets']['S'+sys.argv[2]]['cells']))" "$VAR_INDEX" "$1"; }
+
+repro_cell(){ # $1 label, $2 inputs (repo-relative, backslashes), $3 sha256, $4 only-step or "" ; rc 0 done, 2 hang, 3 generate error, 1 refused
+  local lbl=$1 inp=$2 sh=$3 only=$4
+  LAST_STALL=""
+  clean_tree; guard "$lbl"
+  local lg="derived\\c2_ttft\\_launches\\p11\\$lbl.log"
+  local cmd="tools\\repro_hang123.py run --inputs $inp --inputs-sha256 $sh --watchdog-s $WATCHDOG_S --out-dir derived\\repro_hang123\\runs --label $lbl"
+  [ -n "$only" ] && cmd="$cmd --only-step $only"
+  [ -n "$PYSPY" ] && cmd="$cmd --py-spy $PYSPY"
+  log "launch $lbl (uptime $(uptime_s) s): repro ${inp##*\\} only_step=${only:-all}"
+  xs "cd $R; New-Item -ItemType Directory -Force (Split-Path $lg) | Out-Null; powershell -NoProfile -File tools\\spawn_detached.ps1 -CommandLine \"set SEAM_LAUNCH_CONTEXT=ssh_detached&& set SEAM_PLATFORM_ID=evo-t2&& $PY -u $cmd\" -LogPath $lg -WorkingDirectory $R" > "$OUT/${lbl}_launch.txt"
+  sleep 30; wait_python; log "$lbl exited"
+  scp -q "$X:$(echo "$R\\$lg" | tr '\\' '/')" "$OUT/${lbl}.log" 2>/dev/null || xs "Get-Content '$R\\$lg'" > "$OUT/${lbl}.log"
+  local rc=1
+  if grep -q 'TURN_WATCHDOG_HANG' "$OUT/${lbl}.log"; then rc=2
+  elif grep -q '^GENERATE_ERROR' "$OUT/${lbl}.log"; then rc=3
+  elif grep -q '^REPRO_DONE' "$OUT/${lbl}.log"; then rc=0; fi
+  local st=$(stall_from_log "$OUT/${lbl}.log")
+  grep -m1 '^RUN_ID' "$OUT/${lbl}.log" | sed "s/^/$lbl /" >> "$OUT/run_ids.txt"
+  park "$lbl"
+  echo "$lbl rc=$rc stall_step=${st:-none}" >> "$OUT/cells.txt"
+  case $rc in
+    0) log "$lbl completed (no hang)";;
+    2) log "$lbl HANG at step ${st:-?}";;
+    3) log "$lbl generate error at step ${st:-?} (see ${lbl}.log)";;
+    *) log "$lbl NOT_TESTED (refused or error before generate; see ${lbl}.log)";;
+  esac
+  LAST_STALL=$st
+  return $rc
+}
+runner_cell(){ # $1 label, rest launch_h1 args (-T2S added); rc 0 done, 2 hang, 1 refused/error
+  local lbl=$1; shift
+  LAST_STALL=""
+  clean_tree; guard "$lbl"
+  log "launch $lbl (uptime $(uptime_s) s)"
+  xs "cd $R; powershell -NoProfile -File tools\\launch_h1.ps1 -T2S $*" > "$OUT/${lbl}_launch.txt"
+  if ! grep -q 'Spawned' "$OUT/${lbl}_launch.txt"; then
+    grep -E 'REFUSED|refusal|FAILED' "$OUT/${lbl}_launch.txt" | head -5 | tee -a "$OUT/steps.txt"
+    park "${lbl}_refused"; echo "$lbl rc=1 stall_step=none" >> "$OUT/cells.txt"; log "$lbl NOT_TESTED (did not spawn)"; return 1
+  fi
+  local rid=$(field 'session_id (run_id)' "$OUT/${lbl}_launch.txt"); local ll=$(field 'launch_log' "$OUT/${lbl}_launch.txt"); local ev=$(field 'launch_evidence_dir' "$OUT/${lbl}_launch.txt")
+  log "$lbl run_id $rid"; echo "$lbl $rid" >> "$OUT/run_ids.txt"
+  sleep 60; wait_python; log "$lbl worker exited"
+  xs "Get-Content '$ll' -Tail 160" > "$OUT/${lbl}_logtail.txt"
+  local rc=0
+  if grep -q 'TURN_WATCHDOG_HANG' "$OUT/${lbl}_logtail.txt"; then rc=2
+  elif grep -E -q 'REFUSED|Traceback|ARM_A_INVALID|FAIL_CANARY' "$OUT/${lbl}_logtail.txt"; then rc=1; fi
+  scp -q -r "$X:$(echo "$ev" | tr '\\' '/')" "$OUT/launch_${lbl}_$rid" 2>/dev/null
+  scp -q "$X:$(echo "$ll" | tr '\\' '/')" "$OUT/${lbl}_worker.log" 2>/dev/null || log "WARN worker log copy failed for $lbl"
+  park "$lbl"
+  local st=""
+  local sl=$(find "$OUT/$lbl" -name step_log.jsonl 2>/dev/null | head -1)
+  [ -n "$sl" ] && st=$(tail -1 "$sl" | python3 -c "import json,sys; print(json.loads(sys.stdin.read())['step'])" 2>/dev/null)
+  echo "$lbl rc=$rc stall_step=${st:-none} run_id=$rid" >> "$OUT/cells.txt"
+  case $rc in
+    0) log "$lbl completed (no hang recorded)";;
+    2) log "$lbl HANG (last step_log step ${st:-?})";;
+    *) log "$lbl NOT_TESTED or error (see ${lbl}_logtail.txt)";;
+  esac
+  LAST_STALL=$st
+  return $rc
+}
+
+log "start T2S hang window (HANG_FROM=$HANG_FROM STALL_STEP=${STALL_STEP:-unset} REBOOT_OK=$REBOOT_OK); output in $OUT"
+case "$EXPECT_HEAD" in *PLACEHOLDER*) stop "EXPECT_HEAD not set in this script";; esac
+[ "$REBOOT_OK" = "1" ] || { log "STOP: this window needs REBOOT_OK=1"; exit 1; }
+[ -f "$VAR_INDEX" ] || { log "STOP: $VAR_INDEX missing (Mac repo not at the pushed head?)"; exit 1; }
+ssh -o BatchMode=yes -o ConnectTimeout=15 "$X" hostname >/dev/null 2>&1 || { log "STOP: T2S not reachable over ssh"; exit 1; }
+B64=$(base64 < ~/seam_closeout_1013/t2s/tools/park_untracked_t2s.ps1 | tr -d '\n')
+xs "New-Item -ItemType Directory -Force C:\\Users\\zach\\seam_tools | Out-Null; [IO.File]::WriteAllBytes('C:\\Users\\zach\\seam_tools\\park_untracked_t2s.ps1', [Convert]::FromBase64String('$B64')); (Get-FileHash C:\\Users\\zach\\seam_tools\\park_untracked_t2s.ps1).Hash" | tee "$OUT/park_tool_hash.txt"
+grep -q -E '^[0-9A-F]{64}' "$OUT/park_tool_hash.txt" || stop "could not write park_untracked_t2s.ps1 on the T2S"
+# Read-only checks.
+xs 'hostname; [int]((Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime).TotalSeconds' | tee "$OUT/a_host_uptime.txt"
+r=$(rithwik); [ -z "${r// }" ] || stop "Rithwik's process running: $r"
+b=$(banned); [ -z "${b// }" ] || stop "banned/foreign process running: $b"
+xs 'Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" -ErrorAction SilentlyContinue | Select-Object PauseUpdatesStartTime,PauseUpdatesExpiryTime | Format-List' | tee "$OUT/a_windows_update_pause.txt"
+WU=$(grep -m1 'PauseUpdatesExpiryTime' "$OUT/a_windows_update_pause.txt" | sed 's/^[^:]*: *//'); [ -n "$WU" ] && log "Windows Update paused until $WU" || log "WARN Windows Update NOT paused"
+xs 'Get-CimInstance Win32_PnPSignedDriver | Where-Object { $_.DeviceClass -eq "DISPLAY" -or $_.DeviceName -match "NPU" } | Select-Object DeviceName,DriverVersion,DriverDate,InfName,DeviceID | Format-List' > "$OUT/a_drivers.txt"
+grep -q 'DriverVersion' "$OUT/a_drivers.txt" && log "drivers recorded: $(drv_summary "$OUT/a_drivers.txt")" || log "WARN driver query returned nothing (see a_drivers.txt)"
+watchdog_ok a || stop "T2S watchdog launch-check refused (see watchdog_check_a.txt)"
+# py-spy, standalone (approved for the T2S, Task BA): pip download only, freeze hash checked.
+B64=$(base64 < "$MAC_REPO/tools/get_pyspy.ps1" | tr -d '\n')
+xs "[IO.File]::WriteAllBytes('C:\\Users\\zach\\seam_tools\\get_pyspy.ps1', [Convert]::FromBase64String('$B64')); powershell -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\zach\\seam_tools\\get_pyspy.ps1; \"RC=\$LASTEXITCODE\"" | tee "$OUT/pyspy.txt"
+PRC=$(grep -m1 '^RC=' "$OUT/pyspy.txt" | tr -dc '0-9')
+if [ "$PRC" = "0" ] && grep -q '^PIP_FREEZE_UNCHANGED' "$OUT/pyspy.txt"; then PYSPY="$PYSPY_EXE"; log "py-spy ready"
+elif [ "$PRC" = "4" ]; then stop "pip freeze of .venv-seam changed during the py-spy fetch (see pyspy.txt)"
+else log "py-spy not available (rc ${PRC:-none}); cells run without a native dump"; fi
+# Window start: reboot, pin restore, pull to the expected head.
+reboot_t2s "window start"
+xs "cd $R; git pull --ff-only; Remove-Item derived\\h1_hybrid\\demo2\\DEMO2_HELDOUT_60.json; git checkout -- derived/h1_hybrid/demo2/DEMO2_HELDOUT_60.json; (Get-FileHash -Algorithm SHA256 derived\\h1_hybrid\\demo2\\DEMO2_HELDOUT_60.json).Hash; git log -1 --format=%h; git status --short" | tee "$OUT/b_pull_pin.txt"
+grep -q "^$PIN_SHA" "$OUT/b_pull_pin.txt" || stop "DEMO2_HELDOUT_60 hash after restore is not $PIN_SHA"
+grep -q "^${EXPECT_HEAD:0:7}" "$OUT/b_pull_pin.txt" || stop "T2S head is not $EXPECT_HEAD after the pull"
+clean_tree; log "pulled to $EXPECT_HEAD, pin restored, tree clean"
+
+ONE='-Entries derived\h1_hybrid\demo1\DEMO1_LONGCTX_30.json -EntryOffset 14 -EntryCount 1'
+COMMON='-Interleaved -InterleavedPolicies local_only -PolicyCapUsd local_only=0 -SessionMaxUsd 1 -Placement gpu_only -Residency RESIDENT -DebugRawText -MemTelemetry -GpuMemCounters -StepLog'
+WD="-TurnWatchdogS $WATCHDOG_S"; [ -n "$PYSPY" ] && WD="$WD -HangDumpPySpy $PYSPY"
+UNL=18446744073709551615
+declare -a P10A=(
+  "p10t2s_c2_chunk4096|-Kv default -CompiledReadback -SchedPrefixCaching on -SchedMaxBatchedTokens 4096"
+  "p10t2s_c3_chunk256|-Kv default -CompiledReadback -SchedPrefixCaching on -SchedMaxBatchedTokens 256"
+)
+declare -a P10B=(
+  "p10t2s_c4_kv_u4|-Kv u4 -CompiledReadback"
+  "p10t2s_c5_kv_f16|-Kv f16 -CompiledReadback"
+  "p10t2s_c6_splitfuse_off|-Kv default -CompiledReadback -SchedExploratory -SchedPrefixCaching on -SchedMaxBatchedTokens $UNL -SchedDynamicSplitFuse off"
+  "p10t2s_c1_prefix_off|-Kv default -CompiledReadback -SchedExploratory -SchedPrefixCaching off -SchedMaxBatchedTokens $UNL"
+)
+after_cell(){ # $1 rc: reboot after a hang or a generate error
+  if [ "$1" = "2" ] || [ "$1" = "3" ]; then reboot_t2s "after a hang or error"; clean_tree; fi
+}
+IDX=0
+L1_STALL=""; L2_STALL=""; L1_RC=0; L2_RC=0
+# Phase L.
+if [ $IDX -ge $HANG_FROM ]; then deadline_ok p11_l1_repro $IDX; L1_RC=0; repro_cell p11_l1_repro "$BASE_INPUTS" $BASE_SHA "" || L1_RC=$?; L1_STALL=$LAST_STALL; after_cell $L1_RC; fi
+IDX=1
+if [ $IDX -ge $HANG_FROM ]; then deadline_ok p11_l2_runner $IDX; L2_RC=0; runner_cell p11_l2_runner $COMMON -Kv default -RequireTrueDefault $WD $ONE || L2_RC=$?; L2_STALL=$LAST_STALL; after_cell $L2_RC; fi
+# Stalling step S.
+if [ -n "$STALL_STEP" ]; then S=$STALL_STEP
+elif [ $L1_RC -eq 2 ] && [ -n "$L1_STALL" ]; then S=$L1_STALL
+elif [ $L2_RC -eq 2 ] && [ -n "$L2_STALL" ]; then S=$L2_STALL; log "L1 did not hang; S from L2's step_log (M/S use the repro: a recorded limit)"
+elif [ $HANG_FROM -le 1 ]; then S=""; log "neither L1 nor L2 hung: class 'not reproduced' on this host; M and S are skipped"
+else stop "HANG_FROM=$HANG_FROM skips phase L: set STALL_STEP=<0|1> from the earlier window"; fi
+[ -z "$S" ] || [ "$S" = "0" ] || [ "$S" = "1" ] || stop "stalling step $S has no variant set (only S0 and S1 are built)"
+echo "S=${S:-none} (L1 rc=$L1_RC stall=${L1_STALL:-none}; L2 rc=$L2_RC stall=${L2_STALL:-none})" | tee -a "$OUT/steps.txt" > "$OUT/stall_step.txt"
+# Plan from here (index | label | kind | input).
+PLAN=()
+for c in "${P10A[@]}"; do PLAN+=("runner|$c"); done
+if [ -n "$S" ]; then
+  CELLS_S=" $(var_cells $S) "
+  for m in M4 M1 M2 M3 M5; do [[ "$CELLS_S" == *" $m "* ]] && PLAN+=("repro|p11_s${S}_${m}|derived\\repro_hang123\\variants\\S$S\\$m.json|$(var_sha $S $m)"); done
+  for f in 0p50 0p75 0p90 1p00 1p10 1p25 1p50; do
+    for k in rand real; do PLAN+=("repro|p11_s${S}_S_${k}_$f|derived\\repro_hang123\\variants\\S$S\\S_${k}_$f.json|$(var_sha $S S_${k}_$f)"); done
+  done
+  PLAN+=("repro|p11_s${S}_M6|$BASE_INPUTS|$BASE_SHA")
+fi
+for c in "${P10B[@]}"; do PLAN+=("runner|$c"); done
+: > "$OUT/cells_plan.txt"; for i in "${!PLAN[@]}"; do echo "$((i + 2)) ${PLAN[$i]%%|*} $(echo "${PLAN[$i]}" | cut -d'|' -f2)" >> "$OUT/cells_plan.txt"; done
+log "plan: $(( ${#PLAN[@]} + 2 )) cells (cells_plan.txt; L1=0, L2=1)"
+for i in "${!PLAN[@]}"; do
+  IDX=$((i + 2)); [ $IDX -ge $HANG_FROM ] || continue
+  kind=${PLAN[$i]%%|*}; rest=${PLAN[$i]#*|}
+  lbl=${rest%%|*}
+  deadline_ok "$lbl" $IDX
+  rc=0
+  if [ "$kind" = "runner" ]; then
+    args=${rest#*|}; runner_cell "$lbl" $COMMON $args $WD $ONE || rc=$?
+  else
+    inp=$(echo "$rest" | cut -d'|' -f2); sh=$(echo "$rest" | cut -d'|' -f3)
+    repro_cell "$lbl" "$inp" "$sh" "$S" || rc=$?
+  fi
+  [ $((IDX + 1)) -lt $(( ${#PLAN[@]} + 2 )) ] && after_cell $rc
+done
+log "T2S hang window done (cells.txt); closeout applies the registered rules"
+handback
+exit 0
