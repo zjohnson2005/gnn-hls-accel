@@ -1695,6 +1695,15 @@ class OpenVinoLocalBackend:
             session.gen_cfg_extra = dict(rt["generation"])
         if rt.get("debug_raw_text"):
             session.debug_raw_text = True
+        if rt.get("step_log"):
+            from seam.step_log import STEP_LOG_NAME, StepLog
+
+            base = getattr(self, "telemetry_path", None)
+            if base is None:
+                raise RuntimeError("REFUSED -- --step-log needs the run dir (telemetry_path)")
+            session.step_log = StepLog(
+                path=Path(base).parent / STEP_LOG_NAME, entry_id=str(eid), policy=str(policy)
+            )
         if rt.get("mem_telemetry"):
             if getattr(self, "_mem_sampler", None) is None:
                 from seam.turn_memory import TurnMemorySampler
@@ -4403,6 +4412,13 @@ def build_argparser() -> argparse.ArgumentParser:
         help="Record the raw generated text of every local step in local_turn_telemetry.jsonl "
         "(pilot P1). No behavior change.",
     )
+    g.add_argument(
+        "--step-log",
+        action="store_true",
+        help="Task AZ (P11-HANG-REGIME): before each local generate, write and flush one line "
+        "(entry, turn, step, prompt tokens, estimated new tokens) to step_log.jsonl and stderr. "
+        "No behavior change.",
+    )
     p.add_argument(
         "--turn-watchdog-s",
         type=float,
@@ -4795,6 +4811,7 @@ RUNTIME_FLAG_KEYS = (
     "mem_telemetry",
     "gpu_mem_counters",
     "debug_raw_text",
+    "step_log",
 )
 
 
@@ -4833,6 +4850,7 @@ def resolve_runtime_options(settings: dict[str, Any], flags: dict[str, Any] | No
             mem_telemetry=bool(f.get("mem_telemetry")),
             gpu_mem_counters=bool(f.get("gpu_mem_counters")),
             debug_raw_text=bool(f.get("debug_raw_text")),
+            step_log=bool(f.get("step_log")),
         )
     except ValueError as exc:
         raise SystemExit(f"REFUSED -- {exc}") from exc

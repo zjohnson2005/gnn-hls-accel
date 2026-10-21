@@ -217,6 +217,7 @@ def build_runtime_options(
     mem_telemetry: bool = False,
     gpu_mem_counters: bool = False,
     debug_raw_text: bool = False,
+    step_log: bool = False,
 ) -> dict[str, Any] | None:
     """Validate the DEMO-2 runner flags. None when no flag is set (behavior unchanged).
 
@@ -257,6 +258,7 @@ def build_runtime_options(
         mem_telemetry,
         gpu_mem_counters,
         debug_raw_text,
+        step_log,
     )
     if not any(flags):
         return None
@@ -336,6 +338,9 @@ def build_runtime_options(
     if sched_exploratory:
         # Absent otherwise so existing plans are unchanged.
         out["sched_exploratory"] = True
+    if step_log:
+        # Task AZ; absent otherwise so existing plans are unchanged.
+        out["step_log"] = True
     return out
 
 

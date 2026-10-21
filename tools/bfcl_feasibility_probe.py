@@ -1824,6 +1824,9 @@ class MultiTurnAgentSession:
     gen_cfg_extra: dict[str, Any] | None = field(default=None, init=False)
     debug_raw_text: bool = field(default=False, init=False)
     turn_telemetry: Any = field(default=None, init=False, repr=False)
+    # Task AZ (P11-HANG-REGIME), default off: seam.step_log.StepLog, one line
+    # written and flushed before each generate.
+    step_log: Any = field(default=None, init=False, repr=False)
     ctx_overflow: dict[str, Any] | None = field(default=None, init=False)
     session_generated_once: bool = field(default=False, init=False)
     p1: Any = field(default=None, init=False, repr=False)
@@ -2170,6 +2173,14 @@ class MultiTurnAgentSession:
                     self.stop_reason = "ctx_overflow"
                     break
 
+            if self.step_log is not None:
+                self.step_log.before_generate(
+                    turn=turn_idx,
+                    step=step,
+                    prompt_tokens=prompt_n,
+                    generate_input_tokens=gen_input_tokens,
+                    input_kind=input_kind,
+                )
             prompt_tokens_reported: int | None = None
             if mode is None:
                 t0 = time.perf_counter()
@@ -2252,6 +2263,10 @@ class MultiTurnAgentSession:
                 measure_reprefill = False
 
             self.completion_token_samples.append(int(completion_n))
+            if self.step_log is not None:
+                self.step_log.after_generate(
+                    prompt_tokens=prompt_n, generated_tokens=int(completion_n)
+                )
             self.session_generated_once = True
             turn_responses.append(text)
 

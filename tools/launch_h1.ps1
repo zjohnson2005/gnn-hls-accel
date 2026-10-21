@@ -83,6 +83,7 @@
 #   -SchedPrefixCaching on -SchedMaxBatchedTokens <N> [-SchedCacheSize <GB>] (explicit
 #   SchedulerConfig; replaces the latency defaults), -PromptLookup -NumAssistantTokens <K>
 #   -MaxNgramSize <n>, -MemTelemetry [-GpuMemCounters], -DebugRawText.
+#   -StepLog (Task AZ): one flushed line per local step before generate (step_log.jsonl).
 #   -TurnWatchdogS <s> [-HangDumpPySpy <py-spy.exe>] (Task AW; default off): a local turn
 #                       longer than <s> records outcome hang, dumps stacks, worker exits 86.
 #   -SkipEntries <id[,id]> -SkipHangRecord <hang_events.json> (Task AY; default off): count
@@ -168,6 +169,7 @@ param(
     [switch]$MemTelemetry,
     [switch]$GpuMemCounters,
     [switch]$DebugRawText,
+    [switch]$StepLog,
     # Per-turn wall-clock watchdog (Task AW, harness only; default off). A local turn
     # longer than this records outcome "hang", dumps stacks and ends the worker (exit 86).
     [Nullable[double]]$TurnWatchdogS = $null,
@@ -704,6 +706,7 @@ if ($null -ne $MaxNgramSize) {
 if ($MemTelemetry) { $resolvedCmd = $resolvedCmd + ' --mem-telemetry' }
 if ($GpuMemCounters) { $resolvedCmd = $resolvedCmd + ' --gpu-mem-counters' }
 if ($DebugRawText) { $resolvedCmd = $resolvedCmd + ' --debug-raw-text' }
+if ($StepLog) { $resolvedCmd = $resolvedCmd + ' --step-log' }
 if ($null -ne $TurnWatchdogS) {
     $resolvedCmd = $resolvedCmd + ' --turn-watchdog-s ' + $TurnWatchdogS
 }
