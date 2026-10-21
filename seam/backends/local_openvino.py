@@ -430,8 +430,11 @@ def _text_from_generate_result(result: Any) -> str:
     return str(result)
 
 
-def _make_ttft_streamer(ov_genai: Any) -> Any:
-    """Build a ``StreamerBase`` that records wall time to the first generated token."""
+def _make_ttft_streamer(ov_genai: Any, on_token: Any = None) -> Any:
+    """Build a ``StreamerBase`` that records wall time to the first generated token.
+
+    ``on_token`` (Task BB, default None) is called with "token" on every write.
+    """
 
     class _TtftStreamer(ov_genai.StreamerBase):
         def __init__(self) -> None:
@@ -459,6 +462,8 @@ def _make_ttft_streamer(ov_genai: Any) -> Any:
                 if self.ttft_ns is None and self.t0_ns is not None:
                     self.ttft_ns = now - self.t0_ns
             self.last_token_ns = now
+            if on_token is not None:
+                on_token("token")
             return ov_genai.StreamingStatus.RUNNING
 
         def end(self) -> None:

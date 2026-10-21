@@ -18,6 +18,14 @@ No runner. Three subcommands (variants: tools/repro_hang123_variants.py, Task BA
       python -u tools/repro_hang123.py run --inputs <inputs.json> \
           --model-dir models\\Qwen3-4B-int4-ov [--only-step N]
 
+  run --chain-steps K (Task BB, pilot P11-B; default off): the inputs hold one
+    base prompt and a pinned "chain" suffix. After the base generate, K more
+    generates follow, each on the previous prompt + its output text + the suffix
+    (about 55 new tokens: the shape of 8af10211's steps 2-5). Outputs and every
+    prompt's sha256 are recorded in run.json. --stall-s arms the stall watchdog
+    (no streamer token for that long: outcome stall); --watchdog-s is then the
+    per-generate budget (outcome turn_budget_exceeded).
+
 What it is not: the runner feeds a ChatHistory (RESIDENT) and the model's own
 step-0 output; this feeds rendered strings and the gold step-0 call. Prefix
 caching is on (latency default), so step 1 reuses step 0's prefix only as far
@@ -130,20 +138,45 @@ def _line(tag: str, **kw: Any) -> None:
     print(f"{tag} {json.dumps(kw, sort_keys=True)}", flush=True)
 
 
-def _watchdog(limit_s: float | None, out_dir: Path | None, py_spy: str | None, run_id: str) -> Any:
+def _watchdog(
+    limit_s: float | None,
+    out_dir: Path | None,
+    py_spy: str | None,
+    run_id: str,
+    stall_s: float | None = None,
+) -> Any:
     """seam.turn_watchdog.TurnWatchdog armed per generate (Task BA); None when off."""
-    if limit_s is None:
+    if limit_s is None and stall_s is None:
         if py_spy:
-            raise SystemExit("REFUSED -- --py-spy needs --watchdog-s")
+            raise SystemExit("REFUSED -- --py-spy needs --watchdog-s or --stall-s")
         return None
     if out_dir is None:
-        raise SystemExit("REFUSED -- --watchdog-s needs --out-dir")
+        raise SystemExit("REFUSED -- --watchdog-s needs --out-dir (as does --stall-s)")
     from seam.turn_watchdog import TurnWatchdog
 
     dump = [py_spy, "dump", "--native", "--pid", "{pid}"] if py_spy else None
-    wd = TurnWatchdog(limit_s=float(limit_s), out_dir=out_dir, run_id=run_id, dump_cmd=dump)
+    wd = TurnWatchdog(
+        limit_s=float(limit_s) if limit_s is not None else None,
+        out_dir=out_dir,
+        run_id=run_id,
+        dump_cmd=dump,
+        stall_s=float(stall_s) if stall_s is not None else None,
+    )
     wd.start()
     return wd
+
+
+def _chain_prompts(doc: dict[str, Any], only_step: int | None) -> tuple[dict[str, Any], str]:
+    """Base step and pinned suffix for --chain-steps; refuses a doc without a chain."""
+    chain = doc.get("chain")
+    if not isinstance(chain, dict) or "suffix" not in chain:
+        raise SystemExit("REFUSED -- --chain-steps needs inputs with a 'chain' suffix")
+    if sha(str(chain["suffix"])) != chain.get("suffix_sha256"):
+        raise SystemExit("REFUSED -- chain suffix sha256 mismatch")
+    steps = [s for s in doc["steps"] if only_step is None or s["step"] == only_step]
+    if len(steps) != 1:
+        raise SystemExit("REFUSED -- --chain-steps needs exactly one base step (use --only-step)")
+    return steps[0], str(chain["suffix"])
 
 
 def run(
@@ -156,6 +189,8 @@ def run(
     out_dir: Path | None = None,
     py_spy: str | None = None,
     label: str = "repro",
+    stall_s: float | None = None,
+    chain_steps: int | None = None,
 ) -> int:
     raw = inputs.read_bytes()
     got = hashlib.sha256(raw).hexdigest()
@@ -167,6 +202,12 @@ def run(
             raise SystemExit(f"REFUSED -- step {s['step']} prompt sha256 mismatch")
     import uuid
 
+    base: dict[str, Any] | None = None
+    suffix = ""
+    if chain_steps is not None:
+        if chain_steps < 1:
+            raise SystemExit("REFUSED -- --chain-steps must be >= 1")
+        base, suffix = _chain_prompts(doc, only_step)
     run_id = str(uuid.uuid4())
     record: dict[str, Any] = {
         "kind": "repro_hang123_run",
@@ -177,6 +218,8 @@ def run(
         "only_step": only_step,
         "watchdog_s": watchdog_s,
         "py_spy": py_spy,
+        "stall_s": stall_s,
+        "chain_steps": chain_steps,
         "construction": "LLMPipeline(model_dir, 'GPU'), no property, no SchedulerConfig",
         "max_new_tokens": MAX_NEW_TOKENS,
         "steps": [],
@@ -185,7 +228,7 @@ def run(
     if out_dir is not None:
         out_dir = out_dir / run_id
         out_dir.mkdir(parents=True, exist_ok=True)
-    wd = _watchdog(watchdog_s, out_dir, py_spy, run_id)
+    wd = _watchdog(watchdog_s, out_dir, py_spy, run_id, stall_s)
 
     def save() -> None:
         if out_dir is not None:
@@ -212,6 +255,13 @@ def run(
     cfg.max_new_tokens = MAX_NEW_TOKENS
     cfg.do_sample = False
     cfg.apply_chat_template = False
+    if base is not None:
+        rc = _run_chain(pipe, ov_genai, cfg, base, suffix, int(chain_steps or 0), wd, record, save)
+        if wd is not None:
+            wd.stop()
+        if rc == 0:
+            _line("REPRO_DONE")
+        return rc
     for s in doc["steps"]:
         if only_step is not None and s["step"] != only_step:
             continue
@@ -258,6 +308,83 @@ def run(
     return 0
 
 
+def _run_chain(
+    pipe: Any,
+    ov_genai: Any,
+    cfg: Any,
+    base: dict[str, Any],
+    suffix: str,
+    k: int,
+    wd: Any,
+    record: dict[str, Any],
+    save: Any,
+) -> int:
+    """Base generate, then k generates on prompt + output + suffix (Task BB)."""
+    from seam.backends.local_openvino import _make_ttft_streamer
+
+    prompt = str(base["prompt"])
+    on_tok = wd.progress if wd is not None and wd.stall_s is not None else None
+    for i in range(k + 1):
+        psha = sha(prompt)
+        _line("PRE_GENERATE", step=i, prompt_chars=len(prompt), prompt_sha256=psha)
+        record["steps"].append(
+            {"step": i, "pre_generate_utc": _utc(), "prompt_sha256": psha, "done": False}
+        )
+        save()
+        streamer = _make_ttft_streamer(ov_genai, on_token=on_tok)
+        if wd is not None:
+            wd.arm(entry_id=f"{record['label']}_chain", policy="repro", turn=i)
+        t = time.perf_counter_ns()
+        streamer.t0_ns = t
+        try:
+            res = pipe.generate(prompt, cfg, streamer)
+        except Exception as exc:
+            record["steps"][-1].update(error=f"{type(exc).__name__}: {exc}")
+            record["status"] = "error"
+            save()
+            _line("GENERATE_ERROR", step=i, error=f"{type(exc).__name__}: {exc}")
+            return 2
+        finally:
+            if wd is not None:
+                wd.disarm()
+        wall = round((time.perf_counter_ns() - t) / 1e9, 3)
+        text = str(res)
+        n_in = n_gen = None
+        metrics = getattr(res, "perf_metrics", None)
+        if metrics is not None:
+            try:
+                n_in = int(metrics.get_num_input_tokens())
+                n_gen = int(metrics.get_num_generated_tokens())
+            except Exception as exc:
+                record["steps"][-1]["metrics_error"] = f"{type(exc).__name__}: {exc}"
+        ttft = streamer.ttft_ns / 1e9 if streamer.ttft_ns else None
+        record["steps"][-1].update(
+            done=True,
+            wall_s=wall,
+            ttft_s=None if ttft is None else round(ttft, 3),
+            input_tokens=n_in,
+            generated_tokens=n_gen,
+            streamer_tokens=len(streamer.token_ids),
+            output_chars=len(text),
+            output_sha256=sha(text),
+            output_text=text,
+        )
+        save()
+        _line(
+            "POST_GENERATE",
+            step=i,
+            wall_s=wall,
+            ttft_s=record["steps"][-1]["ttft_s"],
+            input_tokens=n_in,
+            generated_tokens=n_gen,
+            output_sha256=sha(text),
+        )
+        prompt = prompt + text + suffix
+    record["status"] = "complete"
+    save()
+    return 0
+
+
 def _utc() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
@@ -280,12 +407,28 @@ def main(argv: list[str] | None = None) -> int:
     )
     r.add_argument("--py-spy", default=None, help="with --watchdog-s: py-spy exe for a native dump")
     r.add_argument("--label", default="repro")
+    r.add_argument(
+        "--stall-s", type=float, default=None, help="no streamer token for this long: stall"
+    )
+    r.add_argument(
+        "--chain-steps", type=int, default=None, help="Task BB: K generates on prompt+output+suffix"
+    )
     v = sub.add_parser("variants")
     v.add_argument("--tokenizer", type=Path, required=True)
     v.add_argument("--bfcl-unpacked", type=Path, required=True)
     v.add_argument("--inputs", type=Path, required=True)
     v.add_argument("--out", type=Path, required=True)
+    x = sub.add_parser("p11b-inputs")
+    x.add_argument("--tokenizer", type=Path, required=True)
+    x.add_argument("--bfcl-unpacked", type=Path, required=True)
+    x.add_argument("--out", type=Path, required=True)
     a = ap.parse_args(argv)
+    if a.cmd == "p11b-inputs":
+        from tools.repro_hang123_variants import build_p11b
+
+        idx = build_p11b(a.tokenizer, a.bfcl_unpacked, a.out)
+        print(json.dumps(idx, indent=1))
+        return 0
     if a.cmd == "build":
         print(json.dumps(build(a.tokenizer, a.bfcl_unpacked, a.out), indent=1))
         return 0
@@ -304,6 +447,8 @@ def main(argv: list[str] | None = None) -> int:
         out_dir=a.out_dir,
         py_spy=a.py_spy,
         label=a.label,
+        stall_s=a.stall_s,
+        chain_steps=a.chain_steps,
     )
 
 

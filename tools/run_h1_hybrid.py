@@ -1350,6 +1350,9 @@ class OpenVinoLocalBackend:
     runtime: dict[str, Any] | None = None
     # Sidecar JSONL for per-turn telemetry / debug text; set by main when runtime is on.
     telemetry_path: Path | None = None
+    # Task BB (P11-B), interleaved local_only only; default off (unchanged behavior).
+    local_turn_limit: int | None = None
+    ctx_overflow_local_fail: bool = False
     arm_id: str = field(init=False)
     pipe: Any = field(init=False, repr=False)
     tokenizer: Any = field(init=False, repr=False)
@@ -1704,6 +1707,9 @@ class OpenVinoLocalBackend:
             session.step_log = StepLog(
                 path=Path(base).parent / STEP_LOG_NAME, entry_id=str(eid), policy=str(policy)
             )
+        wd = getattr(self, "turn_watchdog", None)
+        if wd is not None and getattr(wd, "stall_s", None) is not None:
+            session.progress_cb = wd.progress
         if rt.get("mem_telemetry"):
             if getattr(self, "_mem_sampler", None) is None:
                 from seam.turn_memory import TurnMemorySampler
@@ -1847,6 +1853,19 @@ class OpenVinoLocalBackend:
             span = self.local_span(entry)
             span.turns_executed = turn_idx + 1
             span.stop_reason = "max_steps"
+        # Task BB (P11-B), default off: a ctx_overflow ends the entry as a local
+        # fail, and --local-turn-limit ends it after N local turns.
+        ovf = session.ctx_overflow
+        if self.ctx_overflow_local_fail and ovf is not None and ovf.get("turn") == turn_idx:
+            span = self.local_span(entry)
+            if span.stop_reason == "completed":
+                span.turns_executed = turn_idx + 1
+                span.stop_reason = "ctx_overflow"
+        if self.local_turn_limit is not None and turn_idx + 1 >= int(self.local_turn_limit):
+            span = self.local_span(entry)
+            if span.stop_reason == "completed" and span.turns_executed > turn_idx + 1:
+                span.turns_executed = turn_idx + 1
+                span.stop_reason = "turn_limit"
         required_tm = (
             "n_decoded_steps",
             "prompt_tokens",
@@ -2655,7 +2674,11 @@ def _run_hybrid_entry_body(
         # step-0 TTFT / decode and generation_error triggers. With neither,
         # mech_reason stays None and every existing path below is unchanged.
         mech_reason: str | None = None
-        if bt.ctx_overflow is not None:
+        if bt.ctx_overflow is not None and policy == "local_only" and getattr(
+            local, "ctx_overflow_local_fail", False
+        ):
+            pass  # Task BB: recorded as a local turn below; the span ends the entry.
+        elif bt.ctx_overflow is not None:
             if policy in ("local_only", "agnostic_default"):
                 raise SystemExit(
                     f"REFUSED -- ctx_overflow under {policy}, which cannot escalate "
@@ -2993,6 +3016,7 @@ def _run_hybrid_entry_body(
                 decoded_steps=[list(s) for s in (bt.decoded_steps or [])],
                 tool_exec_error=bool(bt.tool_exec_error),
                 tool_exec_error_class=bt.tool_exec_error_class,
+                ctx_overflow=bt.ctx_overflow,
             )
         )
 
@@ -3408,6 +3432,7 @@ def run_interleaved_session(
     obs_mask: Any = None,
     turn_watchdog: Any = None,
     skip_hangs: dict[str, Any] | None = None,
+    local_limits: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Entry-by-entry interleave of selected H1 policy arms (INF-5 session_design=interleaved).
 
@@ -3531,6 +3556,9 @@ def run_interleaved_session(
     if turn_watchdog is not None:
         # Task AW harness option; absent otherwise so existing plans are unchanged.
         plan["turn_watchdog"] = turn_watchdog.config()
+    if local_limits is not None:
+        # Task BB harness option; absent otherwise so existing plans are unchanged.
+        plan["local_limits"] = dict(local_limits)
     if skip_hangs is not None:
         # Task AY harness option; absent otherwise so existing plans are unchanged.
         plan["skip_entries"] = skip_hangs
@@ -3651,17 +3679,30 @@ def run_interleaved_session(
             # local turn; only that thread writes these files, at cell ends.
             pol = str(rec["policy"])
             st = state[pol]
-            reason = (
-                f"turn watchdog: entry {rec['entry_id']} turn {rec['turn']} ran "
-                f"{rec['elapsed_s']} s > {rec['limit_s']} s"
-            )
-            st["status"] = "aborted_hang"
+            outcome = str(rec.get("outcome") or "hang")
+            aborted = {
+                "hang": "aborted_hang",
+                "stall": "aborted_stall",
+                "turn_budget_exceeded": "aborted_turn_budget",
+            }.get(outcome, "aborted_hang")
+            if outcome == "stall":
+                reason = (
+                    f"stall watchdog: entry {rec['entry_id']} turn {rec['turn']} no token "
+                    f"or step for {rec.get('since_progress_s')} s > {rec.get('stall_s')} s "
+                    f"({rec.get('phase')})"
+                )
+            else:
+                reason = (
+                    f"turn watchdog: entry {rec['entry_id']} turn {rec['turn']} ran "
+                    f"{rec['elapsed_s']} s > {rec['limit_s']} s"
+                )
+            st["status"] = aborted
             st["abort_reason"] = reason
             st["quality_rows"].append(
                 {
                     "entry_id": rec["entry_id"],
-                    "outcome": "hang",
-                    "status": "hang",
+                    "outcome": outcome,
+                    "status": outcome,
                     "turn": rec["turn"],
                     "local_pass": None,
                     "hybrid_pass": None,
@@ -3671,7 +3712,7 @@ def run_interleaved_session(
                 {
                     "entry_id": rec["entry_id"],
                     "policy": pol,
-                    "status": "hang",
+                    "status": outcome,
                     "turn": rec["turn"],
                     "running_usd_policy": st["cost"].running_usd,
                     "running_usd_session": session_cost.running_usd,
@@ -3685,7 +3726,7 @@ def run_interleaved_session(
                     "run_id": run_id,
                     "kind": kind,
                     "session_design": "interleaved",
-                    "status": "aborted_hang",
+                    "status": aborted,
                     "abort_reason": reason,
                     "measurement_kind": "MEASURED",
                     "n_entries_planned": len(entries),
@@ -4435,6 +4476,29 @@ def build_argparser() -> argparse.ArgumentParser:
         "'py-spy dump --native --pid <worker>' into the run dir.",
     )
     p.add_argument(
+        "--stall-watchdog-s",
+        type=float,
+        default=None,
+        help="Interleaved only (Task BB, pilot P11-B; default off): fire with outcome stall "
+        "when a local turn gets no streamer token and starts no new step for this many "
+        "seconds. With it, --turn-watchdog-s fires with outcome turn_budget_exceeded "
+        "instead of hang. Same records and exit code 86.",
+    )
+    p.add_argument(
+        "--local-turn-limit",
+        type=int,
+        default=None,
+        help="Interleaved local_only only (Task BB, pilot P11-B; default off): end each "
+        "entry after this many local turns (stop_reason turn_limit).",
+    )
+    p.add_argument(
+        "--ctx-overflow-local-fail",
+        action="store_true",
+        help="Interleaved local_only only (Task BB, pilot P11-B; default off): allow "
+        "--context-window; a step over the window is not generated and ends the entry "
+        "(stop_reason ctx_overflow, a local fail) instead of refusing.",
+    )
+    p.add_argument(
         "--skip-entries",
         type=str,
         default=None,
@@ -4945,17 +5009,66 @@ def load_skip_hangs(
 def build_turn_watchdog(args: argparse.Namespace) -> Any:
     """seam.turn_watchdog.TurnWatchdog from --turn-watchdog-s, or None (default off)."""
     limit = getattr(args, "turn_watchdog_s", None)
+    stall = getattr(args, "stall_watchdog_s", None)
     py_spy = getattr(args, "hang_dump_py_spy", None)
-    if limit is None:
+    if limit is None and stall is None:
         if py_spy:
             raise SystemExit("REFUSED -- --hang-dump-py-spy needs --turn-watchdog-s")
         return None
-    if not float(limit) > 0:
+    if limit is not None and not float(limit) > 0:
         raise SystemExit("REFUSED -- --turn-watchdog-s must be positive")
+    if stall is not None and not float(stall) > 0:
+        raise SystemExit("REFUSED -- --stall-watchdog-s must be positive")
     from seam.turn_watchdog import TurnWatchdog
 
     dump = [str(py_spy), "dump", "--native", "--pid", "{pid}"] if py_spy else None
-    return TurnWatchdog(limit_s=float(limit), out_dir=Path(args.out), dump_cmd=dump)
+    return TurnWatchdog(
+        limit_s=float(limit) if limit is not None else None,
+        out_dir=Path(args.out),
+        dump_cmd=dump,
+        stall_s=float(stall) if stall is not None else None,
+    )
+
+
+def attach_local_limits(
+    args: argparse.Namespace, policies: tuple[str, ...], local: Any
+) -> dict[str, Any] | None:
+    """Task BB (P11-B): --local-turn-limit / --ctx-overflow-local-fail (+ --context-window).
+
+    Interleaved local_only on the OpenVINO backend only. None when all are off.
+    """
+    limit = getattr(args, "local_turn_limit", None)
+    fail = bool(getattr(args, "ctx_overflow_local_fail", False))
+    window = getattr(args, "context_window", None)
+    if limit is None and not fail and window is None:
+        return None
+    if tuple(policies) != ("local_only",):
+        raise SystemExit(
+            "REFUSED -- --local-turn-limit / --ctx-overflow-local-fail need "
+            f"--interleaved-policy local_only alone, not {list(policies)}"
+        )
+    if not isinstance(local, OpenVinoLocalBackend):
+        raise SystemExit("REFUSED -- --local-turn-limit / --ctx-overflow-local-fail need OpenVINO")
+    if fail != (window is not None):
+        raise SystemExit("REFUSED -- --ctx-overflow-local-fail and --context-window go together")
+    rec: dict[str, Any] = {"task": "BB", "pilot": "P11-B"}
+    if limit is not None:
+        if int(limit) < 1:
+            raise SystemExit("REFUSED -- --local-turn-limit must be >= 1")
+        local.local_turn_limit = int(limit)
+        rec["local_turn_limit"] = int(limit)
+    if fail:
+        assert window is not None
+        if int(window) <= 0:
+            raise SystemExit("REFUSED -- --context-window must be positive")
+        local.context_window = int(window)
+        local.ctx_overflow_local_fail = True
+        rec["context_window"] = {
+            "tokens": int(window),
+            "rule": "generate input + max_new_tokens > window: not generated; the entry ends "
+            "as a local fail (stop_reason ctx_overflow)",
+        }
+    return rec
 
 
 def refuse_runtime_flags_without_openvino(args: argparse.Namespace, local: Any) -> None:
@@ -4994,7 +5107,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.interleaved:
-        if args.context_window is not None:
+        if args.context_window is not None and not getattr(args, "ctx_overflow_local_fail", False):
             raise SystemExit("REFUSED -- --context-window is single-arm only (DEMO-2)")
         return _main_interleaved(args)
 
@@ -5002,6 +5115,15 @@ def main(argv: list[str] | None = None) -> int:
         args, "hang_dump_py_spy", None
     ):
         raise SystemExit("REFUSED -- --turn-watchdog-s is interleaved only (Task AW)")
+    if (
+        getattr(args, "stall_watchdog_s", None) is not None
+        or getattr(args, "local_turn_limit", None) is not None
+        or getattr(args, "ctx_overflow_local_fail", False)
+    ):
+        raise SystemExit(
+            "REFUSED -- --stall-watchdog-s / --local-turn-limit / --ctx-overflow-local-fail "
+            "are interleaved only (Task BB)"
+        )
     if (
         getattr(args, "skip_entries", None) is not None
         or getattr(args, "skip_hang_record", None) is not None
@@ -5127,6 +5249,12 @@ def _main_interleaved(args: argparse.Namespace) -> int:
     if args.fixture is not None:
         if args.seal is True:
             raise SystemExit("REFUSED -- --seal is incompatible with --fixture (stub cannot seal)")
+        if getattr(args, "local_turn_limit", None) is not None or getattr(
+            args, "ctx_overflow_local_fail", False
+        ):
+            raise SystemExit(
+                "REFUSED -- --local-turn-limit / --ctx-overflow-local-fail need OpenVINO"
+            )
         fix = json.loads(args.fixture.read_text(encoding="utf-8"))
         entries = fix["entries"]
         local: LocalBackend = StubLocalBackend(
@@ -5192,6 +5320,7 @@ def _main_interleaved(args: argparse.Namespace) -> int:
 
     turn_watchdog = build_turn_watchdog(args)
     skip_hangs = load_skip_hangs(args.skip_entries, args.skip_hang_record, entries)
+    local_limits = attach_local_limits(args, policies, local)
     summary = run_interleaved_session(
         entries=entries,
         out_dir=args.out,
@@ -5213,6 +5342,7 @@ def _main_interleaved(args: argparse.Namespace) -> int:
         obs_mask=obs_mask,
         turn_watchdog=turn_watchdog,
         skip_hangs=skip_hangs,
+        local_limits=local_limits,
     )
     print(json.dumps({"ok": True, "summary": summary}, indent=2, default=str))
     ok_statuses = {"complete", "partial_policy_cap"}

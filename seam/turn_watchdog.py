@@ -22,6 +22,18 @@ failure inside steps 1-4 is recorded in the record, never raised, so the exit
 in step 5 always happens.
 
 Off by default: the runner builds a watchdog only with --turn-watchdog-s.
+
+Stall mode (Task BB, pilot P11-B; default off, ``stall_s``): T2S run 8af10211
+showed that a turn over its wall-clock budget can still be progressing (entry
+123 turn 0: steps 2-5 started about 59 s apart when the 600 s budget fired).
+With ``stall_s`` set, ``progress()`` (called on every streamer token and at
+every step start) resets a no-progress clock, and the watchdog fires with
+outcome "stall" when nothing arrived for ``stall_s`` seconds. The wall-clock
+limit, when also set, then fires with outcome "turn_budget_exceeded". Without
+``stall_s`` the outcome stays "hang" (existing plans unchanged). A stall
+record says whether the step had produced a token yet ("prefill" or "decode"):
+with the default scheduler a prefill is one native call with no token, so a
+long prefill is indistinguishable from a stall until its first token.
 """
 
 from __future__ import annotations
@@ -40,6 +52,9 @@ from typing import Any
 
 HANG_EXIT_CODE = 86
 HANG_EVENTS_NAME = "hang_events.json"
+OUTCOME_HANG = "hang"
+OUTCOME_STALL = "stall"
+OUTCOME_BUDGET = "turn_budget_exceeded"
 DUMP_TIMEOUT_S = 120.0
 _SAFE = re.compile(r"[^A-Za-z0-9_.-]+")
 
@@ -56,7 +71,7 @@ class TurnWatchdog:
     def __init__(
         self,
         *,
-        limit_s: float,
+        limit_s: float | None,
         out_dir: Path,
         run_id: str | None = None,
         dump_cmd: list[str] | None = None,
@@ -64,10 +79,16 @@ class TurnWatchdog:
         exit_fn: Callable[[int], Any] = os._exit,
         clock: Callable[[], float] = time.monotonic,
         poll_s: float = 1.0,
+        stall_s: float | None = None,
     ) -> None:
-        if not limit_s > 0:
+        if limit_s is None and stall_s is None:
+            raise ValueError("turn watchdog needs limit_s, stall_s or both")
+        if limit_s is not None and not limit_s > 0:
             raise ValueError("turn watchdog limit must be positive")
-        self.limit_s = float(limit_s)
+        if stall_s is not None and not stall_s > 0:
+            raise ValueError("stall watchdog limit must be positive")
+        self.limit_s = float(limit_s) if limit_s is not None else None
+        self.stall_s = float(stall_s) if stall_s is not None else None
         self.out_dir = Path(out_dir)
         self.run_id = run_id
         self.dump_cmd = list(dump_cmd) if dump_cmd else None
@@ -82,12 +103,20 @@ class TurnWatchdog:
         self._thread: threading.Thread | None = None
 
     def config(self) -> dict[str, Any]:
-        return {
+        doc: dict[str, Any] = {
             "limit_s": self.limit_s,
             "dump_cmd": self.dump_cmd,
             "exit_code": HANG_EXIT_CODE,
             "poll_s": self.poll_s,
         }
+        if self.stall_s is not None:
+            doc["stall_s"] = self.stall_s
+            doc["limit_outcome"] = self.budget_outcome
+        return doc
+
+    @property
+    def budget_outcome(self) -> str:
+        return OUTCOME_BUDGET if self.stall_s is not None else OUTCOME_HANG
 
     def arm(self, *, entry_id: str, policy: str, turn: int) -> None:
         with self._lock:
@@ -97,7 +126,27 @@ class TurnWatchdog:
                 "turn": int(turn),
                 "t0": self._clock(),
                 "armed_utc": _utc_now(),
+                "t_progress": self._clock(),
+                "n_tokens": 0,
+                "n_steps": 0,
+                "step_tokens": 0,
+                "last_progress": "arm",
             }
+
+    def progress(self, kind: str = "token") -> None:
+        """A streamer token ("token") or a new step ("step") in the armed turn."""
+        with self._lock:
+            armed = self._armed
+            if armed is None:
+                return
+            armed["t_progress"] = self._clock()
+            armed["last_progress"] = kind
+            if kind == "step":
+                armed["n_steps"] += 1
+                armed["step_tokens"] = 0
+            else:
+                armed["n_tokens"] += 1
+                armed["step_tokens"] += 1
 
     def disarm(self) -> None:
         with self._lock:
@@ -109,16 +158,25 @@ class TurnWatchdog:
             armed = dict(self._armed) if self._armed is not None else None
             if armed is None or self._fired:
                 return None
-            elapsed = self._clock() - float(armed["t0"])
-            if elapsed <= self.limit_s:
+            now = self._clock()
+            elapsed = now - float(armed["t0"])
+            quiet = now - float(armed["t_progress"])
+            if self.stall_s is not None and quiet > self.stall_s:
+                outcome = OUTCOME_STALL
+            elif self.limit_s is not None and elapsed > self.limit_s:
+                outcome = self.budget_outcome
+            else:
                 return None
             self._fired = True
-        return self.fire(armed, elapsed)
+        armed["since_progress_s"] = quiet
+        return self.fire(armed, elapsed, outcome=outcome)
 
-    def fire(self, armed: dict[str, Any], elapsed_s: float) -> dict[str, Any]:
+    def fire(
+        self, armed: dict[str, Any], elapsed_s: float, *, outcome: str = OUTCOME_HANG
+    ) -> dict[str, Any]:
         tag = f"{_safe(armed['entry_id'])}_t{armed['turn']}"
         record: dict[str, Any] = {
-            "outcome": "hang",
+            "outcome": outcome,
             "run_id": self.run_id,
             "entry_id": armed["entry_id"],
             "policy": armed["policy"],
@@ -131,6 +189,15 @@ class TurnWatchdog:
             "exit_code": HANG_EXIT_CODE,
             "errors": [],
         }
+        if self.stall_s is not None:
+            record.update(
+                stall_s=self.stall_s,
+                since_progress_s=round(float(armed.get("since_progress_s", 0.0)), 3),
+                last_progress=armed.get("last_progress"),
+                n_tokens=armed.get("n_tokens"),
+                n_steps=armed.get("n_steps"),
+                phase="decode" if armed.get("step_tokens") else "prefill",
+            )
         try:
             self.out_dir.mkdir(parents=True, exist_ok=True)
             stacks = self.out_dir / f"hang_stacks_{tag}.txt"
@@ -149,8 +216,9 @@ class TurnWatchdog:
                 record["errors"].append(f"on_fire: {type(exc).__name__}: {exc}")
                 self._append_record(record, replace_last=True)
         print(
-            f"TURN_WATCHDOG_HANG entry={record['entry_id']} policy={record['policy']} "
-            f"turn={record['turn']} elapsed_s={record['elapsed_s']} limit_s={self.limit_s}",
+            f"TURN_WATCHDOG_{outcome.upper()} entry={record['entry_id']} "
+            f"policy={record['policy']} turn={record['turn']} "
+            f"elapsed_s={record['elapsed_s']} limit_s={self.limit_s}",
             flush=True,
         )
         self._exit(HANG_EXIT_CODE)

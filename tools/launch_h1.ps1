@@ -86,6 +86,12 @@
 #   -StepLog (Task AZ): one flushed line per local step before generate (step_log.jsonl).
 #   -TurnWatchdogS <s> [-HangDumpPySpy <py-spy.exe>] (Task AW; default off): a local turn
 #                       longer than <s> records outcome hang, dumps stacks, worker exits 86.
+#   -StallWatchdogS <s> (Task BB, P11-B; default off): a local turn with no streamer token
+#                       and no new step for <s> records outcome stall (exit 86); with it,
+#                       -TurnWatchdogS records outcome turn_budget_exceeded instead of hang.
+#   -LocalTurnLimit <N> (Task BB; interleaved local_only): end each entry after N local turns.
+#   -CtxOverflowLocalFail -ContextWindow <N> (Task BB; interleaved local_only): a step over the
+#                       window is not generated and ends the entry as a local fail.
 #   -SkipEntries <id[,id]> -SkipHangRecord <hang_events.json> (Task AY; default off): count
 #                       entries with a recorded hang as local fails (outcome hang), not run.
 #   -SchedDynamicSplitFuse on|off, -SchedExploratory (Task AY; P10-HANG123 isolation only;
@@ -175,6 +181,10 @@ param(
     [Nullable[double]]$TurnWatchdogS = $null,
     # With -TurnWatchdogS: py-spy executable for a native stack dump of the hung worker.
     [string]$HangDumpPySpy = "",
+    # Task BB (pilot P11-B), all default off.
+    [Nullable[double]]$StallWatchdogS = $null,
+    [Nullable[int]]$LocalTurnLimit = $null,
+    [switch]$CtxOverflowLocalFail,
     # Resume past a recorded hang (Task AY, harness only; default off).
     [string]$SkipEntries = "",
     [string]$SkipHangRecord = ""
@@ -371,7 +381,7 @@ if (-not $Interleaved -and $Policy -eq "agnostic_default") {
     exit 1
 }
 
-if ($Interleaved -and $null -ne $ContextWindow) {
+if ($Interleaved -and $null -ne $ContextWindow -and -not $CtxOverflowLocalFail) {
     Refuse "-ContextWindow is single-arm only (DEMO-2)"
     exit 1
 }
@@ -713,6 +723,13 @@ if ($null -ne $TurnWatchdogS) {
 if (-not [string]::IsNullOrWhiteSpace($HangDumpPySpy)) {
     $resolvedCmd = $resolvedCmd + ' --hang-dump-py-spy "' + $HangDumpPySpy + '"'
 }
+if ($null -ne $StallWatchdogS) {
+    $resolvedCmd = $resolvedCmd + ' --stall-watchdog-s ' + $StallWatchdogS
+}
+if ($null -ne $LocalTurnLimit) {
+    $resolvedCmd = $resolvedCmd + ' --local-turn-limit ' + $LocalTurnLimit
+}
+if ($CtxOverflowLocalFail) { $resolvedCmd = $resolvedCmd + ' --ctx-overflow-local-fail' }
 if (-not [string]::IsNullOrWhiteSpace($SkipEntries)) {
     $resolvedCmd = $resolvedCmd + ' --skip-entries ' + $SkipEntries
 }

@@ -1701,11 +1701,14 @@ def _timed_generate(
     ov_genai: Any,
     prompt: Any,
     cfg: Any,
+    on_token: Any = None,
 ) -> dict[str, Any]:
     """Generate with dual-source TTFT + decode_tok_s (same instrument as smoke_delta_prefill).
 
     ``prompt`` may be a pre-rendered string (NON_RESIDENT / legacy) or a GenAI
     ``ChatHistory`` (RESIDENT - template applied once inside generate).
+    ``on_token`` (Task BB, default None): called with "token" on every streamer
+    write (the stall watchdog's progress signal).
     """
     from seam.backends.local_openvino import (
         _extract_metrics,
@@ -1713,7 +1716,7 @@ def _timed_generate(
         resolve_ttft_ns,
     )
 
-    streamer = _make_ttft_streamer(ov_genai)
+    streamer = _make_ttft_streamer(ov_genai, on_token=on_token)
     t0 = time.perf_counter_ns()
     streamer.t0_ns = t0
     exc: BaseException | None = None
@@ -1827,6 +1830,9 @@ class MultiTurnAgentSession:
     # Task AZ (P11-HANG-REGIME), default off: seam.step_log.StepLog, one line
     # written and flushed before each generate.
     step_log: Any = field(default=None, init=False, repr=False)
+    # Task BB (P11-B), default off: called with "step" before each generate and
+    # "token" on each streamer write (seam.turn_watchdog.TurnWatchdog.progress).
+    progress_cb: Any = field(default=None, init=False, repr=False)
     ctx_overflow: dict[str, Any] | None = field(default=None, init=False)
     session_generated_once: bool = field(default=False, init=False)
     p1: Any = field(default=None, init=False, repr=False)
@@ -2181,6 +2187,8 @@ class MultiTurnAgentSession:
                     generate_input_tokens=gen_input_tokens,
                     input_kind=input_kind,
                 )
+            if self.progress_cb is not None:
+                self.progress_cb("step")
             prompt_tokens_reported: int | None = None
             if mode is None:
                 t0 = time.perf_counter()
@@ -2218,8 +2226,11 @@ class MultiTurnAgentSession:
                 controller = getattr(self, "p1", None)
                 if controller is not None:
                     timed = controller.generate(pipe, ov_genai, gen_input, prompt_tokens=prompt_n)
-                else:
+                elif self.progress_cb is None:
                     timed = _timed_generate(pipe, ov_genai, gen_input, cfg_use)
+                else:
+                    on_tok = self.progress_cb
+                    timed = _timed_generate(pipe, ov_genai, gen_input, cfg_use, on_tok)
                 wall_s = float(timed["wall_s"])
                 t_generate += wall_s
                 text = timed.get("text") or ""
@@ -2266,6 +2277,17 @@ class MultiTurnAgentSession:
             if self.step_log is not None:
                 self.step_log.after_generate(
                     prompt_tokens=prompt_n, generated_tokens=int(completion_n)
+                )
+                self.step_log.post_generate(
+                    turn=turn_idx,
+                    step=step,
+                    prompt_tokens=prompt_n,
+                    generated_tokens=int(completion_n),
+                    wall_s=float(wall_s),
+                    ttft_s=ttft_s,
+                    ok=bool(gen_ok),
+                    error=gen_err,
+                    raw_text=raw_generated if self.debug_raw_text else None,
                 )
             self.session_generated_once = True
             turn_responses.append(text)

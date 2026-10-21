@@ -308,3 +308,144 @@ def build_variants(
 def _frac(name: str) -> float:
     m = re.search(r"_(\d)p(\d+)$", name)
     return float(f"{m.group(1)}.{m.group(2)}") if m else 1.0
+
+
+# --- Task BB (pilot P11-B): X2 random-token chains and the reconstructed X3r input ---
+
+P11B_N = (32_768, 40_960, 49_152, 65_536, 87_392)
+P11B_SUFFIX_TOKENS = 55
+USER_HDR = "<|im_start|>user\n"
+ASSIST_OPEN = "<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
+SUFFIX_HDR = "<|im_end|>\n<|im_start|>user\n<tool_response>\n"
+SUFFIX_TAIL = "\n</tool_response>" + ASSIST_OPEN
+# DERIVED in Task BB part 1 (analysis/demo2_pilots/BB/): the step-0 call set on
+# 8af10211's own path that reproduces its logged sizes (125 text tokens, step-1
+# prompt 87,392 HF tokens with a 5-character price). The exact text was not
+# recorded; this uses the gold price 667.92 (step-1 prompt 87,394 tokens).
+X3R_STEP0_CALLS: tuple[tuple[str, dict[str, Any]], ...] = (
+    ("get_account_info", {}),
+    ("get_stock_info", {"symbol": "TSLA"}),
+    ("get_transaction_history", {}),
+    ("get_available_stocks", {"sector": "Technology"}),
+    ("place_order", {"order_type": "Buy", "symbol": "TSLA", "price": 667.92, "amount": 150}),
+)
+
+
+def x3r_step0_text() -> str:
+    return "\n".join(
+        "<tool_call>\n" + json.dumps({"name": n, "arguments": a}) + "\n</tool_call>"
+        for n, a in X3R_STEP0_CALLS
+    )
+
+
+def _fit_exact(fit: Fitter, stream: list[int], target: int, wrap: Callable[[str], str]) -> str:
+    """Wrapped random text whose total HF token count is target (+-1)."""
+    lo, hi = 1, len(stream)
+    best = ""
+    for _ in range(60):
+        k = (lo + hi) // 2
+        text = wrap(str(fit.tok.decode(stream[:k])))
+        got = len(fit.tok(text)["input_ids"])
+        if abs(got - target) <= 1:
+            return text
+        best = text
+        if got < target:
+            lo = k + 1
+        else:
+            hi = k - 1
+    raise ValueError(f"exact fit did not converge (last {len(best)} chars)")
+
+
+def _reconstructed_step1(tok: Any, bfcl_unpacked: Path) -> str:
+    if "openvino_genai" not in sys.modules:
+        sys.modules["openvino_genai"] = types.ModuleType("openvino_genai")
+    import tools.bfcl_feasibility_probe as probe
+    import tools.h1_context_sizing as hs
+
+    probe.BFCL_UNPACKED = bfcl_unpacked
+    entry = next(
+        e
+        for e in hs.load_entries("multi_turn_long_context", bfcl_unpacked / "bfcl_eval" / "data")
+        if e["id"] == EXCLUDE_ENTRY
+    )
+    prompts: list[str] = []
+
+    class CapturePipe(hs.GoldPipe):  # type: ignore[misc]
+        def generate(self, ps: list[str], cfg: Any) -> Any:
+            prompts.append(str(ps[0]))
+            return super().generate(ps, cfg)
+
+    pipe = CapturePipe()
+    session = probe.MultiTurnAgentSession(pipe=pipe, tokenizer=tok, cfg=None)
+    session.begin(entry)
+    pipe.queue = [x3r_step0_text(), hs.CLOSING_TEXT]
+    session.run_user_turn(0)
+    session._finished = True
+    return prompts[1]
+
+
+def build_p11b(tokenizer_dir: Path, bfcl_unpacked: Path, out: Path) -> dict[str, Any]:
+    from transformers import AutoTokenizer
+
+    tok = AutoTokenizer.from_pretrained(str(tokenizer_dir))
+    fit = Fitter(tok)
+    stream = _random_token_stream(tok, 200_000)
+    out.mkdir(parents=True, exist_ok=True)
+    # Suffix filler comes from the end of the stream, prompts from its start.
+    suffix = _fit_exact(
+        fit,
+        stream[150_000:],
+        P11B_SUFFIX_TOKENS,
+        lambda body: SUFFIX_HDR + body + SUFFIX_TAIL,
+    )
+    suffix_tokens = len(tok(suffix, add_special_tokens=False)["input_ids"])
+    chain = {"suffix": suffix, "suffix_sha256": sha(suffix), "suffix_tokens_hf": suffix_tokens}
+    index: dict[str, Any] = {
+        "kind": "repro_hang123_p11b_index",
+        "seed": SEED,
+        "model_max_position": MODEL_MAX,
+        "chain": {k: v for k, v in chain.items() if k != "suffix"},
+        "cells": {},
+    }
+
+    def write(name: str, prompt: str, note: str) -> None:
+        n = len(tok(prompt)["input_ids"])
+        doc = {
+            "kind": "repro_hang123_p11b_input",
+            "cell": name,
+            "note": note,
+            "chain": chain,
+            "steps": [
+                {
+                    "step": 0,
+                    "prompt": prompt,
+                    "prompt_chars": len(prompt),
+                    "prompt_tokens_hf": n,
+                    "prompt_sha256": sha(prompt),
+                }
+            ],
+        }
+        path = out / f"{name}.json"
+        path.write_text(json.dumps(doc, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+        index["cells"][name] = {
+            "file": path.name,
+            "file_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            "prompt_sha256": sha(prompt),
+            "prompt_tokens_hf": n,
+            "exceeds_model_max": n > MODEL_MAX,
+        }
+
+    for n_target in P11B_N:
+        prompt = _fit_exact(fit, stream, n_target, lambda b: USER_HDR + b + ASSIST_OPEN)
+        write(f"X2_N{n_target}", prompt, "random tokens (seed 20261020) in one user turn")
+    write(
+        "X3r_reconstructed",
+        _reconstructed_step1(tok, bfcl_unpacked),
+        "DERIVED: entry 123 turn-0 step-1 prompt rebuilt from the call set that reproduces "
+        "8af10211's logged sizes; exact model text not recorded (gold price 667.92)",
+    )
+    (out / "INDEX.json").write_text(
+        json.dumps(index, indent=1, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    index["index_sha256"] = hashlib.sha256((out / "INDEX.json").read_bytes()).hexdigest()
+    return index
