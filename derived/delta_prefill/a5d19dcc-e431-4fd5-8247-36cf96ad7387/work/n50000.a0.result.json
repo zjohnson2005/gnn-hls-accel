@@ -1,0 +1,190 @@
+{
+  "affinity_readback": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "completed": false,
+  "exception": {
+    "message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\graph\\impls\\onednn\\primitive_onednn_base.h:550:\ncould not execute a primitive\n\n",
+    "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 526, in _resident_two_turn\n    turn1 = _chat_once(pipe, history, cfg1, ov_genai)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 415, in _chat_once\n    result = pipe.generate(history, cfg, streamer)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\graph\\impls\\onednn\\primitive_onednn_base.h:550:\ncould not execute a primitive\n\n\n",
+    "type": "RuntimeError"
+  },
+  "failure_mode": "turn1:RuntimeError",
+  "kv_cache_precision_readback": [
+    {
+      "enforced": false,
+      "failure_mode": null,
+      "match": true,
+      "readback": {
+        "device": "GPU",
+        "error": null,
+        "normalized": "dynamic",
+        "ok": true,
+        "property": "KV_CACHE_PRECISION",
+        "raw": "<Type: 'dynamic'>",
+        "to_string": "dynamic"
+      },
+      "requested": null
+    }
+  ],
+  "loads": [
+    {
+      "available_delta_mb": 2466.55859375,
+      "compile_s": 3.6743953999999803,
+      "device": "GPU",
+      "kv_cache_precision": {
+        "enforced": false,
+        "failure_mode": null,
+        "match": true,
+        "readback": {
+          "device": "GPU",
+          "error": null,
+          "normalized": "dynamic",
+          "ok": true,
+          "property": "KV_CACHE_PRECISION",
+          "raw": "<Type: 'dynamic'>",
+          "to_string": "dynamic"
+        },
+        "requested": null
+      },
+      "memory_after": {
+        "available_mb": 5406.88671875,
+        "percent": 66.2,
+        "rss_mb": 2550.3671875,
+        "used_mb": 10569.2890625
+      },
+      "memory_before": {
+        "available_mb": 7873.4453125,
+        "percent": 50.7,
+        "rss_mb": 53.21875,
+        "used_mb": 8102.73046875
+      },
+      "properties": {},
+      "properties_requested": {},
+      "rss_delta_mb": 2497.1484375
+    }
+  ],
+  "memory_after_import": {
+    "available_mb": 7873.4453125,
+    "percent": 50.7,
+    "rss_mb": 52.91796875,
+    "used_mb": 8102.73046875
+  },
+  "memory_at_failure": {
+    "available_mb": 2222.67578125,
+    "percent": 86.1,
+    "rss_mb": 5712.78125,
+    "used_mb": 13753.5
+  },
+  "memory_baseline": {
+    "available_mb": 7897.01171875,
+    "percent": 50.6,
+    "rss_mb": 18.9921875,
+    "used_mb": 8079.1640625
+  },
+  "memory_before_generate": {
+    "available_mb": 5381.296875,
+    "percent": 66.3,
+    "rss_mb": 2589.625,
+    "used_mb": 10594.87890625
+  },
+  "memory_resident_before_inference": {
+    "available_mb": 5404.88671875,
+    "percent": 66.2,
+    "rss_mb": 2552.44140625,
+    "used_mb": 10571.2890625
+  },
+  "phase": "failed",
+  "power_request": {
+    "clear_last_error": null,
+    "cleared": false,
+    "close_last_error": null,
+    "closed": false,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x1a8",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "measurement_child",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "spec": {
+    "affinity_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "arm_id": "gpu_only",
+    "arm_properties": {},
+    "delta_tokens": 183,
+    "filler_unit": " the quick brown fox jumps over the lazy dog.",
+    "generate_device": "GPU",
+    "load_sequence": [
+      {
+        "device": "GPU",
+        "properties": {}
+      }
+    ],
+    "max_new_tokens": 8,
+    "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "n_cached": 50000,
+    "prompt_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_prefill\\a5d19dcc-e431-4fd5-8247-36cf96ad7387\\work\\prompt_unused.txt",
+    "resident_two_turn": true,
+    "rss_interval_s": 0.05,
+    "turn1_max_new_tokens": 1,
+    "turn2_max_new_tokens": 1,
+    "turn2_repeats": 1,
+    "wslock": {
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "mode": "request"
+    }
+  },
+  "standing_reservation": {
+    "available_delta_mb": 2492.125,
+    "basis": "delta from process baseline (pre-import) to all backends compiled and resident, before any measured generation; rss and system-available disagree when weights are file-backed or shared, and both are reported without attribution",
+    "rss_delta_mb": 2533.44921875
+  },
+  "working_set_lock": {
+    "after": {
+      "flags": 9,
+      "hard_min_enabled": true,
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "read": true
+    },
+    "before": {
+      "flags": 10,
+      "hard_min_enabled": false,
+      "maximum_bytes": 1413120,
+      "minimum_bytes": 204800,
+      "read": true
+    },
+    "call": "SetProcessWorkingSetSizeEx",
+    "flags": 1,
+    "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+    "granted": true,
+    "last_error": 0,
+    "privilege": {
+      "attempted": true,
+      "granted": true,
+      "last_error": 0,
+      "last_error_meaning": "ERROR_SUCCESS",
+      "privilege": "SeIncreaseWorkingSetPrivilege",
+      "step": "AdjustTokenPrivileges"
+    },
+    "requested": true,
+    "requested_maximum_bytes": 12884901888,
+    "requested_minimum_bytes": 4294967296,
+    "returned": true
+  }
+}

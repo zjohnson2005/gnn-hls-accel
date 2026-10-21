@@ -1,0 +1,266 @@
+=== launch_h1.ps1 ===
+mode           : LIVE
+cwd            : C:\Users\zach\Projects\gnn-hls-accel
+started_utc    : 2026-10-20T23:00:48.1829602Z
+
+Mode           : INTERLEAVED (H1-2POLICY)
+ArmOrder       : local_only
+SessionMaxUsd  : 1
+Policy caps    : local_only=0
+R2c           : EXCLUDED (H1-2POLICY subset; recorded in plan/seal)
+session_design : interleaved (INF-5)
+
+=== 0. platform ===
+platform_id=evo-t2 config=configs/platforms/evo-t2.yaml
+watchdog_log=C:\apu\ovn\watchdog.log
+uptime_gate=skipped deviation=UNCOLD_UPTIME (T2S is not rebooted); other gates enforced
+canary onset_s=657 and healthy floors are borrowed from aipc-c1 (not an evo-t2 measurement)
+watchdog_launch_ok
+venv_imports_ok
+
+=== 1. host cleaning (non-persistent) ===
+Available MBytes BEFORE clean: 59,456.0
+WorkloadsSessionHost: none resident
+Available MBytes AFTER  clean: 59,451.0
+
+launch_evidence_dir : C:\Users\zach\Projects\gnn-hls-accel\derived\h1_hybrid\_launches\108d5f43-ed31-4e90-a62b-adaf8dc019b3
+
+=== 2. five gates ===
+GATE NOTE -- PORT-2: floors/onset from configs/platforms; AC/no-battery; processor AC 100/100.
+
+=== measurement gates (PORT-2) ===
+{
+  "all_passed": true,
+  "gates": [
+    {
+      "detail": {
+        "ac_ok": true,
+        "battery_present": false,
+        "recorded_reason": "platform power.has_battery is false; mains-only; Win32_Battery was not consulted"
+      },
+      "name": "ac",
+      "passed": true,
+      "reason": "no_battery_platform_mains_only"
+    },
+    {
+      "detail": {
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "required_ac_max": 100,
+        "required_ac_min": 100,
+        "scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+        "scheme_name": "High performance",
+        "scheme_text": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+      },
+      "name": "processor_ac",
+      "passed": true,
+      "reason": "processor_ac_100_100"
+    },
+    {
+      "detail": {
+        "citation": "DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate ~36\u201340 GB => Available target ~24\u201328 GB; floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.",
+        "floor_mb": 24000.0,
+        "observed_mb": 59401.0
+      },
+      "name": "available_mb",
+      "passed": true,
+      "reason": "available_mb_ok"
+    },
+    {
+      "detail": {
+        "citation": "CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.",
+        "deviation": {
+          "kind": "UNCOLD_UPTIME",
+          "reason": "remote host; Tailscale unattended mode not confirmed; AutoAdminLogon=0; reboot would risk losing access",
+          "uptime_s": 556287.7333536148
+        },
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 556287.7333536148
+      },
+      "name": "uptime",
+      "passed": true,
+      "reason": "uptime_skipped_noreboot_deviation"
+    },
+    {
+      "detail": {
+        "onset_citation": "UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed. Sessions on this platform must record onset_status=unknown in run_environment.",
+        "onset_s": null,
+        "onset_status": "unknown",
+        "seal_note": "platform onset_s is unknown; recorded in run_environment; canary N must not assume aipc-c1's 657 s"
+      },
+      "name": "onset",
+      "passed": true,
+      "reason": "onset_unknown"
+    },
+    {
+      "detail": {
+        "resident": []
+      },
+      "name": "tier1_processes",
+      "passed": true,
+      "reason": "tier1_clear"
+    }
+  ],
+  "platform_id": "evo-t2",
+  "refusal_reasons": [],
+  "run_environment_fields": {
+    "measurement_gates": {
+      "ac": {
+        "detail": {
+          "ac_ok": true,
+          "battery_present": false,
+          "recorded_reason": "platform power.has_battery is false; mains-only; Win32_Battery was not consulted"
+        },
+        "passed": true,
+        "reason": "no_battery_platform_mains_only"
+      },
+      "all_passed": true,
+      "available_mb": {
+        "citation": "DERIVED for T2S: deepest planned CAP-4-class cell on 64 GB unified memory; peak model+KV+runtime estimate ~36\u201340 GB => Available target ~24\u201328 GB; floor 24000 MB (+ OS/driver headroom below that target). Not yet measured on-host.",
+        "floor_mb": 24000.0,
+        "observed_mb": 59401.0,
+        "passed": true
+      },
+      "onset_citation": "UNKNOWN until measured on evo-t2. aipc-c1's 657 s must not be assumed. Sessions on this platform must record onset_status=unknown in run_environment.",
+      "onset_s": null,
+      "onset_seal_note": "platform onset_s is unknown; recorded in run_environment; canary N must not assume aipc-c1's 657 s",
+      "onset_status": "unknown",
+      "platform_id": "evo-t2",
+      "processor_ac": {
+        "passed": true,
+        "procthrottlemax_ac": 100,
+        "procthrottlemin_ac": 100,
+        "reason": "processor_ac_100_100",
+        "scheme_guid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+        "scheme_name": "High performance"
+      },
+      "tier1_processes": {
+        "passed": true,
+        "reason": "tier1_clear",
+        "resident": []
+      },
+      "uptime": {
+        "citation": "CHOSEN/PROVISIONAL same cold-boot window as aipc-c1 until a T2S onset curve exists.",
+        "max_uptime_s": 7200.0,
+        "observed_uptime_s": 556287.7333536148,
+        "passed": true
+      },
+      "workloads_session_host": {
+        "CPU_s": [],
+        "WS_MB": [],
+        "instance_count": 0,
+        "pids": [],
+        "process": "WorkloadsSessionHost",
+        "read_errors": []
+      }
+    }
+  },
+  "workloads_session_host": {
+    "CPU_s": [],
+    "WS_MB": [],
+    "instance_count": 0,
+    "pids": [],
+    "process": "WorkloadsSessionHost",
+    "read_errors": []
+  }
+}
+gate_json: C:\Users\zach\Projects\gnn-hls-accel\derived\h1_hybrid\_launches\108d5f43-ed31-4e90-a62b-adaf8dc019b3\gates_20261020_160054.json
+GATES: all pass/fail gates PASS
+
+=== 3. INF-1b canary ===
+fixed cell: gpu_only_f16 n_cached=4000 delta=400 RESIDENT
+thresholds: C=3 healthy-session floor (t1 and t2) onset_s=657
+LIVE: opening canary cell before spawn (refuse on FAIL_CANARY_DRIFT)
+[h1_canary] fixed_cell arm=gpu_only_f16 nc=4000 d=400 mode=RESIDENT C=3 floor_t1=0.07709453214145699 floor_t2=0.1642942216508742 onset_s=657.0
+[h1_canary] derive planned=39 n_onset=66 n_budget=9 N=9 bound=budget armed=True
+[h1_canary] derive planned=300 n_onset=66 n_budget=75 N=66 bound=onset armed=True
+[h1_canary] unarmed seal refused (default)
+[h1_canary] opening cell (planned=300 every_n=75 bound=budget)
+[c2_canary] index=0 after_probes=-1 armed=False every_n=75 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-20T23:01:01.574758+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-20T23:01:02.380973+00:00"}
+{
+  "armed": false,
+  "fixed_cell": {
+    "arm": "gpu_only_f16",
+    "delta": 400,
+    "mode": "RESIDENT",
+    "n_cached": 4000
+  },
+  "n_canaries": 1,
+  "ok": true,
+  "out": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\h1_hybrid\\_launches\\108d5f43-ed31-4e90-a62b-adaf8dc019b3\\canary_opening"
+}
+
+=== machine-lock / alive-worker check ===
+machine.lock: absent
+alive measurement workers: none
+
+=== 5. TURNWISE lifecycle smoke ===
+OpenVinoLocalBackend begin/finish per (entry, policy); stubbed generate; no GPU IR.
+{
+  "ok": true,
+  "entry_id": "multi_turn_base_0",
+  "entries_path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\bfcl_feasibility\\w3_weight_quality\\sealed_6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a\\artifacts\\multi_turn_probe_entries.json",
+  "policies": [
+    "slo_escalate",
+    "emission_escalate",
+    "full_signal_bounceback"
+  ],
+  "results": [
+    {
+      "policy": "slo_escalate",
+      "status": "complete",
+      "turns_executed": 4,
+      "n_bounces": 0,
+      "cache_keys": [
+        "multi_turn_base_0\u0000slo_escalate"
+      ]
+    },
+    {
+      "policy": "emission_escalate",
+      "status": "complete",
+      "turns_executed": 4,
+      "n_bounces": 0,
+      "cache_keys": [
+        "multi_turn_base_0\u0000slo_escalate",
+        "multi_turn_base_0\u0000emission_escalate"
+      ]
+    },
+    {
+      "policy": "full_signal_bounceback",
+      "status": "complete",
+      "turns_executed": 4,
+      "n_bounces": 4,
+      "cache_keys": [
+        "multi_turn_base_0\u0000slo_escalate",
+        "multi_turn_base_0\u0000emission_escalate",
+        "multi_turn_base_0\u0000full_signal_bounceback"
+      ]
+    }
+  ],
+  "cell_keys": [
+    "multi_turn_base_0\u0000slo_escalate",
+    "multi_turn_base_0\u0000emission_escalate",
+    "multi_turn_base_0\u0000full_signal_bounceback"
+  ]
+}
+Lifecycle smoke PASS.
+
+=== 5b. cloud ping ===
+cloud ping: skipped (no selected policy reaches the cloud)
+
+ModelSpec      : C:\Users\zach\Projects\gnn-hls-accel\configs\models\Qwen3-4B-int4-ov.yaml
+RESOLVED_CMD:
+set SEAM_LAUNCH_CONTEXT=ssh_detached&& set SEAM_PLATFORM_ID=evo-t2&& "C:\Users\zach\Projects\gnn-hls-accel\.venv-seam\Scripts\python.exe" -u "C:\Users\zach\Projects\gnn-hls-accel\tools\run_h1_hybrid.py" --interleaved --session-max-usd 1 --interleaved-policy local_only --policy-cap local_only=0 --out "C:\Users\zach\Projects\gnn-hls-accel\derived\h1_hybrid\interleaved_108d5f43-ed31-4e90-a62b-adaf8dc019b3" --run-id 108d5f43-ed31-4e90-a62b-adaf8dc019b3 --entries "C:\Users\zach\Projects\gnn-hls-accel\derived\h1_hybrid\demo1\DEMO1_LONGCTX_30.json" --launch-evidence-dir "C:\Users\zach\Projects\gnn-hls-accel\derived\h1_hybrid\_launches\108d5f43-ed31-4e90-a62b-adaf8dc019b3" --model-spec "C:\Users\zach\Projects\gnn-hls-accel\configs\models\Qwen3-4B-int4-ov.yaml" --placement gpu_only --residency RESIDENT --kv u4 --entry-offset 15 --entry-count 15 --compiled-readback --mem-telemetry --gpu-mem-counters --debug-raw-text --turn-watchdog-s 1800
+
+session_id (run_id) : 108d5f43-ed31-4e90-a62b-adaf8dc019b3
+artifact_dir        : C:\Users\zach\Projects\gnn-hls-accel\derived\h1_hybrid\interleaved_108d5f43-ed31-4e90-a62b-adaf8dc019b3
+launch_log          : C:\Users\zach\Projects\gnn-hls-accel\derived\h1_hybrid\_launches\h1_interleaved_20261020_160120.log
+launch_evidence_dir : C:\Users\zach\Projects\gnn-hls-accel\derived\h1_hybrid\_launches\108d5f43-ed31-4e90-a62b-adaf8dc019b3
+session_max_usd     : 1
+arm_order           : local_only
+
+{"pid":5004,"ppid":2552,"parent_name":"WmiPrvSE.exe","spawner_pid":3548,"mechanism":"Win32_Process.Create","log_path":"C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\h1_hybrid\\_launches\\h1_interleaved_20261020_160120.log","command_line":"cmd.exe /c \"set SEAM_LAUNCH_CONTEXT=ssh_detached\u0026\u0026 set SEAM_PLATFORM_ID=evo-t2\u0026\u0026 \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\.venv-seam\\Scripts\\python.exe\" -u \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\tools\\run_h1_hybrid.py\" --interleaved --session-max-usd 1 --interleaved-policy local_only --policy-cap local_only=0 --out \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\h1_hybrid\\interleaved_108d5f43-ed31-4e90-a62b-adaf8dc019b3\" --run-id 108d5f43-ed31-4e90-a62b-adaf8dc019b3 --entries \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\h1_hybrid\\demo1\\DEMO1_LONGCTX_30.json\" --launch-evidence-dir \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\h1_hybrid\\_launches\\108d5f43-ed31-4e90-a62b-adaf8dc019b3\" --model-spec \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml\" --placement gpu_only --residency RESIDENT --kv u4 --entry-offset 15 --entry-count 15 --compiled-readback --mem-telemetry --gpu-mem-counters --debug-raw-text --turn-watchdog-s 1800 \u003e \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\h1_hybrid\\_launches\\h1_interleaved_20261020_160120.log\" 2\u003e\u00261\""}
+
+Spawned. Detached worker owns the run; this shell exits.
