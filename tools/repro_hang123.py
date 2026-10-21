@@ -1,6 +1,6 @@
 """Standalone repro of the entry-123 turn-0 stall (Task AZ, P11-HANG-REGIME).
 
-No runner. Two subcommands:
+No runner. Three subcommands (variants: tools/repro_hang123_variants.py, Task BA):
 
   build (Mac, no model): replay multi_turn_long_context_123 turn 0 on its gold
     path through the runner's own render path (MultiTurnAgentSession,
@@ -130,7 +130,33 @@ def _line(tag: str, **kw: Any) -> None:
     print(f"{tag} {json.dumps(kw, sort_keys=True)}", flush=True)
 
 
-def run(inputs: Path, model_dir: Path, only_step: int | None, pinned_sha: str | None) -> int:
+def _watchdog(limit_s: float | None, out_dir: Path | None, py_spy: str | None, run_id: str) -> Any:
+    """seam.turn_watchdog.TurnWatchdog armed per generate (Task BA); None when off."""
+    if limit_s is None:
+        if py_spy:
+            raise SystemExit("REFUSED -- --py-spy needs --watchdog-s")
+        return None
+    if out_dir is None:
+        raise SystemExit("REFUSED -- --watchdog-s needs --out-dir")
+    from seam.turn_watchdog import TurnWatchdog
+
+    dump = [py_spy, "dump", "--native", "--pid", "{pid}"] if py_spy else None
+    wd = TurnWatchdog(limit_s=float(limit_s), out_dir=out_dir, run_id=run_id, dump_cmd=dump)
+    wd.start()
+    return wd
+
+
+def run(
+    inputs: Path,
+    model_dir: Path,
+    only_step: int | None,
+    pinned_sha: str | None,
+    *,
+    watchdog_s: float | None = None,
+    out_dir: Path | None = None,
+    py_spy: str | None = None,
+    label: str = "repro",
+) -> int:
     raw = inputs.read_bytes()
     got = hashlib.sha256(raw).hexdigest()
     if pinned_sha and got != pinned_sha:
@@ -139,9 +165,39 @@ def run(inputs: Path, model_dir: Path, only_step: int | None, pinned_sha: str | 
     for s in doc["steps"]:
         if sha(s["prompt"]) != s["prompt_sha256"]:
             raise SystemExit(f"REFUSED -- step {s['step']} prompt sha256 mismatch")
+    import uuid
+
+    run_id = str(uuid.uuid4())
+    record: dict[str, Any] = {
+        "kind": "repro_hang123_run",
+        "run_id": run_id,
+        "label": label,
+        "inputs": str(inputs),
+        "inputs_sha256": got,
+        "only_step": only_step,
+        "watchdog_s": watchdog_s,
+        "py_spy": py_spy,
+        "construction": "LLMPipeline(model_dir, 'GPU'), no property, no SchedulerConfig",
+        "max_new_tokens": MAX_NEW_TOKENS,
+        "steps": [],
+        "status": "started",
+    }
+    if out_dir is not None:
+        out_dir = out_dir / run_id
+        out_dir.mkdir(parents=True, exist_ok=True)
+    wd = _watchdog(watchdog_s, out_dir, py_spy, run_id)
+
+    def save() -> None:
+        if out_dir is not None:
+            (out_dir / "run.json").write_text(json.dumps(record, indent=1) + "\n", encoding="utf-8")
+
     import openvino as ov
     import openvino_genai as ov_genai
 
+    record["openvino"] = ov.__version__
+    record["openvino_genai"] = getattr(ov_genai, "__version__", "unknown")
+    save()
+    _line("RUN_ID", run_id=run_id, label=label, out_dir=str(out_dir) if out_dir else None)
     _line(
         "LOAD_START",
         model_dir=str(model_dir),
@@ -165,18 +221,45 @@ def run(inputs: Path, model_dir: Path, only_step: int | None, pinned_sha: str | 
             prompt_tokens_hf=s["prompt_tokens_hf"],
             prompt_sha256=s["prompt_sha256"],
         )
+        record["steps"].append({"step": s["step"], "pre_generate_utc": _utc(), "done": False})
+        save()
+        if wd is not None:
+            wd.arm(entry_id=f"{label}_{ENTRY_ID}", policy="repro", turn=int(s["step"]))
         t = time.perf_counter()
-        res = pipe.generate(s["prompt"], cfg)
+        try:
+            res = pipe.generate(s["prompt"], cfg)
+        except Exception as exc:
+            record["steps"][-1].update(error=f"{type(exc).__name__}: {exc}")
+            record["status"] = "error"
+            save()
+            _line("GENERATE_ERROR", step=s["step"], error=f"{type(exc).__name__}: {exc}")
+            return 2
+        finally:
+            if wd is not None:
+                wd.disarm()
         text = str(res)
+        wall = round(time.perf_counter() - t, 3)
+        record["steps"][-1].update(
+            done=True, wall_s=wall, output_chars=len(text), output_sha256=sha(text)
+        )
+        save()
         _line(
             "POST_GENERATE",
             step=s["step"],
-            wall_s=round(time.perf_counter() - t, 3),
+            wall_s=wall,
             output_chars=len(text),
             output_sha256=sha(text),
         )
+    record["status"] = "complete"
+    save()
+    if wd is not None:
+        wd.stop()
     _line("REPRO_DONE")
     return 0
+
+
+def _utc() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -191,11 +274,37 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--inputs-sha256", default=None)
     r.add_argument("--model-dir", type=Path, default=ROOT / "models" / "Qwen3-4B-int4-ov")
     r.add_argument("--only-step", type=int, default=None)
+    r.add_argument("--watchdog-s", type=float, default=None, help="per-generate limit (exit 86)")
+    r.add_argument(
+        "--out-dir", type=Path, default=None, help="run record dir (run.json, hang files)"
+    )
+    r.add_argument("--py-spy", default=None, help="with --watchdog-s: py-spy exe for a native dump")
+    r.add_argument("--label", default="repro")
+    v = sub.add_parser("variants")
+    v.add_argument("--tokenizer", type=Path, required=True)
+    v.add_argument("--bfcl-unpacked", type=Path, required=True)
+    v.add_argument("--inputs", type=Path, required=True)
+    v.add_argument("--out", type=Path, required=True)
     a = ap.parse_args(argv)
     if a.cmd == "build":
         print(json.dumps(build(a.tokenizer, a.bfcl_unpacked, a.out), indent=1))
         return 0
-    return run(a.inputs, a.model_dir, a.only_step, a.inputs_sha256)
+    if a.cmd == "variants":
+        from tools.repro_hang123_variants import build_variants
+
+        idx = build_variants(a.tokenizer, a.bfcl_unpacked, a.inputs, a.out)
+        print(json.dumps({k: v for k, v in idx.items() if k != "sets"}, indent=1))
+        return 0
+    return run(
+        a.inputs,
+        a.model_dir,
+        a.only_step,
+        a.inputs_sha256,
+        watchdog_s=a.watchdog_s,
+        out_dir=a.out_dir,
+        py_spy=a.py_spy,
+        label=a.label,
+    )
 
 
 if __name__ == "__main__":
