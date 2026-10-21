@@ -3375,3 +3375,58 @@ P8 (registered rule; data so far, not final; analysis/demo2_pilots/AY/):
   u4).
 - Pooled 44: u4 23 vs i8 22, so "keep u4" is false on the data so far.
   LONGCTX 15-30 is not run on either side.
+
+## 2026-10-20 - XPS windows 2-3 and T2S block closeout; config audit; P11 registered (Task AZ)
+
+Mac only, no ssh, $0, no launches. Commits are local only: Zach asked
+(2026-10-20, ~9:30 PM ET) not to push while the XPS window-3 run pulls 3aa9e27.
+
+Closeout (rules applied: analysis/demo2_pilots/AZ/WINDOWS_20261020.md):
+- XPS window 2 (17:33-18:47 ET): a5d19dcc P3 cell 0 (true default; MATCH_MANIFEST): largest
+  18,000, first fail 18,500; 15367c3a arm A LONGCTX 15-30 (seal MATCH, 123 skipped as hang).
+- XPS window 3 (19:30-20:17 ET): 027a07b7 P10 C1 (prefix caching off) hung at 123 turn 0
+  (600 s), UNSEALED record derived/demo2_pilots/hung_027a07b7/. The XPS did not come back on ssh
+  within 15 min of the post-hang reboot; C2-C6 and C0 were not run then. Zach resumed window 3 at
+  9:14 PM ET (W3_FROM=1, window_20261020_2114_p10); in progress, not closed out in Task AZ.
+- T2S (17:33-21:11 ET): P0a PASS (record 5e190568), P0b 03632ad3, arm A, u4, P4, P9 (cold),
+  P2 (cold, one reboot per KV, REBOOT_OK=1 by Zach); all sealed runs seal MATCH / MATCH_MANIFEST,
+  launch evidence 3/3. bbdd1c0d entry 123 alone hung (600 s), UNSEALED record
+  derived/demo2_pilots/hung_bbdd1c0d/.
+- Incident: two Mac scripts drove the T2S at once (20:24-20:35 ET). The t2s_1952 run
+  (STEP_FROM=e) went on into step f and ran 09932887 (unplanned arm A BASE_30 replicate, sealed
+  MATCH). t2s_2024 then rebooted the T2S at 20:34, cutting off a LONGCTX launch, which left no
+  run dir. Both are recorded in derived/demo2_pilots/windows_20261020/README.md.
+- Window scripts edited outside the repo: run_window_t2s.sh (Rithwik-process check excludes
+  $PID; before 17:33 ET) and run_t2s_p9p2.sh (new, ~7:55 PM ET). Both are kept as run, with
+  sha256, in windows_20261020/scripts/. The driver summary line fix (GPU, not HID) is in all
+  four scripts.
+
+Verdicts (registered rules):
+- P6 NO_CHANGE (0 of 60 in the band).
+- P8 T2S keep_u4 false (27/59 vs 26/59).
+- P4 T2S no prompt lookup (not byte-identical).
+- P9 T2S no warm-up (-0.03%).
+- P2 T2S: model holds; u4 gain supported (1.082).
+- P10 C1: does not avoid.
+
+Config audit (Rithwik item 1): derived/audit/CONFIG_PROVENANCE.md/.json.
+- Cited resident limits, warm turn-2 latencies, cold edge, placement and decode numbers are
+  PLAIN_PIPELINE_WITH_PROPS; DEMO-1 V1-V4 are REPLACED_SCHEDULER (prefix caching off,
+  max_num_batched_tokens 256); a5d19dcc is the only TRUE_DEFAULT resident limit.
+- XPS GPU driver readings: 8622 (07-29), 8724 (09-16, 2b3316b6), 8860 (10-20). Driver UNKNOWN
+  for 09-17..10-19.
+- The NPU limit runs (faa14a31, 9acabbf7, 2ffbd61c, 2972e8c4) ran on the T2S.
+- Pre -text seals verify after CRLF restore. No number changed.
+
+Registered before any run: added pilot P11-HANG-REGIME,
+docs/amendments/DEMO2_PILOT_P11_HANG_REGIME_2026-10-20.md (sha256 1ea2831623d94aebccdbfb8ad25a961a557b3fb2f7cc241d57e4df0acc750012), NOT YET APPROVED.
+Harness (default off, not a rule change):
+- run_h1_hybrid --step-log (launch_h1 -StepLog): a flushed, fsynced pre-generate line per local
+  step;
+- tools/repro_hang123.py (build/run), with inputs derived/repro_hang123/inputs_e123_t0.json
+  (sha256 d12142f89702f0ab92a48148abaa034760bb20c87558b58945a92a29a405f2f0).
+
+Literature correction (Rithwik item 3): docs/literature/2026-10-20/OLLAMA_DEFAULT_INHERITANCE.md.
+"Hybrid studies inherit Ollama's default" is withdrawn. The registered arm D label in
+DEMO2_AMEND_2026-10-16_TRUE_DEFAULT.md L63/L89-92 and DEMO2_DESIGN_2026-10-14.md L78 are flagged
+for a superseding addendum (not edited).

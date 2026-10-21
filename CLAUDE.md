@@ -194,7 +194,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-20 (Task AY). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-20 night (Task AZ). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -261,6 +261,22 @@ session start; update it in the same commit as the work. Never delete a row.
   - Next: window 2 (run_window_w2.sh), window 3 (run_window_w3.sh), then
     P3_FROM=1 and P4.
   - T2S block: run_window_t2s.sh.
+- 2026-10-20 windows 2-3 and T2S block (Task AZ, $0; analysis/demo2_pilots/AZ/):
+  - P3 cell 0 a5d19dcc: true-default XPS resident limit 18,000 (first fail 18,500).
+  - P6 complete: NO_CHANGE (0 of 60 in the band). Arm A valid on the T2S
+    (P0a record 5e190568, P0b 03632ad3).
+  - T2S: P8 keep_u4 false (27/59 vs 26/59); P4 no prompt lookup (not
+    byte-identical); P9 no warm-up; P2 model holds, u4 gain 1.08.
+  - Entry 123 stalled 4 of 4 times on 2 devices / 2 drivers (+ 027a07b7 P10
+    C1, bbdd1c0d T2S). P11-HANG-REGIME registered, not approved;
+    --step-log and tools/repro_hang123.py built.
+  - Config audit: derived/audit/CONFIG_PROVENANCE.md. The cited limits are
+    plain pipeline + KV property; DEMO-1 is REPLACED_SCHEDULER; the XPS driver
+    went 8622 -> 8724 -> 8860.
+  - "Hybrid studies inherit Ollama's default" withdrawn
+    (docs/literature/2026-10-20/).
+  - Task AZ commits are local, not pushed (Zach: wait while window 3 pulls
+    3aa9e27).
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.

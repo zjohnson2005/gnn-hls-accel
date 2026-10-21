@@ -1,0 +1,210 @@
+{
+  "task": "AZ",
+  "basis": "sealed runs; rules from docs/amendments/DEMO2_PILOTS_2026-10-16.md",
+  "P6_xps": {
+    "pilot": "P6",
+    "runs": [
+      "39c1c131-f09b-4357-bde3-f39e36947300",
+      "841b84e4-0eb8-436d-89f6-c5b558848991",
+      "15367c3a-5b8d-4be0-9db5-a6538b6e8c56"
+    ],
+    "n_entries": 60,
+    "entry_123": "local fail, outcome hang (24c1abc0; counted by 15367c3a --skip-entries); max n_ctx unknown (stalled in turn 0; gold step 1 = 34,050 > 23,850, outside the band)",
+    "local_pass_total": 4,
+    "registered": {
+      "band": "(20000, 23850]",
+      "n_in_band": 0,
+      "entries": [],
+      "local_pass_in_band": 0,
+      "expected_passes_lost": 0.0,
+      "exceeds_6_of_60": false
+    },
+    "verdict": "NO_CHANGE",
+    "sensitivity_not_registered_A_limit_18000_a5d19dcc": {
+      "band": "(18000, 23850]",
+      "n_in_band": 0,
+      "entries": [],
+      "local_pass_in_band": 0,
+      "expected_passes_lost": 0.0,
+      "exceeds_6_of_60": false
+    },
+    "n_ctx_over_window": [
+      34066,
+      34281,
+      34417,
+      35519,
+      35904,
+      39862,
+      40038,
+      40923,
+      43245,
+      43961,
+      67947
+    ]
+  },
+  "P8_t2s": {
+    "pilot": "P8",
+    "host": "T2S",
+    "parts": {
+      "BASE_30": {
+        "i8_run": "b90f1d5b-6e35-4060-ad72-05e62f22803e",
+        "u4_run": "6c610aa6-aad4-4b24-a089-1c3a7fce107d",
+        "n_paired": 30,
+        "silent_i8": "20/30",
+        "local_pass_i8": [
+          "multi_turn_base_12",
+          "multi_turn_base_161",
+          "multi_turn_base_182"
+        ],
+        "silent_u4": "20/30",
+        "local_pass_u4": [
+          "multi_turn_base_12",
+          "multi_turn_base_161",
+          "multi_turn_base_182"
+        ],
+        "tool": {
+          "pilot": "P8",
+          "n_paired": 30,
+          "turn_agreement": 0.809,
+          "silent_share_i8": 0.6666666666666666,
+          "silent_share_u4": 0.6666666666666666,
+          "rule": "keep u4 if the silent-failure share does not rise",
+          "keep_u4": true
+        }
+      },
+      "LONGCTX_0_13": {
+        "i8_run": "1a634610-a762-4710-8bbe-08edd4665067",
+        "u4_run": "3aa565da-d877-464b-8160-c987cc3dee96",
+        "n_paired": 14,
+        "silent_i8": "2/14",
+        "local_pass_i8": [
+          "multi_turn_long_context_101"
+        ],
+        "silent_u4": "3/14",
+        "local_pass_u4": [
+          "multi_turn_long_context_101"
+        ],
+        "tool": {
+          "pilot": "P8",
+          "n_paired": 14,
+          "turn_agreement": 0.86,
+          "silent_share_i8": 0.14285714285714285,
+          "silent_share_u4": 0.21428571428571427,
+          "rule": "keep u4 if the silent-failure share does not rise",
+          "keep_u4": false
+        }
+      },
+      "LONGCTX_15_29": {
+        "i8_run": "daa6c026-ff57-4b19-a9c9-832dc2a48261",
+        "u4_run": "108d5f43-ed31-4e90-a62b-adaf8dc019b3",
+        "n_paired": 15,
+        "silent_i8": "4/15",
+        "local_pass_i8": [],
+        "silent_u4": "4/15",
+        "local_pass_u4": [],
+        "tool": {
+          "pilot": "P8",
+          "n_paired": 15,
+          "turn_agreement": 0.785,
+          "silent_share_i8": 0.26666666666666666,
+          "silent_share_u4": 0.26666666666666666,
+          "rule": "keep u4 if the silent-failure share does not rise",
+          "keep_u4": true
+        }
+      }
+    },
+    "pooled_silent_i8": "26/59",
+    "pooled_silent_u4": "27/59",
+    "keep_u4": false,
+    "entry_123": "not paired: i8 hung (bbdd1c0d), u4 not run (block stopped)"
+  },
+  "P4_t2s": {
+    "K3": {
+      "pilot": "P4",
+      "matched_steps": 77,
+      "outputs_identical": false,
+      "decode_speedup_median": 1.212,
+      "tokens_per_streamer_write_on": 1.79,
+      "rule": "adopt if speedup >= 1.1 and outputs identical",
+      "adopt": false
+    },
+    "K5": {
+      "pilot": "P4",
+      "matched_steps": 58,
+      "outputs_identical": false,
+      "decode_speedup_median": 1.179,
+      "tokens_per_streamer_write_on": 1.614,
+      "rule": "adopt if speedup >= 1.1 and outputs identical",
+      "adopt": false
+    },
+    "runs": {
+      "off": "16996cdb-6a1b-4c94-b8f6-4e9cb9f98ec0",
+      "k3": "4d8e2fb1-73d6-4fb9-a017-6933fc347bf8",
+      "k5": "cc32619a-2698-4677-b8ce-e0d08cf8e8d6"
+    }
+  },
+  "P9_t2s": {
+    "run": "63b2567a-a999-4d65-aa7b-c5427480f73f",
+    "pilot": "P9",
+    "n_points": 12,
+    "third": 4,
+    "drift_point_medians": -0.0003,
+    "drift_all_repeats": -0.0007,
+    "rule": "warm-up rule for every cell if |drift| > 0.05",
+    "warmup_rule": false
+  },
+  "P2_t2s": {
+    "pilot": "P2",
+    "host": "T2S",
+    "runs": {
+      "i8": "29209e26-879e-4b31-9892-9b90c535b856",
+      "u4": "0a55c316-e438-4460-96c2-267e243ae8c9",
+      "f16": "aa01040d-5c97-481c-9d47-9540b6f8a33f"
+    },
+    "decode_tok_s_median": {
+      "i8": {
+        "3500": 36.342688710564865,
+        "12000": 30.288243113631392,
+        "20000": 25.217916825546215
+      },
+      "u4": {
+        "3500": 35.59723256943367,
+        "12000": 32.76576952776153,
+        "20000": 28.15202091292982
+      },
+      "f16": {
+        "3500": 34.2456743364656,
+        "12000": 25.344043377416416,
+        "20000": 19.757381240027815
+      }
+    },
+    "model": "tok/s = BW / (W + n * KV bytes/token), W 2.353e9, i8 73,728 B/token (tools/demo2_true_default_predict.py), BW calibrated on i8 at 3,500",
+    "bw_calibrated_gb_s": 94.89,
+    "model_tok_s": {
+      "12000": 29.308,
+      "20000": 24.792
+    },
+    "deviation": {
+      "12000": 0.0334,
+      "20000": 0.0172
+    },
+    "bandwidth_model_holds": true,
+    "u4_over_i8_at_12000": 1.0818,
+    "u4_gain_supported": true,
+    "u4_over_i8": {
+      "3500": 0.9795,
+      "12000": 1.0818,
+      "20000": 1.1163
+    }
+  },
+  "hangs_entry_123": {
+    "xps": [
+      "841b84e4 (stalled, killed)",
+      "24c1abc0",
+      "027a07b7 (P10 C1)"
+    ],
+    "t2s": [
+      "bbdd1c0d"
+    ]
+  }
+}

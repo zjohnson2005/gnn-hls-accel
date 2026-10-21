@@ -1,0 +1,1018 @@
+{
+  "task": "AZ part 2",
+  "generated_from": "committed run directories; no number changed",
+  "latency_default_2026_2_1": {
+    "enable_prefix_caching": true,
+    "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+    "dynamic_split_fuse": true,
+    "cache_size": 0,
+    "use_cache_eviction": false
+  },
+  "struct_default_2026_2_1": {
+    "enable_prefix_caching": false,
+    "max_num_batched_tokens": 256,
+    "max_num_seqs": 256,
+    "dynamic_split_fuse": true,
+    "cache_size": 0,
+    "num_kv_blocks": 0,
+    "use_cache_eviction": false
+  },
+  "driver_readings": {
+    "aipc-c1": [
+      [
+        "2026-07-29",
+        "32.0.101.8622",
+        "analysis/aipc-c1/reprobe_af002_2026-07-29/drivers_probe.txt"
+      ],
+      [
+        "2026-09-16",
+        "32.0.101.8724",
+        "2b3316b6 run_environment.gpu_driver_version (manifest.json)"
+      ],
+      [
+        "2026-10-20",
+        "32.0.101.8860",
+        "~/seam_closeout_1013/xps/window_20261020_1733/drivers.txt (17:33 ET, before the window-2 reboot)"
+      ]
+    ],
+    "evo-t2": [
+      [
+        "2026-10-20",
+        "32.0.101.8509",
+        "~/seam_closeout_1013/t2s/window_20261020_1733/a_drivers.txt (Arc B390; NPU 32.0.100.4512)"
+      ]
+    ]
+  },
+  "items": [
+    {
+      "number": "15,000",
+      "what": "XPS resident-session limit, f16 KV",
+      "run_ids": [
+        "553b3a5c-dd68-4502-bb3f-1b6a10a61eb1"
+      ],
+      "tool": "run_resident_limit (delta_prefill)",
+      "class": "PLAIN_PIPELINE_WITH_PROPS",
+      "constructed_as": "LLMPipeline(model_dir, device, **properties) (seam/tools/_delta_n_child.py; no scheduler key in the child spec)",
+      "scheduler": {
+        "enable_prefix_caching": true,
+        "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+        "dynamic_split_fuse": true,
+        "cache_size": 0,
+        "use_cache_eviction": false
+      },
+      "prefix_caching": true,
+      "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+      "kv_requested": "f16",
+      "kv_compiled": "f16 (DERIVED from P0a readback on the same OpenVINO build (597f40a9 XPS, T2S 2026-10-20); not read in this run)",
+      "cache_dir": "none",
+      "residency": "RESIDENT two-turn",
+      "runs": [
+        {
+          "run_id": "553b3a5c-dd68-4502-bb3f-1b6a10a61eb1",
+          "dirs": [
+            "derived/delta_prefill/553b3a5c-dd68-4502-bb3f-1b6a10a61eb1",
+            "derived/delta_prefill/sealed_553b3a5c-dd68-4502-bb3f-1b6a10a61eb1"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "not recorded",
+          "date_utc": "2026-09-30T18:01:24.079649Z",
+          "host": "aipc-c1 (XPS)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: 32.0.101.8724 on 2026-09-16; next after: 32.0.101.8860 on 2026-10-20)",
+          "spec_arms": [
+            "gpu_only_f16"
+          ],
+          "spec_properties": [
+            "[{\"KV_CACHE_PRECISION\": \"f16\"}]"
+          ],
+          "spec_scheduler": [
+            "\"ABSENT_KEY\""
+          ],
+          "spec_resident_two_turn": [
+            "True"
+          ],
+          "plan_residency": [
+            "\"RESIDENT\""
+          ],
+          "seal": "sealed_553b3a5c-dd68-4502-bb3f-1b6a10a61eb1: MANIFEST_COVERAGE_GAP as checked out; MATCH_MANIFEST after CRLF restore (committed LF-normalized)"
+        }
+      ],
+      "recommendation": "LABEL: 'plain LLMPipeline, latency scheduler, KV f16 property'; driver UNKNOWN. Re-measure on driver 8860 to pair with a5d19dcc.",
+      "notes": ""
+    },
+    {
+      "number": "20,000",
+      "what": "XPS resident-session limit, u8 KV request (compiles i8)",
+      "run_ids": [
+        "cf3555d5-1361-434f-b1fb-745fc17e6843"
+      ],
+      "tool": "run_resident_limit",
+      "class": "PLAIN_PIPELINE_WITH_PROPS",
+      "constructed_as": "LLMPipeline(model_dir, device, **properties) (seam/tools/_delta_n_child.py; no scheduler key in the child spec)",
+      "scheduler": {
+        "enable_prefix_caching": true,
+        "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+        "dynamic_split_fuse": true,
+        "cache_size": 0,
+        "use_cache_eviction": false
+      },
+      "prefix_caching": true,
+      "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+      "kv_requested": "u8",
+      "kv_compiled": "i8 (DERIVED from P0a readback on the same OpenVINO build (597f40a9 XPS, T2S 2026-10-20); not read in this run)",
+      "cache_dir": "none",
+      "residency": "RESIDENT two-turn",
+      "runs": [
+        {
+          "run_id": "cf3555d5-1361-434f-b1fb-745fc17e6843",
+          "dirs": [
+            "derived/delta_prefill/cf3555d5-1361-434f-b1fb-745fc17e6843",
+            "derived/delta_prefill/sealed_cf3555d5-1361-434f-b1fb-745fc17e6843"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "not recorded",
+          "date_utc": "2026-09-30T19:03:58.529170Z",
+          "host": "aipc-c1 (XPS)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: 32.0.101.8724 on 2026-09-16; next after: 32.0.101.8860 on 2026-10-20)",
+          "spec_arms": [
+            "gpu_only_u8"
+          ],
+          "spec_properties": [
+            "[{\"KV_CACHE_PRECISION\": \"u8\"}]"
+          ],
+          "spec_scheduler": [
+            "\"ABSENT_KEY\""
+          ],
+          "spec_resident_two_turn": [
+            "True"
+          ],
+          "plan_residency": [
+            "\"RESIDENT\""
+          ],
+          "seal": "sealed_cf3555d5-1361-434f-b1fb-745fc17e6843: MANIFEST_COVERAGE_GAP as checked out; MATCH_MANIFEST after CRLF restore (committed LF-normalized)"
+        }
+      ],
+      "recommendation": "LABEL as plain pipeline + u8 property (= i8 compiled), not 'true default' and not 'bare SchedulerConfig' (Task AX). It is 2,000 above the true-default 18,000 (a5d19dcc) on a later driver: RE-MEASURE gpu_only_u8 on the current driver to split property vs driver.",
+      "notes": "AX finding: plain LLMPipeline with a KV u8 property (_delta_n_child at 0e8aa5a), not the replaced config."
+    },
+    {
+      "number": "26,500",
+      "what": "XPS resident-session limit, u4 KV",
+      "run_ids": [
+        "e4a22dac-6301-4dfa-ae12-882328b6ba7c"
+      ],
+      "tool": "run_resident_limit",
+      "class": "PLAIN_PIPELINE_WITH_PROPS",
+      "constructed_as": "LLMPipeline(model_dir, device, **properties) (seam/tools/_delta_n_child.py; no scheduler key in the child spec)",
+      "scheduler": {
+        "enable_prefix_caching": true,
+        "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+        "dynamic_split_fuse": true,
+        "cache_size": 0,
+        "use_cache_eviction": false
+      },
+      "prefix_caching": true,
+      "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+      "kv_requested": "u4",
+      "kv_compiled": "u4 (DERIVED from P0a readback on the same OpenVINO build (597f40a9 XPS, T2S 2026-10-20); not read in this run)",
+      "cache_dir": "none",
+      "residency": "RESIDENT two-turn",
+      "runs": [
+        {
+          "run_id": "e4a22dac-6301-4dfa-ae12-882328b6ba7c",
+          "dirs": [
+            "derived/delta_prefill/e4a22dac-6301-4dfa-ae12-882328b6ba7c",
+            "derived/delta_prefill/sealed_e4a22dac-6301-4dfa-ae12-882328b6ba7c"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "not recorded",
+          "date_utc": "2026-10-01T00:12:08.988009Z",
+          "host": "aipc-c1 (XPS)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: 32.0.101.8724 on 2026-09-16; next after: 32.0.101.8860 on 2026-10-20)",
+          "spec_arms": [
+            "gpu_only_u4"
+          ],
+          "spec_properties": [
+            "[{\"KV_CACHE_PRECISION\": \"u4\"}]"
+          ],
+          "spec_scheduler": [
+            "\"ABSENT_KEY\""
+          ],
+          "spec_resident_two_turn": [
+            "True"
+          ],
+          "plan_residency": [
+            "\"RESIDENT\""
+          ],
+          "seal": "sealed_e4a22dac-6301-4dfa-ae12-882328b6ba7c: MANIFEST_COVERAGE_GAP as checked out; MATCH_MANIFEST after CRLF restore (committed LF-normalized)"
+        }
+      ],
+      "recommendation": "LABEL; re-measure u4 on driver 8860 (P3 u4 cells would also give it).",
+      "notes": ""
+    },
+    {
+      "number": "18,000",
+      "what": "XPS resident-session limit, true default (no property)",
+      "run_ids": [
+        "a5d19dcc-e431-4fd5-8247-36cf96ad7387"
+      ],
+      "tool": "run_resident_limit --arm gpu_only --high 50000 (P3 cell 0)",
+      "class": "TRUE_DEFAULT",
+      "constructed_as": "LLMPipeline(model_dir, 'GPU') (no property, no scheduler)",
+      "scheduler": {
+        "enable_prefix_caching": true,
+        "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+        "dynamic_split_fuse": true,
+        "cache_size": 0,
+        "use_cache_eviction": false
+      },
+      "prefix_caching": true,
+      "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+      "kv_requested": "none",
+      "kv_compiled": "i8 (DERIVED from P0a readback on the same OpenVINO build (597f40a9 XPS, T2S 2026-10-20); not read in this run)",
+      "cache_dir": "none",
+      "residency": "RESIDENT two-turn",
+      "runs": [
+        {
+          "run_id": "a5d19dcc-e431-4fd5-8247-36cf96ad7387",
+          "dirs": [
+            "derived/delta_prefill/a5d19dcc-e431-4fd5-8247-36cf96ad7387",
+            "derived/delta_prefill/sealed_a5d19dcc-e431-4fd5-8247-36cf96ad7387"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "not recorded",
+          "date_utc": "2026-10-20T21:38:35.168487Z",
+          "host": "aipc-c1 (XPS)",
+          "gpu_driver": "32.0.101.8860 (read 2026-10-20: ~/seam_closeout_1013/xps/window_20261020_1733/drivers.txt (17:33 ET, before the window-2 reboot))",
+          "spec_arms": [
+            "gpu_only"
+          ],
+          "spec_properties": [
+            "[{}]"
+          ],
+          "spec_scheduler": [
+            "\"ABSENT_KEY\""
+          ],
+          "spec_resident_two_turn": [
+            "True"
+          ],
+          "plan_residency": [
+            "\"RESIDENT\""
+          ],
+          "seal": "sealed_a5d19dcc-e431-4fd5-8247-36cf96ad7387: MATCH_MANIFEST"
+        }
+      ],
+      "recommendation": "CITE as the true-default limit (driver 8860, 2026-10-20). First fail 18,500: turn-2 RuntimeError (not a hang).",
+      "notes": ""
+    },
+    {
+      "number": "0.639 / 1.003 / 0.946 s",
+      "what": "XPS warm turn-2 TTFT at 12,000 cached, f16 / u8 / u4",
+      "run_ids": [
+        "72776603-7ea0-4279-a425-941d73a0bf57",
+        "1587d2f4-b30f-4be9-9c1d-6d0d04690c4b",
+        "dd2b0779-48c1-4ad6-9567-ed38e8e1fec9"
+      ],
+      "tool": "run_warm_kv (delta_prefill)",
+      "class": "PLAIN_PIPELINE_WITH_PROPS",
+      "constructed_as": "LLMPipeline(model_dir, device, **properties) (seam/tools/_delta_n_child.py; no scheduler key in the child spec)",
+      "scheduler": {
+        "enable_prefix_caching": true,
+        "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+        "dynamic_split_fuse": true,
+        "cache_size": 0,
+        "use_cache_eviction": false
+      },
+      "prefix_caching": true,
+      "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+      "kv_requested": "f16 / u8 / u4",
+      "kv_compiled": "n/a",
+      "cache_dir": "none",
+      "residency": "RESIDENT two-turn",
+      "runs": [
+        {
+          "run_id": "72776603-7ea0-4279-a425-941d73a0bf57",
+          "dirs": [
+            "derived/delta_prefill/72776603-7ea0-4279-a425-941d73a0bf57",
+            "derived/delta_prefill/sealed_72776603-7ea0-4279-a425-941d73a0bf57"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "not recorded",
+          "date_utc": "2026-09-30T16:22:22.514902Z",
+          "host": "aipc-c1 (XPS)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: 32.0.101.8724 on 2026-09-16; next after: 32.0.101.8860 on 2026-10-20)",
+          "spec_arms": [
+            "gpu_only_f16"
+          ],
+          "spec_properties": [
+            "[{\"KV_CACHE_PRECISION\": \"f16\"}]"
+          ],
+          "spec_scheduler": [
+            "\"ABSENT_KEY\""
+          ],
+          "spec_resident_two_turn": [
+            "True"
+          ],
+          "plan_residency": [
+            "\"RESIDENT\""
+          ],
+          "seal": "sealed_72776603-7ea0-4279-a425-941d73a0bf57: MANIFEST_COVERAGE_GAP as checked out; MATCH_MANIFEST after CRLF restore (committed LF-normalized)"
+        },
+        {
+          "run_id": "1587d2f4-b30f-4be9-9c1d-6d0d04690c4b",
+          "dirs": [
+            "derived/delta_prefill/1587d2f4-b30f-4be9-9c1d-6d0d04690c4b",
+            "derived/delta_prefill/sealed_1587d2f4-b30f-4be9-9c1d-6d0d04690c4b"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "not recorded",
+          "date_utc": "2026-09-30T16:26:27.043548Z",
+          "host": "aipc-c1 (XPS)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: 32.0.101.8724 on 2026-09-16; next after: 32.0.101.8860 on 2026-10-20)",
+          "spec_arms": [
+            "gpu_only_u8"
+          ],
+          "spec_properties": [
+            "[{\"KV_CACHE_PRECISION\": \"u8\"}]"
+          ],
+          "spec_scheduler": [
+            "\"ABSENT_KEY\""
+          ],
+          "spec_resident_two_turn": [
+            "True"
+          ],
+          "plan_residency": [
+            "\"RESIDENT\""
+          ],
+          "seal": "sealed_1587d2f4-b30f-4be9-9c1d-6d0d04690c4b: MANIFEST_COVERAGE_GAP as checked out; MATCH_MANIFEST after CRLF restore (committed LF-normalized)"
+        },
+        {
+          "run_id": "dd2b0779-48c1-4ad6-9567-ed38e8e1fec9",
+          "dirs": [
+            "derived/delta_prefill/dd2b0779-48c1-4ad6-9567-ed38e8e1fec9",
+            "derived/delta_prefill/sealed_dd2b0779-48c1-4ad6-9567-ed38e8e1fec9"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "not recorded",
+          "date_utc": "2026-09-30T16:30:20.402980Z",
+          "host": "aipc-c1 (XPS)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: 32.0.101.8724 on 2026-09-16; next after: 32.0.101.8860 on 2026-10-20)",
+          "spec_arms": [
+            "gpu_only_u4"
+          ],
+          "spec_properties": [
+            "[{\"KV_CACHE_PRECISION\": \"u4\"}]"
+          ],
+          "spec_scheduler": [
+            "\"ABSENT_KEY\""
+          ],
+          "spec_resident_two_turn": [
+            "True"
+          ],
+          "plan_residency": [
+            "\"RESIDENT\""
+          ],
+          "seal": "sealed_dd2b0779-48c1-4ad6-9567-ed38e8e1fec9: MANIFEST_COVERAGE_GAP as checked out; MATCH_MANIFEST after CRLF restore (committed LF-normalized)"
+        }
+      ],
+      "recommendation": "LABEL (plain pipeline + KV property each). The i8 point is u8-requested; a true-default (no property) point does not exist: RE-MEASURE run_warm_kv --arm gpu_only at 12,000 if the paper says 'default'.",
+      "notes": ""
+    },
+    {
+      "number": "$0.184 vs $0.0129 per task",
+      "what": "DEMO-1 V4 hybrid cloud $/task, XPS vs T2S",
+      "run_ids": [
+        "a678926e-2681-4851-a386-8b7c83e971a3",
+        "30caa847-d97a-4e4b-aa22-f152b95d08e9"
+      ],
+      "tool": "run_h1_hybrid --policy slo_escalate (launch_h1)",
+      "class": "REPLACED_SCHEDULER",
+      "constructed_as": "LLMPipeline(model, 'GPU', {'scheduler_config': sc}, KV_CACHE_PRECISION=u8) with sc = SchedulerConfig(); sc.enable_prefix_caching = False (tools/bfcl_feasibility_probe.load_arm_pipeline, NON_RESIDENT branch)",
+      "scheduler": {
+        "enable_prefix_caching": false,
+        "max_num_batched_tokens": 256,
+        "max_num_seqs": 256,
+        "dynamic_split_fuse": true,
+        "cache_size": 0,
+        "num_kv_blocks": 0,
+        "use_cache_eviction": false,
+        "replaced": {
+          "enable_prefix_caching": true,
+          "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+          "dynamic_split_fuse": true,
+          "cache_size": 0,
+          "use_cache_eviction": false
+        },
+        "fields_changed_vs_latency_default": {
+          "enable_prefix_caching": "True -> False",
+          "max_num_batched_tokens": "SIZE_MAX -> 256 (struct default)"
+        }
+      },
+      "prefix_caching": false,
+      "max_num_batched_tokens": 256,
+      "kv_requested": "u8",
+      "kv_compiled": "i8 (DERIVED from P0a readback on the same OpenVINO build (597f40a9 XPS, T2S 2026-10-20); not read in this run)",
+      "cache_dir": "none",
+      "residency": "NON_RESIDENT",
+      "runs": [
+        {
+          "run_id": "a678926e-2681-4851-a386-8b7c83e971a3",
+          "dirs": [
+            "derived/h1_hybrid/sealed_slo_escalate_a678926e-2681-4851-a386-8b7c83e971a3",
+            "derived/h1_hybrid/slo_escalate_a678926e-2681-4851-a386-8b7c83e971a3"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "c80c2fbe1dd7",
+          "date_utc": "2026-10-13T19:47:39.844050+00:00",
+          "host": "aipc-c1 (XPS)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: 32.0.101.8724 on 2026-09-16; next after: 32.0.101.8860 on 2026-10-20)",
+          "plan_residency": [
+            "\"NON_RESIDENT\""
+          ],
+          "plan_kv": [
+            "\"u8\""
+          ],
+          "plan_source": [
+            "\"explicit_SchedulerConfig\""
+          ],
+          "plan_enable_prefix_caching": [
+            "false"
+          ],
+          "seal": "sealed_slo_escalate_a678926e-2681-4851-a386-8b7c83e971a3: MATCH; slo_escalate_a678926e-2681-4851-a386-8b7c83e971a3: MISMATCH as checked out; MISMATCH after CRLF restore (committed LF-normalized)"
+        },
+        {
+          "run_id": "30caa847-d97a-4e4b-aa22-f152b95d08e9",
+          "dirs": [
+            "derived/h1_hybrid/slo_escalate_30caa847-d97a-4e4b-aa22-f152b95d08e9"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "63e36a943df1",
+          "date_utc": "2026-10-14T01:57:55.658781+00:00",
+          "host": "evo-t2 (T2S)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: no earlier reading; next after: 32.0.101.8509 on 2026-10-20)",
+          "plan_residency": [
+            "\"NON_RESIDENT\""
+          ],
+          "plan_kv": [
+            "\"u8\""
+          ],
+          "plan_source": [
+            "\"explicit_SchedulerConfig\""
+          ],
+          "plan_enable_prefix_caching": [
+            "false"
+          ],
+          "seal": "slo_escalate_30caa847-d97a-4e4b-aa22-f152b95d08e9: MATCH"
+        }
+      ],
+      "recommendation": "LABEL exactly: 'NON_RESIDENT, bare SchedulerConfig (prefix caching off, max_num_batched_tokens 256), KV u8 = i8'. A re-measure needs cloud spend (not $0): not proposed here.",
+      "notes": "Same construction for every DEMO-1 V cell (V1 f7343708, V2 1acc8c58, V3 71d33f7a+ab88f47f, T2S V1 b026f3fd, V3 a4284ab0)."
+    },
+    {
+      "number": "V1 local 0.0 / MATCH x3",
+      "what": "DEMO-1 V1 (XPS f7343708, T2S b026f3fd)",
+      "run_ids": [
+        "f7343708-a4a5-4984-93e5-ce5412a6c981",
+        "b026f3fd-004e-4419-91bd-80c79f94e0f1"
+      ],
+      "tool": "run_h1_hybrid --policy slo_escalate",
+      "class": "REPLACED_SCHEDULER",
+      "constructed_as": "as above (NON_RESIDENT bare SchedulerConfig, prefix caching off)",
+      "scheduler": {
+        "enable_prefix_caching": false,
+        "max_num_batched_tokens": 256,
+        "max_num_seqs": 256,
+        "dynamic_split_fuse": true,
+        "cache_size": 0,
+        "num_kv_blocks": 0,
+        "use_cache_eviction": false,
+        "replaced": {
+          "enable_prefix_caching": true,
+          "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+          "dynamic_split_fuse": true,
+          "cache_size": 0,
+          "use_cache_eviction": false
+        }
+      },
+      "prefix_caching": false,
+      "max_num_batched_tokens": 256,
+      "kv_requested": "u8",
+      "kv_compiled": "i8 (DERIVED from P0a readback on the same OpenVINO build (597f40a9 XPS, T2S 2026-10-20); not read in this run)",
+      "cache_dir": "none",
+      "residency": "NON_RESIDENT",
+      "runs": [
+        {
+          "run_id": "f7343708-a4a5-4984-93e5-ce5412a6c981",
+          "dirs": [
+            "derived/h1_hybrid/slo_escalate_f7343708-a4a5-4984-93e5-ce5412a6c981"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "4281755accec",
+          "date_utc": "2026-10-13T16:36:15.852135+00:00",
+          "host": "aipc-c1 (XPS)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: 32.0.101.8724 on 2026-09-16; next after: 32.0.101.8860 on 2026-10-20)",
+          "plan_residency": [
+            "\"NON_RESIDENT\""
+          ],
+          "plan_kv": [
+            "\"u8\""
+          ],
+          "plan_source": [
+            "\"explicit_SchedulerConfig\""
+          ],
+          "plan_enable_prefix_caching": [
+            "false"
+          ],
+          "seal": "slo_escalate_f7343708-a4a5-4984-93e5-ce5412a6c981: MATCH"
+        },
+        {
+          "run_id": "b026f3fd-004e-4419-91bd-80c79f94e0f1",
+          "dirs": [
+            "derived/h1_hybrid/slo_escalate_b026f3fd-004e-4419-91bd-80c79f94e0f1"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "4281755accec",
+          "date_utc": "2026-10-13T16:09:40.387696+00:00",
+          "host": "evo-t2 (T2S)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: no earlier reading; next after: 32.0.101.8509 on 2026-10-20)",
+          "plan_residency": [
+            "\"NON_RESIDENT\""
+          ],
+          "plan_kv": [
+            "\"u8\""
+          ],
+          "plan_source": [
+            "\"explicit_SchedulerConfig\""
+          ],
+          "plan_enable_prefix_caching": [
+            "false"
+          ],
+          "seal": "slo_escalate_b026f3fd-004e-4419-91bd-80c79f94e0f1: MATCH"
+        }
+      ],
+      "recommendation": "LABEL as REPLACED_SCHEDULER. Contrast with DEMO-2 arm A (true default, RESIDENT) is two changes, not one.",
+      "notes": ""
+    },
+    {
+      "number": "10,000 (9,750 HELD)",
+      "what": "XPS GPU cold edge at the 10 s TTFT SLO",
+      "run_ids": [
+        "c2246b1f-c588-4998-838a-5507da87e9ee"
+      ],
+      "tool": "c2_ttft ladder (one child per repeat)",
+      "class": "PLAIN_PIPELINE_WITH_PROPS",
+      "constructed_as": "LLMPipeline(model_dir, device, **properties) (seam/tools/_delta_n_child.py; no scheduler key in the child spec)",
+      "scheduler": {
+        "enable_prefix_caching": true,
+        "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+        "dynamic_split_fuse": true,
+        "cache_size": 0,
+        "use_cache_eviction": false
+      },
+      "prefix_caching": true,
+      "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+      "kv_requested": "u8",
+      "kv_compiled": "i8 (DERIVED from P0a readback on the same OpenVINO build (597f40a9 XPS, T2S 2026-10-20); not read in this run)",
+      "cache_dir": "none",
+      "residency": "cold single generate per child",
+      "runs": [
+        {
+          "run_id": "c2246b1f-c588-4998-838a-5507da87e9ee",
+          "dirs": [
+            "derived/c2_ttft/c2246b1f-c588-4998-838a-5507da87e9ee",
+            "derived/c2_ttft/sealed_c2246b1f-c588-4998-838a-5507da87e9ee"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "not recorded",
+          "date_utc": "2026-09-24T03:32:48.327101+00:00",
+          "host": "aipc-c1 (XPS)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: 32.0.101.8724 on 2026-09-16; next after: 32.0.101.8860 on 2026-10-20)",
+          "spec_arms": [
+            "gpu_only_u8"
+          ],
+          "spec_properties": [
+            "[{\"KV_CACHE_PRECISION\": \"u8\"}]"
+          ],
+          "spec_scheduler": [
+            "\"ABSENT_KEY\""
+          ],
+          "spec_resident_two_turn": [
+            "None"
+          ],
+          "plan_source": [
+            "\"docs/README_characterizations.md Finding 2 / sealed 41e419bd\""
+          ],
+          "seal": "sealed_c2246b1f-c588-4998-838a-5507da87e9ee: MISMATCH as checked out; MATCH after CRLF restore (committed LF-normalized)"
+        }
+      ],
+      "recommendation": "LABEL; each repeat is a fresh process, so prefix caching cannot reuse a prompt. Re-measure under the true default only if the paper says 'default'.",
+      "notes": "9,750 (c647f0c7) stays HELD in derived/WITHDRAWN.md."
+    },
+    {
+      "number": "21.4x",
+      "what": "placement: GPU 10,000 vs CPU 468 tokens",
+      "run_ids": [
+        "c2246b1f-c588-4998-838a-5507da87e9ee",
+        "7f232f86-2525-481b-a000-c6b8491bc224"
+      ],
+      "tool": "c2_ttft",
+      "class": "PLAIN_PIPELINE_WITH_PROPS",
+      "constructed_as": "LLMPipeline(model_dir, device, **properties) (seam/tools/_delta_n_child.py; no scheduler key in the child spec); CPU arm adds PCORE_ONLY, pinning, 4 threads",
+      "scheduler": {
+        "enable_prefix_caching": true,
+        "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+        "dynamic_split_fuse": true,
+        "cache_size": 0,
+        "use_cache_eviction": false
+      },
+      "prefix_caching": true,
+      "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+      "kv_requested": "u8 (GPU) / none (CPU)",
+      "kv_compiled": "n/a",
+      "cache_dir": "none",
+      "residency": "cold single generate per child",
+      "runs": [
+        {
+          "run_id": "c2246b1f-c588-4998-838a-5507da87e9ee",
+          "dirs": [
+            "derived/c2_ttft/c2246b1f-c588-4998-838a-5507da87e9ee",
+            "derived/c2_ttft/sealed_c2246b1f-c588-4998-838a-5507da87e9ee"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "not recorded",
+          "date_utc": "2026-09-24T03:32:48.327101+00:00",
+          "host": "aipc-c1 (XPS)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: 32.0.101.8724 on 2026-09-16; next after: 32.0.101.8860 on 2026-10-20)",
+          "spec_arms": [
+            "gpu_only_u8"
+          ],
+          "spec_properties": [
+            "[{\"KV_CACHE_PRECISION\": \"u8\"}]"
+          ],
+          "spec_scheduler": [
+            "\"ABSENT_KEY\""
+          ],
+          "spec_resident_two_turn": [
+            "None"
+          ],
+          "plan_source": [
+            "\"docs/README_characterizations.md Finding 2 / sealed 41e419bd\""
+          ],
+          "seal": "sealed_c2246b1f-c588-4998-838a-5507da87e9ee: MISMATCH as checked out; MATCH after CRLF restore (committed LF-normalized)"
+        },
+        {
+          "run_id": "7f232f86-2525-481b-a000-c6b8491bc224",
+          "dirs": [
+            "derived/c2_ttft/7f232f86-2525-481b-a000-c6b8491bc224",
+            "derived/c2_ttft/sealed_7f232f86-2525-481b-a000-c6b8491bc224"
+          ],
+          "found": true,
+          "openvino": "UNKNOWN (not recorded)",
+          "openvino_genai": "UNKNOWN (not recorded)",
+          "git_head": "not recorded",
+          "date_utc": "2026-09-25T01:49:18.576755+00:00",
+          "host": "aipc-c1 (XPS)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: 32.0.101.8724 on 2026-09-16; next after: 32.0.101.8860 on 2026-10-20)",
+          "spec_arms": [
+            "A"
+          ],
+          "spec_properties": [
+            "[{\"ENABLE_CPU_PINNING\": true, \"INFERENCE_NUM_THREADS\": 4, \"SCHEDULING_CORE_TYPE\": \"PCORE_ONLY\"}]"
+          ],
+          "spec_scheduler": [
+            "\"ABSENT_KEY\""
+          ],
+          "spec_resident_two_turn": [
+            "None"
+          ],
+          "plan_source": [
+            "\"docs/README_characterizations.md Finding 2 / sealed 41e419bd\""
+          ],
+          "seal": "sealed_7f232f86-2525-481b-a000-c6b8491bc224: MISMATCH as checked out; MATCH after CRLF restore (committed LF-normalized)"
+        }
+      ],
+      "recommendation": "LABEL.",
+      "notes": ""
+    },
+    {
+      "number": "30-34% slower",
+      "what": "int8 vs int4 weights decode (DECODE-MATCH)",
+      "run_ids": [
+        "180dfbb9-5ad6-446e-a3f2-0d6fa8eea196"
+      ],
+      "tool": "run_decode_match",
+      "class": "PLAIN_PIPELINE_WITH_PROPS",
+      "constructed_as": "LLMPipeline(model_dir, device, **properties) (seam/tools/_delta_n_child.py; no scheduler key in the child spec)",
+      "scheduler": {
+        "enable_prefix_caching": true,
+        "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+        "dynamic_split_fuse": true,
+        "cache_size": 0,
+        "use_cache_eviction": false
+      },
+      "prefix_caching": true,
+      "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+      "kv_requested": "u8",
+      "kv_compiled": "i8 (DERIVED from P0a readback on the same OpenVINO build (597f40a9 XPS, T2S 2026-10-20); not read in this run)",
+      "cache_dir": "none",
+      "residency": "cold single generate per child",
+      "runs": [
+        {
+          "run_id": "180dfbb9-5ad6-446e-a3f2-0d6fa8eea196",
+          "dirs": [
+            "derived/c2_ttft/180dfbb9-5ad6-446e-a3f2-0d6fa8eea196",
+            "derived/c2_ttft/sealed_180dfbb9-5ad6-446e-a3f2-0d6fa8eea196"
+          ],
+          "found": true,
+          "openvino": "UNKNOWN (not recorded)",
+          "openvino_genai": "UNKNOWN (not recorded)",
+          "git_head": "not recorded",
+          "date_utc": "2026-09-30T16:34:53.445090Z",
+          "host": "aipc-c1 (XPS)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: 32.0.101.8724 on 2026-09-16; next after: 32.0.101.8860 on 2026-10-20)",
+          "spec_arms": [
+            "gpu_only_u8"
+          ],
+          "spec_properties": [
+            "[{\"KV_CACHE_PRECISION\": \"u8\"}]"
+          ],
+          "spec_scheduler": [
+            "\"ABSENT_KEY\""
+          ],
+          "spec_resident_two_turn": [
+            "None"
+          ],
+          "seal": "sealed_180dfbb9-5ad6-446e-a3f2-0d6fa8eea196: MANIFEST_COVERAGE_GAP as checked out; MATCH_MANIFEST after CRLF restore (committed LF-normalized)"
+        }
+      ],
+      "recommendation": "LABEL.",
+      "notes": ""
+    },
+    {
+      "number": "46k cold turn 230-253 s",
+      "what": "CAP-4 cold-turn timing f16/u8/u4 (not the ~46,000 combined limit)",
+      "run_ids": [
+        "2b3316b6-7f6e-474f-9177-bd5a89aeb58c"
+      ],
+      "tool": "cap4",
+      "class": "PLAIN_PIPELINE_WITH_PROPS",
+      "constructed_as": "LLMPipeline(model_dir, device, **properties) (seam/tools/_delta_n_child.py; no scheduler key in the child spec)",
+      "scheduler": {
+        "enable_prefix_caching": true,
+        "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+        "dynamic_split_fuse": true,
+        "cache_size": 0,
+        "use_cache_eviction": false
+      },
+      "prefix_caching": true,
+      "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+      "kv_requested": "f16 / u8 / u4",
+      "kv_compiled": "n/a",
+      "cache_dir": "none",
+      "residency": "RESIDENT (interleaved)",
+      "runs": [
+        {
+          "run_id": "2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+          "dirs": [
+            "derived/cap4/2b3316b6-7f6e-474f-9177-bd5a89aeb58c",
+            "derived/cap4/sealed_2b3316b6-7f6e-474f-9177-bd5a89aeb58c"
+          ],
+          "found": true,
+          "openvino": "UNKNOWN (not recorded)",
+          "openvino_genai": "UNKNOWN (not recorded)",
+          "git_head": "not recorded",
+          "date_utc": "2026-09-16T01:29:56.611342+00:00",
+          "host": "aipc-c1 (XPS)",
+          "gpu_driver": "32.0.101.8724 (read 2026-09-16: 2b3316b6 run_environment.gpu_driver_version (manifest.json))",
+          "spec_arms": [
+            "gpu_only_f16",
+            "gpu_only_u4"
+          ],
+          "spec_properties": [
+            "[{\"KV_CACHE_PRECISION\": \"f16\"}]",
+            "[{\"KV_CACHE_PRECISION\": \"u4\"}]"
+          ],
+          "spec_scheduler": [
+            "\"ABSENT_KEY\""
+          ],
+          "spec_resident_two_turn": [
+            "None"
+          ],
+          "plan_residency": [
+            "\"RESIDENT\""
+          ],
+          "plan_source": [
+            "\"41e419bd / C-2 family turn-1\"",
+            "\"41e419bd\"",
+            "\"cli_reconstruct_aborted\""
+          ],
+          "seal": "sealed_2b3316b6-7f6e-474f-9177-bd5a89aeb58c: MISMATCH as checked out; MATCH after CRLF restore (committed LF-normalized)"
+        }
+      ],
+      "recommendation": "LABEL; the only run with a recorded GPU driver (8724).",
+      "notes": ""
+    },
+    {
+      "number": "~46,000 combined limit; C2 23-25x",
+      "what": "ISPASS I-5 and the C2 headline",
+      "run_ids": [],
+      "tool": "unknown",
+      "class": "UNKNOWN",
+      "constructed_as": "no run_id in this repo",
+      "scheduler": {
+        "note": "not applicable"
+      },
+      "prefix_caching": null,
+      "max_num_batched_tokens": null,
+      "kv_requested": "unknown",
+      "kv_compiled": "n/a",
+      "cache_dir": "none",
+      "residency": "unknown",
+      "runs": [],
+      "recommendation": "NEEDS RUN_ID (Zach). Cannot be audited until the run is named.",
+      "notes": ""
+    },
+    {
+      "number": "P0-v2 2.47/3.26 s GPU, 9.29/11.17 s CPU",
+      "what": "warm time-to-action at 4k/6k",
+      "run_ids": [
+        "ac4e5472-76a9-4999-bf0b-8274d27ce0ca"
+      ],
+      "tool": "exchange_rate",
+      "class": "PLAIN_PIPELINE_WITH_PROPS",
+      "constructed_as": "LLMPipeline(model_dir, device, **properties) (seam/tools/_delta_n_child.py; no scheduler key in the child spec)",
+      "scheduler": {
+        "enable_prefix_caching": true,
+        "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+        "dynamic_split_fuse": true,
+        "cache_size": 0,
+        "use_cache_eviction": false
+      },
+      "prefix_caching": true,
+      "max_num_batched_tokens": "SIZE_MAX (18446744073709551615)",
+      "kv_requested": "u8",
+      "kv_compiled": "i8 (DERIVED from P0a readback on the same OpenVINO build (597f40a9 XPS, T2S 2026-10-20); not read in this run)",
+      "cache_dir": "none",
+      "residency": "RESIDENT two-turn",
+      "runs": [
+        {
+          "run_id": "ac4e5472-76a9-4999-bf0b-8274d27ce0ca",
+          "dirs": [
+            "derived/exchange_rate/ac4e5472-76a9-4999-bf0b-8274d27ce0ca",
+            "derived/exchange_rate/sealed_ac4e5472-76a9-4999-bf0b-8274d27ce0ca"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "not recorded",
+          "date_utc": "2026-10-01T01:53:00.710186Z",
+          "host": "aipc-c1 (XPS)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: 32.0.101.8724 on 2026-09-16; next after: 32.0.101.8860 on 2026-10-20)",
+          "spec_arms": [
+            "A",
+            "gpu_only_u8"
+          ],
+          "spec_properties": [
+            "[{\"ENABLE_CPU_PINNING\": true, \"INFERENCE_NUM_THREADS\": 4, \"KV_CACHE_PRECISION\": \"u8\", \"SCHEDULING_CORE_TYPE\": \"PCORE_ONLY\"}]",
+            "[{\"KV_CACHE_PRECISION\": \"u8\"}]"
+          ],
+          "spec_scheduler": [
+            "\"ABSENT_KEY\""
+          ],
+          "spec_resident_two_turn": [
+            "None"
+          ],
+          "plan_residency": [
+            "\"RESIDENT\""
+          ],
+          "seal": "sealed_ac4e5472-76a9-4999-bf0b-8274d27ce0ca: MANIFEST_COVERAGE_GAP as checked out; MATCH_MANIFEST after CRLF restore (committed LF-normalized)"
+        }
+      ],
+      "recommendation": "LABEL.",
+      "notes": ""
+    },
+    {
+      "number": "NPU 1024->960, 2048->1984, 4096->4032",
+      "what": "NPU toolchain cap (MAX_PROMPT_LEN)",
+      "run_ids": [
+        "faa14a31-c375-4c77-95a9-7e2fa58f5d49",
+        "9acabbf7-474a-410a-9968-0ef88f76afa1",
+        "2ffbd61c-470a-4d1f-98f1-3fe8eb61f5c4",
+        "2972e8c4-7608-4c9f-9cee-4115d2098039"
+      ],
+      "tool": "npu limit ladder",
+      "class": "PLAIN_PIPELINE_WITH_PROPS",
+      "constructed_as": "NPU LLMPipeline with MAX_PROMPT_LEN, MIN_RESPONSE_LEN 8, NPUW_LLM_PREFILL_CHUNK_SIZE 1024",
+      "scheduler": {
+        "note": "NPU LLMPipeline (static NPUW pipeline); no SchedulerConfig"
+      },
+      "prefix_caching": null,
+      "max_num_batched_tokens": null,
+      "kv_requested": "n/a (INT8 weights)",
+      "kv_compiled": "n/a",
+      "cache_dir": "none",
+      "residency": "n/a",
+      "runs": [
+        {
+          "run_id": "faa14a31-c375-4c77-95a9-7e2fa58f5d49",
+          "dirs": [
+            "derived/npu/faa14a31-c375-4c77-95a9-7e2fa58f5d49",
+            "derived/npu/sealed_faa14a31-c375-4c77-95a9-7e2fa58f5d49"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "not recorded",
+          "date_utc": "2026-10-14T18:24:32.5903777Z",
+          "host": "evo-t2 (T2S)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: no earlier reading; next after: 32.0.101.8509 on 2026-10-20)",
+          "plan_source": [
+            "{\"group_size\": \"constants\""
+          ],
+          "seal": "sealed_faa14a31-c375-4c77-95a9-7e2fa58f5d49: MATCH"
+        },
+        {
+          "run_id": "9acabbf7-474a-410a-9968-0ef88f76afa1",
+          "dirs": [
+            "derived/npu/9acabbf7-474a-410a-9968-0ef88f76afa1",
+            "derived/npu/sealed_9acabbf7-474a-410a-9968-0ef88f76afa1"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "not recorded",
+          "date_utc": "2026-10-14T15:41:54.6364037Z",
+          "host": "evo-t2 (T2S)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: no earlier reading; next after: 32.0.101.8509 on 2026-10-20)",
+          "plan_source": [
+            "{\"group_size\": \"constants\""
+          ],
+          "seal": "sealed_9acabbf7-474a-410a-9968-0ef88f76afa1: MATCH"
+        },
+        {
+          "run_id": "2ffbd61c-470a-4d1f-98f1-3fe8eb61f5c4",
+          "dirs": [
+            "derived/npu/2ffbd61c-470a-4d1f-98f1-3fe8eb61f5c4",
+            "derived/npu/sealed_2ffbd61c-470a-4d1f-98f1-3fe8eb61f5c4"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "not recorded",
+          "date_utc": "2026-10-15T02:56:49.1030746Z",
+          "host": "evo-t2 (T2S)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: no earlier reading; next after: 32.0.101.8509 on 2026-10-20)",
+          "plan_source": [
+            "{\"group_size\": \"constants\""
+          ],
+          "seal": "sealed_2ffbd61c-470a-4d1f-98f1-3fe8eb61f5c4: MATCH"
+        },
+        {
+          "run_id": "2972e8c4-7608-4c9f-9cee-4115d2098039",
+          "dirs": [
+            "derived/npu/2972e8c4-7608-4c9f-9cee-4115d2098039",
+            "derived/npu/sealed_2972e8c4-7608-4c9f-9cee-4115d2098039"
+          ],
+          "found": true,
+          "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+          "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+          "git_head": "not recorded",
+          "date_utc": "2026-10-15T01:50:51.4447110Z",
+          "host": "evo-t2 (T2S)",
+          "gpu_driver": "UNKNOWN (not recorded; last before: no earlier reading; next after: 32.0.101.8509 on 2026-10-20)",
+          "plan_source": [
+            "{\"group_size\": \"constants\""
+          ],
+          "seal": "sealed_2972e8c4-7608-4c9f-9cee-4115d2098039: MATCH"
+        }
+      ],
+      "recommendation": "LABEL with the host: these ran on the T2S (model path C:\\Users\\zach), after the 2026-10-14 Windows Update reboot; NPU driver at the time UNKNOWN (4512 on 2026-10-20).",
+      "notes": "Their canary thresholds were derived from XPS data (threshold_derivation.platform_id aipc-c1)."
+    }
+  ]
+}

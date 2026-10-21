@@ -383,3 +383,20 @@ notes). Searched 2026-10-15/16 by Zach and Claude (Cowork).
 - "41.5% thermal loss" for 2603.23640, or any Intel thermal number from it.
 - "first default-vs-tuned comparison" without "in the hybrid papers we
   searched (docs/RELATED_SEARCHES.md, 2026-10-16)".
+
+## 2026-10-20 (Task AZ): ECO-LLM / Minions and Ollama's num_ctx default
+Record: docs/literature/2026-10-20/OLLAMA_DEFAULT_INHERITANCE.md (clones of
+HazyResearch/minions and ollama/ollama, arXiv pages, GitHub search).
+- Correction to the 2026-10-16 verdict above ("Hybrid papers on Ollama inherit
+  its context default: SUPPORTED, with a caveat"): NOT SUPPORTED.
+  - Minions' OllamaClient sends num_ctx in every request: 4096 at
+    publication (5c2c9c2f, minions/clients/ollama.py L16, L59-66), when
+    Ollama's own default was 2048 (v0.5.12); 48,000 since 9668878
+    (2025-04-13).
+  - ECO-LLM lists context length as a configured, swept Ollama option
+    (Table 2, section 3.2.2), with no code public.
+- Ollama default num_ctx by source: 2048 through v0.6.6; 4096 from v0.6.7
+  (44b466ee); VRAM tiers 4k/32k/256k from v0.15.5 (0334ffa6).
+- Withdrawn wording: "the configuration typical hybrid studies inherit
+  (Ollama's 4k tier below 24 GiB)". Allowed: "Ollama's default window on a
+  < 24 GiB machine (4096; Ollama >= v0.6.7)".
