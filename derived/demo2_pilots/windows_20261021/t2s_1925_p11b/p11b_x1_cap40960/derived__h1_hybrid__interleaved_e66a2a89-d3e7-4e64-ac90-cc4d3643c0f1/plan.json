@@ -1,0 +1,226 @@
+{
+  "arm_order": [
+    "local_only"
+  ],
+  "arm_order_rule": "seeded_latin_square",
+  "arm_order_seed": 0,
+  "caching_policy": "none",
+  "chat_template": {
+    "enable_thinking": false,
+    "renderer": "tools.bfcl_feasibility_probe.render_bfcl_tools_style"
+  },
+  "cloud_model": "claude-sonnet-5",
+  "cloud_ping_worker": {
+    "ran": false,
+    "reason": "no selected policy reaches the cloud"
+  },
+  "entry_assert": {
+    "mode": "caller_supplied",
+    "n": 1
+  },
+  "entry_pin": {
+    "category": "multi_turn_long_context",
+    "chunk": {
+      "count": 1,
+      "first_entry_id": "multi_turn_long_context_123",
+      "last_entry_id": "multi_turn_long_context_123",
+      "offset": 14
+    },
+    "n": 30,
+    "name": "DEMO1_LONGCTX_30",
+    "path": "derived/h1_hybrid/demo1/DEMO1_LONGCTX_30.json",
+    "seed": 20260930,
+    "sha256": "7a71fa6ab4a649bdc18b2c994c9904e44f5667a680abadf2f79147f6ed2513cb"
+  },
+  "excluded_from_interleave": [
+    "slo_escalate",
+    "emission_escalate",
+    "full_signal_bounceback"
+  ],
+  "excluded_policies": {
+    "full_signal_bounceback": {
+      "blocked_on": "R2C-TURNWISE",
+      "reason": "R2c (full_signal_bounceback) excluded from this interleaved session (H1-2POLICY = slo_escalate + emission_escalate only). Not the full three-policy comparison. R2C-TURNWISE is available for dedicated R2c / H1-3POLICY seals."
+    }
+  },
+  "full_three_policy_comparison": false,
+  "generation_config": {
+    "apply_chat_template": false,
+    "do_sample": false,
+    "max_new_tokens": 512,
+    "seed": null,
+    "temperature": null,
+    "top_k": null,
+    "top_p": null
+  },
+  "git": {
+    "dirty": false,
+    "git_diff_head_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "git_head": "328de131645d15d579e3f505503a9f5a86d69679",
+    "launch_evidence": {
+      "dir": "derived/h1_hybrid/_launches/e66a2a89-d3e7-4e64-ac90-cc4d3643c0f1",
+      "files": [
+        {
+          "bytes": 13084,
+          "path": "derived/h1_hybrid/_launches/e66a2a89-d3e7-4e64-ac90-cc4d3643c0f1/canary_opening/canaries/canary.0.json",
+          "sha256": "a42589e9e21427817160f0295f696c1c5c8fbb0df206c92b3dec85360f28138f"
+        },
+        {
+          "bytes": 9416,
+          "path": "derived/h1_hybrid/_launches/e66a2a89-d3e7-4e64-ac90-cc4d3643c0f1/canary_opening/opening_plan.json",
+          "sha256": "617644f86740203a38896e58c2499bb064ca336374dd0901861d1247a433301d"
+        },
+        {
+          "bytes": 4668,
+          "path": "derived/h1_hybrid/_launches/e66a2a89-d3e7-4e64-ac90-cc4d3643c0f1/gates_20261021_165754.json",
+          "sha256": "a6b4451112fbfaa5360f0ae4c4ab029fd20a5306ac780cc918d1aad3b55eae10"
+        }
+      ]
+    },
+    "tree_status": "CLEAN"
+  },
+  "kind": "h1_interleaved",
+  "kv_match_seal": "86d0f4cf-e8c2-4ce5-96da-04c6a9c129f3",
+  "local_backend": "openvino",
+  "local_limits": {
+    "context_window": {
+      "rule": "generate input + max_new_tokens > window: not generated; the entry ends as a local fail (stop_reason ctx_overflow)",
+      "tokens": 40960
+    },
+    "local_turn_limit": 1,
+    "pilot": "P11-B",
+    "task": "BB"
+  },
+  "measurement_kind": "MEASURED",
+  "model": "Qwen3-4B-int4-ov",
+  "n_entries": 1,
+  "openvino": {
+    "arm_id": "gpu_only",
+    "kv": "default",
+    "load_meta": {
+      "device_config": {
+        "arm_id": "gpu_only",
+        "generate_device": "GPU",
+        "label": "gpu only (single pipeline)",
+        "load_sequence": [
+          {
+            "device": "GPU",
+            "properties": {}
+          }
+        ]
+      },
+      "loads": [
+        {
+          "compiled_readback": {
+            "backend": "PA",
+            "captured_chars": 2824,
+            "ir_rt_info": {
+              "checked": true,
+              "kv_cache_precision": null,
+              "override": false,
+              "runtime_options_present": true
+            },
+            "key_cache_quant_mode": null,
+            "kv_cache_precision": "i8",
+            "n_pa_properties": 25,
+            "pa_property_dump_seen": true,
+            "sdpa_fallback_warning": false,
+            "value_cache_quant_mode": null
+          },
+          "device": "GPU",
+          "kv_cache_precision": {
+            "enforced": false,
+            "failure_mode": null,
+            "match": true,
+            "readback": {
+              "device": "GPU",
+              "error": null,
+              "normalized": "dynamic",
+              "ok": true,
+              "property": "KV_CACHE_PRECISION",
+              "raw": "<Type: 'dynamic'>",
+              "to_string": "dynamic"
+            },
+            "requested": null
+          },
+          "properties": {},
+          "scheduler_config": null
+        }
+      ],
+      "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+      "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+      "scheduler_config": {
+        "enable_prefix_caching": null,
+        "source": "LLMPipeline_default_CB_prefix_caching_on"
+      },
+      "true_default_verdict": {
+        "reasons": [],
+        "valid": true
+      }
+    },
+    "max_new_tokens": 512,
+    "model_spec": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+    "prefix_block_clear": "ov_genai.LLMPipeline",
+    "residency": "RESIDENT",
+    "runtime_options": {
+      "compiled_readback": true,
+      "debug_raw_text": true,
+      "extra_properties": {},
+      "generation": null,
+      "gpu_mem_counters": true,
+      "mem_telemetry": true,
+      "require_true_default": true,
+      "scheduler_overrides": null,
+      "step_log": true
+    }
+  },
+  "placement": "gpu_only",
+  "platform_id": "evo-t2",
+  "policy_caps_usd": {
+    "local_only": 0.0
+  },
+  "r2c_excluded": true,
+  "r2c_exclusion_reason": "R2c (full_signal_bounceback) excluded from this interleaved session (H1-2POLICY = slo_escalate + emission_escalate only). Not the full three-policy comparison. R2C-TURNWISE is available for dedicated R2c / H1-3POLICY seals.",
+  "residency": "RESIDENT",
+  "resume_completed_by_policy": {
+    "local_only": []
+  },
+  "retention": {
+    "arm": "FULL"
+  },
+  "run_id": "e66a2a89-d3e7-4e64-ac90-cc4d3643c0f1",
+  "scorer": {
+    "bfcl_eval_version": "2025.12.17",
+    "checker": "bfcl_eval.eval_checker.multi_turn_eval.multi_turn_checker",
+    "w3_seal_refs": [
+      "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+      "1d8db970-4c18-4bcf-824d-d9c141b6eb22"
+    ],
+    "wrapper": "apu_characterization.cap01.bfcl_cap01_multi_turn_checker"
+  },
+  "seal": true,
+  "session_design": "interleaved",
+  "session_max_usd": 1.0,
+  "started_utc": "2026-10-21T23:58:37.865167+00:00",
+  "tier": "4B",
+  "turn_watchdog": {
+    "dump_cmd": [
+      "C:\\Users\\zach\\seam_tools\\py-spy.exe",
+      "dump",
+      "--native",
+      "--pid",
+      "{pid}"
+    ],
+    "exit_code": 86,
+    "limit_outcome": "turn_budget_exceeded",
+    "limit_s": 3600.0,
+    "poll_s": 1.0,
+    "stall_s": 900.0
+  },
+  "w3_entry_pin": null,
+  "w3_seal_refs": [
+    "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+    "1d8db970-4c18-4bcf-824d-d9c141b6eb22"
+  ],
+  "weight": "int4"
+}

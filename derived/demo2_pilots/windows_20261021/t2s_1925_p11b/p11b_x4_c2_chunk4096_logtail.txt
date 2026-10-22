@@ -1,0 +1,200 @@
+  EXECUTION_DEVICES: GPU.0
+EXECUTION_DEVICES:
+ GPU.0: Intel(R) Arc(TM) B390 GPU (iGPU)
+[XAttention]: DISABLED on GPU device.
+CELL_START policy=local_only entry=multi_turn_long_context_123 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+Model: OV Tokenizer
+  NETWORK_NAME: tokenizer
+  OPTIMAL_NUMBER_OF_INFER_REQUESTS: 1
+  NUM_STREAMS: 1
+  INFERENCE_NUM_THREADS: 4
+  PERF_COUNT: NO
+  INFERENCE_PRECISION_HINT: f32
+  PERFORMANCE_HINT: LATENCY
+  EXECUTION_MODE_HINT: PERFORMANCE
+  PERFORMANCE_HINT_NUM_REQUESTS: 0
+  ENABLE_CPU_PINNING: NO
+  ENABLE_CPU_RESERVATION: NO
+  SCHEDULING_CORE_TYPE: ANY_CORE
+  MODEL_DISTRIBUTION_POLICY: 
+  ENABLE_HYPER_THREADING: NO
+  EXECUTION_DEVICES: CPU
+  CPU_DENORMALS_OPTIMIZATION: NO
+  LOG_LEVEL: LOG_NONE
+  CPU_SPARSE_WEIGHTS_DECOMPRESSION_RATE: 1
+  ENABLE_TENSOR_PARALLEL: NO
+  TBB_PARTITIONER: STATIC
+  DYNAMIC_QUANTIZATION_GROUP_SIZE: 32
+  KV_CACHE_PRECISION: u8
+  KEY_CACHE_PRECISION: u8
+  VALUE_CACHE_PRECISION: u8
+  KEY_CACHE_GROUP_SIZE: 0
+  VALUE_CACHE_GROUP_SIZE: 0
+EXECUTION_DEVICES:
+ CPU: Intel(R) Core(TM) Ultra X7 358H
+Model: OV Detokenizer
+  NETWORK_NAME: detokenizer
+  OPTIMAL_NUMBER_OF_INFER_REQUESTS: 1
+  NUM_STREAMS: 1
+  INFERENCE_NUM_THREADS: 4
+  PERF_COUNT: NO
+  INFERENCE_PRECISION_HINT: f32
+  PERFORMANCE_HINT: LATENCY
+  EXECUTION_MODE_HINT: PERFORMANCE
+  PERFORMANCE_HINT_NUM_REQUESTS: 0
+  ENABLE_CPU_PINNING: NO
+  ENABLE_CPU_RESERVATION: NO
+  SCHEDULING_CORE_TYPE: ANY_CORE
+  MODEL_DISTRIBUTION_POLICY: 
+  ENABLE_HYPER_THREADING: NO
+  EXECUTION_DEVICES: CPU
+  CPU_DENORMALS_OPTIMIZATION: NO
+  LOG_LEVEL: LOG_NONE
+  CPU_SPARSE_WEIGHTS_DECOMPRESSION_RATE: 1
+  ENABLE_TENSOR_PARALLEL: NO
+  TBB_PARTITIONER: STATIC
+  DYNAMIC_QUANTIZATION_GROUP_SIZE: 32
+  KV_CACHE_PRECISION: u8
+  KEY_CACHE_PRECISION: u8
+  VALUE_CACHE_PRECISION: u8
+  KEY_CACHE_GROUP_SIZE: 0
+  VALUE_CACHE_GROUP_SIZE: 0
+EXECUTION_DEVICES:
+ CPU: Intel(R) Core(TM) Ultra X7 358H
+SchedulerConfig { 
+  max_num_batched_tokens: 4096
+  num_kv_blocks: 0
+  cache_size: 0
+  num_linear_attention_blocks: 0
+  cache_interval_multiplier: unset
+  dynamic_split_fuse: true
+  use_cache_eviction: false
+  max_num_seqs: 256
+  enable_prefix_caching: true
+  use_sparse_attention: false
+ }
+Model: LLM with Paged Attention
+  NETWORK_NAME: Model0
+  OPTIMAL_NUMBER_OF_INFER_REQUESTS: 1
+  PERF_COUNT: NO
+  ENABLE_CPU_PINNING: NO
+  ENABLE_CPU_RESERVATION: NO
+  MODEL_PRIORITY: MEDIUM
+  GPU_HOST_TASK_PRIORITY: MEDIUM
+  GPU_QUEUE_PRIORITY: MEDIUM
+  GPU_ENABLE_LARGE_ALLOCATIONS: NO
+  GPU_QUEUE_THROTTLE: MEDIUM
+  GPU_ENABLE_LOOP_UNROLLING: YES
+  GPU_DISABLE_WINOGRAD_CONVOLUTION: NO
+  CACHE_DIR: 
+  CACHE_MODE: optimize_speed
+  PERFORMANCE_HINT: LATENCY
+  EXECUTION_MODE_HINT: PERFORMANCE
+  COMPILATION_NUM_THREADS: 16
+  NUM_STREAMS: 1
+  PERFORMANCE_HINT_NUM_REQUESTS: 0
+  INFERENCE_PRECISION_HINT: f16
+  DYNAMIC_QUANTIZATION_GROUP_SIZE: 18446744073709551615
+  ACTIVATIONS_SCALE_FACTOR: -1
+  KV_CACHE_PRECISION: i8
+  DEVICE_ID: 0
+  EXECUTION_DEVICES: GPU.0
+EXECUTION_DEVICES:
+ GPU.0: Intel(R) Arc(TM) B390 GPU (iGPU)
+[XAttention]: DISABLED on GPU device.
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 2189, "input_kind": "chat_history_resident", "new_tokens_est": 2189, "policy": "local_only", "prompt_tokens": 2189, "seen_tokens_before": null, "step": 0, "t_perf_s": 3800.302528, "turn": 0, "utc": "2026-10-22T00:29:44Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 126, "ok": true, "policy": "local_only", "prompt_tokens": 2189, "raw_text_chars": 464, "step": 0, "t_perf_s": 3804.203075, "ttft_s": 0.567293, "turn": 0, "utc": "2026-10-22T00:29:48Z", "wall_s": 3.888086}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 87392, "input_kind": "chat_history_resident", "new_tokens_est": 85077, "policy": "local_only", "prompt_tokens": 87392, "seen_tokens_before": 2315, "step": 1, "t_perf_s": 3804.527313, "turn": 0, "utc": "2026-10-22T00:29:48Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 87392, "raw_text_chars": 1587, "step": 1, "t_perf_s": 4254.465056, "ttft_s": 398.258812, "turn": 0, "utc": "2026-10-22T00:37:18Z", "wall_s": 449.934597}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 87959, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 87959, "seen_tokens_before": 87904, "step": 2, "t_perf_s": 4254.752827, "turn": 0, "utc": "2026-10-22T00:37:19Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 87959, "raw_text_chars": 1587, "step": 2, "t_perf_s": 4313.559216, "ttft_s": 6.87745, "turn": 0, "utc": "2026-10-22T00:38:18Z", "wall_s": 58.803576}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 88526, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 88526, "seen_tokens_before": 88471, "step": 3, "t_perf_s": 4313.851049, "turn": 0, "utc": "2026-10-22T00:38:18Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 88526, "raw_text_chars": 1587, "step": 3, "t_perf_s": 4371.636378, "ttft_s": 5.574644, "turn": 0, "utc": "2026-10-22T00:39:16Z", "wall_s": 57.782532}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 89093, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 89093, "seen_tokens_before": 89038, "step": 4, "t_perf_s": 4371.910313, "turn": 0, "utc": "2026-10-22T00:39:16Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 89093, "raw_text_chars": 1587, "step": 4, "t_perf_s": 4430.522443, "ttft_s": 5.977339, "turn": 0, "utc": "2026-10-22T00:40:14Z", "wall_s": 58.609336}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 89660, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 89660, "seen_tokens_before": 89605, "step": 5, "t_perf_s": 4430.7948, "turn": 0, "utc": "2026-10-22T00:40:15Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 89660, "raw_text_chars": 1587, "step": 5, "t_perf_s": 4489.660855, "ttft_s": 5.649346, "turn": 0, "utc": "2026-10-22T00:41:14Z", "wall_s": 58.863221}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 90227, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 90227, "seen_tokens_before": 90172, "step": 6, "t_perf_s": 4489.937841, "turn": 0, "utc": "2026-10-22T00:41:14Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 90227, "raw_text_chars": 1587, "step": 6, "t_perf_s": 4549.563451, "ttft_s": 6.037074, "turn": 0, "utc": "2026-10-22T00:42:14Z", "wall_s": 59.62276}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 90794, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 90794, "seen_tokens_before": 90739, "step": 7, "t_perf_s": 4549.839774, "turn": 0, "utc": "2026-10-22T00:42:14Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 446, "ok": true, "policy": "local_only", "prompt_tokens": 90794, "raw_text_chars": 1347, "step": 7, "t_perf_s": 4603.094015, "ttft_s": 7.065538, "turn": 0, "utc": "2026-10-22T00:43:07Z", "wall_s": 53.251597}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 91294, "input_kind": "chat_history_resident", "new_tokens_est": 54, "policy": "local_only", "prompt_tokens": 91294, "seen_tokens_before": 91240, "step": 8, "t_perf_s": 4603.374562, "turn": 0, "utc": "2026-10-22T00:43:07Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 91294, "raw_text_chars": 1587, "step": 8, "t_perf_s": 4663.447382, "ttft_s": 6.214728, "turn": 0, "utc": "2026-10-22T00:44:07Z", "wall_s": 60.069652}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 91861, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 91861, "seen_tokens_before": 91806, "step": 9, "t_perf_s": 4663.724805, "turn": 0, "utc": "2026-10-22T00:44:08Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 91861, "raw_text_chars": 1587, "step": 9, "t_perf_s": 4724.630108, "ttft_s": 6.144117, "turn": 0, "utc": "2026-10-22T00:45:09Z", "wall_s": 60.902501}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 92428, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 92428, "seen_tokens_before": 92373, "step": 10, "t_perf_s": 4724.908938, "turn": 0, "utc": "2026-10-22T00:45:09Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 92428, "raw_text_chars": 1587, "step": 10, "t_perf_s": 4785.371329, "ttft_s": 5.828993, "turn": 0, "utc": "2026-10-22T00:46:09Z", "wall_s": 60.459229}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 92995, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 92995, "seen_tokens_before": 92940, "step": 11, "t_perf_s": 4785.651547, "turn": 0, "utc": "2026-10-22T00:46:10Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 92995, "raw_text_chars": 1587, "step": 11, "t_perf_s": 4846.77983, "ttft_s": 6.213413, "turn": 0, "utc": "2026-10-22T00:47:11Z", "wall_s": 61.125615}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 93562, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 93562, "seen_tokens_before": 93507, "step": 12, "t_perf_s": 4847.063799, "turn": 0, "utc": "2026-10-22T00:47:11Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 93562, "raw_text_chars": 1506, "step": 12, "t_perf_s": 4908.986186, "ttft_s": 6.28006, "turn": 0, "utc": "2026-10-22T00:48:13Z", "wall_s": 61.919671}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 94129, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 94129, "seen_tokens_before": 94074, "step": 13, "t_perf_s": 4909.2732, "turn": 0, "utc": "2026-10-22T00:48:13Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 94129, "raw_text_chars": 1506, "step": 13, "t_perf_s": 4971.924186, "ttft_s": 7.314793, "turn": 0, "utc": "2026-10-22T00:49:16Z", "wall_s": 62.648534}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 94696, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 94696, "seen_tokens_before": 94641, "step": 14, "t_perf_s": 4972.213935, "turn": 0, "utc": "2026-10-22T00:49:16Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 94696, "raw_text_chars": 1506, "step": 14, "t_perf_s": 5034.393439, "ttft_s": 6.354472, "turn": 0, "utc": "2026-10-22T00:50:18Z", "wall_s": 62.176938}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 95263, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 95263, "seen_tokens_before": 95208, "step": 15, "t_perf_s": 5034.68103, "turn": 0, "utc": "2026-10-22T00:50:19Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 95263, "raw_text_chars": 1506, "step": 15, "t_perf_s": 5097.066002, "ttft_s": 6.006553, "turn": 0, "utc": "2026-10-22T00:51:21Z", "wall_s": 62.382029}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 95830, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 95830, "seen_tokens_before": 95775, "step": 16, "t_perf_s": 5097.366754, "turn": 0, "utc": "2026-10-22T00:51:21Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 95830, "raw_text_chars": 1506, "step": 16, "t_perf_s": 5160.59929, "ttft_s": 6.416201, "turn": 0, "utc": "2026-10-22T00:52:25Z", "wall_s": 63.22971}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 96397, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 96397, "seen_tokens_before": 96342, "step": 17, "t_perf_s": 5160.891756, "turn": 0, "utc": "2026-10-22T00:52:25Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 96397, "raw_text_chars": 1506, "step": 17, "t_perf_s": 5223.863454, "ttft_s": 6.081461, "turn": 0, "utc": "2026-10-22T00:53:28Z", "wall_s": 62.968762}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 96964, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 96964, "seen_tokens_before": 96909, "step": 18, "t_perf_s": 5224.158228, "turn": 0, "utc": "2026-10-22T00:53:28Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 96964, "raw_text_chars": 1506, "step": 18, "t_perf_s": 5289.494631, "ttft_s": 7.545912, "turn": 0, "utc": "2026-10-22T00:54:34Z", "wall_s": 65.333575}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 97531, "input_kind": "chat_history_resident", "new_tokens_est": 55, "policy": "local_only", "prompt_tokens": 97531, "seen_tokens_before": 97476, "step": 19, "t_perf_s": 5289.79268, "turn": 0, "utc": "2026-10-22T00:54:34Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 365, "ok": true, "policy": "local_only", "prompt_tokens": 97531, "raw_text_chars": 1015, "step": 19, "t_perf_s": 5336.717297, "ttft_s": 6.152535, "turn": 0, "utc": "2026-10-22T00:55:21Z", "wall_s": 46.921634}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_123", "event": "pre_generate", "generate_input_tokens": 97950, "input_kind": "chat_history_resident", "new_tokens_est": 54, "policy": "local_only", "prompt_tokens": 97950, "seen_tokens_before": 97896, "step": 20, "t_perf_s": 5337.016557, "turn": 0, "utc": "2026-10-22T00:55:21Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_123", "error": null, "event": "post_generate", "generated_tokens": 255, "ok": true, "policy": "local_only", "prompt_tokens": 97950, "raw_text_chars": 667, "step": 20, "t_perf_s": 5371.840905, "ttft_s": 6.113527, "turn": 0, "utc": "2026-10-22T00:55:56Z", "wall_s": 34.821365}
+CELL_DONE policy=local_only entry=multi_turn_long_context_123 cloud_usd_entry=0.000000 trajectory_pass=False
+{
+  "ok": true,
+  "summary": {
+    "run_id": "02ade252-f5fc-4809-90db-9ff9cd898ded",
+    "kind": "h1_interleaved",
+    "session_design": "interleaved",
+    "arm_order": [
+      "local_only"
+    ],
+    "status": "complete",
+    "abort_reason": null,
+    "measurement_kind": "MEASURED",
+    "n_entries_planned": 1,
+    "running_usd_session": 0.0,
+    "session_max_usd": 1.0,
+    "policy_caps_usd": {
+      "local_only": 0.0
+    },
+    "policies": {
+      "local_only": {
+        "status": "complete",
+        "abort_reason": null,
+        "n_entries_completed": 1,
+        "running_usd": 0.0,
+        "max_usd": 0.0,
+        "path": "policies/local_only"
+      }
+    },
+    "finished_utc": "2026-10-22T00:55:57.729965+00:00",
+    "caching_policy": "none",
+    "cloud_usd_invariant": {
+      "status": "PASS",
+      "n_violations": 0,
+      "violations": []
+    },
+    "prefix_cache_control_failures": 0,
+    "prefix_cache_control": [],
+    "full_three_policy_comparison": false,
+    "excluded_from_interleave": [
+      "slo_escalate",
+      "emission_escalate",
+      "full_signal_bounceback"
+    ],
+    "r2c_excluded": true,
+    "r2c_exclusion_reason": "R2c (full_signal_bounceback) excluded from this interleaved session (H1-2POLICY = slo_escalate + emission_escalate only). Not the full three-policy comparison. R2C-TURNWISE is available for dedicated R2c / H1-3POLICY seals.",
+    "excluded_policies": {
+      "full_signal_bounceback": {
+        "reason": "R2c (full_signal_bounceback) excluded from this interleaved session (H1-2POLICY = slo_escalate + emission_escalate only). Not the full three-policy comparison. R2C-TURNWISE is available for dedicated R2c / H1-3POLICY seals.",
+        "blocked_on": "R2C-TURNWISE"
+      }
+    }
+  }
+}

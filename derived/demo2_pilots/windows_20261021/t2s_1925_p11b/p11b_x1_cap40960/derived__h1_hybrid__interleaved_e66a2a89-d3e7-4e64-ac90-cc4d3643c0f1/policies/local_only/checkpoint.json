@@ -1,0 +1,71 @@
+{
+  "abort_reason": null,
+  "completed_entry_ids": [
+    "multi_turn_long_context_123"
+  ],
+  "entries": [
+    {
+      "bounces": [],
+      "cloud_usd_entry": 0.0,
+      "entry_id": "multi_turn_long_context_123",
+      "hybrid_pass": false,
+      "hybrid_quality_scope": "hybrid",
+      "local_pass": false,
+      "quality_scope": "local_probe",
+      "score_error_message": "turns_model=1 turns_gt=4 force_quit=False stop_reason=ctx_overflow",
+      "score_error_type": "multi_turn:force_terminated",
+      "slo_fraction": null,
+      "status": "stopped_early",
+      "stop_reason": "ctx_overflow",
+      "trajectory_pass": false,
+      "turns": [
+        {
+          "bounce_trigger": null,
+          "cloud_requests": null,
+          "cloud_tokens_in": 0,
+          "cloud_tokens_out": 0,
+          "cloud_usd": 0.0,
+          "ctx_overflow": {
+            "max_new_tokens": 512,
+            "n_ctx": 87392,
+            "step": 1,
+            "turn": 0,
+            "window": 40960
+          },
+          "decode_tok_s": 37.9726809708561,
+          "decoded_steps": [
+            [
+              "get_account_info()",
+              "get_transaction_history()",
+              "get_available_stocks(sector='Technology')",
+              "get_stock_info(symbol='TSLA')",
+              "place_order(order_type='Buy',symbol='TSLA',price=180.0,amount=150)"
+            ]
+          ],
+          "emitted_parseable_tool_call": true,
+          "entry_id": "multi_turn_long_context_123",
+          "escalate_reason": null,
+          "escalated": false,
+          "model": "Qwen3-4B-int4-ov",
+          "n_ctx": 2189,
+          "placement": "local",
+          "t_generate": 3.8366292,
+          "t_other": 0.09959120000013844,
+          "t_template_build": 0.017185600000175327,
+          "t_tokenize": 0.28911489999995865,
+          "t_tool_exec": 0.002219999999852007,
+          "tool_exec_error": false,
+          "tool_exec_error_class": null,
+          "ttft_s": 0.54478894,
+          "turn": 0,
+          "turn_wall_s": 4.244740900000124
+        }
+      ],
+      "turns_executed": 1,
+      "turns_in_entry": 4
+    }
+  ],
+  "running_usd": 0.0,
+  "status": "complete",
+  "updated_utc": "2026-10-21T23:58:48.182110+00:00"
+}
