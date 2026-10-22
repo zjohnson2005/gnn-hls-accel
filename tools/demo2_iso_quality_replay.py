@@ -48,6 +48,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import itertools
 import json
 import math
 import random
@@ -571,6 +572,10 @@ def bfcl_score_fn(bfcl_unpacked: Path) -> ScoreFn:
     import tools.bfcl_feasibility_probe as probe
 
     probe.BFCL_UNPACKED = bfcl_unpacked
+    # One checker name per call (Task BF): the BFCL checker caches tool-class
+    # instances in globals() by model_name + entry id, so a name reused across
+    # arms or modes scores against the state an earlier call left behind.
+    calls = itertools.count()
 
     def score(entry: dict[str, Any], merged: list[list[list[str]]]) -> bool:
         r = probe.score_multi_turn(
@@ -578,7 +583,7 @@ def bfcl_score_fn(bfcl_unpacked: Path) -> ScoreFn:
             ground_truth=entry["reference"],
             model_result_decoded=merged,
             test_category=str(entry.get("category") or "multi_turn_base"),
-            model_name=f"replay_{entry['id']}",
+            model_name=f"replay_{entry['id']}_{next(calls)}",
         )
         return bool(r.get("valid"))
 
