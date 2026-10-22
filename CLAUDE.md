@@ -194,7 +194,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-21 (Task BE). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-22 (Task BF0). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -305,6 +305,12 @@ session start; update it in the same commit as the work. Never delete a row.
   (XPS 8B INT4, P' 4B INT8 by rule; T2S 8B INT8). Calibration pin DEMO2_CALIB_30. Freeze Fri Oct 23 noon
   (TASK_BF_PROMPT.md). Scripts download_models_{xps,t2s}.sh, run_queue_{t2s,xps}_be.sh;
   schedule docs/DEMO2_SPRINT_2026-10-22.md.
+- 2026-10-22 (Task BF0 part A, approved ~1:15 PM ET): pre-freeze rules
+  docs/amendments/DEMO2_PREFREEZE_2026-10-22.md: cache-aware cloud price (refuse missing cache
+  fields); ONLY confirmatory test = P vs A dC_iso, T2S then XPS; everything else secondary; -inf
+  draws kept; P' rule (pass / decode p5 / TTFT vs cal_a1); hang at its turn; splice primary +
+  re-run / cold-handoff sensitivities; analytic frontier; held-out cloud cap rule; Sunday rule;
+  freeze Fri Oct 23 12:00 PM ET hard ceiling. Predictions DEMO2_BF0_PREDICTIONS.json.
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.

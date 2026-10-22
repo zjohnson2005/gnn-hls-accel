@@ -3508,3 +3508,12 @@ for Claude in this session; Zach pushes).
   INT8_ASYM; all four IRs share the tokenizer and chat template bytes.
 - Environment, not code: a gitignored symlink apu_characterization/out/cap01/live_sources/bfcl-wheel/unpacked
   on the Mac makes 4 previously failing BFCL-scoring tests pass (suite 48 failed, was 52).
+
+## 2026-10-22 (Task BF0 part A, Mac only, $0; approvals ~1:15 PM ET)
+- APPROVALS_2026-10-22.md (sha256 399425d713da6dbe7d02a9407c44bd24f47234b3a57d2b53df4585291d2379c0): C/L6 deviation, secondary contrasts
+  with DERIVED predictions, splice primary + sensitivities, one confirmatory test per host (T2S then XPS).
+- REGISTERED before the author opened any calibration ledger: docs/amendments/DEMO2_PREFREEZE_2026-10-22.md
+  (sha256 e24f4ce92395a6b2fed9b065cee933eb808a704539aacc7d24d29998b2e6ae8b); predictions DEMO2_BF0_PREDICTIONS.json (c250131d...).
+- Disclosed deviations (section 12): BE followed BC's predicted C loss; the pre-freeze audit had parsed
+  calibration ledgers (T2S cal_a1/a2/c/p, XPS cal_a1) before the P' rule was redefined; XPS cal_a1 stopped
+  11:10:39 AM by the banned-app check (msedge); the L6 gate was never evaluated.
