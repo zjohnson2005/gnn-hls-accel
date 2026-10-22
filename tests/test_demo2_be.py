@@ -160,6 +160,8 @@ def _outcomes(
         "local": [bool(x) for x in local],
         "cloud_pass": [bool(x) for x in cp],
         "cloud_usd": cu,
+        "ids": [f"e{k}" for k in range(len(base))],
+        "late": [False] * len(base),
     }
 
 
@@ -172,14 +174,14 @@ def test_frontier_and_iso_endpoints() -> None:
     x = _outcomes(
         [1, 1, 1, 0, 0, 0], [0.3, 0.3, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0], cp, cu
     )
-    res = rp.analyse({"A": a, "X": x}, "A", boot=200, seed=1)
-    assert res["Q_star"] == pytest.approx(2 / 6) and res["C_star"] == pytest.approx(0.1)
-    xr = res["arms"]["X"]
+    res = rp.analyse({"splice": {"A": a, "X": x}}, [("X", "A")], primary=None, boot=200, seed=1)
+    xr = res["contrasts"]["X vs A"]["splice"]
+    assert xr["Q_star"] == pytest.approx(2 / 6) and xr["C_star"] == pytest.approx(0.1)
     assert xr["dQ_iso"] == pytest.approx(1 / 6)
-    # X reaches 2/6 by thinning one escalation: cost 0.05 -> saves 0.05 per task.
+    # X reaches 2/6 by thinning half its escalations (expected frontier): saves 0.05 per task.
     assert xr["dC_iso"] == pytest.approx(0.05)
     assert xr["mcnemar_at_matched_cost"]["b"] >= 1
-    assert set(res["holm"]) == {"X:dC_iso", "X:mcnemar"}
+    assert res["contrasts"]["X vs A"]["role"] == "secondary"
 
 
 def test_mcnemar_and_holm() -> None:

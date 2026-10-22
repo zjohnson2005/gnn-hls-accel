@@ -205,3 +205,76 @@ def cloud_usd_nondecreasing(
         "n_violations": len(violations),
         "violations": violations,
     }
+
+
+# ---------------------------------------------------------------------------
+# Cache-aware price (docs/amendments/DEMO2_PREFREEZE_2026-10-22.md section 1, Task BF0 X2)
+# ---------------------------------------------------------------------------
+PRICE_FORMULA_ID = (
+    "PREFREEZE-2026-10-22-s1: input*p_in + cache_write*1.25*p_in + cache_read*0.10*p_in "
+    "+ output*p_out (seam.budget.usd_cost, 5m write rate)"
+)
+PRICE_FIELDS = (
+    "input_tokens",
+    "output_tokens",
+    "cache_creation_input_tokens",
+    "cache_read_input_tokens",
+)
+
+
+class CloudPriceRefused(SystemExit):
+    """A billed request record that cannot be priced (missing usage fields)."""
+
+
+def load_price_table(path: Any = None) -> Any:
+    from pathlib import Path
+
+    from seam.budget import PricingTable
+
+    p = (
+        Path(path)
+        if path is not None
+        else (Path(__file__).resolve().parents[1] / "configs" / "pricing" / "anthropic.yaml")
+    )
+    return PricingTable.load(p)
+
+
+def price_request(rec: dict[str, Any], *, table: Any, when: Any, model: str | None = None) -> float:
+    """USD of one cloud request record; ok False costs 0; a billed record missing a field refuses."""
+    from seam.budget import CallUsage, usd_cost
+
+    if rec.get("ok") is False:
+        return 0.0
+    missing = [k for k in PRICE_FIELDS if rec.get(k) is None]
+    if missing:
+        raise CloudPriceRefused(
+            f"REFUSED -- cloud request (turn {rec.get('turn')}, request "
+            f"{rec.get('request_index_within_turn', rec.get('step'))}) lacks {missing}; "
+            "a billed request is never priced as zero"
+        )
+    m = str(rec.get("model") or model or "")
+    tier = table.tier_for(m, when)
+    if (
+        abs(tier.cache_write_5m_per_mtok - 1.25 * tier.input_per_mtok) > 1e-9
+        or abs(tier.cache_read_per_mtok - 0.10 * tier.input_per_mtok) > 1e-9
+    ):
+        raise CloudPriceRefused(
+            f"REFUSED -- price tier {tier.label} for {m} does not match the registered "
+            "multipliers (write 1.25x, read 0.10x)"
+        )
+    return usd_cost(
+        CallUsage(
+            input_tokens=int(rec["input_tokens"]),
+            output_tokens=int(rec["output_tokens"]),
+            cache_read_input_tokens=int(rec["cache_read_input_tokens"]),
+            cache_creation_input_tokens=int(rec["cache_creation_input_tokens"]),
+            cache_write_ttl="5m",
+        ),
+        tier,
+    )
+
+
+def price_requests(
+    recs: list[dict[str, Any]], *, table: Any, when: Any, model: str | None = None
+) -> float:
+    return sum(price_request(r, table=table, when=when, model=model) for r in recs)

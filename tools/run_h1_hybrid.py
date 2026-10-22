@@ -134,6 +134,10 @@ ENTRY_PINS: dict[str, dict[str, Any]] = {
         "path": "derived/h1_hybrid/demo2/DEMO2_HELDOUT_60.json",
         "category": "multi_turn_base+multi_turn_long_context",
         "seed": 20261014,
+        # Task BF0 H7: refused unless --heldout-after-freeze (the _v2 queue scripts pass it
+        # only after their freeze gate); --confirmation-run does not unlock it.
+        "reserved_for": "DEMO-2 held-out cells after the registration freeze",
+        "unlock": "heldout_after_freeze",
     },
     # Second DEMO-2 held-out pin, long_context half (tools/demo2_heldout_b.py;
     # base half blocked). Reserved: the runner refuses it without
@@ -457,6 +461,12 @@ USD_PER_MTOK_OUT = 15.0
 
 def cloud_usd(tokens_in: int, tokens_out: int) -> float:
     return (tokens_in * USD_PER_MTOK_IN + tokens_out * USD_PER_MTOK_OUT) / 1_000_000.0
+
+
+def _price_formula_id() -> str:
+    from tools.h1_cloud_accounting import PRICE_FORMULA_ID
+
+    return PRICE_FORMULA_ID
 
 
 def _utc_now() -> str:
@@ -1433,6 +1443,9 @@ class OpenVinoLocalBackend:
     warm_toolset_prefix: bool = False
     passive_router: bool = False
     warmup_log_path: Path | None = None
+    # Task BF0 H2 (default off): rebuild + re-warm the resident pipeline after a local
+    # generation error, before the next entry (logged PIPELINE_REBUILT).
+    rebuild_on_error: bool = False
     arm_id: str = field(init=False)
     pipe: Any = field(init=False, repr=False)
     tokenizer: Any = field(init=False, repr=False)
@@ -1658,6 +1671,30 @@ class OpenVinoLocalBackend:
             with Path(path).open("a", encoding="utf-8") as fh:
                 fh.write(json.dumps(rec) + "\n")
 
+    def _rebuild_resident(self, entry: dict[str, Any]) -> None:
+        """Task BF0 H2: new pipeline after a local generation error; tool sets are re-warmed."""
+        cause = self.__dict__.pop("_needs_rebuild", None)
+        t0 = time.perf_counter()
+        self.reload_prefix_cache()
+        self.__dict__["_warmed_toolsets"] = set()
+        self._n_rebuilds = int(getattr(self, "_n_rebuilds", 0)) + 1
+        rec = {
+            "event": "PIPELINE_REBUILT",
+            "before_entry_id": str(entry["id"]),
+            "cause": cause,
+            "n_rebuilds": self._n_rebuilds,
+            "wall_s": round(time.perf_counter() - t0, 3),
+            "utc": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        }
+        print(
+            f"PIPELINE_REBUILT before_entry={rec['before_entry_id']} cause={cause}", flush=True
+        )
+        path = getattr(self, "warmup_log_path", None)
+        if path is not None:
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
+            with Path(path).open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(rec) + "\n")
+
     def reload_prefix_cache(self) -> str:
         """Drop continuous-batching prefix blocks before the next arm.
 
@@ -1775,6 +1812,8 @@ class OpenVinoLocalBackend:
         are gone, unless --resident-pipeline (Task BE) keeps one pipeline for the run.
         """
         if getattr(self, "resident_pipeline", False):
+            if getattr(self, "_needs_rebuild", None):
+                self._rebuild_resident(entry)
             self._warm_toolset(entry)
         else:
             self.reload_prefix_cache()
@@ -2030,6 +2069,11 @@ class OpenVinoLocalBackend:
                 self._last_injection[key] = inj
         # Do not finish here: finish_entry owns end-of-entry / abort closeout so
         # bounce inject on the last local turn still sees an active session.
+        gen_error = any(
+            step.get("ok") is False for step in (tm.get("steps") or []) if "ok" in step
+        )
+        if gen_error and getattr(self, "rebuild_on_error", False):
+            self._needs_rebuild = f"generation_error entry={eid} turn={turn_idx}"
         return BackendTurn(
             n_ctx=n_ctx,
             ttft_s=(float(tm["ttft_s"]) if tm["ttft_s"] is not None else None),
@@ -2047,9 +2091,7 @@ class OpenVinoLocalBackend:
             tool_exec_error_class=tool_err_class,
             decoded_steps=[list(step) for step in decoded_steps],
             ctx_overflow=tm.get("ctx_overflow"),
-            generation_error=any(
-                step.get("ok") is False for step in (tm.get("steps") or []) if "ok" in step
-            ),
+            generation_error=gen_error,
         )
 
     def accept_cloud_context(
@@ -2163,6 +2205,7 @@ class AnthropicCloudBackend:
     # OBS_MASK arm: the cloud agent sees the same masked observations as local.
     obs_mask: Any = None
     _entry_cache: dict[str, dict[str, Any]] = field(default_factory=dict)
+    _price_table: Any = None
 
     def _ensure_entry(self, entry: dict[str, Any]) -> dict[str, Any]:
         eid = str(entry["id"])
@@ -2194,17 +2237,34 @@ class AnthropicCloudBackend:
             for c in (row.get("calls") or [])
             if int(c.get("user_turn", c.get("turn", -1))) == turn_idx
         ]
+        # Task BF0 X2: every charge is the cache-aware price of the request records
+        # (docs PREFREEZE section 1); a billed record without cache fields refuses.
+        from tools.h1_cloud_accounting import load_price_table, price_requests
+
+        if self._price_table is None:
+            self._price_table = load_price_table()
+        today = datetime.now(UTC).date()
         if not calls:
             # Fallback: apportion entry totals across user turns.
             n = max(1, int(row.get("n_user_turns") or 1))
             tin = int(row.get("prompt_tokens_sum") or 0) // n
             tout = int(row.get("completion_tokens_sum") or 0) // n
-            usd = float(row.get("usd") or 0.0) / n
+            usd = (
+                price_requests(
+                    list(row.get("calls") or []),
+                    table=self._price_table,
+                    when=today,
+                    model=self.cloud_model,
+                )
+                / n
+            )
             wall = 0.05
         else:
             tin = sum(int(c.get("prompt_tokens") or 0) for c in calls)
             tout = sum(int(c.get("completion_tokens") or 0) for c in calls)
-            usd = sum(float(c.get("usd") or 0.0) for c in calls)
+            usd = price_requests(
+                calls, table=self._price_table, when=today, model=self.cloud_model
+            )
             wall = sum(float(c.get("latency_s") or 0.0) for c in calls) or 0.05
             # Prefer explicit per-call API failure over apportioned zeros.
             for c in calls:
@@ -2491,11 +2551,14 @@ def save_checkpoint(path: Path, state: dict[str, Any]) -> None:
 # ---------------------------------------------------------------------------
 # Entry / scorer asserts
 # ---------------------------------------------------------------------------
-def assert_entry_set_pinned(entries_path: Path, *, allow_reserved: bool = False) -> dict[str, Any]:
+def assert_entry_set_pinned(
+    entries_path: Path, *, allow_reserved: bool = False, allow_heldout: bool = False
+) -> dict[str, Any]:
     """Refuse an entries file whose sha256 is not in ENTRY_PINS, or whose count differs.
 
     A pin with ``reserved_for`` is refused unless ``allow_reserved``
-    (--confirmation-run).
+    (--confirmation-run), or, for a pin with ``unlock: heldout_after_freeze``
+    (DEMO2_HELDOUT_60), unless ``allow_heldout`` (--heldout-after-freeze).
     """
     digest = _sha256_file(entries_path)
     pin = ENTRY_PINS.get(digest)
@@ -2505,7 +2568,13 @@ def assert_entry_set_pinned(entries_path: Path, *, allow_reserved: bool = False)
             f"(W-3 {W3_ENTRIES_SHA256}, seals {', '.join(W3_SEAL_REFS)}; "
             f"DEMO1_LONGCTX_30 {DEMO1_LONGCTX_30_SHA256})"
         )
-    if pin.get("reserved_for") and not allow_reserved:
+    if pin.get("unlock") == "heldout_after_freeze":
+        if not allow_heldout:
+            raise SystemExit(
+                f"REFUSED -- entry pin {pin['name']} is reserved for {pin['reserved_for']}; "
+                "pass --heldout-after-freeze (the _v2 queue scripts do, after their freeze gate)"
+            )
+    elif pin.get("reserved_for") and not allow_reserved:
         raise SystemExit(
             f"REFUSED -- entry pin {pin['name']} is reserved for {pin['reserved_for']}; "
             "pass --confirmation-run only for that run"
@@ -3301,6 +3370,7 @@ def run_session(
         "local_backend": local_backend_kind(local),
         "seal": bool(seal),
         "started_utc": _utc_now(),
+        "cloud_price_formula": _price_formula_id(),
         "w3_entry_pin": _w3_pin_field(entry_pin),
         "entry_pin": entry_pin or ENTRY_PIN_DEFAULT,
         "retention": retention or {"arm": "FULL"},
@@ -3639,6 +3709,7 @@ def run_interleaved_session(
         "local_backend": local_backend_kind(local),
         "seal": bool(seal),
         "started_utc": _utc_now(),
+        "cloud_price_formula": _price_formula_id(),
         "w3_entry_pin": _w3_pin_field(entry_pin),
         "entry_pin": entry_pin or ENTRY_PIN_DEFAULT,
         "retention": retention or {"arm": "FULL"},
@@ -4345,7 +4416,7 @@ def derive_r1_from_cb781(
 
 
 def load_w3_entries(
-    path: Path | None = None, *, allow_reserved: bool = False
+    path: Path | None = None, *, allow_reserved: bool = False, allow_heldout: bool = False
 ) -> tuple[list[dict[str, Any]], Path]:
     if path is None:
         path = (
@@ -4357,7 +4428,7 @@ def load_w3_entries(
             / "artifacts"
             / "multi_turn_probe_entries.json"
         )
-    assert_entry_set_pinned(path, allow_reserved=allow_reserved)
+    assert_entry_set_pinned(path, allow_reserved=allow_reserved, allow_heldout=allow_heldout)
     entries = json.loads(path.read_text(encoding="utf-8-sig"))
     return entries, path
 
@@ -4474,6 +4545,18 @@ def build_argparser() -> argparse.ArgumentParser:
         "--order-by-toolset",
         action="store_true",
         help="Task BE: run entries grouped by tool set (stable; identical across arms). Default: off.",
+    )
+    p.add_argument(
+        "--rebuild-on-error",
+        action="store_true",
+        help="Task BF0 H2: with --resident-pipeline, rebuild and re-warm the pipeline before the "
+        "next entry after a local generation error (PIPELINE_REBUILT). Default: off.",
+    )
+    p.add_argument(
+        "--heldout-after-freeze",
+        action="store_true",
+        help="Task BF0 H7: allow DEMO2_HELDOUT_60 (reserved for held-out cells after the "
+        "registration freeze). Default: refused.",
     )
     p.add_argument(
         "--retention-age-mask",
@@ -5340,10 +5423,13 @@ def attach_be_modes(
     warm = bool(getattr(args, "warm_toolset_prefix", False))
     passive = bool(getattr(args, "passive_router", False))
     order = bool(getattr(args, "order_by_toolset", False))
-    if not (resident or warm or passive or order):
+    rebuild = bool(getattr(args, "rebuild_on_error", False))
+    if not (resident or warm or passive or order or rebuild):
         return None
     if warm and not resident:
         raise SystemExit("REFUSED -- --warm-toolset-prefix needs --resident-pipeline")
+    if rebuild and not resident:
+        raise SystemExit("REFUSED -- --rebuild-on-error needs --resident-pipeline")
     if passive and tuple(policies) != ("local_only",):
         raise SystemExit("REFUSED -- --passive-router needs --interleaved-policy local_only alone")
     if (resident or warm or passive) and not isinstance(local, OpenVinoLocalBackend):
@@ -5361,6 +5447,10 @@ def attach_be_modes(
         rec["passive_router"] = "hybrid_full triggers logged per local turn (passive_triggers)"
     if order:
         rec["order_by_toolset"] = "entries grouped by tool set, groups in first-appearance order"
+    if rebuild:
+        local.rebuild_on_error = True
+        rec["rebuild_on_error"] = "new pipeline + re-warm before the next entry after a local "
+        rec["rebuild_on_error"] += "generation error (PIPELINE_REBUILT in toolset_warmups.jsonl)"
     return rec
 
 
@@ -5463,8 +5553,13 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if summary["status"] == "complete" else 2
 
     allow_reserved = bool(getattr(args, "confirmation_run", False))
-    entries, entries_path = load_w3_entries(args.entries, allow_reserved=allow_reserved)
-    entry_pin = assert_entry_set_pinned(entries_path, allow_reserved=allow_reserved)
+    allow_heldout = bool(getattr(args, "heldout_after_freeze", False))
+    entries, entries_path = load_w3_entries(
+        args.entries, allow_reserved=allow_reserved, allow_heldout=allow_heldout
+    )
+    entry_pin = assert_entry_set_pinned(
+        entries_path, allow_reserved=allow_reserved, allow_heldout=allow_heldout
+    )
     entries, entry_pin = slice_entries(
         entries, entry_pin, offset=args.entry_offset, count=args.entry_count
     )
@@ -5577,8 +5672,13 @@ def _main_interleaved(args: argparse.Namespace) -> int:
         return 0 if summary["status"] in ok_statuses else 2
 
     allow_reserved = bool(getattr(args, "confirmation_run", False))
-    entries, entries_path = load_w3_entries(args.entries, allow_reserved=allow_reserved)
-    entry_pin = assert_entry_set_pinned(entries_path, allow_reserved=allow_reserved)
+    allow_heldout = bool(getattr(args, "heldout_after_freeze", False))
+    entries, entries_path = load_w3_entries(
+        args.entries, allow_reserved=allow_reserved, allow_heldout=allow_heldout
+    )
+    entry_pin = assert_entry_set_pinned(
+        entries_path, allow_reserved=allow_reserved, allow_heldout=allow_heldout
+    )
     if getattr(args, "order_by_toolset", False):
         # Before slicing, so --entry-offset indexes the run order (resume after a hang).
         entries = order_by_toolset(entries)

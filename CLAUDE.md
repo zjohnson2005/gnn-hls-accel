@@ -311,6 +311,9 @@ session start; update it in the same commit as the work. Never delete a row.
   draws kept; P' rule (pass / decode p5 / TTFT vs cal_a1); hang at its turn; splice primary +
   re-run / cold-handoff sensitivities; analytic frontier; held-out cloud cap rule; Sunday rule;
   freeze Fri Oct 23 12:00 PM ET hard ceiling. Predictions DEMO2_BF0_PREDICTIONS.json.
+  Part B: cache-aware CostGuard + replay repricing; replay per PF (analytic frontier, `family`);
+  runner --rebuild-on-error, DEMO2_HELDOUT_60 refused without --heldout-after-freeze; queue scripts
+  ~/seam_closeout_1013/xps/run_queue_{t2s,xps}_be_v2.sh + park_untracked_v2.ps1 (v1 unchanged).
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.

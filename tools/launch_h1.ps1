@@ -81,6 +81,10 @@
 #                       -RetentionCloudOnly: retention on the cloud agent only (Task BE).
 #   -ResidentPipeline [-WarmToolsetPrefix] -PassiveRouter -OrderByToolset (Task BE; default off):
 #                       one pipeline per run, tool-set prefix warm-up, passive trigger log, run order.
+#   -RebuildOnError     (Task BF0 H2) with -ResidentPipeline: new pipeline + re-warm before the next
+#                       entry after a local generation error (PIPELINE_REBUILT). Default off.
+#   -HeldoutAfterFreeze (Task BF0 H7) allow DEMO2_HELDOUT_60; the _v2 queue scripts pass it only
+#                       after their freeze gate. Default: the worker refuses the held-out pin.
 #   -ContextWindow <N>  DEMO-2: a local step whose prompt plus max_new_tokens exceeds N is not
 #                       generated; the turn escalates (sticky, ctx_overflow). Single-arm only.
 #                       Default off.
@@ -167,6 +171,9 @@ param(
     [switch]$WarmToolsetPrefix,
     [switch]$PassiveRouter,
     [switch]$OrderByToolset,
+    # Task BF0 (default off).
+    [switch]$RebuildOnError,
+    [switch]$HeldoutAfterFreeze,
     [ValidateSet("", "none", "ephemeral")]
     [string]$CachingPolicy = "",
     [Nullable[int]]$EntryOffset = $null,
@@ -765,6 +772,8 @@ if ($ResidentPipeline) { $resolvedCmd = $resolvedCmd + ' --resident-pipeline' }
 if ($WarmToolsetPrefix) { $resolvedCmd = $resolvedCmd + ' --warm-toolset-prefix' }
 if ($PassiveRouter) { $resolvedCmd = $resolvedCmd + ' --passive-router' }
 if ($OrderByToolset) { $resolvedCmd = $resolvedCmd + ' --order-by-toolset' }
+if ($RebuildOnError) { $resolvedCmd = $resolvedCmd + ' --rebuild-on-error' }
+if ($HeldoutAfterFreeze) { $resolvedCmd = $resolvedCmd + ' --heldout-after-freeze' }
 if ($CachingPolicy -ne "") { $resolvedCmd = $resolvedCmd + ' --caching-policy ' + $CachingPolicy }
 if (-not [string]::IsNullOrWhiteSpace($SkipEntries)) {
     $resolvedCmd = $resolvedCmd + ' --skip-entries ' + $SkipEntries

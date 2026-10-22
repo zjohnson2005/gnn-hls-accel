@@ -7,6 +7,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -28,7 +30,12 @@ def test_pin_file_matches_meta_and_runner() -> None:
     digest = hashlib.sha256(PIN.read_bytes()).hexdigest()
     assert digest == meta["entries_sha256"]
     assert ENTRY_PINS[digest]["name"] == "DEMO2_HELDOUT_60"
-    pin = assert_entry_set_pinned(PIN)
+    # Task BF0 H7: reserved for held-out cells after the freeze.
+    with pytest.raises(SystemExit, match="heldout-after-freeze"):
+        assert_entry_set_pinned(PIN)
+    with pytest.raises(SystemExit, match="heldout-after-freeze"):
+        assert_entry_set_pinned(PIN, allow_reserved=True)
+    pin = assert_entry_set_pinned(PIN, allow_heldout=True)
     assert pin["n"] == 60
     ids = [e["id"] for e in json.loads(PIN.read_text(encoding="utf-8"))]
     assert ids == meta["selected"]

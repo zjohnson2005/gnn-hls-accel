@@ -3517,3 +3517,12 @@ for Claude in this session; Zach pushes).
 - Disclosed deviations (section 12): BE followed BC's predicted C loss; the pre-freeze audit had parsed
   calibration ledgers (T2S cal_a1/a2/c/p, XPS cal_a1) before the P' rule was redefined; XPS cal_a1 stopped
   11:10:39 AM by the banned-app check (msedge); the L6 gate was never evaluated.
+- Part B (code, Task BF0): CostGuard and the replay price every cloud request with the cache-aware formula
+  (tools/h1_cloud_accounting.price_request; a billed record without cache fields refuses); the replay
+  implements PF 2-13 (one primary, -inf kept, analytic frontier, matched point pi, splice/rerun/cold, hang
+  turn, refusals, --contrast, base/long halves, LOW_MEM, `family` fixed sequence); runner
+  --rebuild-on-error (PIPELINE_REBUILT) and DEMO2_HELDOUT_60 reserved unless --heldout-after-freeze
+  (launch_h1 -RebuildOnError / -HeldoutAfterFreeze). Two existing tests changed to the new rules: the
+  held-out pin test now passes --heldout-after-freeze; the cloud-accounting fixture carries 0 cache tokens
+  (a None field refuses). Queue scripts v2 (new files outside the repo): run_queue_{t2s,xps}_be_v2.sh,
+  park_untracked_v2.ps1; originals unchanged.

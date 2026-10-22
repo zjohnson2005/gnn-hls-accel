@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from tools.h1_cloud_accounting import (
     DEFAULT_CACHING_POLICY,
     apply_caching_policy,
@@ -137,8 +139,10 @@ def test_anthropic_backend_copies_per_request_log(monkeypatch) -> None:  # type:
                     "request_index_within_turn": 0,
                     "input_tokens": 4,
                     "output_tokens": 1,
-                    "cache_creation_input_tokens": None,
-                    "cache_read_input_tokens": None,
+                    # Task BF0 X2: a billed request with None cache fields is refused, so the
+                    # fixture carries the zeros the API sends without caching (1acc8c58).
+                    "cache_creation_input_tokens": 0,
+                    "cache_read_input_tokens": 0,
                     "system_tokens": 0,
                     "tool_schema_tokens": 1,
                     "history_tokens": 1,
@@ -158,9 +162,9 @@ def test_anthropic_backend_copies_per_request_log(monkeypatch) -> None:  # type:
         }
 
     monkeypatch.setattr(probe, "run_cloud_multi_turn_agent_entry", _fake)
-    backend = AnthropicCloudBackend(client=object(), cloud_model="m")
+    backend = AnthropicCloudBackend(client=object(), cloud_model="claude-sonnet-5")
     turn = backend.run_turn(
-        {"id": "e", "question": [[{"role": "user", "content": "hi"}]]}, 0, model="m"
+        {"id": "e", "question": [[{"role": "user", "content": "hi"}]]}, 0, model="claude-sonnet-5"
     )
     assert turn.cloud_requests is not None
     logged = turn.cloud_requests[0]
@@ -169,4 +173,5 @@ def test_anthropic_backend_copies_per_request_log(monkeypatch) -> None:  # type:
     assert logged["tool_schema_tokens"] == 1
     assert logged["history_tokens"] == 1
     assert logged["new_tokens"] == 2
-    assert logged["cache_read_input_tokens"] is None
+    assert logged["cache_read_input_tokens"] == 0
+    assert turn.cloud_usd == pytest.approx((4 * 3.0 + 1 * 15.0) / 1e6)
