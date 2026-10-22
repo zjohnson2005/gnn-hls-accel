@@ -194,7 +194,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-22 (Task BF0). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-22 (Task BF). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -314,6 +314,12 @@ session start; update it in the same commit as the work. Never delete a row.
   Part B: cache-aware CostGuard + replay repricing; replay per PF (analytic frontier, `family`);
   runner --rebuild-on-error, DEMO2_HELDOUT_60 refused without --heldout-after-freeze; queue scripts
   ~/seam_closeout_1013/xps/run_queue_{t2s,xps}_be_v2.sh + park_untracked_v2.ps1 (v1 unchanged).
+- 2026-10-22 ~8 PM ET (Task BF): DEMO-2 FROZEN, docs/amendments/DEMO2_FREEZE_2026-10-23.md (freeze head =
+  its commit). T2S B 16,384 (R1 5a6583aa); XPS 8,192 (dd2ecf51). P' selected on the XPS (PF 6 (a): cal_p
+  f511af02 3 vs cal_a1 7cf9b18d 4 local passes) -> PSPEC Qwen3-4B-int8-ov.yaml. A/A 0/30 discordant on both
+  hosts, d_usd 0.0, d_lat 0.0045 T2S / 0.0471 XPS. cal_cloud a403befe $2.45 -> held-out cap $20. Replay
+  scorer bug (BFCL checker name reuse) fixed in 24f9ed9 before any value. Records
+  derived/demo2_pilots/windows_20261022/. Next: Zach pushes, then held-out on both hosts (FROM=30).
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.

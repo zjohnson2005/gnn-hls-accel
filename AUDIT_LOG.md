@@ -3526,3 +3526,15 @@ for Claude in this session; Zach pushes).
   held-out pin test now passes --heldout-after-freeze; the cloud-accounting fixture carries 0 cache tokens
   (a None field refuses). Queue scripts v2 (new files outside the repo): run_queue_{t2s,xps}_be_v2.sh,
   park_untracked_v2.ps1; originals unchanged.
+
+## 2026-10-22 (Task BF, DEMO-2 freeze, Mac only, $0; written about 8 PM ET)
+- Code fix 24f9ed9 (not a rule change): the replay reused one BFCL checker name per entry across arms
+  and modes, so the checker's globals() instance cache leaked state between scores. Found by A2 vs A on
+  byte-identical logs (splice dC_iso -0.0042). The pre-fix outputs are kept in analysis/demo2_pilots/BF/
+  (*_SCORER_REUSE_BUG.*) and are used for nothing.
+- Records 7e1ae29: derived/demo2_pilots/windows_20261022/ (T2S/XPS R0/R1, downloads, T2S and XPS
+  calibration, cal_cloud a403befe). 19/19 h1 seals re-verified on the Mac. All downloads MATCH their pins.
+- Values (docs/amendments/DEMO2_FREEZE_2026-10-23.md): T2S B 16,384; XPS B 8,192; P' selected on the XPS
+  by PF 6 (a) (cal_p 3 vs cal_a1 4 local passes); A/A d_usd 0.0 both hosts, d_lat 0.0045 T2S / 0.0471 XPS;
+  held-out cloud cap $20.00. Frozen queue script hashes recorded (unchanged since BF0).
+- No discard. No rule, threshold, arm, pin or prediction changed. DEMO2_HELDOUT_60 untouched.
