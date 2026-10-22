@@ -18,8 +18,15 @@ from tools import demo2_iso_quality_replay as rp  # noqa: E402
 def test_score_fn_never_reuses_checker_name(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    score = rp.bfcl_score_fn(tmp_path)
+    # bfcl_score_fn sets module and interpreter state; restore all of it after the test.
     import tools.bfcl_feasibility_probe as probe
+
+    monkeypatch.setattr(probe, "BFCL_UNPACKED", probe.BFCL_UNPACKED)
+    monkeypatch.setattr(sys, "path", list(sys.path))
+    if "openvino_genai" not in sys.modules:
+        monkeypatch.setitem(sys.modules, "openvino_genai", None)
+        monkeypatch.delitem(sys.modules, "openvino_genai")
+    score = rp.bfcl_score_fn(tmp_path)
 
     names: list[str] = []
 
