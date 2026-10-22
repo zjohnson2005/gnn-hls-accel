@@ -1721,6 +1721,8 @@ class OpenVinoLocalBackend:
 
             self.obs_mask.context = {"policy": policy}
             install_on_session(session, self.obs_mask, entry_id=eid)
+            if getattr(self.obs_mask, "age_mask", False):
+                session.retention_fit = self.obs_mask
         self._sessions[key] = session
         turns_in = turns_in_entry_count(entry)
         self._span_state[key] = LocalEntrySpan(turns_in, turns_in, "completed")
@@ -4301,6 +4303,32 @@ def build_argparser() -> argparse.ArgumentParser:
         "observation (local and cloud). Default: off (FULL).",
     )
     p.add_argument(
+        "--retention-k",
+        type=int,
+        default=None,
+        help="Task BC revised arm C: cut every tool observation above K model tokens at "
+        "insertion (tools/h1_retention_budget.py; local and cloud). Default: off (FULL). "
+        "Not with --obs-mask-k.",
+    )
+    p.add_argument(
+        "--retention-shape",
+        choices=("head", "h70t30", "json"),
+        default="json",
+        help="Shape for --retention-k (default json: JSON-aware, h70t30 fallback).",
+    )
+    p.add_argument(
+        "--retention-cloud-raw",
+        action="store_true",
+        help="With --retention-k: the cloud agent sees FULL tool outputs (raw-payload "
+        "sensitivity cell). Default: off (cloud sees the same retention as local).",
+    )
+    p.add_argument(
+        "--retention-age-mask",
+        action="store_true",
+        help="With --retention-k and --context-window: mask the oldest tool outputs (never "
+        "the last 3) only when a step would exceed the window. Default: off.",
+    )
+    p.add_argument(
         "--context-window",
         type=int,
         default=None,
@@ -4838,6 +4866,45 @@ def attach_obs_mask(
     return mask.plan_record(), mask
 
 
+def attach_retention(args: argparse.Namespace, local: Any, cloud: Any) -> tuple[Any, Any]:
+    """OBS_MASK (--obs-mask-k) or the Task BC retention budget (--retention-k).
+
+    Both give the same (plan record, transform) pair to the backends; at most one.
+    """
+    k = getattr(args, "retention_k", None)
+    if k is None:
+        if getattr(args, "retention_age_mask", False) or getattr(args, "retention_cloud_raw", False):
+            raise SystemExit(
+                "REFUSED -- --retention-age-mask / --retention-cloud-raw need --retention-k"
+            )
+        return attach_obs_mask(args.obs_mask_k, local, cloud)
+    if args.obs_mask_k is not None:
+        raise SystemExit("REFUSED -- --retention-k and --obs-mask-k are exclusive")
+    if isinstance(local, ScriptedLiveLocalBackend):
+        raise SystemExit("REFUSED -- --retention-k cannot apply to precomputed --local-script turns")
+    if args.retention_age_mask and args.context_window is None:
+        raise SystemExit("REFUSED -- --retention-age-mask needs --context-window")
+    tokenizer = getattr(local, "tokenizer", None)
+    if not callable(tokenizer):
+        raise SystemExit("REFUSED -- --retention-k needs the local HF tokenizer")
+    from tools.h1_retention_budget import RetentionBudget, hf_codec
+
+    encode, decode = hf_codec(tokenizer)
+    rb = RetentionBudget(
+        int(k),
+        shape=str(args.retention_shape),
+        encode=encode,
+        decode=decode,
+        age_mask=bool(args.retention_age_mask),
+    )
+    if hasattr(local, "obs_mask"):
+        local.obs_mask = rb
+    if hasattr(cloud, "obs_mask") and not args.retention_cloud_raw:
+        cloud.obs_mask = rb
+    plan = {**rb.plan_record(), "cloud": "FULL" if args.retention_cloud_raw else "same"}
+    return plan, rb
+
+
 def attach_context_window(window: int | None, policy: str, local: Any) -> int | None:
     """DEMO-2 --context-window: give N to the local backend (None = off)."""
     if window is None:
@@ -5205,7 +5272,7 @@ def main(argv: list[str] | None = None) -> int:
     if getattr(local, "runtime", None) is not None:
         local.telemetry_path = Path(args.out) / "local_turn_telemetry.jsonl"
 
-    retention, obs_mask = attach_obs_mask(args.obs_mask_k, local, cloud)
+    retention, obs_mask = attach_retention(args, local, cloud)
     context_window = attach_context_window(args.context_window, args.policy, local)
     from tools.cloud_ping import ping as cloud_ping
 
@@ -5315,7 +5382,7 @@ def _main_interleaved(args: argparse.Namespace) -> int:
     if getattr(local, "runtime", None) is not None:
         local.telemetry_path = Path(args.out) / "local_turn_telemetry.jsonl"
 
-    retention, obs_mask = attach_obs_mask(args.obs_mask_k, local, cloud)
+    retention, obs_mask = attach_retention(args, local, cloud)
     from tools.cloud_ping import ping as cloud_ping
 
     turn_watchdog = build_turn_watchdog(args)

@@ -148,6 +148,43 @@ def readback_one(ov: Any, ir_xml: Path, device: str, kv: str) -> dict[str, Any]:
     return rec
 
 
+def cache_dir_check(ov: Any, ir_xml: Path, device: str, cache_dir: Path) -> dict[str, Any]:
+    """Task BC (ladder L0): does CACHE_DIR change the compiled KV ports, or only the property?
+
+    Compiles the PA-transformed model twice with only CACHE_DIR set: the first
+    compile exports the blob, the second imports it. Records key_cache.* /
+    value_cache.* element types and the KV_CACHE_PRECISION property each time,
+    next to the no-CACHE_DIR compile (readback_one, kv default).
+    """
+    out: dict[str, Any] = {
+        "cache_dir": str(cache_dir),
+        "no_cache_dir": readback_one(ov, ir_xml, device, "default"),
+    }
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    out["cache_dir_files_before"] = sorted(p.name for p in cache_dir.iterdir())
+    for label in ("export", "import"):
+        rec: dict[str, Any] = {}
+        try:
+            core = ov.Core()
+            model = core.read_model(str(ir_xml))
+            _pa_transform(model)
+            t0 = time.perf_counter()
+            compiled = core.compile_model(model, device, {"CACHE_DIR": str(cache_dir)})
+            rec["compile_s"] = round(time.perf_counter() - t0, 2)
+            rec["compiled_cache_ports"] = summarize_ports(cache_ports(compiled.inputs))
+            for prop in ("KV_CACHE_PRECISION", "DYNAMIC_QUANTIZATION_GROUP_SIZE"):
+                try:
+                    rec[f"property_{prop}"] = str(compiled.get_property(prop))
+                except Exception as exc:
+                    rec[f"property_{prop}"] = f"error: {type(exc).__name__}: {exc}"
+            del compiled
+        except Exception as exc:  # recorded, not raised
+            rec["error"] = f"{type(exc).__name__}: {exc}"
+        out[label] = rec
+    out["cache_dir_files_after"] = sorted(p.name for p in cache_dir.iterdir())
+    return out
+
+
 def genai_child(ir_dir: Path, device: str) -> int:
     """Child: build LLMPipeline(ir_dir, device) with nothing else passed, then exit."""
     import openvino_genai as ov_genai
@@ -209,6 +246,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--device", default="GPU")
     ap.add_argument("--model-spec", type=Path, default=DEFAULT_SPEC)
     ap.add_argument("--genai-child", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument(
+        "--cache-dir",
+        type=Path,
+        default=None,
+        help="Task BC ladder L0: also compile twice with only CACHE_DIR set (export, import) "
+        "and record the KV port types. Default: off. Use an empty scratch directory.",
+    )
     args = ap.parse_args(argv)
 
     from seam.model_provenance import load_local_spec
@@ -248,6 +292,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.mode in ("all", "core"):
         kvs = KV_CHOICES if args.kv == "all" else (args.kv,)
         doc["arms"] = [readback_one(ov, ir_xml, args.device, kv) for kv in kvs]
+    if args.cache_dir is not None:
+        doc["cache_dir_check"] = cache_dir_check(ov, ir_xml, args.device, args.cache_dir)
     print(json.dumps(doc, indent=2, default=str))
     return 0
 

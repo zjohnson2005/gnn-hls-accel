@@ -3478,3 +3478,15 @@ for Claude in this session; Zach pushes).
   task text: the step-1 prefill took ~340 s with no token (DERIVED), so 300 s would record a stall inside a
   healthy prefill (Decision for Zach).
 
+
+## 2026-10-21 (Task BC, Mac only, $0)
+- REGISTERED before any held-out run: docs/amendments/DEMO2_ARMS_REVISED_2026-10-21.md, sha256
+  872c8d3c63eb9060cb9fa1fb3bd21e1f9228928d5ec2b8eb25b0f53d48ada3ce. Revised B (prompt budget XPS 8,192 / T2S 16,384 via the
+  existing ctx_overflow), revised C (B + retention K 2,048 JSON-aware + lazy age-mask), I-4K (= D), R-full
+  (f16, explicit scheduler, 40,960, loud). Controls: $/pass headline, decomposition, matched-rate random
+  control (offline, NOT_RUN without cloud-only records), raw-payload cell. $0 ladder L0-L6 rules fixed.
+- Predictions derived/h1_hybrid/demo2/DEMO2_BC_PREDICTIONS.json sha256
+  7256755a30bd1a804bf0c51d1ce4b71dc59c31180024a9aed0aa1ab2b75d47be (DERIVED; reproduces registered arm A).
+  Revised C point: XPS -12% vs A, T2S +73% vs A. The research report's $0.046 was the old arm C.
+- Facts (analysis/demo2_pilots/BC/REPO_FACTS.md): the v2 pin's recipe fields scale_estimation/dataset
+  copy the card; the IR rt_info says scale_estimation False, dataset null. Pins not edited.

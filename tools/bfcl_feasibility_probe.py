@@ -1833,6 +1833,10 @@ class MultiTurnAgentSession:
     # Task BB (P11-B), default off: called with "step" before each generate and
     # "token" on each streamer write (seam.turn_watchdog.TurnWatchdog.progress).
     progress_cb: Any = field(default=None, init=False, repr=False)
+    # Task BC (revised arm C), default off: tools.h1_retention_budget.RetentionBudget
+    # with age_mask=True; masks the oldest tool outputs before a step that would
+    # exceed context_window (never the last 3).
+    retention_fit: Any = field(default=None, init=False, repr=False)
     ctx_overflow: dict[str, Any] | None = field(default=None, init=False)
     session_generated_once: bool = field(default=False, init=False)
     p1: Any = field(default=None, init=False, repr=False)
@@ -1964,6 +1968,23 @@ class MultiTurnAgentSession:
         if self.resident_history is not None and history_base is not None:
             self.resident_history.set_messages(history_base)
 
+    def _retention_age_mask(self, turn_idx: int, step: int) -> None:
+        """Task BC: lazy age-masking before the step's render (default off)."""
+        tokenizer, tools = self.tokenizer, self.tools
+
+        def count(msgs: list[dict[str, Any]]) -> int:
+            return len(tokenizer(render_bfcl_tools_style(tokenizer, msgs, tools))["input_ids"])
+
+        masked = self.retention_fit.fit(
+            self.messages,
+            count=count,
+            max_new_tokens=self.max_new,
+            window=int(self.context_window or 0),
+            where={"turn": turn_idx, "step": step},
+        )
+        if masked and self.resident_history is not None:
+            self.resident_history.set_messages([_chat_message_for_genai(m) for m in self.messages])
+
     def _finish_chat_safe(self) -> None:
         with contextlib.suppress(Exception), warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
@@ -2070,6 +2091,8 @@ class MultiTurnAgentSession:
         measure_reprefill = self._pending_reprefill
 
         while True:
+            if self.retention_fit is not None and self.context_window is not None:
+                self._retention_age_mask(turn_idx, step)
             _t = time.perf_counter()
             prompt_full = render_bfcl_tools_style(tokenizer, self.messages, tools)
             t_template_build += time.perf_counter() - _t
