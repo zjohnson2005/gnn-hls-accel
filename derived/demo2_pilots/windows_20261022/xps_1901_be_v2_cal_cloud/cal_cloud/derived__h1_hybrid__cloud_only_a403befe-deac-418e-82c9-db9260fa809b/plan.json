@@ -1,0 +1,122 @@
+{
+  "arm_config": {
+    "kv": "n/a",
+    "model": "claude-sonnet",
+    "placement": "cloud",
+    "residency": "n/a",
+    "tier": "cloud",
+    "weight": "n/a"
+  },
+  "caching_policy": "ephemeral",
+  "chat_template": {
+    "enable_thinking": false,
+    "renderer": "tools.bfcl_feasibility_probe.render_bfcl_tools_style"
+  },
+  "cloud_model": "claude-sonnet-5",
+  "cloud_ping_worker": {
+    "anthropic_sdk_version": "0.120.2",
+    "api_key_present": true,
+    "error_class": null,
+    "http_status": 200,
+    "model": "claude-sonnet-5",
+    "note": "Ping cost is recorded here and is not charged to the policy or session caps.",
+    "ok": true,
+    "path": "cloud_ping_worker.json",
+    "ran": true,
+    "sha256": "e8b94e79667fdb7b1848ca1708e42e7f231e6fe3bc0cc6ffa409f924e4fbb5c6",
+    "usd": 9.9e-05
+  },
+  "cloud_price_formula": "PREFREEZE-2026-10-22-s1: input*p_in + cache_write*1.25*p_in + cache_read*0.10*p_in + output*p_out (seam.budget.usd_cost, 5m write rate)",
+  "entry_assert": {
+    "mode": "caller_supplied",
+    "n": 30
+  },
+  "entry_pin": {
+    "category": "multi_turn_base+multi_turn_long_context",
+    "n": 30,
+    "name": "DEMO2_CALIB_30",
+    "path": "derived/h1_hybrid/demo2/DEMO2_CALIB_30.json",
+    "seed": 20261022,
+    "sha256": "28f00f54080eee8a909dcfe562057e71411c9795afc84b4d9d5a8b38fbc5d895"
+  },
+  "generation_config": {
+    "apply_chat_template": false,
+    "do_sample": false,
+    "max_new_tokens": 512,
+    "seed": null,
+    "temperature": null,
+    "top_k": null,
+    "top_p": null
+  },
+  "git": {
+    "dirty": false,
+    "git_diff_head_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "git_head": "5212e66a8a869ad9d9ccb4cb42cab41edaa539ba",
+    "launch_evidence": {
+      "dir": "derived/h1_hybrid/_launches/a403befe-deac-418e-82c9-db9260fa809b",
+      "files": [
+        {
+          "bytes": 17280,
+          "path": "derived/h1_hybrid/_launches/a403befe-deac-418e-82c9-db9260fa809b/canary_opening/canaries/canary.0.json",
+          "sha256": "1f2a41b952bef6a973c057ab622cbeb0ce8107bef45e723e27ab5856e85a187b"
+        },
+        {
+          "bytes": 9504,
+          "path": "derived/h1_hybrid/_launches/a403befe-deac-418e-82c9-db9260fa809b/canary_opening/opening_plan.json",
+          "sha256": "e74c8dceca5938d33d3a14e2644a56c0696c3e5ca51d7d39155d3be93deb8070"
+        },
+        {
+          "bytes": 1077,
+          "path": "derived/h1_hybrid/_launches/a403befe-deac-418e-82c9-db9260fa809b/cloud_ping.json",
+          "sha256": "1c9a2016d20e5810584f9ab11e9288d2e67d6250253d685d0d39173b97e7f9cf"
+        },
+        {
+          "bytes": 3984,
+          "path": "derived/h1_hybrid/_launches/a403befe-deac-418e-82c9-db9260fa809b/gates_20261022_190716.json",
+          "sha256": "cc4ebb9ff2f3f4a617a6be2085a439404b144c2d1f91e6a18790a7ac0bec7f10"
+        }
+      ]
+    },
+    "tree_status": "CLEAN"
+  },
+  "local_backend": "stub",
+  "max_usd": 20.0,
+  "measurement_kind": "MEASURED",
+  "n_entries": 30,
+  "platform_id": "aipc-c1",
+  "policy": "cloud_only",
+  "resume_from_completed": [],
+  "retention": {
+    "age_mask": false,
+    "applies_to": [
+      "local session tool observations",
+      "cloud agent tool results"
+    ],
+    "arm": "RETENTION_BUDGET",
+    "cloud": "same",
+    "k": 1024,
+    "keep_last_tool_messages": 3,
+    "local": "FULL",
+    "marker": "[... N tokens elided ...]",
+    "shape": "h70t30",
+    "transform": "tools.h1_retention_budget.truncate_observation",
+    "unit": "model tokens (pinned HF tokenizer)"
+  },
+  "run_id": "a403befe-deac-418e-82c9-db9260fa809b",
+  "scorer": {
+    "bfcl_eval_version": "2025.12.17",
+    "checker": "bfcl_eval.eval_checker.multi_turn_eval.multi_turn_checker",
+    "w3_seal_refs": [
+      "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+      "1d8db970-4c18-4bcf-824d-d9c141b6eb22"
+    ],
+    "wrapper": "apu_characterization.cap01.bfcl_cap01_multi_turn_checker"
+  },
+  "seal": true,
+  "started_utc": "2026-10-22T23:08:00.986420+00:00",
+  "w3_entry_pin": null,
+  "w3_seal_refs": [
+    "6225d6e1-4e0a-41c9-90bb-695ecc5fbe0a",
+    "1d8db970-4c18-4bcf-824d-d9c141b6eb22"
+  ]
+}

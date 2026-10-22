@@ -1,0 +1,99 @@
+{
+ "kind": "demo2_ladder_l4",
+ "run_id": "13cca5ff-26a3-456d-95d6-68dd452be825",
+ "label": "r0_u4",
+ "started_utc": "2026-10-22T10:59:53Z",
+ "grid": [],
+ "repeats": 3,
+ "kv": "u4",
+ "prompt_lookup": false,
+ "warmup_s": 0.0,
+ "refine_ttft_s": null,
+ "max_new_tokens": 64,
+ "delta_tokens": 55,
+ "construction": "load_arm_pipeline('gpu_only_u4'), extra_properties None, no SchedulerConfig",
+ "points": [],
+ "status": "readback_only",
+ "load_s": 3.741,
+ "compiled_readback": {
+  "backend": "PA",
+  "sdpa_fallback_warning": false,
+  "pa_property_dump_seen": true,
+  "kv_cache_precision": "u4",
+  "key_cache_quant_mode": null,
+  "value_cache_quant_mode": null,
+  "n_pa_properties": 25,
+  "captured_chars": 2824,
+  "ir_rt_info": {
+   "checked": true,
+   "runtime_options_present": true,
+   "kv_cache_precision": null,
+   "override": false
+  }
+ },
+ "verdict": {
+  "valid": true,
+  "reasons": []
+ },
+ "load_meta": {
+  "device_config": {
+   "arm_id": "gpu_only_u4",
+   "label": "gpu only (KV_CACHE_PRECISION=u4)",
+   "load_sequence": [
+    {
+     "device": "GPU",
+     "properties": {
+      "KV_CACHE_PRECISION": "u4"
+     }
+    }
+   ],
+   "generate_device": "GPU"
+  },
+  "loads": [
+   {
+    "device": "GPU",
+    "properties": {
+     "KV_CACHE_PRECISION": "u4"
+    },
+    "kv_cache_precision": {
+     "requested": "u4",
+     "readback": {
+      "property": "KV_CACHE_PRECISION",
+      "device": "GPU",
+      "raw": "<Type: 'uint4_t'>",
+      "to_string": "u4",
+      "normalized": "u4",
+      "ok": true,
+      "error": null
+     },
+     "match": true,
+     "enforced": true,
+     "failure_mode": null
+    },
+    "scheduler_config": null,
+    "compiled_readback": {
+     "backend": "PA",
+     "sdpa_fallback_warning": false,
+     "pa_property_dump_seen": true,
+     "kv_cache_precision": "u4",
+     "key_cache_quant_mode": null,
+     "value_cache_quant_mode": null,
+     "n_pa_properties": 25,
+     "captured_chars": 2824,
+     "ir_rt_info": {
+      "checked": true,
+      "runtime_options_present": true,
+      "kv_cache_precision": null,
+      "override": false
+     }
+    }
+   }
+  ],
+  "scheduler_config": {
+   "enable_prefix_caching": null,
+   "source": "LLMPipeline_default_CB_prefix_caching_on"
+  },
+  "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+  "openvino_genai": "2026.2.1.0-3123-7dea0459b2a"
+ }
+}

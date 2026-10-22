@@ -33,3 +33,25 @@ def test_score_fn_never_reuses_checker_name(
         assert score(entry, [[["pwd()"]]])
     assert len(set(names)) == 3
     assert all(n.startswith("replay_multi_turn_base_1_") for n in names)
+
+
+def test_nearest_rank_p5_and_aa_floor() -> None:
+    from tools import demo2_freeze_values as fv
+
+    xs = [float(x) for x in range(1, 101)]
+    assert fv.nearest_rank(xs, 0.05) == 5.0
+    assert fv.nearest_rank([3.0], 0.05) == 3.0
+    assert fv.nearest_rank([], 0.05) is None
+
+    def run(steps: list[list[str]], ok: bool, t_gen: float) -> dict[str, Any]:
+        turn = {"turn": 0, "decoded_steps": steps}
+        return {
+            "_eq": {"e1": {"local_pass": ok}},
+            "_tl": {"e1": {"turns": [turn]}},
+            "t_generate_p50": t_gen,
+        }
+
+    aa = fv.aa_floor(run([["a()"], ["b()"]], True, 1.0), run([["a()"]], False, 3.0))
+    assert aa["n_discordant"] == 1
+    assert (aa["step_positions"], aa["step_mismatches"]) == (2, 1)
+    assert aa["d_lat"] == 1.0

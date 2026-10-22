@@ -1,0 +1,65 @@
+{
+  "chat_template": {
+    "enable_thinking": false,
+    "renderer": "tools.bfcl_feasibility_probe.render_bfcl_tools_style"
+  },
+  "cloud_model": "claude-sonnet-5",
+  "excluded_from_interleave": [
+    "slo_escalate",
+    "emission_escalate",
+    "full_signal_bounceback"
+  ],
+  "excluded_policies": {
+    "full_signal_bounceback": {
+      "blocked_on": "R2C-TURNWISE",
+      "reason": "R2c (full_signal_bounceback) excluded from this interleaved session (H1-2POLICY = slo_escalate + emission_escalate only). Not the full three-policy comparison. R2C-TURNWISE is available for dedicated R2c / H1-3POLICY seals."
+    }
+  },
+  "full_three_policy_comparison": false,
+  "generation_config": {
+    "apply_chat_template": false,
+    "do_sample": false,
+    "max_new_tokens": 512,
+    "seed": null,
+    "temperature": null,
+    "top_k": null,
+    "top_p": null
+  },
+  "git": {
+    "dirty": false,
+    "git_diff_head_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "git_head": "145047face93b3393fcfe6a8e4ad3d42b76d99c9",
+    "launch_evidence": {
+      "dir": "derived/h1_hybrid/_launches/f511af02-6c89-4818-b984-2ca3ebf4b1aa",
+      "files": [
+        {
+          "bytes": 17292,
+          "path": "derived/h1_hybrid/_launches/f511af02-6c89-4818-b984-2ca3ebf4b1aa/canary_opening/canaries/canary.0.json",
+          "sha256": "b2b39f1c58b02ab3a152b755e7e18041bfd3b343f9bd97cff4ad93a6574100a4"
+        },
+        {
+          "bytes": 9505,
+          "path": "derived/h1_hybrid/_launches/f511af02-6c89-4818-b984-2ca3ebf4b1aa/canary_opening/opening_plan.json",
+          "sha256": "2d69a702c4a29c173975f6cea1aa58a2ee1d03f09e8909d3b7a5d000389419cc"
+        },
+        {
+          "bytes": 3984,
+          "path": "derived/h1_hybrid/_launches/f511af02-6c89-4818-b984-2ca3ebf4b1aa/gates_20261022_122004.json",
+          "sha256": "d23d4d4e377449835426cbd21acbd75f100495f58ec4d6531a8c0770a0e19efa"
+        }
+      ]
+    },
+    "tree_status": "CLEAN"
+  },
+  "measurement_kind": "MEASURED",
+  "parent_kind": "h1_interleaved",
+  "parent_run_id": "f511af02-6c89-4818-b984-2ca3ebf4b1aa",
+  "policy": "local_only",
+  "r2c_excluded": true,
+  "r2c_exclusion_reason": "R2c (full_signal_bounceback) excluded from this interleaved session (H1-2POLICY = slo_escalate + emission_escalate only). Not the full three-policy comparison. R2C-TURNWISE is available for dedicated R2c / H1-3POLICY seals.",
+  "run_id": "f511af02-6c89-4818-b984-2ca3ebf4b1aa",
+  "sealed_utc": "2026-10-22T16:38:20.206046+00:00",
+  "session_design": "interleaved",
+  "status": "complete",
+  "tree_sha256": "af08d4458ef795358978eece90c02f3775246f029389bbe61a29de83807daea4"
+}

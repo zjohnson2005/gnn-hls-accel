@@ -1,0 +1,528 @@
+{
+  "kind": "kv_compiled_readback",
+  "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+  "openvino_genai": "2026.2.1.0-3123-7dea0459b2a",
+  "model_spec": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\configs\\models\\Qwen3-4B-int4-ov.yaml",
+  "ir_xml": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov\\openvino_model.xml",
+  "device": "GPU",
+  "scheduler_config_struct_defaults": {
+    "enable_prefix_caching": false,
+    "max_num_batched_tokens": 256,
+    "max_num_seqs": 256,
+    "cache_size": 0,
+    "num_kv_blocks": 0,
+    "dynamic_split_fuse": true,
+    "use_cache_eviction": false
+  },
+  "ir_quantization": {
+    "ir_dir": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "xml_present": true,
+    "xml_sha256": "b0b632ea0e6b1c934b514a1cb48b03faac2868b2cdefc3e9c46de53bde5dab44",
+    "xml_sha256_pin": null,
+    "xml_matches_pin": null,
+    "rt_info": {
+      "attribute": {}
+    },
+    "openvino_config": {
+      "dtype": "",
+      "input_info": null,
+      "optimum_version": "2.1.0.dev0",
+      "output_attentions": false,
+      "quantization_config": {
+        "_dataset_kwargs": {},
+        "dataset": null,
+        "default_config": {
+          "quant_method": "awq"
+        },
+        "ignored_scope": null,
+        "num_samples": null,
+        "processor": null,
+        "quantization_configs": {},
+        "tokenizer": "/nfs/ov-share-01/data/cv_bench_cache/NATIVE_GEN-AI_MODELS/qwen3-4b/pytorch/NATIVE"
+      },
+      "save_onnx_model": false,
+      "transformers_version": "4.57.6"
+    },
+    "constants": {
+      "weight_constants": {
+        "i4": 252,
+        "u8": 1
+      },
+      "weight_params": {
+        "i4": 3633315840,
+        "u8": 388956160
+      },
+      "group_sizes": {
+        "4bit:128": 252,
+        "8bit:-1": 1
+      },
+      "zero_point_constants": {
+        "u8": 1
+      },
+      "scalar_low_bit_constants": 0,
+      "int4_param_share": 0.9032993890020367
+    },
+    "summary": {
+      "source": {
+        "mode": "constants",
+        "group_size": "constants",
+        "ratio": null,
+        "sym": "constants"
+      },
+      "mode": "INT4_SYM",
+      "group_size": 128,
+      "ratio": null,
+      "sym": true
+    },
+    "conflicts": [],
+    "error": null
+  },
+  "device_name": "Intel(R) Arc(TM) B390 GPU (iGPU)",
+  "genai_default": {
+    "method": "LLMPipeline(ir_dir, device), no properties, OPENVINO_LOG_LEVEL=3",
+    "child_returncode": 0,
+    "child_done": true,
+    "parsed": {
+      "backend": "PA",
+      "sdpa_fallback_warning": false,
+      "pa_property_dump_seen": true,
+      "kv_cache_precision": "i8",
+      "key_cache_quant_mode": null,
+      "value_cache_quant_mode": null,
+      "n_pa_properties": 25,
+      "captured_chars": 2859
+    },
+    "ir_rt_info": {
+      "checked": true,
+      "runtime_options_present": true,
+      "kv_cache_precision": null,
+      "override": false
+    },
+    "verdict_true_default": {
+      "valid": true,
+      "reasons": []
+    },
+    "log_tail": [
+      "  SCHEDULING_CORE_TYPE: ANY_CORE",
+      "  MODEL_DISTRIBUTION_POLICY: ",
+      "  ENABLE_HYPER_THREADING: NO",
+      "  EXECUTION_DEVICES: CPU",
+      "  CPU_DENORMALS_OPTIMIZATION: NO",
+      "  LOG_LEVEL: LOG_NONE",
+      "  CPU_SPARSE_WEIGHTS_DECOMPRESSION_RATE: 1",
+      "  ENABLE_TENSOR_PARALLEL: NO",
+      "  TBB_PARTITIONER: STATIC",
+      "  DYNAMIC_QUANTIZATION_GROUP_SIZE: 32",
+      "  KV_CACHE_PRECISION: u8",
+      "  KEY_CACHE_PRECISION: u8",
+      "  VALUE_CACHE_PRECISION: u8",
+      "  KEY_CACHE_GROUP_SIZE: 0",
+      "  VALUE_CACHE_GROUP_SIZE: 0",
+      "EXECUTION_DEVICES:",
+      " CPU: Intel(R) Core(TM) Ultra X7 358H",
+      "SchedulerConfig { ",
+      "  max_num_batched_tokens: 18446744073709551615",
+      "  num_kv_blocks: 0",
+      "  cache_size: 0",
+      "  num_linear_attention_blocks: 0",
+      "  cache_interval_multiplier: unset",
+      "  dynamic_split_fuse: true",
+      "  use_cache_eviction: false",
+      "  max_num_seqs: 256",
+      "  enable_prefix_caching: true",
+      "  use_sparse_attention: false",
+      " }",
+      "Model: LLM with Paged Attention",
+      "  NETWORK_NAME: Model0",
+      "  OPTIMAL_NUMBER_OF_INFER_REQUESTS: 1",
+      "  PERF_COUNT: NO",
+      "  ENABLE_CPU_PINNING: NO",
+      "  ENABLE_CPU_RESERVATION: NO",
+      "  MODEL_PRIORITY: MEDIUM",
+      "  GPU_HOST_TASK_PRIORITY: MEDIUM",
+      "  GPU_QUEUE_PRIORITY: MEDIUM",
+      "  GPU_ENABLE_LARGE_ALLOCATIONS: NO",
+      "  GPU_QUEUE_THROTTLE: MEDIUM",
+      "  GPU_ENABLE_LOOP_UNROLLING: YES",
+      "  GPU_DISABLE_WINOGRAD_CONVOLUTION: NO",
+      "  CACHE_DIR: ",
+      "  CACHE_MODE: optimize_speed",
+      "  PERFORMANCE_HINT: LATENCY",
+      "  EXECUTION_MODE_HINT: PERFORMANCE",
+      "  COMPILATION_NUM_THREADS: 16",
+      "  NUM_STREAMS: 1",
+      "  PERFORMANCE_HINT_NUM_REQUESTS: 0",
+      "  INFERENCE_PRECISION_HINT: f16",
+      "  DYNAMIC_QUANTIZATION_GROUP_SIZE: 18446744073709551615",
+      "  ACTIVATIONS_SCALE_FACTOR: -1",
+      "  KV_CACHE_PRECISION: i8",
+      "  DEVICE_ID: 0",
+      "  EXECUTION_DEVICES: GPU.0",
+      "EXECUTION_DEVICES:",
+      " GPU.0: Intel(R) Arc(TM) B390 GPU (iGPU)",
+      "[XAttention]: DISABLED on GPU device.",
+      "KV_READBACK_CHILD_DONE load_s=5.7",
+      ""
+    ]
+  },
+  "arms": [
+    {
+      "kv_requested": "default",
+      "properties_passed": {},
+      "pa_transform": {
+        "applied": true,
+        "call": "paged_attention_transformation(model)"
+      },
+      "model_cache_ports_before_compile": {
+        "key_cache": {
+          "element_types": [
+            "<Type: 'dynamic'>"
+          ],
+          "ports": 36
+        },
+        "value_cache": {
+          "element_types": [
+            "<Type: 'dynamic'>"
+          ],
+          "ports": 36
+        },
+        "n_cache_ports": 72
+      },
+      "compile_s": 4.14,
+      "compiled_cache_ports": {
+        "key_cache": {
+          "element_types": [
+            "<Type: 'int8_t'>"
+          ],
+          "ports": 36
+        },
+        "value_cache": {
+          "element_types": [
+            "<Type: 'int8_t'>"
+          ],
+          "ports": 36
+        },
+        "n_cache_ports": 72
+      },
+      "compiled_cache_ports_first4": [
+        {
+          "name": "key_cache.0",
+          "element_type": "<Type: 'int8_t'>"
+        },
+        {
+          "name": "value_cache.0",
+          "element_type": "<Type: 'int8_t'>"
+        },
+        {
+          "name": "key_cache.1",
+          "element_type": "<Type: 'int8_t'>"
+        },
+        {
+          "name": "value_cache.1",
+          "element_type": "<Type: 'int8_t'>"
+        }
+      ],
+      "compiled_property_KV_CACHE_PRECISION": "<Type: 'int8_t'>"
+    },
+    {
+      "kv_requested": "u8",
+      "properties_passed": {
+        "KV_CACHE_PRECISION": "u8"
+      },
+      "pa_transform": {
+        "applied": true,
+        "call": "paged_attention_transformation(model)"
+      },
+      "model_cache_ports_before_compile": {
+        "key_cache": {
+          "element_types": [
+            "<Type: 'dynamic'>"
+          ],
+          "ports": 36
+        },
+        "value_cache": {
+          "element_types": [
+            "<Type: 'dynamic'>"
+          ],
+          "ports": 36
+        },
+        "n_cache_ports": 72
+      },
+      "compile_s": 3.94,
+      "compiled_cache_ports": {
+        "key_cache": {
+          "element_types": [
+            "<Type: 'int8_t'>"
+          ],
+          "ports": 36
+        },
+        "value_cache": {
+          "element_types": [
+            "<Type: 'int8_t'>"
+          ],
+          "ports": 36
+        },
+        "n_cache_ports": 72
+      },
+      "compiled_cache_ports_first4": [
+        {
+          "name": "key_cache.0",
+          "element_type": "<Type: 'int8_t'>"
+        },
+        {
+          "name": "value_cache.0",
+          "element_type": "<Type: 'int8_t'>"
+        },
+        {
+          "name": "key_cache.1",
+          "element_type": "<Type: 'int8_t'>"
+        },
+        {
+          "name": "value_cache.1",
+          "element_type": "<Type: 'int8_t'>"
+        }
+      ],
+      "compiled_property_KV_CACHE_PRECISION": "<Type: 'int8_t'>"
+    },
+    {
+      "kv_requested": "u4",
+      "properties_passed": {
+        "KV_CACHE_PRECISION": "u4"
+      },
+      "pa_transform": {
+        "applied": true,
+        "call": "paged_attention_transformation(model)"
+      },
+      "model_cache_ports_before_compile": {
+        "key_cache": {
+          "element_types": [
+            "<Type: 'dynamic'>"
+          ],
+          "ports": 36
+        },
+        "value_cache": {
+          "element_types": [
+            "<Type: 'dynamic'>"
+          ],
+          "ports": 36
+        },
+        "n_cache_ports": 72
+      },
+      "compile_s": 4.0,
+      "compiled_cache_ports": {
+        "key_cache": {
+          "element_types": [
+            "<Type: 'uint8_t'>"
+          ],
+          "ports": 36
+        },
+        "value_cache": {
+          "element_types": [
+            "<Type: 'uint8_t'>"
+          ],
+          "ports": 36
+        },
+        "n_cache_ports": 72
+      },
+      "compiled_cache_ports_first4": [
+        {
+          "name": "key_cache.0",
+          "element_type": "<Type: 'uint8_t'>"
+        },
+        {
+          "name": "value_cache.0",
+          "element_type": "<Type: 'uint8_t'>"
+        },
+        {
+          "name": "key_cache.1",
+          "element_type": "<Type: 'uint8_t'>"
+        },
+        {
+          "name": "value_cache.1",
+          "element_type": "<Type: 'uint8_t'>"
+        }
+      ],
+      "compiled_property_KV_CACHE_PRECISION": "<Type: 'uint4_t'>"
+    },
+    {
+      "kv_requested": "f16",
+      "properties_passed": {
+        "KV_CACHE_PRECISION": "f16"
+      },
+      "pa_transform": {
+        "applied": true,
+        "call": "paged_attention_transformation(model)"
+      },
+      "model_cache_ports_before_compile": {
+        "key_cache": {
+          "element_types": [
+            "<Type: 'dynamic'>"
+          ],
+          "ports": 36
+        },
+        "value_cache": {
+          "element_types": [
+            "<Type: 'dynamic'>"
+          ],
+          "ports": 36
+        },
+        "n_cache_ports": 72
+      },
+      "compile_s": 3.91,
+      "compiled_cache_ports": {
+        "key_cache": {
+          "element_types": [
+            "<Type: 'float16'>"
+          ],
+          "ports": 36
+        },
+        "value_cache": {
+          "element_types": [
+            "<Type: 'float16'>"
+          ],
+          "ports": 36
+        },
+        "n_cache_ports": 72
+      },
+      "compiled_cache_ports_first4": [
+        {
+          "name": "key_cache.0",
+          "element_type": "<Type: 'float16'>"
+        },
+        {
+          "name": "value_cache.0",
+          "element_type": "<Type: 'float16'>"
+        },
+        {
+          "name": "key_cache.1",
+          "element_type": "<Type: 'float16'>"
+        },
+        {
+          "name": "value_cache.1",
+          "element_type": "<Type: 'float16'>"
+        }
+      ],
+      "compiled_property_KV_CACHE_PRECISION": "<Type: 'float16'>"
+    }
+  ],
+  "cache_dir_check": {
+    "cache_dir": "C:\\Users\\zach\\seam_tools\\l0_cachedir_r0",
+    "no_cache_dir": {
+      "kv_requested": "default",
+      "properties_passed": {},
+      "pa_transform": {
+        "applied": true,
+        "call": "paged_attention_transformation(model)"
+      },
+      "model_cache_ports_before_compile": {
+        "key_cache": {
+          "element_types": [
+            "<Type: 'dynamic'>"
+          ],
+          "ports": 36
+        },
+        "value_cache": {
+          "element_types": [
+            "<Type: 'dynamic'>"
+          ],
+          "ports": 36
+        },
+        "n_cache_ports": 72
+      },
+      "compile_s": 4.0,
+      "compiled_cache_ports": {
+        "key_cache": {
+          "element_types": [
+            "<Type: 'int8_t'>"
+          ],
+          "ports": 36
+        },
+        "value_cache": {
+          "element_types": [
+            "<Type: 'int8_t'>"
+          ],
+          "ports": 36
+        },
+        "n_cache_ports": 72
+      },
+      "compiled_cache_ports_first4": [
+        {
+          "name": "key_cache.0",
+          "element_type": "<Type: 'int8_t'>"
+        },
+        {
+          "name": "value_cache.0",
+          "element_type": "<Type: 'int8_t'>"
+        },
+        {
+          "name": "key_cache.1",
+          "element_type": "<Type: 'int8_t'>"
+        },
+        {
+          "name": "value_cache.1",
+          "element_type": "<Type: 'int8_t'>"
+        }
+      ],
+      "compiled_property_KV_CACHE_PRECISION": "<Type: 'int8_t'>"
+    },
+    "cache_dir_files_before": [],
+    "export": {
+      "compile_s": 5.55,
+      "compiled_cache_ports": {
+        "key_cache": {
+          "element_types": [
+            "<Type: 'int8_t'>"
+          ],
+          "ports": 36
+        },
+        "value_cache": {
+          "element_types": [
+            "<Type: 'int8_t'>"
+          ],
+          "ports": 36
+        },
+        "n_cache_ports": 72
+      },
+      "property_KV_CACHE_PRECISION": "<Type: 'int8_t'>",
+      "property_DYNAMIC_QUANTIZATION_GROUP_SIZE": "18446744073709551615"
+    },
+    "import": {
+      "compile_s": 2.01,
+      "compiled_cache_ports": {
+        "key_cache": {
+          "element_types": [
+            "<Type: 'int8_t'>"
+          ],
+          "ports": 36
+        },
+        "value_cache": {
+          "element_types": [
+            "<Type: 'int8_t'>"
+          ],
+          "ports": 36
+        },
+        "n_cache_ports": 72
+      },
+      "property_KV_CACHE_PRECISION": "<Type: 'dynamic'>",
+      "property_DYNAMIC_QUANTIZATION_GROUP_SIZE": "0"
+    },
+    "cache_dir_files_after": [
+      "10743194916205433301.cl_cache",
+      "11818148080515788126.cl_cache",
+      "1218492359104952239.cl_cache",
+      "12598370381744877675.cl_cache",
+      "13551020117886752847.cl_cache",
+      "13695594085175284082.cl_cache",
+      "14616699091247941368.cl_cache",
+      "16418598926005570944.cl_cache",
+      "3959499223961320171.cl_cache",
+      "5857166056637350276.cl_cache",
+      "6025141795532643754.blob",
+      "6045343100435839658.cl_cache",
+      "6444816924797845173.cl_cache",
+      "7058686796254541177.cl_cache",
+      "8946722705112029106.cl_cache"
+    ]
+  }
+}
+L0_DONE

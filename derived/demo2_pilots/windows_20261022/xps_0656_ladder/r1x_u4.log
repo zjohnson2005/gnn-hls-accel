@@ -1,0 +1,125 @@
+{"RUN_ID": "ab95aeb2-3262-4423-a08f-051fd5aad43a", "out": "derived\\demo2_ladder\\L4\\ab95aeb2-3262-4423-a08f-051fd5aad43a"}
+Model: OV Tokenizer
+  NETWORK_NAME: tokenizer
+  OPTIMAL_NUMBER_OF_INFER_REQUESTS: 1
+  NUM_STREAMS: 1
+  INFERENCE_NUM_THREADS: 4
+  PERF_COUNT: NO
+  INFERENCE_PRECISION_HINT: f32
+  PERFORMANCE_HINT: LATENCY
+  EXECUTION_MODE_HINT: PERFORMANCE
+  PERFORMANCE_HINT_NUM_REQUESTS: 0
+  ENABLE_CPU_PINNING: NO
+  ENABLE_CPU_RESERVATION: NO
+  SCHEDULING_CORE_TYPE: ANY_CORE
+  MODEL_DISTRIBUTION_POLICY: 
+  ENABLE_HYPER_THREADING: NO
+  EXECUTION_DEVICES: CPU
+  CPU_DENORMALS_OPTIMIZATION: NO
+  LOG_LEVEL: LOG_NONE
+  CPU_SPARSE_WEIGHTS_DECOMPRESSION_RATE: 1
+  ENABLE_TENSOR_PARALLEL: NO
+  TBB_PARTITIONER: STATIC
+  DYNAMIC_QUANTIZATION_GROUP_SIZE: 32
+  KV_CACHE_PRECISION: u8
+  KEY_CACHE_PRECISION: u8
+  VALUE_CACHE_PRECISION: u8
+  KEY_CACHE_GROUP_SIZE: 0
+  VALUE_CACHE_GROUP_SIZE: 0
+EXECUTION_DEVICES:
+ CPU: Intel(R) Core(TM) Ultra 5 325
+Model: OV Detokenizer
+  NETWORK_NAME: detokenizer
+  OPTIMAL_NUMBER_OF_INFER_REQUESTS: 1
+  NUM_STREAMS: 1
+  INFERENCE_NUM_THREADS: 4
+  PERF_COUNT: NO
+  INFERENCE_PRECISION_HINT: f32
+  PERFORMANCE_HINT: LATENCY
+  EXECUTION_MODE_HINT: PERFORMANCE
+  PERFORMANCE_HINT_NUM_REQUESTS: 0
+  ENABLE_CPU_PINNING: NO
+  ENABLE_CPU_RESERVATION: NO
+  SCHEDULING_CORE_TYPE: ANY_CORE
+  MODEL_DISTRIBUTION_POLICY: 
+  ENABLE_HYPER_THREADING: NO
+  EXECUTION_DEVICES: CPU
+  CPU_DENORMALS_OPTIMIZATION: NO
+  LOG_LEVEL: LOG_NONE
+  CPU_SPARSE_WEIGHTS_DECOMPRESSION_RATE: 1
+  ENABLE_TENSOR_PARALLEL: NO
+  TBB_PARTITIONER: STATIC
+  DYNAMIC_QUANTIZATION_GROUP_SIZE: 32
+  KV_CACHE_PRECISION: u8
+  KEY_CACHE_PRECISION: u8
+  VALUE_CACHE_PRECISION: u8
+  KEY_CACHE_GROUP_SIZE: 0
+  VALUE_CACHE_GROUP_SIZE: 0
+EXECUTION_DEVICES:
+ CPU: Intel(R) Core(TM) Ultra 5 325
+SchedulerConfig { 
+  max_num_batched_tokens: 18446744073709551615
+  num_kv_blocks: 0
+  cache_size: 0
+  num_linear_attention_blocks: 0
+  cache_interval_multiplier: unset
+  dynamic_split_fuse: true
+  use_cache_eviction: false
+  max_num_seqs: 256
+  enable_prefix_caching: true
+  use_sparse_attention: false
+ }
+Model: LLM with Paged Attention
+  NETWORK_NAME: Model0
+  OPTIMAL_NUMBER_OF_INFER_REQUESTS: 1
+  PERF_COUNT: NO
+  ENABLE_CPU_PINNING: NO
+  ENABLE_CPU_RESERVATION: NO
+  MODEL_PRIORITY: MEDIUM
+  GPU_HOST_TASK_PRIORITY: MEDIUM
+  GPU_QUEUE_PRIORITY: MEDIUM
+  GPU_ENABLE_LARGE_ALLOCATIONS: NO
+  GPU_QUEUE_THROTTLE: MEDIUM
+  GPU_ENABLE_LOOP_UNROLLING: YES
+  GPU_DISABLE_WINOGRAD_CONVOLUTION: NO
+  CACHE_DIR: 
+  CACHE_MODE: optimize_speed
+  PERFORMANCE_HINT: LATENCY
+  EXECUTION_MODE_HINT: PERFORMANCE
+  COMPILATION_NUM_THREADS: 8
+  NUM_STREAMS: 1
+  PERFORMANCE_HINT_NUM_REQUESTS: 0
+  INFERENCE_PRECISION_HINT: f16
+  DYNAMIC_QUANTIZATION_GROUP_SIZE: 18446744073709551615
+  ACTIVATIONS_SCALE_FACTOR: -1
+  KV_CACHE_PRECISION: u4
+  DEVICE_ID: 0
+  EXECUTION_DEVICES: GPU.0
+EXECUTION_DEVICES:
+ GPU.0: Intel(R) Graphics (iGPU)
+[XAttention]: DISABLED on GPU device.
+{"POINT": {"n_tokens": 2170, "kind": "cold", "ttft_s": 1.025183837, "ok": true}}
+{"POINT": {"n_tokens": 2197, "kind": "cold", "ttft_s": 1.127230957, "ok": true}}
+{"POINT": {"n_tokens": 2172, "kind": "cold", "ttft_s": 1.090355834, "ok": true}}
+{"POINT": {"n_tokens": 2228, "kind": "warm", "ttft_s": 0.23272171, "ok": true}}
+{"POINT": {"n_tokens": 4298, "kind": "cold", "ttft_s": 2.976055175, "ok": true}}
+{"POINT": {"n_tokens": 4306, "kind": "cold", "ttft_s": 2.849422363, "ok": true}}
+{"POINT": {"n_tokens": 4261, "kind": "cold", "ttft_s": 2.809062988, "ok": true}}
+{"POINT": {"n_tokens": 4322, "kind": "warm", "ttft_s": 0.219932006, "ok": true}}
+{"POINT": {"n_tokens": 6430, "kind": "cold", "ttft_s": 5.498797851, "ok": true}}
+{"POINT": {"n_tokens": 6469, "kind": "cold", "ttft_s": 5.480339355, "ok": true}}
+{"POINT": {"n_tokens": 6445, "kind": "cold", "ttft_s": 4.988599609, "ok": true}}
+{"POINT": {"n_tokens": 6504, "kind": "warm", "ttft_s": 0.302765502, "ok": true}}
+{"POINT": {"n_tokens": 8616, "kind": "cold", "ttft_s": 8.928566406, "ok": true}}
+{"POINT": {"n_tokens": 8683, "kind": "cold", "ttft_s": 8.624973632, "ok": true}}
+{"POINT": {"n_tokens": 8669, "kind": "cold", "ttft_s": 8.706088867, "ok": true}}
+{"POINT": {"n_tokens": 8728, "kind": "warm", "ttft_s": 0.393348815, "ok": true}}
+{"POINT": {"n_tokens": 10787, "kind": "cold", "ttft_s": 17.243396484, "ok": true}}
+{"POINT": {"n_tokens": 10761, "kind": "cold", "ttft_s": 16.986917968, "ok": true}}
+{"POINT": {"n_tokens": 10784, "kind": "cold", "ttft_s": 12.878985351, "ok": true}}
+{"POINT": {"n_tokens": 10842, "kind": "warm", "ttft_s": 0.933436096, "ok": true}}
+{"POINT": {"n_tokens": 9690, "kind": "cold", "ttft_s": 10.130396484, "ok": true}}
+{"POINT": {"n_tokens": 9695, "kind": "cold", "ttft_s": 10.791730468, "ok": true}}
+{"POINT": {"n_tokens": 9677, "kind": "cold", "ttft_s": 10.38667871, "ok": true}}
+{"POINT": {"n_tokens": 9735, "kind": "warm", "ttft_s": 0.466157012, "ok": true}}
+L4_DONE {"refined_largest_pass": 8192}
