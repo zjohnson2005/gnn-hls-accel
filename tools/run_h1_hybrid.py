@@ -83,6 +83,8 @@ DEMO2_HELDOUT_60_B_SHA256 = "9dfa9280c67ef799034338607ad5bbc34246fe02d21fc5882be
 # Task BC addendum 2 (tools/demo2_per_device_pins.py): R6 / 2x2 and R5 pins.
 DEMO2_CONFIRM_200_SHA256 = "fdd3d404f474888fa86b8c3b0de8cd11d1f2a7b1f6cbb720192da279773b8753"
 DEMO2_GROWTH_10_SHA256 = "a223ebd120d20a6cce0d8e23b16b502a75c06dfdbf8ecebe1bfeb2e14b3d3ac7"
+# Task BE (tools/demo2_be_pins.py): calibration pin, 15 + 15 from DEMO2_CONFIRM_200.
+DEMO2_CALIB_30_SHA256 = "28f00f54080eee8a909dcfe562057e71411c9795afc84b4d9d5a8b38fbc5d895"
 ENTRY_PINS: dict[str, dict[str, Any]] = {
     W3_ENTRIES_SHA256: {"name": "W3_multi_turn_base_200", "n": 200, "seal_refs": list(W3_SEAL_REFS)},
     DEMO1_LONGCTX_30_SHA256: {
@@ -169,6 +171,14 @@ ENTRY_PINS: dict[str, dict[str, Any]] = {
         "path": "derived/h1_hybrid/demo2/DEMO2_GROWTH_10.json",
         "category": "multi_turn_long_context",
         "seed": 20261021,
+    },
+    # Task BE: calibration pin (router thresholds and the P/P' rule are fixed on it).
+    DEMO2_CALIB_30_SHA256: {
+        "name": "DEMO2_CALIB_30",
+        "n": 30,
+        "path": "derived/h1_hybrid/demo2/DEMO2_CALIB_30.json",
+        "category": "multi_turn_base+multi_turn_long_context",
+        "seed": 20261022,
     },
 }
 ENTRY_PIN_DEFAULT: dict[str, Any] = {"sha256": W3_ENTRIES_SHA256, **ENTRY_PINS[W3_ENTRIES_SHA256]}
@@ -361,6 +371,15 @@ DEFAULT_LOCAL_TIER = "4B"
 KV_MATCH_SEAL_4B = "86d0f4cf-e8c2-4ce5-96da-04c6a9c129f3"
 
 
+def local_model_weight(local: Any) -> str:
+    """Weight precision from the local spec name (Task BE: INT8 / 8B specs); int4 default."""
+    import re
+
+    name = local_model_identity(local)["model"]
+    m = re.search(r"-(int4|int8|fp16)-", name.lower())
+    return m.group(1) if m else "int4"
+
+
 def local_model_identity(local: Any) -> dict[str, str]:
     """Model name and tier of the local backend, read from its model spec.
 
@@ -414,6 +433,7 @@ def arm_config_for(policy: str, local: Any) -> dict[str, str]:
     arm = dict(ARM_CONFIG[policy])
     if arm["placement"] != "cloud":
         arm.update(local_model_identity(local))
+        arm["weight"] = local_model_weight(local)
         for key in ("placement", "residency", "kv"):
             value = getattr(local, key, None)
             if isinstance(value, str) and value:
@@ -514,10 +534,13 @@ class TurnLedger:
     trigger_class: str | None = None
     # DEMO-2: {"n_ctx", "window", "max_new_tokens", "step"} when a turn overflowed.
     ctx_overflow: dict[str, Any] | None = None
+    # Task BE: --passive-router (local_only). The triggers hybrid_full would have
+    # fired on this local turn, logged and not acted on. Absent otherwise.
+    passive_triggers: dict[str, Any] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         d = asdict(self)
-        for optional in ("local_attempt", "trigger_class", "ctx_overflow"):
+        for optional in ("local_attempt", "trigger_class", "ctx_overflow", "passive_triggers"):
             if d.get(optional) is None:
                 d.pop(optional, None)
         assert phases_sum_to_wall(
@@ -798,6 +821,38 @@ def decide_hybrid_mechanical(
     if generation_error:
         return True, "generation_error"
     return False, None
+
+
+def passive_trigger_record(bt: BackendTurn, *, generation_error_at_end: bool) -> dict[str, Any]:
+    """Task BE passive router: what hybrid_full would fire on this local turn, not acted on.
+
+    Same functions and order as the live router: ctx_overflow, then step-0 TTFT /
+    decode and generation_error (mechanical, sticky), then the quality triggers.
+    """
+    mech: str | None = None
+    if bt.ctx_overflow is not None:
+        mech = "ctx_overflow"
+    else:
+        _m, mech = decide_hybrid_mechanical(
+            ttft_s=bt.ttft_s,
+            decode_tok_s=bt.decode_tok_s,
+            generation_error=bool(bt.generation_error) or generation_error_at_end,
+        )
+    _q, quality = decide_bounceback(
+        emitted_parseable_tool_call=bt.emitted_parseable_tool_call,
+        n_steps=bt.n_steps,
+        tool_exec_error=bool(bt.tool_exec_error),
+    )
+    return {
+        "mechanical": mech,
+        "quality": quality,
+        "ttft_s": bt.ttft_s,
+        "decode_tok_s": bt.decode_tok_s,
+        "n_steps": bt.n_steps,
+        "generation_error": bool(bt.generation_error) or generation_error_at_end,
+        "emitted_parseable_tool_call": bool(bt.emitted_parseable_tool_call),
+        "tool_exec_error": bool(bt.tool_exec_error),
+    }
 
 
 def local_attempt_record(bt: BackendTurn, *, stop_reason: str) -> dict[str, Any]:
@@ -1372,6 +1427,12 @@ class OpenVinoLocalBackend:
     # Task BB (P11-B), interleaved local_only only; default off (unchanged behavior).
     local_turn_limit: int | None = None
     ctx_overflow_local_fail: bool = False
+    # Task BE, all default off: one pipeline for the whole run (no per-entry rebuild),
+    # one warm-up generate per distinct tool set, passive router records.
+    resident_pipeline: bool = False
+    warm_toolset_prefix: bool = False
+    passive_router: bool = False
+    warmup_log_path: Path | None = None
     arm_id: str = field(init=False)
     pipe: Any = field(init=False, repr=False)
     tokenizer: Any = field(init=False, repr=False)
@@ -1564,6 +1625,39 @@ class OpenVinoLocalBackend:
                     f"readback={got!r} requested={kv['requested']!r}"
                 )
 
+    def _warm_toolset(self, entry: dict[str, Any]) -> None:
+        """Task BE: one 1-token generate on the tool-set prefix the first time a tool set appears."""
+        if not getattr(self, "warm_toolset_prefix", False):
+            return
+        import tools.bfcl_feasibility_probe as probe
+
+        tools = probe.tools_for_entry(entry)
+        key = toolset_key(entry)
+        warmed = self.__dict__.setdefault("_warmed_toolsets", set())
+        if key in warmed:
+            return
+        prompt = probe.render_bfcl_tools_style(self.tokenizer, [{"role": "user", "content": ""}], tools)
+        cfg = self.ov_genai.GenerationConfig()
+        cfg.max_new_tokens = 1
+        cfg.do_sample = False
+        cfg.apply_chat_template = False
+        t0 = time.perf_counter()
+        self.pipe.generate([prompt], cfg)
+        rec = {
+            "event": "toolset_warmup",
+            "entry_id": str(entry["id"]),
+            "toolset": key,
+            "prompt_tokens": len(self.tokenizer(prompt)["input_ids"]),
+            "wall_s": round(time.perf_counter() - t0, 3),
+            "utc": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        }
+        warmed.add(key)
+        path = getattr(self, "warmup_log_path", None)
+        if path is not None:
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
+            with Path(path).open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(rec) + "\n")
+
     def reload_prefix_cache(self) -> str:
         """Drop continuous-batching prefix blocks before the next arm.
 
@@ -1678,9 +1772,12 @@ class OpenVinoLocalBackend:
         Cell key is ``(entry_id, policy)`` so interleaved arms sharing this
         backend cannot reuse a finished or in-flight session from another policy.
         Each begin constructs a new pipeline so the previous arm's prefix blocks
-        are gone.
+        are gone, unless --resident-pipeline (Task BE) keeps one pipeline for the run.
         """
-        self.reload_prefix_cache()
+        if getattr(self, "resident_pipeline", False):
+            self._warm_toolset(entry)
+        else:
+            self.reload_prefix_cache()
         eid = str(entry["id"])
         key = self.cell_key(eid, policy)
         if self._active_cell is not None:
@@ -3038,6 +3135,17 @@ def _run_hybrid_entry_body(
                 tool_exec_error=bool(bt.tool_exec_error),
                 tool_exec_error_class=bt.tool_exec_error_class,
                 ctx_overflow=bt.ctx_overflow,
+                passive_triggers=(
+                    passive_trigger_record(
+                        bt,
+                        generation_error_at_end=(
+                            turn_idx == local_span.turns_executed - 1
+                            and local_span.stop_reason == "generation_error"
+                        ),
+                    )
+                    if getattr(local, "passive_router", False)
+                    else None
+                ),
             )
         )
 
@@ -3548,7 +3656,7 @@ def run_interleaved_session(
         "residency": local_arm["residency"],
         "tier": identity["tier"],
         "model": identity["model"],
-        "weight": "int4",
+        "weight": local_model_weight(local),
         "platform_id": run_platform_id(),
         "resume_completed_by_policy": {
             p: sorted(state[p]["completed"]) for p in policies
@@ -4342,6 +4450,32 @@ def build_argparser() -> argparse.ArgumentParser:
         "sensitivity cell). Default: off (cloud sees the same retention as local).",
     )
     p.add_argument(
+        "--retention-cloud-only",
+        action="store_true",
+        help="With --retention-k: apply retention to the cloud agent only (Task BE shared "
+        "correction; the local arm keeps FULL observations). Default: off.",
+    )
+    p.add_argument(
+        "--resident-pipeline",
+        action="store_true",
+        help="Task BE: keep one LLMPipeline for the whole run (no per-entry rebuild). Default: off.",
+    )
+    p.add_argument(
+        "--warm-toolset-prefix",
+        action="store_true",
+        help="Task BE, with --resident-pipeline: one 1-token generate on each new tool-set prefix.",
+    )
+    p.add_argument(
+        "--passive-router",
+        action="store_true",
+        help="Task BE, interleaved local_only: log hybrid_full's triggers per local turn, not acted on.",
+    )
+    p.add_argument(
+        "--order-by-toolset",
+        action="store_true",
+        help="Task BE: run entries grouped by tool set (stable; identical across arms). Default: off.",
+    )
+    p.add_argument(
         "--retention-age-mask",
         action="store_true",
         help="With --retention-k and --context-window: mask the oldest tool outputs (never "
@@ -4892,18 +5026,32 @@ def attach_retention(args: argparse.Namespace, local: Any, cloud: Any) -> tuple[
     """
     k = getattr(args, "retention_k", None)
     if k is None:
-        if getattr(args, "retention_age_mask", False) or getattr(args, "retention_cloud_raw", False):
+        if (
+            getattr(args, "retention_age_mask", False)
+            or getattr(args, "retention_cloud_raw", False)
+            or getattr(args, "retention_cloud_only", False)
+        ):
             raise SystemExit(
                 "REFUSED -- --retention-age-mask / --retention-cloud-raw need --retention-k"
             )
         return attach_obs_mask(args.obs_mask_k, local, cloud)
     if args.obs_mask_k is not None:
         raise SystemExit("REFUSED -- --retention-k and --obs-mask-k are exclusive")
+    cloud_only = bool(getattr(args, "retention_cloud_only", False))
+    if cloud_only and (args.retention_cloud_raw or args.retention_age_mask):
+        raise SystemExit("REFUSED -- --retention-cloud-only excludes --retention-cloud-raw / -age-mask")
     if isinstance(local, ScriptedLiveLocalBackend):
         raise SystemExit("REFUSED -- --retention-k cannot apply to precomputed --local-script turns")
     if args.retention_age_mask and args.context_window is None:
         raise SystemExit("REFUSED -- --retention-age-mask needs --context-window")
     tokenizer = getattr(local, "tokenizer", None)
+    if not callable(tokenizer) and getattr(args, "policy", None) == "cloud_only":
+        # Task BE: the shared cloud-only log has a stub local backend; the retention budget
+        # counts with the pinned model tokenizer (same files for 4B and 8B IRs).
+        import tools.bfcl_feasibility_probe as probe
+
+        probe.apply_model_spec(getattr(args, "model_spec", None))
+        tokenizer = probe._hf_tokenizer()
     if not callable(tokenizer):
         raise SystemExit("REFUSED -- --retention-k needs the local HF tokenizer")
     from tools.h1_retention_budget import RetentionBudget, hf_codec
@@ -4916,11 +5064,15 @@ def attach_retention(args: argparse.Namespace, local: Any, cloud: Any) -> tuple[
         decode=decode,
         age_mask=bool(args.retention_age_mask),
     )
-    if hasattr(local, "obs_mask"):
+    if hasattr(local, "obs_mask") and not cloud_only:
         local.obs_mask = rb
     if hasattr(cloud, "obs_mask") and not args.retention_cloud_raw:
         cloud.obs_mask = rb
-    plan = {**rb.plan_record(), "cloud": "FULL" if args.retention_cloud_raw else "same"}
+    plan = {
+        **rb.plan_record(),
+        "cloud": "FULL" if args.retention_cloud_raw else "same",
+        "local": "FULL" if cloud_only else "same",
+    }
     return plan, rb
 
 
@@ -5066,7 +5218,12 @@ def load_skip_hangs(
         raise SystemExit(f"REFUSED -- --skip-hang-record not found: {path}")
     raw = path.read_bytes()
     doc = json.loads(raw.decode("utf-8-sig"))
-    events = [ev for ev in doc.get("events") or [] if ev.get("outcome") == "hang"]
+    # Task BE: a stall or turn-budget fire (stall watchdog) is skipped the same way.
+    events = [
+        ev
+        for ev in doc.get("events") or []
+        if ev.get("outcome") in ("hang", "stall", "turn_budget_exceeded")
+    ]
     found: dict[str, Any] = {}
     for eid in ids:
         hits = [ev for ev in events if str(ev.get("entry_id")) == eid]
@@ -5154,6 +5311,56 @@ def attach_local_limits(
             "rule": "generate input + max_new_tokens > window: not generated; the entry ends "
             "as a local fail (stop_reason ctx_overflow)",
         }
+    return rec
+
+
+def toolset_key(entry: dict[str, Any]) -> str:
+    """Tool-set identity of an entry: sha256 of its involved classes (sorted) and excluded functions."""
+    raw = entry.get("raw_entry") or {}
+    key = {
+        "involved_classes": sorted(str(c) for c in raw.get("involved_classes") or []),
+        "excluded_function": sorted(str(f) for f in raw.get("excluded_function") or []),
+    }
+    return hashlib.sha256(json.dumps(key, sort_keys=True).encode("utf-8")).hexdigest()[:16]
+
+
+def order_by_toolset(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Stable grouping by tool set, groups in order of first appearance (Task BE run order)."""
+    first: dict[str, int] = {}
+    for i, e in enumerate(entries):
+        first.setdefault(toolset_key(e), i)
+    return sorted(entries, key=lambda e: first[toolset_key(e)])
+
+
+def attach_be_modes(
+    args: argparse.Namespace, policies: tuple[str, ...], local: Any, out_dir: Path
+) -> dict[str, Any] | None:
+    """Task BE (all default off): --resident-pipeline, --warm-toolset-prefix, --passive-router."""
+    resident = bool(getattr(args, "resident_pipeline", False))
+    warm = bool(getattr(args, "warm_toolset_prefix", False))
+    passive = bool(getattr(args, "passive_router", False))
+    order = bool(getattr(args, "order_by_toolset", False))
+    if not (resident or warm or passive or order):
+        return None
+    if warm and not resident:
+        raise SystemExit("REFUSED -- --warm-toolset-prefix needs --resident-pipeline")
+    if passive and tuple(policies) != ("local_only",):
+        raise SystemExit("REFUSED -- --passive-router needs --interleaved-policy local_only alone")
+    if (resident or warm or passive) and not isinstance(local, OpenVinoLocalBackend):
+        raise SystemExit("REFUSED -- --resident-pipeline / --passive-router need OpenVINO")
+    rec: dict[str, Any] = {"task": "BE"}
+    if resident:
+        local.resident_pipeline = True
+        rec["resident_pipeline"] = "one LLMPipeline for the whole run; no per-entry rebuild"
+    if warm:
+        local.warm_toolset_prefix = True
+        local.warmup_log_path = Path(out_dir) / "toolset_warmups.jsonl"
+        rec["warm_toolset_prefix"] = "one 1-token generate per new tool set (toolset_warmups.jsonl)"
+    if passive:
+        local.passive_router = True
+        rec["passive_router"] = "hybrid_full triggers logged per local turn (passive_triggers)"
+    if order:
+        rec["order_by_toolset"] = "entries grouped by tool set, groups in first-appearance order"
     return rec
 
 
@@ -5372,6 +5579,10 @@ def _main_interleaved(args: argparse.Namespace) -> int:
     allow_reserved = bool(getattr(args, "confirmation_run", False))
     entries, entries_path = load_w3_entries(args.entries, allow_reserved=allow_reserved)
     entry_pin = assert_entry_set_pinned(entries_path, allow_reserved=allow_reserved)
+    if getattr(args, "order_by_toolset", False):
+        # Before slicing, so --entry-offset indexes the run order (resume after a hang).
+        entries = order_by_toolset(entries)
+        entry_pin = {**entry_pin, "order": "by_toolset (tools.run_h1_hybrid.order_by_toolset)"}
     entries, entry_pin = slice_entries(
         entries, entry_pin, offset=args.entry_offset, count=args.entry_count
     )
@@ -5407,6 +5618,9 @@ def _main_interleaved(args: argparse.Namespace) -> int:
     turn_watchdog = build_turn_watchdog(args)
     skip_hangs = load_skip_hangs(args.skip_entries, args.skip_hang_record, entries)
     local_limits = attach_local_limits(args, policies, local)
+    be_modes = attach_be_modes(args, policies, local, Path(args.out))
+    if be_modes is not None:
+        local_limits = {**(local_limits or {}), "task_be": be_modes}
     summary = run_interleaved_session(
         entries=entries,
         out_dir=args.out,

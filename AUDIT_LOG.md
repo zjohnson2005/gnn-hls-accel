@@ -3497,3 +3497,14 @@ for Claude in this session; Zach pushes).
 - L1 (65bb249) chose K 1,024 h70t30 (registered rule); arm C and every per-device profile use it.
 - P11-B T2S closeout (96b2a87): context-overrun regime; cap 40,960 converts the failure; chunk 4,096
   does not change it; no STALL on the T2S. XPS X0 d0dd5a37 pending.
+
+## 2026-10-21 (Task BE, Mac only, $0; approvals 9:45 PM ET)
+- APPROVALS_2026-10-21.md (sha256 f2bd2137cfef6e9c34483b9cde8838f3c52136b1eca2f346e01aa05a7f4283a0): model downloads, cloud logs ($20 + $20 caps), resident arm A
+  with shared corrections in every arm, device-provisioned arm P.
+- REGISTERED before any run it governs: docs/amendments/DEMO2_ISO_QUALITY_2026-10-21.md (sha256 5bb7e44a3095c9792199b380defbf22c41717aa037c28351a68d7e569d622950);
+  predictions DEMO2_BE_PREDICTIONS.json (f54b5ad7...); pin DEMO2_CALIB_30 (28f00f54...); model pin
+  Qwen3-8B-int8-ov (eac56228..., from Hub metadata; the method reproduces the two existing pins exactly).
+- Facts: the 8B INT4 IR is INT4_ASYM, AWQ False, SE True (wikitext2); the INT8 IRs are data-free
+  INT8_ASYM; all four IRs share the tokenizer and chat template bytes.
+- Environment, not code: a gitignored symlink apu_characterization/out/cap01/live_sources/bfcl-wheel/unpacked
+  on the Mac makes 4 previously failing BFCL-scoring tests pass (suite 48 failed, was 52).

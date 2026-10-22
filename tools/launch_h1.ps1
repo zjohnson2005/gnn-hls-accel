@@ -77,7 +77,10 @@
 #   -RetentionK <K> [-RetentionShape head|h70t30|json] [-RetentionAgeMask] (Task BC, revised
 #                       arm C; default off): cut each tool observation above K model tokens at
 #                       insertion (local and cloud); -RetentionAgeMask needs -ContextWindow;
-#                       -RetentionCloudRaw: the cloud agent sees FULL outputs (sensitivity).
+#                       -RetentionCloudRaw: the cloud agent sees FULL outputs (sensitivity);
+#                       -RetentionCloudOnly: retention on the cloud agent only (Task BE).
+#   -ResidentPipeline [-WarmToolsetPrefix] -PassiveRouter -OrderByToolset (Task BE; default off):
+#                       one pipeline per run, tool-set prefix warm-up, passive trigger log, run order.
 #   -ContextWindow <N>  DEMO-2: a local step whose prompt plus max_new_tokens exceeds N is not
 #                       generated; the turn escalates (sticky, ctx_overflow). Single-arm only.
 #                       Default off.
@@ -158,6 +161,14 @@ param(
     [string]$RetentionShape = "",
     [switch]$RetentionAgeMask,
     [switch]$RetentionCloudRaw,
+    [switch]$RetentionCloudOnly,
+    # Task BE (all default off).
+    [switch]$ResidentPipeline,
+    [switch]$WarmToolsetPrefix,
+    [switch]$PassiveRouter,
+    [switch]$OrderByToolset,
+    [ValidateSet("", "none", "ephemeral")]
+    [string]$CachingPolicy = "",
     [Nullable[int]]$EntryOffset = $null,
     [Nullable[int]]$EntryCount = $null,
     # Interleaved per-policy caps, overriding the defaults, e.g.
@@ -693,8 +704,9 @@ if ($null -ne $RetentionK) {
     if ($RetentionShape -ne "") { $resolvedCmd = $resolvedCmd + ' --retention-shape ' + $RetentionShape }
     if ($RetentionAgeMask) { $resolvedCmd = $resolvedCmd + ' --retention-age-mask' }
     if ($RetentionCloudRaw) { $resolvedCmd = $resolvedCmd + ' --retention-cloud-raw' }
-} elseif ($RetentionShape -ne "" -or $RetentionAgeMask -or $RetentionCloudRaw) {
-    Refuse "-RetentionShape / -RetentionAgeMask / -RetentionCloudRaw need -RetentionK"
+    if ($RetentionCloudOnly) { $resolvedCmd = $resolvedCmd + ' --retention-cloud-only' }
+} elseif ($RetentionShape -ne "" -or $RetentionAgeMask -or $RetentionCloudRaw -or $RetentionCloudOnly) {
+    Refuse "-RetentionShape / -RetentionAgeMask / -RetentionCloudRaw / -RetentionCloudOnly need -RetentionK"
     exit 1
 }
 if ($null -ne $EntryOffset) {
@@ -749,6 +761,11 @@ if ($null -ne $LocalTurnLimit) {
     $resolvedCmd = $resolvedCmd + ' --local-turn-limit ' + $LocalTurnLimit
 }
 if ($CtxOverflowLocalFail) { $resolvedCmd = $resolvedCmd + ' --ctx-overflow-local-fail' }
+if ($ResidentPipeline) { $resolvedCmd = $resolvedCmd + ' --resident-pipeline' }
+if ($WarmToolsetPrefix) { $resolvedCmd = $resolvedCmd + ' --warm-toolset-prefix' }
+if ($PassiveRouter) { $resolvedCmd = $resolvedCmd + ' --passive-router' }
+if ($OrderByToolset) { $resolvedCmd = $resolvedCmd + ' --order-by-toolset' }
+if ($CachingPolicy -ne "") { $resolvedCmd = $resolvedCmd + ' --caching-policy ' + $CachingPolicy }
 if (-not [string]::IsNullOrWhiteSpace($SkipEntries)) {
     $resolvedCmd = $resolvedCmd + ' --skip-entries ' + $SkipEntries
 }

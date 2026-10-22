@@ -194,7 +194,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-21 (Task BC). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-21 (Task BE). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -298,6 +298,13 @@ session start; update it in the same commit as the work. Never delete a row.
   either host) and per-device profiles + T2S ladder R0-R6 (DEMO2_PER_DEVICE_2026-10-21.md). L1 ran: K 1,024
   h70t30. Harness: --retention-k/-shape/-age-mask/-cloud-raw, demo2_ladder_l1/l4, pins DEMO2_CONFIRM_200 /
   DEMO2_GROWTH_10. Scripts run_window_t2s_ladder.sh / run_window_xps_ladder.sh. XPS X0 d0dd5a37 pending.
+- 2026-10-21 (Task BE, approved 9:45 PM ET): DEMO-2 primary = $ at iso-quality by offline replay
+  (docs/amendments/DEMO2_ISO_QUALITY_2026-10-21.md; tools/demo2_iso_quality_replay.py): local-only passive
+  logs per arm vs ONE shared cloud-only log. Arm A resident; shared corrections in every arm (resident
+  pipeline + tool-set warm-up, caching ephemeral, cloud retention K 1,024). Arm P device-provisioned
+  (XPS 8B INT4, P' 4B INT8 by rule; T2S 8B INT8). Calibration pin DEMO2_CALIB_30. Freeze Fri Oct 23 noon
+  (TASK_BF_PROMPT.md). Scripts download_models_{xps,t2s}.sh, run_queue_{t2s,xps}_be.sh;
+  schedule docs/DEMO2_SPRINT_2026-10-22.md.
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.
