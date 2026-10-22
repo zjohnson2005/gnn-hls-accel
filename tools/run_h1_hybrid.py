@@ -80,6 +80,9 @@ DEMO2_HELDOUT_60_B_LONG30_SHA256 = (
     "46aa65098a4f704d07cd8037168ad48a04269b6731b0118bfb195a50b032c37c"
 )
 DEMO2_HELDOUT_60_B_SHA256 = "9dfa9280c67ef799034338607ad5bbc34246fe02d21fc5882be2fc5a5cfa61ef"
+# Task BC addendum 2 (tools/demo2_per_device_pins.py): R6 / 2x2 and R5 pins.
+DEMO2_CONFIRM_200_SHA256 = "fdd3d404f474888fa86b8c3b0de8cd11d1f2a7b1f6cbb720192da279773b8753"
+DEMO2_GROWTH_10_SHA256 = "a223ebd120d20a6cce0d8e23b16b502a75c06dfdbf8ecebe1bfeb2e14b3d3ac7"
 ENTRY_PINS: dict[str, dict[str, Any]] = {
     W3_ENTRIES_SHA256: {"name": "W3_multi_turn_base_200", "n": 200, "seal_refs": list(W3_SEAL_REFS)},
     DEMO1_LONGCTX_30_SHA256: {
@@ -150,6 +153,22 @@ ENTRY_PINS: dict[str, dict[str, Any]] = {
         "category": "multi_turn_base+multi_turn_long_context",
         "seed": 20261016,
         "reserved_for": "one DEMO-2 SEARCH confirmation run (final searched profile vs arm A)",
+    },
+    # Task BC addendum 2: 100 base + 100 long, outside the held-out and DEMO-1 pins.
+    DEMO2_CONFIRM_200_SHA256: {
+        "name": "DEMO2_CONFIRM_200",
+        "n": 200,
+        "path": "derived/h1_hybrid/demo2/DEMO2_CONFIRM_200.json",
+        "category": "multi_turn_base+multi_turn_long_context",
+        "seed": 20261021,
+    },
+    # Task BC addendum 2: 10 DEMO1_LONGCTX_30 entries with the largest T2S arm A prompts.
+    DEMO2_GROWTH_10_SHA256: {
+        "name": "DEMO2_GROWTH_10",
+        "n": 10,
+        "path": "derived/h1_hybrid/demo2/DEMO2_GROWTH_10.json",
+        "category": "multi_turn_long_context",
+        "seed": 20261021,
     },
 }
 ENTRY_PIN_DEFAULT: dict[str, Any] = {"sha256": W3_ENTRIES_SHA256, **ENTRY_PINS[W3_ENTRIES_SHA256]}

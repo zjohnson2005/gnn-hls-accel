@@ -194,7 +194,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-21 (Task BB). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-21 (Task BC). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -289,6 +289,15 @@ session start; update it in the same commit as the work. Never delete a row.
   Qwen3-4B's 40,960 positions (8 runs); GenAI enforces no limit by default; "context held" is not
   valid above 40,960. Stall watchdog (--stall-watchdog-s) built. P11-B registered; T2S script
   run_window_t2s_hang.sh now runs P11-B; X0-XPS queued (run_window_xps_x0.sh).
+- 2026-10-21 (Task BC, analysis/demo2_pilots/BC/): P11-B T2S: entry 123 is a context-overrun loop
+  (X0 cddcd9fd 21 steps to 98,165 tokens, 26 min, no stall; random tokens loop above 65k, not at <= 40,960);
+  a 40,960 cap converts it (e66a2a89). Repo facts: hybrid Qwen3-4B; thinking off by template; IR rt_info
+  AWQ True / scale_estimation False (card says True); max_new_tokens 512 everywhere; a5d19dcc 18,500 =
+  OpenCL event error in turn 2. Registered before any held-out run: revised arms
+  (docs/amendments/DEMO2_ARMS_REVISED_2026-10-21.md; predictions: revised C not a material $ win vs A on
+  either host) and per-device profiles + T2S ladder R0-R6 (DEMO2_PER_DEVICE_2026-10-21.md). L1 ran: K 1,024
+  h70t30. Harness: --retention-k/-shape/-age-mask/-cloud-raw, demo2_ladder_l1/l4, pins DEMO2_CONFIRM_200 /
+  DEMO2_GROWTH_10. Scripts run_window_t2s_ladder.sh / run_window_xps_ladder.sh. XPS X0 d0dd5a37 pending.
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.

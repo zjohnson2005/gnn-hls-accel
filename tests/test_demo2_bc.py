@@ -216,3 +216,36 @@ def test_bc_predictions_reproduce_registered_arm_a() -> None:
     for c in ("B-X", "C-X", "B-T", "C-T"):
         for b in ("lo", "point", "hi"):
             assert doc["per_cell_usd"][c][b]["gold_local_turns_over_32768"] == 0
+
+
+def test_l4_p90_nearest_rank() -> None:
+    from tools.demo2_ladder_l4 import p90_of
+
+    assert p90_of([1.0, 2.0, 3.0]) == 3.0
+    assert p90_of([5.0]) == 5.0
+    assert p90_of([float(i) for i in range(1, 11)]) == 9.0
+
+
+def test_l4_verdict_u4_and_default() -> None:
+    from tools.demo2_ladder_l4 import _verdict
+
+    ok_u4 = {"backend": "PA", "sdpa_fallback_warning": False, "kv_cache_precision": "u4"}
+    assert _verdict(ok_u4, "u4")["valid"]
+    assert not _verdict({**ok_u4, "kv_cache_precision": "i8"}, "u4")["valid"]
+    assert not _verdict({**ok_u4, "backend": "SDPA"}, "u4")["valid"]
+
+
+def test_per_device_pins_disjoint_and_registered() -> None:
+    import hashlib
+
+    from tools import demo2_per_device_pins as pins
+    from tools.run_h1_hybrid import ENTRY_PINS
+
+    meta = json.loads((ROOT / "derived/h1_hybrid/demo2/DEMO2_CONFIRM_200.meta.json").read_text())
+    assert meta["n"] == 200 and not set(meta["selected"]) & pins.excluded_ids()
+    for name in ("DEMO2_CONFIRM_200", "DEMO2_GROWTH_10"):
+        raw = (ROOT / f"derived/h1_hybrid/demo2/{name}.json").read_bytes()
+        sha = hashlib.sha256(raw).hexdigest()
+        assert ENTRY_PINS[sha]["name"] == name
+    growth = [i for i, _ in pins.select_growth()]
+    assert growth[0] == "multi_turn_long_context_123" and len(growth) == 10

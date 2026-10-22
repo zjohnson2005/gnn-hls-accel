@@ -295,6 +295,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.cache_dir is not None:
         doc["cache_dir_check"] = cache_dir_check(ov, ir_xml, args.device, args.cache_dir)
     print(json.dumps(doc, indent=2, default=str))
+    print("L0_DONE", flush=True)
     return 0
 
 

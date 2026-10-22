@@ -3490,3 +3490,10 @@ for Claude in this session; Zach pushes).
   Revised C point: XPS -12% vs A, T2S +73% vs A. The research report's $0.046 was the old arm C.
 - Facts (analysis/demo2_pilots/BC/REPO_FACTS.md): the v2 pin's recipe fields scale_estimation/dataset
   copy the card; the IR rt_info says scale_estimation False, dataset null. Pins not edited.
+- REGISTERED before any run it governs (Task BC addendum 2, approved "yes"): docs/amendments/
+  DEMO2_PER_DEVICE_2026-10-21.md, sha256 b7152a31000fe0f921357c0b47e69d8b2b6271952442f5dba32888582895e6f7. Written after DEMO2_ARMS_REVISED (17a102e) and
+  L1 (65bb249) because the request arrived after them; it changes nothing L1 decided and replaces the
+  L4 budget rule before any L4 run. Pins DEMO2_CONFIRM_200 / DEMO2_GROWTH_10 added to ENTRY_PINS.
+- L1 (65bb249) chose K 1,024 h70t30 (registered rule); arm C and every per-device profile use it.
+- P11-B T2S closeout (96b2a87): context-overrun regime; cap 40,960 converts the failure; chunk 4,096
+  does not change it; no STALL on the T2S. XPS X0 d0dd5a37 pending.
