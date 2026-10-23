@@ -30,6 +30,13 @@ C = extends (paper 2 or appendix). Priority orders work; it never removes it.
 
 Deadlines: draft to Dr. Hao Nov 2; data freeze Nov 16; ISPASS December.
 
+### PLAN LOCK (2026-10-23, Task BN): read this first
+docs/PLAN_LOCK_2026-10-23.md (sha256 1864d79f5c47a194577330e4d2b296fe7353c1c3dd6aaf5796f16627559d145e) locks the title ("Beyond the KV Cache: A Context
+Roofline for LLM Agents on Consumer AI PCs"), the thesis, the experiment set (DEMO-2 through 72e499f;
+CTXKV-E1E2; CC + A1-A36 with the v3 queues), the schedule and the change rule. No new cells, arms,
+predictions, thresholds, title or thesis changes; only red flags R1-R10 trigger re-evaluation, and
+Zach decides. Where the plan of record below differs (e.g. the earlier title), the lock governs.
+
 ### Plan of record as of 2026-10-23 (Task BJ)
 
 - **Paper (current priority):** ISPASS 2027, "Not the KV Cache: Memory Tiers Set the Context

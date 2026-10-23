@@ -89,6 +89,11 @@ committed or pushed from them.
 8. Do not revive withdrawn directions. Search before any "first" or novelty
    claim and log the search in docs/RELATED_SEARCHES.md.
 9. Concise, plain language in reports. State errors plainly.
+10. PLAN LOCK (2026-10-23, docs/PLAN_LOCK_2026-10-23.md): no new cells, arms, predictions,
+   thresholds, title or thesis changes. Only red flags R1-R10 trigger re-evaluation: on one, park the
+   current cell safely, change nothing, report it FIRST under "RED FLAG" with run_ids; Zach decides.
+   Every closeout report starts with R1-R10 as PASS / RED FLAG / NOT YET MEASURED. Accuracy-only
+   wording fixes are allowed and logged in AUDIT_LOG.md.
 
 ## Number prohibitions and analysis integrity
 
@@ -196,7 +201,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-23 (Task BM). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-23 (Task BN, PLAN LOCK). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -383,6 +388,9 @@ session start; update it in the same commit as the work. Never delete a row.
   - Queues ~/seam_closeout_1013/xps/run_queue_{t2s,xps}_cc_v3.sh (the v2 scripts are superseded).
   - Not scripted: A26 battery pass and A27 (gates need AC); A28; A15/A16/A35 and A30-active on the
     T2S (Rithwik).
+- 2026-10-23 ~12:35 PM ET (Task BN): PLAN LOCK, docs/PLAN_LOCK_2026-10-23.md.
+  - Title: "Beyond the KV Cache: A Context Roofline for LLM Agents on Consumer AI PCs".
+  - Thesis, experiment set, schedule and red flags R1-R10 are locked (rule 10).
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.

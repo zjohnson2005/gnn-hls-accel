@@ -3617,3 +3617,10 @@ for Claude in this session; Zach pushes).
   - gpu_only_i8 arm in configs/delta_n.yaml.
 - New queue scripts run_queue_{t2s,xps}_cc_v3.sh. The v2 scripts are superseded and unchanged.
 - No discard.
+
+## 2026-10-23 ~12:35 PM ET (Task BN, PLAN LOCK; Mac only, $0, docs only)
+- docs/PLAN_LOCK_2026-10-23.md (sha256 1864d79f5c47a194577330e4d2b296fe7353c1c3dd6aaf5796f16627559d145e): locked title, thesis, experiment set (DEMO-2 through
+  72e499f; CTXKV-E1E2; CC + A1-A36 with the v3 queues), schedule, change rule, red flags R1-R10, and the
+  closeout duty. Approval: Zach, about 12:30 PM ET (verbatim intent in the file).
+- Pointers: registry section 0; CLAUDE.md rule 10 and current state. No cell, prediction, threshold or
+  script changed.
