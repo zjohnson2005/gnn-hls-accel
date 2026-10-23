@@ -3547,5 +3547,8 @@ for Claude in this session; Zach pushes).
   host input; BF0 regenerates byte-identically, unchanged); F2 non-dollar family registered with
   DERIVED predictions DEMO2_BH_F2_PREDICTIONS.json (bbf01fce...). Disclosed: F2 was added after the
   reports flagged small dollar effects, and its predictions use calibration walls already read in BF.
+- CTXKV_E1E2_2026-10-23.md (sha256 84b373a3...): E1/E2 registered as a separate experiment;
+  predictions CTXKV_E1E2_PREDICTIONS.json (8d28c04f...). Pilot inputs are Rithwik's, without run_ids
+  here, and labelled PILOT.
 - No discard. No runner or queue script change. DEMO-2 arms, pins, budgets, PSPEC, cap, replay and
   every earlier prediction unchanged. Held-out EXPECT_HEAD moves to the last Task BH commit.

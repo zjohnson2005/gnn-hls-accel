@@ -1,0 +1,227 @@
+{
+  "id": "CTXKV_E1E2_PREDICTIONS",
+  "status": "registered with docs/registrations/CTXKV_E1E2_2026-10-23.md before any E1/E2 run; DERIVED from PILOT / ASSUMED / LITERATURE inputs (labelled)",
+  "generator": "tools/ctxkv_e1e2_predict.py",
+  "runner_must_not_read_this_file": true,
+  "inputs": {
+    "pilot_pass_by_window_qwen3_14b_AMD": {
+      "4096": 0.58,
+      "8192": 0.647,
+      "16384": 0.873,
+      "40960": 0.887
+    },
+    "pilot_pass_4096_protected": 0.7,
+    "pilot_session_min": {
+      "R_f16": 214.8,
+      "X1_q8_0": 75.4
+    },
+    "q_cloud_assumed": 0.95,
+    "discordance_assumed": 0.08,
+    "n_confirm": 200,
+    "nsim": 400,
+    "boot": 2000,
+    "seed": 20261023
+  },
+  "E1": {
+    "primary_order": "XPS, then AMD (fixed sequence; REG E1.6)",
+    "X_window_16384": {
+      "p_A_4096": 0.58,
+      "p_X": 0.873,
+      "mcnemar_X_vs_A_power_n200": 1.0,
+      "delta_escalations_per_1000": {
+        "Q_t=0.85": {
+          "analytic_point": 729.7,
+          "sim_p025": 542.4,
+          "sim_p975": 800.1,
+          "power_ci_excludes_0": 1.0,
+          "n": 200
+        },
+        "Q_t=0.9": {
+          "analytic_point": 514.2,
+          "sim_p025": 240.7,
+          "sim_p975": 883.1,
+          "power_ci_excludes_0": 0.853,
+          "n": 200
+        }
+      }
+    },
+    "X_window_40960": {
+      "p_A_4096": 0.58,
+      "p_X": 0.887,
+      "mcnemar_X_vs_A_power_n200": 1.0,
+      "delta_escalations_per_1000": {
+        "Q_t=0.85": {
+          "analytic_point": 729.7,
+          "sim_p025": 624.9,
+          "sim_p975": 807.2,
+          "power_ci_excludes_0": 1.0,
+          "n": 200
+        },
+        "Q_t=0.9": {
+          "analytic_point": 658.5,
+          "sim_p025": 314.0,
+          "sim_p975": 920.0,
+          "power_ci_excludes_0": 0.865,
+          "n": 200
+        }
+      }
+    },
+    "relative_saving_at_Qt_0.95q": {
+      "q=0.9": 1.0,
+      "q=0.95": 0.718,
+      "q=0.98": 0.461
+    },
+    "X_vs_R_AMD_128GB": {
+      "statement": "about zero: X (largest fitting window, q8_0 KV + FA) and R (40,960, f16) both run 40,960 on 128 GB; pilot 16,384 vs 40,960 12.7% vs 11.3% wrong (p ~ 0.72)",
+      "delta_escalations_per_1000": {
+        "Q_t=0.85": {
+          "analytic_point": 0.0,
+          "sim_p025": -0.7,
+          "sim_p975": 0.0,
+          "power_ci_excludes_0": 0.0,
+          "n": 200
+        },
+        "Q_t=0.9": {
+          "analytic_point": 0.0,
+          "sim_p025": -184.9,
+          "sim_p975": 195.1,
+          "power_ci_excludes_0": 0.0,
+          "n": 200
+        }
+      }
+    },
+    "kv_cache_gib": {
+      "qwen3:8b": {
+        "f16@4096": 0.56,
+        "f16@16384": 2.25,
+        "f16@40960": 5.62,
+        "q8_0@4096": 0.3,
+        "q8_0@16384": 1.2,
+        "q8_0@40960": 2.99
+      },
+      "qwen3:14b": {
+        "f16@4096": 0.62,
+        "f16@16384": 2.5,
+        "f16@40960": 6.25,
+        "q8_0@4096": 0.33,
+        "q8_0@16384": 1.33,
+        "q8_0@40960": 3.32
+      }
+    },
+    "secondaries": {
+      "wrong_answer_rate": {
+        "A_4096": 0.42,
+        "X": [
+          0.113,
+          0.127
+        ],
+        "source": "PILOT (n = 150, qwen3:14b, AMD)"
+      },
+      "silent_failure_rate": {
+        "A_4096": "every failure silent (PILOT: Ollama truncates without an error)",
+        "X": "overflow failures loud BY CONSTRUCTION (client token count refuses and escalates); X's in-window wrong answers stay silent and are counted"
+      }
+    },
+    "XPS_R_fit": {
+      "statement": "R (qwen3:8b, f16 KV, 40,960) needs about 5 GB weights + 5.6 GiB KV against the XPS's default GPU share (about 8 GB, report figure, to be measured by the fit sweep): predicted NOT to fit; if so R is recorded 'does not fit' and X vs R is not tested on the XPS",
+      "kv_f16_40960_gib": 5.62,
+      "kv_q8_0_40960_gib": 2.99
+    },
+    "dollars": {
+      "formula": "dUSD per 1,000 = dEscalations x c_esc; c_esc = replayed per-entry cost of the escalated tasks from the shared cloud-only log (cache-aware, PF 1 formula with read multiplier 0.05 on 5.5-tier models)",
+      "prior_c_esc_usd": [
+        0.01,
+        0.03
+      ],
+      "prior_dUSD_per_1000_at_Qt_0.85": [
+        7.3,
+        21.9
+      ],
+      "cache_hit_sweep_input_multiplier": {
+        "0.55": 0.4775,
+        "0.7": 0.335,
+        "0.9": 0.145,
+        "0.95": 0.0975
+      },
+      "price_sheet_per_mtok_list": {
+        "input": 2.0,
+        "write_5m": 2.5,
+        "read": 0.1,
+        "output": 10.0
+      },
+      "price_sheet_minus_50pct": {
+        "input": 1.0,
+        "write_5m": 1.25,
+        "read": 0.05,
+        "output": 5.0
+      }
+    },
+    "odds_judgement": {
+      "source": "research report 'Win cost where device defaults break' (registered judgement, not a measurement)",
+      "X_beats_A_on_local_pass": "85-90%",
+      "cost_endpoint_excludes_0_at_Qt_0.85": "about 85%",
+      "meaningful_win_over_R_on_AMD": "under 10%"
+    }
+  },
+  "E2": {
+    "cost_formula": "usd_per_session = (BOX_USD / (LIFE_Y x 12 x ACTIVE_H_MONTH) + WATTS/1000 x USD_KWH) x t_session_h / p_complete (active-hour basis); full-utilization basis uses LIFE_Y x 8760 h",
+    "cost_inputs_defaults": {
+      "box_usd": 2000.0,
+      "life_years": 3.0,
+      "wall_watts": 120.0,
+      "usd_per_kwh": 0.16,
+      "active_h_per_month": 160.0,
+      "replace_with": "measured wall power and duty cycle, actual purchase price"
+    },
+    "AMD_R_pilot": {
+      "usd_per_session_active_hour_basis": 1.312,
+      "usd_per_session_full_utilization": 0.341,
+      "sessions_per_machine_day": 6.7
+    },
+    "AMD_X1_pilot": {
+      "usd_per_session_active_hour_basis": 0.46,
+      "usd_per_session_full_utilization": 0.12,
+      "sessions_per_machine_day": 19.1
+    },
+    "AMD_X1_over_R_session_ratio": {
+      "point": 2.85,
+      "band": [
+        2.0,
+        3.7
+      ],
+      "band_derivation": "upper = point x 1.3 = 3.70; lower = 2.0, the report's replication criterion (wider than point / 1.3 = 2.19)"
+    },
+    "attribution_X0": {
+      "statistic": "s = ln(t_R / t_X0) / ln(t_R / t_X1) (share of the X1 gain that FA alone gives)",
+      "prediction": "s >= 0.5 (FA / memory fit carries most of it)",
+      "odds_judgement": "65-75% (report: 25-35% that KV precision carries it)"
+    },
+    "cross_device": {
+      "XPS_u4_over_i8_sessions_per_day_at_4_concurrent": {
+        "point": 1.325,
+        "band": [
+          1.0,
+          1.5
+        ],
+        "derivation": "capacity bound by the resident limit: u4 26,500 / u8 20,000 (e4a22dac / cf3555d5; u8 is the measured 8-bit proxy for the i8 default); band: 1.0 if memory does not bind at the chosen contexts, 1.5 = one extra 8,192-token session in 20,000 vs 26,500"
+      },
+      "T2S_u4_over_i8_sessions_per_day": {
+        "point": 1.082,
+        "band": [
+          0.9,
+          1.2
+        ],
+        "derivation": "64 GB never binds; decode-rate gain only, 1.082 at 12,000 (0a55c316 / 29209e26)"
+      },
+      "pattern": "large on 16 GB (XPS) and 128 GB (AMD, f16 at 40,960 x sessions), near-null (<= 1.2x) on the 64 GB T2S"
+    },
+    "accuracy_noninferiority": {
+      "margin_points": -5,
+      "test": "paired, one-sided 95% lower bound of (X - R) pass rate > -0.05",
+      "power_n200_disc_0.08": 0.801,
+      "power_n300_disc_0.08": 0.916,
+      "power_n200_disc_0.05": 0.934,
+      "prediction": "X1 within about 1 point of R (literature: W8A8KV8 within ~1 point, arXiv 2504.04823); X2 (q4_0 KV) gets its own test"
+    }
+  }
+}
