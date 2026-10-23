@@ -3560,3 +3560,17 @@ for Claude in this session; Zach pushes).
   were the queue scripts' guard lines, not window logs.
 - Schedule note: T2S held-out first; XPS held-out deferred until after Oct 27 (fixed sequence
   unchanged). No discard, no runner or queue script change. Held-out EXPECT_HEAD = this commit.
+
+## 2026-10-23 ~1 PM ET (Task BJ part C, CC context-ceiling registration; Mac only, $0)
+- docs/registrations/CC_CONTEXT_CEILING_2026-10-23.md: CC-PRECHECK (partial), CC-REH, CC-BYTES-XPS,
+  CC-MECH-XPS/T2S, CC-CEIL, CC-CLIFF-XPS (T2S BLOCKED), conditional/later and Rithwik-side rows.
+  Predictions derived/cc/CC_PREDICTIONS.json (DERIVED, tools/cc_predict.py), before any CC run.
+- CC-PRECHECK finding from committed records: the sealed XPS limits (553b3a5c, cf3555d5, e4a22dac)
+  read back the requested KV property and failed in turn 1 (uncapped n-token prefill); turn 2 is 183
+  tokens, so the strategy report's MIXED-step mechanism cannot bind in those probes. T2S limits
+  5c714535/051d2681/d2d5cc4a/56c116a6 are TTFT-bound, not memory limits.
+- Code, all default off: run_resident_limit --cc-cell/--low/--resolution/--points/--turn2-new-tokens/
+  --turn2-repeats/--gpu-mem-stats/--compiled-readback; child memory snapshots and compiled-KV capture;
+  tools/cc_mem_sidecar.ps1 (read-only PDH sampler), tools/cc_mem_trace.py. Default paths unchanged
+  (tests/test_cc_runner.py). New queue scripts (outside the repo): run_queue_t2s_cc.sh,
+  run_queue_xps_cc.sh. No existing script edited. No discard.

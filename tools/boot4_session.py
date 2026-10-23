@@ -54,6 +54,52 @@ def _resident_high() -> int:
     return RESIDENT_HIGH_OVERRIDE or RESIDENT_HIGH
 
 
+# CC cells (Task BJ, docs/registrations/CC_CONTEXT_CEILING_2026-10-23.md): bisection grid,
+# fixed points instead of bisection, turn-2 decode length and repeats, and child-side memory
+# and compiled-KV records. Empty = unchanged. Set only by tools/run_resident_limit.py flags.
+CC_OVERRIDE: dict[str, Any] = {}
+CC_CHILD_FLAGS = ("gpu_mem_stats", "compiled_readback")
+
+
+def set_cc_overrides(
+    *,
+    cell: str | None = None,
+    low: int | None = None,
+    resolution: int | None = None,
+    points: tuple[int, ...] | None = None,
+    turn2_new_tokens: int | None = None,
+    turn2_repeats: int | None = None,
+    gpu_mem_stats: bool = False,
+    compiled_readback: bool = False,
+) -> None:
+    global CC_OVERRIDE
+    out: dict[str, Any] = {}
+    for key, value in (
+        ("cell", cell),
+        ("low", low),
+        ("resolution", resolution),
+        ("turn2_new_tokens", turn2_new_tokens),
+        ("turn2_repeats", turn2_repeats),
+    ):
+        if value is not None:
+            out[key] = value
+    if points:
+        out["points"] = tuple(int(n) for n in points)
+    if gpu_mem_stats:
+        out["gpu_mem_stats"] = True
+    if compiled_readback:
+        out["compiled_readback"] = True
+    CC_OVERRIDE = out
+
+
+def _resident_low() -> int:
+    return int(CC_OVERRIDE.get("low") or RESIDENT_LOW)
+
+
+def _resident_resolution() -> int:
+    return int(CC_OVERRIDE.get("resolution") or RESIDENT_RESOLUTION)
+
+
 def runner_body_is_stub(path: Path) -> bool:
     return STUB_MARK in path.read_text(encoding="utf-8")
 
@@ -233,6 +279,9 @@ def _child_spec(harness: dict[str, Any], arm_id: str, work: Path) -> dict[str, A
     spec["filler_unit"] = harness["filler_unit"]
     if SCHEDULER_OVERRIDE is not None:
         spec["scheduler_config"] = dict(SCHEDULER_OVERRIDE)
+    for flag in CC_CHILD_FLAGS:
+        if CC_OVERRIDE.get(flag):
+            spec[flag] = True
     return spec
 
 
@@ -883,6 +932,29 @@ def run_resident_limit_smoke(*, arm: str, model_spec: Path) -> int:
     return 0 if record.get("outcome") == "pass" else 1
 
 
+def fixed_points(points: tuple[int, ...], attempt: Any) -> dict[str, Any]:
+    """CC cells: attempt each listed n once, in the listed order (no bisection).
+
+    largest_n_cached is the largest listed n that held; first_fail_n_cached the smallest that
+    did not. Both are descriptive; a fixed-point cell does not search for a limit.
+    """
+    pts = [attempt(int(n)) for n in points]
+    held = [int(p["n_cached"]) for p in pts if p.get("holds")]
+    failed = [int(p["n_cached"]) for p in pts if not p.get("holds")]
+    out: dict[str, Any] = {
+        "largest_n_cached": max(held) if held else None,
+        "failure_in_range": bool(failed),
+        "passing_turn2_ttft_s": {
+            str(p["n_cached"]): p.get("turn2_ttft_s") for p in pts if p.get("holds")
+        },
+        "points": pts,
+        "note": "fixed points (CC cell), not a bisection",
+    }
+    if failed:
+        out["first_fail_n_cached"] = min(failed)
+    return out
+
+
 def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: Path) -> int:
     """Bisect the largest n_cached a resident session holds. One attempt per rung."""
     from seam.tools.delta_n import measured_repeat
@@ -890,6 +962,10 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
 
     gates = require_gates()
     harness = load_harness(model_spec)
+    points = tuple(CC_OVERRIDE.get("points") or ())
+    turn2_new_tokens = int(CC_OVERRIDE.get("turn2_new_tokens") or 1)
+    turn2_repeats = int(CC_OVERRIDE.get("turn2_repeats") or 1)
+    planned = max(RESIDENT_PLANNED_PROBES, len(points))
     out_dir.mkdir(parents=True, exist_ok=True)
     _publish_cell_status("running", session_id)
     plan: dict[str, Any] = {
@@ -899,28 +975,32 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
         "arm": arm,
         "model_spec": str(harness["model_spec"]),
         "model_name": harness["model_name"],
-        "low": RESIDENT_LOW,
+        "low": _resident_low(),
         "high": _resident_high(),
-        "resolution": RESIDENT_RESOLUTION,
+        "resolution": _resident_resolution(),
         "one_attempt_per_rung": True,
         "pass": "turn 1 completes and turn 2 runs",
         "delta_tokens": DELTA_TOKENS,
-        "turn2_repeats": 1,
+        "turn2_repeats": turn2_repeats,
         "residency": "RESIDENT",
-        "planned_probe_count": RESIDENT_PLANNED_PROBES,
+        "planned_probe_count": planned,
         "gates": gates,
         "status": "running",
     }
     if SCHEDULER_OVERRIDE is not None:
         # DEMO-2 pilot P3 only; absent otherwise so existing plans are unchanged.
         plan["scheduler_config"] = dict(SCHEDULER_OVERRIDE)
+    if CC_OVERRIDE:
+        # CC cells only (Task BJ); absent otherwise so existing plans are unchanged.
+        plan["cc"] = {k: (list(v) if isinstance(v, tuple) else v) for k, v in CC_OVERRIDE.items()}
+        plan["turn2_max_new_tokens"] = turn2_new_tokens
     plan_path = out_dir / "plan.json"
     _write(plan_path, plan)
     guard = _open_canary(
         model_spec=_canary_model([harness["model_spec"]]),
         work=out_dir / "work",
         plan_path=plan_path,
-        planned=RESIDENT_PLANNED_PROBES,
+        planned=planned,
     )
     plan["canary"] = guard.plan_fragment()
     _write(plan_path, plan)
@@ -928,22 +1008,25 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
     recorded: list[dict[str, Any]] = []
 
     def attempt(n_cached: int) -> dict[str, Any]:
+        # A repeated n (CC repeat cells only) gets a suffix so no record is overwritten.
+        k = sum(1 for p in recorded if int(p["n_cached"]) == int(n_cached))
+        sfx = f"_r{k}" if k else ""
         work = out_dir / "work"
         spec = _child_spec(harness, arm, work)
         spec["resident_two_turn"] = True
         spec["n_cached"] = int(n_cached)
         spec["delta_tokens"] = DELTA_TOKENS
-        spec["turn2_repeats"] = 1
+        spec["turn2_repeats"] = turn2_repeats
         spec["turn1_max_new_tokens"] = 1
-        spec["turn2_max_new_tokens"] = 1
+        spec["turn2_max_new_tokens"] = turn2_new_tokens
         measured = measured_repeat(
             root=ROOT,
             cfg=harness["cfg"],
             p_cpus=harness["p_cpus"],
             work_dir=work,
             child_spec=spec,
-            label=f"resident-{arm}-n{n_cached}",
-            tag=f"n{n_cached}",
+            label=f"resident-{arm}-n{n_cached}{sfx}",
+            tag=f"n{n_cached}{sfx}",
         )
         child = measured["result"]
         classified = _point_failure(child)
@@ -969,7 +1052,13 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
             "hang_duration_s": child.get("hang_duration_s"),
             "hang_disposition": child.get("hang_disposition"),
         }
-        _write(out_dir / "points" / f"n{n_cached}.json", point)
+        if CC_OVERRIDE:
+            point["turn2"] = turn2
+            point["cc_mem"] = (child.get("child") or {}).get("cc_mem")
+            point["compiled_kv"] = [
+                ld.get("compiled") for ld in ((child.get("child") or {}).get("loads") or [])
+            ]
+        _write(out_dir / "points" / f"n{n_cached}{sfx}.json", point)
         recorded.append(point)
         probes_log.append({"wall_s": child.get("parent_wall_s")})
         guard.after_probe(probes_log)
@@ -977,12 +1066,15 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
 
     try:
         guard.opening()
-        found = bisect_holds(
-            low=RESIDENT_LOW,
-            high=_resident_high(),
-            resolution=RESIDENT_RESOLUTION,
-            attempt=attempt,
-        )
+        if points:
+            found = fixed_points(points, attempt)
+        else:
+            found = bisect_holds(
+                low=_resident_low(),
+                high=_resident_high(),
+                resolution=_resident_resolution(),
+                attempt=attempt,
+            )
     except CanaryDriftAbort as exc:
         summary = {
             "kind": "resident_limit",
@@ -1007,9 +1099,9 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
         "passing_turn2_ttft_s": found["passing_turn2_ttft_s"],
         "points": found["points"],
         "search": {
-            "low": RESIDENT_LOW,
+            "low": _resident_low(),
             "high": _resident_high(),
-            "resolution": RESIDENT_RESOLUTION,
+            "resolution": _resident_resolution(),
             "one_attempt": True,
         },
     }

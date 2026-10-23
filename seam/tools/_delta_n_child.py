@@ -17,6 +17,7 @@ leaves behind the phase it reached. A missing field is therefore evidence, not a
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import time
 import traceback
@@ -28,6 +29,33 @@ import psutil
 
 MB = 1024.0 * 1024.0
 _REPLACE_POLICY: tuple[int, float] | None = None
+
+
+def cc_mem_snapshot(stage: str, cores: dict[str, Any]) -> dict[str, Any]:
+    """CC cells (Task BJ; spec gpu_mem_stats): one memory record, outside any timed generate.
+
+    GPU_MEMORY_STATISTICS is read through the Core used for the load (same plugin state as the
+    KV readback). Whether it sees GenAI's allocations is UNVERIFIED until a smoke shows bytes
+    that grow with n; any read that fails is recorded as an error string, never raised.
+    """
+    import os
+
+    from seam.turn_memory import read_gpu_counters
+
+    stats: dict[str, Any] = {}
+    for device, core in cores.items():
+        try:
+            raw = core.get_property(device, "GPU_MEMORY_STATISTICS")
+            stats[device] = {str(k): int(v) for k, v in dict(raw).items()}
+        except Exception as exc:  # recorded, never raised
+            stats[device] = {"error": f"{type(exc).__name__}: {str(exc)[:300]}"}
+    return {
+        "stage": stage,
+        "t_unix": time.time(),
+        "system": _mem(),
+        "gpu_memory_statistics": stats,
+        "gpu_process_counters": read_gpu_counters(os.getpid()),
+    }
 
 
 def result_replace_policy() -> tuple[int, float]:
@@ -201,6 +229,7 @@ def _run_with_power(spec: dict[str, Any], writer: _Writer) -> int:
     loads: list[dict[str, Any]] = []
     pipes: dict[str, Any] = {}
     kv_precision_records: list[dict[str, Any]] = []
+    cores: dict[str, Any] = {}
 
     # Load order matters and is declared by the parent: the standing accelerator is compiled
     # first, because "enabled" means resident before the measured work begins.
@@ -215,13 +244,22 @@ def _run_with_power(spec: dict[str, Any], writer: _Writer) -> int:
         core = ov.Core()
         if requested_kv is not None:
             core.set_property(device, {"KV_CACHE_PRECISION": properties["KV_CACHE_PRECISION"]})
-        if sched_spec is not None:
-            from seam.genai_runtime import build_scheduler_config
+        cores[device] = core
+        capture: contextlib.AbstractContextManager[dict[str, Any]] = contextlib.nullcontext(
+            {"text": None}
+        )
+        if spec.get("compiled_readback"):
+            from seam.genai_runtime import capture_native_output
 
-            sched = {"scheduler_config": build_scheduler_config(ov_genai, dict(sched_spec))}
-            pipes[device] = ov_genai.LLMPipeline(model_dir, device, sched, **properties)
-        else:
-            pipes[device] = ov_genai.LLMPipeline(model_dir, device, **properties)
+            capture = capture_native_output()
+        with capture as captured:
+            if sched_spec is not None:
+                from seam.genai_runtime import build_scheduler_config
+
+                sched = {"scheduler_config": build_scheduler_config(ov_genai, dict(sched_spec))}
+                pipes[device] = ov_genai.LLMPipeline(model_dir, device, sched, **properties)
+            else:
+                pipes[device] = ov_genai.LLMPipeline(model_dir, device, **properties)
         compile_s = time.perf_counter() - t0
         after = _mem()
         kv_check = enforce_kv_cache_precision(device=device, requested=requested_kv, core=core)
@@ -241,6 +279,10 @@ def _run_with_power(spec: dict[str, Any], writer: _Writer) -> int:
         }
         if sched_spec is not None:
             load_rec["scheduler_config"] = dict(sched_spec)
+        if spec.get("compiled_readback"):
+            from seam.genai_runtime import parse_genai_load_log
+
+            load_rec["compiled"] = parse_genai_load_log(str(captured.get("text") or ""))
         loads.append(load_rec)
         writer.update(
             phase=f"loaded:{device}",
@@ -283,7 +325,16 @@ def _run_with_power(spec: dict[str, Any], writer: _Writer) -> int:
     pipe = pipes[generate_device]
 
     if spec.get("resident_two_turn"):
-        return _resident_two_turn(spec, writer, pipe, ov_genai)
+        mem_probe = None
+        if spec.get("gpu_mem_stats"):
+            cc_mem: list[dict[str, Any]] = [cc_mem_snapshot("loaded", cores)]
+            writer.update(cc_mem=list(cc_mem))
+
+            def mem_probe(stage: str) -> None:
+                cc_mem.append(cc_mem_snapshot(stage, cores))
+                writer.update(cc_mem=list(cc_mem))
+
+        return _resident_two_turn(spec, writer, pipe, ov_genai, mem_probe=mem_probe)
 
     if spec.get("build_exact_n") is not None:
         from seam.tools.boot4_text import rendered_exact_prompt
@@ -482,7 +533,13 @@ def _rendered_ids(tokenizer: Any, history: Any) -> list[int] | None:
         return None
 
 
-def _resident_two_turn(spec: dict[str, Any], writer: _Writer, pipe: Any, ov_genai: Any) -> int:
+def _resident_two_turn(
+    spec: dict[str, Any],
+    writer: _Writer,
+    pipe: Any,
+    ov_genai: Any,
+    mem_probe: Callable[[str], None] | None = None,
+) -> int:
     """One turn-1 fill, then turn-2 repeats on histories that share only that prefix.
 
     turn2_path "user_followup" (default, sealed WARM-KV): turn 2 = turn-1 user
@@ -526,6 +583,8 @@ def _resident_two_turn(spec: dict[str, Any], writer: _Writer, pipe: Any, ov_gena
         turn1 = _chat_once(pipe, history, cfg1, ov_genai)
     except Exception as exc:
         return _fail_turn(writer, "turn1", exc)
+    if mem_probe is not None:
+        mem_probe("after_turn1")
     reported = turn1.get("prompt_tokens_reported")
     if reported is not None and int(reported) != n_cached:
         return _fail_turn(
@@ -560,6 +619,8 @@ def _resident_two_turn(spec: dict[str, Any], writer: _Writer, pipe: Any, ov_gena
             rec = _chat_once(pipe, branch, cfg2, ov_genai)
         except Exception as exc:
             return _fail_turn(writer, "turn2", exc)
+        if mem_probe is not None:
+            mem_probe(f"after_turn2_{i}")
         rec["repeat"] = i
         rec["delta_tokens"] = delta_tokens
         rec.update(prefix_rec)
