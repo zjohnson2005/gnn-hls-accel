@@ -271,3 +271,11 @@ Done in this task from the committed records (derived/delta_prefill/*, derived/c
 | Closeout, values, meeting pack (TASK_BK_MEETING27.md) | Claude Code | Mon Oct 26 |
 | OK for CC-XRT-T2S / E2-T2S / any T2S setting change | Rithwik | before Sun Oct 25 noon to fit |
 | Mechanism go/no-go (fix prototype vs context-guard fallback) | Zach | Fri Nov 6 |
+
+## Gate text reconciliation (2026-10-23, Task BO; wording only)
+The Nov 6 mechanism go/no-go uses one gate wording everywhere:
+- held-out median absolute error <= 10% (target);
+- > 15% median = red flag R8 (docs/PLAN_LOCK_2026-10-23.md);
+- at least 30 held-out cells;
+- the binding ceiling called correctly in >= 90%.
+Source: docs/registrations/CC_AMEND_2026-10-23d_MODEL2.md section 4.

@@ -31,7 +31,7 @@ C = extends (paper 2 or appendix). Priority orders work; it never removes it.
 Deadlines: draft to Dr. Hao Nov 2; data freeze Nov 16; ISPASS December.
 
 ### PLAN LOCK (2026-10-23, Task BN): read this first
-docs/PLAN_LOCK_2026-10-23.md (sha256 1864d79f5c47a194577330e4d2b296fe7353c1c3dd6aaf5796f16627559d145e) locks the title ("Beyond the KV Cache: A Context
+docs/PLAN_LOCK_2026-10-23.md (sha256 36009c4ca833157d9f7a11352c14d742c4c8c24a4a09910a89e7d26cf895d6c7 after the Task BO addendum; 1864d79f... at Task BN) locks the title ("Beyond the KV Cache: A Context
 Roofline for LLM Agents on Consumer AI PCs"), the thesis, the experiment set (DEMO-2 through 72e499f;
 CTXKV-E1E2; CC + A1-A36 with the v3 queues), the schedule and the change rule. No new cells, arms,
 predictions, thresholds, title or thesis changes; only red flags R1-R10 trigger re-evaluation, and
@@ -244,6 +244,10 @@ Predictions: derived/cc/CC_PREDICTIONS.json (DERIVED, tools/cc_predict.py), CC_B
 | CC-OLLAMA-DEFAULT | Ollama default window by detected VRAM | H4 | B | REGISTERED (A30); XPS only if installed (no download); T2S detection only | XPS, T2S | predicted XPS 4K, T2S 32K |
 | CC-RITHWIK-A35 | Ollama/llama.cpp K/V types, flash attention, compute buffer on Strix Halo and the 4070 | H1 cross-vendor | A | CONDITIONAL (A35, Rithwik) | AMD, 4070 / Rithwik | reject when applied != requested |
 | CC-STREAM-HOG | decode at 8K under 0/2/4/8 STREAM-class threads | support | C | OPTIONAL (A28), not scripted | XPS | - |
+| CC-M2-ALLOC-XPS | Qwen3-8B INT4 allocator slope a at 1K/2K/3K, f16 and u4, r = 3 | H1 held-out (second model) | A | REGISTERED 2026-10-23 (Task BO, CC_AMEND_2026-10-23d_MODEL2.md sha256 1e997746facadecd37f75abaf449840c645950cd73e6954e5cf80f18bbc04d07; approved "Add Qwen3-8B"); predicted a 131,072 B/token [111,411, 150,733] | XPS / Zach | run_queue_xps_m2.sh after the v3 queue |
+| CC-M2-LIMIT-XPS | Qwen3-8B uncapped limits f16 / i8 / u4, 250 grid, r = 3 | H1 held-out | A | REGISTERED (Task BO); predicted 3,846 / 5,116 / 6,209 (+-15%) | XPS / Zach | retro sealed 8B points sit 22-26% below the law (analysis/cc/retro_8b.md; early warning) |
+| CC-M2-MECH-XPS | Qwen3-8B u4 cap-256 limit, r = 3 | H1 held-out | A | REGISTERED (Task BO); predicted 25,022 [21,269, 28,775]; KV bound 2.125x | XPS / Zach | - |
+| FLEET-FRONTIER | share of agent steps that fit per installed tier at defaults and at the law's ceiling | H4 | B | REGISTERED 2026-10-23 (Task BO, docs/registrations/FLEET_FRONTIER_2026-10-23.md); inputs pinned; results only after the Nov 6 gate | Mac / Zach | derived/fleet/ |
 
 ### 3d. Other rows kept open (relabelled 2026-10-23)
 
@@ -511,10 +515,16 @@ weekend and the XPS held-out moves to after the meeting.
 | Tue Oct 27 | Meeting: CC headline (two devices), router-flip $, DEMO-2 T2S result. XPS DEMO-2 held-out starts after it (est. about 1 day) |
 | Thu Oct 29 | Dr. Hao meeting (DEMO-2 result + paper plan) |
 | Oct 26 - Nov 6 | XPS CC cells (budget sweep, llama.cpp cross, E1-XPS); Rithwik AMD/4070 cells |
-| Fri Nov 6 | Mechanism go/no-go: fix prototype vs context-guard fallback |
+| Fri Nov 6 | Mechanism go/no-go: fix prototype vs context-guard fallback. Nov 6 gate (wording reconciled 2026-10-23, Task BO): held-out median absolute error <= 10% (target); > 15% median = red flag R8; >= 30 held-out cells; binding ceiling called correctly in >= 90% |
 | Nov 7 - Nov 22 | fix prototype measured; context-ceiling model fit + leave-one-device-out; reps; BFCL harness validated against a published number; artifact packaging |
 | Sun Nov 22 | Data freeze (11:59 PM) |
 | Nov 23 - Dec 11 | writing; draft to Dr. Hao about Dec 1; abstract Dec 8 (TBC); submission-ready Dec 11; paper Dec 15 (TBC; the ISPASS 2027 CFP is not posted) |
+
+Pre-existing tensions (Task BO; to be read against A19 max-allocation, A21, CC-GROW, A32; not
+verdicts): (1) 15367c3a ran a 67,947-token generate in a resident session (BB CONTEXT_OVER_LIMIT),
+far above the single-prefill B; (2) sealed 8-bit 20,000 (cf3555d5) and 18,000 (a5d19dcc) sit below the
+A21 band 20,921-21,486; (3) V5-CAL cached-prefix turns of 17-35 s (a178e9c5, e1ed06b4) vs the A23 law's
+~3.8 s (L 20K, delta 2K) / ~10 s at the V5-CAL shape. Details: CC_AMEND_2026-10-23d_MODEL2.md section 4.
 
 ### Earlier schedules (kept for the record)
 

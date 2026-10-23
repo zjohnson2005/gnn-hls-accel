@@ -1,0 +1,98 @@
+{
+  "id": "FLEET_PREDICTIONS",
+  "status": "registered with docs/registrations/FLEET_FRONTIER_2026-10-23.md before any fleet result; DERIVED; results only after the Nov 6 gate",
+  "generator": "tools/fleet_predict.py",
+  "inputs": {
+    "a_B_per_token": 96768,
+    "budget_xps_GiB": 3.412,
+    "W_plus_c0_GiB": 4.338,
+    "xps_visible_GiB_assumed": 15.5,
+    "firmware_GiB_assumed": 0.5,
+    "a19_rule": "replace the assumed XPS graphics tier with the A19 SharedSystemMemory; W + c0 follows, no refit"
+  },
+  "tiers": {
+    "8GiB": {
+      "graphics_tier_GiB": 3.75,
+      "budget_GiB": -0.59,
+      "L_mem_uncapped": {
+        "f16": 0,
+        "u4": 0
+      },
+      "L_mem_bounded_step": {
+        "f16": 0,
+        "u4": 0
+      },
+      "L_window": 40960,
+      "ollama_default_window": 4096
+    },
+    "16GiB": {
+      "graphics_tier_GiB": 7.75,
+      "budget_GiB": 3.41,
+      "L_mem_uncapped": {
+        "f16": 15000,
+        "u4": 26500
+      },
+      "L_mem_bounded_step": {
+        "f16": 24844,
+        "u4": 88333
+      },
+      "L_window": 40960,
+      "ollama_default_window": 4096
+    },
+    "32GiB": {
+      "graphics_tier_GiB": 15.75,
+      "budget_GiB": 11.41,
+      "L_mem_uncapped": {
+        "f16": 50172,
+        "u4": 88638
+      },
+      "L_mem_bounded_step": {
+        "f16": 83098,
+        "u4": 295459
+      },
+      "L_window": 40960,
+      "ollama_default_window": 4096
+    },
+    "64GiB": {
+      "graphics_tier_GiB": 47.5,
+      "budget_GiB": 43.16,
+      "L_mem_uncapped": {
+        "f16": 189763,
+        "u4": 335247
+      },
+      "L_mem_bounded_step": {
+        "f16": 314294,
+        "u4": 1117491
+      },
+      "L_window": 40960,
+      "ollama_default_window": 32768
+    },
+    "128GiB": {
+      "graphics_tier_GiB": 102.0,
+      "budget_GiB": 97.66,
+      "L_mem_uncapped": {
+        "f16": 429374,
+        "u4": 758561
+      },
+      "L_mem_bounded_step": {
+        "f16": 711151,
+        "u4": 2528538
+      },
+      "L_window": 40960,
+      "ollama_default_window": 262144
+    }
+  },
+  "award_report_fit_fractions_verbatim": {
+    "steam_mix_defaults": "~0-1.1%",
+    "16GB_measured_ceilings_15K_26.5K": "7-17% (Copilot fit), 3-8% (TraceLab-wide), 0% (TraceLab-tight)",
+    "16GB_capped_u4_88K_memory_feasible": "61% / 39% / 24% (past Qwen3-4B's window)"
+  },
+  "registered_predictions": {
+    "defaults_fit_fraction_max": 0.02,
+    "tier16_measured_ceiling_fit_fraction_band": [
+      0.0,
+      0.2
+    ],
+    "basis": "the award report's ranges, widened to whole bands; scored on the TraceLab CDF"
+  }
+}

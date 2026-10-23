@@ -78,6 +78,7 @@ def set_cc_overrides(
     conc: dict[str, Any] | None = None,
     dxgi_trace: bool = False,
     reject_kv_mismatch: bool = False,
+    canary_model_spec: str | None = None,
 ) -> None:
     global CC_OVERRIDE
     out: dict[str, Any] = {}
@@ -104,6 +105,8 @@ def set_cc_overrides(
         out["dxgi_trace"] = True
     if reject_kv_mismatch:
         out["reject_kv_mismatch"] = True
+    if canary_model_spec:
+        out["canary_model_spec"] = str(canary_model_spec)
     CC_OVERRIDE = out
 
 
@@ -143,6 +146,16 @@ def validity_fields(largest: int | None, window: dict[str, Any]) -> dict[str, An
         "L_valid": min(int(largest), mpe),
         "past_trained_positions": int(largest) > mpe,
     }
+
+
+def _cc_canary_specs(harness: dict[str, Any]) -> list[Path]:
+    """The measured model first, then --canary-model-spec if set (Task BO: a second-model cell
+    keeps the registered Qwen3-4B canary). Without the option the list is unchanged."""
+    specs = [harness["model_spec"]]
+    extra = CC_OVERRIDE.get("canary_model_spec")
+    if extra:
+        specs.append(Path(str(extra)))
+    return specs
 
 
 def _resident_low() -> int:
@@ -1053,7 +1066,7 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
     plan_path = out_dir / "plan.json"
     _write(plan_path, plan)
     guard = _open_canary(
-        model_spec=_canary_model([harness["model_spec"]]),
+        model_spec=_canary_model(_cc_canary_specs(harness)),
         work=out_dir / "work",
         plan_path=plan_path,
         planned=planned,
@@ -1211,7 +1224,7 @@ def run_cc_series(*, arm: str, model_spec: Path, session_id: str, out_dir: Path)
     _write(plan_path, plan)
     planned = max(RESIDENT_PLANNED_PROBES, len(steps))
     guard = _open_canary(
-        model_spec=_canary_model([harness["model_spec"]]),
+        model_spec=_canary_model(_cc_canary_specs(harness)),
         work=out_dir / "work",
         plan_path=plan_path,
         planned=planned,

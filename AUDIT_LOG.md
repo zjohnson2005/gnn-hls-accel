@@ -3624,3 +3624,28 @@ for Claude in this session; Zach pushes).
   closeout duty. Approval: Zach, about 12:30 PM ET (verbatim intent in the file).
 - Pointers: registry section 0; CLAUDE.md rule 10 and current state. No cell, prediction, threshold or
   script changed.
+
+## 2026-10-23 ~1:30-2:30 PM ET (Task BO, parallel Mac work while the queues run; Mac only, $0)
+- Part A: second-model amendment docs/registrations/CC_AMEND_2026-10-23d_MODEL2.md (sha256 1e997746facadecd37f75abaf449840c645950cd73e6954e5cf80f18bbc04d07;
+  approved "Add Qwen3-8B" about 1:05 PM ET) and predictions derived/cc/CC_M2_PREDICTIONS.json (sha256 930d3981a8dfc8802e917d20bead0448e04d4a65922c2d3eaf378fa4c3975d6e;
+  tools/cc_m2_predict.py).
+  - Default-off --canary-model-spec, so 8B cells keep the 4B canary.
+  - New queue ~/seam_closeout_1013/xps/run_queue_xps_m2.sh.
+  - PLAN_LOCK addendum (new sha256 36009c4ca833157d9f7a11352c14d742c4c8c24a4a09910a89e7d26cf895d6c7).
+- Part B, wording only: the Nov 6 gate is reconciled (median <= 10% target, > 15% red flag R8, >= 30
+  cells, binding >= 90%) in registry section 7, PLAN_LOCK and the CC registration (new sha256 9e85bdf3db6593c49b324f9ffc39830915c90eaa2dd1f54947ff38ab0d0bd039). Three
+  pre-existing tensions are recorded in the registry as "to be read against", not verdicts.
+- Part C: FLEET-FRONTIER registered (docs/registrations/FLEET_FRONTIER_2026-10-23.md sha256 cad49c9f126f4f208a027cac6dd5003f778e33022b3a64cd77aa0523c8c75ff0;
+  derived/fleet/FLEET_PREDICTIONS.json sha256 b1563eb81c7de9b711376a94368ee5230dca80f4a0eb482240bcc4ed3c7033e9).
+  - TraceLab v0.0.2 jsonl.gz downloaded to derived/fleet/raw/ and verified against the published
+    sha256 11ce51ec... It is gitignored.
+  - Schema check only; no results (rule: after Nov 6).
+- Part D: tools/figs/fig1-7, tools/redflags.py, tools/queue_status.py, tests. Figures read sealed records
+  and prediction JSONs only.
+- Part E: analysis/cc/cc_valid_2507_export.md (commands only; no download).
+- Part F: analysis/cc/retro_8b.md. The sealed 8B points sit 22-26% below the law (retrospective, not
+  scored).
+- Read from the T2S A14/A19 record (window_20261023_130443_cc_v3), read-only:
+  - SharedSystemMemory 48,634 MiB = ullTotalPhys 65,018 - 16,384 MiB, so R6 passes on the T2S;
+  - the OpenCL device total is 33.6 GiB (GPU_DEVICE_TOTAL_MEM_SIZE).
+- Nothing pushed. No queue script that a running queue reads was edited.

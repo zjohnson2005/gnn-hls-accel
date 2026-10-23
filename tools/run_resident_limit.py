@@ -94,6 +94,13 @@ def main(argv: list[str] | None = None) -> int:
         help="A31: fail a probe whose compiled KV type is unknown or differs from the request "
         "(needs --compiled-readback).",
     )
+    # Task BO (docs/registrations/CC_AMEND_2026-10-23d_MODEL2.md); off by default.
+    parser.add_argument(
+        "--canary-model-spec",
+        default=None,
+        help="Second-model cells: the Qwen3-4B spec the canary guard uses (the measured model is "
+        "not the canary model).",
+    )
     args = parser.parse_args(argv)
     points = (
         tuple(int(x) for x in str(args.points).split(",") if x.strip()) if args.points else None
@@ -146,6 +153,7 @@ def main(argv: list[str] | None = None) -> int:
         or args.sched_no_prefix_caching
         or args.dxgi_trace
         or args.reject_kv_mismatch
+        or args.canary_model_spec
     )
     if cc_used and not args.cc_cell:
         raise SystemExit("REFUSED -- CC options need --cc-cell")
@@ -181,6 +189,7 @@ def main(argv: list[str] | None = None) -> int:
         conc=conc,
         dxgi_trace=bool(args.dxgi_trace),
         reject_kv_mismatch=bool(args.reject_kv_mismatch),
+        canary_model_spec=args.canary_model_spec,
     )
     if not points and (_resident_high() - _resident_low()) % _resident_resolution() != 0:
         raise SystemExit("REFUSED -- high - low must be a multiple of the resolution")

@@ -391,6 +391,13 @@ session start; update it in the same commit as the work. Never delete a row.
 - 2026-10-23 ~12:35 PM ET (Task BN): PLAN LOCK, docs/PLAN_LOCK_2026-10-23.md.
   - Title: "Beyond the KV Cache: A Context Roofline for LLM Agents on Consumer AI PCs".
   - Thesis, experiment set, schedule and red flags R1-R10 are locked (rule 10).
+- 2026-10-23 afternoon (Task BO, parallel Mac work, local commits only):
+  - Second model Qwen3-8B registered (CC_AMEND_2026-10-23d_MODEL2.md; predictions CC_M2_PREDICTIONS.json;
+    queue run_queue_xps_m2.sh after the v3 queue). The PLAN_LOCK addendum adds it.
+  - Nov 6 gate wording reconciled; FLEET-FRONTIER registered (TraceLab pinned, results after Nov 6).
+  - Tools: tools/figs/fig1-7, tools/redflags.py, tools/queue_status.py.
+  - T2S A19 record: R6 PASS (48,634 = 65,018 - 16,384 MiB); the OpenCL device total is 33.6 GiB.
+  - Retro: the sealed 8B points sit 22-26% under the law (analysis/cc/retro_8b.md).
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.
