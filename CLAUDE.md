@@ -194,7 +194,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-22 (Task BF). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-22 (Task BH). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -320,6 +320,16 @@ session start; update it in the same commit as the work. Never delete a row.
   hosts, d_usd 0.0, d_lat 0.0045 T2S / 0.0471 XPS. cal_cloud a403befe $2.45 -> held-out cap $20. Replay
   scorer bug (BFCL checker name reuse) fixed in 24f9ed9 before any value. Records
   derived/demo2_pilots/windows_20261022/. Next: Zach pushes, then held-out on both hosts (FROM=30).
+- 2026-10-22 ~10:30 PM ET (Task BH, approved "ok register everything new"; APPROVALS_2026-10-23.md):
+  no held-out record exists. DEMO-2 amendment docs/amendments/DEMO2_AMEND_2026-10-23_OBJECTIVES.md:
+  P/C vs I-4K equal on both hosts is NOT a bug (I-4K reference has no host input; BF0 unchanged);
+  F2 non-dollar family (silent overrun [by construction, outside Holm], wall per entry,
+  time-to-failure, hang/loop) x (A vs P, A vs C), m = 6 per host, Holm, NOT gated on the $ primary;
+  tools/demo2_f2_objectives.py; predictions DEMO2_BH_F2_PREDICTIONS.json (P slower than A on both
+  hosts; C faster on the XPS only). Separate experiment CTXKV-E1E2 registered
+  (docs/registrations/CTXKV_E1E2_2026-10-23.md, derived/ctxkv/): E1 context default by memory tier,
+  E2 KV precision / flash attention; AMD/T2S arms pending Rithwik; 200-task pin PENDING; E1 cloud cap
+  $20 not yet approved. Held-out EXPECT_HEAD = the last BH commit (freeze note still in tree).
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.
