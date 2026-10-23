@@ -3649,3 +3649,12 @@ for Claude in this session; Zach pushes).
   - SharedSystemMemory 48,634 MiB = ullTotalPhys 65,018 - 16,384 MiB, so R6 passes on the T2S;
   - the OpenCL device total is 33.6 GiB (GPU_DEVICE_TOTAL_MEM_SIZE).
 - Nothing pushed. No queue script that a running queue reads was edited.
+
+## 2026-10-23 ~4:25 PM ET (Task BP part A, CC canary-arming fix; Mac only, $0)
+- reh_grow 4bc203d8 (XPS, 241e4d3) and the one-point rehearsals reh_i8 84453830 / reh_bal b8b71ce7
+  ended REFUSED_CANARY: one probe cannot arm a C = 3 gate under the interleaved schedule. Logged
+  deviations: XPS v3 relaunched FROM=14 UNTIL=79 (rehearsals 12-13 skipped), T2S v3 FROM=14. No cell,
+  arm, prediction or threshold changed; A31 on; 8-bit cells i8 as registered.
+- Fix (docs/amendments/CC_FIX_2026-10-23e_CANARY.md): CC series and one-point limit cells calibrate
+  before the first probe (NPU 2026-10-08 option ii). Bisections and 2+ point cells unchanged (pinned by
+  a test). Tests tests/test_cc_bp_canary.py.

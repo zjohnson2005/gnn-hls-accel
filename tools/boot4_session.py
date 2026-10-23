@@ -367,6 +367,7 @@ def _open_canary(
     plan_path: Path,
     planned: int,
     enforce_probe_budget: bool = True,
+    up_front: bool = False,
 ) -> Any:
     from tools.ttft_slo_canary import CanaryBudgetRefuse, TtftSloCanaryGuard
 
@@ -380,10 +381,45 @@ def _open_canary(
             allow_unguarded=False,
             discard_warmup=True,
             enforce_probe_budget=enforce_probe_budget,
+            arm_before_probes=up_front,
+            up_front_budget=up_front,
         )
     except CanaryBudgetRefuse as exc:
         raise SystemExit(f"REFUSED -- {exc.detail}") from exc
     return guard
+
+
+def _require_armed_up_front(
+    *, guard: Any, out_dir: Path, summary: dict[str, Any], plan: dict[str, Any]
+) -> None:
+    """CC fix 2026-10-23e (as NPU amendment 2026-10-08 rule 1): after the up-front
+    calibration the gate must be armed, or the run refuses before any probe."""
+    if not guard.arm_before_probes or guard.gate.get("armed"):
+        return
+    summary.update(
+        {
+            "status": "REFUSED_CANARY",
+            "abort_reason": "gate not armed after the up-front calibration; no probe ran",
+            "points": [],
+            "canaries": list(guard.canaries),
+            "canary": guard.plan_fragment(),
+            "ended_utc": _utc(),
+        }
+    )
+    _write(out_dir / "summary.json", summary)
+    plan["status"] = "REFUSED_CANARY"
+    _write(out_dir / "plan.json", plan)
+    raise SystemExit("REFUSED -- canary gate not armed after the up-front calibration")
+
+
+def cc_up_front(points: tuple[int, ...]) -> bool:
+    """One-point CC cells cannot arm with interleaved canaries: the opening fires one
+    calibration canary and each probe at most one more, and C = 3. Those cells calibrate
+    before the first probe (CC fix 2026-10-23e). Bisections and 2+ point cells are unchanged.
+    """
+    from tools.ttft_slo_canary import CALIBRATION_C
+
+    return bool(points) and len(points) < CALIBRATION_C - 1
 
 
 def _point_failure(record: dict[str, Any]) -> dict[str, Any]:
@@ -1033,7 +1069,8 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
     points = tuple(CC_OVERRIDE.get("points") or ())
     turn2_new_tokens = int(CC_OVERRIDE.get("turn2_new_tokens") or 1)
     turn2_repeats = int(CC_OVERRIDE.get("turn2_repeats") or 1)
-    planned = max(RESIDENT_PLANNED_PROBES, len(points))
+    up_front = cc_up_front(points)
+    planned = len(points) if up_front else max(RESIDENT_PLANNED_PROBES, len(points))
     out_dir.mkdir(parents=True, exist_ok=True)
     _publish_cell_status("running", session_id)
     plan: dict[str, Any] = {
@@ -1070,6 +1107,7 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
         work=out_dir / "work",
         plan_path=plan_path,
         planned=planned,
+        up_front=up_front,
     )
     plan["canary"] = guard.plan_fragment()
     _write(plan_path, plan)
@@ -1139,6 +1177,12 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
 
     try:
         guard.opening()
+        _require_armed_up_front(
+            guard=guard,
+            out_dir=out_dir,
+            summary={"kind": "resident_limit", "session_id": session_id, "arm": arm},
+            plan=plan,
+        )
         if points:
             found = fixed_points(points, attempt)
         else:
@@ -1148,6 +1192,7 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
                 resolution=_resident_resolution(),
                 attempt=attempt,
             )
+        guard.closing(probes_log)
     except CanaryDriftAbort as exc:
         summary: dict[str, Any] = {
             "kind": "resident_limit",
@@ -1222,12 +1267,16 @@ def run_cc_series(*, arm: str, model_spec: Path, session_id: str, out_dir: Path)
         plan["scheduler_config"] = dict(SCHEDULER_OVERRIDE)
     plan_path = out_dir / "plan.json"
     _write(plan_path, plan)
-    planned = max(RESIDENT_PLANNED_PROBES, len(steps))
+    # CC fix 2026-10-23e: calibrate before the first step (a grow series is one step and a
+    # conc series stops at its first failure, so interleaved canaries cannot arm). Canaries
+    # run in this process between children, never while a series child is resident.
+    planned = len(steps)
     guard = _open_canary(
         model_spec=_canary_model(_cc_canary_specs(harness)),
         work=out_dir / "work",
         plan_path=plan_path,
         planned=planned,
+        up_front=True,
     )
     plan["canary"] = guard.plan_fragment()
     _write(plan_path, plan)
@@ -1235,6 +1284,12 @@ def run_cc_series(*, arm: str, model_spec: Path, session_id: str, out_dir: Path)
     points: list[dict[str, Any]] = []
     try:
         guard.opening()
+        _require_armed_up_front(
+            guard=guard,
+            out_dir=out_dir,
+            summary={"kind": kind, "session_id": session_id, "arm": arm},
+            plan=plan,
+        )
         for n in steps:
             work = out_dir / "work"
             spec = _child_spec(harness, arm, work)
@@ -1276,6 +1331,7 @@ def run_cc_series(*, arm: str, model_spec: Path, session_id: str, out_dir: Path)
             guard.after_probe(probes_log)
             if not point["holds"]:
                 break
+        guard.closing(probes_log)
     except CanaryDriftAbort as exc:
         summary: dict[str, Any] = {
             "kind": kind,

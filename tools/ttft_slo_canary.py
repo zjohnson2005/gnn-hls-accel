@@ -185,33 +185,51 @@ def estimate_bisect_planned_probes(
     return int(n_arms) * points_per_arm * int(repeats)
 
 
+def _n_budget(planned: int, c: int, calibrated_before_probes: bool) -> int:
+    """floor(planned / (C + 1)); at least 1 when calibration runs before the first probe.
+
+    CC fix 2026-10-23e: with the C calibration canaries run up front, only one armed
+    check has to fit inside the planned probes, so a run of 1-3 probes keeps N = 1.
+    """
+    n = planned // (c + 1)
+    if calibrated_before_probes and planned >= 1:
+        return max(1, n)
+    return n
+
+
 def assert_canary_budget_fits(
     planned_probe_count: int,
     *,
     calibration_c: int = CALIBRATION_C,
+    calibrated_before_probes: bool = False,
 ) -> dict[str, Any]:
     """Refuse before start if C calibration + one armed check cannot fit.
 
     Requires floor(planned / (C + 1)) >= 1 so the budget-bound N is at least 1.
+    With calibrated_before_probes (CC fix 2026-10-23e) the C canaries run before
+    any probe, so the budget needs only one armed check: planned >= 1.
     """
     planned = int(planned_probe_count)
     c = int(calibration_c)
     if c < 2:
         raise ValueError("calibration_c must be >= 2")
-    n_budget = planned // (c + 1)
+    n_budget = _n_budget(planned, c, calibrated_before_probes)
     if n_budget < 1:
         raise CanaryBudgetRefuse(
             f"canary budget cannot fit C={c} calibration canaries + 1 armed check: "
             f"planned_probe_count={planned} < C+1={c + 1} "
             f"(floor(planned/(C+1))={n_budget}). Do not start unguarded."
         )
-    return {
+    out: dict[str, Any] = {
         "planned_probe_count": planned,
         "calibration_c": c,
         "n_budget": n_budget,
         "min_canaries_required": c + 1,
         "ok": True,
     }
+    if calibrated_before_probes:
+        out["budget_rule"] = "calibrated_before_probes: C canaries up front + 1 armed check"
+    return out
 
 
 def derive_canary_every_n(
@@ -220,12 +238,13 @@ def derive_canary_every_n(
     onset_s: float = ONSET_S,
     planned_probe_count: int | None = None,
     calibration_c: int = CALIBRATION_C,
+    calibrated_before_probes: bool = False,
 ) -> dict[str, Any]:
     """N = min(onset bound, budget bound). Records both candidates and which bound."""
     c = int(calibration_c)
     n_budget: int | None = None
     if planned_probe_count is not None:
-        n_budget = int(planned_probe_count) // (c + 1)
+        n_budget = _n_budget(int(planned_probe_count), c, calibrated_before_probes)
 
     walls = [float(w) for w in probe_wall_s if w is not None and float(w) > 0]
     mean_w: float | None = None
@@ -502,6 +521,8 @@ class TtftSloCanaryGuard:
     discard_warmup: bool = False
     # NPU amendment 2026-10-08: run the C calibration canaries before any probe.
     arm_before_probes: bool = False
+    # CC fix 2026-10-23e: with arm_before_probes, budget for one armed check only.
+    up_front_budget: bool = False
     enforce_probe_budget: bool = True
     calibration_c: int = CALIBRATION_C
     rel_drift_floor: float | None = None
@@ -529,6 +550,8 @@ class TtftSloCanaryGuard:
     _transition_post_done: bool = field(default=False, repr=False)
 
     def __post_init__(self) -> None:
+        if self.up_front_budget and not self.arm_before_probes:
+            raise ValueError("up_front_budget needs arm_before_probes")
         self.gate = new_canary_gate(
             calibration_c=self.calibration_c,
             rel_drift_floor=self.rel_drift_floor,
@@ -540,6 +563,7 @@ class TtftSloCanaryGuard:
             self.budget_preflight = assert_canary_budget_fits(
                 int(self.planned_probe_count),
                 calibration_c=self.calibration_c,
+                calibrated_before_probes=self.up_front_budget,
             )
         else:
             self.budget_preflight = {
@@ -567,6 +591,7 @@ class TtftSloCanaryGuard:
             "allow_unguarded": bool(self.allow_unguarded),
             "canary_every_n": self.n_every,
             **({"schedule": "arm_before_probes"} if self.arm_before_probes else {}),
+            **({"budget_rule": "up_front (CC fix 2026-10-23e)"} if self.up_front_budget else {}),
             "n_derivation": self.n_derivation,
             "canary_gate": self.gate,
             "n_canaries": len(self.canaries),
@@ -609,6 +634,7 @@ class TtftSloCanaryGuard:
             onset_s=self.onset_s,
             planned_probe_count=int(self.planned_probe_count),
             calibration_c=self.calibration_c,
+            calibrated_before_probes=self.up_front_budget,
         )
         if self.n_derivation.get("refuse"):
             raise CanaryBudgetRefuse(self.n_derivation.get("note") or "canary budget refuse")
