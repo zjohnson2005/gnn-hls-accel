@@ -3552,3 +3552,11 @@ for Claude in this session; Zach pushes).
   here, and labelled PILOT.
 - No discard. No runner or queue script change. DEMO-2 arms, pins, budgets, PSPEC, cap, replay and
   every earlier prediction unchanged. Held-out EXPECT_HEAD moves to the last Task BH commit.
+
+## 2026-10-23 ~10:50 AM ET (Task BJ part A, XPS P' rows; Mac only, $0)
+- DEMO2_AMEND_2026-10-23b_PPRIME.md: XPS P' rows for P vs R-full / I-4K / C, DERIVED with the BF0
+  function and BF0's P' multiplier; DEMO2_BJ_PPRIME_PREDICTIONS.json (9c8a8e60...). BF0 unchanged.
+- Guard re-checked: no held-out record. Correction: OBJ section 0's 4 NOT_RUN_BEFORE_FREEZE matches
+  were the queue scripts' guard lines, not window logs.
+- Schedule note: T2S held-out first; XPS held-out deferred until after Oct 27 (fixed sequence
+  unchanged). No discard, no runner or queue script change. Held-out EXPECT_HEAD = this commit.

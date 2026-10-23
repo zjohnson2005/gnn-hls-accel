@@ -22,3 +22,11 @@ Not approved by this:
   before it runs.
 - No change to DEMO-2's arms, pins, budgets, PSPEC, HO_CLOUD_CAP, the replay or the dollar
   primary.
+
+## Task BJ part A (Fri Oct 23 2026, about 10:45 AM ET)
+- Zach asked (TASK_BJ_REGISTRY_REBUILD.md) to rebuild the plan and run DEMO-2 held-out. Recorded as:
+  "P' rows, approved 2026-10-23". Scope: docs/amendments/DEMO2_AMEND_2026-10-23b_PPRIME.md (XPS P'
+  rows for P vs R-full / I-4K / C, DERIVED, same generator) and a dated schedule note (T2S held-out
+  first; XPS held-out deferred until after Oct 27). Nothing else changes.
+- Not approved by this: any spend beyond the registered held-out cap, a llama.cpp install on the
+  T2S, E2-T2S, or anything on the T2S after Oct 25 without Rithwik's written OK.
