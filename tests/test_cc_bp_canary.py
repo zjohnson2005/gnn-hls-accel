@@ -234,3 +234,23 @@ def test_guard_defaults_unchanged() -> None:
         tsc.TtftSloCanaryGuard(
             root=ROOT, model_spec=SPEC, work_dir=ROOT, planned_probe_count=4, up_front_budget=True
         )
+
+
+# ---------------------------------------------------------------- R6 (Task BP part D)
+
+
+def test_r6_uses_the_override_clause_and_the_windows_formula() -> None:
+    from tools import redflags
+
+    xps_total = 16_752_234_496 / 2**20  # a19_dxgi_start.json, window_20261023_132334_cc_v3
+    xps_shared = 9_548_773_662 / 2**20
+    t2s = {"shared_mib": 48_634, "total_phys_mib": 65_018}
+    assert redflags.r6_formula_mib(t2s) == 48_634
+    # Without the override the registered 0.50 x M clause is 1,118 MiB off: a RED FLAG.
+    no_override = {"shared_mib": xps_shared, "total_phys_mib": xps_total}
+    assert redflags._r6({"xps": no_override, "t2s": t2s})[0] == redflags.RED
+    # Zach's manual record: Intel Shared GPU Memory Override ON at 57%.
+    xps = {**no_override, "override_pct": 57}
+    assert abs(redflags.r6_formula_mib(xps) - xps_shared) < 1
+    assert redflags._r6({"xps": xps, "t2s": t2s})[0] == redflags.PASS
+    assert redflags._r6({"t2s": {"shared_mib": 48_634, "formula_mib": 48_634}})[0] == redflags.PASS

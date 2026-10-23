@@ -75,11 +75,23 @@ def _r5(d: dict[str, Any]) -> tuple[str, str]:
     return (RED if mism else PASS), f"mismatches: {mism or 'none'}"
 
 
+def r6_formula_mib(v: dict[str, Any]) -> float:
+    """A19 registered prediction for one host (Task BP): the given formula_mib, else the Intel
+    override (override_pct x ullTotalPhys, the registered "slider" clause) when recorded, else
+    the Windows formula MIN(0.80 M, MAX(M - 16 GiB, 0.50 M)) on ullTotalPhys M (MiB)."""
+    if "formula_mib" in v:
+        return float(v["formula_mib"])
+    m = float(v["total_phys_mib"])
+    if v.get("override_pct") is not None:
+        return float(v["override_pct"]) / 100.0 * m
+    return min(0.80 * m, max(m - 16_384.0, 0.50 * m))
+
+
 def _r6(d: dict[str, Any]) -> tuple[str, str]:
     bad = {
         h: v
         for h, v in d.items()
-        if isinstance(v, dict) and abs(v["shared_mib"] - v["formula_mib"]) > A19_TOL_MIB
+        if isinstance(v, dict) and abs(v["shared_mib"] - r6_formula_mib(v)) > A19_TOL_MIB
     }
     return (
         RED if bad else PASS

@@ -3658,3 +3658,16 @@ for Claude in this session; Zach pushes).
 - Fix (docs/amendments/CC_FIX_2026-10-23e_CANARY.md): CC series and one-point limit cells calibrate
   before the first probe (NPU 2026-10-08 option ii). Bisections and 2+ point cells unchanged (pinned by
   a test). Tests tests/test_cc_bp_canary.py.
+
+## 2026-10-23 ~4:45 PM ET (Task BP parts B-G; Mac only, $0, nothing pushed or launched)
+- R6: XPS SharedSystemMemory 9,106.42 MiB = 0.57 x ullTotalPhys; Zach's manual record (Intel Graphics
+  Software, ~4:25 PM ET): Shared GPU Memory Override ON at 57%; Intel KB 000101789 gives 57% as the
+  default. R6 PASS under the registered slider clause. H2 wording fixed for accuracy (registry, PLAN_LOCK
+  addendum): the tier is set by the OS formula or, where active, the vendor driver's override.
+- R1 RED FLAG by the registered range: 8-bit L* 19,750 (de5f641f + b038e362; i8 read back) vs 19,900.
+  Reported first; nothing changed. u4 (5943c992) shows the same -5.6% shift: a window-level B shift.
+- Balloon cells g1/g2 (5b2ca33c, 75fd18fc) refused by the 7,000 MB Available floor; floor not changed;
+  options recorded (analysis/cc/bp_xps_first_data_20261023.md section 7).
+- DEMO-2 T2S resume note docs/amendments/DEMO2_RESUME_2026-10-23c_T2S_HELDOUT.md (path behaviour
+  identical; git_head deviation recorded). tools/redflags.py R6 now applies the registered override
+  clause when override_pct is given. New queue ~/seam_closeout_1013/xps/run_queue_xps_cc_v3b.sh.

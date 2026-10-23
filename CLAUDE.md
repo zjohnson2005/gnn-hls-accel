@@ -398,6 +398,11 @@ session start; update it in the same commit as the work. Never delete a row.
   - Tools: tools/figs/fig1-7, tools/redflags.py, tools/queue_status.py.
   - T2S A19 record: R6 PASS (48,634 = 65,018 - 16,384 MiB); the OpenCL device total is 33.6 GiB.
   - Retro: the sealed 8B points sit 22-26% under the law (analysis/cc/retro_8b.md).
+- 2026-10-23 ~4:25-4:45 PM ET (Task BP): canary-arming fix docs/amendments/CC_FIX_2026-10-23e_CANARY.md
+  (CC series and one-point cells calibrate before the first probe); grow + balloon rows re-queued in
+  run_queue_xps_cc_v3b.sh. R1 RED FLAG (8-bit 19,750 < 19,900; window B shift shared with u4), R6 PASS
+  (XPS Intel override 57%), balloon cells refused by the 7,000 MB floor (Zach decides);
+  analysis/cc/bp_xps_first_data_20261023.md. DEMO-2 T2S resume note DEMO2_RESUME_2026-10-23c_T2S_HELDOUT.md.
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.
