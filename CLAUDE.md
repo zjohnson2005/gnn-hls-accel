@@ -403,6 +403,9 @@ session start; update it in the same commit as the work. Never delete a row.
   run_queue_xps_cc_v3b.sh. R1 RED FLAG (8-bit 19,750 < 19,900; window B shift shared with u4), R6 PASS
   (XPS Intel override 57%), balloon cells refused by the 7,000 MB floor (Zach decides);
   analysis/cc/bp_xps_first_data_20261023.md. DEMO-2 T2S resume note DEMO2_RESUME_2026-10-23c_T2S_HELDOUT.md.
+- 2026-10-23 ~5:10-5:30 PM ET (Task BQ): R1 "Keep going" (logged in PLAN_LOCK red-flag log); balloon-gate
+  option (a) approved and built (--balloon-floor-credit, CC-BAL only, docs/amendments/CC_BALLOON_GATE_2026-10-23f.md);
+  v3b runs balloon rows last with BALLOONS=1. u4 L* unchanged by a 1 GiB balloon (d6616dfd vs 598e882d).
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.

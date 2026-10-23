@@ -94,7 +94,8 @@ def _stub(
 
 
 def _summary(out: Path) -> dict[str, Any]:
-    return json.loads((out / "summary.json").read_text(encoding="utf-8"))
+    doc: dict[str, Any] = json.loads((out / "summary.json").read_text(encoding="utf-8"))
+    return doc
 
 
 def _sealed(out: Path) -> Path:
@@ -105,7 +106,9 @@ def _sealed(out: Path) -> Path:
 # ---------------------------------------------------------------- series
 
 
-def test_grow_one_step_arms_before_the_step_and_seals(monkeypatch, tmp_path) -> None:
+def test_grow_one_step_arms_before_the_step_and_seals(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     events = _stub(monkeypatch, tmp_path)
     monkeypatch.setattr(b4, "CC_OVERRIDE", {"cell": "CC-GROW", "grow": {"step": 1024}})
     out = tmp_path / "s"
@@ -123,7 +126,7 @@ def test_grow_one_step_arms_before_the_step_and_seals(monkeypatch, tmp_path) -> 
     assert (_sealed(out) / ".sealed").is_file()
 
 
-def test_conc_one_session_arms_and_seals(monkeypatch, tmp_path) -> None:
+def test_conc_one_session_arms_and_seals(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     events = _stub(monkeypatch, tmp_path)
     monkeypatch.setattr(
         b4, "CC_OVERRIDE", {"cell": "CC-CONC", "conc": {"sessions": (1,), "tokens": 4096}}
@@ -135,7 +138,9 @@ def test_conc_one_session_arms_and_seals(monkeypatch, tmp_path) -> None:
     assert (_sealed(out) / ".sealed").is_file()
 
 
-def test_conc_first_step_fails_still_seals_with_the_failure(monkeypatch, tmp_path) -> None:
+def test_conc_first_step_fails_still_seals_with_the_failure(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     events = _stub(monkeypatch, tmp_path, holds=[False])
     monkeypatch.setattr(
         b4, "CC_OVERRIDE", {"cell": "CC-CONC", "conc": {"sessions": (4, 6, 8), "tokens": 8192}}
@@ -151,7 +156,9 @@ def test_conc_first_step_fails_still_seals_with_the_failure(monkeypatch, tmp_pat
     assert (_sealed(out) / "points" / "n4.json").is_file()
 
 
-def test_no_canary_runs_while_a_series_child_is_resident(monkeypatch, tmp_path) -> None:
+def test_no_canary_runs_while_a_series_child_is_resident(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     events = _stub(monkeypatch, tmp_path)
     monkeypatch.setattr(
         b4, "CC_OVERRIDE", {"cell": "CC-CONC", "conc": {"sessions": (1, 2, 3), "tokens": 4096}}
@@ -163,7 +170,9 @@ def test_no_canary_runs_while_a_series_child_is_resident(monkeypatch, tmp_path) 
     assert events[-1] == "canary"
 
 
-def test_unarmed_after_up_front_calibration_refuses_before_any_step(monkeypatch, tmp_path) -> None:
+def test_unarmed_after_up_front_calibration_refuses_before_any_step(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     events = _stub(monkeypatch, tmp_path, cells=["OK", "OK", "OTHER", "OK"])
     monkeypatch.setattr(b4, "CC_OVERRIDE", {"cell": "CC-GROW", "grow": {"step": 1024}})
     out = tmp_path / "u"
@@ -177,7 +186,9 @@ def test_unarmed_after_up_front_calibration_refuses_before_any_step(monkeypatch,
 # ---------------------------------------------------------------- limit path
 
 
-def test_one_point_limit_cell_arms_up_front_and_seals(monkeypatch, tmp_path) -> None:
+def test_one_point_limit_cell_arms_up_front_and_seals(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     events = _stub(monkeypatch, tmp_path)
     monkeypatch.setattr(b4, "CC_OVERRIDE", {"cell": "reh_i8", "points": (1024,)})
     out = tmp_path / "p"
@@ -191,7 +202,9 @@ def test_one_point_limit_cell_arms_up_front_and_seals(monkeypatch, tmp_path) -> 
 
 
 @pytest.mark.parametrize("points", [(), (1024, 2048), (12000, 13000, 14000)])
-def test_limit_paths_that_already_arm_are_unchanged(monkeypatch, tmp_path, points) -> None:
+def test_limit_paths_that_already_arm_are_unchanged(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, points: tuple[int, ...]
+) -> None:
     """Bisections and 2+ point cells (e.g. reh e259520d): warm-up + 1 opening canary, a
     canary after every probe, armed after probe 2, no up-front schedule, planned as before."""
     assert b4.cc_up_front(points) is False

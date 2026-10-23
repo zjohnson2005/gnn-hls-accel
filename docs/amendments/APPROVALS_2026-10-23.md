@@ -30,3 +30,11 @@ Not approved by this:
   first; XPS held-out deferred until after Oct 27). Nothing else changes.
 - Not approved by this: any spend beyond the registered held-out cap, a llama.cpp install on the
   T2S, E2-T2S, or anything on the T2S after Oct 25 without Rithwik's written OK.
+
+## Task BQ (Fri Oct 23 2026, about 5:10 PM ET; recorded verbatim from TASK_BQ_BALLOON_GATE.md)
+1. R1: "Keep going". Change nothing. R1 is recorded as RED FLAG by the registered range, with the BP
+   diagnosis (window-level B shift: u4 and i8 both imply B = 3.22 GiB vs 3.412; ratio holds). Add a
+   dated entry to the PLAN_LOCK red-flag log and AUDIT_LOG. No prediction, band or threshold is changed.
+2. Balloon gate: "Approve option (a)" from the BP report.
+- Scope: option (a) only (docs/amendments/CC_BALLOON_GATE_2026-10-23f.md). The 7,000 MB floor, balloon
+  sizes, points, bands and predictions are unchanged.

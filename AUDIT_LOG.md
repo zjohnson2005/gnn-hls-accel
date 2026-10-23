@@ -3671,3 +3671,16 @@ for Claude in this session; Zach pushes).
 - DEMO-2 T2S resume note docs/amendments/DEMO2_RESUME_2026-10-23c_T2S_HELDOUT.md (path behaviour
   identical; git_head deviation recorded). tools/redflags.py R6 now applies the registered override
   clause when override_pct is given. New queue ~/seam_closeout_1013/xps/run_queue_xps_cc_v3b.sh.
+
+## 2026-10-23 ~5:10-5:30 PM ET (Task BQ; Mac only, $0, nothing pushed or launched)
+- R1 decision recorded verbatim (APPROVALS_2026-10-23.md): "Keep going". R1 stays RED FLAG by the
+  registered range (de5f641f, b038e362; window-level B shift). Nothing changed. PLAN_LOCK red-flag log
+  entry added.
+- Balloon gate option (a) approved ("Approve option (a)") and built default off:
+  --balloon-floor-credit, CC-BAL cells only; floor 7,000 MB unchanged; Available + measured balloon
+  private bytes; full record in the gates block. Note docs/amendments/CC_BALLOON_GATE_2026-10-23f.md
+  (also corrects the BP attribution of the balloon's extra Available cost to its retained host buffers).
+- Reported, not acted on: u4 L* 25,000 with and without a verified 1 GiB GPU balloon (d6616dfd,
+  598e882d), vs A22's predicted -7,767 tokens per GiB.
+- run_queue_xps_cc_v3b.sh (not running) edited: balloon rows last, with the flag, only with BALLOONS=1;
+  rows 34 and 36 covered by 598e882d and 0f3950a3 (registered gate passed at 241e4d3).

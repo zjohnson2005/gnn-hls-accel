@@ -60,6 +60,9 @@ def _resident_high() -> int:
 # and compiled-KV records. Empty = unchanged. Set only by tools/run_resident_limit.py flags.
 CC_OVERRIDE: dict[str, Any] = {}
 CC_CHILD_FLAGS = ("gpu_mem_stats", "compiled_readback", "dxgi_trace", "reject_kv_mismatch")
+# Task BQ balloon-gate option (a): CC-BAL cells only; the balloon is tools/gpu_balloon.py.
+BALLOON_CELL_PREFIX = "CC-BAL-"
+BALLOON_SCRIPT = "gpu_balloon.py"
 
 
 def set_cc_overrides(
@@ -79,6 +82,7 @@ def set_cc_overrides(
     dxgi_trace: bool = False,
     reject_kv_mismatch: bool = False,
     canary_model_spec: str | None = None,
+    balloon_floor_credit: bool = False,
 ) -> None:
     global CC_OVERRIDE
     out: dict[str, Any] = {}
@@ -107,6 +111,8 @@ def set_cc_overrides(
         out["reject_kv_mismatch"] = True
     if canary_model_spec:
         out["canary_model_spec"] = str(canary_model_spec)
+    if balloon_floor_credit:
+        out["balloon_floor_credit"] = True
     CC_OVERRIDE = out
 
 
@@ -282,15 +288,81 @@ def _write(path: Path, doc: dict[str, Any]) -> None:
     path.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def balloon_private_bytes() -> dict[str, Any]:
+    """The running balloon process (tools/gpu_balloon.py) and its measured private bytes.
+
+    Candidates are python processes whose command line names the balloon script; the cmd.exe
+    wrapper from spawn_detached.ps1 and any shell are ignored. A venv python.exe launcher and
+    the interpreter it starts both match, so the one holding the memory is the candidate with
+    no candidate child. Refuses unless exactly one such process is found and its private bytes
+    can be read (psutil memory_info().private, Windows). The requested size is never used."""
+    import psutil
+
+    found: dict[int, Any] = {}
+    for proc in psutil.process_iter(["pid", "ppid", "name", "cmdline"]):
+        name = str(proc.info.get("name") or "").lower()
+        cmd = " ".join(str(c) for c in (proc.info.get("cmdline") or []))
+        if name.startswith("python") and BALLOON_SCRIPT in cmd:
+            found[int(proc.pid)] = proc
+    parents = {int(p.info.get("ppid") or 0) for p in found.values()}
+    leaves = [p for pid, p in found.items() if pid not in parents]
+    if len(leaves) != 1:
+        raise SystemExit(
+            f"REFUSED -- balloon floor credit: {len(leaves)} {BALLOON_SCRIPT} interpreter "
+            f"processes (need 1; candidates {sorted(found)})"
+        )
+    proc = leaves[0]
+    try:
+        mem = proc.memory_info()
+    except psutil.Error as exc:
+        raise SystemExit(f"REFUSED -- balloon floor credit: bytes unreadable ({exc})") from exc
+    private = getattr(mem, "private", None)
+    if not isinstance(private, int) or private <= 0:
+        raise SystemExit("REFUSED -- balloon floor credit: private bytes unreadable")
+    return {
+        "balloon_pid": int(proc.pid),
+        "balloon_candidates": sorted(found),
+        "balloon_private_bytes": private,
+        "balloon_rss": mem.rss,
+    }
+
+
 def require_gates(*, skip_uptime: bool = False) -> dict[str, Any]:
     """All measurement gates. ``skip_uptime`` skips only the uptime gate; the gate
-    record then carries the UNCOLD_UPTIME deviation (T2S, not rebooted)."""
-    from seam.measurement_gates import evaluate_measurement_gates
+    record then carries the UNCOLD_UPTIME deviation (T2S, not rebooted).
 
-    report = evaluate_measurement_gates(ROOT, skip_uptime=skip_uptime)
+    Task BQ option (a), CC-BAL cells with --balloon-floor-credit only: the Available floor
+    (unchanged) is checked on Available + the balloon process's private bytes; the record
+    keeps the observed Available, the balloon bytes, the credited sum, the floor and its
+    citation. Every other gate is evaluated exactly as without the flag."""
+    from seam.measurement_gates import evaluate_measurement_gates, probe_available_mb
+
+    credit: dict[str, Any] | None = None
+    kw: dict[str, Any] = {}
+    if CC_OVERRIDE.get("balloon_floor_credit"):
+        if not str(CC_OVERRIDE.get("cell") or "").startswith(BALLOON_CELL_PREFIX):
+            raise SystemExit(f"REFUSED -- balloon floor credit needs a {BALLOON_CELL_PREFIX}* cell")
+        observed = probe_available_mb()
+        if observed is None:
+            raise SystemExit("REFUSED -- balloon floor credit: Available MB unreadable")
+        credit = {"observed_available_mb": float(observed), **balloon_private_bytes()}
+        credit["balloon_private_mb"] = credit["balloon_private_bytes"] / 2**20
+        credit["credited_available_mb"] = float(observed) + credit["balloon_private_mb"]
+        kw["available_mb"] = credit["credited_available_mb"]
+    report = evaluate_measurement_gates(ROOT, skip_uptime=skip_uptime, **kw)
+    out = report.to_dict()
+    if credit is not None:
+        mem = next(g for g in out["gates"] if g["name"] == "available_mb")
+        credit["floor_mb"] = mem["detail"].get("floor_mb")
+        credit["floor_citation"] = mem["detail"].get("citation")
+        credit["passed"] = mem["passed"]
+        credit["rule"] = "Available + balloon private bytes >= floor (Task BQ option (a))"
+        mem["detail"]["observed_is_credited"] = True
+        out["balloon_floor_credit"] = credit
+        print(json.dumps({"event": "balloon_floor_credit", **credit}, sort_keys=True), flush=True)
     if not report.all_passed:
         raise SystemExit("REFUSED -- gates: " + "; ".join(report.refusal_reasons))
-    return report.to_dict()
+    return out
 
 
 def load_harness(model_spec: Path) -> dict[str, Any]:

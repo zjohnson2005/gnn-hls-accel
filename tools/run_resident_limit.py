@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.boot4_session import (  # noqa: E402
+    BALLOON_CELL_PREFIX,
     RESIDENT_HIGH,
     _resident_high,
     _resident_low,
@@ -101,7 +102,18 @@ def main(argv: list[str] | None = None) -> int:
         help="Second-model cells: the Qwen3-4B spec the canary guard uses (the measured model is "
         "not the canary model).",
     )
+    # Task BQ (docs/amendments/CC_BALLOON_GATE_2026-10-23f.md); off by default.
+    parser.add_argument(
+        "--balloon-floor-credit",
+        action="store_true",
+        help="CC-BAL cells only: the Available floor is checked on Available plus the running "
+        "balloon process's measured private bytes (floor unchanged; both values recorded).",
+    )
     args = parser.parse_args(argv)
+    if args.balloon_floor_credit and not str(args.cc_cell or "").startswith(BALLOON_CELL_PREFIX):
+        raise SystemExit(
+            f"REFUSED -- --balloon-floor-credit needs a {BALLOON_CELL_PREFIX}* --cc-cell"
+        )
     points = (
         tuple(int(x) for x in str(args.points).split(",") if x.strip()) if args.points else None
     )
@@ -154,6 +166,7 @@ def main(argv: list[str] | None = None) -> int:
         or args.dxgi_trace
         or args.reject_kv_mismatch
         or args.canary_model_spec
+        or args.balloon_floor_credit
     )
     if cc_used and not args.cc_cell:
         raise SystemExit("REFUSED -- CC options need --cc-cell")
@@ -190,6 +203,7 @@ def main(argv: list[str] | None = None) -> int:
         dxgi_trace=bool(args.dxgi_trace),
         reject_kv_mismatch=bool(args.reject_kv_mismatch),
         canary_model_spec=args.canary_model_spec,
+        balloon_floor_credit=bool(args.balloon_floor_credit),
     )
     if not points and (_resident_high() - _resident_low()) % _resident_resolution() != 0:
         raise SystemExit("REFUSED -- high - low must be a multiple of the resolution")
