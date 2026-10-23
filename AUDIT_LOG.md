@@ -3538,3 +3538,14 @@ for Claude in this session; Zach pushes).
   by PF 6 (a) (cal_p 3 vs cal_a1 4 local passes); A/A d_usd 0.0 both hosts, d_lat 0.0045 T2S / 0.0471 XPS;
   held-out cloud cap $20.00. Frozen queue script hashes recorded (unchanged since BF0).
 - No discard. No rule, threshold, arm, pin or prediction changed. DEMO2_HELDOUT_60 untouched.
+
+## 2026-10-22 late evening ET (Task BH, register everything new; Mac only, $0; approval ~10:20 PM ET)
+- APPROVALS_2026-10-23.md (sha256 6048a569...): Zach "ok register everything new"; Rithwik's agreement
+  for the AMD/T2S arms of E1/E2 is pending.
+- Guard: no held-out record anywhere (no ho_* cell in any window file, no run naming DEMO2_HELDOUT_60).
+- DEMO2_AMEND_2026-10-23_OBJECTIVES.md (sha256 f72e3e74...): A1 not a bug (the I-4K reference has no
+  host input; BF0 regenerates byte-identically, unchanged); F2 non-dollar family registered with
+  DERIVED predictions DEMO2_BH_F2_PREDICTIONS.json (bbf01fce...). Disclosed: F2 was added after the
+  reports flagged small dollar effects, and its predictions use calibration walls already read in BF.
+- No discard. No runner or queue script change. DEMO-2 arms, pins, budgets, PSPEC, cap, replay and
+  every earlier prediction unchanged. Held-out EXPECT_HEAD moves to the last Task BH commit.

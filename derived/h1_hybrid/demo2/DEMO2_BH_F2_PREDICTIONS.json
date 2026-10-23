@@ -1,0 +1,257 @@
+{
+  "id": "DEMO2_BH_F2_PREDICTIONS",
+  "status": "registered with docs/amendments/DEMO2_AMEND_2026-10-23_OBJECTIVES.md before any held-out run; DERIVED",
+  "generator": "tools/demo2_bh_predict.py",
+  "runner_must_not_read_this_file": true,
+  "inputs": {
+    "calibration": {
+      "T2S": {
+        "A": "75fa4d1c",
+        "C": "dd62e520",
+        "P": "c91bc055"
+      },
+      "XPS": {
+        "A": "7cf9b18d",
+        "C": "a200bd1a",
+        "P": "4407accc"
+      }
+    },
+    "long_pilots_arm_A": {
+      "T2S": [
+        "1a634610",
+        "daa6c026"
+      ],
+      "XPS": [
+        "15367c3a"
+      ]
+    },
+    "entry_123": {
+      "T2S_A": "cddcd9fd",
+      "T2S_X": "e66a2a89",
+      "XPS_A": "stall at 3,600 s (841b84e4 unsealed; d0dd5a37 pending)"
+    },
+    "max_prompt_source": "analysis/demo2_pilots/BB/context_over_limit.json",
+    "x_windows": {
+      "XPS": 8704,
+      "T2S": 16896
+    },
+    "nsim": 2000,
+    "seed": 20261023,
+    "m_F2": 6
+  },
+  "scoring": "HIT if the measured statistic lies inside [band_p05, band_p95] (b, c: median paired difference; a, d: A's count of 60) and the measured test outcome equals predicted_test_outcome (b, c, d only); partial = one of the two",
+  "predictions": {
+    "T2S": {
+      "A vs P": {
+        "x_window": 16896,
+        "x_overflowed_long_entries": {
+          "point": 12.0,
+          "band_p05": 8.0,
+          "band_p95": 16.0
+        },
+        "a_silent_overrun": {
+          "label": "by construction on the X side (X = 0): mechanism check, outside Holm",
+          "A_count_of_60": {
+            "point": 5.0,
+            "band_p05": 2.0,
+            "band_p95": 8.0
+          },
+          "X_count_of_60": 0,
+          "P_mcnemar_p_lt_0.05": 0.389
+        },
+        "b_wall": {
+          "statistic": "median paired wall_A - wall_X, s (positive = X faster)",
+          "point": -20.521,
+          "band_p05": -29.261,
+          "band_p95": -14.279,
+          "P_p_lt_0.05": 1.0,
+          "P_p_lt_0.05_over_6": 1.0,
+          "predicted_test_outcome": "REJECT (direction of the point)"
+        },
+        "c_time_to_failure": {
+          "statistic": "median paired wall_A - wall_X on both-fail entries, s",
+          "point": -24.768,
+          "band_p05": -35.29,
+          "band_p95": -17.591,
+          "n_both_fail": {
+            "point": 52.0,
+            "band_p05": 48.0,
+            "band_p95": 56.0
+          },
+          "P_p_lt_0.05": 1.0,
+          "P_p_lt_0.05_over_6": 1.0,
+          "predicted_test_outcome": "REJECT (direction of the point)"
+        },
+        "d_hang_loop": {
+          "A_count_of_60": {
+            "point": 1.0,
+            "band_p05": 0.0,
+            "band_p95": 3.0
+          },
+          "X_count_of_60": 0,
+          "P_p_lt_0.05": 0.0,
+          "note": "exact McNemar cannot reach p < 0.05 unless A-only discordant >= 6",
+          "predicted_test_outcome": "NOT REJECT"
+        }
+      },
+      "A vs C": {
+        "x_window": 16896,
+        "x_overflowed_long_entries": {
+          "point": 12.0,
+          "band_p05": 8.0,
+          "band_p95": 16.0
+        },
+        "a_silent_overrun": {
+          "label": "by construction on the X side (X = 0): mechanism check, outside Holm",
+          "A_count_of_60": {
+            "point": 5.0,
+            "band_p05": 2.0,
+            "band_p95": 8.0
+          },
+          "X_count_of_60": 0,
+          "P_mcnemar_p_lt_0.05": 0.368
+        },
+        "b_wall": {
+          "statistic": "median paired wall_A - wall_X, s (positive = X faster)",
+          "point": -0.012,
+          "band_p05": -0.03,
+          "band_p95": 0.012,
+          "P_p_lt_0.05": 0.14,
+          "P_p_lt_0.05_over_6": 0.03,
+          "predicted_test_outcome": "NOT REJECT"
+        },
+        "c_time_to_failure": {
+          "statistic": "median paired wall_A - wall_X on both-fail entries, s",
+          "point": -0.012,
+          "band_p05": -0.026,
+          "band_p95": 0.013,
+          "n_both_fail": {
+            "point": 55.0,
+            "band_p05": 51.0,
+            "band_p95": 58.0
+          },
+          "P_p_lt_0.05": 0.178,
+          "P_p_lt_0.05_over_6": 0.045,
+          "predicted_test_outcome": "NOT REJECT"
+        },
+        "d_hang_loop": {
+          "A_count_of_60": {
+            "point": 1.0,
+            "band_p05": 0.0,
+            "band_p95": 3.0
+          },
+          "X_count_of_60": 0,
+          "P_p_lt_0.05": 0.001,
+          "note": "exact McNemar cannot reach p < 0.05 unless A-only discordant >= 6",
+          "predicted_test_outcome": "NOT REJECT"
+        }
+      }
+    },
+    "XPS": {
+      "A vs P": {
+        "x_window": 8704,
+        "x_overflowed_long_entries": {
+          "point": 17.0,
+          "band_p05": 12.0,
+          "band_p95": 21.0
+        },
+        "a_silent_overrun": {
+          "label": "by construction on the X side (X = 0): mechanism check, outside Holm",
+          "A_count_of_60": {
+            "point": 4.0,
+            "band_p05": 1.0,
+            "band_p95": 7.0
+          },
+          "X_count_of_60": 0,
+          "P_mcnemar_p_lt_0.05": 0.167
+        },
+        "b_wall": {
+          "statistic": "median paired wall_A - wall_X, s (positive = X faster)",
+          "point": -6.87,
+          "band_p05": -8.432,
+          "band_p95": -3.816,
+          "P_p_lt_0.05": 0.936,
+          "P_p_lt_0.05_over_6": 0.796,
+          "predicted_test_outcome": "REJECT (direction of the point)"
+        },
+        "c_time_to_failure": {
+          "statistic": "median paired wall_A - wall_X on both-fail entries, s",
+          "point": -6.931,
+          "band_p05": -9.254,
+          "band_p95": -4.271,
+          "n_both_fail": {
+            "point": 55.0,
+            "band_p05": 52.0,
+            "band_p95": 58.0
+          },
+          "P_p_lt_0.05": 0.937,
+          "P_p_lt_0.05_over_6": 0.799,
+          "predicted_test_outcome": "REJECT (direction of the point)"
+        },
+        "d_hang_loop": {
+          "A_count_of_60": {
+            "point": 2.0,
+            "band_p05": 0.0,
+            "band_p95": 4.0
+          },
+          "X_count_of_60": 0,
+          "P_p_lt_0.05": 0.012,
+          "note": "exact McNemar cannot reach p < 0.05 unless A-only discordant >= 6",
+          "predicted_test_outcome": "NOT REJECT"
+        }
+      },
+      "A vs C": {
+        "x_window": 8704,
+        "x_overflowed_long_entries": {
+          "point": 17.0,
+          "band_p05": 12.0,
+          "band_p95": 21.0
+        },
+        "a_silent_overrun": {
+          "label": "by construction on the X side (X = 0): mechanism check, outside Holm",
+          "A_count_of_60": {
+            "point": 4.0,
+            "band_p05": 1.0,
+            "band_p95": 7.0
+          },
+          "X_count_of_60": 0,
+          "P_mcnemar_p_lt_0.05": 0.163
+        },
+        "b_wall": {
+          "statistic": "median paired wall_A - wall_X, s (positive = X faster)",
+          "point": 0.244,
+          "band_p05": 0.059,
+          "band_p95": 0.65,
+          "P_p_lt_0.05": 0.964,
+          "P_p_lt_0.05_over_6": 0.853,
+          "predicted_test_outcome": "REJECT (direction of the point)"
+        },
+        "c_time_to_failure": {
+          "statistic": "median paired wall_A - wall_X on both-fail entries, s",
+          "point": 0.308,
+          "band_p05": 0.064,
+          "band_p95": 0.758,
+          "n_both_fail": {
+            "point": 56.0,
+            "band_p05": 53.0,
+            "band_p95": 59.0
+          },
+          "P_p_lt_0.05": 0.973,
+          "P_p_lt_0.05_over_6": 0.875,
+          "predicted_test_outcome": "REJECT (direction of the point)"
+        },
+        "d_hang_loop": {
+          "A_count_of_60": {
+            "point": 2.0,
+            "band_p05": 0.0,
+            "band_p95": 4.0
+          },
+          "X_count_of_60": 0,
+          "P_p_lt_0.05": 0.011,
+          "note": "exact McNemar cannot reach p < 0.05 unless A-only discordant >= 6",
+          "predicted_test_outcome": "NOT REJECT"
+        }
+      }
+    }
+  }
+}
