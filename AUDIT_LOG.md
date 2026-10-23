@@ -3574,3 +3574,10 @@ for Claude in this session; Zach pushes).
   tools/cc_mem_sidecar.ps1 (read-only PDH sampler), tools/cc_mem_trace.py. Default paths unchanged
   (tests/test_cc_runner.py). New queue scripts (outside the repo): run_queue_t2s_cc.sh,
   run_queue_xps_cc.sh. No existing script edited. No discard.
+
+## 2026-10-23 ~1:30 PM ET (Task BJ part B, registry rebuild; Mac only, $0)
+- docs/EXPERIMENT_REGISTRY.md rebuilt: 0 rules + plan of record (ISPASS 2027 "Not the KV Cache"),
+  1 machine windows, 2 findings map F1-F10, 3 active tracks (DEMO-2, CTXKV, CC, other rows kept
+  open), 4 analysis, 5 Rithwik dependencies, 6 superseded/dropped (with reason and the report that
+  dropped each), 7 timeline, 8 the sealed DONE record. All 192 earlier table rows and every earlier
+  text line are kept verbatim (checked by script); none deleted. New labels sit in short tables.
