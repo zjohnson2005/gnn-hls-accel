@@ -14,7 +14,9 @@ Three papers and one demo:
 4. DEMO, shown Oct 26: DEMO-1 done; DEMO-2 (default vs tuned configuration
    in a real hybrid) registered, rehearsals pending.
 Evidence per paper: docs/PAPER_EVIDENCE_MAP.md.
-Deadlines: draft to Dr. Hao Nov 2, data freeze Nov 16, ISPASS in December.
+Deadlines (Task BJ, 2026-10-23; registry section 7): data freeze Sun Nov 22, draft to Dr. Hao
+about Dec 1, ISPASS 2027 submission-ready Dec 11 (CFP not posted). Paper plan of record: registry
+section 0 ("Not the KV Cache: Memory Tiers Set the Context Ceiling of LLM Agents on Consumer AI PCs").
 
 ## Thesis and decision rules
 
@@ -194,7 +196,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-22 (Task BH). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-23 (Task BJ). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -330,6 +332,24 @@ session start; update it in the same commit as the work. Never delete a row.
   (docs/registrations/CTXKV_E1E2_2026-10-23.md, derived/ctxkv/): E1 context default by memory tier,
   E2 KV precision / flash attention; AMD/T2S arms pending Rithwik; 200-task pin PENDING; E1 cloud cap
   $20 not yet approved. Held-out EXPECT_HEAD = the last BH commit (freeze note still in tree).
+- 2026-10-23 (Task BJ; priority override ~10:45 AM ET: Tue Oct 27 meeting needs the new headline measured):
+  - Part A: docs/amendments/DEMO2_AMEND_2026-10-23b_PPRIME.md, XPS P' rows (P' vs R-full / I-4K / C,
+    each 1.5% DERIVED; DEMO2_BJ_PPRIME_PREDICTIONS.json). Guard re-checked: no held-out record.
+    Held-out EXPECT_HEAD = 72e499f. Schedule: the T2S held-out runs first; the XPS held-out is
+    deferred until after Oct 27 (fixed sequence T2S -> XPS unchanged).
+  - Registry rebuilt (sections 0-8: plan of record, machine windows, F1-F10 map, tracks, drops with
+    reasons, timeline to the Nov 22 freeze). Every old row was kept verbatim.
+  - CC registration docs/registrations/CC_CONTEXT_CEILING_2026-10-23.md, predictions
+    derived/cc/CC_PREDICTIONS.json.
+    - CC-PRECHECK: the sealed XPS limits read back the requested KV and failed in the uncapped turn-1
+      prefill (turn 2 = 183 tokens). So F1 wording is "non-KV term in the uncapped prefill" until
+      CC-MECH reports. T2S limits are TTFT-bound, not memory.
+    - Runner options (default off): run_resident_limit --cc-cell / --points / --gpu-mem-stats /
+      --compiled-readback; memory sidecar tools/cc_mem_sidecar.ps1.
+    - Queues: ~/seam_closeout_1013/xps/run_queue_{t2s,xps}_cc.sh. The T2S queue waits for the
+      held-out queue. CC-CLIFF-T2S is blocked.
+  - Monday prompt: ~/seam_closeout_1013/papers_20261015/TASK_BK_MEETING27.md.
+  - CC-XRT-T2S and E2-T2S are CONDITIONAL on Rithwik's written OK.
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.
