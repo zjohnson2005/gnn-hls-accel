@@ -88,6 +88,14 @@ arms:
     generate_device: GPU
     properties:
       KV_CACHE_PRECISION: u4
+  # Task BM (A21/A31): the sealed u8 limit cf3555d5 compiled i8; CC cells request i8 directly
+  # so the compiled type equals the request.
+  - id: gpu_only_i8
+    label: gpu only (KV_CACHE_PRECISION=i8)
+    load_sequence: [GPU]
+    generate_device: GPU
+    properties:
+      KV_CACHE_PRECISION: i8
 
 arm_order: [A, B, A_prime]
 

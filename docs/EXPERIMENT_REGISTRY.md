@@ -189,9 +189,9 @@ Rows as written before 2026-10-23 (moved verbatim):
 
 ### 3c. CC track (context ceiling; registered 2026-10-23, docs/registrations/CC_CONTEXT_CEILING_2026-10-23.md)
 
-Predictions: derived/cc/CC_PREDICTIONS.json (DERIVED, tools/cc_predict.py) and, from Task BL,
-derived/cc/CC_BL_PREDICTIONS.json. Queues: ~/seam_closeout_1013/xps/run_queue_{t2s,xps}_cc_v2.sh
-(Task BL; the BJ scripts run_queue_t2s_cc.sh / run_queue_xps_cc.sh are SUPERSEDED, not to be run). $0.
+Predictions: derived/cc/CC_PREDICTIONS.json (DERIVED, tools/cc_predict.py), CC_BL_PREDICTIONS.json
+(Task BL) and CC_BM_PREDICTIONS.json (Task BM). Queues: ~/seam_closeout_1013/xps/run_queue_{t2s,xps}_cc_v3.sh
+(Task BM; the BJ and BL scripts run_queue_*_cc.sh / *_cc_v2.sh are SUPERSEDED, not to be run). $0.
 
 | id | question | finding | pri | status | machine / owner | notes |
 |---|---|---|---|---|---|---|
@@ -225,6 +225,18 @@ derived/cc/CC_BL_PREDICTIONS.json. Queues: ~/seam_closeout_1013/xps/run_queue_{t
 | CC-SLIDER-T2S | GPU-memory slider at 50% / current / max x CC-CONC (ii) | F2 | B | CONDITIONAL on Rithwik's written OK (A15); restore by Sun 7:45 PM; no bcdedit | T2S | +1 session per 4.5 GiB (DERIVED) |
 | CC-32B-T2S | Qwen3-32B INT4 single-session L_mem | F11 | C | CONDITIONAL (A16), pre-converted IR only | T2S | - |
 | CC-SLIDER-XPS | Shared GPU Memory Override sweep at f16 uncapped | F2 | B | CONDITIONAL on Zach (A18); +4,397 tokens/GiB (DERIVED) | XPS / Zach | not scripted |
+| CC-AMEND-BM | amendment A19-A36, Context Roofline validation cells (docs/registrations/CC_AMEND_2026-10-23c.md, sha256 68471f7c51ae718cbc32c5e728e983df281cce96c5183076c0f141bfe856c7eb) | all CC | A | REGISTERED 2026-10-23 ~12:25 PM ET (Task BM) before any CC run; predictions derived/cc/CC_BM_PREDICTIONS.json (tools/cc_bm_predict.py); earlier prediction files unchanged | Mac | source read (genai 2026.2.1.0): the budget assertion runs only with an explicit cache_size, so the sealed dynamic-cache limits never hit it; KV block bytes use the compiled element size |
+| CC-A19-RECORD | OS tier: ullTotalPhys, DXGI SharedSystemMemory, per-process QueryVideoMemoryInfo, budget-change events; Intel override value | H2 (OS formula) | A | REGISTERED (A19); T2S before the held-out, XPS at queue start; 10 Hz in-child if the probe works | T2S, XPS / Zach | predicted T2S shared = ullTotalPhys - 16,384 MiB; XPS 0.50 x ullTotalPhys or the slider |
+| CC-ALLOC-XPS, CC-ALLOC-T2S | allocator-measured a: peak GPU memory minus applied KV vs n (4K/8K/12K, f16 and u4, r = 3) | H1 held-out | A | REGISTERED (A20); predicted 93-98 KB/token, falsified < 70 or > 130 or f16/u4 slopes > 10% apart | XPS, T2S / Zach | - |
+| CC-A21-XPS | 8-bit (i8) uncapped rebisection 18K-24K at 250, r = 3 | H1 held-out | A | REGISTERED (A21); predicted 20,921-21,486; law fails outside 19,900-22,600 | XPS / Zach | 8-bit cells request i8 (sealed u8 compiled i8) |
+| CC-BAL-XPS | GPU-shared balloon 0/1/2 GiB x f16/u4 and CPU balloon 2/4 GiB x f16 | H1, H2 | A | REGISTERED (A22); predicted -4,397 / -7,767 tokens per GiB, ratio 1.767 [1.59, 1.95]; CPU < 5% | XPS / Zach | 4 GiB CPU cell may be refused by the 7,000 MB free-memory gate (not loosened) |
+| CC-BAL-T2S | GPU-shared balloon 4.5 / 9 GiB x CC-CONC (ii) | H1, H2, F11 | A | REGISTERED (A29); predicted cliff N = 10 / 9 / 8 at 0 / 4.5 / 9 GiB | T2S / Zach | side process only |
+| CC-ENERGY-XPS | prefill energy E(N) at 2K-16K on AC (power sidecar) | H3 support | B | REGISTERED (A26); battery pass NOT scripted (gates require AC; decision) | XPS / Zach | J/token |
+| CC-RESIDENCY-POWER | idle power with ~3 GiB KV resident vs none (battery, screen off) | H3 support | B | REGISTERED (A27), NOT scripted (battery + gate deviation; decision) | XPS / Zach | predicted delta within meter resolution |
+| CC-A33-XPS | u4 uncapped with cache_size 0 vs 2 GiB | bookkeeping test | A | REGISTERED (A33); source prediction equal +-256; DERIVED from the source read about 25,891 (expected MISS of the source prediction) | XPS / Zach | - |
+| CC-OLLAMA-DEFAULT | Ollama default window by detected VRAM | H4 | B | REGISTERED (A30); XPS only if installed (no download); T2S detection only | XPS, T2S | predicted XPS 4K, T2S 32K |
+| CC-RITHWIK-A35 | Ollama/llama.cpp K/V types, flash attention, compute buffer on Strix Halo and the 4070 | H1 cross-vendor | A | CONDITIONAL (A35, Rithwik) | AMD, 4070 / Rithwik | reject when applied != requested |
+| CC-STREAM-HOG | decode at 8K under 0/2/4/8 STREAM-class threads | support | C | OPTIONAL (A28), not scripted | XPS | - |
 
 ### 3d. Other rows kept open (relabelled 2026-10-23)
 

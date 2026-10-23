@@ -196,7 +196,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-23 (Task BL). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-23 (Task BM). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -365,6 +365,24 @@ session start; update it in the same commit as the work. Never delete a row.
     - cf3555d5 compiled i8;
     - the NPU caps ran on the T2S;
     - 44,742 = 83127e1b, unsealed.
+- 2026-10-23 ~12:25 PM ET (Task BM, before any CC launch): amendment
+  docs/registrations/CC_AMEND_2026-10-23c.md (A19-A36, Context Roofline validation cells),
+  predictions derived/cc/CC_BM_PREDICTIONS.json.
+  - Held-out tests of the fitted law:
+    - A20 allocator-measured a (93-98 KB/token);
+    - A21 8-bit (i8) rebisect, 20,921-21,486;
+    - A22 / A29 GPU-shared and CPU balloons;
+    - A23 grow at 1K / 2K / 4K;
+    - A24 TTFT law;
+    - A25 XPS slider (Zach);
+    - A33 cache_size test.
+  - Logging: A19 DXGI budget record and in-child trace; A31 rejects compiled != requested KV;
+    A32 failure taxonomy.
+  - Source read (genai 2026.2.1.0): the budget assertion runs only with an explicit cache_size,
+    so it does not explain the sealed limits.
+  - Queues ~/seam_closeout_1013/xps/run_queue_{t2s,xps}_cc_v3.sh (the v2 scripts are superseded).
+  - Not scripted: A26 battery pass and A27 (gates need AC); A28; A15/A16/A35 and A30-active on the
+    T2S (Rithwik).
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.

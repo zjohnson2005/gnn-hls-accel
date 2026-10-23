@@ -60,6 +60,7 @@ def cc_mem_snapshot(stage: str, cores: dict[str, Any]) -> dict[str, Any]:
 
 # CC cells (Task BL): cores of the load, for the memory records and the 10 Hz trace.
 _CC_CORES: dict[str, Any] = {}
+_LAST_TRACE: dict[str, Any] | None = None
 DEVICE_MEM_PROPS = ("GPU_DEVICE_MAX_ALLOC_MEM_SIZE", "GPU_DEVICE_TOTAL_MEM_SIZE")
 
 
@@ -97,7 +98,9 @@ class MemTrace:
 
     MAX_SAMPLES = 20000
 
-    def __init__(self, hz: float, cores: dict[str, Any], read_gpu: bool = True) -> None:
+    def __init__(
+        self, hz: float, cores: dict[str, Any], read_gpu: bool = True, dxgi: bool = False
+    ) -> None:
         import threading
 
         self.period = 1.0 / float(hz)
@@ -106,6 +109,15 @@ class MemTrace:
         self.read_gpu = read_gpu
         self.samples: list[tuple[float, float, int | None]] = []
         self.errors = 0
+        # Task BM A19: this process's DXGI budget / usage and budget-change events.
+        self.watch: Any = None
+        self.dxgi_peak: dict[str, int] = {}
+        self.dxgi_first: dict[str, Any] = {}
+        self.dxgi_last: dict[str, Any] = {}
+        if dxgi:
+            from seam.dxgi_budget import BudgetWatch
+
+            self.watch = BudgetWatch()
         self._stop = threading.Event()
         self._thread = threading.Thread(target=self._run, daemon=True)
 
@@ -116,6 +128,15 @@ class MemTrace:
                 gpu = _gpu_stat_total(self.cores) if self.read_gpu else None
                 if len(self.samples) < self.MAX_SAMPLES:
                     self.samples.append((time.time(), round(avail, 1), gpu))
+                if self.watch is not None and not self.watch.error:
+                    self.watch.poll()
+                    q = self.watch.query()
+                    if not self.dxgi_first:
+                        self.dxgi_first = dict(q)
+                    self.dxgi_last = dict(q)
+                    for seg, val in q.items():
+                        if isinstance(val, tuple):
+                            self.dxgi_peak[seg] = max(self.dxgi_peak.get(seg, 0), int(val[1]))
             except Exception:
                 self.errors += 1
             self._stop.wait(self.period)
@@ -127,6 +148,8 @@ class MemTrace:
     def __exit__(self, *exc: Any) -> None:
         self._stop.set()
         self._thread.join(timeout=5.0)
+        if self.watch is not None:
+            self.watch.close()
 
     def result(self) -> dict[str, Any]:
         gpus = [g for _, _, g in self.samples if g is not None]
@@ -140,18 +163,58 @@ class MemTrace:
             "gpu_stat_total_first_bytes": gpus[0] if gpus else None,
             "gpu_stat_total_last_bytes": gpus[-1] if gpus else None,
             "trace": self.samples,
+            "dxgi": None
+            if self.watch is None
+            else {
+                "error": self.watch.error,
+                "budget_change_events": self.watch.count,
+                "first_budget_usage": self.dxgi_first,
+                "last_budget_usage": self.dxgi_last,
+                "peak_current_usage": self.dxgi_peak,
+            },
         }
 
 
 def _traced(spec: dict[str, Any], fn: Callable[[], dict[str, Any]]) -> dict[str, Any]:
     """Run one generate, under a MemTrace when the spec asks for one."""
+    global _LAST_TRACE
     hz = spec.get("mem_trace_hz")
     if not hz:
         return fn()
-    with MemTrace(float(hz), _CC_CORES, read_gpu=bool(spec.get("gpu_mem_stats"))) as tr:
-        rec = fn()
+    tr = MemTrace(
+        float(hz),
+        _CC_CORES,
+        read_gpu=bool(spec.get("gpu_mem_stats")),
+        dxgi=bool(spec.get("dxgi_trace")),
+    )
+    try:
+        with tr:
+            rec = fn()
+    except BaseException:
+        # Task BM A32: keep the trace (peak usage at failure) for _fail_turn.
+        _LAST_TRACE = tr.result()
+        raise
     rec["mem_trace"] = tr.result()
     return rec
+
+
+def compiled_kv_mismatch(
+    spec: dict[str, Any], requested: str | None, compiled: dict[str, Any] | None
+) -> str | None:
+    """Task BM A31: with spec reject_kv_mismatch, a reason string when the compiled KV type
+    (GenAI load log) is unknown or differs from the request; None when it matches or the
+    check is off or nothing was requested."""
+    if not spec.get("reject_kv_mismatch") or requested is None:
+        return None
+    from seam.genai_runtime import normalize_kv
+
+    want = normalize_kv(str(requested))
+    got = (compiled or {}).get("kv_cache_precision")
+    if got is None:
+        return f"compiled KV type not read back (requested {want}); A31 rejects unknown"
+    if normalize_kv(str(got)) != want:
+        return f"compiled KV {got} != requested {want}"
+    return None
 
 
 def result_replace_policy() -> tuple[int, float]:
@@ -380,6 +443,10 @@ def _run_with_power(spec: dict[str, Any], writer: _Writer) -> int:
             from seam.genai_runtime import parse_genai_load_log
 
             load_rec["compiled"] = parse_genai_load_log(str(captured.get("text") or ""))
+            load_rec["versions"] = {
+                "openvino": str(ov.get_version()),
+                "openvino_genai": str(getattr(ov_genai, "__version__", "unknown")),
+            }
         if spec.get("gpu_mem_stats"):
             load_rec["device_mem_props"] = device_mem_props(core, device)
         loads.append(load_rec)
@@ -398,6 +465,17 @@ def _run_with_power(spec: dict[str, Any], writer: _Writer) -> int:
                     "message": str(kv_check["failure_mode"]),
                     "traceback": "",
                 },
+                memory_at_failure=_mem(),
+            )
+            return 1
+        reason = compiled_kv_mismatch(spec, requested_kv, load_rec.get("compiled"))
+        if reason:
+            # Task BM A31: the applied (compiled) KV type must equal the request.
+            writer.update(
+                phase="failed",
+                completed=False,
+                failure_mode="kv_compiled_mismatch",
+                exception={"type": "KvCompiledMismatch", "message": reason, "traceback": ""},
                 memory_at_failure=_mem(),
             )
             return 1
@@ -613,6 +691,9 @@ def _fail_turn(writer: _Writer, turn: str, exc: BaseException) -> int:
         },
         memory_at_failure=_mem(),
     )
+    if _LAST_TRACE is not None:
+        trace = {k: v for k, v in _LAST_TRACE.items() if k != "trace"}
+        writer.update(memory_trace_at_failure=trace)
     return 1
 
 

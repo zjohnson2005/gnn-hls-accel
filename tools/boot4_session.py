@@ -59,7 +59,7 @@ def _resident_high() -> int:
 # fixed points instead of bisection, turn-2 decode length and repeats, and child-side memory
 # and compiled-KV records. Empty = unchanged. Set only by tools/run_resident_limit.py flags.
 CC_OVERRIDE: dict[str, Any] = {}
-CC_CHILD_FLAGS = ("gpu_mem_stats", "compiled_readback")
+CC_CHILD_FLAGS = ("gpu_mem_stats", "compiled_readback", "dxgi_trace", "reject_kv_mismatch")
 
 
 def set_cc_overrides(
@@ -76,6 +76,8 @@ def set_cc_overrides(
     mem_trace_hz: float | None = None,
     grow: dict[str, int] | None = None,
     conc: dict[str, Any] | None = None,
+    dxgi_trace: bool = False,
+    reject_kv_mismatch: bool = False,
 ) -> None:
     global CC_OVERRIDE
     out: dict[str, Any] = {}
@@ -98,6 +100,10 @@ def set_cc_overrides(
         out["gpu_mem_stats"] = True
     if compiled_readback:
         out["compiled_readback"] = True
+    if dxgi_trace:
+        out["dxgi_trace"] = True
+    if reject_kv_mismatch:
+        out["reject_kv_mismatch"] = True
     CC_OVERRIDE = out
 
 

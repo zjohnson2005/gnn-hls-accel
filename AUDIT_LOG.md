@@ -3598,3 +3598,22 @@ for Claude in this session; Zach pushes).
   validity fields (L_mem, L_valid, past_trained_positions); device memory properties.
 - New queue scripts run_queue_{t2s,xps}_cc_v2.sh (outside the repo). The BJ scripts are superseded
   and unchanged. No discard.
+
+## 2026-10-23 ~12:25 PM ET (Task BM, CC amendment A19-A36, Context Roofline cells; Mac only, $0)
+- docs/registrations/CC_AMEND_2026-10-23c.md (sha256 68471f7c51ae718cbc32c5e728e983df281cce96c5183076c0f141bfe856c7eb). DERIVED predictions
+  derived/cc/CC_BM_PREDICTIONS.json (sha256 ad3a8647091355db3d4e3563d1a339487af34640ffa2b0089a39f373cbbe7d96; tools/cc_bm_predict.py). Earlier prediction files
+  are unchanged (test).
+- Source read, openvino.genai 2026.2.1.0 (GitHub):
+  - the budget assertion runs only with an explicit cache_size, so it does not apply to the sealed
+    limits;
+  - KV block bytes use the compiled element type's size();
+  - available memory = device total - 1.1 x GPU_MEMORY_STATISTICS (no DXGI).
+- Code, all default off:
+  - seam/dxgi_budget.py + tools/dxgi_probe.py (A19);
+  - --dxgi-trace, --reject-kv-mismatch (A31), versions in load records, the trace kept on failure
+    (A32);
+  - tools/cc_failure.py (A32), tools/gpu_balloon.py (A22/A29), tools/cc_power_sidecar.ps1 (A26);
+  - i8 added to seam/ov_kv_precision.py, which the DEMO-2 runner does not import;
+  - gpu_only_i8 arm in configs/delta_n.yaml.
+- New queue scripts run_queue_{t2s,xps}_cc_v3.sh. The v2 scripts are superseded and unchanged.
+- No discard.

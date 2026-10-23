@@ -84,6 +84,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--conc-sessions", default=None, help="CC-CONC N list, ascending (A13).")
     parser.add_argument("--conc-tokens", type=int, default=None, help="Tokens per session.")
     parser.add_argument("--conc-new-tokens", type=int, default=16)
+    # Task BM amendments (docs/registrations/CC_AMEND_2026-10-23c.md); all off by default.
+    parser.add_argument(
+        "--dxgi-trace", action="store_true", help="A19: DXGI budget/usage in the 10 Hz trace."
+    )
+    parser.add_argument(
+        "--reject-kv-mismatch",
+        action="store_true",
+        help="A31: fail a probe whose compiled KV type is unknown or differs from the request "
+        "(needs --compiled-readback).",
+    )
     args = parser.parse_args(argv)
     points = (
         tuple(int(x) for x in str(args.points).split(",") if x.strip()) if args.points else None
@@ -111,6 +121,10 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("REFUSED -- CC-GROW and CC-CONC are separate cells")
     if (grow or conc) and points:
         raise SystemExit("REFUSED -- --points does not combine with CC-GROW / CC-CONC")
+    if args.reject_kv_mismatch and not args.compiled_readback:
+        raise SystemExit("REFUSED -- --reject-kv-mismatch needs --compiled-readback")
+    if args.dxgi_trace and not args.mem_trace_hz:
+        raise SystemExit("REFUSED -- --dxgi-trace needs --mem-trace-hz")
     if args.sched_no_prefix_caching and args.sched_max_batched_tokens is None:
         raise SystemExit("REFUSED -- --sched-no-prefix-caching needs --sched-max-batched-tokens")
     cc_used = any(
@@ -126,7 +140,13 @@ def main(argv: list[str] | None = None) -> int:
             grow,
             conc,
         )
-    ) or bool(args.gpu_mem_stats or args.compiled_readback or args.sched_no_prefix_caching)
+    ) or bool(
+        args.gpu_mem_stats
+        or args.compiled_readback
+        or args.sched_no_prefix_caching
+        or args.dxgi_trace
+        or args.reject_kv_mismatch
+    )
     if cc_used and not args.cc_cell:
         raise SystemExit("REFUSED -- CC options need --cc-cell")
     if points and any(n < 1 for n in points):
@@ -159,6 +179,8 @@ def main(argv: list[str] | None = None) -> int:
         mem_trace_hz=args.mem_trace_hz,
         grow=grow,
         conc=conc,
+        dxgi_trace=bool(args.dxgi_trace),
+        reject_kv_mismatch=bool(args.reject_kv_mismatch),
     )
     if not points and (_resident_high() - _resident_low()) % _resident_resolution() != 0:
         raise SystemExit("REFUSED -- high - low must be a multiple of the resolution")
