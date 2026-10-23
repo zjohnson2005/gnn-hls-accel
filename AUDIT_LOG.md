@@ -3561,7 +3561,7 @@ for Claude in this session; Zach pushes).
 - Schedule note: T2S held-out first; XPS held-out deferred until after Oct 27 (fixed sequence
   unchanged). No discard, no runner or queue script change. Held-out EXPECT_HEAD = this commit.
 
-## 2026-10-23 ~1 PM ET (Task BJ part C, CC context-ceiling registration; Mac only, $0)
+## 2026-10-23 ~11 AM ET (Task BJ part C, CC context-ceiling registration; Mac only, $0)
 - docs/registrations/CC_CONTEXT_CEILING_2026-10-23.md: CC-PRECHECK (partial), CC-REH, CC-BYTES-XPS,
   CC-MECH-XPS/T2S, CC-CEIL, CC-CLIFF-XPS (T2S BLOCKED), conditional/later and Rithwik-side rows.
   Predictions derived/cc/CC_PREDICTIONS.json (DERIVED, tools/cc_predict.py), before any CC run.
@@ -3575,9 +3575,11 @@ for Claude in this session; Zach pushes).
   (tests/test_cc_runner.py). New queue scripts (outside the repo): run_queue_t2s_cc.sh,
   run_queue_xps_cc.sh. No existing script edited. No discard.
 
-## 2026-10-23 ~1:30 PM ET (Task BJ part B, registry rebuild; Mac only, $0)
+## 2026-10-23 ~11 AM ET (Task BJ part B, registry rebuild; Mac only, $0)
 - docs/EXPERIMENT_REGISTRY.md rebuilt: 0 rules + plan of record (ISPASS 2027 "Not the KV Cache"),
   1 machine windows, 2 findings map F1-F10, 3 active tracks (DEMO-2, CTXKV, CC, other rows kept
   open), 4 analysis, 5 Rithwik dependencies, 6 superseded/dropped (with reason and the report that
   dropped each), 7 timeline, 8 the sealed DONE record. All 192 earlier table rows and every earlier
   text line are kept verbatim (checked by script); none deleted. New labels sit in short tables.
+- Correction (Task BJ, 11:08 AM ET): the part B / part C headers above and the CC registration first
+  line said about 1 PM / 1:30 PM ET; the commits were made about 11 AM ET. Times fixed; nothing else.

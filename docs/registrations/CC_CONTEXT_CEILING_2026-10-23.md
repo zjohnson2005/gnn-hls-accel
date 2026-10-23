@@ -1,6 +1,6 @@
 # CC: context-ceiling cells (registration)
 
-Registered Fri Oct 23 2026, about 1 PM ET (Task BJ part C), before any CC cell runs. Mac only, no
+Registered Fri Oct 23 2026, about 11 AM ET (Task BJ part C), before any CC cell runs. Mac only, no
 ssh, $0. Approval: Zach's Task BJ brief (TASK_BJ_REGISTRY_REBUILD.md, priority override about 10:45 AM
 ET: "measured evidence for 'Not the KV cache: memory tiers set the context ceiling' on TWO devices").
 Launching any cell still needs Zach's go (launch command in the Task BJ report). Runners do not read
