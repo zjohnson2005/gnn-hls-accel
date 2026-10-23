@@ -126,9 +126,9 @@ DERIVED / PILOT label.
 | F1 | At the 16 GB ceiling KV is not the binding term: u4 KV gives 1.77x context (15,000 -> 26,500) against a 3.56x byte ratio; a non-KV, context-proportional term fills the rest | RESIDENT-LIMIT (553b3a5c, cf3555d5, e4a22dac); CC-PRECHECK; CC-BYTES-XPS/T2S; CC-MECH-XPS/T2S | limits SEALED; mechanism TARGET (CC-PRECHECK: the term sits in the uncapped turn-1 prefill, not the 183-token MIXED step) | XPS, T2S | Zach | gate Fri Nov 6 |
 | F2 | On unified memory the OS GPU-visible budget, not DRAM, sets the ceiling | CC-BUDGET-XPS; CC-AMD-LIMIT (VGM/GTT); T2-4 MEM-SWEEP (parked) | XPS limits SEALED; sweep TARGET | XPS, AMD | Zach, Rithwik | Nov 8 |
 | F3 | Bytes per decoded token cross from weights to KV near L_x = W / k_KV (DERIVED: about 16,000 f16 for Qwen3-4B INT4); caches stop helping | CC-CEIL-T2S/XPS; CC-AMD-ZEROCOPY; counter cells (TARGET) | DERIVED; decode bandwidth model holds on the T2S within 3.3% (29209e26, PILOT P2) | T2S, XPS, AMD, 4070 | both | Nov 15 |
-| F4 | The NPU tier is a compile-time wall | NPU-INT8 (960 faa14a31; 1,984 9acabbf7/2ffbd61c; 4,032 2972e8c4), NPU-1, NPU-PROMPT-PLAIN | caps SEALED; invariance TARGET | XPS NPU | Zach | Nov 15 |
+| F4 | The NPU tier is a compile-time wall | NPU-INT8 (960 faa14a31; 1,984 9acabbf7/2ffbd61c; 4,032 2972e8c4), NPU-1, NPU-PROMPT-PLAIN | caps SEALED; invariance TARGET | T2S NPU (corrected 2026-10-23 Task BL: the sealed caps ran on the T2S, CONFIG_PROVENANCE) | Zach | Nov 15 |
 | F5 | Discrete VRAM -> PCIe spill is a ramp bounded by r | CC-4070-SPILL | TARGET (r = 16.3 DERIVED) | 4070 | Rithwik | Nov 15 |
-| F6 | Unified-memory overflow: loud allocator failure or silent paging | CC-CLIFF-XPS; ALLOC-DIAG; B390-OOR (parked); loud CL_OUT_OF_RESOURCES at the sealed limits (553b3a5c, cf3555d5, e4a22dac) | PARTIAL; the '44,742 tokens silent paging' run_id is NOT FOUND (not citable) | XPS (T2S blocked) | Zach | Nov 8 |
+| F6 | Unified-memory overflow: loud allocator failure or silent paging | CC-CLIFF-XPS; ALLOC-DIAG; B390-OOR (parked); loud CL_OUT_OF_RESOURCES at the sealed limits (553b3a5c, cf3555d5, e4a22dac) | PARTIAL; the '44,742 tokens silent paging' figure is C-1 83127e1b, UNSEALED (aborted, operator salvage; corrected Task BL: not 'not found'), so not citable as sealed until CC-CLIFF reproduces it | XPS (T2S blocked) | Zach | Nov 8 |
 | F7 | Cliff height tracks next-tier ratio; shape tracks placement policy | literature points + CC-CLIFF-XPS + CC-4070-SPILL | TARGET (law DERIVED) | analysis | Zach | Nov 22 |
 | F8 | Memory-keyed defaults turn the ceiling into silent error; OpenVINO ran past 40,960 positions silently | CTXKV-E1E2 (E1), OLLAMA-WINDOW, KV-ACCURACY-AT-LIMITS; overrun cddcd9fd (loop to 98,165 tokens), e66a2a89 (40,960 cap converts it) | overrun measured (BC); 42.0% vs 11.3% PILOT (Rithwik, no run_id here); replication TARGET | XPS, AMD, 4070 | Zach, Rithwik | Nov 8 |
 | F9 | Device configuration flips hybrid routing | DEMO-1 f7343708 (V1) vs 1acc8c58 (V2: 30 escalations, $0.297/task, 22/30 passes vs 3/30); CAP-1 21.4x (c2246b1f, 7f232f86); DEMO-2 T2S held-out (contrast paragraph) | point SEALED (n = 30); phase diagram TARGET (offline replay) | Mac | Zach | Nov 15 |
@@ -189,21 +189,22 @@ Rows as written before 2026-10-23 (moved verbatim):
 
 ### 3c. CC track (context ceiling; registered 2026-10-23, docs/registrations/CC_CONTEXT_CEILING_2026-10-23.md)
 
-Predictions: derived/cc/CC_PREDICTIONS.json (DERIVED, tools/cc_predict.py). Queues:
-~/seam_closeout_1013/xps/run_queue_t2s_cc.sh, run_queue_xps_cc.sh (new). $0.
+Predictions: derived/cc/CC_PREDICTIONS.json (DERIVED, tools/cc_predict.py) and, from Task BL,
+derived/cc/CC_BL_PREDICTIONS.json. Queues: ~/seam_closeout_1013/xps/run_queue_{t2s,xps}_cc_v2.sh
+(Task BL; the BJ scripts run_queue_t2s_cc.sh / run_queue_xps_cc.sh are SUPERSEDED, not to be run). $0.
 
 | id | question | finding | pri | status | machine / owner | notes |
 |---|---|---|---|---|---|---|
-| CC-PRECHECK | which KV precision and which step did the sealed limit runs use? | F1 wording gate | A | PARTIAL 2026-10-23 (registration section 1): KV property readback matched f16/u8/u4 in all sealed XPS and T2S limit runs; compiled type not logged; all 3 XPS limits failed in turn 1 (uncapped n-token prefill), turn 2 = 183 tokens; T2S limits are TTFT-bound, not memory | Mac / Claude Code | rest Mon Oct 26: 2026.2.1 tag diff, the 44,742 run_id, T2S GPU-visible figure |
+| CC-PRECHECK | which KV precision and which step did the sealed limit runs use? | F1 wording gate | A | PARTIAL 2026-10-23 (registration section 1): KV property readback matched f16/u8/u4 in all sealed XPS and T2S limit runs; compiled type not logged; all 3 XPS limits failed in turn 1 (uncapped n-token prefill), turn 2 = 183 tokens; T2S limits are TTFT-bound, not memory | Mac / Claude Code | rest Mon Oct 26: 2026.2.1 tag diff, T2S GPU-visible figure (the 44,742 run is 83127e1b, unsealed; Task BL) |
 | CC-REH-T2S, CC-REH-XPS | does every CC path run detached (memory records, compiled readback, sidecar)? | infra | A | REGISTERED | T2S, XPS / Zach launches | first cell of each queue; queue stops unless REHEARSAL_COMPLETE |
 | CC-BYTES-XPS | where do context bytes go at 4K / 12K / limit-1K, per precision and cap? | F1 (stacked bar) | A | REGISTERED | XPS / Zach | 7 cells, about 3 h; first after the rehearsal |
 | CC-BYTES-T2S | same on the 64 GB tier | F1 | A | REGISTERED (carried by the CC-MECH-T2S cells) | T2S / Zach | - |
 | CC-MECH-XPS | does a step cap (256 / 1024 / unlimited explicit) move the resident limit per KV precision, and which non-KV term binds? | F1 | A | REGISTERED; prediction u4 c256 63,319 [36,239, 99,204], ratio 2.83 [2.83, 3.56]; gate HIT if u4 c256 >= 40,000 | XPS / Zach | 9 bisections + repeats at L* (r = 5 u4 c256; r = 3 f16 c256, u4/f16 unlx), about 15 h |
 | CC-MECH-T2S | do the uncapped vs capped slopes (peak and settled bytes per token) match the XPS hypotheses on the 64 GB tier? | F1 | A | REGISTERED; prediction: holds at 40,448 in every arm; settled slope = k_KV +-25%; uncapped peak-minus-settled 71,956-129,024 B/token | T2S / Zach | 22 cells (u4 unl and c256 r = 5; f16 unl and c256 r = 3), about 8-10 h, after held-out |
-| CC-CEIL-T2S | W, k_KV, k_ws(T), R0 and decode tok/s vs context; KV-vs-weight crossover | F3, model | A | REGISTERED (analysis of CC-MECH-T2S DENSE cells) | T2S / Claude Code | no extra machine time |
+| CC-CEIL-T2S | W, k_KV, k_ws(T), R0 and decode tok/s vs context; KV-vs-weight crossover | F3, model | A | SUPERSEDED as a cell by CC-WINDOW-T2S (Task BL A11); the analysis uses the byte-slope cells | T2S / Claude Code | no extra machine time |
 | CC-CEIL-XPS | same on the XPS | F3, model | A | REGISTERED (analysis of CC-BYTES/CLIFF-XPS) | XPS / Claude Code | - |
 | CC-CLIFF-XPS | TTFT and decode tok/s from 0.8x to 1.5x the limit; available memory, hard faults | F6, F7 | A | REGISTERED; predicted loud failure above L*, no silent step | XPS / Zach | last in the XPS queue, about 2-5 h |
-| CC-CLIFF-T2S | same on the T2S | F6, F7 | A | BLOCKED: the 4B ceiling is far above the window; needs a lower GPU budget on Rithwik's host (his OK) | T2S | not this weekend |
+| CC-CLIFF-T2S | same on the T2S | F6, F7 | A | BLOCKED: the 4B ceiling is far above the window; needs a lower GPU budget on Rithwik's host (his OK); replaced by CC-CONC-T2S (Task BL A11) | T2S | not this weekend |
 | CC-BUDGET-XPS | Shared GPU Memory Override default / 50% / max: tokens per GB of budget | F2 | A | REGISTERED, after Oct 27 | XPS / Zach | Zach sets the driver option, one reboot per setting |
 | CC-XRT-T2S | same limit and bytes under a pinned llama.cpp (Vulkan or SYCL), flash attention on/off | F1 (runtime confound) | B | CONDITIONAL on Rithwik's written OK to install in our own folder | T2S / Zach | no script yet |
 | CC-XRT-XPS | same on the XPS | F1 | B | REGISTERED, after Oct 27 | XPS / Zach | - |
@@ -214,6 +215,16 @@ Predictions: derived/cc/CC_PREDICTIONS.json (DERIVED, tools/cc_predict.py). Queu
 | CC-FIX | budget-aware fix (step cap knob, then the budget-gate patch), before/after | F1, I1 | A | PLANNED, gated by the Nov 6 mechanism go/no-go | XPS (+T2S logs) / Zach | fallback: context guard (E1 arm X) |
 | CC-MODEL | fit the context-ceiling model; leave-one-device-out vs KV-only and llama.cpp --fit | model | A | PLANNED Nov 7-22 | Mac / Zach | targets +-5% llama.cpp, +-10% OpenVINO (proposals) |
 | BFCL-LADDER | official harness within +-3 points of a published number, then one factor at a time | validity | B | PLANNED Nov 7-22 (rented GPU needs a spend OK) | - | supersedes the BFCL-BASELINE question |
+| CC-AMEND-BL | amendment A1-A18 before any CC launch (docs/registrations/CC_AMEND_2026-10-23b.md, sha256 40bb77d7ec1c996cfa062d78a2da9073570b26dc178f9fbe7a100420c0f73255) | all CC | A | REGISTERED 2026-10-23 ~11:50 AM ET (Task BL; approval as stated in the task file, "~12 PM ET"); predictions derived/cc/CC_BL_PREDICTIONS.json (tools/cc_bl_predict.py); CC_PREDICTIONS.json unchanged | Mac | MIXED 64*T retired for the sealed limits; H-act / H-quad / H-grow rule; grid to 110,000 at 1,000; timeout 3,600 s, censored timeouts; L_mem / L_valid; 10 Hz trace. Corrections: cf3555d5 compiled i8 (CONFIG_PROVENANCE); NPU caps ran on the T2S |
+| CC-CONC-T2S | do concurrent 32,768-token f16 sessions hit the 48 GiB tier, and does step policy move it? arms (i) unbounded (ii) cap 256 dynamic (iii) fixed 40 GB (iv) fixed 50 GB | F11, F2, F6 | A | REGISTERED (A13); predicted (ii) fails N = 10, (i) N = 6, (iii) preemption from N = 9, (iv) construction fails | T2S / Zach | replaces CC-CLIFF-T2S; no system change |
+| CC-WINDOW-T2S | 40,448 at f16 / u8 / u4 uncapped, r = 3, headroom logged | F11 | A | REGISTERED (A11); predicted holds, ~4.6x headroom (DERIVED) | T2S / Zach | supersedes CC-CEIL-T2S as a cell (its analysis stays) |
+| CC-TTFT-XPS | TTFT cost of the step cap at 4K / 8K / 16K, u4, prefix caching off, r = 3 | F1 cost | A | REGISTERED (A8); predicted c256 penalty <= 15% at 16K | XPS / Zach | - |
+| CC-GROW-XPS | one session grown by 2,048-token turns to failure or 110K; f16 / u4 x cap none / 256 | F1 (agent-like growth) | A | REGISTERED (A9); H-act f16 24,676 / u4 87,736; MIXED f16 13,153 / u4 21,231 uncapped, u4 c256 63,319 | XPS / Zach | - |
+| CC-RT-XPS | llama.cpp defaults (n_ubatch 512): does KV bind again, q4_0/f16 >= 3.0x? | F12 | A | CONDITIONAL (A7): no pinned build or harness on the XPS | XPS / Zach | Ollama default window logged |
+| CC-VALID-XPS | Qwen3-4B-Instruct-2507 INT4 (262,144 window, same shapes): anchors within 1,000 of 15,000 / 26,500; u4 c256 L_valid >= 40,000 | F1 validity | A | REGISTERED (A10); IR export on the Mac pending; spec pin before any cell | XPS / Zach | fallback YaRN re-export by new amendment |
+| CC-SLIDER-T2S | GPU-memory slider at 50% / current / max x CC-CONC (ii) | F2 | B | CONDITIONAL on Rithwik's written OK (A15); restore by Sun 7:45 PM; no bcdedit | T2S | +1 session per 4.5 GiB (DERIVED) |
+| CC-32B-T2S | Qwen3-32B INT4 single-session L_mem | F11 | C | CONDITIONAL (A16), pre-converted IR only | T2S | - |
+| CC-SLIDER-XPS | Shared GPU Memory Override sweep at f16 uncapped | F2 | B | CONDITIONAL on Zach (A18); +4,397 tokens/GiB (DERIVED) | XPS / Zach | not scripted |
 
 ### 3d. Other rows kept open (relabelled 2026-10-23)
 

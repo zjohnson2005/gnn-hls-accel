@@ -3583,3 +3583,18 @@ for Claude in this session; Zach pushes).
   text line are kept verbatim (checked by script); none deleted. New labels sit in short tables.
 - Correction (Task BJ, 11:08 AM ET): the part B / part C headers above and the CC registration first
   line said about 1 PM / 1:30 PM ET; the commits were made about 11 AM ET. Times fixed; nothing else.
+
+## 2026-10-23 ~11:50 AM ET (Task BL, CC amendment A1-A18 before any CC launch; Mac only, $0)
+- docs/registrations/CC_AMEND_2026-10-23b.md (sha256 40bb77d7ec1c996cfa062d78a2da9073570b26dc178f9fbe7a100420c0f73255) amends CC_CONTEXT_CEILING_2026-10-23.md.
+  New DERIVED predictions derived/cc/CC_BL_PREDICTIONS.json (sha256 5a4c4477747b94dc9a0b172497dcb5f35c4fa27adebd386449c140c1df3e9d56; tools/cc_bl_predict.py).
+  CC_PREDICTIONS.json, the primary and the gate are unchanged (test).
+- Corrections to Task BJ text, from derived/audit/CONFIG_PROVENANCE.md and docs/ENV_CHANGELOG.md:
+  - cf3555d5 requested u8 but compiled i8.
+  - The sealed NPU caps ran on the T2S (registry F4 corrected).
+  - The 44,742 figure is C-1 83127e1b, unsealed (aborted salvage), not "run_id not found".
+    It is labelled unsealed in PROJECT_STATE.md and PAPER_EVIDENCE_MAP.md.
+- Code, all default off: run_resident_limit --probe-timeout-s, --mem-trace-hz,
+  --sched-no-prefix-caching, --grow-step/--grow-max (CC-GROW), --conc-sessions/--conc-tokens (CC-CONC);
+  validity fields (L_mem, L_valid, past_trained_positions); device memory properties.
+- New queue scripts run_queue_{t2s,xps}_cc_v2.sh (outside the repo). The BJ scripts are superseded
+  and unchanged. No discard.

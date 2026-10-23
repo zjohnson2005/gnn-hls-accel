@@ -21,6 +21,7 @@ from tools.boot4_session import (  # noqa: E402
     _resident_low,
     _resident_resolution,
     new_session_id,
+    run_cc_series,
     run_resident_limit,
     run_resident_limit_smoke,
     set_cc_overrides,
@@ -69,14 +70,63 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Child captures GenAI's load log and records the compiled KV type and backend.",
     )
+    # Task BL amendments (docs/registrations/CC_AMEND_2026-10-23b.md); all off by default.
+    parser.add_argument("--probe-timeout-s", type=float, default=None, help="Child timeout (A4).")
+    parser.add_argument("--mem-trace-hz", type=float, default=None, help="In-child trace (A6).")
+    parser.add_argument(
+        "--sched-no-prefix-caching",
+        action="store_true",
+        help="With --sched-max-batched-tokens: enable_prefix_caching=False (A13).",
+    )
+    parser.add_argument("--grow-step", type=int, default=None, help="CC-GROW turn tokens (A9).")
+    parser.add_argument("--grow-max", type=int, default=None, help="CC-GROW stop at this context.")
+    parser.add_argument("--grow-new-tokens", type=int, default=1)
+    parser.add_argument("--conc-sessions", default=None, help="CC-CONC N list, ascending (A13).")
+    parser.add_argument("--conc-tokens", type=int, default=None, help="Tokens per session.")
+    parser.add_argument("--conc-new-tokens", type=int, default=16)
     args = parser.parse_args(argv)
     points = (
         tuple(int(x) for x in str(args.points).split(",") if x.strip()) if args.points else None
     )
+    grow = None
+    if args.grow_step is not None or args.grow_max is not None:
+        if not (args.grow_step and args.grow_max and args.grow_step > 0 < args.grow_max):
+            raise SystemExit("REFUSED -- CC-GROW needs --grow-step and --grow-max > 0")
+        grow = {
+            "step_tokens": int(args.grow_step),
+            "max_tokens": int(args.grow_max),
+            "new_tokens": int(args.grow_new_tokens),
+        }
+    conc = None
+    if args.conc_sessions is not None or args.conc_tokens is not None:
+        sessions = [int(x) for x in str(args.conc_sessions or "").split(",") if x.strip()]
+        if not sessions or not args.conc_tokens or sessions != sorted(set(sessions)):
+            raise SystemExit("REFUSED -- CC-CONC needs ascending --conc-sessions and --conc-tokens")
+        conc = {
+            "sessions": sessions,
+            "tokens": int(args.conc_tokens),
+            "new_tokens": int(args.conc_new_tokens),
+        }
+    if grow and conc:
+        raise SystemExit("REFUSED -- CC-GROW and CC-CONC are separate cells")
+    if (grow or conc) and points:
+        raise SystemExit("REFUSED -- --points does not combine with CC-GROW / CC-CONC")
+    if args.sched_no_prefix_caching and args.sched_max_batched_tokens is None:
+        raise SystemExit("REFUSED -- --sched-no-prefix-caching needs --sched-max-batched-tokens")
     cc_used = any(
         v is not None
-        for v in (args.low, args.resolution, points, args.turn2_new_tokens, args.turn2_repeats)
-    ) or bool(args.gpu_mem_stats or args.compiled_readback)
+        for v in (
+            args.low,
+            args.resolution,
+            points,
+            args.turn2_new_tokens,
+            args.turn2_repeats,
+            args.probe_timeout_s,
+            args.mem_trace_hz,
+            grow,
+            conc,
+        )
+    ) or bool(args.gpu_mem_stats or args.compiled_readback or args.sched_no_prefix_caching)
     if cc_used and not args.cc_cell:
         raise SystemExit("REFUSED -- CC options need --cc-cell")
     if points and any(n < 1 for n in points):
@@ -90,7 +140,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.sched_max_batched_tokens is None:
             raise SystemExit("REFUSED -- --sched-cache-size needs --sched-max-batched-tokens")
         sched = {
-            "enable_prefix_caching": True,
+            "enable_prefix_caching": not args.sched_no_prefix_caching,
             "max_num_batched_tokens": int(args.sched_max_batched_tokens),
         }
         if args.sched_cache_size is not None:
@@ -105,6 +155,10 @@ def main(argv: list[str] | None = None) -> int:
         turn2_repeats=args.turn2_repeats,
         gpu_mem_stats=bool(args.gpu_mem_stats),
         compiled_readback=bool(args.compiled_readback),
+        probe_timeout_s=args.probe_timeout_s,
+        mem_trace_hz=args.mem_trace_hz,
+        grow=grow,
+        conc=conc,
     )
     if not points and (_resident_high() - _resident_low()) % _resident_resolution() != 0:
         raise SystemExit("REFUSED -- high - low must be a multiple of the resolution")
@@ -120,6 +174,10 @@ def main(argv: list[str] | None = None) -> int:
         + (f" cc_cell={args.cc_cell} points={list(points or [])}" if cc_used else ""),
         flush=True,
     )
+    if grow or conc:
+        return run_cc_series(
+            arm=str(args.arm), model_spec=args.model_spec, session_id=session_id, out_dir=out
+        )
     return run_resident_limit(
         arm=str(args.arm),
         model_spec=args.model_spec,

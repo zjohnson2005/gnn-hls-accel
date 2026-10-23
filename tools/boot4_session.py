@@ -7,6 +7,7 @@ turn-2 repeats. Decode length comes from configs/delta_n.yaml acceptance.max_new
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import shutil
@@ -71,6 +72,10 @@ def set_cc_overrides(
     turn2_repeats: int | None = None,
     gpu_mem_stats: bool = False,
     compiled_readback: bool = False,
+    probe_timeout_s: float | None = None,
+    mem_trace_hz: float | None = None,
+    grow: dict[str, int] | None = None,
+    conc: dict[str, Any] | None = None,
 ) -> None:
     global CC_OVERRIDE
     out: dict[str, Any] = {}
@@ -80,6 +85,10 @@ def set_cc_overrides(
         ("resolution", resolution),
         ("turn2_new_tokens", turn2_new_tokens),
         ("turn2_repeats", turn2_repeats),
+        ("probe_timeout_s", probe_timeout_s),
+        ("mem_trace_hz", mem_trace_hz),
+        ("grow", grow),
+        ("conc", conc),
     ):
         if value is not None:
             out[key] = value
@@ -90,6 +99,44 @@ def set_cc_overrides(
     if compiled_readback:
         out["compiled_readback"] = True
     CC_OVERRIDE = out
+
+
+def _cc_cfg(cfg: dict[str, Any]) -> dict[str, Any]:
+    """Harness config for one CC probe: a longer child timeout if --probe-timeout-s is set
+    (Task BL A4). Without it the config object is returned unchanged."""
+    t = CC_OVERRIDE.get("probe_timeout_s")
+    if not t:
+        return cfg
+    out = copy.deepcopy(cfg)
+    out["generation"]["timeout_s"] = float(t)
+    return out
+
+
+def model_window(model_dir: str | Path) -> dict[str, Any]:
+    """Task BL A5: the checkpoint's position window, read from its config.json."""
+    path = Path(model_dir) / "config.json"
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return {"error": f"{type(exc).__name__}: {exc}"[:300], "path": str(path)}
+    return {
+        "max_position_embeddings": doc.get("max_position_embeddings"),
+        "rope_scaling": doc.get("rope_scaling"),
+        "rope_theta": doc.get("rope_theta"),
+        "path": str(path),
+    }
+
+
+def validity_fields(largest: int | None, window: dict[str, Any]) -> dict[str, Any]:
+    """Task BL A5: L_mem, L_valid = min(L_mem, max_position_embeddings), and the flag."""
+    mpe = window.get("max_position_embeddings")
+    if largest is None or not isinstance(mpe, int):
+        return {"L_mem": largest, "L_valid": None, "past_trained_positions": None}
+    return {
+        "L_mem": int(largest),
+        "L_valid": min(int(largest), mpe),
+        "past_trained_positions": int(largest) > mpe,
+    }
 
 
 def _resident_low() -> int:
@@ -282,6 +329,8 @@ def _child_spec(harness: dict[str, Any], arm_id: str, work: Path) -> dict[str, A
     for flag in CC_CHILD_FLAGS:
         if CC_OVERRIDE.get(flag):
             spec[flag] = True
+    if CC_OVERRIDE.get("mem_trace_hz"):
+        spec["mem_trace_hz"] = float(CC_OVERRIDE["mem_trace_hz"])
     return spec
 
 
@@ -994,6 +1043,7 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
         # CC cells only (Task BJ); absent otherwise so existing plans are unchanged.
         plan["cc"] = {k: (list(v) if isinstance(v, tuple) else v) for k, v in CC_OVERRIDE.items()}
         plan["turn2_max_new_tokens"] = turn2_new_tokens
+        plan["model_window"] = model_window(harness["model_dir"])
     plan_path = out_dir / "plan.json"
     _write(plan_path, plan)
     guard = _open_canary(
@@ -1021,7 +1071,7 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
         spec["turn2_max_new_tokens"] = turn2_new_tokens
         measured = measured_repeat(
             root=ROOT,
-            cfg=harness["cfg"],
+            cfg=_cc_cfg(harness["cfg"]),
             p_cpus=harness["p_cpus"],
             work_dir=work,
             child_spec=spec,
@@ -1055,6 +1105,10 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
         if CC_OVERRIDE:
             point["turn2"] = turn2
             point["cc_mem"] = (child.get("child") or {}).get("cc_mem")
+            mpe = (plan.get("model_window") or {}).get("max_position_embeddings")
+            point["past_trained_positions"] = (
+                int(n_cached) + DELTA_TOKENS > mpe if isinstance(mpe, int) else None
+            )
             point["compiled_kv"] = [
                 ld.get("compiled") for ld in ((child.get("child") or {}).get("loads") or [])
             ]
@@ -1076,7 +1130,7 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
                 attempt=attempt,
             )
     except CanaryDriftAbort as exc:
-        summary = {
+        summary: dict[str, Any] = {
             "kind": "resident_limit",
             "session_id": session_id,
             "arm": arm,
@@ -1109,6 +1163,124 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
         summary["note"] = found["note"]
     if "first_fail_n_cached" in found:
         summary["first_fail_n_cached"] = found["first_fail_n_cached"]
+    if CC_OVERRIDE:
+        summary["validity"] = validity_fields(
+            found["largest_n_cached"], plan.get("model_window") or {}
+        )
+    return _finish(guard=guard, out_dir=out_dir, summary=summary, plan=plan)
+
+
+def run_cc_series(*, arm: str, model_spec: Path, session_id: str, out_dir: Path) -> int:
+    """CC-GROW (one growing session) or CC-CONC (N concurrent sessions, ascending, stop on
+    the first failure). Task BL; set by tools/run_resident_limit.py --grow-step / --conc-sessions.
+    """
+    from seam.tools.delta_n import measured_repeat
+    from tools.ttft_slo_canary import CanaryDriftAbort
+
+    grow: dict[str, Any] = dict(CC_OVERRIDE.get("grow") or {})
+    conc: dict[str, Any] = dict(CC_OVERRIDE.get("conc") or {})
+    if bool(grow) == bool(conc):
+        raise SystemExit("REFUSED -- run_cc_series needs exactly one of grow / conc")
+    gates = require_gates()
+    harness = load_harness(model_spec)
+    kind = "cc_grow" if grow else "cc_conc"
+    steps: list[int] = [0] if grow else [int(n) for n in conc["sessions"]]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    _publish_cell_status("running", session_id)
+    plan: dict[str, Any] = {
+        "kind": kind,
+        "session_id": session_id,
+        "started_utc": _utc(),
+        "arm": arm,
+        "model_spec": str(harness["model_spec"]),
+        "model_name": harness["model_name"],
+        "model_window": model_window(harness["model_dir"]),
+        "cc": {k: (list(v) if isinstance(v, tuple) else v) for k, v in CC_OVERRIDE.items()},
+        "gates": gates,
+        "status": "running",
+    }
+    if SCHEDULER_OVERRIDE is not None:
+        plan["scheduler_config"] = dict(SCHEDULER_OVERRIDE)
+    plan_path = out_dir / "plan.json"
+    _write(plan_path, plan)
+    planned = max(RESIDENT_PLANNED_PROBES, len(steps))
+    guard = _open_canary(
+        model_spec=_canary_model([harness["model_spec"]]),
+        work=out_dir / "work",
+        plan_path=plan_path,
+        planned=planned,
+    )
+    plan["canary"] = guard.plan_fragment()
+    _write(plan_path, plan)
+    probes_log: list[dict[str, Any]] = []
+    points: list[dict[str, Any]] = []
+    try:
+        guard.opening()
+        for n in steps:
+            work = out_dir / "work"
+            spec = _child_spec(harness, arm, work)
+            tag = "grow" if grow else f"n{n}"
+            if grow:
+                spec["cc_grow"] = dict(grow)
+            else:
+                spec["cc_conc"] = {
+                    "sessions": n,
+                    "tokens": int(conc["tokens"]),
+                    "new_tokens": int(conc.get("new_tokens", 16)),
+                }
+            measured = measured_repeat(
+                root=ROOT,
+                cfg=_cc_cfg(harness["cfg"]),
+                p_cpus=harness["p_cpus"],
+                work_dir=work,
+                child_spec=spec,
+                label=f"{kind}-{arm}-{tag}",
+                tag=tag,
+            )
+            child = measured["result"]
+            classified = _point_failure(child)
+            point: dict[str, Any] = {
+                "arm": arm,
+                "step": n,
+                "holds": child.get("outcome") == "pass",
+                "outcome": child.get("outcome"),
+                "failure_kind": classified.get("failure_kind"),
+                "failure_mode": child.get("failure_mode"),
+                "exception": (child.get("child") or {}).get("exception"),
+                "generation": (child.get("child") or {}).get("generation"),
+                "loads": (child.get("child") or {}).get("loads"),
+                "hung_after_result": bool(child.get("hung_after_result")),
+            }
+            _write(out_dir / "points" / f"{tag}.json", point)
+            points.append(point)
+            probes_log.append({"wall_s": child.get("parent_wall_s")})
+            guard.after_probe(probes_log)
+            if not point["holds"]:
+                break
+    except CanaryDriftAbort as exc:
+        summary: dict[str, Any] = {
+            "kind": kind,
+            "session_id": session_id,
+            "arm": arm,
+            "status": "FAIL_CANARY_DRIFT",
+            "abort_reason": str(exc.detail),
+            "points": points,
+            "canaries": list(guard.canaries),
+        }
+        _write(out_dir / "summary.json", summary)
+        raise SystemExit(f"REFUSED -- FAIL_CANARY_DRIFT: {exc.detail}") from exc
+    held = [p["step"] for p in points if p["holds"]]
+    failed = [p["step"] for p in points if not p["holds"]]
+    summary = {
+        "kind": kind,
+        "session_id": session_id,
+        "arm": arm,
+        "model_name": harness["model_name"],
+        "status": "complete",
+        "largest_holding_step": max(held) if held else None,
+        "first_failing_step": min(failed) if failed else None,
+        "points": points,
+    }
     return _finish(guard=guard, out_dir=out_dir, summary=summary, plan=plan)
 
 

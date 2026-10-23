@@ -196,7 +196,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-23 (Task BJ). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-23 (Task BL). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -350,6 +350,21 @@ session start; update it in the same commit as the work. Never delete a row.
       held-out queue. CC-CLIFF-T2S is blocked.
   - Monday prompt: ~/seam_closeout_1013/papers_20261015/TASK_BK_MEETING27.md.
   - CC-XRT-T2S and E2-T2S are CONDITIONAL on Rithwik's written OK.
+- 2026-10-23 ~11:50 AM ET (Task BL, before any CC launch): amendment
+  docs/registrations/CC_AMEND_2026-10-23b.md (A1-A18), predictions derived/cc/CC_BL_PREDICTIONS.json.
+  - MIXED 64*T is retired for the sealed limits. H-act (a = 96,768 B per token) vs H-quad is decided
+    by f16 / u4 at c256 and c1024. The primary 63,319 and the gate >= 40,000 are unchanged.
+  - Grid to 110,000 at 1,000; child timeout 3,600 s; censored timeouts; every row L_mem / L_valid;
+    10 Hz in-child trace.
+  - New cells:
+    - T2S: CC-CONC (i)-(iv), CC-WINDOW, A14 read-only record first;
+    - XPS: CC-TTFT, CC-GROW, CC-VALID (Qwen3-4B-Instruct-2507 INT4, Mac export, spec pin pending);
+    - CONDITIONAL: CC-RT, A15 slider (Rithwik), A16, A18.
+  - Queues ~/seam_closeout_1013/xps/run_queue_{t2s,xps}_cc_v2.sh. The BJ CC scripts are superseded.
+  - Corrections:
+    - cf3555d5 compiled i8;
+    - the NPU caps ran on the T2S;
+    - 44,742 = 83127e1b, unsealed.
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.

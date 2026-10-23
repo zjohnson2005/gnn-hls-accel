@@ -58,6 +58,102 @@ def cc_mem_snapshot(stage: str, cores: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+# CC cells (Task BL): cores of the load, for the memory records and the 10 Hz trace.
+_CC_CORES: dict[str, Any] = {}
+DEVICE_MEM_PROPS = ("GPU_DEVICE_MAX_ALLOC_MEM_SIZE", "GPU_DEVICE_TOTAL_MEM_SIZE")
+
+
+def device_mem_props(core: Any, device: str) -> dict[str, Any]:
+    """CL max single allocation and total device memory as the plugin reports them."""
+    out: dict[str, Any] = {}
+    for name in DEVICE_MEM_PROPS:
+        try:
+            out[name] = int(core.get_property(device, name))
+        except Exception as exc:  # recorded, never raised
+            out[name] = f"error: {type(exc).__name__}: {str(exc)[:200]}"
+    return out
+
+
+def _gpu_stat_total(cores: dict[str, Any]) -> int | None:
+    total = 0
+    seen = False
+    for device, core in cores.items():
+        try:
+            raw = dict(core.get_property(device, "GPU_MEMORY_STATISTICS"))
+        except Exception:
+            continue
+        total += sum(int(v) for v in raw.values())
+        seen = True
+    return total if seen else None
+
+
+class MemTrace:
+    """CC cells (spec mem_trace_hz): sample system available memory and the summed
+    GPU_MEMORY_STATISTICS at about hz while a generate runs (background thread).
+
+    Thread safety of the plugin property read during inference is UNVERIFIED; the
+    rehearsal cell exercises it. Read errors are counted, never raised.
+    """
+
+    MAX_SAMPLES = 20000
+
+    def __init__(self, hz: float, cores: dict[str, Any], read_gpu: bool = True) -> None:
+        import threading
+
+        self.period = 1.0 / float(hz)
+        self.hz = float(hz)
+        self.cores = cores
+        self.read_gpu = read_gpu
+        self.samples: list[tuple[float, float, int | None]] = []
+        self.errors = 0
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+
+    def _run(self) -> None:
+        while not self._stop.is_set():
+            try:
+                avail = psutil.virtual_memory().available / MB
+                gpu = _gpu_stat_total(self.cores) if self.read_gpu else None
+                if len(self.samples) < self.MAX_SAMPLES:
+                    self.samples.append((time.time(), round(avail, 1), gpu))
+            except Exception:
+                self.errors += 1
+            self._stop.wait(self.period)
+
+    def __enter__(self) -> MemTrace:
+        self._thread.start()
+        return self
+
+    def __exit__(self, *exc: Any) -> None:
+        self._stop.set()
+        self._thread.join(timeout=5.0)
+
+    def result(self) -> dict[str, Any]:
+        gpus = [g for _, _, g in self.samples if g is not None]
+        avails = [a for _, a, _ in self.samples]
+        return {
+            "hz": self.hz,
+            "n": len(self.samples),
+            "errors": self.errors,
+            "available_min_mb": min(avails) if avails else None,
+            "gpu_stat_total_peak_bytes": max(gpus) if gpus else None,
+            "gpu_stat_total_first_bytes": gpus[0] if gpus else None,
+            "gpu_stat_total_last_bytes": gpus[-1] if gpus else None,
+            "trace": self.samples,
+        }
+
+
+def _traced(spec: dict[str, Any], fn: Callable[[], dict[str, Any]]) -> dict[str, Any]:
+    """Run one generate, under a MemTrace when the spec asks for one."""
+    hz = spec.get("mem_trace_hz")
+    if not hz:
+        return fn()
+    with MemTrace(float(hz), _CC_CORES, read_gpu=bool(spec.get("gpu_mem_stats"))) as tr:
+        rec = fn()
+    rec["mem_trace"] = tr.result()
+    return rec
+
+
 def result_replace_policy() -> tuple[int, float]:
     """How many times to retry a result-file replace after WinError 5.
 
@@ -245,6 +341,7 @@ def _run_with_power(spec: dict[str, Any], writer: _Writer) -> int:
         if requested_kv is not None:
             core.set_property(device, {"KV_CACHE_PRECISION": properties["KV_CACHE_PRECISION"]})
         cores[device] = core
+        _CC_CORES[device] = core
         capture: contextlib.AbstractContextManager[dict[str, Any]] = contextlib.nullcontext(
             {"text": None}
         )
@@ -283,6 +380,8 @@ def _run_with_power(spec: dict[str, Any], writer: _Writer) -> int:
             from seam.genai_runtime import parse_genai_load_log
 
             load_rec["compiled"] = parse_genai_load_log(str(captured.get("text") or ""))
+        if spec.get("gpu_mem_stats"):
+            load_rec["device_mem_props"] = device_mem_props(core, device)
         loads.append(load_rec)
         writer.update(
             phase=f"loaded:{device}",
@@ -323,6 +422,11 @@ def _run_with_power(spec: dict[str, Any], writer: _Writer) -> int:
 
     generate_device = str(spec["generate_device"])
     pipe = pipes[generate_device]
+
+    if spec.get("cc_grow"):
+        return _cc_grow(spec, writer, pipe, ov_genai)
+    if spec.get("cc_conc"):
+        return _cc_conc(spec, writer, pipe, ov_genai)
 
     if spec.get("resident_two_turn"):
         mem_probe = None
@@ -580,7 +684,7 @@ def _resident_two_turn(
     history.append({"role": "user", "content": turn1_content})
     writer.update(phase="generating", memory_before_generate=_mem())
     try:
-        turn1 = _chat_once(pipe, history, cfg1, ov_genai)
+        turn1 = _traced(spec, lambda: _chat_once(pipe, history, cfg1, ov_genai))
     except Exception as exc:
         return _fail_turn(writer, "turn1", exc)
     if mem_probe is not None:
@@ -637,6 +741,102 @@ def _resident_two_turn(
             "turn1": turn1,
             "turn2": turn2s,
         },
+        memory_after_generate=_mem(),
+    )
+    return 0
+
+
+def _cc_grow(spec: dict[str, Any], writer: _Writer, pipe: Any, ov_genai: Any) -> int:
+    """CC-GROW (Task BL): grow one ChatHistory session by step-token user turns until an
+    error or max_tokens. Each turn generates new_tokens; prefix reuse follows the
+    pipeline's scheduler (prefix caching as configured). Records every turn.
+    """
+    from seam.tools.boot4_text import raw_exact_text
+
+    tokenizer = pipe.get_tokenizer()
+    unit = str(spec["filler_unit"])
+    g = dict(spec["cc_grow"])
+    step = int(g["step_tokens"])
+    max_tokens = int(g["max_tokens"])
+    cfg = ov_genai.GenerationConfig()
+    cfg.max_new_tokens = int(g.get("new_tokens", 1))
+    cfg.do_sample = False
+    cfg.ignore_eos = True
+    history = ov_genai.ChatHistory()
+    history.set_extra_context({"enable_thinking": False})
+    turns: list[dict[str, Any]] = []
+    writer.update(phase="generating", memory_before_generate=_mem())
+    k = 0
+    while True:
+        history.append(
+            {"role": "user", "content": raw_exact_text(tokenizer, step, unit=unit, salt=f"g{k}")}
+        )
+        try:
+            rec = _traced(spec, lambda: _chat_once(pipe, history, cfg, ov_genai))
+        except Exception as exc:
+            writer.update(generation={"cc_grow": True, "turns": turns})
+            return _fail_turn(writer, f"grow_turn{k}", exc)
+        rec["turn"] = k
+        rec["system_after"] = _mem()
+        rec.pop("text_head", None)
+        turns.append(rec)
+        history.append({"role": "assistant", "content": "ok"})
+        writer.update(generation={"cc_grow": True, "turns": turns})
+        reported = rec.get("prompt_tokens_reported")
+        if reported is not None and int(reported) >= max_tokens:
+            break
+        if reported is None and (k + 1) * step >= max_tokens:
+            break
+        k += 1
+    writer.update(
+        phase="done",
+        completed=True,
+        failure_mode=None,
+        generation={"cc_grow": True, "turns": turns, "reached_max": True},
+        memory_after_generate=_mem(),
+    )
+    return 0
+
+
+def _cc_conc(spec: dict[str, Any], writer: _Writer, pipe: Any, ov_genai: Any) -> int:
+    """CC-CONC (Task BL): one generate over N unique prompts of tokens each (a batch the
+    continuous-batching scheduler admits per its config). Records wall time and memory.
+    """
+    from seam.tools.boot4_text import raw_exact_text
+
+    tokenizer = pipe.get_tokenizer()
+    unit = str(spec["filler_unit"])
+    c = dict(spec["cc_conc"])
+    n = int(c["sessions"])
+    tokens = int(c["tokens"])
+    prompts = [raw_exact_text(tokenizer, tokens, unit=unit, salt=f"c{i}") for i in range(n)]
+    if len(set(prompts)) != n:
+        raise RuntimeError("concurrent prompts are not unique")
+    cfg = ov_genai.GenerationConfig()
+    cfg.max_new_tokens = int(c.get("new_tokens", 16))
+    cfg.do_sample = False
+    cfg.ignore_eos = True
+    if hasattr(cfg, "apply_chat_template"):
+        cfg.apply_chat_template = False
+    writer.update(phase="generating", memory_before_generate=_mem())
+
+    def run() -> dict[str, Any]:
+        t0 = time.perf_counter()
+        result = pipe.generate(prompts, cfg)
+        wall = time.perf_counter() - t0
+        texts = getattr(result, "texts", None)
+        return {"wall_s": wall, "n_texts": len(texts) if texts is not None else None}
+
+    try:
+        rec = _traced(spec, run)
+    except Exception as exc:
+        return _fail_turn(writer, f"conc_n{n}", exc)
+    rec.update({"sessions": n, "tokens_per_session": tokens, "system_after": _mem()})
+    writer.update(
+        phase="done",
+        completed=True,
+        failure_mode=None,
+        generation={"cc_conc": True, **rec},
         memory_after_generate=_mem(),
     )
     return 0

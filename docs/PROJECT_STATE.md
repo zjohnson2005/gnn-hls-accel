@@ -476,7 +476,7 @@ measurable on this platform:
 | claim | evidence |
 |:--|:--|
 | Cold-start TTFT limit identical at **10,000** for f16 / u8 / u4 | C-2 `62395fdb` (AM-038 held, span 0) |
-| No hard memory ceiling | C-1 `83127e1b`: f16 completed n=44,742 with Available 0.0 MB via paging |
+| No hard memory ceiling | C-1 `83127e1b`: f16 completed n=44,742 with Available 0.0 MB via paging (UNSEALED: aborted, operator salvage; not citable as sealed, Task BL A17) |
 | Quality uninformative at n=20 | `41e419bd`: 17 / 16 / 17; MDE ~24 points |
 | Workload max context **7,743** = **77%** of cold-start TTFT limit | vs C-2 limit 10,000 |
 
