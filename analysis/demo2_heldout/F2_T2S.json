@@ -1,0 +1,183 @@
+{
+ "F2": {
+  "alpha": 0.05,
+  "claims": [
+   "A is better than P for b_wall",
+   "A is better than P for c_time_to_failure"
+  ],
+  "holm_adjusted": {
+   "b_wall | A vs C": 1.0,
+   "b_wall | A vs P": 4.512552540410642e-08,
+   "c_time_to_failure | A vs C": 1.0,
+   "c_time_to_failure | A vs P": 4.772627804072727e-07,
+   "d_hang_loop | A vs C": 1.0,
+   "d_hang_loop | A vs P": 1.0
+  },
+  "m": 6
+ },
+ "arms": {
+  "A": {
+   "cap": 40960,
+   "generates_over_cap": 0,
+   "hang_loop": 0,
+   "local_fails": 57,
+   "max_steps": 0,
+   "overrun_loud": 0,
+   "silent_overrun": 0
+  },
+  "C": {
+   "cap": 16896,
+   "generates_over_cap": 0,
+   "hang_loop": 0,
+   "local_fails": 56,
+   "max_steps": 0,
+   "overrun_loud": 0,
+   "silent_overrun": 0
+  },
+  "P": {
+   "cap": 16896,
+   "generates_over_cap": 0,
+   "hang_loop": 0,
+   "local_fails": 48,
+   "max_steps": 0,
+   "overrun_loud": 0,
+   "silent_overrun": 0
+  }
+ },
+ "contrasts": {
+  "A vs C": {
+   "a_silent_overrun": {
+    "A_count": 0,
+    "X_count": 0,
+    "b": 0,
+    "c": 0,
+    "favours": null,
+    "n": 60,
+    "p": 1.0,
+    "role": "by construction (X refuses a generate past its window): mechanism check, outside the Holm family, no empirical claim",
+    "test": "exact McNemar (b = A only, c = X only)"
+   },
+   "b_wall": {
+    "favours": "A",
+    "median_A_s": 11.773237450000295,
+    "median_X_s": 10.794503450000775,
+    "median_paired_diff_s": -0.041826650000672316,
+    "n": 60,
+    "n_nonzero": 60,
+    "p": 0.2958623332952983,
+    "p_holm": 1.0,
+    "r_minus": 1057.0,
+    "r_plus": 773.0,
+    "rejects_holm_0.05": false,
+    "test": "Wilcoxon signed-rank, two-sided, wall_A - wall_X",
+    "wall_lower_bound_entries": {
+     "A": 0,
+     "X": 0
+    }
+   },
+   "c_time_to_failure": {
+    "favours": "A",
+    "median_paired_diff_s": -0.04263685000060491,
+    "median_ttf_A_s": 11.82540210000019,
+    "median_ttf_X_s": 11.080270350000319,
+    "n": 56,
+    "n_both_fail": 56,
+    "n_fail_A": 57,
+    "n_fail_X": 56,
+    "n_nonzero": 56,
+    "p": 0.3157058210597713,
+    "p_holm": 1.0,
+    "r_minus": 921.0,
+    "r_plus": 675.0,
+    "rejects_holm_0.05": false,
+    "test": "Wilcoxon signed-rank, two-sided, on entries where both fail locally",
+    "testable": true
+   },
+   "d_hang_loop": {
+    "A_count": 0,
+    "X_count": 0,
+    "b": 0,
+    "c": 0,
+    "favours": null,
+    "n": 60,
+    "p": 1.0,
+    "p_holm": 1.0,
+    "rejects_holm_0.05": false,
+    "test": "exact McNemar (b = A only, c = X only)"
+   }
+  },
+  "A vs P": {
+   "a_silent_overrun": {
+    "A_count": 0,
+    "X_count": 0,
+    "b": 0,
+    "c": 0,
+    "favours": null,
+    "n": 60,
+    "p": 1.0,
+    "role": "by construction (X refuses a generate past its window): mechanism check, outside the Holm family, no empirical claim",
+    "test": "exact McNemar (b = A only, c = X only)"
+   },
+   "b_wall": {
+    "favours": "A",
+    "median_A_s": 11.773237450000295,
+    "median_X_s": 25.794162000000256,
+    "median_paired_diff_s": -13.945783299999846,
+    "n": 60,
+    "n_nonzero": 60,
+    "p": 7.520920900684404e-09,
+    "p_holm": 4.512552540410642e-08,
+    "r_minus": 1700.0,
+    "r_plus": 130.0,
+    "rejects_holm_0.05": true,
+    "test": "Wilcoxon signed-rank, two-sided, wall_A - wall_X",
+    "wall_lower_bound_entries": {
+     "A": 0,
+     "X": 0
+    }
+   },
+   "c_time_to_failure": {
+    "favours": "A",
+    "median_paired_diff_s": -13.163146949999827,
+    "median_ttf_A_s": 11.998369400000115,
+    "median_ttf_X_s": 23.921104749999813,
+    "n": 48,
+    "n_both_fail": 48,
+    "n_fail_A": 57,
+    "n_fail_X": 48,
+    "n_nonzero": 48,
+    "p": 9.545255608145453e-08,
+    "p_holm": 4.772627804072727e-07,
+    "r_minus": 1064.0,
+    "r_plus": 112.0,
+    "rejects_holm_0.05": true,
+    "test": "Wilcoxon signed-rank, two-sided, on entries where both fail locally",
+    "testable": true
+   },
+   "d_hang_loop": {
+    "A_count": 0,
+    "X_count": 0,
+    "b": 0,
+    "c": 0,
+    "favours": null,
+    "n": 60,
+    "p": 1.0,
+    "p_holm": 1.0,
+    "rejects_holm_0.05": false,
+    "test": "exact McNemar (b = A only, c = X only)"
+   }
+  }
+ },
+ "family": "F2 (OBJ): not gated on the dollar primary; own alpha 0.05; Holm per host",
+ "host": "T2S",
+ "inputs": {
+  "arms": [
+   "A=derived/demo2_heldout/t2s_window_20261023_131037_be_v2/ho_a/derived__h1_hybrid__interleaved_1f13b75e-f1e3-49e1-9a1b-25bd4655a0cc",
+   "P=derived/demo2_heldout/t2s_window_20261023_131037_be_v2/ho_p/derived__h1_hybrid__interleaved_9eb71a3a-a0f6-433b-bb4b-c0bfb39f37cf",
+   "C=derived/demo2_heldout/t2s_window_20261023_131037_be_v2/ho_c/derived__h1_hybrid__interleaved_89676c43-ee0e-4aff-ab62-bb5dbeb1cfd9"
+  ],
+  "pin": "derived/h1_hybrid/demo2/DEMO2_HELDOUT_60.json"
+ },
+ "n": 60,
+ "pin_sha256": "cc74a37ed84ed95b0f4dd4b8d7eb774f2737230dcfca01321fe136cdbfbca447"
+}

@@ -1,0 +1,283 @@
+{
+  "affinity_readback": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "cc_mem": [
+    {
+      "gpu_memory_statistics": {
+        "GPU": {
+          "cl_mem": 0,
+          "unknown": 0,
+          "usm_device": 0,
+          "usm_host": 2267177611,
+          "usm_shared": 0
+        }
+      },
+      "gpu_process_counters": {
+        "dedicated_usage_mb": 0.0,
+        "shared_usage_mb": 2255.1
+      },
+      "stage": "loaded",
+      "system": {
+        "available_mb": 5431.5,
+        "percent": 66.0,
+        "rss_mb": 2562.0390625,
+        "used_mb": 10544.67578125
+      },
+      "t_unix": 1792789297.317697
+    }
+  ],
+  "completed": false,
+  "exception": {
+    "message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.\n\n\n",
+    "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 768, in _resident_two_turn\n    turn1 = _traced(spec, lambda: _chat_once(pipe, history, cfg1, ov_genai))\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 192, in _traced\n    rec = fn()\n          ^^^^\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 768, in <lambda>\n    turn1 = _traced(spec, lambda: _chat_once(pipe, history, cfg1, ov_genai))\n                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 648, in _chat_once\n    result = pipe.generate(history, cfg, streamer)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_common.hpp:62:\n[GPU] CL_OUT_OF_RESOURCES exception.\n\tDue to a driver bug, any subsequent OpenCL API call may cause the application to hang, so the GPU plugin may be unable to finish correctly.\n\tThe CL_OUT_OF_RESOURCES error typically occurs in two cases:\n\t1. Insufficient memory for the current inference.\n\t2. An out-of-bounds access to GPU memory from a kernel.\n\tFor case 1 (Insufficient Memory)\t  - Try adjusting some model parameters (e.g., using a smaller batch size, lower inference precision, fewer streams, etc.) to \n\t    reduce the required memory size.\n\t  - Alternatively, for Intel integrated Arc GPUs on Microsoft Windows 10 or 11 host systems with more than 10 GB of system memory, the \n\t    shared memory allocation can be increased via the Intel Graphics Software tool: 'Graphics > General > Shared GPU Memory Override', \n\t    as long as it is not already at its software-defined upper limit.\n\tFor case 2 (Out-of-Bounds Access):\n\t  - Please submit a bug report to the OpenVINO team.\n\tAdditionally, please try updating the driver to the latest version.\n\n\n\n",
+    "type": "RuntimeError"
+  },
+  "failure_mode": "turn1:RuntimeError",
+  "kv_cache_precision_readback": [
+    {
+      "enforced": true,
+      "failure_mode": null,
+      "match": true,
+      "readback": {
+        "device": "GPU",
+        "error": null,
+        "normalized": "u4",
+        "ok": true,
+        "property": "KV_CACHE_PRECISION",
+        "raw": "<Type: 'uint4_t'>",
+        "to_string": "u4"
+      },
+      "requested": "u4"
+    }
+  ],
+  "loads": [
+    {
+      "available_delta_mb": 2484.83984375,
+      "compile_s": 3.7099440000001778,
+      "compiled": {
+        "backend": "PA",
+        "captured_chars": 2811,
+        "key_cache_quant_mode": null,
+        "kv_cache_precision": "u4",
+        "n_pa_properties": 25,
+        "pa_property_dump_seen": true,
+        "sdpa_fallback_warning": false,
+        "value_cache_quant_mode": null
+      },
+      "device": "GPU",
+      "device_mem_props": {
+        "GPU_DEVICE_MAX_ALLOC_MEM_SIZE": 8503984128,
+        "GPU_DEVICE_TOTAL_MEM_SIZE": 8503984128
+      },
+      "kv_cache_precision": {
+        "enforced": true,
+        "failure_mode": null,
+        "match": true,
+        "readback": {
+          "device": "GPU",
+          "error": null,
+          "normalized": "u4",
+          "ok": true,
+          "property": "KV_CACHE_PRECISION",
+          "raw": "<Type: 'uint4_t'>",
+          "to_string": "u4"
+        },
+        "requested": "u4"
+      },
+      "memory_after": {
+        "available_mb": 5433.5234375,
+        "percent": 66.0,
+        "rss_mb": 2559.91796875,
+        "used_mb": 10542.65234375
+      },
+      "memory_before": {
+        "available_mb": 7918.36328125,
+        "percent": 50.4,
+        "rss_mb": 53.1953125,
+        "used_mb": 8057.8125
+      },
+      "properties": {
+        "KV_CACHE_PRECISION": "<Type: 'uint4_t'>"
+      },
+      "properties_requested": {
+        "KV_CACHE_PRECISION": "u4"
+      },
+      "rss_delta_mb": 2506.72265625,
+      "versions": {
+        "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+        "openvino_genai": "2026.2.1.0-3123-7dea0459b2a"
+      }
+    }
+  ],
+  "memory_after_import": {
+    "available_mb": 7918.35546875,
+    "percent": 50.4,
+    "rss_mb": 52.92578125,
+    "used_mb": 8057.8203125
+  },
+  "memory_at_failure": {
+    "available_mb": 2141.8046875,
+    "percent": 86.6,
+    "rss_mb": 5835.4609375,
+    "used_mb": 13834.37109375
+  },
+  "memory_baseline": {
+    "available_mb": 7943.80078125,
+    "percent": 50.3,
+    "rss_mb": 19.3828125,
+    "used_mb": 8032.375
+  },
+  "memory_before_generate": {
+    "available_mb": 5417.30078125,
+    "percent": 66.1,
+    "rss_mb": 2583.07421875,
+    "used_mb": 10558.875
+  },
+  "memory_resident_before_inference": {
+    "available_mb": 5431.51953125,
+    "percent": 66.0,
+    "rss_mb": 2562.01953125,
+    "used_mb": 10544.65625
+  },
+  "memory_trace_at_failure": {
+    "available_min_mb": 2155.5,
+    "dxgi": {
+      "budget_change_events": 4,
+      "error": null,
+      "first_budget_usage": {
+        "LOCAL": [
+          8802899523,
+          2359926784
+        ],
+        "NON_LOCAL": [
+          0,
+          0
+        ]
+      },
+      "last_budget_usage": {
+        "LOCAL": [
+          8802899523,
+          5726949376
+        ],
+        "NON_LOCAL": [
+          0,
+          0
+        ]
+      },
+      "peak_current_usage": {
+        "LOCAL": 5726949376,
+        "NON_LOCAL": 0
+      }
+    },
+    "errors": 0,
+    "gpu_stat_total_first_bytes": 2267177611,
+    "gpu_stat_total_last_bytes": 5670541863,
+    "gpu_stat_total_peak_bytes": 5670541863,
+    "hz": 10.0,
+    "n": 12
+  },
+  "phase": "failed",
+  "power_request": {
+    "clear_last_error": null,
+    "cleared": false,
+    "close_last_error": null,
+    "closed": false,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x2b0",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "measurement_child",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "spec": {
+    "affinity_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "arm_id": "gpu_only_u4",
+    "arm_properties": {
+      "KV_CACHE_PRECISION": "u4"
+    },
+    "compiled_readback": true,
+    "delta_tokens": 183,
+    "dxgi_trace": true,
+    "filler_unit": " the quick brown fox jumps over the lazy dog.",
+    "generate_device": "GPU",
+    "gpu_mem_stats": true,
+    "load_sequence": [
+      {
+        "device": "GPU",
+        "properties": {
+          "KV_CACHE_PRECISION": "u4"
+        }
+      }
+    ],
+    "max_new_tokens": 8,
+    "mem_trace_hz": 10.0,
+    "model_dir": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "n_cached": 25250,
+    "prompt_path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_prefill\\598e882d-174c-4c65-8e7d-780c9402ccb3\\work\\prompt_unused.txt",
+    "reject_kv_mismatch": true,
+    "resident_two_turn": true,
+    "rss_interval_s": 0.05,
+    "turn1_max_new_tokens": 1,
+    "turn2_max_new_tokens": 1,
+    "turn2_repeats": 1,
+    "wslock": {
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "mode": "request"
+    }
+  },
+  "standing_reservation": {
+    "available_delta_mb": 2512.28125,
+    "basis": "delta from process baseline (pre-import) to all backends compiled and resident, before any measured generation; rss and system-available disagree when weights are file-backed or shared, and both are reported without attribution",
+    "rss_delta_mb": 2542.63671875
+  },
+  "working_set_lock": {
+    "after": {
+      "flags": 9,
+      "hard_min_enabled": true,
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "read": true
+    },
+    "before": {
+      "flags": 10,
+      "hard_min_enabled": false,
+      "maximum_bytes": 1413120,
+      "minimum_bytes": 204800,
+      "read": true
+    },
+    "call": "SetProcessWorkingSetSizeEx",
+    "flags": 1,
+    "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+    "granted": true,
+    "last_error": 0,
+    "privilege": {
+      "attempted": true,
+      "granted": true,
+      "last_error": 0,
+      "last_error_meaning": "ERROR_SUCCESS",
+      "privilege": "SeIncreaseWorkingSetPrivilege",
+      "step": "AdjustTokenPrivileges"
+    },
+    "requested": true,
+    "requested_maximum_bytes": 12884901888,
+    "requested_minimum_bytes": 4294967296,
+    "returned": true
+  }
+}

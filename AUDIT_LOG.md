@@ -3704,3 +3704,18 @@ for Claude in this session; Zach pushes).
 - New tools: inv_alloc_probe.py, pinned_balloon.py, inv_commit_sidecar.py, xrt_llamacpp.py (pin
   configs/xrt/llamacpp_pin.yaml; -np 1 and --cache-ram 0 fixed), stat_cir.py. New queue scripts (outside
   the repo): run_queue_xps_{inv1,xrt1,sess1,stat1}.sh + br_lib.sh. docs/RITHWIK_ASKS_2026-10-26.md.
+
+## 2026-10-26 ~10:20-11:10 AM ET (Task BK closeout + meeting pack; Mac only, $0, no ssh)
+- Records: derived/cc/windows_20261023_25/ (9 CC windows) and derived/demo2_heldout/ (2 T2S be_v2 windows), byte
+  copies; sidecar CSVs stay outside git with sha256 (CSV_MANIFEST.sha256). Seals: 70 MATCH_MANIFEST + 10 MATCH;
+  1 truncated duplicate copy of e7f0c307 (0-byte summary.json from the network hang) reads COVERAGE_GAP; its
+  nested re-copy is MATCH and is the one used. slope_f16_unl b4a96d44 (T2S) has no cells.txt line (park failed)
+  but its sealed tree reached the Mac (MATCH) and is included.
+- Discards: none. Not run: cliff_u4 36e0ec24 and bal_g2_f16 98c9a927 (quiescence refusals), CC-VALID, CC-RT,
+  A30 (Ollama absent), M2. ho_i4k d9873c58 crashed in the BFCL checker (IndexError), no summary, secondary only.
+- Scored by each file's rule (analysis/cc_20261026/SCORES.md; analysis/demo2_heldout/SCORES.md). R1, R2 RED
+  FLAG (already decided); R3-R7 PASS; R8-R10 NOT YET MEASURED. DEMO-2 T2S primary PENDING (needs ho_cloud).
+- Reported, not acted on: at 74% override the failures moved to turn-2 CL_EXEC_STATUS event errors and the
+  first children started at 3.5-3.9 GB Available (39d38c85, 9e31d4cb). T2S hand-back SIDECARS=1 in every CC
+  window, very likely the count query matching itself (not verified; no ssh).
+- Wording fixes recorded (APPROVALS_2026-10-24.md; PLAN_LOCK): the (k+a)/a scope sentence, capacity-probe label.

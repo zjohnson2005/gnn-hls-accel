@@ -1,0 +1,99 @@
+[10-23 16:05:50 ET] run_queue_t2s_cc_v3.sh sha256 5fe18fbca204b3a593e6431174302ce06fdc0f4f7fa7647b3ca84efe657e1851; park_untracked_v2.ps1 sha256 e2bf2fc643bff81cea2db594d5bdcdd68e020fdfe91a9386eb0e54464f4d63c7
+[10-23 16:05:50 ET] start (FROM=14 UNTIL=999 head 241e4d3); output in /Users/zjohnson05/seam_closeout_1013/t2s/window_20261023_160550_cc_v3
+[10-23 16:06:22 ET] pulled to 241e4d3, tree clean
+[10-23 16:07:01 ET] A19 DXGI probe OK; cells use --dxgi-trace
+[10-23 16:07:14 ET] reboot (cold launch for alloc_f16); boot time before 2026-10-23T10:11:49.5000000-07:00
+[10-23 16:09:01 ET] T2S back, boot time 2026-10-23T13:07:38.5000000-07:00 (uptime 83 s)
+[10-23 16:11:30 ET] launch alloc_f16 (uptime 231 s): run_resident_limit.py --arm gpu_only_f16 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-ALLOC-T2S:f16 --points 4096,4096,4096,8192,8192,8192,12288,12288,12288 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 3600
+[10-23 16:20:23 ET] alloc_f16 run_id 50d5a3a4-d6ac-48dc-b0d0-6fdad2afa9f9
+[10-23 16:20:34 ET] parked alloc_f16 as 20261023_160550_alloc_f16
+[10-23 16:21:42 ET] copied alloc_f16 to Mac
+[10-23 16:21:42 ET] alloc_f16 rc=0
+[10-23 16:21:45 ET] reboot (cold launch for alloc_u4); boot time before 2026-10-23T13:07:38.5000000-07:00
+[10-23 16:23:35 ET] T2S back, boot time 2026-10-23T13:22:09.5000000-07:00 (uptime 85 s)
+[10-23 16:25:58 ET] launch alloc_u4 (uptime 227 s): run_resident_limit.py --arm gpu_only_u4 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-ALLOC-T2S:u4 --points 4096,4096,4096,8192,8192,8192,12288,12288,12288 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 3600
+[10-23 16:34:42 ET] alloc_u4 run_id 460ec188-f757-459d-9abe-319605d5fa53
+[10-23 16:34:44 ET] parked alloc_u4 as 20261023_160550_alloc_u4
+[10-23 16:34:48 ET] copied alloc_u4 to Mac
+[10-23 16:34:48 ET] alloc_u4 rc=0
+[10-23 16:34:49 ET] reboot (cold launch for conc_ii); boot time before 2026-10-23T13:22:09.5000000-07:00
+[10-23 16:36:22 ET] T2S back, boot time 2026-10-23T13:35:09.5000000-07:00 (uptime 72 s)
+[10-23 16:38:26 ET] launch conc_ii (uptime 196 s): run_resident_limit.py --arm gpu_only_f16 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-CONC-T2S:ii --sched-max-batched-tokens 256 --sched-no-prefix-caching --conc-sessions 7,8,9,10,11,12 --conc-tokens 32768 --conc-new-tokens 16 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 3600
+[10-23 18:01:57 ET] conc_ii run_id fb3ad7d0-8158-4e1f-ba6e-8954ff95fd8f
+[10-23 18:01:58 ET] parked conc_ii as 20261023_160550_conc_ii
+[10-23 18:02:02 ET] copied conc_ii to Mac
+[10-23 18:02:02 ET] conc_ii rc=0
+[10-23 18:02:03 ET] reboot (cold launch for conc_ii_bal4p5); boot time before 2026-10-23T13:35:09.5000000-07:00
+[10-23 18:03:36 ET] T2S back, boot time 2026-10-23T15:02:22.5000000-07:00 (uptime 73 s)
+balloon shared_usage_mb 4690.9 need 4147.2 method device_tensor_copy_from
+[10-23 18:05:52 ET] balloon gpu 4.5 GiB ready
+[10-23 18:05:53 ET] launch conc_ii_bal4p5 (uptime 210 s): run_resident_limit.py --arm gpu_only_f16 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-CONC-T2S:ii:balloon4.5 --sched-max-batched-tokens 256 --sched-no-prefix-caching --conc-sessions 6,7,8,9,10,11 --conc-tokens 32768 --conc-new-tokens 16 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 3600
+[10-23 19:34:36 ET] balloon released
+[10-23 19:34:48 ET] conc_ii_bal4p5 run_id cf1237a2-b689-4be5-b2e6-ab045f27d64f
+[10-23 19:34:50 ET] parked conc_ii_bal4p5 as 20261023_160550_conc_ii_bal4p5
+[10-23 19:34:54 ET] copied conc_ii_bal4p5 to Mac
+[10-23 19:34:54 ET] conc_ii_bal4p5 rc=0
+[10-23 19:34:55 ET] reboot (cold launch for conc_ii_bal9); boot time before 2026-10-23T15:02:22.5000000-07:00
+[10-23 19:36:28 ET] T2S back, boot time 2026-10-23T16:35:13.5000000-07:00 (uptime 73 s)
+balloon shared_usage_mb 9352.0 need 8294.4 method device_tensor_copy_from
+[10-23 19:38:44 ET] balloon gpu 9 GiB ready
+[10-23 19:38:44 ET] launch conc_ii_bal9 (uptime 210 s): run_resident_limit.py --arm gpu_only_f16 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-CONC-T2S:ii:balloon9 --sched-max-batched-tokens 256 --sched-no-prefix-caching --conc-sessions 5,6,7,8,9,10 --conc-tokens 32768 --conc-new-tokens 16 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 3600
+[10-23 20:30:26 ET] WARN python count read failed (ssh); not counted
+[10-23 20:39:10 ET] WARN python count read failed (ssh); not counted
+[10-23 20:40:21 ET] WARN python count read failed (ssh); not counted
+[10-23 21:20:03 ET] WARN python count read failed (ssh); not counted
+[10-23 21:21:25 ET] balloon released
+[10-23 21:21:57 ET] conc_ii_bal9 run_id 093364f9-5aff-44c3-833e-95938aa3b8d3
+[10-23 21:21:58 ET] parked conc_ii_bal9 as 20261023_160550_conc_ii_bal9
+[10-23 21:22:04 ET] copied conc_ii_bal9 to Mac
+[10-23 21:22:04 ET] conc_ii_bal9 rc=0
+[10-23 21:22:05 ET] reboot (cold launch for conc_iv); boot time before 2026-10-23T16:35:13.5000000-07:00
+[10-23 21:26:53 ET] T2S back, boot time 2026-10-23T18:22:24.5000000-07:00 (uptime 268 s)
+[10-23 21:33:54 ET] launch conc_iv (uptime 689 s): run_resident_limit.py --arm gpu_only_f16 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-CONC-T2S:iv --sched-max-batched-tokens 256 --sched-no-prefix-caching --sched-cache-size 50 --conc-sessions 1 --conc-tokens 32768 --conc-new-tokens 16 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 3600
+[10-23 21:40:14 ET] WARN python count read failed (ssh); not counted
+[10-23 21:49:09 ET] WARN python count read failed (ssh); not counted
+[10-23 21:50:21 ET] WARN python count read failed (ssh); not counted
+[10-23 22:17:51 ET] WARN python count read failed (ssh); not counted
+[10-23 22:28:20 ET] WARN python count read failed (ssh); not counted
+[10-23 22:28:20 ET] ALERT: python still running after 2400 s (2 x reserve); waiting, nothing is killed
+[10-23 22:45:17 ET] WARN python count read failed (ssh); not counted
+[10-23 23:36:23 ET] WARN python count read failed (ssh); not counted
+[10-24 00:11:23 ET] WARN python count read failed (ssh); not counted
+[10-24 01:09:57 ET] WARN python count read failed (ssh); not counted
+[10-24 02:31:41 ET] WARN python count read failed (ssh); not counted
+[10-24 03:10:12 ET] WARN python count read failed (ssh); not counted
+[10-24 03:34:03 ET] WARN python count read failed (ssh); not counted
+[10-24 04:09:24 ET] WARN python count read failed (ssh); not counted
+[10-24 04:32:51 ET] WARN python count read failed (ssh); not counted
+[10-24 05:25:14 ET] WARN python count read failed (ssh); not counted
+[10-24 06:17:19 ET] WARN python count read failed (ssh); not counted
+[10-24 07:17:26 ET] WARN python count read failed (ssh); not counted
+[10-24 08:10:23 ET] WARN python count read failed (ssh); not counted
+[10-24 09:09:54 ET] WARN python count read failed (ssh); not counted
+[10-24 09:43:04 ET] WARN python count read failed (ssh); not counted
+[10-24 10:02:35 ET] WARN python count read failed (ssh); not counted
+[10-24 10:20:27 ET] WARN python count read failed (ssh); not counted
+[10-24 10:44:42 ET] WARN python count read failed (ssh); not counted
+[10-24 10:50:17 ET] WARN python count read failed (ssh); not counted
+[10-24 11:09:08 ET] WARN python count read failed (ssh); not counted
+[10-24 11:37:43 ET] WARN python count read failed (ssh); not counted
+[10-24 11:39:09 ET] WARN python count read failed (ssh); not counted
+[10-24 11:40:37 ET] conc_iv run_id c38c2259-b9b8-42a9-b50c-70d60ce1762a
+Traceback (most recent call last):
+[10-24 11:40:38 ET] parked conc_iv as 20261023_160550_conc_iv
+[10-24 11:40:50 ET] copied conc_iv to Mac
+[10-24 11:40:50 ET] conc_iv rc=1
+[10-24 11:40:50 ET] reboot (cold launch for slope_f16_unl); boot time before 2026-10-23T18:22:24.5000000-07:00
+[10-24 11:48:45 ET] T2S back, boot time 100.72.40.24::: (uptime 455 s)
+[10-24 12:15:04 ET] launch slope_f16_unl (uptime 10072402422 s): run_resident_limit.py --arm gpu_only_f16 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-MECH-T2S:f16:unl --points 8192,24576,40448 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 3600 --turn2-new-tokens 64 --turn2-repeats 3
+[10-24 12:29:58 ET] WARN python count read failed (ssh); not counted
+[10-24 12:47:43 ET] WARN python count read failed (ssh); not counted
+[10-24 13:09:09 ET] WARN python count read failed (ssh); not counted
+[10-24 13:19:53 ET] WARN python count read failed (ssh); not counted
+[10-24 13:44:51 ET] WARN sidecar CSV copy failed for slope_f16_unl (it stays in C:\Users\zach\seam_tools\cc_mem)
+[10-24 13:59:22 ET] WARN log copy failed for slope_f16_unl
+[10-24 14:17:26 ET] WARN park slope_f16_unl try 1 did not print PARK_OK
+[10-24 14:23:50 ET] WARN park slope_f16_unl try 2 did not print PARK_OK
+[10-24 14:24:35 ET] WARN park slope_f16_unl try 3 did not print PARK_OK
+[10-24 14:25:05 ET] STOP: park slope_f16_unl failed 3 times (no PARK_OK)
+[10-24 14:25:05 ET] hand-back check (no python of ours, tree clean; Rithwik has the T2S Oct 26 - Nov 8)

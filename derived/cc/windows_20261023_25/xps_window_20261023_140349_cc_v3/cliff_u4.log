@@ -1,0 +1,36 @@
+resident_limit arm=gpu_only_u4 low=12000 high=30000 resolution=500 session=36e0ec24-0aee-48c2-8f13-87d526cfcd7d cc_cell=CC-CLIFF-XPS:u4 points=[21200, 23850, 25175, 26500, 27825, 33125, 39750]
+[c2_canary] index=0 after_probes=-1 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-24T18:57:47.963103+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-24T18:57:48.789701+00:00"}
+[c2_canary] index=1 after_probes=-1 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-24T18:58:04.895525+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-24T18:58:05.859737+00:00"}
+{"event": "delta_n.repeat", "failure_mode": null, "hang_disposition": null, "hang_duration_s": null, "outcome": "pass", "phase": "done", "tag": "n21200.a0", "ts": "2026-10-24T19:00:18.557197+00:00", "wall_s": 88.03}
+[c2_canary] index=2 after_probes=0 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-24T19:00:20.885959+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-24T19:00:21.850287+00:00"}
+{"attempt": 0, "event": "delta_n.block_refused", "reason": "measured-load quiescence refusal: mean total CPU 23.319% > 20.000%", "tag": "n23850", "ts": "2026-10-24T19:01:06.655238+00:00"}
+{"attempt": 1, "event": "delta_n.block_refused", "reason": "measured-load quiescence refusal: mean total CPU 21.791% > 20.000%", "tag": "n23850", "ts": "2026-10-24T19:01:36.678439+00:00"}
+{"attempt": 2, "event": "delta_n.block_refused", "reason": "measured-load quiescence refusal: mean total CPU 29.376% > 20.000%", "tag": "n23850", "ts": "2026-10-24T19:02:06.702609+00:00"}
+Traceback (most recent call last):
+  File "C:\Users\zjohn\Projects\gnn-hls-accel\tools\run_resident_limit.py", line 212, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "C:\Users\zjohn\Projects\gnn-hls-accel\tools\run_resident_limit.py", line 203, in main
+    return run_resident_limit(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zjohn\Projects\gnn-hls-accel\tools\boot4_session.py", line 1130, in run_resident_limit
+    found = fixed_points(points, attempt)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zjohn\Projects\gnn-hls-accel\tools\boot4_session.py", line 996, in fixed_points
+    pts = [attempt(int(n)) for n in points]
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zjohn\Projects\gnn-hls-accel\tools\boot4_session.py", line 996, in <listcomp>
+    pts = [attempt(int(n)) for n in points]
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\zjohn\Projects\gnn-hls-accel\tools\boot4_session.py", line 1078, in attempt
+    measured = measured_repeat(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\zjohn\Projects\gnn-hls-accel\seam\tools\delta_n.py", line 584, in measured_repeat
+    raise SeamError(_ceiling_refusal_message(label, attempts, max_retries))
+seam.errors.SeamError: resident-gpu_only_u4-n23850: 3 consecutive inadmissible blocks (['quiescence_refusal', 'quiescence_refusal', 'quiescence_refusal']); refusing to record a ceiling from a machine that will not hold still. Stop and report.

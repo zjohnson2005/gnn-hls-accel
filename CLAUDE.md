@@ -412,6 +412,11 @@ session start; update it in the same commit as the work. Never delete a row.
   8B (a 114,688), HYB-1; predictions derived/br/ (compiled k, a 87,520, B_BR 3.267 GB). Queues
   ~/seam_closeout_1013/xps/run_queue_xps_{inv1,xrt1,sess1,stat1}.sh (+ br_lib.sh). Gates: A Wed Nov 4,
   B Sun Nov 8, framing Sun Nov 15. BK's session lengths are one turn short (d7e8b43e held 61,771).
+- 2026-10-26 (Task BK): weekend closed out (records derived/cc/windows_20261023_25/, derived/demo2_heldout/;
+  scores analysis/cc_20261026/SCORES.md). KV pool = n x compiled k exactly; non-KV term = prefill working set
+  87,056 B/token uncapped, 0 capped (both hosts). u4/f16 1.79x unchunked vs 3.18x cap 256. One budget 3.267 GB
+  +-4.6% over 14 cells (in-sample). 64 GB: window binds (40,448). DEMO-2 T2S primary PENDING (ho_cloud, XPS);
+  F2: A faster than P. Meeting pack analysis/meeting_20261027/.
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.

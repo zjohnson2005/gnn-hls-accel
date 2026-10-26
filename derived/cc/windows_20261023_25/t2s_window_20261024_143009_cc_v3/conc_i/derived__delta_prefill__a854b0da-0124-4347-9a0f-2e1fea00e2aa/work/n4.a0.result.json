@@ -1,0 +1,265 @@
+{
+  "affinity_readback": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "completed": false,
+  "exception": {
+    "message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_memory.cpp:569:\n[GPU] clWaitForEvents, error code: -14 CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST\n\n",
+    "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 912, in _cc_conc\n    rec = _traced(spec, run)\n          ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 192, in _traced\n    rec = fn()\n          ^^^^\n  File \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 906, in run\n    result = pipe.generate(prompts, cfg)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_memory.cpp:569:\n[GPU] clWaitForEvents, error code: -14 CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST\n\n\n",
+    "type": "RuntimeError"
+  },
+  "failure_mode": "conc_n4:RuntimeError",
+  "kv_cache_precision_readback": [
+    {
+      "enforced": true,
+      "failure_mode": null,
+      "match": true,
+      "readback": {
+        "device": "GPU",
+        "error": null,
+        "normalized": "f16",
+        "ok": true,
+        "property": "KV_CACHE_PRECISION",
+        "raw": "<Type: 'float16'>",
+        "to_string": "f16"
+      },
+      "requested": "f16"
+    }
+  ],
+  "loads": [
+    {
+      "available_delta_mb": 2443.32421875,
+      "compile_s": 3.0908165000000167,
+      "compiled": {
+        "backend": "PA",
+        "captured_chars": 3086,
+        "key_cache_quant_mode": null,
+        "kv_cache_precision": "f16",
+        "n_pa_properties": 25,
+        "pa_property_dump_seen": true,
+        "sdpa_fallback_warning": false,
+        "value_cache_quant_mode": null
+      },
+      "device": "GPU",
+      "device_mem_props": {
+        "GPU_DEVICE_MAX_ALLOC_MEM_SIZE": 36057006080,
+        "GPU_DEVICE_TOTAL_MEM_SIZE": 36057006080
+      },
+      "kv_cache_precision": {
+        "enforced": true,
+        "failure_mode": null,
+        "match": true,
+        "readback": {
+          "device": "GPU",
+          "error": null,
+          "normalized": "f16",
+          "ok": true,
+          "property": "KV_CACHE_PRECISION",
+          "raw": "<Type: 'float16'>",
+          "to_string": "f16"
+        },
+        "requested": "f16"
+      },
+      "memory_after": {
+        "available_mb": 56240.0078125,
+        "percent": 13.5,
+        "rss_mb": 2526.91796875,
+        "used_mb": 8777.9921875
+      },
+      "memory_before": {
+        "available_mb": 58683.33203125,
+        "percent": 9.7,
+        "rss_mb": 53.58203125,
+        "used_mb": 6334.66796875
+      },
+      "properties": {
+        "KV_CACHE_PRECISION": "<Type: 'float16'>"
+      },
+      "properties_requested": {
+        "KV_CACHE_PRECISION": "f16"
+      },
+      "rss_delta_mb": 2473.3359375,
+      "scheduler_config": {
+        "enable_prefix_caching": false,
+        "max_num_batched_tokens": 18446744073709551615
+      },
+      "versions": {
+        "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+        "openvino_genai": "2026.2.1.0-3123-7dea0459b2a"
+      }
+    }
+  ],
+  "memory_after_import": {
+    "available_mb": 58683.32421875,
+    "percent": 9.7,
+    "rss_mb": 53.16796875,
+    "used_mb": 6334.67578125
+  },
+  "memory_at_failure": {
+    "available_mb": 26335.8515625,
+    "percent": 59.5,
+    "rss_mb": 31927.40234375,
+    "used_mb": 38682.1484375
+  },
+  "memory_baseline": {
+    "available_mb": 58715.52734375,
+    "percent": 9.7,
+    "rss_mb": 19.1484375,
+    "used_mb": 6302.47265625
+  },
+  "memory_before_generate": {
+    "available_mb": 56223.0859375,
+    "percent": 13.5,
+    "rss_mb": 2550.4453125,
+    "used_mb": 8794.9140625
+  },
+  "memory_resident_before_inference": {
+    "available_mb": 56238.00390625,
+    "percent": 13.5,
+    "rss_mb": 2529.0078125,
+    "used_mb": 8779.99609375
+  },
+  "memory_trace_at_failure": {
+    "available_min_mb": 26313.4,
+    "dxgi": {
+      "budget_change_events": 1,
+      "error": null,
+      "first_budget_usage": {
+        "LOCAL": [
+          50191138816,
+          2369572864
+        ],
+        "NON_LOCAL": [
+          0,
+          0
+        ]
+      },
+      "last_budget_usage": {
+        "LOCAL": [
+          50191138816,
+          2397712384
+        ],
+        "NON_LOCAL": [
+          0,
+          0
+        ]
+      },
+      "peak_current_usage": {
+        "LOCAL": 33174159360,
+        "NON_LOCAL": 0
+      }
+    },
+    "errors": 0,
+    "gpu_stat_total_first_bytes": 2268781195,
+    "gpu_stat_total_last_bytes": 33076986579,
+    "gpu_stat_total_peak_bytes": 33076986579,
+    "hz": 10.0,
+    "n": 625
+  },
+  "phase": "failed",
+  "power_request": {
+    "clear_last_error": null,
+    "cleared": false,
+    "close_last_error": null,
+    "closed": false,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x2b4",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "measurement_child",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "spec": {
+    "affinity_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "arm_id": "gpu_only_f16",
+    "arm_properties": {
+      "KV_CACHE_PRECISION": "f16"
+    },
+    "cc_conc": {
+      "new_tokens": 16,
+      "sessions": 4,
+      "tokens": 32768
+    },
+    "compiled_readback": true,
+    "dxgi_trace": true,
+    "filler_unit": " the quick brown fox jumps over the lazy dog.",
+    "generate_device": "GPU",
+    "gpu_mem_stats": true,
+    "load_sequence": [
+      {
+        "device": "GPU",
+        "properties": {
+          "KV_CACHE_PRECISION": "f16"
+        }
+      }
+    ],
+    "max_new_tokens": 8,
+    "mem_trace_hz": 10.0,
+    "model_dir": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "prompt_path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_prefill\\a854b0da-0124-4347-9a0f-2e1fea00e2aa\\work\\prompt_unused.txt",
+    "reject_kv_mismatch": true,
+    "rss_interval_s": 0.05,
+    "scheduler_config": {
+      "enable_prefix_caching": false,
+      "max_num_batched_tokens": 18446744073709551615
+    },
+    "wslock": {
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "mode": "request"
+    }
+  },
+  "standing_reservation": {
+    "available_delta_mb": 2477.5234375,
+    "basis": "delta from process baseline (pre-import) to all backends compiled and resident, before any measured generation; rss and system-available disagree when weights are file-backed or shared, and both are reported without attribution",
+    "rss_delta_mb": 2509.859375
+  },
+  "working_set_lock": {
+    "after": {
+      "flags": 9,
+      "hard_min_enabled": true,
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "read": true
+    },
+    "before": {
+      "flags": 10,
+      "hard_min_enabled": false,
+      "maximum_bytes": 1413120,
+      "minimum_bytes": 204800,
+      "read": true
+    },
+    "call": "SetProcessWorkingSetSizeEx",
+    "flags": 1,
+    "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+    "granted": true,
+    "last_error": 0,
+    "privilege": {
+      "attempted": true,
+      "granted": true,
+      "last_error": 0,
+      "last_error_meaning": "ERROR_SUCCESS",
+      "privilege": "SeIncreaseWorkingSetPrivilege",
+      "step": "AdjustTokenPrivileges"
+    },
+    "requested": true,
+    "requested_maximum_bytes": 12884901888,
+    "requested_minimum_bytes": 4294967296,
+    "returned": true
+  }
+}

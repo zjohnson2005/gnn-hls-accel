@@ -1,0 +1,78 @@
+{
+  "arm": "gpu_only_f16",
+  "exception": {
+    "message": "Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_memory.cpp:569:\n[GPU] clWaitForEvents, error code: -14 CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST\n\n",
+    "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 912, in _cc_conc\n    rec = _traced(spec, run)\n          ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 192, in _traced\n    rec = fn()\n          ^^^^\n  File \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 906, in run\n    result = pipe.generate(prompts, cfg)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: Exception from src\\inference\\src\\cpp\\infer_request.cpp:224:\nException from src\\plugins\\intel_gpu\\src\\runtime\\ocl\\ocl_memory.cpp:569:\n[GPU] clWaitForEvents, error code: -14 CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST\n\n\n",
+    "type": "RuntimeError"
+  },
+  "failure_kind": "other",
+  "failure_mode": "conc_n4:RuntimeError",
+  "generation": null,
+  "holds": false,
+  "hung_after_result": false,
+  "loads": [
+    {
+      "available_delta_mb": 2443.32421875,
+      "compile_s": 3.0908165000000167,
+      "compiled": {
+        "backend": "PA",
+        "captured_chars": 3086,
+        "key_cache_quant_mode": null,
+        "kv_cache_precision": "f16",
+        "n_pa_properties": 25,
+        "pa_property_dump_seen": true,
+        "sdpa_fallback_warning": false,
+        "value_cache_quant_mode": null
+      },
+      "device": "GPU",
+      "device_mem_props": {
+        "GPU_DEVICE_MAX_ALLOC_MEM_SIZE": 36057006080,
+        "GPU_DEVICE_TOTAL_MEM_SIZE": 36057006080
+      },
+      "kv_cache_precision": {
+        "enforced": true,
+        "failure_mode": null,
+        "match": true,
+        "readback": {
+          "device": "GPU",
+          "error": null,
+          "normalized": "f16",
+          "ok": true,
+          "property": "KV_CACHE_PRECISION",
+          "raw": "<Type: 'float16'>",
+          "to_string": "f16"
+        },
+        "requested": "f16"
+      },
+      "memory_after": {
+        "available_mb": 56240.0078125,
+        "percent": 13.5,
+        "rss_mb": 2526.91796875,
+        "used_mb": 8777.9921875
+      },
+      "memory_before": {
+        "available_mb": 58683.33203125,
+        "percent": 9.7,
+        "rss_mb": 53.58203125,
+        "used_mb": 6334.66796875
+      },
+      "properties": {
+        "KV_CACHE_PRECISION": "<Type: 'float16'>"
+      },
+      "properties_requested": {
+        "KV_CACHE_PRECISION": "f16"
+      },
+      "rss_delta_mb": 2473.3359375,
+      "scheduler_config": {
+        "enable_prefix_caching": false,
+        "max_num_batched_tokens": 18446744073709551615
+      },
+      "versions": {
+        "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+        "openvino_genai": "2026.2.1.0-3123-7dea0459b2a"
+      }
+    }
+  ],
+  "outcome": "fail",
+  "step": 4
+}

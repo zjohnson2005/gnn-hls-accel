@@ -1,0 +1,267 @@
+Model: OV Tokenizer
+  NETWORK_NAME: tokenizer
+  OPTIMAL_NUMBER_OF_INFER_REQUESTS: 1
+  NUM_STREAMS: 1
+  INFERENCE_NUM_THREADS: 4
+  PERF_COUNT: NO
+  INFERENCE_PRECISION_HINT: f32
+  PERFORMANCE_HINT: LATENCY
+  EXECUTION_MODE_HINT: PERFORMANCE
+  PERFORMANCE_HINT_NUM_REQUESTS: 0
+  ENABLE_CPU_PINNING: NO
+  ENABLE_CPU_RESERVATION: NO
+  SCHEDULING_CORE_TYPE: ANY_CORE
+  MODEL_DISTRIBUTION_POLICY: 
+  ENABLE_HYPER_THREADING: NO
+  EXECUTION_DEVICES: CPU
+  CPU_DENORMALS_OPTIMIZATION: NO
+  LOG_LEVEL: LOG_NONE
+  CPU_SPARSE_WEIGHTS_DECOMPRESSION_RATE: 1
+  ENABLE_TENSOR_PARALLEL: NO
+  TBB_PARTITIONER: STATIC
+  DYNAMIC_QUANTIZATION_GROUP_SIZE: 32
+  KV_CACHE_PRECISION: u8
+  KEY_CACHE_PRECISION: u8
+  VALUE_CACHE_PRECISION: u8
+  KEY_CACHE_GROUP_SIZE: 0
+  VALUE_CACHE_GROUP_SIZE: 0
+EXECUTION_DEVICES:
+ CPU: Intel(R) Core(TM) Ultra X7 358H
+Model: OV Detokenizer
+  NETWORK_NAME: detokenizer
+  OPTIMAL_NUMBER_OF_INFER_REQUESTS: 1
+  NUM_STREAMS: 1
+  INFERENCE_NUM_THREADS: 4
+  PERF_COUNT: NO
+  INFERENCE_PRECISION_HINT: f32
+  PERFORMANCE_HINT: LATENCY
+  EXECUTION_MODE_HINT: PERFORMANCE
+  PERFORMANCE_HINT_NUM_REQUESTS: 0
+  ENABLE_CPU_PINNING: NO
+  ENABLE_CPU_RESERVATION: NO
+  SCHEDULING_CORE_TYPE: ANY_CORE
+  MODEL_DISTRIBUTION_POLICY: 
+  ENABLE_HYPER_THREADING: NO
+  EXECUTION_DEVICES: CPU
+  CPU_DENORMALS_OPTIMIZATION: NO
+  LOG_LEVEL: LOG_NONE
+  CPU_SPARSE_WEIGHTS_DECOMPRESSION_RATE: 1
+  ENABLE_TENSOR_PARALLEL: NO
+  TBB_PARTITIONER: STATIC
+  DYNAMIC_QUANTIZATION_GROUP_SIZE: 32
+  KV_CACHE_PRECISION: u8
+  KEY_CACHE_PRECISION: u8
+  VALUE_CACHE_PRECISION: u8
+  KEY_CACHE_GROUP_SIZE: 0
+  VALUE_CACHE_GROUP_SIZE: 0
+EXECUTION_DEVICES:
+ CPU: Intel(R) Core(TM) Ultra X7 358H
+SchedulerConfig { 
+  max_num_batched_tokens: 18446744073709551615
+  num_kv_blocks: 0
+  cache_size: 0
+  num_linear_attention_blocks: 0
+  cache_interval_multiplier: unset
+  dynamic_split_fuse: true
+  use_cache_eviction: false
+  max_num_seqs: 256
+  enable_prefix_caching: true
+  use_sparse_attention: false
+ }
+Model: LLM with Paged Attention
+  NETWORK_NAME: Model0
+  OPTIMAL_NUMBER_OF_INFER_REQUESTS: 1
+  PERF_COUNT: NO
+  ENABLE_CPU_PINNING: NO
+  ENABLE_CPU_RESERVATION: NO
+  MODEL_PRIORITY: MEDIUM
+  GPU_HOST_TASK_PRIORITY: MEDIUM
+  GPU_QUEUE_PRIORITY: MEDIUM
+  GPU_ENABLE_LARGE_ALLOCATIONS: NO
+  GPU_QUEUE_THROTTLE: MEDIUM
+  GPU_ENABLE_LOOP_UNROLLING: YES
+  GPU_DISABLE_WINOGRAD_CONVOLUTION: NO
+  CACHE_DIR: 
+  CACHE_MODE: optimize_speed
+  PERFORMANCE_HINT: LATENCY
+  EXECUTION_MODE_HINT: PERFORMANCE
+  COMPILATION_NUM_THREADS: 16
+  NUM_STREAMS: 1
+  PERFORMANCE_HINT_NUM_REQUESTS: 0
+  INFERENCE_PRECISION_HINT: f16
+  DYNAMIC_QUANTIZATION_GROUP_SIZE: 18446744073709551615
+  ACTIVATIONS_SCALE_FACTOR: -1
+  KV_CACHE_PRECISION: i8
+  DEVICE_ID: 0
+  EXECUTION_DEVICES: GPU.0
+EXECUTION_DEVICES:
+ GPU.0: Intel(R) Arc(TM) B390 GPU (iGPU)
+[XAttention]: DISABLED on GPU device.
+CELL_START policy=local_only entry=multi_turn_base_20 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_base_20 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_long_context_30 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_long_context_30 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_base_25 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_25", "event": "pre_generate", "generate_input_tokens": 2617, "input_kind": "chat_history_resident", "new_tokens_est": 2617, "policy": "local_only", "prompt_tokens": 2617, "seen_tokens_before": null, "step": 0, "t_perf_s": 1485.568771, "turn": 0, "utc": "2026-10-24T22:25:14Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_25", "error": null, "event": "post_generate", "generated_tokens": 24, "ok": true, "policy": "local_only", "prompt_tokens": 2617, "raw_text_chars": 92, "step": 0, "t_perf_s": 1486.444475, "ttft_s": 0.175024, "turn": 0, "utc": "2026-10-24T22:25:15Z", "wall_s": 0.858616}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_25", "event": "pre_generate", "generate_input_tokens": 2661, "input_kind": "chat_history_resident", "new_tokens_est": 20, "policy": "local_only", "prompt_tokens": 2661, "seen_tokens_before": 2641, "step": 1, "t_perf_s": 1486.530945, "turn": 0, "utc": "2026-10-24T22:25:15Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_25", "error": null, "event": "post_generate", "generated_tokens": 37, "ok": true, "policy": "local_only", "prompt_tokens": 2661, "raw_text_chars": 153, "step": 1, "t_perf_s": 1488.235814, "ttft_s": 0.714462, "turn": 0, "utc": "2026-10-24T22:25:17Z", "wall_s": 1.701773}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_25", "event": "pre_generate", "generate_input_tokens": 2717, "input_kind": "chat_history_resident", "new_tokens_est": 19, "policy": "local_only", "prompt_tokens": 2717, "seen_tokens_before": 2698, "step": 0, "t_perf_s": 1489.509012, "turn": 1, "utc": "2026-10-24T22:25:18Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_25", "error": null, "event": "post_generate", "generated_tokens": 30, "ok": true, "policy": "local_only", "prompt_tokens": 2717, "raw_text_chars": 110, "step": 0, "t_perf_s": 1490.389896, "ttft_s": 0.0773, "turn": 1, "utc": "2026-10-24T22:25:19Z", "wall_s": 0.878042}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_25", "event": "pre_generate", "generate_input_tokens": 2779, "input_kind": "chat_history_resident", "new_tokens_est": 32, "policy": "local_only", "prompt_tokens": 2779, "seen_tokens_before": 2747, "step": 1, "t_perf_s": 1490.421713, "turn": 1, "utc": "2026-10-24T22:25:19Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_25", "error": null, "event": "post_generate", "generated_tokens": 32, "ok": true, "policy": "local_only", "prompt_tokens": 2779, "raw_text_chars": 131, "step": 1, "t_perf_s": 1491.522009, "ttft_s": 0.258196, "turn": 1, "utc": "2026-10-24T22:25:20Z", "wall_s": 1.097293}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_25", "event": "pre_generate", "generate_input_tokens": 2834, "input_kind": "chat_history_resident", "new_tokens_est": 23, "policy": "local_only", "prompt_tokens": 2834, "seen_tokens_before": 2811, "step": 0, "t_perf_s": 1492.794633, "turn": 2, "utc": "2026-10-24T22:25:22Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_25", "error": null, "event": "post_generate", "generated_tokens": 21, "ok": true, "policy": "local_only", "prompt_tokens": 2834, "raw_text_chars": 84, "step": 0, "t_perf_s": 1493.446566, "ttft_s": 0.084695, "turn": 2, "utc": "2026-10-24T22:25:22Z", "wall_s": 0.645942}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_25", "event": "pre_generate", "generate_input_tokens": 2893, "input_kind": "chat_history_resident", "new_tokens_est": 38, "policy": "local_only", "prompt_tokens": 2893, "seen_tokens_before": 2855, "step": 1, "t_perf_s": 1493.479044, "turn": 2, "utc": "2026-10-24T22:25:22Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_25", "error": null, "event": "post_generate", "generated_tokens": 54, "ok": true, "policy": "local_only", "prompt_tokens": 2893, "raw_text_chars": 257, "step": 1, "t_perf_s": 1495.010341, "ttft_s": 0.082408, "turn": 2, "utc": "2026-10-24T22:25:24Z", "wall_s": 1.527832}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_25", "event": "pre_generate", "generate_input_tokens": 2978, "input_kind": "chat_history_resident", "new_tokens_est": 31, "policy": "local_only", "prompt_tokens": 2978, "seen_tokens_before": 2947, "step": 0, "t_perf_s": 1496.269891, "turn": 3, "utc": "2026-10-24T22:25:25Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_25", "error": null, "event": "post_generate", "generated_tokens": 27, "ok": true, "policy": "local_only", "prompt_tokens": 2978, "raw_text_chars": 95, "step": 0, "t_perf_s": 1497.093598, "ttft_s": 0.096673, "turn": 3, "utc": "2026-10-24T22:25:26Z", "wall_s": 0.820861}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_25", "event": "pre_generate", "generate_input_tokens": 3029, "input_kind": "chat_history_resident", "new_tokens_est": 24, "policy": "local_only", "prompt_tokens": 3029, "seen_tokens_before": 3005, "step": 1, "t_perf_s": 1497.125231, "turn": 3, "utc": "2026-10-24T22:25:26Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_25", "error": null, "event": "post_generate", "generated_tokens": 33, "ok": true, "policy": "local_only", "prompt_tokens": 3029, "raw_text_chars": 153, "step": 1, "t_perf_s": 1498.098386, "ttft_s": 0.082723, "turn": 3, "utc": "2026-10-24T22:25:27Z", "wall_s": 0.970329}
+CELL_DONE policy=local_only entry=multi_turn_base_25 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_long_context_3 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_3", "event": "pre_generate", "generate_input_tokens": 2629, "input_kind": "chat_history_resident", "new_tokens_est": 2629, "policy": "local_only", "prompt_tokens": 2629, "seen_tokens_before": null, "step": 0, "t_perf_s": 1499.40165, "turn": 0, "utc": "2026-10-24T22:25:28Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_3", "error": null, "event": "post_generate", "generated_tokens": 23, "ok": true, "policy": "local_only", "prompt_tokens": 2629, "raw_text_chars": 85, "step": 0, "t_perf_s": 1500.087074, "ttft_s": 0.076636, "turn": 0, "utc": "2026-10-24T22:25:29Z", "wall_s": 0.682045}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_3", "event": "pre_generate", "generate_input_tokens": 2696, "input_kind": "chat_history_resident", "new_tokens_est": 44, "policy": "local_only", "prompt_tokens": 2696, "seen_tokens_before": 2652, "step": 1, "t_perf_s": 1500.117489, "turn": 0, "utc": "2026-10-24T22:25:29Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_3", "error": null, "event": "post_generate", "generated_tokens": 69, "ok": true, "policy": "local_only", "prompt_tokens": 2696, "raw_text_chars": 305, "step": 1, "t_perf_s": 1502.027523, "ttft_s": 0.084691, "turn": 0, "utc": "2026-10-24T22:25:31Z", "wall_s": 1.907091}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_3", "event": "pre_generate", "generate_input_tokens": 2810, "input_kind": "chat_history_resident", "new_tokens_est": 45, "policy": "local_only", "prompt_tokens": 2810, "seen_tokens_before": 2765, "step": 0, "t_perf_s": 1503.298726, "turn": 1, "utc": "2026-10-24T22:25:32Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_3", "error": null, "event": "post_generate", "generated_tokens": 97, "ok": true, "policy": "local_only", "prompt_tokens": 2810, "raw_text_chars": 412, "step": 0, "t_perf_s": 1505.996895, "ttft_s": 0.091421, "turn": 1, "utc": "2026-10-24T22:25:35Z", "wall_s": 2.695432}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_3", "event": "pre_generate", "generate_input_tokens": 2997, "input_kind": "chat_history_resident", "new_tokens_est": 90, "policy": "local_only", "prompt_tokens": 2997, "seen_tokens_before": 2907, "step": 1, "t_perf_s": 1506.028994, "turn": 1, "utc": "2026-10-24T22:25:35Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_3", "error": null, "event": "post_generate", "generated_tokens": 105, "ok": true, "policy": "local_only", "prompt_tokens": 2997, "raw_text_chars": 482, "step": 1, "t_perf_s": 1509.112771, "ttft_s": 0.260193, "turn": 1, "utc": "2026-10-24T22:25:38Z", "wall_s": 3.08088}
+CELL_DONE policy=local_only entry=multi_turn_long_context_3 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_long_context_25 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_25", "event": "pre_generate", "generate_input_tokens": 2617, "input_kind": "chat_history_resident", "new_tokens_est": 2617, "policy": "local_only", "prompt_tokens": 2617, "seen_tokens_before": null, "step": 0, "t_perf_s": 1510.426312, "turn": 0, "utc": "2026-10-24T22:25:39Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_25", "error": null, "event": "post_generate", "generated_tokens": 24, "ok": true, "policy": "local_only", "prompt_tokens": 2617, "raw_text_chars": 92, "step": 0, "t_perf_s": 1511.20064, "ttft_s": 0.145646, "turn": 0, "utc": "2026-10-24T22:25:40Z", "wall_s": 0.771639}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_25", "event": "pre_generate", "generate_input_tokens": 2661, "input_kind": "chat_history_resident", "new_tokens_est": 20, "policy": "local_only", "prompt_tokens": 2661, "seen_tokens_before": 2641, "step": 1, "t_perf_s": 1511.231491, "turn": 0, "utc": "2026-10-24T22:25:40Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_25", "error": null, "event": "post_generate", "generated_tokens": 37, "ok": true, "policy": "local_only", "prompt_tokens": 2661, "raw_text_chars": 153, "step": 1, "t_perf_s": 1512.289712, "ttft_s": 0.094999, "turn": 0, "utc": "2026-10-24T22:25:41Z", "wall_s": 1.055249}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_25", "event": "pre_generate", "generate_input_tokens": 2717, "input_kind": "chat_history_resident", "new_tokens_est": 19, "policy": "local_only", "prompt_tokens": 2717, "seen_tokens_before": 2698, "step": 0, "t_perf_s": 1513.550598, "turn": 1, "utc": "2026-10-24T22:25:42Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_25", "error": null, "event": "post_generate", "generated_tokens": 30, "ok": true, "policy": "local_only", "prompt_tokens": 2717, "raw_text_chars": 110, "step": 0, "t_perf_s": 1514.431863, "ttft_s": 0.075806, "turn": 1, "utc": "2026-10-24T22:25:43Z", "wall_s": 0.87789}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_25", "event": "pre_generate", "generate_input_tokens": 2779, "input_kind": "chat_history_resident", "new_tokens_est": 32, "policy": "local_only", "prompt_tokens": 2779, "seen_tokens_before": 2747, "step": 1, "t_perf_s": 1514.463593, "turn": 1, "utc": "2026-10-24T22:25:43Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_25", "error": null, "event": "post_generate", "generated_tokens": 32, "ok": true, "policy": "local_only", "prompt_tokens": 2779, "raw_text_chars": 131, "step": 1, "t_perf_s": 1515.391299, "ttft_s": 0.072965, "turn": 1, "utc": "2026-10-24T22:25:44Z", "wall_s": 0.924895}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_25", "event": "pre_generate", "generate_input_tokens": 2834, "input_kind": "chat_history_resident", "new_tokens_est": 23, "policy": "local_only", "prompt_tokens": 2834, "seen_tokens_before": 2811, "step": 0, "t_perf_s": 1516.659503, "turn": 2, "utc": "2026-10-24T22:25:45Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_25", "error": null, "event": "post_generate", "generated_tokens": 21, "ok": true, "policy": "local_only", "prompt_tokens": 2834, "raw_text_chars": 84, "step": 0, "t_perf_s": 1517.285624, "ttft_s": 0.071881, "turn": 2, "utc": "2026-10-24T22:25:46Z", "wall_s": 0.62322}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_25", "event": "pre_generate", "generate_input_tokens": 3499, "input_kind": "chat_history_resident", "new_tokens_est": 644, "policy": "local_only", "prompt_tokens": 3499, "seen_tokens_before": 2855, "step": 1, "t_perf_s": 1517.320491, "turn": 2, "utc": "2026-10-24T22:25:46Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_25", "error": null, "event": "post_generate", "generated_tokens": 512, "ok": true, "policy": "local_only", "prompt_tokens": 3499, "raw_text_chars": 3018, "step": 1, "t_perf_s": 1531.874997, "ttft_s": 0.334715, "turn": 2, "utc": "2026-10-24T22:26:01Z", "wall_s": 14.55163}
+CELL_DONE policy=local_only entry=multi_turn_long_context_25 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_base_44 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_base_44 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_long_context_28 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_long_context_28 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_long_context_34 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_long_context_34 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_base_51 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_base_51 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_base_91 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_base_91 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_base_95 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_base_95 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_long_context_95 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_long_context_95 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_base_59 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_base_59 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_long_context_98 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_long_context_98 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_base_68 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_base_68 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_base_76 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_base_76 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_base_90 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_base_90 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_long_context_52 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_long_context_52 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_long_context_69 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_long_context_69 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_long_context_76 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+CELL_DONE policy=local_only entry=multi_turn_long_context_76 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_base_79 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_79", "event": "pre_generate", "generate_input_tokens": 2787, "input_kind": "chat_history_resident", "new_tokens_est": 2787, "policy": "local_only", "prompt_tokens": 2787, "seen_tokens_before": null, "step": 0, "t_perf_s": 1559.131787, "turn": 0, "utc": "2026-10-24T22:26:28Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_79", "error": null, "event": "post_generate", "generated_tokens": 39, "ok": true, "policy": "local_only", "prompt_tokens": 2787, "raw_text_chars": 137, "step": 0, "t_perf_s": 1560.25119, "ttft_s": 0.0781, "turn": 0, "utc": "2026-10-24T22:26:29Z", "wall_s": 1.116531}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_79", "event": "pre_generate", "generate_input_tokens": 2856, "input_kind": "chat_history_resident", "new_tokens_est": 30, "policy": "local_only", "prompt_tokens": 2856, "seen_tokens_before": 2826, "step": 1, "t_perf_s": 1560.282154, "turn": 0, "utc": "2026-10-24T22:26:29Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_79", "error": null, "event": "post_generate", "generated_tokens": 28, "ok": true, "policy": "local_only", "prompt_tokens": 2856, "raw_text_chars": 134, "step": 1, "t_perf_s": 1561.10939, "ttft_s": 0.081235, "turn": 0, "utc": "2026-10-24T22:26:30Z", "wall_s": 0.824514}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_79", "event": "pre_generate", "generate_input_tokens": 2921, "input_kind": "chat_history_resident", "new_tokens_est": 37, "policy": "local_only", "prompt_tokens": 2921, "seen_tokens_before": 2884, "step": 0, "t_perf_s": 1562.38795, "turn": 1, "utc": "2026-10-24T22:26:31Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_79", "error": null, "event": "post_generate", "generated_tokens": 22, "ok": true, "policy": "local_only", "prompt_tokens": 2921, "raw_text_chars": 88, "step": 0, "t_perf_s": 1563.065325, "ttft_s": 0.084513, "turn": 1, "utc": "2026-10-24T22:26:32Z", "wall_s": 0.67401}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_79", "event": "pre_generate", "generate_input_tokens": 2985, "input_kind": "chat_history_resident", "new_tokens_est": 42, "policy": "local_only", "prompt_tokens": 2985, "seen_tokens_before": 2943, "step": 1, "t_perf_s": 1563.097026, "turn": 1, "utc": "2026-10-24T22:26:32Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_79", "error": null, "event": "post_generate", "generated_tokens": 37, "ok": true, "policy": "local_only", "prompt_tokens": 2985, "raw_text_chars": 179, "step": 1, "t_perf_s": 1564.171922, "ttft_s": 0.079212, "turn": 1, "utc": "2026-10-24T22:26:33Z", "wall_s": 1.071983}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_79", "event": "pre_generate", "generate_input_tokens": 3078, "input_kind": "chat_history_resident", "new_tokens_est": 56, "policy": "local_only", "prompt_tokens": 3078, "seen_tokens_before": 3022, "step": 0, "t_perf_s": 1565.440966, "turn": 2, "utc": "2026-10-24T22:26:34Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_79", "error": null, "event": "post_generate", "generated_tokens": 43, "ok": true, "policy": "local_only", "prompt_tokens": 3078, "raw_text_chars": 133, "step": 0, "t_perf_s": 1566.702374, "ttft_s": 0.097045, "turn": 2, "utc": "2026-10-24T22:26:36Z", "wall_s": 1.25845}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_79", "event": "pre_generate", "generate_input_tokens": 3147, "input_kind": "chat_history_resident", "new_tokens_est": 26, "policy": "local_only", "prompt_tokens": 3147, "seen_tokens_before": 3121, "step": 1, "t_perf_s": 1566.734692, "turn": 2, "utc": "2026-10-24T22:26:36Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_79", "error": null, "event": "post_generate", "generated_tokens": 32, "ok": true, "policy": "local_only", "prompt_tokens": 3147, "raw_text_chars": 152, "step": 1, "t_perf_s": 1567.684776, "ttft_s": 0.082978, "turn": 2, "utc": "2026-10-24T22:26:37Z", "wall_s": 0.947146}
+CELL_DONE policy=local_only entry=multi_turn_base_79 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_base_92 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_92", "event": "pre_generate", "generate_input_tokens": 2803, "input_kind": "chat_history_resident", "new_tokens_est": 2803, "policy": "local_only", "prompt_tokens": 2803, "seen_tokens_before": null, "step": 0, "t_perf_s": 1568.997755, "turn": 0, "utc": "2026-10-24T22:26:38Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_92", "error": null, "event": "post_generate", "generated_tokens": 36, "ok": true, "policy": "local_only", "prompt_tokens": 2803, "raw_text_chars": 105, "step": 0, "t_perf_s": 1570.037137, "ttft_s": 0.079941, "turn": 0, "utc": "2026-10-24T22:26:39Z", "wall_s": 1.036401}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_92", "event": "pre_generate", "generate_input_tokens": 2861, "input_kind": "chat_history_resident", "new_tokens_est": 22, "policy": "local_only", "prompt_tokens": 2861, "seen_tokens_before": 2839, "step": 1, "t_perf_s": 1570.068134, "turn": 0, "utc": "2026-10-24T22:26:39Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_92", "error": null, "event": "post_generate", "generated_tokens": 57, "ok": true, "policy": "local_only", "prompt_tokens": 2861, "raw_text_chars": 211, "step": 1, "t_perf_s": 1571.68768, "ttft_s": 0.082615, "turn": 0, "utc": "2026-10-24T22:26:41Z", "wall_s": 1.616689}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_92", "event": "pre_generate", "generate_input_tokens": 2959, "input_kind": "chat_history_resident", "new_tokens_est": 41, "policy": "local_only", "prompt_tokens": 2959, "seen_tokens_before": 2918, "step": 0, "t_perf_s": 1572.969663, "turn": 1, "utc": "2026-10-24T22:26:42Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_92", "error": null, "event": "post_generate", "generated_tokens": 38, "ok": true, "policy": "local_only", "prompt_tokens": 2959, "raw_text_chars": 181, "step": 0, "t_perf_s": 1574.0904, "ttft_s": 0.094912, "turn": 1, "utc": "2026-10-24T22:26:43Z", "wall_s": 1.117525}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_92", "event": "pre_generate", "generate_input_tokens": 3019, "input_kind": "chat_history_resident", "new_tokens_est": 22, "policy": "local_only", "prompt_tokens": 3019, "seen_tokens_before": 2997, "step": 0, "t_perf_s": 1575.361176, "turn": 2, "utc": "2026-10-24T22:26:44Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_92", "error": null, "event": "post_generate", "generated_tokens": 25, "ok": true, "policy": "local_only", "prompt_tokens": 3019, "raw_text_chars": 84, "step": 0, "t_perf_s": 1576.119887, "ttft_s": 0.083278, "turn": 2, "utc": "2026-10-24T22:26:45Z", "wall_s": 0.755795}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_92", "event": "pre_generate", "generate_input_tokens": 3069, "input_kind": "chat_history_resident", "new_tokens_est": 25, "policy": "local_only", "prompt_tokens": 3069, "seen_tokens_before": 3044, "step": 1, "t_perf_s": 1576.151895, "turn": 2, "utc": "2026-10-24T22:26:45Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_92", "error": null, "event": "post_generate", "generated_tokens": 60, "ok": true, "policy": "local_only", "prompt_tokens": 3069, "raw_text_chars": 275, "step": 1, "t_perf_s": 1577.855397, "ttft_s": 0.07923, "turn": 2, "utc": "2026-10-24T22:26:47Z", "wall_s": 1.700616}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_92", "event": "pre_generate", "generate_input_tokens": 3174, "input_kind": "chat_history_resident", "new_tokens_est": 45, "policy": "local_only", "prompt_tokens": 3174, "seen_tokens_before": 3129, "step": 0, "t_perf_s": 1579.114215, "turn": 3, "utc": "2026-10-24T22:26:48Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_92", "error": null, "event": "post_generate", "generated_tokens": 22, "ok": true, "policy": "local_only", "prompt_tokens": 3174, "raw_text_chars": 88, "step": 0, "t_perf_s": 1579.810213, "ttft_s": 0.098632, "turn": 3, "utc": "2026-10-24T22:26:49Z", "wall_s": 0.693122}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_92", "event": "pre_generate", "generate_input_tokens": 3238, "input_kind": "chat_history_resident", "new_tokens_est": 42, "policy": "local_only", "prompt_tokens": 3238, "seen_tokens_before": 3196, "step": 1, "t_perf_s": 1579.843023, "turn": 3, "utc": "2026-10-24T22:26:49Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_92", "error": null, "event": "post_generate", "generated_tokens": 68, "ok": true, "policy": "local_only", "prompt_tokens": 3238, "raw_text_chars": 315, "step": 1, "t_perf_s": 1581.773207, "ttft_s": 0.08142, "turn": 3, "utc": "2026-10-24T22:26:51Z", "wall_s": 1.92728}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_92", "event": "pre_generate", "generate_input_tokens": 3354, "input_kind": "chat_history_resident", "new_tokens_est": 48, "policy": "local_only", "prompt_tokens": 3354, "seen_tokens_before": 3306, "step": 0, "t_perf_s": 1583.050233, "turn": 4, "utc": "2026-10-24T22:26:52Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_92", "error": null, "event": "post_generate", "generated_tokens": 18, "ok": true, "policy": "local_only", "prompt_tokens": 3354, "raw_text_chars": 73, "step": 0, "t_perf_s": 1583.649972, "ttft_s": 0.104845, "turn": 4, "utc": "2026-10-24T22:26:52Z", "wall_s": 0.595756}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_base_92", "event": "pre_generate", "generate_input_tokens": 3450, "input_kind": "chat_history_resident", "new_tokens_est": 78, "policy": "local_only", "prompt_tokens": 3450, "seen_tokens_before": 3372, "step": 1, "t_perf_s": 1583.683905, "turn": 4, "utc": "2026-10-24T22:26:53Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_base_92", "error": null, "event": "post_generate", "generated_tokens": 104, "ok": true, "policy": "local_only", "prompt_tokens": 3450, "raw_text_chars": 366, "step": 1, "t_perf_s": 1586.654567, "ttft_s": 0.106942, "turn": 4, "utc": "2026-10-24T22:26:55Z", "wall_s": 2.967747}
+CELL_DONE policy=local_only entry=multi_turn_base_92 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_long_context_70 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_70", "event": "pre_generate", "generate_input_tokens": 2834, "input_kind": "chat_history_resident", "new_tokens_est": 2834, "policy": "local_only", "prompt_tokens": 2834, "seen_tokens_before": null, "step": 0, "t_perf_s": 1587.967973, "turn": 0, "utc": "2026-10-24T22:26:57Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_70", "error": null, "event": "post_generate", "generated_tokens": 106, "ok": true, "policy": "local_only", "prompt_tokens": 2834, "raw_text_chars": 401, "step": 0, "t_perf_s": 1590.902202, "ttft_s": 0.089042, "turn": 0, "utc": "2026-10-24T22:27:00Z", "wall_s": 2.931157}
+CELL_DONE policy=local_only entry=multi_turn_long_context_70 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_long_context_71 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_71", "event": "pre_generate", "generate_input_tokens": 2772, "input_kind": "chat_history_resident", "new_tokens_est": 2772, "policy": "local_only", "prompt_tokens": 2772, "seen_tokens_before": null, "step": 0, "t_perf_s": 1592.245995, "turn": 0, "utc": "2026-10-24T22:27:01Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_71", "error": null, "event": "post_generate", "generated_tokens": 35, "ok": true, "policy": "local_only", "prompt_tokens": 2772, "raw_text_chars": 165, "step": 0, "t_perf_s": 1593.257623, "ttft_s": 0.07535, "turn": 0, "utc": "2026-10-24T22:27:02Z", "wall_s": 1.009163}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_71", "event": "pre_generate", "generate_input_tokens": 2845, "input_kind": "chat_history_resident", "new_tokens_est": 38, "policy": "local_only", "prompt_tokens": 2845, "seen_tokens_before": 2807, "step": 0, "t_perf_s": 1594.531133, "turn": 1, "utc": "2026-10-24T22:27:03Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_71", "error": null, "event": "post_generate", "generated_tokens": 41, "ok": true, "policy": "local_only", "prompt_tokens": 2845, "raw_text_chars": 202, "step": 0, "t_perf_s": 1595.701961, "ttft_s": 0.079429, "turn": 1, "utc": "2026-10-24T22:27:05Z", "wall_s": 1.167811}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_71", "event": "pre_generate", "generate_input_tokens": 2903, "input_kind": "chat_history_resident", "new_tokens_est": 17, "policy": "local_only", "prompt_tokens": 2903, "seen_tokens_before": 2886, "step": 0, "t_perf_s": 1596.956695, "turn": 2, "utc": "2026-10-24T22:27:06Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_71", "error": null, "event": "post_generate", "generated_tokens": 23, "ok": true, "policy": "local_only", "prompt_tokens": 2903, "raw_text_chars": 82, "step": 0, "t_perf_s": 1597.657667, "ttft_s": 0.083768, "turn": 2, "utc": "2026-10-24T22:27:06Z", "wall_s": 0.698058}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_71", "event": "pre_generate", "generate_input_tokens": 2951, "input_kind": "chat_history_resident", "new_tokens_est": 25, "policy": "local_only", "prompt_tokens": 2951, "seen_tokens_before": 2926, "step": 1, "t_perf_s": 1597.689329, "turn": 2, "utc": "2026-10-24T22:27:07Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_71", "error": null, "event": "post_generate", "generated_tokens": 45, "ok": true, "policy": "local_only", "prompt_tokens": 2951, "raw_text_chars": 216, "step": 1, "t_perf_s": 1598.983463, "ttft_s": 0.080958, "turn": 2, "utc": "2026-10-24T22:27:08Z", "wall_s": 1.291692}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_71", "event": "pre_generate", "generate_input_tokens": 3018, "input_kind": "chat_history_resident", "new_tokens_est": 22, "policy": "local_only", "prompt_tokens": 3018, "seen_tokens_before": 2996, "step": 0, "t_perf_s": 1600.257176, "turn": 3, "utc": "2026-10-24T22:27:09Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_71", "error": null, "event": "post_generate", "generated_tokens": 22, "ok": true, "policy": "local_only", "prompt_tokens": 3018, "raw_text_chars": 88, "step": 0, "t_perf_s": 1600.930911, "ttft_s": 0.080742, "turn": 3, "utc": "2026-10-24T22:27:10Z", "wall_s": 0.670679}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_71", "event": "pre_generate", "generate_input_tokens": 3082, "input_kind": "chat_history_resident", "new_tokens_est": 42, "policy": "local_only", "prompt_tokens": 3082, "seen_tokens_before": 3040, "step": 1, "t_perf_s": 1600.962885, "turn": 3, "utc": "2026-10-24T22:27:10Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_71", "error": null, "event": "post_generate", "generated_tokens": 57, "ok": true, "policy": "local_only", "prompt_tokens": 3082, "raw_text_chars": 259, "step": 1, "t_perf_s": 1602.592084, "ttft_s": 0.083176, "turn": 3, "utc": "2026-10-24T22:27:11Z", "wall_s": 1.626733}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_71", "event": "pre_generate", "generate_input_tokens": 3166, "input_kind": "chat_history_resident", "new_tokens_est": 27, "policy": "local_only", "prompt_tokens": 3166, "seen_tokens_before": 3139, "step": 0, "t_perf_s": 1603.869225, "turn": 4, "utc": "2026-10-24T22:27:13Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_71", "error": null, "event": "post_generate", "generated_tokens": 27, "ok": true, "policy": "local_only", "prompt_tokens": 3166, "raw_text_chars": 112, "step": 0, "t_perf_s": 1604.689539, "ttft_s": 0.085926, "turn": 4, "utc": "2026-10-24T22:27:14Z", "wall_s": 0.817334}
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_71", "event": "pre_generate", "generate_input_tokens": 3219, "input_kind": "chat_history_resident", "new_tokens_est": 26, "policy": "local_only", "prompt_tokens": 3219, "seen_tokens_before": 3193, "step": 1, "t_perf_s": 1604.722339, "turn": 4, "utc": "2026-10-24T22:27:14Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_71", "error": null, "event": "post_generate", "generated_tokens": 46, "ok": true, "policy": "local_only", "prompt_tokens": 3219, "raw_text_chars": 222, "step": 1, "t_perf_s": 1606.044409, "ttft_s": 0.08154, "turn": 4, "utc": "2026-10-24T22:27:15Z", "wall_s": 1.319168}
+CELL_DONE policy=local_only entry=multi_turn_long_context_71 cloud_usd_entry=0.000000 trajectory_pass=False
+CELL_START policy=local_only entry=multi_turn_long_context_93 policy_usd=0.000000/0.000000 session_usd=0.000000/1.000000
+STEP_PRE_GENERATE {"entry_id": "multi_turn_long_context_93", "event": "pre_generate", "generate_input_tokens": 2764, "input_kind": "chat_history_resident", "new_tokens_est": 2764, "policy": "local_only", "prompt_tokens": 2764, "seen_tokens_before": null, "step": 0, "t_perf_s": 1607.360285, "turn": 0, "utc": "2026-10-24T22:27:16Z"}
+STEP_POST_GENERATE {"entry_id": "multi_turn_long_context_93", "error": null, "event": "post_generate", "generated_tokens": 58, "ok": true, "policy": "local_only", "prompt_tokens": 2764, "raw_text_chars": 248, "step": 0, "t_perf_s": 1609.048991, "ttft_s": 0.13751, "turn": 0, "utc": "2026-10-24T22:27:18Z", "wall_s": 1.685479}
+Traceback (most recent call last):
+  File "C:\Users\zach\Projects\gnn-hls-accel\tools\run_h1_hybrid.py", line 5753, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "C:\Users\zach\Projects\gnn-hls-accel\tools\run_h1_hybrid.py", line 5495, in main
+    return _main_interleaved(args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zach\Projects\gnn-hls-accel\tools\run_h1_hybrid.py", line 5724, in _main_interleaved
+    summary = run_interleaved_session(
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zach\Projects\gnn-hls-accel\tools\run_h1_hybrid.py", line 4023, in run_interleaved_session
+    er = run_hybrid_entry(
+         ^^^^^^^^^^^^^^^^^
+  File "C:\Users\zach\Projects\gnn-hls-accel\tools\run_h1_hybrid.py", line 2718, in run_hybrid_entry
+    return _run_hybrid_entry_body(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zach\Projects\gnn-hls-accel\tools\run_h1_hybrid.py", line 3261, in _run_hybrid_entry_body
+    attach_entry_quality(result, local, entry)
+  File "C:\Users\zach\Projects\gnn-hls-accel\tools\run_h1_hybrid.py", line 1003, in attach_entry_quality
+    score_hybrid_trajectory(result, entry)
+  File "C:\Users\zach\Projects\gnn-hls-accel\tools\run_h1_hybrid.py", line 974, in score_hybrid_trajectory
+    scored = score_multi_turn(
+             ^^^^^^^^^^^^^^^^^
+  File "C:\Users\zach\Projects\gnn-hls-accel\tools\bfcl_feasibility_probe.py", line 959, in score_multi_turn
+    return check(
+           ^^^^^^
+  File "C:\Users\zach\Projects\gnn-hls-accel\apu_characterization\cap01\bfcl_cap01_multi_turn_checker.py", line 80, in check
+    return multi_turn_checker(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zach\Projects\gnn-hls-accel\apu_characterization\out\cap01\live_sources\bfcl-wheel\unpacked\bfcl_eval\eval_checker\multi_turn_eval\multi_turn_checker.py", line 31, in multi_turn_checker
+    single_turn_model_response_list = multi_turn_model_result_list_decoded[turn_index]
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+IndexError: list index out of range

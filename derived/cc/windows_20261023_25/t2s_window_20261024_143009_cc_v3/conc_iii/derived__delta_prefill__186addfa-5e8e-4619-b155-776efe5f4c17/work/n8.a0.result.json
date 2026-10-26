@@ -1,0 +1,132 @@
+{
+  "affinity_readback": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "completed": false,
+  "exception": {
+    "message": "Check 'budget_in_bytes <= total_available_memory' failed at C:\\Jenkins\\workspace\\private-ci\\ie\\build-windows-vs2022@2\\b\\repos\\openvino.genai\\src\\cpp\\src\\continuous_batching/cache/cache_orchestrator.hpp:760:\nRequested cache size is larger than available memory size on the system.\n",
+    "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 311, in main\n    return _run(spec, writer)\n           ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 339, in _run\n    return _run_with_power(spec, writer)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\zach\\Projects\\gnn-hls-accel\\seam\\tools\\_delta_n_child.py\", line 420, in _run_with_power\n    pipes[device] = ov_genai.LLMPipeline(model_dir, device, sched, **properties)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: Check 'budget_in_bytes <= total_available_memory' failed at C:\\Jenkins\\workspace\\private-ci\\ie\\build-windows-vs2022@2\\b\\repos\\openvino.genai\\src\\cpp\\src\\continuous_batching/cache/cache_orchestrator.hpp:760:\nRequested cache size is larger than available memory size on the system.\n\n",
+    "type": "RuntimeError"
+  },
+  "failure_mode": "exception:RuntimeError",
+  "memory_after_import": {
+    "available_mb": 58709.11328125,
+    "percent": 9.7,
+    "rss_mb": 53.31640625,
+    "used_mb": 6308.88671875
+  },
+  "memory_at_failure": {
+    "available_mb": 57573.5859375,
+    "percent": 11.4,
+    "rss_mb": 1198.671875,
+    "used_mb": 7444.4140625
+  },
+  "memory_baseline": {
+    "available_mb": 58735.9375,
+    "percent": 9.7,
+    "rss_mb": 18.875,
+    "used_mb": 6282.0625
+  },
+  "phase": "failed",
+  "power_request": {
+    "clear_last_error": 0,
+    "cleared": true,
+    "close_last_error": 0,
+    "closed": true,
+    "create_last_error": null,
+    "created": true,
+    "error": null,
+    "handle_repr": "0x2dc",
+    "mechanism": "PowerCreateRequest/PowerSetRequest",
+    "platform": "Windows",
+    "reason": "SEAM measurement child; PowerRequestSystemRequired for generate window",
+    "request_type": "PowerRequestSystemRequired",
+    "request_type_id": 1,
+    "role": "measurement_child",
+    "set": true,
+    "set_last_error": 0,
+    "succeeded": true
+  },
+  "spec": {
+    "affinity_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "arm_id": "gpu_only_f16",
+    "arm_properties": {
+      "KV_CACHE_PRECISION": "f16"
+    },
+    "cc_conc": {
+      "new_tokens": 16,
+      "sessions": 8,
+      "tokens": 32768
+    },
+    "compiled_readback": true,
+    "dxgi_trace": true,
+    "filler_unit": " the quick brown fox jumps over the lazy dog.",
+    "generate_device": "GPU",
+    "gpu_mem_stats": true,
+    "load_sequence": [
+      {
+        "device": "GPU",
+        "properties": {
+          "KV_CACHE_PRECISION": "f16"
+        }
+      }
+    ],
+    "max_new_tokens": 8,
+    "mem_trace_hz": 10.0,
+    "model_dir": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\models\\Qwen3-4B-int4-ov",
+    "prompt_path": "C:\\Users\\zach\\Projects\\gnn-hls-accel\\derived\\delta_prefill\\186addfa-5e8e-4619-b155-776efe5f4c17\\work\\prompt_unused.txt",
+    "reject_kv_mismatch": true,
+    "rss_interval_s": 0.05,
+    "scheduler_config": {
+      "cache_size": 40,
+      "enable_prefix_caching": false,
+      "max_num_batched_tokens": 256
+    },
+    "wslock": {
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "mode": "request"
+    }
+  },
+  "working_set_lock": {
+    "after": {
+      "flags": 9,
+      "hard_min_enabled": true,
+      "maximum_bytes": 12884901888,
+      "minimum_bytes": 4294967296,
+      "read": true
+    },
+    "before": {
+      "flags": 10,
+      "hard_min_enabled": false,
+      "maximum_bytes": 1413120,
+      "minimum_bytes": 204800,
+      "read": true
+    },
+    "call": "SetProcessWorkingSetSizeEx",
+    "flags": 1,
+    "flags_name": "QUOTA_LIMITS_HARDWS_MIN_ENABLE",
+    "granted": true,
+    "last_error": 0,
+    "privilege": {
+      "attempted": true,
+      "granted": true,
+      "last_error": 0,
+      "last_error_meaning": "ERROR_SUCCESS",
+      "privilege": "SeIncreaseWorkingSetPrivilege",
+      "step": "AdjustTokenPrivileges"
+    },
+    "requested": true,
+    "requested_maximum_bytes": 12884901888,
+    "requested_minimum_bytes": 4294967296,
+    "returned": true
+  }
+}

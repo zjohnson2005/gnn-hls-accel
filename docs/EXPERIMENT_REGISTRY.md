@@ -141,6 +141,16 @@ DERIVED / PILOT label.
 | F9 | Device configuration flips hybrid routing | DEMO-1 f7343708 (V1) vs 1acc8c58 (V2: 30 escalations, $0.297/task, 22/30 passes vs 3/30); CAP-1 21.4x (c2246b1f, 7f232f86); DEMO-2 T2S held-out (contrast paragraph) | point SEALED (n = 30); phase diagram TARGET (offline replay) | Mac | Zach | Nov 15 |
 | F10 | Unified memory trades decode rate for reach; the workspace term sets the $ of context | CC-MECH + CC-BUDGET slopes; CTXKV E2 (2.85x sessions PILOT); DRAM-tier $ only if F1 passes | DERIVED / PILOT / TARGET | all | Zach | Nov 22 |
 
+Status update 2026-10-26 (Task BK closeout; scores in analysis/cc_20261026/SCORES.md; rows above unchanged):
+- F1: MEASURED on both hosts. KV pool = n x compiled k exactly; the non-KV term is the prefill working set
+  (usm_device 87,056 B/token uncapped, 0 at cap 256/1024). u4/f16 1.79x unchunked (5943c992/aa914c4c) vs
+  3.18x at cap 256 (f8df3847/d782cf80) against 3.12x compiled / 3.56x nominal. Gate HIT on registered L*;
+  robust ceiling at cap 256 not established (0/8 repeats, 0580176a).
+- F2: R2 RED FLAG (slider inverse a2a7c763/f4abaf6e/9e31d4cb; balloons null). Candidate gated at Gate A; INV-1.
+- F6: cliff_f16 83a3c422 loud in turn 1 past L*; cliff_u4 NOT RUN (quiescence).
+- F8: 40,448 held at every arm on 64 GB (7e249f7e, 6dfd1a12, 2d329db2): the window binds.
+- F9: DEMO-2 T2S F2 measured (A faster than P, analysis/demo2_heldout/SCORES.md); $ primary PENDING (ho_cloud).
+
 Sealed numbers reused (unchanged): placement 21.4x (c2246b1f, 7f232f86); XPS resident limits
 f16/u8/u4 15,000 / 20,000 / 26,500 (553b3a5c, cf3555d5, e4a22dac); T2S TTFT-bound limits (10 s
 SLO, not memory) f16 4B 18,687 / 8B 16,437 (5c714535, 051d2681), u8 4B 18,500 / 8B 16,437
@@ -265,6 +275,16 @@ earlier rows keep their registered k. Queues (NEW): ~/seam_closeout_1013/xps/run
 | STAT-1 | L90 / L50 with CIs on three anchors (BCD, CIR, session bootstrap); u4 cap256 binomial at 63,000 | method (ceilings as distributions) | A | REGISTERED 2026-10-26 (docs/registrations/BR_STAT_2026-10-26.md sha256 a77053af4066e2653e5841f0f405d8e94ccebee998cd795272db2d076da8e05a) | XPS / Zach, overnight | tools/stat_cir.py frozen with tests |
 | CC-M2-8B-A | Qwen3-8B a = 114,688 B/token +-10% and ceilings from B_BR + compiled k (beside the BO predictions) | H1 held-out (second model) | A | REGISTERED 2026-10-26 (docs/registrations/BR_8B_2026-10-26.md sha256 16943e2345d712223940e6677c5dca6233eb52ae2abecaf999d7eb04f3a35370) before run_queue_xps_m2.sh | XPS / Zach | f16 / i8 / u4 2,575 / 3,396 / 4,169, u4 cap256 13,669 (+-15%); BO values still scored as registered |
 | HYB-1 | can the ceiling model decide local feasibility per agent call before generation (feasibility, not savings)? | H4 extension, section 8.2 | B | REGISTERED 2026-10-26 before any trace row (docs/registrations/BR_HYB1_2026-10-26.md sha256 c1454ebbdbe38e6d472a240f6531ce53518f7c82719ee0ced2021498cacb5642); results only after Nov 6 | Mac (+ XPS window probe, Nov 16-22 replay) / Zach | H-NARROW, H-BAND, H-CONTRAST, H-P2, H-KV, H-SILENT, H-RANK; time-to-ready / KV survival not built yet |
+
+CC closeout 2026-10-26 (Task BK; per row, the rows above keep their registered text):
+- DONE (sealed, run_ids in analysis/cc_20261026/RUNS.md): CC-REH-XPS (5dac335c), CC-BYTES-XPS, CC-MECH-XPS
+  (9 bisections + repeats), CC-TTFT-XPS (A8 MISS), CC-GROW-XPS (8 cells), CC-A21-XPS (R1), CC-ALLOC-XPS/T2S
+  (R3 PASS), CC-A33-XPS (MISS), CC-BAL-XPS (MISS; bal_g2_f16 NOT RUN, 98c9a927 quiescence), CC-SLIDER-XPS
+  (A25 MISS, R2), CC-WINDOW-T2S (HIT), T2S byte-slope cells (A12: settled HIT, uncapped peak MISS as
+  registered), CC-CONC-T2S ((i) MISS, (ii) UNRESOLVED timeout, (iii) MISS, (iv) HIT), CC-BAL-T2S (A29 MISS /
+  UNRESOLVED), CC-A19-RECORD (HIT at 50/57/74% and T2S).
+- NOT RUN: CC-CLIFF-XPS u4 (36e0ec24 quiescence), CC-VALID-XPS (spec pin), CC-RT-XPS (now XRT-1, BR), CC-OLLAMA-DEFAULT
+  (absent), CC-M2-*, conditional rows.
 
 ### 3d. Other rows kept open (relabelled 2026-10-23)
 
@@ -542,6 +562,9 @@ verdicts): (1) 15367c3a ran a 67,947-token generate in a resident session (BB CO
 far above the single-prefill B; (2) sealed 8-bit 20,000 (cf3555d5) and 18,000 (a5d19dcc) sit below the
 A21 band 20,921-21,486; (3) V5-CAL cached-prefix turns of 17-35 s (a178e9c5, e1ed06b4) vs the A23 law's
 ~3.8 s (L 20K, delta 2K) / ~10 s at the V5-CAL shape. Details: CC_AMEND_2026-10-23d_MODEL2.md section 4.
+
+Oct 26 (Task BK): weekend closed out; meeting pack analysis/meeting_20261027/ (SUMMARY.md, SLIDES.md, figs).
+XPS DEMO-2 held-out (ho_cloud + XPS arms) moves to Sat Oct 31 daytime (below).
 
 Week-1 schedule (Task BR, 2026-10-26; XPS; Zach launches every queue; each refuses while xps.lock is held):
 | When (ET) | XPS queue |

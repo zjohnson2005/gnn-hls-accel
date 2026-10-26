@@ -1,0 +1,116 @@
+[10-24 17:59:32 ET] run_queue_xps_cc_v3b.sh sha256 b311102c50d0dee7f8cbbf8ce6c4813bfa0bb1c6576e99fa9b9ade7a139a6354; park_untracked_v2.ps1 sha256 e2bf2fc643bff81cea2db594d5bdcdd68e020fdfe91a9386eb0e54464f4d63c7
+[10-24 17:59:32 ET] start (FROM=0 UNTIL=999 head cedb9d3); output in /Users/zjohnson05/seam_closeout_1013/xps/window_20261024_175932_cc_v3b
+[10-24 17:59:33 ET] origin main == EXPECT_HEAD (cedb9d3f082bf94c0cf7ac387e789c53a675400a)
+[10-24 17:59:33 ET] took /Users/zjohnson05/seam_closeout_1013/locks/xps.lock
+[10-24 17:59:41 ET] reboot (window start); boot time before 2026-10-24T16:13:27.5000000-04:00
+[10-24 18:01:13 ET] XPS back, boot time 2026-10-24T18:00:10.5000000-04:00
+[10-24 18:04:18 ET] pulled to cedb9d3, tree clean
+[10-24 18:04:49 ET] A19 DXGI probe OK; cells use --dxgi-trace
+[10-24 18:04:53 ET] launch reh_grow (uptime 285 s): run_resident_limit.py --arm gpu_only_f16 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-REH-XPS:grow --grow-step 512 --grow-max 2048 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 3600
+[10-24 18:08:11 ET] reh_grow run_id 5dac335c-0a70-46c0-b559-6901795d80c7
+[10-24 18:08:13 ET] parked reh_grow as 20261024_175932_reh_grow
+[10-24 18:08:14 ET] copied reh_grow to Mac
+[10-24 18:08:14 ET] reh_grow rc=0
+[10-24 18:08:14 ET] REHEARSAL_COMPLETE (grow path, sealed)
+[10-24 18:08:17 ET] launch grow_f16_unl (uptime 489 s): run_resident_limit.py --arm gpu_only_f16 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-GROW-XPS:f16:unl:d2048 --grow-step 2048 --grow-max 110000 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 10800
+[10-24 18:12:35 ET] grow_f16_unl run_id 71b7d9d8-4dc3-43bd-be73-e12ac7f639d5
+[10-24 18:12:36 ET] parked grow_f16_unl as 20261024_175932_grow_f16_unl
+[10-24 18:12:37 ET] copied grow_f16_unl to Mac
+[10-24 18:12:37 ET] grow_f16_unl rc=0
+[10-24 18:12:41 ET] launch grow_u4_unl (uptime 752 s): run_resident_limit.py --arm gpu_only_u4 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-GROW-XPS:u4:unl:d2048 --grow-step 2048 --grow-max 110000 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 10800
+[10-24 18:28:44 ET] grow_u4_unl run_id d7e8b43e-8f2f-43f0-b2c7-b5c313098a4a
+[10-24 18:28:45 ET] parked grow_u4_unl as 20261024_175932_grow_u4_unl
+[10-24 18:28:47 ET] copied grow_u4_unl to Mac
+[10-24 18:28:47 ET] grow_u4_unl rc=0
+[10-24 18:28:51 ET] launch grow_f16_c256 (uptime 1722 s): run_resident_limit.py --arm gpu_only_f16 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-GROW-XPS:f16:c256:d2048 --sched-max-batched-tokens 256 --grow-step 2048 --grow-max 110000 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 10800
+[10-24 18:34:10 ET] grow_f16_c256 run_id 2bfae783-9b1a-4b68-a582-63d71a174d8a
+[10-24 18:34:11 ET] parked grow_f16_c256 as 20261024_175932_grow_f16_c256
+[10-24 18:34:12 ET] copied grow_f16_c256 to Mac
+[10-24 18:34:12 ET] grow_f16_c256 rc=0
+[10-24 18:34:16 ET] launch grow_u4_c256 (uptime 2047 s): run_resident_limit.py --arm gpu_only_u4 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-GROW-XPS:u4:c256:d2048 --sched-max-batched-tokens 256 --grow-step 2048 --grow-max 110000 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 10800
+[10-24 18:54:22 ET] WARN python count read failed (ssh); not counted
+[10-24 18:56:41 ET] WARN python count read failed (ssh); not counted
+[10-24 18:57:59 ET] grow_u4_c256 run_id 08e52da9-4946-4ec4-9198-fd7c8b353c49
+[10-24 18:58:02 ET] parked grow_u4_c256 as 20261024_175932_grow_u4_c256
+[10-24 18:58:17 ET] copied grow_u4_c256 to Mac
+[10-24 18:58:17 ET] grow_u4_c256 rc=0
+[10-24 18:58:23 ET] launch grow_f16_unl_d1k (uptime 3494 s): run_resident_limit.py --arm gpu_only_f16 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-GROW-XPS:f16:unl:d1024 --grow-step 1024 --grow-max 110000 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 10800
+[10-24 19:03:17 ET] grow_f16_unl_d1k run_id e99bb2ad-c636-4edd-8a39-1d39a0ad6027
+[10-24 19:03:20 ET] parked grow_f16_unl_d1k as 20261024_175932_grow_f16_unl_d1k
+[10-24 19:03:27 ET] copied grow_f16_unl_d1k to Mac
+[10-24 19:03:27 ET] grow_f16_unl_d1k rc=0
+[10-24 19:03:33 ET] launch grow_u4_unl_d1k (uptime 3804 s): run_resident_limit.py --arm gpu_only_u4 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-GROW-XPS:u4:unl:d1024 --grow-step 1024 --grow-max 110000 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 10800
+[10-24 19:09:14 ET] WARN python count read failed (ssh); not counted
+[10-24 19:09:45 ET] WARN python count read failed (ssh); not counted
+[10-24 19:15:10 ET] WARN python count read failed (ssh); not counted
+[10-24 19:16:58 ET] WARN python count read failed (ssh); not counted
+[10-24 19:17:43 ET] WARN python count read failed (ssh); not counted
+[10-24 19:18:28 ET] WARN python count read failed (ssh); not counted
+[10-24 19:21:18 ET] WARN python count read failed (ssh); not counted
+[10-24 19:22:03 ET] WARN python count read failed (ssh); not counted
+[10-24 19:23:23 ET] grow_u4_unl_d1k run_id 0c7ae0a3-c22d-49a8-984c-335cdb921232
+[10-24 19:23:26 ET] parked grow_u4_unl_d1k as 20261024_175932_grow_u4_unl_d1k
+[10-24 19:23:39 ET] copied grow_u4_unl_d1k to Mac
+[10-24 19:23:39 ET] grow_u4_unl_d1k rc=0
+[10-24 19:23:45 ET] launch grow_f16_unl_d4k (uptime 5016 s): run_resident_limit.py --arm gpu_only_f16 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-GROW-XPS:f16:unl:d4096 --grow-step 4096 --grow-max 110000 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 10800
+[10-24 19:27:38 ET] grow_f16_unl_d4k run_id 9cb921fd-1aed-4623-98c4-71e088fe1b79
+[10-24 19:27:40 ET] parked grow_f16_unl_d4k as 20261024_175932_grow_f16_unl_d4k
+[10-24 19:27:47 ET] copied grow_f16_unl_d4k to Mac
+[10-24 19:27:47 ET] grow_f16_unl_d4k rc=0
+[10-24 19:27:53 ET] launch grow_u4_unl_d4k (uptime 5264 s): run_resident_limit.py --arm gpu_only_u4 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-GROW-XPS:u4:unl:d4096 --grow-step 4096 --grow-max 110000 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 10800
+[10-24 19:41:21 ET] grow_u4_unl_d4k run_id 10cb79e4-be11-4faa-8a61-38f3ed80e002
+[10-24 19:41:24 ET] parked grow_u4_unl_d4k as 20261024_175932_grow_u4_unl_d4k
+[10-24 19:41:33 ET] copied grow_u4_unl_d4k to Mac
+[10-24 19:41:33 ET] grow_u4_unl_d4k rc=0
+[10-24 19:41:39 ET] launch a33_u4_cache2 (uptime 6090 s): run_resident_limit.py --arm gpu_only_u4 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-A33-XPS:u4:cache2 --sched-max-batched-tokens 18446744073709551615 --sched-cache-size 2 --low 12000 --high 30000 --resolution 250 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 3600
+[10-24 19:52:17 ET] a33_u4_cache2 run_id aaadf214-9946-4492-a9d1-0b2528ed30f7
+[10-24 19:52:19 ET] parked a33_u4_cache2 as 20261024_175932_a33_u4_cache2
+[10-24 19:52:32 ET] copied a33_u4_cache2 to Mac
+[10-24 19:52:32 ET] a33_u4_cache2 rc=0
+[10-24 19:52:38 ET] launch a33_u4_cache0 (uptime 6749 s): run_resident_limit.py --arm gpu_only_u4 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-A33-XPS:u4:cache0 --sched-max-batched-tokens 18446744073709551615 --low 12000 --high 30000 --resolution 250 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 3600
+[10-24 20:00:25 ET] WARN python count read failed (ssh); not counted
+[10-24 20:05:20 ET] a33_u4_cache0 run_id 3cd03df7-b87c-4a68-a0ed-4db18f8237de
+[10-24 20:05:23 ET] parked a33_u4_cache0 as 20261024_175932_a33_u4_cache0
+[10-24 20:05:35 ET] copied a33_u4_cache0 to Mac
+[10-24 20:05:35 ET] a33_u4_cache0 rc=0
+[10-24 20:05:36 ET] A30: Ollama not installed on the XPS (nothing run)
+[10-24 20:05:36 ET] NOT_RUN cc_rt: CC-RT is CONDITIONAL (no pinned llama.cpp build or harness on the XPS; A7)
+[10-24 20:05:38 ET] reboot (uptime 7528 s before bal_g1_f16); boot time before 2026-10-24T18:00:10.5000000-04:00
+[10-24 20:07:13 ET] XPS back, boot time 2026-10-24T20:06:34.5000000-04:00
+balloon shared_usage_mb 1056.0 need 921.6 method device_tensor_copy_from
+[10-24 20:10:32 ET] balloon gpu 1 GiB ready
+[10-24 20:10:33 ET] launch bal_g1_f16 (uptime 240 s): run_resident_limit.py --arm gpu_only_f16 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-BAL-XPS:gpu1:f16 --low 8000 --high 18000 --resolution 250 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 3600 --balloon-floor-credit
+[10-24 20:20:32 ET] balloon released
+[10-24 20:20:46 ET] bal_g1_f16 run_id 0014465c-1d83-4b51-8e55-64ee6cbb9e6b
+[10-24 20:20:48 ET] parked bal_g1_f16 as 20261024_175932_bal_g1_f16
+[10-24 20:21:00 ET] copied bal_g1_f16 to Mac
+[10-24 20:21:00 ET] bal_g1_f16 rc=0
+balloon shared_usage_mb 2104.0 need 1843.2 method device_tensor_copy_from
+[10-24 20:21:18 ET] balloon gpu 2 GiB ready
+[10-24 20:21:19 ET] launch bal_g2_f16 (uptime 886 s): run_resident_limit.py --arm gpu_only_f16 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-BAL-XPS:gpu2:f16 --low 8000 --high 18000 --resolution 250 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 3600 --balloon-floor-credit
+[10-24 20:24:39 ET] balloon released
+[10-24 20:24:53 ET] bal_g2_f16 run_id 98c9a927-e54b-41e2-8b1d-ad4472d6ecfc
+Traceback (most recent call last):
+[10-24 20:24:55 ET] parked bal_g2_f16 as 20261024_175932_bal_g2_f16
+[10-24 20:24:58 ET] copied bal_g2_f16 to Mac
+[10-24 20:24:58 ET] bal_g2_f16 rc=1
+[10-24 20:24:59 ET] reboot (after an error in bal_g2_f16); boot time before 2026-10-24T20:06:34.5000000-04:00
+[10-24 20:26:31 ET] XPS back, boot time 2026-10-24T20:25:28.5000000-04:00
+balloon shared_usage_mb 2088.0 need 1843.2 method device_tensor_copy_from
+[10-24 20:30:04 ET] balloon gpu 2 GiB ready
+[10-24 20:30:05 ET] launch bal_g2_u4 (uptime 278 s): run_resident_limit.py --arm gpu_only_u4 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-BAL-XPS:gpu2:u4 --low 12000 --high 30000 --resolution 250 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 3600 --balloon-floor-credit
+[10-24 20:45:37 ET] balloon released
+[10-24 20:45:49 ET] bal_g2_u4 run_id f9953743-4a62-4adc-80ca-5d9edea3c380
+[10-24 20:45:50 ET] parked bal_g2_u4 as 20261024_175932_bal_g2_u4
+[10-24 20:45:52 ET] copied bal_g2_u4 to Mac
+[10-24 20:45:52 ET] bal_g2_u4 rc=0
+[10-24 20:46:07 ET] balloon cpu 4 GiB ready
+[10-24 20:46:07 ET] launch bal_c4_f16 (uptime 1240 s): run_resident_limit.py --arm gpu_only_f16 --model-spec configs\models\Qwen3-4B-int4-ov.yaml --cc-cell CC-BAL-XPS:cpu4:f16 --low 8000 --high 18000 --resolution 250 --gpu-mem-stats --compiled-readback --reject-kv-mismatch --mem-trace-hz 10 --dxgi-trace --probe-timeout-s 3600 --balloon-floor-credit
+[10-24 20:55:39 ET] balloon released
+[10-24 20:55:53 ET] bal_c4_f16 run_id 62d59ab8-c9f8-4742-bd0a-3a4c71085292
+[10-24 20:55:56 ET] parked bal_c4_f16 as 20261024_175932_bal_c4_f16
+[10-24 20:56:07 ET] copied bal_c4_f16 to Mac
+[10-24 20:56:07 ET] bal_c4_f16 rc=0
+[10-24 20:56:07 ET] NOT_RUN bal_g1_u4: covered by 598e882d (registered gate passed at 241e4d3)
+[10-24 20:56:07 ET] NOT_RUN bal_c2_f16: covered by 0f3950a3 (registered gate passed at 241e4d3)
+[10-24 20:56:07 ET] XPS CC v3b queue done (cells.txt)

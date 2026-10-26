@@ -1,0 +1,33 @@
+resident_limit arm=gpu_only_f16 low=8000 high=18000 resolution=250 session=98c9a927-e54b-41e2-8b1d-ad4472d6ecfc cc_cell=CC-BAL-XPS:gpu2:f16 points=[]
+{"balloon_candidates": [6664, 7984], "balloon_pid": 7984, "balloon_private_bytes": 4720603136, "balloon_private_mb": 4501.91796875, "balloon_rss": 4498767872, "credited_available_mb": 10279.91796875, "event": "balloon_floor_credit", "floor_citation": "2026-08-09 clean session / 7477 MB Available; arm A lowest free_physical_mb_start 6926; floor 7000 (configs/delta_n.yaml isolation.pre_run_available_mb_min).", "floor_mb": 7000.0, "observed_available_mb": 5778.0, "passed": true, "rule": "Available + balloon private bytes >= floor (Task BQ option (a))"}
+[c2_canary] index=0 after_probes=-1 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-25T00:21:36.323817+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-25T00:21:37.302654+00:00"}
+[c2_canary] index=1 after_probes=-1 armed=False every_n=1 bound=budget
+{"chars": 17995, "event": "delta_n.prompt_built", "n_tokens_realized": 4000, "n_tokens_requested": 4000, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n4000.txt", "sha256": "39999742ea41ec589a0a7bffab59d3d89f84ff222238ea5ecb5d6bc4e4da51a3", "ts": "2026-10-25T00:21:55.370306+00:00"}
+{"chars": 1795, "event": "delta_n.prompt_built", "n_tokens_realized": 400, "n_tokens_requested": 400, "path": "C:\\Users\\zjohn\\Projects\\gnn-hls-accel\\derived\\delta_n\\prompts\\n400.txt", "sha256": "0af153e2f15c6d66489af7a8d5a778c5d07b077827bb19a30b7eb2f25cc39498", "ts": "2026-10-25T00:21:56.457747+00:00"}
+{"attempt": 0, "event": "delta_n.block_refused", "reason": "measured-load quiescence refusal: mean total CPU 25.619% > 20.000%", "tag": "n8000", "ts": "2026-10-25T00:22:43.648867+00:00"}
+{"attempt": 1, "event": "delta_n.block_refused", "reason": "measured-load quiescence refusal: mean total CPU 30.771% > 20.000%", "tag": "n8000", "ts": "2026-10-25T00:23:13.674893+00:00"}
+{"attempt": 2, "event": "delta_n.block_refused", "reason": "measured-load quiescence refusal: mean total CPU 38.928% > 20.000%", "tag": "n8000", "ts": "2026-10-25T00:23:43.698238+00:00"}
+Traceback (most recent call last):
+  File "C:\Users\zjohn\Projects\gnn-hls-accel\tools\run_resident_limit.py", line 235, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "C:\Users\zjohn\Projects\gnn-hls-accel\tools\run_resident_limit.py", line 226, in main
+    return run_resident_limit(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zjohn\Projects\gnn-hls-accel\tools\boot4_session.py", line 1261, in run_resident_limit
+    found = bisect_holds(
+            ^^^^^^^^^^^^^
+  File "C:\Users\zjohn\Projects\gnn-hls-accel\tools\boot4_session.py", line 242, in bisect_holds
+    low_point = once(low)
+                ^^^^^^^^^
+  File "C:\Users\zjohn\Projects\gnn-hls-accel\tools\boot4_session.py", line 238, in once
+    point = attempt(n)
+            ^^^^^^^^^^
+  File "C:\Users\zjohn\Projects\gnn-hls-accel\tools\boot4_session.py", line 1201, in attempt
+    measured = measured_repeat(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\zjohn\Projects\gnn-hls-accel\seam\tools\delta_n.py", line 584, in measured_repeat
+    raise SeamError(_ceiling_refusal_message(label, attempts, max_retries))
+seam.errors.SeamError: resident-gpu_only_f16-n8000: 3 consecutive inadmissible blocks (['quiescence_refusal', 'quiescence_refusal', 'quiescence_refusal']); refusing to record a ceiling from a machine that will not hold still. Stop and report.
