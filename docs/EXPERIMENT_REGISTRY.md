@@ -249,6 +249,23 @@ Predictions: derived/cc/CC_PREDICTIONS.json (DERIVED, tools/cc_predict.py), CC_B
 | CC-M2-MECH-XPS | Qwen3-8B u4 cap-256 limit, r = 3 | H1 held-out | A | REGISTERED (Task BO); predicted 25,022 [21,269, 28,775]; KV bound 2.125x | XPS / Zach | - |
 | FLEET-FRONTIER | share of agent steps that fit per installed tier at defaults and at the law's ceiling | H4 | B | REGISTERED 2026-10-23 (Task BO, docs/registrations/FLEET_FRONTIER_2026-10-23.md); inputs pinned; results only after the Nov 6 gate | Mac / Zach | derived/fleet/ |
 
+### 3e. Week-1 amendments (Task BR, registered 2026-10-26 before any run; approved "ok on all", Sun Oct 25 ~10:50 PM ET)
+Trigger: R2 RED FLAG (PLAN_LOCK red-flag log 2026-10-25). Approvals verbatim:
+docs/amendments/APPROVALS_2026-10-25.md. Predictions: derived/br/BR_*_PREDICTIONS.json (DERIVED,
+tools/br_predict.py, tests/test_br.py). New DERIVED predictions use compiled k (f16 147,456 / i8 84,096 /
+u4 47,232), a = 87,520 (e4e797e7) and B_BR = 3,267,086,560 B (median of 14 in-sample 57% cells, +-4.6%);
+earlier rows keep their registered k. Queues (NEW): ~/seam_closeout_1013/xps/run_queue_xps_{inv1,xrt1,sess1,stat1}.sh
++ br_lib.sh. $0.
+
+| id | question | finding | pri | status | machine / owner | notes |
+|---|---|---|---|---|---|---|
+| INV-1 | does the Shared GPU/NPU Memory Override inversion reproduce across reboots (ABAB 74/50/74/50), and is it OpenVINO placement policy (H1), driver (H2), pinned memory (H3) or boot variance (H4)? | inversion (Gate A Wed Nov 4) | A | REGISTERED 2026-10-26 (docs/registrations/BR_INV_2026-10-26.md sha256 1865b88a54c34777adcb8a266edda8d0d0c2b87c84d179996ab885c399bb1c36) | XPS / Zach sets the slider | P-INV-1..7; raw alloc probe, fixed-n trials, pinned balloons, WPR; 74% boot first children started at 3.5-3.9 GB Available (39d38c85, 9e31d4cb) |
+| XRT-1 / INV-2 | llama.cpp b11559 SYCL + Vulkan on the XPS: buffer census and real-prefill OOM boundary at 50% / 74% | F1 runtime generality; inversion platform test | A | REGISTERED 2026-10-26 (docs/registrations/BR_XRT_2026-10-26.md sha256 3098c5e545869bb0ed5b4a150e3fecb3b2d9c781a15c3b889f0bf106eb750863); two downloads approved (configs/xrt/llamacpp_pin.yaml) | XPS / Zach | replaces CC-RT-XPS (A7, CONDITIONAL); E3/E4/E5 CONDITIONAL on Rithwik (docs/RITHWIK_ASKS_2026-10-26.md) |
+| SESS-1 | does the corrected session law L_hist = (B - aT)/k - T hold on held-out T, and is the residual copy transients? | F1 agent sessions (Gate B Sun Nov 8) | A | REGISTERED 2026-10-26 (docs/registrations/BR_SESS_2026-10-26.md sha256 3f776405f4983a843d541df7fcf798b6d8bc70498d7a1d1aa9fcffbb1c4c2213) | XPS / Zach | held-out f16 17,261 / 12,366, u4 60,407 / 51,642 (T 3,072 / 6,144, +-15%); logged-length check: BK addendum 2 lengths are one turn short (d7e8b43e held 61,771) |
+| STAT-1 | L90 / L50 with CIs on three anchors (BCD, CIR, session bootstrap); u4 cap256 binomial at 63,000 | method (ceilings as distributions) | A | REGISTERED 2026-10-26 (docs/registrations/BR_STAT_2026-10-26.md sha256 a77053af4066e2653e5841f0f405d8e94ccebee998cd795272db2d076da8e05a) | XPS / Zach, overnight | tools/stat_cir.py frozen with tests |
+| CC-M2-8B-A | Qwen3-8B a = 114,688 B/token +-10% and ceilings from B_BR + compiled k (beside the BO predictions) | H1 held-out (second model) | A | REGISTERED 2026-10-26 (docs/registrations/BR_8B_2026-10-26.md sha256 16943e2345d712223940e6677c5dca6233eb52ae2abecaf999d7eb04f3a35370) before run_queue_xps_m2.sh | XPS / Zach | f16 / i8 / u4 2,575 / 3,396 / 4,169, u4 cap256 13,669 (+-15%); BO values still scored as registered |
+| HYB-1 | can the ceiling model decide local feasibility per agent call before generation (feasibility, not savings)? | H4 extension, section 8.2 | B | REGISTERED 2026-10-26 before any trace row (docs/registrations/BR_HYB1_2026-10-26.md sha256 c1454ebbdbe38e6d472a240f6531ce53518f7c82719ee0ced2021498cacb5642); results only after Nov 6 | Mac (+ XPS window probe, Nov 16-22 replay) / Zach | H-NARROW, H-BAND, H-CONTRAST, H-P2, H-KV, H-SILENT, H-RANK; time-to-ready / KV survival not built yet |
+
 ### 3d. Other rows kept open (relabelled 2026-10-23)
 
 | group | rows | label 2026-10-23 |
@@ -525,6 +542,18 @@ verdicts): (1) 15367c3a ran a 67,947-token generate in a resident session (BB CO
 far above the single-prefill B; (2) sealed 8-bit 20,000 (cf3555d5) and 18,000 (a5d19dcc) sit below the
 A21 band 20,921-21,486; (3) V5-CAL cached-prefix turns of 17-35 s (a178e9c5, e1ed06b4) vs the A23 law's
 ~3.8 s (L 20K, delta 2K) / ~10 s at the V5-CAL shape. Details: CC_AMEND_2026-10-23d_MODEL2.md section 4.
+
+Week-1 schedule (Task BR, 2026-10-26; XPS; Zach launches every queue; each refuses while xps.lock is held):
+| When (ET) | XPS queue |
+|---|---|
+| Mon Oct 26 | push; XRT-1 STEP=install (two approved downloads); INV-1 boot 1 (74%), boot 2 (50%) |
+| Tue Oct 27 | meeting; INV-1 boot 3 (74%) + XRT-1 E2 at 74%; boot 4 (50%) + E2 at 50%; restore 57%; XRT-1 E1 |
+| Wed Oct 28 - Thu Oct 29 | SESS-1 (HYB-1 window probe first; resumable) |
+| Thu Oct 29 - Sun Nov 1 nights | STAT-1 sessions 1-3 (one boot each) |
+| Sat Oct 31 daytime | DEMO-2 XPS held-out (after Oct 27, as frozen; between STAT nights) |
+| Sun Nov 1 daytime / Mon Nov 2 | M2 (Qwen3-8B) with EXPECT_HEAD = the BR commit |
+| Wed Nov 4 / Fri Nov 6 / Sun Nov 8 / Sun Nov 15 | Gate A (inversion) / fleet + mechanism gate / Gate B (session law) / framing checkpoint (title) |
+ISPASS 2027 (GPU-share plan, CFP read 2026-10-25): abstract Fri Dec 11 AoE, full paper Fri Dec 18 AoE, 9 pages.
 
 ### Earlier schedules (kept for the record)
 

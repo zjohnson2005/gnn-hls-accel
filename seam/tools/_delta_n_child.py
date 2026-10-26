@@ -61,6 +61,7 @@ def cc_mem_snapshot(stage: str, cores: dict[str, Any]) -> dict[str, Any]:
 # CC cells (Task BL): cores of the load, for the memory records and the 10 Hz trace.
 _CC_CORES: dict[str, Any] = {}
 _LAST_TRACE: dict[str, Any] | None = None
+_LAST_TRACE_RAW: dict[str, Any] | None = None
 DEVICE_MEM_PROPS = ("GPU_DEVICE_MAX_ALLOC_MEM_SIZE", "GPU_DEVICE_TOTAL_MEM_SIZE")
 
 
@@ -73,6 +74,22 @@ def device_mem_props(core: Any, device: str) -> dict[str, Any]:
         except Exception as exc:  # recorded, never raised
             out[name] = f"error: {type(exc).__name__}: {str(exc)[:200]}"
     return out
+
+
+def _gpu_stat_types(cores: dict[str, Any]) -> dict[str, int] | None:
+    """Task BR (--trial-telemetry): GPU_MEMORY_STATISTICS per allocation type, summed over
+    the loaded devices; None when no device answered."""
+    out: dict[str, int] = {}
+    seen = False
+    for device, core in cores.items():
+        try:
+            raw = dict(core.get_property(device, "GPU_MEMORY_STATISTICS"))
+        except Exception:
+            continue
+        for k, v in raw.items():
+            out[str(k)] = out.get(str(k), 0) + int(v)
+        seen = True
+    return out if seen else None
 
 
 def _gpu_stat_total(cores: dict[str, Any]) -> int | None:
@@ -99,7 +116,12 @@ class MemTrace:
     MAX_SAMPLES = 20000
 
     def __init__(
-        self, hz: float, cores: dict[str, Any], read_gpu: bool = True, dxgi: bool = False
+        self,
+        hz: float,
+        cores: dict[str, Any],
+        read_gpu: bool = True,
+        dxgi: bool = False,
+        types: bool = False,
     ) -> None:
         import threading
 
@@ -108,6 +130,10 @@ class MemTrace:
         self.cores = cores
         self.read_gpu = read_gpu
         self.samples: list[tuple[float, float, int | None]] = []
+        # Task BR (--trial-telemetry): per-type GPU bytes per sample, and DXGI usage per sample.
+        self.types = bool(types)
+        self.type_samples: list[tuple[float, dict[str, int] | None]] = []
+        self.dxgi_samples: list[tuple[float, dict[str, Any]]] = []
         self.errors = 0
         # Task BM A19: this process's DXGI budget / usage and budget-change events.
         self.watch: Any = None
@@ -125,15 +151,24 @@ class MemTrace:
         while not self._stop.is_set():
             try:
                 avail = psutil.virtual_memory().available / MB
-                gpu = _gpu_stat_total(self.cores) if self.read_gpu else None
+                now = time.time()
+                if self.types and self.read_gpu:
+                    per = _gpu_stat_types(self.cores)
+                    gpu = sum(per.values()) if per is not None else None
+                    if len(self.type_samples) < self.MAX_SAMPLES:
+                        self.type_samples.append((now, per))
+                else:
+                    gpu = _gpu_stat_total(self.cores) if self.read_gpu else None
                 if len(self.samples) < self.MAX_SAMPLES:
-                    self.samples.append((time.time(), round(avail, 1), gpu))
+                    self.samples.append((now, round(avail, 1), gpu))
                 if self.watch is not None and not self.watch.error:
                     self.watch.poll()
                     q = self.watch.query()
                     if not self.dxgi_first:
                         self.dxgi_first = dict(q)
                     self.dxgi_last = dict(q)
+                    if self.types and len(self.dxgi_samples) < self.MAX_SAMPLES:
+                        self.dxgi_samples.append((now, dict(q)))
                     for seg, val in q.items():
                         if isinstance(val, tuple):
                             self.dxgi_peak[seg] = max(self.dxgi_peak.get(seg, 0), int(val[1]))
@@ -163,6 +198,11 @@ class MemTrace:
             "gpu_stat_total_first_bytes": gpus[0] if gpus else None,
             "gpu_stat_total_last_bytes": gpus[-1] if gpus else None,
             "trace": self.samples,
+            **(
+                {"type_trace": self.type_samples, "dxgi_trace": self.dxgi_samples}
+                if self.types
+                else {}
+            ),
             "dxgi": None
             if self.watch is None
             else {
@@ -177,22 +217,29 @@ class MemTrace:
 
 def _traced(spec: dict[str, Any], fn: Callable[[], dict[str, Any]]) -> dict[str, Any]:
     """Run one generate, under a MemTrace when the spec asks for one."""
-    global _LAST_TRACE
+    global _LAST_TRACE, _LAST_TRACE_RAW
     hz = spec.get("mem_trace_hz")
     if not hz:
         return fn()
+    telemetry = bool(spec.get("trial_telemetry"))
     tr = MemTrace(
         float(hz),
         _CC_CORES,
         read_gpu=bool(spec.get("gpu_mem_stats")),
         dxgi=bool(spec.get("dxgi_trace")),
+        types=telemetry,
     )
+    t0 = time.time()
     try:
         with tr:
             rec = fn()
     except BaseException:
         # Task BM A32: keep the trace (peak usage at failure) for _fail_turn.
         _LAST_TRACE = tr.result()
+        if telemetry:
+            # Task BR: time-to-fail and the raw samples through the failure.
+            _LAST_TRACE["elapsed_to_exception_s"] = time.time() - t0
+            _LAST_TRACE_RAW = {k: _LAST_TRACE.get(k) for k in ("trace", "type_trace", "dxgi_trace")}
         raise
     rec["mem_trace"] = tr.result()
     return rec
@@ -692,8 +739,12 @@ def _fail_turn(writer: _Writer, turn: str, exc: BaseException) -> int:
         memory_at_failure=_mem(),
     )
     if _LAST_TRACE is not None:
-        trace = {k: v for k, v in _LAST_TRACE.items() if k != "trace"}
+        trace = {
+            k: v for k, v in _LAST_TRACE.items() if k not in ("trace", "type_trace", "dxgi_trace")
+        }
         writer.update(memory_trace_at_failure=trace)
+    if _LAST_TRACE_RAW is not None:
+        writer.update(memory_trace_raw_at_failure=_LAST_TRACE_RAW)
     return 1
 
 
@@ -859,6 +910,8 @@ def _cc_grow(spec: dict[str, Any], writer: _Writer, pipe: Any, ov_genai: Any) ->
             return _fail_turn(writer, f"grow_turn{k}", exc)
         rec["turn"] = k
         rec["system_after"] = _mem()
+        if spec.get("trial_telemetry"):
+            rec["gpu_stats_end"] = _gpu_stat_types(_CC_CORES)
         rec.pop("text_head", None)
         turns.append(rec)
         history.append({"role": "assistant", "content": "ok"})
@@ -869,6 +922,27 @@ def _cc_grow(spec: dict[str, Any], writer: _Writer, pipe: Any, ov_genai: Any) ->
         if reported is None and (k + 1) * step >= max_tokens:
             break
         k += 1
+    final = g.get("final_tokens")
+    if final:
+        # Task BR SESS-1 sub-turn bisection: one final turn of `final` tokens on the history
+        # the series reached (the same deterministic turns as the uninterrupted series).
+        history.append(
+            {
+                "role": "user",
+                "content": raw_exact_text(tokenizer, int(final), unit=unit, salt=f"g{k + 1}"),
+            }
+        )
+        try:
+            rec = _traced(spec, lambda: _chat_once(pipe, history, cfg, ov_genai))
+        except Exception as exc:
+            writer.update(generation={"cc_grow": True, "turns": turns, "reached_max": True})
+            return _fail_turn(writer, f"grow_final{int(final)}", exc)
+        rec.update({"turn": k + 1, "final": True, "final_tokens": int(final)})
+        rec["system_after"] = _mem()
+        if spec.get("trial_telemetry"):
+            rec["gpu_stats_end"] = _gpu_stat_types(_CC_CORES)
+        rec.pop("text_head", None)
+        turns.append(rec)
     writer.update(
         phase="done",
         completed=True,

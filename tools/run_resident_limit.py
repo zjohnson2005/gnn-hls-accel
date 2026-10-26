@@ -109,6 +109,40 @@ def main(argv: list[str] | None = None) -> int:
         help="CC-BAL cells only: the Available floor is checked on Available plus the running "
         "balloon process's measured private bytes (floor unchanged; both values recorded).",
     )
+    # Task BR (docs/registrations/BR_*_2026-10-26.md); all off by default.
+    parser.add_argument(
+        "--trial-telemetry",
+        action="store_true",
+        help="INV/SESS/STAT/HYB-1: per-type GPU bytes in the 10 Hz trace, per-turn per-type "
+        "bytes in grow cells, and the full exception, raw failure trace and time-to-fail in "
+        "every point record (needs --mem-trace-hz and --gpu-mem-stats).",
+    )
+    parser.add_argument(
+        "--sched-num-kv-blocks",
+        type=int,
+        default=None,
+        help="SESS-1 pre-reserved pool: SchedulerConfig num_kv_blocks (needs "
+        "--sched-max-batched-tokens; not with --sched-cache-size).",
+    )
+    parser.add_argument(
+        "--grow-final-step",
+        type=int,
+        default=None,
+        help="SESS-1 sub-turn bisection: after the grow reaches --grow-max, one final user "
+        "turn of this many tokens.",
+    )
+    parser.add_argument(
+        "--bcd-start",
+        type=int,
+        default=None,
+        help="STAT-1: biased-coin up-and-down block from this n on the --low/--high grid "
+        "(step --resolution).",
+    )
+    parser.add_argument("--bcd-trials", type=int, default=None, help="STAT-1 block trials.")
+    parser.add_argument(
+        "--bcd-target-hold", type=float, default=0.9, help="STAT-1 target hold probability."
+    )
+    parser.add_argument("--bcd-seed", type=int, default=None, help="STAT-1 coin seed.")
     args = parser.parse_args(argv)
     if args.balloon_floor_credit and not str(args.cc_cell or "").startswith(BALLOON_CELL_PREFIX):
         raise SystemExit(
@@ -126,6 +160,12 @@ def main(argv: list[str] | None = None) -> int:
             "max_tokens": int(args.grow_max),
             "new_tokens": int(args.grow_new_tokens),
         }
+        if args.grow_final_step is not None:
+            if args.grow_final_step < 1:
+                raise SystemExit("REFUSED -- --grow-final-step must be >= 1")
+            grow["final_tokens"] = int(args.grow_final_step)
+    elif args.grow_final_step is not None:
+        raise SystemExit("REFUSED -- --grow-final-step needs --grow-step and --grow-max")
     conc = None
     if args.conc_sessions is not None or args.conc_tokens is not None:
         sessions = [int(x) for x in str(args.conc_sessions or "").split(",") if x.strip()]
@@ -140,6 +180,33 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("REFUSED -- CC-GROW and CC-CONC are separate cells")
     if (grow or conc) and points:
         raise SystemExit("REFUSED -- --points does not combine with CC-GROW / CC-CONC")
+    bcd = None
+    if args.bcd_start is not None or args.bcd_trials is not None or args.bcd_seed is not None:
+        if args.bcd_start is None or args.bcd_trials is None or args.bcd_seed is None:
+            raise SystemExit("REFUSED -- STAT-1 needs --bcd-start, --bcd-trials and --bcd-seed")
+        if points or grow or conc:
+            raise SystemExit("REFUSED -- --bcd-* does not combine with --points / grow / conc")
+        if args.low is None or args.high is None or args.resolution is None:
+            raise SystemExit("REFUSED -- STAT-1 needs --low, --high and --resolution (the step)")
+        if args.bcd_trials < 4:
+            raise SystemExit("REFUSED -- --bcd-trials must be >= 4 (canary arming)")
+        if not 0.5 <= args.bcd_target_hold < 1.0:
+            raise SystemExit("REFUSED -- --bcd-target-hold must be in [0.5, 1)")
+        if not args.low <= args.bcd_start <= args.high or (args.bcd_start - args.low) % (
+            args.resolution
+        ):
+            raise SystemExit("REFUSED -- --bcd-start must lie on the --low/--high grid")
+        bcd = {
+            "start": int(args.bcd_start),
+            "step": int(args.resolution),
+            "trials": int(args.bcd_trials),
+            "target_hold": float(args.bcd_target_hold),
+            "seed": int(args.bcd_seed),
+            "low": int(args.low),
+            "high": int(args.high),
+        }
+    if args.trial_telemetry and not (args.mem_trace_hz and args.gpu_mem_stats):
+        raise SystemExit("REFUSED -- --trial-telemetry needs --mem-trace-hz and --gpu-mem-stats")
     if args.reject_kv_mismatch and not args.compiled_readback:
         raise SystemExit("REFUSED -- --reject-kv-mismatch needs --compiled-readback")
     if args.dxgi_trace and not args.mem_trace_hz:
@@ -158,6 +225,7 @@ def main(argv: list[str] | None = None) -> int:
             args.mem_trace_hz,
             grow,
             conc,
+            bcd,
         )
     ) or bool(
         args.gpu_mem_stats
@@ -167,6 +235,8 @@ def main(argv: list[str] | None = None) -> int:
         or args.reject_kv_mismatch
         or args.canary_model_spec
         or args.balloon_floor_credit
+        or args.trial_telemetry
+        or args.sched_num_kv_blocks is not None
     )
     if cc_used and not args.cc_cell:
         raise SystemExit("REFUSED -- CC options need --cc-cell")
@@ -177,6 +247,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.turn2_repeats is not None and args.turn2_repeats < 1:
         raise SystemExit("REFUSED -- --turn2-repeats must be >= 1")
     sched = None
+    if args.sched_num_kv_blocks is not None:
+        if args.sched_max_batched_tokens is None or args.sched_cache_size is not None:
+            raise SystemExit(
+                "REFUSED -- --sched-num-kv-blocks needs --sched-max-batched-tokens and no "
+                "--sched-cache-size"
+            )
+        if args.sched_num_kv_blocks < 1:
+            raise SystemExit("REFUSED -- --sched-num-kv-blocks must be >= 1")
     if args.sched_max_batched_tokens is not None or args.sched_cache_size is not None:
         if args.sched_max_batched_tokens is None:
             raise SystemExit("REFUSED -- --sched-cache-size needs --sched-max-batched-tokens")
@@ -186,6 +264,8 @@ def main(argv: list[str] | None = None) -> int:
         }
         if args.sched_cache_size is not None:
             sched["cache_size"] = int(args.sched_cache_size)
+        if args.sched_num_kv_blocks is not None:
+            sched["num_kv_blocks"] = int(args.sched_num_kv_blocks)
     set_pilot_overrides(scheduler=sched, resident_high=args.high)
     set_cc_overrides(
         cell=args.cc_cell,
@@ -204,6 +284,8 @@ def main(argv: list[str] | None = None) -> int:
         reject_kv_mismatch=bool(args.reject_kv_mismatch),
         canary_model_spec=args.canary_model_spec,
         balloon_floor_credit=bool(args.balloon_floor_credit),
+        trial_telemetry=bool(args.trial_telemetry),
+        bcd=bcd,
     )
     if not points and (_resident_high() - _resident_low()) % _resident_resolution() != 0:
         raise SystemExit("REFUSED -- high - low must be a multiple of the resolution")

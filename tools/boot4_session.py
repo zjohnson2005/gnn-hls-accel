@@ -59,10 +59,18 @@ def _resident_high() -> int:
 # fixed points instead of bisection, turn-2 decode length and repeats, and child-side memory
 # and compiled-KV records. Empty = unchanged. Set only by tools/run_resident_limit.py flags.
 CC_OVERRIDE: dict[str, Any] = {}
-CC_CHILD_FLAGS = ("gpu_mem_stats", "compiled_readback", "dxgi_trace", "reject_kv_mismatch")
-# Task BQ balloon-gate option (a): CC-BAL cells only; the balloon is tools/gpu_balloon.py.
+CC_CHILD_FLAGS = (
+    "gpu_mem_stats",
+    "compiled_readback",
+    "dxgi_trace",
+    "reject_kv_mismatch",
+    "trial_telemetry",
+)
+# Task BQ balloon-gate option (a): CC-BAL cells only; the balloon is tools/gpu_balloon.py, or
+# (Task BR INV-1) the pinned balloon tools/pinned_balloon.py.
 BALLOON_CELL_PREFIX = "CC-BAL-"
 BALLOON_SCRIPT = "gpu_balloon.py"
+BALLOON_SCRIPTS = (BALLOON_SCRIPT, "pinned_balloon.py")
 
 
 def set_cc_overrides(
@@ -83,6 +91,8 @@ def set_cc_overrides(
     reject_kv_mismatch: bool = False,
     canary_model_spec: str | None = None,
     balloon_floor_credit: bool = False,
+    trial_telemetry: bool = False,
+    bcd: dict[str, Any] | None = None,
 ) -> None:
     global CC_OVERRIDE
     out: dict[str, Any] = {}
@@ -96,6 +106,7 @@ def set_cc_overrides(
         ("mem_trace_hz", mem_trace_hz),
         ("grow", grow),
         ("conc", conc),
+        ("bcd", bcd),
     ):
         if value is not None:
             out[key] = value
@@ -113,6 +124,8 @@ def set_cc_overrides(
         out["canary_model_spec"] = str(canary_model_spec)
     if balloon_floor_credit:
         out["balloon_floor_credit"] = True
+    if trial_telemetry:
+        out["trial_telemetry"] = True
     CC_OVERRIDE = out
 
 
@@ -279,6 +292,80 @@ def bisect_holds(
     }
 
 
+def bcd_next(level: int, held: bool, u: float, *, step: int, b: float, low: int, high: int) -> int:
+    """Biased-coin up-and-down (Durham-Flournoy), STAT-1 (Task BR): after a failure step
+    down; after a hold step up with probability b, else stay. Targets P(fail) = b / (1 + b),
+    so b = (1 - q) / q targets the level that holds with probability q (q = 0.9 -> L90).
+    The level stays on [low, high]."""
+    if not held:
+        return max(low, level - step)
+    if u < b:
+        return min(high, level + step)
+    return level
+
+
+def bcd_holds(
+    *,
+    start: int,
+    step: int,
+    trials: int,
+    target_hold: float,
+    seed: int,
+    low: int,
+    high: int,
+    attempt: Any,
+) -> dict[str, Any]:
+    """STAT-1 block: `trials` fresh-child attempts on the biased-coin up-and-down rule.
+
+    One uniform draw per trial from random.Random(seed), drawn whether or not it is used,
+    so the coin sequence is fixed by the seed. Each point records its draw and the next level.
+    largest_n_cached / first_fail_n_cached are descriptive; the estimand (L90, L50 by
+    centered isotonic regression) is computed across blocks and sessions on the Mac."""
+    import random
+
+    if not 0.5 <= target_hold < 1.0:
+        raise ValueError("target_hold must be in [0.5, 1)")
+    if step <= 0 or trials < 1 or not low <= start <= high:
+        raise ValueError("bad BCD parameters")
+    b = (1.0 - target_hold) / target_hold
+    rng = random.Random(int(seed))
+    level = int(start)
+    points: list[dict[str, Any]] = []
+    seq: list[list[Any]] = []
+    for i in range(int(trials)):
+        point = attempt(level)
+        u = rng.random()
+        nxt = bcd_next(level, bool(point["holds"]), u, step=step, b=b, low=low, high=high)
+        point["bcd"] = {"trial": i, "level": level, "u": u, "b": b, "next_level": nxt}
+        points.append(point)
+        seq.append([level, bool(point["holds"])])
+        level = nxt
+    held = [int(p["n_cached"]) for p in points if p.get("holds")]
+    failed = [int(p["n_cached"]) for p in points if not p.get("holds")]
+    out: dict[str, Any] = {
+        "largest_n_cached": max(held) if held else None,
+        "failure_in_range": bool(failed),
+        "passing_turn2_ttft_s": _passing_turn2(points),
+        "points": points,
+        "note": "biased-coin up-and-down block (STAT-1), not a bisection",
+        "bcd": {
+            "start": int(start),
+            "step": int(step),
+            "trials": int(trials),
+            "target_hold": float(target_hold),
+            "b": b,
+            "seed": int(seed),
+            "low": int(low),
+            "high": int(high),
+            "sequence": seq,
+            "next_level": level,
+        },
+    }
+    if failed:
+        out["first_fail_n_cached"] = min(failed)
+    return out
+
+
 def _utc() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
@@ -302,13 +389,13 @@ def balloon_private_bytes() -> dict[str, Any]:
     for proc in psutil.process_iter(["pid", "ppid", "name", "cmdline"]):
         name = str(proc.info.get("name") or "").lower()
         cmd = " ".join(str(c) for c in (proc.info.get("cmdline") or []))
-        if name.startswith("python") and BALLOON_SCRIPT in cmd:
+        if name.startswith("python") and any(b in cmd for b in BALLOON_SCRIPTS):
             found[int(proc.pid)] = proc
     parents = {int(p.info.get("ppid") or 0) for p in found.values()}
     leaves = [p for pid, p in found.items() if pid not in parents]
     if len(leaves) != 1:
         raise SystemExit(
-            f"REFUSED -- balloon floor credit: {len(leaves)} {BALLOON_SCRIPT} interpreter "
+            f"REFUSED -- balloon floor credit: {len(leaves)} balloon interpreter "
             f"processes (need 1; candidates {sorted(found)})"
         )
     proc = leaves[0]
@@ -492,6 +579,22 @@ def cc_up_front(points: tuple[int, ...]) -> bool:
     from tools.ttft_slo_canary import CALIBRATION_C
 
     return bool(points) and len(points) < CALIBRATION_C - 1
+
+
+def trial_telemetry_fields(child: dict[str, Any]) -> dict[str, Any]:
+    """Task BR (--trial-telemetry): the child's full exception, its memory trace at failure
+    (summary and the raw 10 Hz samples with per-type GPU bytes) and time-to-fail (start of
+    the failing generate to the exception). Empty values when the trial held."""
+    rec = child.get("child") or {}
+    at_fail = rec.get("memory_trace_at_failure") or {}
+    return {
+        "exception": rec.get("exception"),
+        "memory_at_failure": rec.get("memory_at_failure"),
+        "memory_trace_at_failure": rec.get("memory_trace_at_failure"),
+        "memory_trace_raw_at_failure": rec.get("memory_trace_raw_at_failure"),
+        "time_to_fail_s": at_fail.get("elapsed_to_exception_s"),
+        "parent_wall_s": child.get("parent_wall_s"),
+    }
 
 
 def _point_failure(record: dict[str, Any]) -> dict[str, Any]:
@@ -1139,10 +1242,15 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
     gates = require_gates()
     harness = load_harness(model_spec)
     points = tuple(CC_OVERRIDE.get("points") or ())
+    bcd: dict[str, Any] = dict(CC_OVERRIDE.get("bcd") or {})
     turn2_new_tokens = int(CC_OVERRIDE.get("turn2_new_tokens") or 1)
     turn2_repeats = int(CC_OVERRIDE.get("turn2_repeats") or 1)
     up_front = cc_up_front(points)
     planned = len(points) if up_front else max(RESIDENT_PLANNED_PROBES, len(points))
+    if bcd:
+        # STAT-1 (Task BR): a BCD block runs exactly `trials` children (>= 4, so the
+        # interleaved canary schedule arms as for a bisection).
+        planned = int(bcd["trials"])
     out_dir.mkdir(parents=True, exist_ok=True)
     _publish_cell_status("running", session_id)
     plan: dict[str, Any] = {
@@ -1241,6 +1349,8 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
             point["compiled_kv"] = [
                 ld.get("compiled") for ld in ((child.get("child") or {}).get("loads") or [])
             ]
+        if CC_OVERRIDE.get("trial_telemetry"):
+            point.update(trial_telemetry_fields(child))
         _write(out_dir / "points" / f"n{n_cached}{sfx}.json", point)
         recorded.append(point)
         probes_log.append({"wall_s": child.get("parent_wall_s")})
@@ -1257,6 +1367,17 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
         )
         if points:
             found = fixed_points(points, attempt)
+        elif bcd:
+            found = bcd_holds(
+                start=int(bcd["start"]),
+                step=int(bcd["step"]),
+                trials=int(bcd["trials"]),
+                target_hold=float(bcd["target_hold"]),
+                seed=int(bcd["seed"]),
+                low=int(bcd["low"]),
+                high=int(bcd["high"]),
+                attempt=attempt,
+            )
         else:
             found = bisect_holds(
                 low=_resident_low(),
@@ -1297,6 +1418,8 @@ def run_resident_limit(*, arm: str, model_spec: Path, session_id: str, out_dir: 
     }
     if found.get("note"):
         summary["note"] = found["note"]
+    if found.get("bcd"):
+        summary["bcd"] = found["bcd"]
     if "first_fail_n_cached" in found:
         summary["first_fail_n_cached"] = found["first_fail_n_cached"]
     if CC_OVERRIDE:
@@ -1397,6 +1520,8 @@ def run_cc_series(*, arm: str, model_spec: Path, session_id: str, out_dir: Path)
                 "loads": (child.get("child") or {}).get("loads"),
                 "hung_after_result": bool(child.get("hung_after_result")),
             }
+            if CC_OVERRIDE.get("trial_telemetry"):
+                point.update(trial_telemetry_fields(child))
             _write(out_dir / "points" / f"{tag}.json", point)
             points.append(point)
             probes_log.append({"wall_s": child.get("parent_wall_s")})

@@ -3684,3 +3684,23 @@ for Claude in this session; Zach pushes).
   598e882d), vs A22's predicted -7,767 tokens per GiB.
 - run_queue_xps_cc_v3b.sh (not running) edited: balloon rows last, with the flag, only with BALLOONS=1;
   rows 34 and 36 covered by 598e882d and 0f3950a3 (registered gate passed at 241e4d3).
+
+## 2026-10-26 ~9:45-10:15 AM ET (Task BR, week-1 amendments; Mac only, $0, nothing pushed or launched)
+- R2 RED FLAG (Sun Oct 25) and Zach's "ok on all" recorded verbatim (docs/amendments/APPROVALS_2026-10-25.md;
+  PLAN_LOCK red-flag log + addendum). HYB-1 approved by Zach's Task BR message (verbatim there).
+- Registered before any run: INV-1, XRT-1/INV-2, SESS-1, STAT-1, 8B (CC-M2-8B-A), HYB-1
+  (docs/registrations/BR_*_2026-10-26.md; derived/br/BR_*_PREDICTIONS.json, tools/br_predict.py).
+  Earlier predictions keep their registered k and are scored as registered.
+- Finding while confirming the logged session length (asked by the task): the CC-GROW lengths quoted in
+  TASK_BK addendum 2 and the GPU-share plan are one turn short (the last recorded turn held; d7e8b43e held
+  61,771 and failed at turn 30; 59,712 is turn 28). With the right lengths the corrected session law is
+  within -2.5% to +5.9% on all six cells (in-sample). No analysis file edited; reported to Zach.
+- Observation recorded before INV-1: in the 74% boot the first two children started with 3,492 / 3,884 MB
+  Available after load (39d38c85, 9e31d4cb) vs 6,955-8,436 MB in every other slider child.
+- Runner options added, all default off (tests/test_br.py): --trial-telemetry, --sched-num-kv-blocks,
+  --grow-final-step, --bcd-*; pinned_balloon.py counts for the BQ floor credit. Child trace keys unchanged
+  without the flag (test). The DEMO-2 opening canary spawns seam/tools/_delta_n_child.py; every new branch
+  is keyed on spec fields DEMO-2 never sets, so its path behaves identically.
+- New tools: inv_alloc_probe.py, pinned_balloon.py, inv_commit_sidecar.py, xrt_llamacpp.py (pin
+  configs/xrt/llamacpp_pin.yaml; -np 1 and --cache-ram 0 fixed), stat_cir.py. New queue scripts (outside
+  the repo): run_queue_xps_{inv1,xrt1,sess1,stat1}.sh + br_lib.sh. docs/RITHWIK_ASKS_2026-10-26.md.

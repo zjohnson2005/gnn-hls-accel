@@ -201,7 +201,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-23 (Task BN, PLAN LOCK). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-26 (Task BR; PLAN LOCK 2026-10-23 with dated addenda). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -406,6 +406,12 @@ session start; update it in the same commit as the work. Never delete a row.
 - 2026-10-23 ~5:10-5:30 PM ET (Task BQ): R1 "Keep going" (logged in PLAN_LOCK red-flag log); balloon-gate
   option (a) approved and built (--balloon-floor-credit, CC-BAL only, docs/amendments/CC_BALLOON_GATE_2026-10-23f.md);
   v3b runs balloon rows last with BALLOONS=1. u4 L* unchanged by a 1 GiB balloon (d6616dfd vs 598e882d).
+- 2026-10-26 (Task BR): R2 RED FLAG (slider inverse: u4 22,750 / 21,250 / 17,750 at 50 / 57 / 74%; balloons
+  null); Zach "ok on all" (docs/amendments/APPROVALS_2026-10-25.md). Registered before any run (registry 3e):
+  INV-1, XRT-1/INV-2 (llama.cpp b11559 + Qwen3-4B Q4_K_M, configs/xrt/llamacpp_pin.yaml), SESS-1, STAT-1,
+  8B (a 114,688), HYB-1; predictions derived/br/ (compiled k, a 87,520, B_BR 3.267 GB). Queues
+  ~/seam_closeout_1013/xps/run_queue_xps_{inv1,xrt1,sess1,stat1}.sh (+ br_lib.sh). Gates: A Wed Nov 4,
+  B Sun Nov 8, framing Sun Nov 15. BK's session lengths are one turn short (d7e8b43e held 61,771).
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.
