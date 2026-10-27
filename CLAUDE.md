@@ -201,7 +201,7 @@ the report path and a 3-line summary. `_agent_reports/` is gitignored.
 
 ## Current state (keep this section updated)
 
-As of 2026-10-26 (Task BR; PLAN LOCK 2026-10-23 with dated addenda). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
+As of 2026-10-26 (Task BS; PLAN LOCK 2026-10-23 with dated addenda). Plan of record: docs/EXPERIMENT_REGISTRY.md. Read it at
 session start; update it in the same commit as the work. Never delete a row.
 
 - 2026-10-15 (Task AQ): thesis docs/THESIS.md; papers and evidence map
@@ -417,6 +417,10 @@ session start; update it in the same commit as the work. Never delete a row.
   87,056 B/token uncapped, 0 capped (both hosts). u4/f16 1.79x unchunked vs 3.18x cap 256. One budget 3.267 GB
   +-4.6% over 14 cells (in-sample). 64 GB: window binds (40,448). DEMO-2 T2S primary PENDING (ho_cloud, XPS);
   F2: A faster than P. Meeting pack analysis/meeting_20261027/.
+- 2026-10-26 evening (Task BS): Rithwik runs XRT himself from pinned runbooks (~/seam_closeout_1013/rithwik_runbooks/,
+  sources tools/rithwik_runbooks/): E3 on his RTX 4070 (CUDA 12.4), E5a on the evo-x2 queue (Vulkan, default share).
+  E4 vLLM NOT RUN (deviation); E5b and a T2S evening only with his OK (docs/registrations/BS_XRT_RUNBOOKS_2026-10-26.md).
+  Meeting note docs/MEETING_RITHWIK_2026-10-27.md (paper split: starting point, Zach decides).
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.

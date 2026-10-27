@@ -276,6 +276,18 @@ earlier rows keep their registered k. Queues (NEW): ~/seam_closeout_1013/xps/run
 | CC-M2-8B-A | Qwen3-8B a = 114,688 B/token +-10% and ceilings from B_BR + compiled k (beside the BO predictions) | H1 held-out (second model) | A | REGISTERED 2026-10-26 (docs/registrations/BR_8B_2026-10-26.md sha256 16943e2345d712223940e6677c5dca6233eb52ae2abecaf999d7eb04f3a35370) before run_queue_xps_m2.sh | XPS / Zach | f16 / i8 / u4 2,575 / 3,396 / 4,169, u4 cap256 13,669 (+-15%); BO values still scored as registered |
 | HYB-1 | can the ceiling model decide local feasibility per agent call before generation (feasibility, not savings)? | H4 extension, section 8.2 | B | REGISTERED 2026-10-26 before any trace row (docs/registrations/BR_HYB1_2026-10-26.md sha256 c1454ebbdbe38e6d472a240f6531ce53518f7c82719ee0ced2021498cacb5642); results only after Nov 6 | Mac (+ XPS window probe, Nov 16-22 replay) / Zach | H-NARROW, H-BAND, H-CONTRAST, H-P2, H-KV, H-SILENT, H-RANK; time-to-ready / KV survival not built yet |
 
+Task BS 2026-10-26 ~8:55 PM ET (rows added; XRT-1 row above unchanged; docs/registrations/BS_XRT_RUNBOOKS_2026-10-26.md
+sha256 46b9a824b3883609c8ba61443a0b616995c91ea435b552ab009a000ce37a84f2; predictions derived/bs/BS_XRT_PREDICTIONS.json;
+inputs docs/amendments/APPROVALS_2026-10-26.md):
+
+| id | question | finding | pri | status | machine / owner | notes |
+|---|---|---|---|---|---|---|
+| XRT-E3-4070 | FA-off ceiling vs 1/(k + 4 x n_head x ubatch) on discrete VRAM (llama.cpp CUDA 12.4) | F1 vendor 2 | A | REGISTERED (P-XRT-7 unchanged); runbook seam_xrt_rtx4070 ready, not sent | Rithwik's RTX 4070 / Rithwik operates | 5 cells as registered; Sysmem Fallback confirmation + screenshot; we never had access |
+| XRT-E4-VLLM | vLLM KV blocks vs max_num_batched_tokens | - | - | NOT RUN (deviation): needs WSL/Docker; admin + reboot on evo-x2 not approved | - | no substitute cell |
+| XRT-E5a | the law at the default share on Strix Halo (Vulkan; L = load boundary, P = load + prefill) | F1 vendor 3 | A | REGISTERED (P-E5a-1..5, rule substitutes the machine's reported memory, no refit); job seam_xrt_evo-x2 ready, not sent | evo-x2 queue / Rithwik | P cells expected above_range at 131,072 when L_pred >= 132,096 |
+| XRT-E5b | ceiling vs GPU share, 3+ points (P-XRT-8 unchanged) | inversion generality | B | CONDITIONAL on Rithwik's OK for share changes (E5B_SHARE_OK=1) | evo-x2 queue / Rithwik | one job + reboot per point |
+| XRT-T2S | E5a cells on the 64 GB T2S, SYCL + Vulkan, default share, + read-only A19 | F1 capacity | B | CONDITIONAL on Rithwik's evening + folder install OK (R-T2S-LLAMA); no queue script yet | T2S / Zach | v3 no-system-change rules |
+
 CC closeout 2026-10-26 (Task BK; per row, the rows above keep their registered text):
 - DONE (sealed, run_ids in analysis/cc_20261026/RUNS.md): CC-REH-XPS (5dac335c), CC-BYTES-XPS, CC-MECH-XPS
   (9 bisections + repeats), CC-TTFT-XPS (A8 MISS), CC-GROW-XPS (8 cells), CC-A21-XPS (R1), CC-ALLOC-XPS/T2S
@@ -393,6 +405,8 @@ Rows as written before 2026-10-23 (moved verbatim):
 | R-AMD-CELLS (new) | CC-AMD-BYTES / LIMIT / ZEROCOPY on Strix Halo; UMC/CS counter tool | F1-F3 | Nov 8 |
 | R-4070-CELLS (new) | CC-4070-SPILL; E1 4K-tier arm | F5, F7, F8 | Nov 15 |
 | R-RUNIDS | run_ids for the ~46,000 combined limit and the 23-25x retention headline | F1 context, retention (parked) | Oct 26 |
+| R-XRT-RUNBOOKS (Task BS) | run seam_xrt_rtx4070 (E3) and queue seam_xrt_evo-x2 (E5a); send zips + sha256 + screenshots; say whether VGM share changes are OK (E5b); pick one T2S evening | XRT-E3-4070, XRT-E5a/b, XRT-T2S | 4070 by Sun Nov 1; evo-x2 by Wed Nov 4 |
+| R-T2S-OVERRIDE (Task BS) | the T2S Shared GPU Memory Override value | A19 / R6 record, T2S XRT predictions | Tue Oct 27 meeting |
 | R-SIZE, R-LABELS | only if the retention section survives (section 3d) | parked retention rows | - |
 | R-READS (new) | SiliconBench full text (Ollama lag vs 4K default?), 2608.04714, Apple/MDPI UMA papers, KVSwap | F6, F8 wording | Oct 26 / Nov 8 |
 | T2S time | ours to Sun Oct 25 9:44 PM ET; his Oct 26 - Nov 8 | all T2S rows | - |

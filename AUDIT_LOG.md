@@ -3719,3 +3719,18 @@ for Claude in this session; Zach pushes).
   first children started at 3.5-3.9 GB Available (39d38c85, 9e31d4cb). T2S hand-back SIDECARS=1 in every CC
   window, very likely the count query matching itself (not verified; no ssh).
 - Wording fixes recorded (APPROVALS_2026-10-24.md; PLAN_LOCK): the (k+a)/a scope sentence, capacity-probe label.
+
+## 2026-10-26 ~8:35-9:10 PM ET (Task BS, Rithwik runbooks; Mac only, $0, no ssh, nothing pushed or launched)
+- Registered before any run: docs/registrations/BS_XRT_RUNBOOKS_2026-10-26.md (E4 NOT RUN deviation; E5a/E5b
+  split; E5a predictions derived/bs/BS_XRT_PREDICTIONS.json; optional T2S evening). Inputs recorded in
+  docs/amendments/APPROVALS_2026-10-26.md: Rithwik's reply is verbatim from the task file as Zach relayed it, not
+  from his original message (not in the repo).
+- Runbooks: sources tools/rithwik_runbooks/, builder tools/build_rithwik_runbooks.py, output
+  ~/seam_closeout_1013/rithwik_runbooks/ (two folders, two zips, two README PDFs, MANIFEST.sha256). New pins
+  (metadata only, nothing downloaded) appended to configs/xrt/llamacpp_pin.yaml under rithwik_assets; existing
+  keys unchanged.
+- Dry run: the PowerShell core ran under pwsh 7.6 on the Mac against a stand-in server
+  (tests/fixtures/fake_llama_server.py): load, prefill, fail_load, fail_prefill, repeats, resume. Windows
+  PowerShell 5.1 itself was not available; 5.1 compatibility is a static check (tests/test_rithwik_runbooks.py).
+- Discards: none. No run, no spend.
+
