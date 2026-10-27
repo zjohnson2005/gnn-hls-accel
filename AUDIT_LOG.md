@@ -3743,3 +3743,11 @@ for Claude in this session; Zach pushes).
   write-then-rename while the boot-1 queue (pid 60477) was running; that process keeps reading the old file
   (old inode still open), so the running queue was not touched. New sha256 cccb0f6f...e70e.
 - Discards: none. Both boot-1 balloon runs stay in the record.
+
+## 2026-10-27 afternoon ET (XRT-1 E2-at-74% pre-check deviation; Mac only, $0, no ssh, nothing launched)
+- docs/amendments/XRT1_DEV_2026-10-27_E2_P74_PRECHECK.md: window_20261027_130904_xrt1_e2_p74 refused all four
+  E2 cells before any trial ("port 8091 already answers /health (status -1)"; -1 = client timeout, not HTTP).
+  No data. No prediction changes; E2 at 74% re-runs as registered.
+- tools/xrt_llamacpp.py ensure_port_free: refuse only on a real HTTP response; status 0/-1 = free; running
+  llama-server.exe PIDs (tasklist) reported. Tests in tests/test_xrt_llamacpp.py. No queue script changed.
+- Discards: none.

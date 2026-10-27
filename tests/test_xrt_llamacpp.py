@@ -237,6 +237,7 @@ class FakeServer:
         return xrt.Runtime(
             launcher=self.launcher,
             http=self.http,
+            server_pids=lambda: [],
             sleep=lambda _s: None,
             clock=self.clock,
             env_base={"PATH": "p"},
@@ -393,6 +394,52 @@ def test_boundary_with_fake_server(tmp_path: Path, capsys: pytest.CaptureFixture
     assert summary["largest_hold"] == 21_000
     assert summary["first_fail"] == 21_500
     assert summary["status"] == "complete"
+
+
+def _probe_rt(result: xrt.HttpResult, pids: list[int]) -> xrt.Runtime:
+    return xrt.Runtime(http=lambda *_a: result, server_pids=lambda: pids)
+
+
+@pytest.mark.parametrize(
+    "result",
+    [
+        xrt.HttpResult(0, None, "URLError: [WinError 10061] connection refused"),
+        xrt.HttpResult(0, None, "ConnectionRefusedError: refused"),
+        xrt.HttpResult(-1, None, "timeout: timed out"),  # the Oct 27 E2-at-74% case
+    ],
+)
+def test_port_free_on_no_http_answer(
+    result: xrt.HttpResult, capsys: pytest.CaptureFixture[str]
+) -> None:
+    xrt.ensure_port_free(8091, _probe_rt(result, []))
+    assert capsys.readouterr().err == ""
+    # a llama-server.exe exists but nothing answers HTTP: still free, PID reported
+    xrt.ensure_port_free(8091, _probe_rt(result, [4242]))
+    err = capsys.readouterr().err
+    assert "treated as free" in err and "PID(s) 4242" in err
+
+
+@pytest.mark.parametrize("status", [200, 503])
+def test_port_refused_on_real_http_answer(status: int) -> None:
+    res = xrt.HttpResult(status, {"status": "ok"}, "{}")
+    with pytest.raises(
+        RuntimeError, match=rf"HTTP {status}\); llama-server.exe running, PID\(s\) 9136, 9140"
+    ):
+        xrt.ensure_port_free(8091, _probe_rt(res, [9136, 9140]))
+    with pytest.raises(RuntimeError, match=r"no llama-server\.exe process found"):
+        xrt.ensure_port_free(8091, _probe_rt(res, []))
+
+
+def test_parse_tasklist_pids() -> None:
+    text = (
+        '"llama-server.exe","9136","Console","1","2,113,540 K"\r\n'
+        '"llama-server.exe","9140","Console","1","51,200 K"\r\n'
+        '"python.exe","15292","Console","1","40,000 K"\r\n'
+    )
+    assert xrt.parse_tasklist_pids(text) == [9136, 9140]
+    none = "INFO: No tasks are running which match the specified criteria.\r\n"
+    assert xrt.parse_tasklist_pids(none) == []
+    assert xrt.llama_server_pids() == [] or sys.platform == "win32"
 
 
 def test_source_is_ascii() -> None:

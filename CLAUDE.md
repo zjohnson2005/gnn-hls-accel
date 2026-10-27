@@ -423,6 +423,9 @@ session start; update it in the same commit as the work. Never delete a row.
   Meeting note docs/MEETING_RITHWIK_2026-10-27.md (paper split: starting point, Zach decides).
 - 2026-10-27 (INV-1 deviation, docs/amendments/INV1_DEV_2026-10-27_PINNED.md): boot-1 pinned balloons failed
   (cf47fcf7 GPU vs quiescence gate; 5a727658 CPU hung ~8 h, AC_offline). P-INV-4 NOT RUN in boots 2-4 (SKIP_PINNED=1), deferred.
+- 2026-10-27 (XRT-1 deviation): E2 at 74% window_20261027_130904 refused all 4 cells before any trial (port pre-check read
+  status -1 = timeout as a stale server); no data, no prediction changes, re-runs as registered. ensure_port_free now
+  refuses only on a real HTTP answer and reports llama-server.exe PIDs (docs/amendments/XRT1_DEV_2026-10-27_E2_P74_PRECHECK.md).
 - Spend: DEMO-2 ceiling $275 (raised 2026-10-16 from $150; arms $108.35 /
   $216.70 at 1 / 2 replicates + pilot caps $54.81). P7 approved (caps
   $27.54); P5 needs a separate OK after P7.

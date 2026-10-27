@@ -134,10 +134,35 @@ def urllib_http(method: str, url: str, body: Any, timeout_s: float) -> HttpResul
     return HttpResult(status, parsed, text)
 
 
+def parse_tasklist_pids(text: str, image: str = "llama-server.exe") -> list[int]:
+    """PIDs from `tasklist /FO CSV /NH` output for one image name."""
+    pids: list[int] = []
+    for line in text.splitlines():
+        cols = [c.strip().strip('"') for c in line.split('","')]
+        if len(cols) >= 2 and cols[0].lower() == image.lower() and cols[1].isdigit():
+            pids.append(int(cols[1]))
+    return pids
+
+
+def llama_server_pids() -> list[int]:
+    """Running llama-server.exe PIDs (Windows only; [] elsewhere or if tasklist fails)."""
+    if sys.platform != "win32":
+        return []
+    try:
+        out = subprocess.run(
+            ["tasklist", "/FI", "IMAGENAME eq llama-server.exe", "/FO", "CSV", "/NH"],
+            capture_output=True, text=True, timeout=15, check=False,
+        )  # fmt: skip
+    except (OSError, subprocess.SubprocessError):
+        return []
+    return parse_tasklist_pids(out.stdout)
+
+
 @dataclass
 class Runtime:
     launcher: Launcher = popen_launcher
     http: HttpFn = urllib_http
+    server_pids: Callable[[], list[int]] = llama_server_pids
     sleep: Callable[[float], None] = time.sleep
     clock: Callable[[], float] = time.monotonic
     poll_s: float = 0.5
@@ -341,12 +366,26 @@ def _base_url(port: int) -> str:
 
 
 def ensure_port_free(port: int, rt: Runtime) -> None:
+    """Refuse only on a real HTTP response. Status 0 (refused / connection error) and -1 (client
+    timeout; Windows retries a refused localhost connect for ~2 s) mean nothing answers: port free."""
     res = rt.http("GET", _base_url(port) + "/health", None, 2.0)
-    if res.status != 0:
+    pids = rt.server_pids()
+    pid_note = (
+        f"llama-server.exe running, PID(s) {', '.join(map(str, pids))}"
+        if pids
+        else "no llama-server.exe process found"
+    )
+    if res.status > 0:
         raise RuntimeError(
-            f"port {port} already answers /health (status {res.status}); a stale server is "
-            "running. Stop it before this run; refusing to measure against an unknown process."
+            f"port {port} already answers /health (HTTP {res.status}); {pid_note}. A stale server "
+            "is running. Stop it before this run; refusing to measure against an unknown process."
         )
+    if pids:
+        print(
+            f"note: port {port} gave no HTTP answer (status {res.status}: {res.text[:120]}), "
+            f"treated as free; {pid_note}",
+            file=sys.stderr, flush=True,
+        )  # fmt: skip
 
 
 def wait_ready(
