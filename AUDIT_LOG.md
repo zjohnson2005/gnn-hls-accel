@@ -3734,3 +3734,12 @@ for Claude in this session; Zach pushes).
   PowerShell 5.1 itself was not available; 5.1 compatibility is a static check (tests/test_rithwik_runbooks.py).
 - Discards: none. No run, no spend.
 
+
+## 2026-10-27 ~10:15 AM ET (INV-1 pinned-balloon deviation; Mac only, $0, no ssh, nothing launched)
+- docs/amendments/INV1_DEV_2026-10-27_PINNED.md: boot 1 pinned GPU balloon cf47fcf7 is incompatible with the
+  quiescence gate by design (resident kernel every 10 ms); pinned 2 GiB CPU balloon 5a727658 hung ~8 h, then
+  refused AC_offline. P-INV-4 NOT RUN in boots 2-4, deferred. No other prediction changes.
+- ~/seam_closeout_1013/xps/run_queue_xps_inv1.sh: new SKIP_PINNED=1 (default 0) skips steps 31-32. Replaced by
+  write-then-rename while the boot-1 queue (pid 60477) was running; that process keeps reading the old file
+  (old inode still open), so the running queue was not touched. New sha256 cccb0f6f...e70e.
+- Discards: none. Both boot-1 balloon runs stay in the record.
