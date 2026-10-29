@@ -288,6 +288,12 @@ inputs docs/amendments/APPROVALS_2026-10-26.md):
 | XRT-E5b | ceiling vs GPU share, 3+ points (P-XRT-8 unchanged) | inversion generality | B | CONDITIONAL on Rithwik's OK for share changes (E5B_SHARE_OK=1) | evo-x2 queue / Rithwik | one job + reboot per point |
 | XRT-T2S | E5a cells on the 64 GB T2S, SYCL + Vulkan, default share, + read-only A19 | F1 capacity | B | CONDITIONAL on Rithwik's evening + folder install OK (R-T2S-LLAMA); no queue script yet | T2S / Zach | v3 no-system-change rules |
 
+Task BT 2026-10-29 ~5:06 PM EDT (rows added before any data; approval docs/amendments/APPROVALS_2026-10-29.md):
+
+| id | question | finding | pri | status | machine / owner | notes |
+|---|---|---|---|---|---|---|
+| COST-1 | Unit cost, DRAM equivalence: does a 16 GB XPS at u4 + chunk 256 hold the agent context a 32 GB machine holds at the true default (RAM-EQ), and how small is the cloud $ side (PRICE)? | DRAM per device (VC unit); PRICE predicted small | B | REGISTERED 2026-10-29, no run_ids (docs/registrations/COST1_RAMEQ_2026-10-29.md sha256 e64c702940d54e162c1380007f96b05eb7cf1e53d38fee29a9695286a6cc6810; predictions derived/cost1/COST1_PREDICTIONS.json sha256 175079890c9f5a26f75a1ca714eed2caceed9619551dfc3b75501d6aba004047) | XPS + T2S (one evening, Rithwik present) / Zach | lowest priority behind gate jobs; XPS ~8.5-12 h, T2S ~4.5-5.5 h; PRICE after Nov 6 only; CLOUD-Q optional, cap $10, needs written approval |
+
 CC closeout 2026-10-26 (Task BK; per row, the rows above keep their registered text):
 - DONE (sealed, run_ids in analysis/cc_20261026/RUNS.md): CC-REH-XPS (5dac335c), CC-BYTES-XPS, CC-MECH-XPS
   (9 bisections + repeats), CC-TTFT-XPS (A8 MISS), CC-GROW-XPS (8 cells), CC-A21-XPS (R1), CC-ALLOC-XPS/T2S
